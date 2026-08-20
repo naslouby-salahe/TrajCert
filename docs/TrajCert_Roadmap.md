@@ -295,8 +295,7 @@ For $A+G>0$,
 
 $$
 \tau_\Pi=
-(A+G)h\left(\frac{A}{A+G}\right)
--
+(A+G)h\left(\frac{A}{A+G}\right) -
 \sum_{k=1}^{K}m_kh(r_k).
 $$
 
@@ -304,12 +303,9 @@ $$
 
 $$
 \boxed{
-\mathcal S_\Pi(u)
-=
-h(A+u)
--
-\sum_k m_k h(r_k)
--
+\mathcal S_\Pi(u) =
+h(A+u) -
+\sum_k m_k h(r_k) -
 c,h(u/c).
 }
 $$
@@ -317,8 +313,7 @@ $$
 For $0<u<c$,
 
 $$
-\mathcal S_\Pi'(u)
-=
+\mathcal S_\Pi'(u) =
 \log\frac{u(G+c-u)}
 {(A+u)(c-u)}
 $$
@@ -326,12 +321,10 @@ $$
 and
 
 $$
-\mathcal S_\Pi''(u)
-=
+\mathcal S_\Pi''(u) =
 \frac{A}{u(A+u)}
 +
-\frac{G}{(c-u)(G+c-u)}
->0
+\frac{G}{(c-u)(G+c-u)} >0
 $$
 
 under nondegenerate conditions.
@@ -355,8 +348,7 @@ $$
 ## 3.6 Sharp risk set
 
 $$
-\mathcal U_\Pi(\rho)
-=
+\mathcal U_\Pi(\rho) =
 \{u\in[0,c]:\mathcal S_\Pi(u)\le\rho\}.
 $$
 
@@ -384,8 +376,7 @@ The sharp latent-risk interval is
 
 $$
 \boxed{
-\Theta_\Pi(\rho)
-=
+\Theta_\Pi(\rho) =
 [A+u_L,A+u_U].
 }
 $$
@@ -411,8 +402,7 @@ $$
 Moreover,
 
 $$
-\mathcal S_{\Pi_f}(u)-\mathcal S_{\Pi_c}(u)
-=
+\mathcal S_{\Pi_f}(u)-\mathcal S_{\Pi_c}(u) =
 I(L;J_{\Pi_f}\mid J_{\Pi_c})
 =:\Delta\tau.
 $$
@@ -439,22 +429,22 @@ Regimes:
 2. If
    $$
    \beta<\theta^\dagger=\frac{A}{A+G},
-   $$
+$$
    the state is intrinsically uncertifiable.
 3. If
    $$
    \theta^\dagger\le\beta<A+c,
-   $$
+$$
    then
    $$
    \boxed{
    \rho^\star=\mathcal S_\Pi(\beta-A).
    }
-   $$
+$$
 4. If
    $$
    \beta\ge A+c,
-   $$
+$$
    the action is safe even under unresolved-as-harm.
 
 For deterministic safety-boundary validation, define
@@ -1076,8 +1066,7 @@ $$
 For harmful outcomes,
 
 $$
-P(J=k\mid L=1)
-=
+P(J=k\mid L=1) =
 (1-q_1)w_k(\lambda_1),
 $$
 
@@ -1088,8 +1077,7 @@ $$
 For correct outcomes,
 
 $$
-P(J=k\mid L=0)
-=
+P(J=k\mid L=0) =
 (1-q_0)w_k(\lambda_0),
 $$
 
@@ -1173,7 +1161,7 @@ For each event:
 1. sample
    $$
    L\sim\operatorname{Bernoulli}(\theta);
-   $$
+$$
 2. conditional on $L$, sample $J$;
 3. reveal `(J,L)` when finite;
 4. reveal only `infinity` when terminal unresolved.
@@ -1253,7 +1241,7 @@ For total count $n$ and target category probabilities $p_j$:
 3. let
    $$
    r=n-\sum_j f_j;
-   $$
+$$
 4. assign one additional count to the $r$ categories having the largest fractional remainders $q_j-f_j$;
 5. break equal-remainder ties by canonical category order.
 
@@ -1358,8 +1346,7 @@ A future real study is a separate study and does not alter the current synthetic
 ## 7.1 Complete-case arrival-only
 
 $$
-\hat\theta_{\text{complete}}
-=
+\hat\theta_{\text{complete}} =
 \frac{A}{A+G}
 $$
 
@@ -1398,25 +1385,21 @@ $$
 For candidate hidden mass $u$,
 
 $$
-h_{1k}(u)
-=
+h_{1k}(u) =
 \frac{a_k}{a_k+A_k^++u},
 $$
 
 $$
-h_{0k}(u)
-=
+h_{0k}(u) =
 \frac{b_k}{b_k+B_k^++c-u}.
 $$
 
 Response-hazard odds ratio:
 
 $$
-\psi_k(u)
-=
+\psi_k(u) =
 \frac{h_{1k}/(1-h_{1k})}
-{h_{0k}/(1-h_{0k})}
-=
+{h_{0k}/(1-h_{0k})} =
 \frac{a_k(B_k^++c-u)}
 {b_k(A_k^++u)}.
 $$
@@ -1464,8 +1447,7 @@ $$
 Define the odds-shift operation
 
 $$
-T(q,\gamma)
-=
+T(q,\gamma) =
 \frac{\gamma q}{1-q+\gamma q}.
 $$
 
@@ -1492,14 +1474,12 @@ P(J=1,L=\ell)=P(L=\ell)h_{\ell1},
 $$
 
 $$
-P(J=2,L=\ell)
-=
+P(J=2,L=\ell) =
 P(L=\ell)(1-h_{\ell1})h_{\ell2},
 $$
 
 $$
-P(J=\infty,L=\ell)
-=
+P(J=\infty,L=\ell) =
 P(L=\ell)(1-h_{\ell1})(1-h_{\ell2}).
 $$
 
@@ -1612,8 +1592,7 @@ $$
 Fit
 
 $$
-\operatorname{logit}(r_k)
-=
+\operatorname{logit}(r_k) =
 \zeta_0+\zeta_1k
 $$
 
@@ -1659,8 +1638,7 @@ BASELINE_NUMERICALLY_UNSTABLE
 For sensitivity $C$,
 
 $$
-r_\infty(C)
-=
+r_\infty(C) =
 \operatorname{expit}{\zeta_0+\zeta_1(K+C)},
 $$
 
@@ -1681,8 +1659,7 @@ The independent oracle constructs the full $2\times(K+1)$ table directly.
 For candidate $u$,
 
 $$
-I(L;J)
-=
+I(L;J) =
 \sum_{\ell,j}
 p_{\ell j}
 \log
@@ -1711,7 +1688,7 @@ Its independent algorithm is:
 6. define the oracle equality tolerance as
    $$
    \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle\_decimal\_digits}/2\rfloor};
-   $$
+$$
 7. if $\rho<I_{\min}-\epsilon_{\text{oracle}}$, return `MODEL_INCOMPATIBLE`;
 8. if $|\rho-I_{\min}|\le\epsilon_{\text{oracle}}$, return the singleton minimum bracket midpoint as both endpoints;
 9. otherwise solve the left and right direct-table equations $I(L;J)=\rho$ by independent bisection on the two sides of the minimum;
@@ -1963,21 +1940,17 @@ At matured $n$, category $j$ has count $S_{j,n}$.
 For $p\in(0,1)$,
 
 $$
-\log M_{j,n}(p)
-=
+\log M_{j,n}(p) =
 \operatorname{betaln}
 \left(
 S_{j,n}+\frac12,
 n-S_{j,n}+\frac12
-\right)
--
+\right) -
 \operatorname{betaln}
 \left(
 \frac12,\frac12
-\right)
--
-S_{j,n}\log p
--
+\right) -
+S_{j,n}\log p -
 (n-S_{j,n})\log(1-p).
 $$
 
@@ -1990,8 +1963,7 @@ $$
 Raw confidence set:
 
 $$
-C^{raw}_{j,n}
-=
+C^{raw}_{j,n} =
 \left\{
 p:
 \log M_{j,n}(p)
@@ -2028,8 +2000,7 @@ Never return an inward midpoint as a stored CS endpoint.
 Running interval:
 
 $$
-C_{j,n}
-=
+C_{j,n} =
 \bigcap_{t\le n}
 C^{raw}_{j,t}.
 $$
@@ -2044,8 +2015,7 @@ running upper = min(previous running upper, current raw upper)
 Simultaneous region:
 
 $$
-\mathcal C_n^{rect}
-=
+\mathcal C_n^{rect} =
 \left\{
 p:
 \ell_{j,n}\le p_j\le u_{j,n},
@@ -2140,12 +2110,9 @@ The finite-sample procedure claims validity, not shortest possible width.
 Define
 
 $$
-S(A,G,C,u)
-=
-h(A+u)
--
-C
--
+S(A,G,C,u) =
+h(A+u) -
+C -
 c,h(u/c),
 \qquad
 c=1-A-G.
@@ -2154,8 +2121,7 @@ $$
 Then
 
 $$
-U_n(\rho)
-=
+U_n(\rho) =
 \sup
 \left\{
 A+u:
@@ -2187,19 +2153,19 @@ u in [0,1]
 5. intersect with
    $$
    A\ge0,\quad G\ge0,\quad A+G\le1,
-   $$
+$$
    $$
    c\in[c_L,c_U],
    \quad
    0\le u\le c;
-   $$
+$$
 6. if an interval for $c$ crosses exactly zero, split at `c=0` before terminal entropy evaluation;
 7. use exact continuous entropy extensions on boundary boxes;
 8. prune when the interval lower bound of $S$ exceeds $\rho$;
 9. objective upper bound is
    $$
    \min(1,A_{hi}+u_{hi});
-   $$
+$$
 10. generate feasible incumbents from box midpoints;
 11. for midpoint $(A,G)$, compute the maximal feasible $u$ with $C=C_U$ by deterministic upper-branch bisection using the same mathematical profile $S(A,G,C_U,u)$;
 12. the scalar incumbent bisection stops at `numerics.population_root_absolute_tolerance`;
@@ -2219,7 +2185,7 @@ A, then G, then u
     U_{\text{queue}}-L_{\text{feasible}}
     \le
     \texttt{numerics.outer\_certified\_gap};
-    $$
+$$
 20. stop at `numerics.outer_max_visited_nodes` if not already converged.
 
 On node cap, arithmetic failure, or unresolved interval ambiguity:
@@ -2246,8 +2212,7 @@ termination_reason
 For $A+G>0$,
 
 $$
-\tau(A,G,C)
-=
+\tau(A,G,C) =
 (A+G)
 h\left(\frac{A}{A+G}\right)-C.
 $$
@@ -2255,8 +2220,7 @@ $$
 Compute
 
 $$
-\underline\rho_n^{comp}
-=
+\underline\rho_n^{comp} =
 \inf_{(A,G,C)\in\mathcal E_n}\tau(A,G,C).
 $$
 
@@ -2277,7 +2241,7 @@ The certified lower bound is computed by deterministic Arb branch-and-bound over
    \texttt{feasible\_upper}-\texttt{global\_lower}
    \le
    \texttt{numerics.outer\_certified\_gap};
-   $$
+$$
 7. use the same node cap and exact Arb precision as Section 9.4;
 8. on node cap or ambiguity, return the current `global_lower`.
 
@@ -2286,10 +2250,7 @@ The returned value is always a **proven lower bound**, even when the optimizatio
 `MODEL_INCOMPATIBLE` requires
 
 $$
-\underline\rho_n^{comp}
-
->
-
+\underline\rho_n^{comp} >
 \rho_{\text{deploy}}
 +
 \texttt{numerics.scientific\_comparison\_guard}.
@@ -2300,8 +2261,7 @@ $$
 Define
 
 $$
-\theta^\dagger(A,G)
-=
+\theta^\dagger(A,G) =
 \frac{A}{A+G}.
 $$
 
@@ -2325,7 +2285,7 @@ Use deterministic Arb branch-and-bound over $(A,G,u)$:
 4. for each surviving box with $A+G$ bounded strictly above zero, compute an interval enclosure of
    $$
    \frac{A}{A+G};
-   $$
+$$
 5. if any surviving compatible-plausible box includes $A+G=0$, set
 
    ```text
@@ -2347,10 +2307,9 @@ Use deterministic Arb branch-and-bound over $(A,G,u)$:
 * evidence gates passed;
 * `zero_resolved_mass_plausible=false`;
 * $$
-  \underline\theta_n^\dagger
-  >
+  \underline\theta_n^\dagger >
   \beta+\texttt{numerics.scientific\_comparison\_guard}.
-  $$
+$$
 
 ## 9.7 Evidence gate, failure precedence, and scientific-state precedence
 
@@ -2410,7 +2369,7 @@ After all preceding checks:
 3. otherwise if
    $$
    U_n(\rho)\le\beta,
-   $$
+$$
    → `CERTIFIED`;
 4. otherwise → `UNCERTIFIED`.
 
@@ -2419,16 +2378,14 @@ After all preceding checks:
 For $m$ independent streams and $v$ ever-violation streams, let
 
 $$
-q_{CP}
-=
+q_{CP} =
 \texttt{sequential\_inference.coverage\_validation.clopper\_pearson\_confidence}.
 $$
 
 The exact one-sided confidence limit is
 
 $$
-U_{CP}
-=
+U_{CP} =
 \begin{cases}
 1,&v=m,\
 \operatorname{BetaQuantile}(q_{CP};v+1,m-v),&v<m.
@@ -2462,11 +2419,11 @@ For favorable-direction paired difference $D_s$:
 * upper-risk or time-to-certificate:
   $$
   D_s=Y_{\text{baseline},s}-Y_{\text{method},s};
-  $$
+$$
 * certified fraction:
   $$
   D_s=Y_{\text{method},s}-Y_{\text{baseline},s}.
-  $$
+$$
 
 Positive always favors TrajCert.
 
@@ -2516,7 +2473,7 @@ For randomization $b$:
    $$
    T_b=
    \frac1n\sum_s\sigma_{s,b}D_s.
-   $$
+$$
 
 Use namespace:
 
@@ -2585,8 +2542,7 @@ Raw-p ties are broken by canonical `semantic_comparison_name`, then `metric_name
 For ordered p-values $p_{(1)},\ldots,p_{(m)}$, compute
 
 $$
-\tilde p_{(i)}
-=
+\tilde p_{(i)} =
 \min\left[
 1,
 \max_{1\le j\le i}
@@ -4798,16 +4754,14 @@ Population claim qualification is evaluated only on the primary 8-band partition
 For one compatible 8-band cell:
 
 $$
-\text{absolute tightening}
-=
+\text{absolute tightening} =
 (A+c)-\theta_U(\rho).
 $$
 
 When $c>0$,
 
 $$
-\text{relative unresolved gain}
-=
+\text{relative unresolved gain} =
 \frac{(A+c)-\theta_U(\rho)}{c}.
 $$
 
@@ -6012,7 +5966,7 @@ Required property checks, with deterministic Hypothesis settings:
 * $$
   \mathcal S(u)\ge\tau-
   \texttt{numerics.deterministic\_identity\_tolerance};
-  $$
+$$
 * convexity for nondegenerate laws;
 * $u^\dagger\in[0,c]$;
 * refinement does not reduce $\mathcal S$;
