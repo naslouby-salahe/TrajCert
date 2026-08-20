@@ -92,7 +92,7 @@ where $L=1$ means an automatic action is wrong or harmful, correctness is observ
 Every certificate is local to one immutable:
 
 $$
-(\texttt{client\_id},\texttt{action\_channel\_id},\texttt{epoch\_id}).
+(\texttt{client＿id},\texttt{action＿channel＿id},\texttt{epoch＿id}).
 $$
 
 The epoch manifest fixes detector/model identity, action policy, adjudication regime, event/logging semantics, terminal horizon, and finest trajectory representation. A material change closes the epoch; pending actions remain assigned to the epoch in which they were issued.
@@ -123,13 +123,13 @@ The theorem assumes trustworthy event IDs, issue/adjudication timestamps, termin
 For an analysis partition
 
 $$
-\Pi=\{H_1<\cdots<H_K\},
+\Pi=\lbrace H_1<\cdots<H_K\rbrace,
 $$
 
 define
 
 $$
-J_\Pi\in\{1,\ldots,K,\infty\},
+J_\Pi\in\lbrace1,\ldots,K,\infty\rbrace,
 $$
 
 where $J_\Pi=k$ means adjudication first completes in resolved band $k$, and $J_\Pi=\infty$ means unresolved through $H_K$.
@@ -158,7 +158,7 @@ G=\sum_{k=1}^{K}b_k,
 A+G+c=1.
 $$
 
-The latent outcome is binary, $L\in\{0,1\}$. The only hidden binary terminal mass is
+The latent outcome is binary, $L\in\lbrace0,1\rbrace$. The only hidden binary terminal mass is
 
 $$
 u=P(J_\Pi=\infty,L=1),
@@ -203,7 +203,7 @@ with the continuous extension $0\log0=0$.
 Define
 
 $$
-R=\mathbf1\{J_\Pi<\infty\}.
+R=\mathbf1\lbrace J_\Pi<\infty\rbrace.
 $$
 
 ## 3.1 Event-ledger and fixed-horizon maturation
@@ -246,7 +246,7 @@ The sequential estimator updates exactly once per matured event.
 For observable category $j$, the stable-epoch condition is
 
 $$
-E[\mathbf1\{Y_n=j\}\mid\mathcal F_{n-1}]=p_j
+E[\mathbf1\lbrace Y_n=j\rbrace\mid\mathcal F_{n-1}]=p_j
 $$
 
 for one fixed categorical probability vector $p$ throughout the epoch.
@@ -349,7 +349,7 @@ $$
 
 $$
 \mathcal U_\Pi(\rho) =
-\{u\in[0,c]:\mathcal S_\Pi(u)\le\rho\}.
+\lbrace u\in[0,c]:\mathcal S_\Pi(u)\le\rho\rbrace.
 $$
 
 The regimes are:
@@ -363,7 +363,7 @@ $$
 $$
 \rho=\tau_\Pi
 \Rightarrow
-\mathcal U_\Pi(\rho)=\{u^\dagger\},
+\mathcal U_\Pi(\rho)=\lbrace u^\dagger\rbrace,
 $$
 
 and for $\rho>\tau_\Pi$,
@@ -502,7 +502,7 @@ The iteration cap is
 $$
 \left\lceil
 \log_2\frac{w_0}
-{\texttt{numerics.population\_root\_absolute\_tolerance}}
+{\texttt{numerics.population＿root＿absolute＿tolerance}}
 \right\rceil+2,
 $$
 
@@ -1160,7 +1160,7 @@ For each event:
 
 1. sample
    $$
-   L\sim\operatorname{Bernoulli}(\theta);
+   L\sim\mathrm{Bernoulli}(\theta);
 $$
 2. conditional on $L$, sample $J$;
 3. reveal `(J,L)` when finite;
@@ -1253,9 +1253,9 @@ For each $t=1,\ldots,n$, append the category
 
 $$
 j_t=
-\arg\max_j\left\{
+\arg\max_j\left\lbrace
 t,p_j-C_{j,t-1}
-\right\}.
+\right\rbrace.
 $$
 
 Any exact tie is broken by canonical category order.
@@ -1433,9 +1433,9 @@ For each configured pair
 $$
 (\Gamma,q)
 \in
-\texttt{legacy\_partition\_incoherence.gamma\_values}
+\texttt{legacy＿partition＿incoherence.gamma＿values}
 \times
-\texttt{legacy\_partition\_incoherence.q\_values},
+\texttt{legacy＿partition＿incoherence.q＿values},
 $$
 
 construct a two-band full law with
@@ -1524,7 +1524,7 @@ $$
 The model is compatible when an accepted root satisfies:
 
 $$
-Q(u)\le\texttt{numerics.callback\_q\_acceptance}.
+Q(u)\le\texttt{numerics.callback＿q＿acceptance}.
 $$
 
 `numerics.callback_q_acceptance` is the common-slope acceptance tolerance.
@@ -1537,7 +1537,7 @@ Algorithm:
 4. endpoints are brackets when locally minimal;
 5. apply deterministic golden-section minimization;
 6. stop when bracket width is no greater than `numerics.callback_golden_section_width`;
-7. accept if $Q(u)\le\texttt{numerics.callback\_q\_acceptance}$;
+7. accept if $Q(u)\le\texttt{numerics.callback＿q＿acceptance}$;
 8. sort accepted roots;
 9. deduplicate roots whose absolute difference is no greater than `numerics.callback_root_dedup_tolerance`, retaining the smaller root;
 10. if no accepted root, return `MODEL_INCOMPATIBLE`;
@@ -1568,7 +1568,7 @@ Use the same high-precision grid/local-minimization procedure as Section 7.5, re
 Accept a root when
 
 $$
-E(u)\le\texttt{numerics.callback\_equality\_tolerance}.
+E(u)\le\texttt{numerics.callback＿equality＿tolerance}.
 $$
 
 Sort and deduplicate accepted roots using `numerics.callback_root_dedup_tolerance`.
@@ -1592,7 +1592,7 @@ $$
 Fit
 
 $$
-\operatorname{logit}(r_k) =
+\mathrm{logit}(r_k) =
 \zeta_0+\zeta_1k
 $$
 
@@ -1610,13 +1610,13 @@ $$
 
 $$
 \zeta_0=
-\operatorname{logit}
+\mathrm{logit}
 \left[
-\operatorname{clip}
+\mathrm{clip}
 \left(
 \frac{A}{A+G},
-\texttt{numerics.pattern\_mixture\_initial\_probability\_clip},
-1-\texttt{numerics.pattern\_mixture\_initial\_probability\_clip}
+\texttt{numerics.pattern＿mixture＿initial＿probability＿clip},
+1-\texttt{numerics.pattern＿mixture＿initial＿probability＿clip}
 \right)
 \right].
 $$
@@ -1639,7 +1639,7 @@ For sensitivity $C$,
 
 $$
 r_\infty(C) =
-\operatorname{expit}{\zeta_0+\zeta_1(K+C)},
+\mathrm{expit}{\zeta_0+\zeta_1(K+C)},
 $$
 
 $$
@@ -1687,7 +1687,7 @@ Its independent algorithm is:
 5. let $I_{\min}$ be the minimum direct-table value at the midpoint;
 6. define the oracle equality tolerance as
    $$
-   \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle\_decimal\_digits}/2\rfloor};
+   \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle＿decimal＿digits}/2\rfloor};
 $$
 7. if $\rho<I_{\min}-\epsilon_{\text{oracle}}$, return `MODEL_INCOMPATIBLE`;
 8. if $|\rho-I_{\min}|\le\epsilon_{\text{oracle}}$, return the singleton minimum bracket midpoint as both endpoints;
@@ -1829,7 +1829,7 @@ The last uses the exact binary maximum-information budget $\log 2$ and removes t
 | `Safety-frontier sensitivity budget`            | $\rho^\star$                                  | larger more robust                       |
 | `Anytime upper risk`                            | proven $U_n(\rho)$                            | lower better                             |
 | `Anytime compatibility floor`                   | certified lower envelope of $\tau$            | descriptive                              |
-| `Ever-violation indicator`                      | $\mathbf1\{\exists n:\theta>U_n\}$              | lower                                    |
+| `Ever-violation indicator`                      | $\mathbf1\lbrace\exists n:\theta>U_n\rbrace$              | lower                                    |
 | `Bound gain versus endpoint-only`               | endpoint upper minus fine upper               | higher better                            |
 | `Absolute tightening versus unresolved-as-harm` | $(A+c)-\theta_U$                              | higher better                            |
 | `Relative unresolved-mass gain`                 | $((A+c)-\theta_U)/c$                          | higher better                            |
@@ -1875,7 +1875,7 @@ $$
 u=0
 $$
 
-and the risk set is $\{A\}$.
+and the risk set is $\lbrace A\rbrace$.
 
 If $m_k=0$:
 
@@ -1920,7 +1920,7 @@ Monitoring times within one stream and optimizer evaluations are never independe
 For $K$ finite bands, let
 
 $$
-\delta=\texttt{confidence.anytime\_delta}
+\delta=\texttt{confidence.anytime＿delta}
 $$
 
 and
@@ -1941,12 +1941,12 @@ For $p\in(0,1)$,
 
 $$
 \log M_{j,n}(p) =
-\operatorname{betaln}
+\mathrm{betaln}
 \left(
 S_{j,n}+\frac12,
 n-S_{j,n}+\frac12
 \right) -
-\operatorname{betaln}
+\mathrm{betaln}
 \left(
 \frac12,\frac12
 \right) -
@@ -1964,12 +1964,12 @@ Raw confidence set:
 
 $$
 C^{raw}_{j,n} =
-\left\{
+\left\lbrace
 p:
 \log M_{j,n}(p)
 <
 \log\frac{d}{\delta}
-\right\}.
+\right\rbrace.
 $$
 
 The stored numerical interval is the closure of this set; inclusion of an equality boundary is conservative.
@@ -2016,14 +2016,14 @@ Simultaneous region:
 
 $$
 \mathcal C_n^{rect} =
-\left\{
+\left\lbrace
 p:
 \ell_{j,n}\le p_j\le u_{j,n},
 \quad
 p_j\ge0,
 \quad
 \sum_jp_j=1
-\right\}.
+\right\rbrace.
 $$
 
 Simplex feasibility for a rectangular interval vector is tested exactly by:
@@ -2094,13 +2094,13 @@ Use
 
 $$
 \mathcal E_n=
-\left\{
+\left\lbrace
 (A,G,C):
 A\in[A_L,A_U],
 G\in[G_L,G_U],
 c=1-A-G\in[c_L,c_U],
 C\in[C_L,C_U]
-\right\}.
+\right\rbrace.
 $$
 
 The finite-sample procedure claims validity, not shortest possible width.
@@ -2123,12 +2123,12 @@ Then
 $$
 U_n(\rho) =
 \sup
-\left\{
+\left\lbrace
 A+u:
 (A,G,C)\in\mathcal E_n,
 0\le u\le c,
 S(A,G,C,u)\le\rho
-\right\}.
+\right\rbrace.
 $$
 
 Because $S$ is decreasing in $C$, optimization sets
@@ -2184,7 +2184,7 @@ A, then G, then u
     $$
     U_{\text{queue}}-L_{\text{feasible}}
     \le
-    \texttt{numerics.outer\_certified\_gap};
+    \texttt{numerics.outer＿certified＿gap};
 $$
 20. stop at `numerics.outer_max_visited_nodes` if not already converged.
 
@@ -2238,9 +2238,9 @@ The certified lower bound is computed by deterministic Arb branch-and-bound over
 5. split by longest normalized $A/G$ width with tie order `A`, then `G`;
 6. stop when
    $$
-   \texttt{feasible\_upper}-\texttt{global\_lower}
+   \texttt{feasible＿upper}-\texttt{global＿lower}
    \le
-   \texttt{numerics.outer\_certified\_gap};
+   \texttt{numerics.outer＿certified＿gap};
 $$
 7. use the same node cap and exact Arb precision as Section 9.4;
 8. on node cap or ambiguity, return the current `global_lower`.
@@ -2253,7 +2253,7 @@ $$
 \underline\rho_n^{comp} >
 \rho_{\text{deploy}}
 +
-\texttt{numerics.scientific\_comparison\_guard}.
+\texttt{numerics.scientific＿comparison＿guard}.
 $$
 
 ## 9.6 Finite-sample intrinsic impossibility
@@ -2308,7 +2308,7 @@ $$
 * `zero_resolved_mass_plausible=false`;
 * $$
   \underline\theta_n^\dagger >
-  \beta+\texttt{numerics.scientific\_comparison\_guard}.
+  \beta+\texttt{numerics.scientific＿comparison＿guard}.
 $$
 
 ## 9.7 Evidence gate, failure precedence, and scientific-state precedence
@@ -2379,7 +2379,7 @@ For $m$ independent streams and $v$ ever-violation streams, let
 
 $$
 q_{CP} =
-\texttt{sequential\_inference.coverage\_validation.clopper\_pearson\_confidence}.
+\texttt{sequential＿inference.coverage＿validation.clopper＿pearson＿confidence}.
 $$
 
 The exact one-sided confidence limit is
@@ -2388,7 +2388,7 @@ $$
 U_{CP} =
 \begin{cases}
 1,&v=m,\
-\operatorname{BetaQuantile}(q_{CP};v+1,m-v),&v<m.
+\mathrm{BetaQuantile}(q_{CP};v+1,m-v),&v<m.
 \end{cases}
 $$
 
@@ -2399,13 +2399,13 @@ A primary stress cell passes empirical validation only if
 $$
 U_{CP}
 \le
-\texttt{sequential\_inference.coverage\_validation.acceptance\_upper\_limit}.
+\texttt{sequential＿inference.coverage＿validation.acceptance＿upper＿limit}.
 $$
 
 The theoretical target remains
 
 $$
-\delta=\texttt{confidence.anytime\_delta}.
+\delta=\texttt{confidence.anytime＿delta}.
 $$
 
 The acceptance upper limit is only the Monte Carlo implementation-validation tolerance.
@@ -2468,7 +2468,7 @@ $$
 
 For randomization $b$:
 
-1. independently draw signs $\sigma_{s,b}\in\{-1,+1\}$ with probability $1/2$;
+1. independently draw signs $\sigma_{s,b}\in\lbrace-1,+1\rbrace$ with probability $1/2$;
 2. define
    $$
    T_b=
@@ -2486,7 +2486,7 @@ with seed index `0`.
 With
 
 $$
-B=\texttt{statistics.sign\_flip.randomizations},
+B=\texttt{statistics.sign＿flip.randomizations},
 $$
 
 the one-sided p-value is
@@ -2494,7 +2494,7 @@ the one-sided p-value is
 $$
 p=
 \frac{
-1+\#\{T_b\ge T_{\text{obs}}\}
+1+\#\lbrace T_b\ge T_{\text{obs}}\rbrace
 }{
 1+B
 }.
@@ -4257,7 +4257,7 @@ The offset semantics are fixed:
 $$
 \rho=\tau_\Pi+d,
 \qquad
-d\in\texttt{sensitivity.theorem\_rho\_offsets.sharp\_set}.
+d\in\texttt{sensitivity.theorem＿rho＿offsets.sharp＿set}.
 $$
 
 `Production Solver vs Independent Oracle`:
@@ -4265,7 +4265,7 @@ $$
 $$
 \rho=\tau_\Pi+d,
 \qquad
-d\in\texttt{sensitivity.theorem\_rho\_offsets.oracle\_validation}.
+d\in\texttt{sensitivity.theorem＿rho＿offsets.oracle＿validation}.
 $$
 
 `Partition Coherence`, `Strict Timing-Gain Identity`, and `Strict Timing Gain`:
@@ -4273,7 +4273,7 @@ $$
 $$
 \rho=\tau_{\text{fine}}+d,
 \qquad
-d\in\texttt{sensitivity.theorem\_rho\_offsets.refinement\_above\_fine\_tau}.
+d\in\texttt{sensitivity.theorem＿rho＿offsets.refinement＿above＿fine＿tau}.
 $$
 
 No offset is interpreted relative to a coarse $\tau$ unless explicitly stated elsewhere.
@@ -4426,7 +4426,7 @@ where
 
 $$
 d=
-\texttt{sensitivity.theorem\_rho\_offsets.refinement\_above\_fine\_tau[0]}.
+\texttt{sensitivity.theorem＿rho＿offsets.refinement＿above＿fine＿tau[0]}.
 $$
 
 For endpoint-only partition:
@@ -4443,7 +4443,7 @@ without adding a separate registry cell.
 $$
 \rho=
 \tau+
-\texttt{sensitivity.confirmatory\_sharpness\_oracle\_offset\_above\_tau}.
+\texttt{sensitivity.confirmatory＿sharpness＿oracle＿offset＿above＿tau}.
 $$
 
 `Safety and Intrinsic Impossibility` uses the five deterministic beta regimes.
@@ -4691,20 +4691,20 @@ $$
 For minimum-information completion:
 
 $$
-\rho=\tau+\texttt{rho\_offset\_above\_compatibility\_floor}.
+\rho=\tau+\texttt{rho＿offset＿above＿compatibility＿floor}.
 $$
 
 All stress cases except near-certification use:
 
 $$
-\beta=\texttt{budgets.primary\_risk}.
+\beta=\texttt{budgets.primary＿risk}.
 $$
 
 Near-certification uses:
 
 $$
 \beta=\theta_U(\rho)+
-\texttt{beta\_offset\_above\_true\_upper\_bound}.
+\texttt{beta＿offset＿above＿true＿upper＿bound}.
 $$
 
 If derived $\beta>1$:
@@ -4841,7 +4841,7 @@ Axis derivations:
 * **Harmful prevalence:** set $\theta$.
 * **Path resolution:** set $K$.
 * **Sensitivity margin above compatibility:** $\rho=\tau+d$.
-* **Risk-budget offset from intrinsic boundary:** $\beta=\operatorname{clip}(\theta^\dagger+d,0,1)$.
+* **Risk-budget offset from intrinsic boundary:** $\beta=\mathrm{clip}(\theta^\dagger+d,0,1)$.
 * **Matured sample size:** use balanced-prefix at configured $n$.
 * **Terminal-selection asymmetry:** use configured $(q_1,q_0)$.
 * **Optimizer-node budget:** use configured diagnostic node cap and deterministic $n=500$.
@@ -5965,7 +5965,7 @@ Required property checks, with deterministic Hypothesis settings:
 * generated laws stay on the simplex;
 * $$
   \mathcal S(u)\ge\tau-
-  \texttt{numerics.deterministic\_identity\_tolerance};
+  \texttt{numerics.deterministic＿identity＿tolerance};
 $$
 * convexity for nondegenerate laws;
 * $u^\dagger\in[0,c]$;
