@@ -123,7 +123,7 @@ The theorem assumes trustworthy event IDs, issue/adjudication timestamps, termin
 For an analysis partition
 
 $$
-\Pi=\lbrace H_1<\cdots<H_K\rbrace,
+\Pi=\lbrace H_1\lt \cdots\lt H_K\rbrace,
 $$
 
 define
@@ -183,7 +183,7 @@ and
 $$
 r_k=
 \begin{cases}
-a_k/m_k,&m_k>0,\\
+a_k/m_k,&m_k\gt 0,\\
 \text{undefined},&m_k=0.
 \end{cases}
 $$
@@ -203,7 +203,7 @@ with the continuous extension $0\log0=0$.
 Define
 
 $$
-R=\mathbf1\lbrace J_\Pi<\infty\rbrace.
+R=\mathbf1\lbrace J_\Pi\lt \infty\rbrace.
 $$
 
 ## 3.1 Event-ledger and fixed-horizon maturation
@@ -291,7 +291,7 @@ $$
 }
 $$
 
-For $A+G>0$,
+For $A+G\gt 0$,
 
 $$
 \tau_\Pi=
@@ -310,7 +310,7 @@ c,h(u/c).
 }
 $$
 
-For $0<u<c$,
+For $0\lt u\lt c$,
 
 $$
 \mathcal S_\Pi'(u) =
@@ -324,14 +324,14 @@ $$
 \mathcal S_\Pi''(u) =
 \frac{A}{u(A+u)}
 +
-\frac{G}{(c-u)(G+c-u)} >0
+\frac{G}{(c-u)(G+c-u)} \gt 0
 $$
 
 under nondegenerate conditions.
 
 ## 3.5 Minimum-information completion and compatibility floor
 
-When $A+G>0$,
+When $A+G\gt 0$,
 
 $$
 u^\dagger=\frac{Ac}{A+G},
@@ -355,7 +355,7 @@ $$
 The regimes are:
 
 $$
-\rho<\tau_\Pi
+\rho\lt \tau_\Pi
 \Rightarrow
 \mathcal U_\Pi(\rho)=\varnothing,
 $$
@@ -366,7 +366,7 @@ $$
 \mathcal U_\Pi(\rho)=\lbrace u^\dagger\rbrace,
 $$
 
-and for $\rho>\tau_\Pi$,
+and for $\rho\gt \tau_\Pi$,
 
 $$
 \mathcal U_\Pi(\rho)=[u_L,u_U].
@@ -410,9 +410,9 @@ $$
 Under the theorem's compatibility and interior-upper-root conditions,
 
 $$
-\Delta\tau>0
+\Delta\tau\gt 0
 \iff
-u_U^f(\rho)<u_U^c(\rho).
+u_U^f(\rho)\lt u_U^c(\rho).
 $$
 
 ## 3.8 Safety regimes
@@ -425,15 +425,15 @@ $$
 
 Regimes:
 
-1. If $\beta<A$, resolved harmful mass already exceeds the budget.
+1. If $\beta\lt A$, resolved harmful mass already exceeds the budget.
 2. If
    $$
-   \beta<\theta^\dagger=\frac{A}{A+G},
+   \beta\lt \theta^\dagger=\frac{A}{A+G},
 $$
    the state is intrinsically uncertifiable.
 3. If
    $$
-   \theta^\dagger\le\beta<A+c,
+   \theta^\dagger\le\beta\lt A+c,
 $$
    then
    $$
@@ -1350,7 +1350,7 @@ $$
 \frac{A}{A+G}
 $$
 
-when $A+G>0$.
+when $A+G\gt 0$.
 
 Terminal unresolved mass is ignored. This is an optimistic descriptive reference, not a PIS certificate.
 
@@ -1377,9 +1377,9 @@ this isolates the value of resolved timing.
 Define:
 
 $$
-A_k^+=\sum_{j>k}a_j,
+A_k^+=\sum_{j\gt k}a_j,
 \qquad
-B_k^+=\sum_{j>k}b_j.
+B_k^+=\sum_{j\gt k}b_j.
 $$
 
 For candidate hidden mass $u$,
@@ -1575,7 +1575,7 @@ Sort and deduplicate accepted roots using `numerics.callback_root_dedup_toleranc
 
 Attempts after the second add no identifying equality restriction.
 
-If $K<2$:
+If $K\lt 2$:
 
 ```text
 NOT_APPLICABLE
@@ -1689,7 +1689,7 @@ Its independent algorithm is:
    $$
    \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle＿decimal＿digits}/2\rfloor};
 $$
-7. if $\rho<I_{\min}-\epsilon_{\text{oracle}}$, return `MODEL_INCOMPATIBLE`;
+7. if $\rho\lt I_{\min}-\epsilon_{\text{oracle}}$, return `MODEL_INCOMPATIBLE`;
 8. if $|\rho-I_{\min}|\le\epsilon_{\text{oracle}}$, return the singleton minimum bracket midpoint as both endpoints;
 9. otherwise solve the left and right direct-table equations $I(L;J)=\rho$ by independent bisection on the two sides of the minimum;
 10. terminate each boundary bisection when its bracket width is no greater than `numerics.oracle_boundary_bracket_width`;
@@ -1829,7 +1829,7 @@ The last uses the exact binary maximum-information budget $\log 2$ and removes t
 | `Safety-frontier sensitivity budget`            | $\rho^\star$                                  | larger more robust                       |
 | `Anytime upper risk`                            | proven $U_n(\rho)$                            | lower better                             |
 | `Anytime compatibility floor`                   | certified lower envelope of $\tau$            | descriptive                              |
-| `Ever-violation indicator`                      | $\mathbf1\lbrace\exists n:\theta>U_n\rbrace$              | lower                                    |
+| `Ever-violation indicator`                      | $\mathbf1\lbrace\exists n:\theta\gt U_n\rbrace$              | lower                                    |
 | `Bound gain versus endpoint-only`               | endpoint upper minus fine upper               | higher better                            |
 | `Absolute tightening versus unresolved-as-harm` | $(A+c)-\theta_U$                              | higher better                            |
 | `Relative unresolved-mass gain`                 | $((A+c)-\theta_U)/c$                          | higher better                            |
@@ -1967,7 +1967,7 @@ C^{raw}_{j,n} =
 \left\lbrace
 p:
 \log M_{j,n}(p)
-<
+\lt 
 \log\frac{d}{\delta}
 \right\rbrace.
 $$
@@ -2075,7 +2075,7 @@ q(a,b)=
 \begin{cases}
 -a\log\frac{a}{a+b}
 -b\log\frac{b}{a+b},
-&a+b>0,\\
+&a+b\gt 0,\\
 0,&a=b=0.
 \end{cases}
 $$
@@ -2209,7 +2209,7 @@ termination_reason
 
 ## 9.5 Finite-sample compatibility
 
-For $A+G>0$,
+For $A+G\gt 0$,
 
 $$
 \tau(A,G,C) =
@@ -2250,7 +2250,7 @@ The returned value is always a **proven lower bound**, even when the optimizatio
 `MODEL_INCOMPATIBLE` requires
 
 $$
-\underline\rho_n^{comp} >
+\underline\rho_n^{comp} \gt 
 \rho_{\text{deploy}}
 +
 \texttt{numerics.scientific＿comparison＿guard}.
@@ -2307,7 +2307,7 @@ $$
 * evidence gates passed;
 * `zero_resolved_mass_plausible=false`;
 * $$
-  \underline\theta_n^\dagger >
+  \underline\theta_n^\dagger \gt 
   \beta+\texttt{numerics.scientific＿comparison＿guard}.
 $$
 
@@ -2388,7 +2388,7 @@ $$
 U_{CP} =
 \begin{cases}
 1,&v=m,\\
-\mathrm{BetaQuantile}(q_{CP};v+1,m-v),&v<m.
+\mathrm{BetaQuantile}(q_{CP};v+1,m-v),&v\lt m.
 \end{cases}
 $$
 
@@ -2439,7 +2439,7 @@ $$
 d_z=\frac{\bar D}{s_D}
 $$
 
-when $s_D>0$, a paired percentile-bootstrap CI, and a one-sided favorable-direction sign-flip p-value.
+when $s_D\gt 0$, a paired percentile-bootstrap CI, and a one-sided favorable-direction sign-flip p-value.
 
 ### Paired percentile bootstrap
 
@@ -4509,7 +4509,7 @@ $$
 \rho=\tau-d.
 $$
 
-For every 2-, 4-, and 8-band cell, $\tau>0$, hence $d>0$ and $\rho<\tau$.
+For every 2-, 4-, and 8-band cell, $\tau\gt 0$, hence $d\gt 0$ and $\rho\lt \tau$.
 
 Expected:
 
@@ -4707,7 +4707,7 @@ $$
 \texttt{beta＿offset＿above＿true＿upper＿bound}.
 $$
 
-If derived $\beta>1$:
+If derived $\beta\gt 1$:
 
 ```text
 planned case = INVALID
@@ -4758,7 +4758,7 @@ $$
 (A+c)-\theta_U(\rho).
 $$
 
-When $c>0$,
+When $c\gt 0$,
 
 $$
 \text{relative unresolved gain} =
