@@ -183,7 +183,7 @@ and
 $$
 r_k=
 \begin{cases}
-a_k/m_k,&m_k>0,\
+a_k/m_k,&m_k>0,\\
 \text{undefined},&m_k=0.
 \end{cases}
 $$
@@ -2075,7 +2075,7 @@ q(a,b)=
 \begin{cases}
 -a\log\frac{a}{a+b}
 -b\log\frac{b}{a+b},
-&a+b>0,\
+&a+b>0,\\
 0,&a=b=0.
 \end{cases}
 $$
@@ -2387,7 +2387,7 @@ The exact one-sided confidence limit is
 $$
 U_{CP} =
 \begin{cases}
-1,&v=m,\
+1,&v=m,\\
 \mathrm{BetaQuantile}(q_{CP};v+1,m-v),&v<m.
 \end{cases}
 $$
@@ -2494,7 +2494,7 @@ the one-sided p-value is
 $$
 p=
 \frac{
-1+\#\lbrace T_b\ge T_{\text{obs}}\rbrace
+1+\left\lvert\lbrace T_b\ge T_{\text{obs}}\rbrace\right\rvert
 }{
 1+B
 }.
