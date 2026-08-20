@@ -2,13 +2,13 @@
 
 **Contribution:** **TrajCert — Trajectory-Aware Partial-Identification and Sensitivity-Certification Framework**
 
-**Research object:** **Latent Operational Error Risk** (\theta=P(L=1))
+**Research object:** **Latent Operational Error Risk** $\theta=P(L=1)$
 
 **Verification setting:** **Delayed, selective/outcome-dependent, and potentially unresolved outcome verification**
 
-**Theoretical principle:** **Path-Information Sensitivity (PIS)** — (I(L;J^*)\le\rho)
+**Theoretical principle:** **Path-Information Sensitivity (PIS)** — $I(L;J^*)\le\rho$
 
-**Primary finest trajectory resolution:** **`method.primary_finest_resolved_bands` (resolved value: 8 bands, (K=8))**
+**Primary finest trajectory resolution:** **`method.primary_finest_resolved_bands` (resolved value: 8 bands, $K=8$)**
 
 **Scientific authority:** **this roadmap**
 
@@ -83,17 +83,17 @@ A semantic experiment cell has one execution only for each material dependency i
 
 For one stable operational stream, certify the latent action-error risk
 
-[
+$$
 \theta=P(L=1),
-]
+$$
 
-where (L=1) means an automatic action is wrong or harmful, correctness is observed only if an outcome-dependent adjudication process resolves the action, and some actions remain unresolved through a terminal horizon. Complete-case error can be optimistic under informative resolution; unresolved-as-harm is assumption-free but can be excessively conservative.
+where $L=1$ means an automatic action is wrong or harmful, correctness is observed only if an outcome-dependent adjudication process resolves the action, and some actions remain unresolved through a terminal horizon. Complete-case error can be optimistic under informative resolution; unresolved-as-harm is assumption-free but can be excessively conservative.
 
 Every certificate is local to one immutable:
 
-[
-(\texttt{client_id},\texttt{action_channel_id},\texttt{epoch_id}).
-]
+$$
+(\texttt{client\_id},\texttt{action\_channel\_id},\texttt{epoch\_id}).
+$$
 
 The epoch manifest fixes detector/model identity, action policy, adjudication regime, event/logging semantics, terminal horizon, and finest trajectory representation. A material change closes the epoch; pending actions remain assigned to the epoch in which they were issued.
 
@@ -104,7 +104,7 @@ The epoch manifest fixes detector/model identity, action policy, adjudication re
 3. Does the one-dimensional information profile generate the exact compatible latent-risk set?
 4. Can the method distinguish model contradiction, sensitivity-driven non-certification, and intrinsic impossibility?
 5. Does projection of a simultaneous observable-law confidence sequence through the conservative sharp-map envelope provide the declared time-uniform upper-risk guarantee?
-6. Over a predeclared (\rho) domain, when is the certificate informative, incompatible, or practically vacuous?
+6. Over a predeclared $\rho$ domain, when is the certificate informative, incompatible, or practically vacuous?
 7. If a future eligible action/adjudication ledger exists, does real resolved timing materially improve certification?
 8. Does local validity remain independent of foreign-client information?
 
@@ -114,7 +114,7 @@ The confirmatory claim names, exact wording, evidence gates, scopes, and failure
 
 The contribution does **not** claim invention of callback/repeated-attempt data, outcome-dependent timing as missing-data information, mutual information, entropy/divergence sensitivity generally, partial identification, sharp bounds generally, falsification/breakdown frontiers generally, data processing, confidence sequences/e-processes, delayed-outcome inference generally, active querying/abstention/selective acting, or federated evidence borrowing.
 
-It does **not** claim finite-sample minimax optimality; universal (\rho) calibration; universal odds-ratio-to-(\rho) conversion; continuous-time or unrestricted serial-drift validity; covariate-conditional validity; active-adjudication optimality; detector-training superiority; privacy protection; poisoning/Byzantine robustness; OOD/zero-day superiority; constrained-device deployment feasibility; or current real-trajectory validation.
+It does **not** claim finite-sample minimax optimality; universal $\rho$ calibration; universal odds-ratio-to-$\rho$ conversion; continuous-time or unrestricted serial-drift validity; covariate-conditional validity; active-adjudication optimality; detector-training superiority; privacy protection; poisoning/Byzantine robustness; OOD/zero-day superiority; constrained-device deployment feasibility; or current real-trajectory validation.
 
 The theorem assumes trustworthy event IDs, issue/adjudication timestamps, terminal status, and resolved correctness labels. Tampering, malicious adjudicators/clients, poisoning, detector evasion, secure aggregation, and privacy leakage are outside scope; a data-integrity violation yields no certificate. Federation is unnecessary for local validity and foreign-client information does not enter the core inference procedure.
 
@@ -122,71 +122,71 @@ The theorem assumes trustworthy event IDs, issue/adjudication timestamps, termin
 
 For an analysis partition
 
-[
-\Pi={H_1<\cdots<H_K},
-]
+$$
+\Pi=\{H_1<\cdots<H_K\},
+$$
 
 define
 
-[
-J_\Pi\in{1,\ldots,K,\infty},
-]
+$$
+J_\Pi\in\{1,\ldots,K,\infty\},
+$$
 
-where (J_\Pi=k) means adjudication first completes in resolved band (k), and (J_\Pi=\infty) means unresolved through (H_K).
+where $J_\Pi=k$ means adjudication first completes in resolved band $k$, and $J_\Pi=\infty$ means unresolved through $H_K$.
 
 Observable masses are
 
-[
+$$
 a_k=P(J_\Pi=k,L=1),
-]
+$$
 
-[
+$$
 b_k=P(J_\Pi=k,L=0),
-]
+$$
 
-[
+$$
 c=P(J_\Pi=\infty).
-]
+$$
 
 Define
 
-[
+$$
 A=\sum_{k=1}^{K}a_k,
 \qquad
 G=\sum_{k=1}^{K}b_k,
 \qquad
 A+G+c=1.
-]
+$$
 
-The latent outcome is binary, (L\in{0,1}). The only hidden binary terminal mass is
+The latent outcome is binary, $L\in\{0,1\}$. The only hidden binary terminal mass is
 
-[
+$$
 u=P(J_\Pi=\infty,L=1),
 \qquad
 0\le u\le c.
-]
+$$
 
 Therefore
 
-[
+$$
 \theta(u)=A+u.
-]
+$$
 
 For each resolved band,
 
-[
+$$
 m_k=a_k+b_k
-]
+$$
 
 and
 
-[
+$$
 r_k=
 \begin{cases}
 a_k/m_k,&m_k>0,\
 \text{undefined},&m_k=0.
 \end{cases}
-]
+$$
 
 Empty bands contribute exactly zero to entropy sums.
 
@@ -194,17 +194,17 @@ All information quantities use natural logarithms and are reported in **nats**.
 
 Binary entropy is
 
-[
+$$
 h(x)=-x\log x-(1-x)\log(1-x),
-]
+$$
 
-with the continuous extension (0\log0=0).
+with the continuous extension $0\log0=0$.
 
 Define
 
-[
-R=\mathbf1{J_\Pi<\infty}.
-]
+$$
+R=\mathbf1\{J_\Pi<\infty\}.
+$$
 
 ## 3.1 Event-ledger and fixed-horizon maturation
 
@@ -221,7 +221,7 @@ terminal_horizon
 
 and zero or one valid adjudication record.
 
-An adjudication may be operationally recorded immediately, but **inferential ingestion occurs only when the action reaches terminal age (H_K)**.
+An adjudication may be operationally recorded immediately, but **inferential ingestion occurs only when the action reaches terminal age $H_K$**.
 
 At maturity the category is permanently:
 
@@ -243,13 +243,13 @@ with `event_id` compared lexicographically for timestamp ties.
 
 The sequential estimator updates exactly once per matured event.
 
-For observable category (j), the stable-epoch condition is
+For observable category $j$, the stable-epoch condition is
 
-[
-E[\mathbf1{Y_n=j}\mid\mathcal F_{n-1}]=p_j
-]
+$$
+E[\mathbf1\{Y_n=j\}\mid\mathcal F_{n-1}]=p_j
+$$
 
-for one fixed categorical probability vector (p) throughout the epoch.
+for one fixed categorical probability vector $p$ throughout the epoch.
 
 IID categorical observations satisfy the assumption. No theorem is claimed under arbitrary serial drift.
 
@@ -269,233 +269,225 @@ Integrity failures are data-validity failures, not evidence-count shortfalls. Th
 
 ## 3.2 Path-Information Sensitivity
 
-The finest trajectory representation (J^*) is fixed before corresponding outcomes are inspected.
+The finest trajectory representation $J^*$ is fixed before corresponding outcomes are inspected.
 
-[
+$$
 \boxed{I(L;J^*)\le\rho.}
-]
+$$
 
 Every analysis partition is a deterministic coarsening
 
-[
+$$
 J_\Pi=g_\Pi(J^*).
-]
+$$
 
-The same numerical (\rho) therefore remains valid after deterministic coarsening.
+The same numerical $\rho$ therefore remains valid after deterministic coarsening.
 
 ## 3.3 Observable timing information
 
-[
+$$
 \boxed{
 \tau_\Pi=(A+G)I(L;J_\Pi\mid R=1).
 }
-]
+$$
 
-For (A+G>0),
+For $A+G>0$,
 
-[
+$$
 \tau_\Pi=
 (A+G)h\left(\frac{A}{A+G}\right)
---------------------------------
-
+-
 \sum_{k=1}^{K}m_kh(r_k).
-]
+$$
 
 ## 3.4 Exact information profile
 
-[
+$$
 \boxed{
 \mathcal S_\Pi(u)
-=================
-
-## h(A+u)
-
-## \sum_k m_k h(r_k)
-
+=
+h(A+u)
+-
+\sum_k m_k h(r_k)
+-
 c,h(u/c).
 }
-]
+$$
 
-For (0<u<c),
+For $0<u<c$,
 
-[
+$$
 \mathcal S_\Pi'(u)
-==================
-
+=
 \log\frac{u(G+c-u)}
 {(A+u)(c-u)}
-]
+$$
 
 and
 
-[
+$$
 \mathcal S_\Pi''(u)
-===================
-
+=
 \frac{A}{u(A+u)}
 +
 \frac{G}{(c-u)(G+c-u)}
-
-> 0
-> ]
+>0
+$$
 
 under nondegenerate conditions.
 
 ## 3.5 Minimum-information completion and compatibility floor
 
-When (A+G>0),
+When $A+G>0$,
 
-[
+$$
 u^\dagger=\frac{Ac}{A+G},
-]
+$$
 
-[
+$$
 \theta^\dagger=\frac{A}{A+G},
-]
+$$
 
-[
+$$
 \boxed{\rho_{\min}=\tau_\Pi.}
-]
+$$
 
 ## 3.6 Sharp risk set
 
-[
+$$
 \mathcal U_\Pi(\rho)
-====================
-
-{u\in[0,c]:\mathcal S_\Pi(u)\le\rho}.
-]
+=
+\{u\in[0,c]:\mathcal S_\Pi(u)\le\rho\}.
+$$
 
 The regimes are:
 
-[
+$$
 \rho<\tau_\Pi
 \Rightarrow
 \mathcal U_\Pi(\rho)=\varnothing,
-]
+$$
 
-[
+$$
 \rho=\tau_\Pi
 \Rightarrow
-\mathcal U_\Pi(\rho)={u^\dagger},
-]
+\mathcal U_\Pi(\rho)=\{u^\dagger\},
+$$
 
-and for (\rho>\tau_\Pi),
+and for $\rho>\tau_\Pi$,
 
-[
+$$
 \mathcal U_\Pi(\rho)=[u_L,u_U].
-]
+$$
 
 The sharp latent-risk interval is
 
-[
+$$
 \boxed{
 \Theta_\Pi(\rho)
-================
-
+=
 [A+u_L,A+u_U].
 }
-]
+$$
 
 ## 3.7 Refinement and exact timing value
 
-If (\Pi_f) refines (\Pi_c) under the same terminal horizon,
+If $\Pi_f$ refines $\Pi_c$ under the same terminal horizon,
 
-[
+$$
 \mathcal S_{\Pi_c}(u)
 \le
 \mathcal S_{\Pi_f}(u),
-]
+$$
 
 so
 
-[
+$$
 \Theta_{\Pi_f}(\rho)
 \subseteq
 \Theta_{\Pi_c}(\rho).
-]
+$$
 
 Moreover,
 
-[
+$$
 \mathcal S_{\Pi_f}(u)-\mathcal S_{\Pi_c}(u)
-===========================================
-
+=
 I(L;J_{\Pi_f}\mid J_{\Pi_c})
 =:\Delta\tau.
-]
+$$
 
 Under the theorem's compatibility and interior-upper-root conditions,
 
-[
+$$
 \Delta\tau>0
 \iff
 u_U^f(\rho)<u_U^c(\rho).
-]
+$$
 
 ## 3.8 Safety regimes
 
-For action-risk budget (\beta), define
+For action-risk budget $\beta$, define
 
-[
+$$
 u_\beta=\beta-A.
-]
+$$
 
 Regimes:
 
-1. If (\beta<A), resolved harmful mass already exceeds the budget.
+1. If $\beta<A$, resolved harmful mass already exceeds the budget.
 2. If
-   [
+   $$
    \beta<\theta^\dagger=\frac{A}{A+G},
-   ]
+   $$
    the state is intrinsically uncertifiable.
 3. If
-   [
+   $$
    \theta^\dagger\le\beta<A+c,
-   ]
+   $$
    then
-   [
+   $$
    \boxed{
    \rho^\star=\mathcal S_\Pi(\beta-A).
    }
-   ]
+   $$
 4. If
-   [
+   $$
    \beta\ge A+c,
-   ]
+   $$
    the action is safe even under unresolved-as-harm.
 
 For deterministic safety-boundary validation, define
 
-[
+$$
 \theta_{\max}=A+c.
-]
+$$
 
 The five fixed safety-budget cases are:
 
-| Case                                         | Risk budget (\beta)                | Validity rule                                                        |
+| Case                                         | Risk budget $\beta$                | Validity rule                                                        |
 | -------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
-| Below resolved harmful mass                  | (\max(0,A-0.005))                  | always defined                                                       |
-| Between resolved mass and intrinsic boundary | ((A+\theta^\dagger)/2)             | invalid when (A=\theta^\dagger); record `DEGENERATE_SAFETY_INTERVAL` |
-| At intrinsic boundary                        | (\theta^\dagger)                   | always defined when (\theta^\dagger) exists                          |
-| Interior safety frontier                     | ((\theta^\dagger+\theta_{\max})/2) | always defined when (\theta^\dagger) exists                          |
-| Assumption-free boundary                     | (\theta_{\max})                    | always defined                                                       |
+| Below resolved harmful mass                  | $\max(0,A-0.005)$                  | always defined                                                       |
+| Between resolved mass and intrinsic boundary | $(A+\theta^\dagger)/2$             | invalid when $A=\theta^\dagger$; record `DEGENERATE_SAFETY_INTERVAL` |
+| At intrinsic boundary                        | $\theta^\dagger$                   | always defined when $\theta^\dagger$ exists                          |
+| Interior safety frontier                     | $(\theta^\dagger+\theta_{\max})/2$ | always defined when $\theta^\dagger$ exists                          |
+| Assumption-free boundary                     | $\theta_{\max}$                    | always defined                                                       |
 
 These are fixed scientific constructions, not independently editable configuration values.
 
 ## 3.9 Endpoint special case
 
-For (K=1),
+For $K=1$,
 
-[
+$$
 \tau=0,
-]
+$$
 
 and
 
-[
+$$
 \mathcal S(u)=I(L;R).
-]
+$$
 
 This is the mandatory endpoint-only PIS baseline.
 
@@ -503,28 +495,28 @@ This is the mandatory endpoint-only PIS baseline.
 
 The production population solver is fixed methodology rather than a configurable algorithm choice.
 
-Sufficient-statistic accumulation is (O(K)). Entropy terms use a numerically stable `xlogy`-equivalent evaluation with the exact continuous boundary extension. Compatibility is classified before root solving, and exact boundary cases are evaluated before iteration.
+Sufficient-statistic accumulation is $O(K)$. Entropy terms use a numerically stable `xlogy`-equivalent evaluation with the exact continuous boundary extension. Compatibility is classified before root solving, and exact boundary cases are evaluated before iteration.
 
 For compatible nondegenerate cases, the solver uses bisection and solves the lower and upper branches separately.
 
 For each branch:
 
-1. initialize the branch bracket using ([0,u^\dagger]) for the lower root and ([u^\dagger,c]) for the upper root;
-2. retain an exact sign-valid bracket for (\mathcal S_\Pi(u)-\rho);
+1. initialize the branch bracket using $[0,u^\dagger]$ for the lower root and $[u^\dagger,c]$ for the upper root;
+2. retain an exact sign-valid bracket for $\mathcal S_\Pi(u)-\rho$;
 3. bisect until bracket width is no greater than `numerics.population_root_absolute_tolerance`;
 4. return the bracket midpoint;
 5. store the final bracket endpoints, width, returned root, residual, and iteration count.
 
 The iteration cap is
 
-[
+$$
 \left\lceil
 \log_2\frac{w_0}
-{\texttt{numerics.population_root_absolute_tolerance}}
+{\texttt{numerics.population\_root\_absolute\_tolerance}}
 \right\rceil+2,
-]
+$$
 
-where (w_0) is the initial branch width. It is derived, not independently configured.
+where $w_0$ is the initial branch width. It is derived, not independently configured.
 
 The population solver validation requirement is:
 
@@ -1034,7 +1026,7 @@ The following configuration-adjacent rules are mandatory:
 
 1. No generic scientific epsilon exists. Entropy, mutual-information, latent-risk, and sensitivity formulas use their exact continuous extensions and declared numerical algorithms rather than an undocumented epsilon.
 2. `numerics.scientific_comparison_guard` may prevent a false strong classification caused only by binary representation error, but it may never relax certification. `CERTIFIED` still requires the proven upper risk to be no greater than the applicable risk budget.
-3. The exact binary maximum-information endpoint is the mathematical constant (\log 2). It is required where Sections 7.12 and 18.9 specify it and is not stored as an approximate configurable constant.
+3. The exact binary maximum-information endpoint is the mathematical constant $\log 2$. It is required where Sections 7.12 and 18.9 specify it and is not stored as an approximate configurable constant.
 4. The file order of `synthetic_data.laws` is authoritative where deterministic law ordering is required.
 5. Experiment ordering is authoritative in Section 17.
 6. `sensitivity.primary_beta_grid` is a prespecified descriptive reference grid included in Table 1 and configuration provenance. No current registry experiment sweeps that grid independently; beta values used by executable experiments are defined by their experiment-specific contracts.
@@ -1069,9 +1061,9 @@ Scientific execution never re-resolves dependencies when a valid `requirements.l
 
 ## 5.1 Synthetic trajectory generator
 
-For (K) resolved bands, terminal probability (q), and slope (\lambda),
+For $K$ resolved bands, terminal probability $q$, and slope $\lambda$,
 
-[
+$$
 w_k(\lambda)=
 \frac{
 \exp{\lambda(k-(K+1)/2)}
@@ -1079,51 +1071,49 @@ w_k(\lambda)=
 \sum_{j=1}^{K}
 \exp{\lambda(j-(K+1)/2)}
 }.
-]
+$$
 
 For harmful outcomes,
 
-[
+$$
 P(J=k\mid L=1)
-==============
-
+=
 (1-q_1)w_k(\lambda_1),
-]
+$$
 
-[
+$$
 P(J=\infty\mid L=1)=q_1.
-]
+$$
 
 For correct outcomes,
 
-[
+$$
 P(J=k\mid L=0)
-==============
-
+=
 (1-q_0)w_k(\lambda_0),
-]
+$$
 
-[
+$$
 P(J=\infty\mid L=0)=q_0.
-]
+$$
 
 Finally,
 
-[
+$$
 P(L=1)=\theta.
-]
+$$
 
-Positive (\lambda) shifts resolved mass later; negative (\lambda) shifts it earlier.
+Positive $\lambda$ shifts resolved mass later; negative $\lambda$ shifts it earlier.
 
-The observed law hides (L) for (J=\infty).
+The observed law hides $L$ for $J=\infty$.
 
-The synthetic terminal horizon is `method.synthetic_terminal_horizon_age_units`. For any resolved-band count (K), the synthetic resolved boundaries are equally spaced over that fixed horizon:
+The synthetic terminal horizon is `method.synthetic_terminal_horizon_age_units`. For any resolved-band count $K$, the synthetic resolved boundaries are equally spaced over that fixed horizon:
 
-[
+$$
 H_k=\frac{k}{K}H_K,\qquad k=1,\ldots,K.
-]
+$$
 
-Thus changing (K) in a declared resolution experiment changes trajectory resolution without silently changing the terminal horizon.
+Thus changing $K$ in a declared resolution experiment changes trajectory resolution without silently changing the terminal horizon.
 
 Every generated synthetic action is admitted to the ledger; action coverage is fixed at 1.0 and no hidden action subsampling occurs.
 
@@ -1140,11 +1130,11 @@ Every generated synthetic action is admitted to the ledger; action coverage is f
 * `Intrinsic safety impossibility`: intrinsic-risk boundary;
 * `Near numerical degeneracy`: extreme small cells/timing;
 * `Same endpoint without timing information`: same-endpoint zero-timing control;
-* `Same endpoint with timing information`: same ((A,G,c)), positive timing-information counterpart.
+* `Same endpoint with timing information`: same $(A,G,c)$, positive timing-information counterpart.
 
 ## 5.3 Derived minimum-information laws
 
-For observed masses ((a_k,b_k,c)), define:
+For observed masses $(a_k,b_k,c)$, define:
 
 ```text
 Minimum-information completion of <law name>
@@ -1152,19 +1142,19 @@ Minimum-information completion of <law name>
 
 by setting
 
-[
+$$
 u=u^\dagger=\frac{Ac}{A+G}
-]
+$$
 
 while preserving every observable mass.
 
-The full-law path information is exactly (\tau).
+The full-law path information is exactly $\tau$.
 
 These laws are used only in declared compatibility-boundary stress tests.
 
 ## 5.4 K-scaling laws
 
-For each (K) in `partitions.computational_scaling_resolved_bands`, regenerate the same conditional-law functional form with unchanged:
+For each $K$ in `partitions.computational_scaling_resolved_bands`, regenerate the same conditional-law functional form with unchanged:
 
 ```text
 theta
@@ -1174,17 +1164,17 @@ lambda1
 lambda0
 ```
 
-and only change (K).
+and only change $K$.
 
 ## 5.5 Stochastic stream generation
 
 For each event:
 
 1. sample
-   [
+   $$
    L\sim\operatorname{Bernoulli}(\theta);
-   ]
-2. conditional on (L), sample (J);
+   $$
+2. conditional on $L$, sample $J$;
 3. reveal `(J,L)` when finite;
 4. reveal only `infinity` when terminal unresolved.
 
@@ -1210,7 +1200,7 @@ issue_age_unit    = t
 maturity_age_unit = t + H_K
 ```
 
-For resolved band (k):
+For resolved band $k$:
 
 ```text
 adjudication_completion_age = t + H_k
@@ -1256,43 +1246,43 @@ The canonical category order is exactly:
 (1,1),(1,0),(2,1),(2,0),...,infinity
 ```
 
-For total count (n) and target category probabilities (p_j):
+For total count $n$ and target category probabilities $p_j$:
 
-1. compute exact quotas (q_j=np_j);
-2. assign (f_j=\lfloor q_j\rfloor);
+1. compute exact quotas $q_j=np_j$;
+2. assign $f_j=\lfloor q_j\rfloor$;
 3. let
-   [
+   $$
    r=n-\sum_j f_j;
-   ]
-4. assign one additional count to the (r) categories having the largest fractional remainders (q_j-f_j);
+   $$
+4. assign one additional count to the $r$ categories having the largest fractional remainders $q_j-f_j$;
 5. break equal-remainder ties by canonical category order.
 
 ### Balanced-prefix construction
 
-For deterministic sequential constructions, let (C_{j,t}) be the count of category (j) after (t) events, with (C_{j,0}=0).
+For deterministic sequential constructions, let $C_{j,t}$ be the count of category $j$ after $t$ events, with $C_{j,0}=0$.
 
-For each (t=1,\ldots,n), append the category
+For each $t=1,\ldots,n$, append the category
 
-[
+$$
 j_t=
-\arg\max_j\left{
+\arg\max_j\left\{
 t,p_j-C_{j,t-1}
-\right}.
-]
+\right\}.
+$$
 
 Any exact tie is broken by canonical category order.
 
 Then set
 
-[
+$$
 C_{j_t,t}=C_{j_t,t-1}+1
-]
+$$
 
 and leave all other category counts unchanged.
 
 The resulting sequence is the authoritative `balanced-prefix construction`. It is deterministic for a fixed probability vector and category ordering.
 
-When a construction first specifies exact terminal counts rather than probabilities, define target probabilities as those exact counts divided by (n), then apply the same balanced-prefix rule. Its final prefix must reproduce the supplied exact counts; otherwise preprocessing is invalid.
+When a construction first specifies exact terminal counts rather than probabilities, define target probabilities as those exact counts divided by $n$, then apply the same balanced-prefix rule. Its final prefix must reproduce the supplied exact counts; otherwise preprocessing is invalid.
 
 # 6. Dataset Authority and Real-Trajectory Decision
 
@@ -1367,32 +1357,31 @@ A future real study is a separate study and does not alter the current synthetic
 
 ## 7.1 Complete-case arrival-only
 
-[
+$$
 \hat\theta_{\text{complete}}
-============================
-
+=
 \frac{A}{A+G}
-]
+$$
 
-when (A+G>0).
+when $A+G>0$.
 
 Terminal unresolved mass is ignored. This is an optimistic descriptive reference, not a PIS certificate.
 
 ## 7.2 Unresolved-as-harm worst case
 
-[
+$$
 \theta_U^{\text{worst}}=A+c.
-]
+$$
 
 This is assumption-free.
 
 ## 7.3 Endpoint-only path information
 
-All finite bands are merged into (K=1) using the same numerical (\rho). Because
+All finite bands are merged into $K=1$ using the same numerical $\rho$. Because
 
-[
+$$
 \tau=0,
-]
+$$
 
 this isolates the value of resolved timing.
 
@@ -1400,41 +1389,37 @@ this isolates the value of resolved timing.
 
 Define:
 
-[
+$$
 A_k^+=\sum_{j>k}a_j,
 \qquad
 B_k^+=\sum_{j>k}b_j.
-]
+$$
 
-For candidate hidden mass (u),
+For candidate hidden mass $u$,
 
-[
+$$
 h_{1k}(u)
-=========
-
+=
 \frac{a_k}{a_k+A_k^++u},
-]
+$$
 
-[
+$$
 h_{0k}(u)
-=========
-
+=
 \frac{b_k}{b_k+B_k^++c-u}.
-]
+$$
 
 Response-hazard odds ratio:
 
-[
+$$
 \psi_k(u)
-=========
-
+=
 \frac{h_{1k}/(1-h_{1k})}
 {h_{0k}/(1-h_{0k})}
-===================
-
+=
 \frac{a_k(B_k^++c-u)}
 {b_k(A_k^++u)}.
-]
+$$
 
 When both outcome-specific response hazards are structurally zero:
 
@@ -1448,13 +1433,13 @@ Other structural-zero cases use exact extended-real limits.
 
 Feasibility requires
 
-[
+$$
 \Gamma^{-1}\le\psi_k(u)\le\Gamma
-]
+$$
 
 for every informative band.
 
-No universal mapping between (\Gamma) and (\rho) is reported.
+No universal mapping between $\Gamma$ and $\rho$ is reported.
 
 The feasible interval is solved analytically from the linear-rational inequalities when denominators are positive; boundary cases use exact limits. No numerical optimizer default is used.
 
@@ -1462,76 +1447,73 @@ The feasible interval is solved analytically from the linear-rational inequaliti
 
 For each configured pair
 
-[
+$$
 (\Gamma,q)
 \in
-\texttt{legacy_partition_incoherence.gamma_values}
+\texttt{legacy\_partition\_incoherence.gamma\_values}
 \times
-\texttt{legacy_partition_incoherence.q_values},
-]
+\texttt{legacy\_partition\_incoherence.q\_values},
+$$
 
 construct a two-band full law with
 
-[
+$$
 P(L=1)=P(L=0)=0.5.
-]
+$$
 
 Define the odds-shift operation
 
-[
+$$
 T(q,\gamma)
-===========
-
+=
 \frac{\gamma q}{1-q+\gamma q}.
-]
+$$
 
-For (L=0), set conditional response hazards
+For $L=0$, set conditional response hazards
 
-[
+$$
 h_{01}=q,
 \qquad
 h_{02}=q.
-]
+$$
 
-For (L=1), set
+For $L=1$, set
 
-[
+$$
 h_{11}=T(q,\Gamma),
 \qquad
 h_{12}=T(q,\Gamma^{-1}).
-]
+$$
 
 The full-law masses are:
 
-[
+$$
 P(J=1,L=\ell)=P(L=\ell)h_{\ell1},
-]
+$$
 
-[
+$$
 P(J=2,L=\ell)
-=============
-
+=
 P(L=\ell)(1-h_{\ell1})h_{\ell2},
-]
+$$
 
-[
+$$
 P(J=\infty,L=\ell)
-==================
-
+=
 P(L=\ell)(1-h_{\ell1})(1-h_{\ell2}).
-]
+$$
 
 Under the fine two-band representation, the true hidden terminal harmful mass satisfies exactly:
 
-[
+$$
 \psi_1=\Gamma,
 \qquad
 \psi_2=\Gamma^{-1},
-]
+$$
 
 so the fine legacy model is compatible at the true completion.
 
-The same observable law is then coarsened to the endpoint-only partition and evaluated under the identical numerical (\Gamma).
+The same observable law is then coarsened to the endpoint-only partition and evaluated under the identical numerical $\Gamma$.
 
 The counterexample passes when:
 
@@ -1545,41 +1527,41 @@ The exact direction and magnitude of the set difference are reported; only non-i
 
 ## 7.5 ALHO common-slope callback
 
-For candidate (u), define
+For candidate $u$, define
 
-[
+$$
 g_k(u)=\log\psi_k(u)
-]
+$$
 
-for every informative band with finite positive (\psi_k), and
+for every informative band with finite positive $\psi_k$, and
 
-[
+$$
 Q(u)=
 \sum_k
 (g_k(u)-\bar g(u))^2.
-]
+$$
 
 The model is compatible when an accepted root satisfies:
 
-[
-Q(u)\le\texttt{numerics.callback_q_acceptance}.
-]
+$$
+Q(u)\le\texttt{numerics.callback\_q\_acceptance}.
+$$
 
 `numerics.callback_q_acceptance` is the common-slope acceptance tolerance.
 
 Algorithm:
 
 1. use `numerics.oracle_decimal_digits` decimal digits;
-2. evaluate exactly `numerics.callback_grid_points` equally spaced (u) points including `0` and `c`;
+2. evaluate exactly `numerics.callback_grid_points` equally spaced $u$ points including `0` and `c`;
 3. every point no greater than available immediate neighbors defines a local minimization bracket;
 4. endpoints are brackets when locally minimal;
 5. apply deterministic golden-section minimization;
 6. stop when bracket width is no greater than `numerics.callback_golden_section_width`;
-7. accept if (Q(u)\le\texttt{numerics.callback_q_acceptance});
+7. accept if $Q(u)\le\texttt{numerics.callback\_q\_acceptance}$;
 8. sort accepted roots;
 9. deduplicate roots whose absolute difference is no greater than `numerics.callback_root_dedup_tolerance`, retaining the smaller root;
 10. if no accepted root, return `MODEL_INCOMPATIBLE`;
-11. risk set is the convex hull of (A+u) over accepted roots.
+11. risk set is the convex hull of $A+u$ over accepted roots.
 
 If fewer than two informative bands remain:
 
@@ -1589,31 +1571,31 @@ NOT_APPLICABLE
 
 ## 7.6 Stable-resistance callback
 
-For (K\ge2), impose
+For $K\ge2$, impose
 
-[
+$$
 \log\psi_1(u)=\log\psi_2(u).
-]
+$$
 
 Define residual
 
-[
+$$
 E(u)=\left|\log\psi_1(u)-\log\psi_2(u)\right|.
-]
+$$
 
-Use the same high-precision grid/local-minimization procedure as Section 7.5, replacing (Q) by (E).
+Use the same high-precision grid/local-minimization procedure as Section 7.5, replacing $Q$ by $E$.
 
 Accept a root when
 
-[
-E(u)\le\texttt{numerics.callback_equality_tolerance}.
-]
+$$
+E(u)\le\texttt{numerics.callback\_equality\_tolerance}.
+$$
 
 Sort and deduplicate accepted roots using `numerics.callback_root_dedup_tolerance`.
 
 Attempts after the second add no identifying equality restriction.
 
-If (K<2):
+If $K<2$:
 
 ```text
 NOT_APPLICABLE
@@ -1621,22 +1603,21 @@ NOT_APPLICABLE
 
 ## 7.7 Binary repeated-attempt pattern mixture
 
-For nonempty finite band (k),
+For nonempty finite band $k$,
 
-[
+$$
 r_k=\frac{a_k}{m_k}.
-]
+$$
 
 Fit
 
-[
+$$
 \operatorname{logit}(r_k)
-=========================
-
+=
 \zeta_0+\zeta_1k
-]
+$$
 
-using weighted Bernoulli cross-entropy with weight (m_k).
+using weighted Bernoulli cross-entropy with weight $m_k$.
 
 The optimizer is fixed to `L-BFGS-B`.
 
@@ -1644,22 +1625,22 @@ Coefficient bounds, convergence tolerances, iteration limit, and initial slope a
 
 Initialization:
 
-[
+$$
 \zeta_1=0,
-]
+$$
 
-[
+$$
 \zeta_0=
 \operatorname{logit}
 \left[
 \operatorname{clip}
 \left(
 \frac{A}{A+G},
-\texttt{numerics.pattern_mixture_initial_probability_clip},
-1-\texttt{numerics.pattern_mixture_initial_probability_clip}
+\texttt{numerics.pattern\_mixture\_initial\_probability\_clip},
+1-\texttt{numerics.pattern\_mixture\_initial\_probability\_clip}
 \right)
 \right].
-]
+$$
 
 Successful fit requires:
 
@@ -1675,18 +1656,17 @@ Otherwise:
 BASELINE_NUMERICALLY_UNSTABLE
 ```
 
-For sensitivity (C),
+For sensitivity $C$,
 
-[
+$$
 r_\infty(C)
-===========
-
+=
 \operatorname{expit}{\zeta_0+\zeta_1(K+C)},
-]
+$$
 
-[
+$$
 \theta(C)=A+c,r_\infty(C).
-]
+$$
 
 If fewer than two nonempty finite bands exist:
 
@@ -1696,20 +1676,19 @@ NOT_APPLICABLE
 
 ## 7.8 Generic full-law information oracle
 
-The independent oracle constructs the full (2\times(K+1)) table directly.
+The independent oracle constructs the full $2\times(K+1)$ table directly.
 
-For candidate (u),
+For candidate $u$,
 
-[
+$$
 I(L;J)
-======
-
+=
 \sum_{\ell,j}
 p_{\ell j}
 \log
 \frac{p_{\ell j}}
 {p_{\ell+}p_{+j}}.
-]
+$$
 
 The oracle may use the mathematical fact that the feasible set is an interval, but it may not import or call the production information-profile, derivative, minimizer, or production root-solving implementation.
 
@@ -1724,22 +1703,22 @@ The oracle uses `mpmath` at exactly `numerics.oracle_decimal_digits` decimal dig
 
 Its independent algorithm is:
 
-1. construct the full table directly from ((a_k,b_k,c,u));
+1. construct the full table directly from $(a_k,b_k,c,u)$;
 2. evaluate mutual information using the table formula above with exact zero-cell limits;
-3. locate the global minimum over ([0,c]) using an independently implemented golden-section search on the direct table objective;
-4. stop minimum search when its (u)-bracket width is no greater than `numerics.oracle_boundary_bracket_width`;
-5. let (I_{\min}) be the minimum direct-table value at the midpoint;
+3. locate the global minimum over $[0,c]$ using an independently implemented golden-section search on the direct table objective;
+4. stop minimum search when its $u$-bracket width is no greater than `numerics.oracle_boundary_bracket_width`;
+5. let $I_{\min}$ be the minimum direct-table value at the midpoint;
 6. define the oracle equality tolerance as
-   [
-   \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle_decimal_digits}/2\rfloor};
-   ]
-7. if (\rho<I_{\min}-\epsilon_{\text{oracle}}), return `MODEL_INCOMPATIBLE`;
-8. if (|\rho-I_{\min}|\le\epsilon_{\text{oracle}}), return the singleton minimum bracket midpoint as both endpoints;
-9. otherwise solve the left and right direct-table equations (I(L;J)=\rho) by independent bisection on the two sides of the minimum;
+   $$
+   \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle\_decimal\_digits}/2\rfloor};
+   $$
+7. if $\rho<I_{\min}-\epsilon_{\text{oracle}}$, return `MODEL_INCOMPATIBLE`;
+8. if $|\rho-I_{\min}|\le\epsilon_{\text{oracle}}$, return the singleton minimum bracket midpoint as both endpoints;
+9. otherwise solve the left and right direct-table equations $I(L;J)=\rho$ by independent bisection on the two sides of the minimum;
 10. terminate each boundary bisection when its bracket width is no greater than `numerics.oracle_boundary_bracket_width`;
 11. return boundary bracket midpoints and retain the complete boundary brackets for validation.
 
-This procedure detects the (\rho=\tau) tangent/singleton case explicitly and therefore does not depend on arbitrary subdivision discovering a zero-width feasible component.
+This procedure detects the $\rho=\tau$ tangent/singleton case explicitly and therefore does not depend on arbitrary subdivision discovering a zero-width feasible component.
 
 Production endpoints must agree with oracle endpoints within `numerics.deterministic_identity_tolerance`.
 
@@ -1771,51 +1750,51 @@ Time-uniform observable-law projection
 
 means the raw valid projected upper bound and its coverage diagnostics without TrajCert operational-state interpretation.
 
-The numerical (U_n(\rho)) calculation is shared by dependency identity and is never redundantly recomputed merely because both method labels are reported.
+The numerical $U_n(\rho)$ calculation is shared by dependency identity and is never redundantly recomputed merely because both method labels are reported.
 
 No sequential-method novelty is claimed.
 
 ## 7.10 Repeated-static-monitoring negative control
 
-At every matured (n), for category count (s) and (\hat p=s/n), use a Wilson score interval with per-category two-sided confidence level
+At every matured $n$, for category count $s$ and $\hat p=s/n$, use a Wilson score interval with per-category two-sided confidence level
 
-[
+$$
 1-\frac{\delta}{d}.
-]
+$$
 
 Let
 
-[
+$$
 z=
 \Phi^{-1}
 \left(
 1-\frac{\delta}{2d}
 \right).
-]
+$$
 
 Then
 
-[
+$$
 center=
 \frac{
 \hat p+z^2/(2n)
 }{
 1+z^2/n
 },
-]
+$$
 
-[
+$$
 half=
 \frac{z}{1+z^2/n}
 \sqrt{
 \frac{\hat p(1-\hat p)}{n}
 +\frac{z^2}{4n^2}
 }.
-]
+$$
 
 Clip only interval endpoints to `[0,1]`.
 
-At each individual (n), apply Bonferroni across categories and project through the same outer routine. No across-time correction is applied.
+At each individual $n$, apply Bonferroni across categories and project through the same outer routine. No across-time correction is applied.
 
 This comparator is deliberately invalid under continuous monitoring and can never support deployment.
 
@@ -1823,15 +1802,15 @@ This comparator is deliberately invalid under continuous monitoring and can neve
 
 Applicable only when truth satisfies
 
-[
+$$
 L\perp J.
-]
+$$
 
 Among matured events, maintain the Jeffreys beta-binomial mixture confidence sequence defined in Section 9.2 on the binary harmful/correct outcome using only resolved labels.
 
-At matured time (n):
+At matured time $n$:
 
-* (m_n) is the resolved count;
+* $m_n$ is the resolved count;
 * update the Bernoulli CS only when a resolved label appears;
 * retain the previous CS on unresolved updates;
 * use its upper endpoint as the risk upper under the ignorable assumption.
@@ -1856,40 +1835,40 @@ Same Endpoint, Different Timing
 rho = log(2)
 ```
 
-The last uses the exact binary maximum-information budget (\log 2) and removes the effective PIS restriction for binary (L).
+The last uses the exact binary maximum-information budget $\log 2$ and removes the effective PIS restriction for binary $L$.
 
 # 8. Metrics and Aggregation
 
 | Metric                                          | Definition                                    | Direction                                |
 | ----------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
-| `Latent error risk`                             | (\theta=A+u)                                  | lower safer                              |
-| `Observed timing information`                   | (\tau)                                        | descriptive                              |
-| `Conditional timing gain`                       | (\Delta\tau)                                  | larger indicates more timing information |
-| `Minimum compatible sensitivity budget`         | (\tau)                                        | descriptive                              |
-| `Minimum-information risk`                      | (\theta^\dagger)                              | lower safer                              |
-| `Risk lower bound`                              | (A+u_L)                                       | descriptive                              |
-| `Risk upper bound`                              | (A+u_U)                                       | lower better                             |
-| `Identified-set width`                          | (u_U-u_L)                                     | lower tighter                            |
-| `Safety-frontier sensitivity budget`            | (\rho^\star)                                  | larger more robust                       |
-| `Anytime upper risk`                            | proven (U_n(\rho))                            | lower better                             |
-| `Anytime compatibility floor`                   | certified lower envelope of (\tau)            | descriptive                              |
-| `Ever-violation indicator`                      | (\mathbf1{\exists n:\theta>U_n})              | lower                                    |
+| `Latent error risk`                             | $\theta=A+u$                                  | lower safer                              |
+| `Observed timing information`                   | $\tau$                                        | descriptive                              |
+| `Conditional timing gain`                       | $\Delta\tau$                                  | larger indicates more timing information |
+| `Minimum compatible sensitivity budget`         | $\tau$                                        | descriptive                              |
+| `Minimum-information risk`                      | $\theta^\dagger$                              | lower safer                              |
+| `Risk lower bound`                              | $A+u_L$                                       | descriptive                              |
+| `Risk upper bound`                              | $A+u_U$                                       | lower better                             |
+| `Identified-set width`                          | $u_U-u_L$                                     | lower tighter                            |
+| `Safety-frontier sensitivity budget`            | $\rho^\star$                                  | larger more robust                       |
+| `Anytime upper risk`                            | proven $U_n(\rho)$                            | lower better                             |
+| `Anytime compatibility floor`                   | certified lower envelope of $\tau$            | descriptive                              |
+| `Ever-violation indicator`                      | $\mathbf1\{\exists n:\theta>U_n\}$              | lower                                    |
 | `Bound gain versus endpoint-only`               | endpoint upper minus fine upper               | higher better                            |
-| `Absolute tightening versus unresolved-as-harm` | ((A+c)-\theta_U)                              | higher better                            |
-| `Relative unresolved-mass gain`                 | (((A+c)-\theta_U)/c)                          | higher better                            |
-| `Time to first certification`                   | first eligible certified (n)                  | lower better                             |
+| `Absolute tightening versus unresolved-as-harm` | $(A+c)-\theta_U$                              | higher better                            |
+| `Relative unresolved-mass gain`                 | $((A+c)-\theta_U)/c$                          | higher better                            |
+| `Time to first certification`                   | first eligible certified $n$                  | lower better                             |
 | `Certified update fraction`                     | certified eligible updates / eligible updates | higher better                            |
 | `State frequency`                               | state count / eligible updates                | descriptive                              |
-| `Compatibility-budget consumption`              | (\tau/\rho)                                   | descriptive                              |
+| `Compatibility-budget consumption`              | $\tau/\rho$                                   | descriptive                              |
 | `Oracle absolute error`                         | production-oracle absolute difference         | lower                                    |
 | `Runtime seconds`                               | monotonic elapsed target-computation time     | lower                                    |
 | `Peak RSS MiB`                                  | peak resident memory                          | lower                                    |
 
 For `Time to first certification`, a never-certified stream receives
 
-[
+$$
 N_{\max}+1
-]
+$$
 
 only in numeric comparison statistics.
 
@@ -1903,7 +1882,7 @@ never_certified=true
 
 ## 8.1 Undefined behavior
 
-If (A+G=0):
+If $A+G=0$:
 
 ```text
 tau = null
@@ -1913,28 +1892,28 @@ theta_dagger = null
 
 and finite-sample substantive state cannot be assigned.
 
-If (c=0):
+If $c=0$:
 
-[
+$$
 u=0
-]
+$$
 
-and the risk set is ({A}).
+and the risk set is $\{A\}$.
 
-If (m_k=0):
+If $m_k=0$:
 
 ```text
 r_k = null
 entropy contribution = 0
 ```
 
-If (\rho=0):
+If $\rho=0$:
 
 ```text
 Compatibility-budget consumption = null
 ```
 
-For `Relative unresolved-mass gain`, if (c=0):
+For `Relative unresolved-mass gain`, if $c=0$:
 
 ```text
 relative_unresolved_gain = null
@@ -1961,81 +1940,77 @@ Monitoring times within one stream and optimizer evaluations are never independe
 
 ## 9.2 Categorical confidence sequence
 
-For (K) finite bands, let
+For $K$ finite bands, let
 
-[
-\delta=\texttt{confidence.anytime_delta}
-]
+$$
+\delta=\texttt{confidence.anytime\_delta}
+$$
 
 and
 
-[
+$$
 d=2K+1.
-]
+$$
 
 Categories:
 
-[
+$$
 (1,1),(1,0),\ldots,(K,1),(K,0),\infty.
-]
+$$
 
-At matured (n), category (j) has count (S_{j,n}).
+At matured $n$, category $j$ has count $S_{j,n}$.
 
-For (p\in(0,1)),
+For $p\in(0,1)$,
 
-[
+$$
 \log M_{j,n}(p)
-===============
-
+=
 \operatorname{betaln}
 \left(
 S_{j,n}+\frac12,
 n-S_{j,n}+\frac12
 \right)
--------
-
+-
 \operatorname{betaln}
 \left(
 \frac12,\frac12
 \right)
--------
-
-## S_{j,n}\log p
-
+-
+S_{j,n}\log p
+-
 (n-S_{j,n})\log(1-p).
-]
+$$
 
 Per-category allocation:
 
-[
+$$
 \alpha_j=\frac{\delta}{d}.
-]
+$$
 
 Raw confidence set:
 
-[
+$$
 C^{raw}_{j,n}
-=============
-
-\left{
+=
+\left\{
 p:
 \log M_{j,n}(p)
 <
 \log\frac{d}{\delta}
-\right}.
-]
+\right\}.
+$$
 
 The stored numerical interval is the closure of this set; inclusion of an equality boundary is conservative.
 
-At (p=0) and (p=1), exact limiting likelihood values are used; `log(0)` is never numerically evaluated.
+At $p=0$ and $p=1$, exact limiting likelihood values are used; `log(0)` is never numerically evaluated.
 
 ### Endpoint inversion
 
 For each non-boundary endpoint, maintain a sign-valid bisection bracket around the root of
 
-[
+$$
 \log M_{j,n}(p)-\log(d/\delta)=0.
-]
+$$
 
 Stop only when bracket width is no greater than `numerics.anytime_category_root_tolerance`.
 
@@ -2052,13 +2027,12 @@ Never return an inward midpoint as a stored CS endpoint.
 
 Running interval:
 
-[
+$$
 C_{j,n}
-=======
-
+=
 \bigcap_{t\le n}
 C^{raw}_{j,t}.
-]
+$$
 
 Numerically:
 
@@ -2069,25 +2043,24 @@ running upper = min(previous running upper, current raw upper)
 
 Simultaneous region:
 
-[
+$$
 \mathcal C_n^{rect}
-===================
-
-\left{
+=
+\left\{
 p:
 \ell_{j,n}\le p_j\le u_{j,n},
 \quad
 p_j\ge0,
 \quad
 \sum_jp_j=1
-\right}.
-]
+\right\}.
+$$
 
 Simplex feasibility for a rectangular interval vector is tested exactly by:
 
-[
+$$
 \sum_j\ell_{j,n}\le1\le\sum_j u_{j,n}.
-]
+$$
 
 The running intersection and simplex intersection are mandatory parts of the procedure.
 
@@ -2105,29 +2078,29 @@ and the owning execution cell becomes `FAILED`.
 
 Compute
 
-[
+$$
 A_L=\sum_k\ell_{a_k},
 \qquad
 A_U=\sum_ku_{a_k},
-]
+$$
 
-[
+$$
 G_L=\sum_k\ell_{b_k},
 \qquad
 G_U=\sum_ku_{b_k}.
-]
+$$
 
 Terminal mass additionally satisfies
 
-[
+$$
 c=1-A-G
-]
+$$
 
 and the terminal-category interval.
 
 Define
 
-[
+$$
 q(a,b)=
 \begin{cases}
 -a\log\frac{a}{a+b}
@@ -2135,30 +2108,30 @@ q(a,b)=
 &a+b>0,\
 0,&a=b=0.
 \end{cases}
-]
+$$
 
 Then
 
-[
+$$
 C_L=\sum_kq(\ell_{a_k},\ell_{b_k}),
-]
+$$
 
-[
+$$
 C_U=\sum_kq(u_{a_k},u_{b_k}).
-]
+$$
 
 Use
 
-[
+$$
 \mathcal E_n=
-\left{
+\left\{
 (A,G,C):
 A\in[A_L,A_U],
 G\in[G_L,G_U],
 c=1-A-G\in[c_L,c_U],
 C\in[C_L,C_U]
-\right}.
-]
+\right\}.
+$$
 
 The finite-sample procedure claims validity, not shortest possible width.
 
@@ -2166,39 +2139,37 @@ The finite-sample procedure claims validity, not shortest possible width.
 
 Define
 
-[
+$$
 S(A,G,C,u)
-==========
-
-## h(A+u)
-
-## C
-
+=
+h(A+u)
+-
+C
+-
 c,h(u/c),
 \qquad
 c=1-A-G.
-]
+$$
 
 Then
 
-[
+$$
 U_n(\rho)
-=========
-
+=
 \sup
-\left{
+\left\{
 A+u:
 (A,G,C)\in\mathcal E_n,
 0\le u\le c,
 S(A,G,C,u)\le\rho
-\right}.
-]
+\right\}.
+$$
 
-Because (S) is decreasing in (C), optimization sets
+Because $S$ is decreasing in $C$, optimization sets
 
-[
+$$
 C=C_U.
-]
+$$
 
 Deterministic interval branch-and-bound:
 
@@ -2214,25 +2185,25 @@ u in [0,1]
 ```
 
 5. intersect with
-   [
+   $$
    A\ge0,\quad G\ge0,\quad A+G\le1,
-   ]
-   [
+   $$
+   $$
    c\in[c_L,c_U],
    \quad
    0\le u\le c;
-   ]
-6. if an interval for (c) crosses exactly zero, split at `c=0` before terminal entropy evaluation;
+   $$
+6. if an interval for $c$ crosses exactly zero, split at `c=0` before terminal entropy evaluation;
 7. use exact continuous entropy extensions on boundary boxes;
-8. prune when the interval lower bound of (S) exceeds (\rho);
+8. prune when the interval lower bound of $S$ exceeds $\rho$;
 9. objective upper bound is
-   [
+   $$
    \min(1,A_{hi}+u_{hi});
-   ]
+   $$
 10. generate feasible incumbents from box midpoints;
-11. for midpoint ((A,G)), compute the maximal feasible (u) with (C=C_U) by deterministic upper-branch bisection using the same mathematical profile (S(A,G,C_U,u));
+11. for midpoint $(A,G)$, compute the maximal feasible $u$ with $C=C_U$ by deterministic upper-branch bisection using the same mathematical profile $S(A,G,C_U,u)$;
 12. the scalar incumbent bisection stops at `numerics.population_root_absolute_tolerance`;
-13. an incumbent is accepted only when direct Arb evaluation gives an upper bound on (S) no greater than (\rho);
+13. an incumbent is accepted only when direct Arb evaluation gives an upper bound on $S$ no greater than $\rho$;
 14. normalized coordinate width is physical box width divided by that coordinate's width in the initial box;
 15. if an initial coordinate width is zero, its normalized width is zero;
 16. split the coordinate with longest normalized width;
@@ -2242,13 +2213,13 @@ u in [0,1]
 A, then G, then u
 ```
 
-18. let (U_{\text{queue}}) be the largest objective upper bound among surviving boxes and (L_{\text{feasible}}) the largest verified feasible incumbent;
+18. let $U_{\text{queue}}$ be the largest objective upper bound among surviving boxes and $L_{\text{feasible}}$ the largest verified feasible incumbent;
 19. stop when
-    [
+    $$
     U_{\text{queue}}-L_{\text{feasible}}
     \le
-    \texttt{numerics.outer_certified_gap};
-    ]
+    \texttt{numerics.outer\_certified\_gap};
+    $$
 20. stop at `numerics.outer_max_visited_nodes` if not already converged.
 
 On node cap, arithmetic failure, or unresolved interval ambiguity:
@@ -2272,43 +2243,41 @@ termination_reason
 
 ## 9.5 Finite-sample compatibility
 
-For (A+G>0),
+For $A+G>0$,
 
-[
+$$
 \tau(A,G,C)
-===========
-
+=
 (A+G)
 h\left(\frac{A}{A+G}\right)-C.
-]
+$$
 
 Compute
 
-[
+$$
 \underline\rho_n^{comp}
-=======================
-
+=
 \inf_{(A,G,C)\in\mathcal E_n}\tau(A,G,C).
-]
+$$
 
-Because (\tau) decreases in (C), the infimum uses (C=C_U).
+Because $\tau$ decreases in $C$, the infimum uses $C=C_U$.
 
-The certified lower bound is computed by deterministic Arb branch-and-bound over ((A,G)):
+The certified lower bound is computed by deterministic Arb branch-and-bound over $(A,G)$:
 
-1. initial box is ([A_L,A_U]\times[G_L,G_U]);
-2. enforce (A\ge0), (G\ge0), (A+G\le1), and (1-A-G\in[c_L,c_U]);
-3. evaluate an Arb enclosure of (\tau(A,G,C_U)) on every box;
+1. initial box is $[A_L,A_U]\times[G_L,G_U]$;
+2. enforce $A\ge0$, $G\ge0$, $A+G\le1$, and $1-A-G\in[c_L,c_U]$;
+3. evaluate an Arb enclosure of $\tau(A,G,C_U)$ on every box;
 4. maintain:
 
    * `global_lower` = minimum lower endpoint over all surviving boxes;
    * `feasible_upper` = smallest verified point value found;
-5. split by longest normalized (A/G) width with tie order `A`, then `G`;
+5. split by longest normalized $A/G$ width with tie order `A`, then `G`;
 6. stop when
-   [
-   \texttt{feasible_upper}-\texttt{global_lower}
+   $$
+   \texttt{feasible\_upper}-\texttt{global\_lower}
    \le
-   \texttt{numerics.outer_certified_gap};
-   ]
+   \texttt{numerics.outer\_certified\_gap};
+   $$
 7. use the same node cap and exact Arb precision as Section 9.4;
 8. on node cap or ambiguity, return the current `global_lower`.
 
@@ -2316,49 +2285,48 @@ The returned value is always a **proven lower bound**, even when the optimizatio
 
 `MODEL_INCOMPATIBLE` requires
 
-[
+$$
 \underline\rho_n^{comp}
 
 >
 
 \rho_{\text{deploy}}
 +
-\texttt{numerics.scientific_comparison_guard}.
-]
+\texttt{numerics.scientific\_comparison\_guard}.
+$$
 
 ## 9.6 Finite-sample intrinsic impossibility
 
 Define
 
-[
+$$
 \theta^\dagger(A,G)
-===================
-
+=
 \frac{A}{A+G}.
-]
+$$
 
-The compatible subset consists of ((A,G)) for which there exists (u\in[0,c]) with
+The compatible subset consists of $(A,G)$ for which there exists $u\in[0,c]$ with
 
-[
+$$
 S(A,G,C_U,u)\le\rho.
-]
+$$
 
 Compute a certified lower bound
 
-[
+$$
 \underline\theta_n^\dagger.
-]
+$$
 
-Use deterministic Arb branch-and-bound over ((A,G,u)):
+Use deterministic Arb branch-and-bound over $(A,G,u)$:
 
-1. initial domains are the same (A,G,u) domains as Section 9.4;
+1. initial domains are the same $A,G,u$ domains as Section 9.4;
 2. enforce the envelope and simplex constraints;
-3. prune a box when the interval lower bound of (S(A,G,C_U,u)) exceeds (\rho);
-4. for each surviving box with (A+G) bounded strictly above zero, compute an interval enclosure of
-   [
+3. prune a box when the interval lower bound of $S(A,G,C_U,u)$ exceeds $\rho$;
+4. for each surviving box with $A+G$ bounded strictly above zero, compute an interval enclosure of
+   $$
    \frac{A}{A+G};
-   ]
-5. if any surviving compatible-plausible box includes (A+G=0), set
+   $$
+5. if any surviving compatible-plausible box includes $A+G=0$, set
 
    ```text
    zero_resolved_mass_plausible = true
@@ -2378,13 +2346,11 @@ Use deterministic Arb branch-and-bound over ((A,G,u)):
 
 * evidence gates passed;
 * `zero_resolved_mass_plausible=false`;
-* [
+* $$
   \underline\theta_n^\dagger
-
   >
-
-  \beta+\texttt{numerics.scientific_comparison_guard}.
-  ]
+  \beta+\texttt{numerics.scientific\_comparison\_guard}.
+  $$
 
 ## 9.7 Evidence gate, failure precedence, and scientific-state precedence
 
@@ -2439,53 +2405,51 @@ There is no separate minimum harmful-event-count gate.
 
 After all preceding checks:
 
-1. certified incompatibility lower bound above (\rho) → `MODEL_INCOMPATIBLE`;
-2. otherwise certified intrinsic-risk lower bound above (\beta) → `INTRINSICALLY_UNCERTIFIABLE`;
+1. certified incompatibility lower bound above $\rho$ → `MODEL_INCOMPATIBLE`;
+2. otherwise certified intrinsic-risk lower bound above $\beta$ → `INTRINSICALLY_UNCERTIFIABLE`;
 3. otherwise if
-   [
+   $$
    U_n(\rho)\le\beta,
-   ]
+   $$
    → `CERTIFIED`;
 4. otherwise → `UNCERTIFIED`.
 
 ## 9.8 Clopper-Pearson validation
 
-For (m) independent streams and (v) ever-violation streams, let
+For $m$ independent streams and $v$ ever-violation streams, let
 
-[
+$$
 q_{CP}
-======
-
-\texttt{sequential_inference.coverage_validation.clopper_pearson_confidence}.
-]
+=
+\texttt{sequential\_inference.coverage\_validation.clopper\_pearson\_confidence}.
+$$
 
 The exact one-sided confidence limit is
 
-[
+$$
 U_{CP}
-======
-
+=
 \begin{cases}
 1,&v=m,\
 \operatorname{BetaQuantile}(q_{CP};v+1,m-v),&v<m.
 \end{cases}
-]
+$$
 
 Use the inverse regularized incomplete beta function with exactly those arguments.
 
 A primary stress cell passes empirical validation only if
 
-[
+$$
 U_{CP}
 \le
-\texttt{sequential_inference.coverage_validation.acceptance_upper_limit}.
-]
+\texttt{sequential\_inference.coverage\_validation.acceptance\_upper\_limit}.
+$$
 
 The theoretical target remains
 
-[
-\delta=\texttt{confidence.anytime_delta}.
-]
+$$
+\delta=\texttt{confidence.anytime\_delta}.
+$$
 
 The acceptance upper limit is only the Monte Carlo implementation-validation tolerance.
 
@@ -2493,32 +2457,32 @@ Every configured primary TrajCert case in `sequential_stress_cases` must pass.
 
 ## 9.9 Paired practical inference
 
-For favorable-direction paired difference (D_s):
+For favorable-direction paired difference $D_s$:
 
 * upper-risk or time-to-certificate:
-  [
+  $$
   D_s=Y_{\text{baseline},s}-Y_{\text{method},s};
-  ]
+  $$
 * certified fraction:
-  [
+  $$
   D_s=Y_{\text{method},s}-Y_{\text{baseline},s}.
-  ]
+  $$
 
 Positive always favors TrajCert.
 
 Report:
 
-[
+$$
 \bar D,
-]
+$$
 
-sample SD using denominator (n-1),
+sample SD using denominator $n-1$,
 
-[
+$$
 d_z=\frac{\bar D}{s_D}
-]
+$$
 
-when (s_D>0), a paired percentile-bootstrap CI, and a one-sided favorable-direction sign-flip p-value.
+when $s_D>0$, a paired percentile-bootstrap CI, and a one-sided favorable-direction sign-flip p-value.
 
 ### Paired percentile bootstrap
 
@@ -2531,28 +2495,28 @@ For one comparison:
    ```
 2. use seed index `0`;
 3. instantiate the required `PCG64` generator;
-4. for each of exactly `statistics.bootstrap.resamples` resamples, sample (n) pair indices independently with replacement from `0..n-1`;
+4. for each of exactly `statistics.bootstrap.resamples` resamples, sample $n$ pair indices independently with replacement from `0..n-1`;
 5. compute the resampled mean paired difference;
 6. sort all bootstrap means;
-7. for confidence level (1-\alpha), use quantiles (\alpha/2) and (1-\alpha/2);
-8. quantiles use linear interpolation at index ((B-1)q).
+7. for confidence level $1-\alpha$, use quantiles $\alpha/2$ and $1-\alpha/2$;
+8. quantiles use linear interpolation at index $(B-1)q$.
 
 ### Sign-flip test
 
 Define
 
-[
+$$
 T_{\text{obs}}=\bar D.
-]
+$$
 
-For randomization (b):
+For randomization $b$:
 
-1. independently draw signs (\sigma_{s,b}\in{-1,+1}) with probability (1/2);
+1. independently draw signs $\sigma_{s,b}\in\{-1,+1\}$ with probability $1/2$;
 2. define
-   [
+   $$
    T_b=
    \frac1n\sum_s\sigma_{s,b}D_s.
-   ]
+   $$
 
 Use namespace:
 
@@ -2564,20 +2528,20 @@ with seed index `0`.
 
 With
 
-[
-B=\texttt{statistics.sign_flip.randomizations},
-]
+$$
+B=\texttt{statistics.sign\_flip.randomizations},
+$$
 
 the one-sided p-value is
 
-[
+$$
 p=
 \frac{
-1+#{T_b\ge T_{\text{obs}}}
+1+\#\{T_b\ge T_{\text{obs}}\}
 }{
 1+B
 }.
-]
+$$
 
 ### Effect-size edge cases
 
@@ -2618,18 +2582,17 @@ Order the 54 raw p-values ascending.
 
 Raw-p ties are broken by canonical `semantic_comparison_name`, then `metric_name`.
 
-For ordered p-values (p_{(1)},\ldots,p_{(m)}), compute
+For ordered p-values $p_{(1)},\ldots,p_{(m)}$, compute
 
-[
+$$
 \tilde p_{(i)}
-==============
-
+=
 \min\left[
 1,
 \max_{1\le j\le i}
 {(m-j+1)p_{(j)}}
 \right].
-]
+$$
 
 Map adjusted p-values back to their original semantic records.
 
@@ -3205,7 +3168,7 @@ For descriptive names:
 
 For numeric coordinates, use the exact canonical JSON number token produced for the binary64 value.
 
-The exact symbolic endpoint (\log2) is rendered:
+The exact symbolic endpoint $\log2$ is rendered:
 
 ```text
 rho=log2
@@ -3867,7 +3830,7 @@ TrajCert applicability:
 | preprocessing            | synthetic law construction/validation, finest-to-coarse mappings, deterministic hand/count construction                    | prepared laws, observable/full-law tables, partition maps, deterministic count sequences          |
 | training                 | **not applicable**                                                                                                         | none                                                                                              |
 | scoring                  | population solver/oracle/comparator calculations and sequential confidence/envelope/projection calculations                | population summaries, profiles, comparator fits, streams, CS trajectories, envelopes, projections |
-| calibration/thresholding | no learned calibration; (\rho,\beta,\delta), materiality thresholds, and multiplicity rules are prespecified               | no fitted calibration artifact                                                                    |
+| calibration/thresholding | no learned calibration; $\rho,\beta,\delta$, materiality thresholds, and multiplicity rules are prespecified               | no fitted calibration artifact                                                                    |
 | evaluation               | theorem/oracle checks, state assignment, stream metrics, runtime measurements                                              | validated results, stream metrics, validation records, runtime records                            |
 | analysis                 | paired comparisons, bootstrap CIs, sign-flip tests, Holm adjustment, materiality and claim synthesis                       | statistical artifacts, claim-state artifacts, source-data Parquet                                 |
 | reporting                | deterministic rendering/export only                                                                                        | CSV/TeX/SVG/PNG and report summaries                                                              |
@@ -4335,31 +4298,31 @@ The offset semantics are fixed:
 
 `Sharp-Set Constructive Identity`:
 
-[
+$$
 \rho=\tau_\Pi+d,
 \qquad
-d\in\texttt{sensitivity.theorem_rho_offsets.sharp_set}.
-]
+d\in\texttt{sensitivity.theorem\_rho\_offsets.sharp\_set}.
+$$
 
 `Production Solver vs Independent Oracle`:
 
-[
+$$
 \rho=\tau_\Pi+d,
 \qquad
-d\in\texttt{sensitivity.theorem_rho_offsets.oracle_validation}.
-]
+d\in\texttt{sensitivity.theorem\_rho\_offsets.oracle\_validation}.
+$$
 
 `Partition Coherence`, `Strict Timing-Gain Identity`, and `Strict Timing Gain`:
 
-[
+$$
 \rho=\tau_{\text{fine}}+d,
 \qquad
-d\in\texttt{sensitivity.theorem_rho_offsets.refinement_above_fine_tau}.
-]
+d\in\texttt{sensitivity.theorem\_rho\_offsets.refinement\_above\_fine\_tau}.
+$$
 
-No offset is interpreted relative to a coarse (\tau) unless explicitly stated elsewhere.
+No offset is interpreted relative to a coarse $\tau$ unless explicitly stated elsewhere.
 
-`Information Profile Convexity` evaluates exactly `numerics.convexity_profile_grid_points` equally spaced (u) points in `[0,c]` per law/partition.
+`Information Profile Convexity` evaluates exactly `numerics.convexity_profile_grid_points` equally spaced $u$ points in `[0,c]` per law/partition.
 
 Second derivatives are evaluated only in the interior and checked by symbolic/high-precision direct differentiation, not finite differences.
 
@@ -4386,21 +4349,21 @@ For Table 6 `rho_star` validation, use:
 beta = budgets.primary_risk
 ```
 
-For each law/partition, compute (\rho^\star) only when the Section 3.8 interior safety-frontier regime applies.
+For each law/partition, compute $\rho^\star$ only when the Section 3.8 interior safety-frontier regime applies.
 
 Production:
 
-[
+$$
 \rho^\star_{\text{prod}}=\mathcal S_\Pi(\beta-A).
-]
+$$
 
 Oracle:
 
 construct the full table at hidden mass
 
-[
+$$
 u=\beta-A
-]
+$$
 
 and compute direct-table mutual information.
 
@@ -4435,7 +4398,7 @@ pattern-mixture C = comparators.repeated_attempt_pattern_mixture.c_grid
 generic MI rho = sensitivity.primary_rho_grid plus exact log(2)
 ```
 
-No (\Gamma\leftrightarrow\rho) or (C\leftrightarrow\rho) calibration is inferred.
+No $\Gamma\leftrightarrow\rho$ or $C\leftrightarrow\rho$ calibration is inferred.
 
 Each comparator result records:
 
@@ -4477,13 +4440,13 @@ partition_name = one primary partition
 rho = one same_endpoint_rho_grid value
 ```
 
-Within one paired cell, compute both laws and report their separate (\tau), risk intervals, and their difference.
+Within one paired cell, compute both laws and report their separate $\tau$, risk intervals, and their difference.
 
 `Strict Timing Gain` uses the six configured timing cases and:
 
-[
+$$
 \rho=\tau_{\text{fine}}+d.
-]
+$$
 
 Required:
 
@@ -4499,16 +4462,16 @@ positive-information gain > numerics.deterministic_identity_tolerance
 
 `Compatibility Floor Behavior` uses 8-band and endpoint-only partitions and internally checks:
 
-[
+$$
 \rho=\tau-d,\quad\tau,\quad\tau+d
-]
+$$
 
 where
 
-[
+$$
 d=
-\texttt{sensitivity.theorem_rho_offsets.refinement_above_fine_tau[0]}.
-]
+\texttt{sensitivity.theorem\_rho\_offsets.refinement\_above\_fine\_tau[0]}.
+$$
 
 For endpoint-only partition:
 
@@ -4521,11 +4484,11 @@ without adding a separate registry cell.
 
 `Sharpness Against Generic Oracle` uses:
 
-[
+$$
 \rho=
 \tau+
-\texttt{sensitivity.confirmatory_sharpness_oracle_offset_above_tau}.
-]
+\texttt{sensitivity.confirmatory\_sharpness\_oracle\_offset\_above\_tau}.
+$$
 
 `Safety and Intrinsic Impossibility` uses the five deterministic beta regimes.
 
@@ -4552,7 +4515,7 @@ expected = INSUFFICIENT_EVIDENCE
 
 ### 2. Insufficient resolved events
 
-At (n=200):
+At $n=200$:
 
 ```text
 n_resolved = 49
@@ -4580,17 +4543,17 @@ confidence envelope = exact singleton population observable law
 
 Define:
 
-[
+$$
 d=\min(0.005,\tau/2)
-]
+$$
 
 and
 
-[
+$$
 \rho=\tau-d.
-]
+$$
 
-For every 2-, 4-, and 8-band cell, (\tau>0), hence (d>0) and (\rho<\tau).
+For every 2-, 4-, and 8-band cell, $\tau>0$, hence $d>0$ and $\rho<\tau$.
 
 Expected:
 
@@ -4640,7 +4603,7 @@ n_resolved = 50
 evidence-count gate = PASS
 ```
 
-and construct a valid envelope whose feasible ((A,G)) domain includes:
+and construct a valid envelope whose feasible $(A,G)$ domain includes:
 
 ```text
 (A,G) = (0,0)
@@ -4678,15 +4641,15 @@ risk upper = A
 
 ### 9. Simplex boundary
 
-For each (K), construct observable masses:
+For each $K$, construct observable masses:
 
-[
+$$
 c=0.20,
 \qquad
 A=0.10,
 \qquad
 G=0.70.
-]
+$$
 
 Set:
 
@@ -4696,23 +4659,23 @@ a_k = A/(K-1) for k=2..K
 b_k = G/K for every k
 ```
 
-for (K\ge2).
+for $K\ge2$.
 
 Use exact singleton envelope.
 
 Set hidden terminal harmful mass for the independent full-law fixture:
 
-[
+$$
 u=0.05.
-]
+$$
 
 Set:
 
-[
+$$
 \rho=I_{\text{true}}+0.01,
 \qquad
 \beta=0.50.
-]
+$$
 
 Expected projection is the independent projection-oracle result.
 
@@ -4750,10 +4713,10 @@ For singleton envelopes, compute the exact population solution using direct high
 
 For non-singleton hand fixtures, the oracle is a deterministic feasible-point lower-bound search:
 
-1. enumerate a (1001\times1001) grid over the feasible (A,G) rectangle;
+1. enumerate a $1001\times1001$ grid over the feasible $A,G$ rectangle;
 2. reject points violating simplex/terminal constraints;
-3. for every retained ((A,G)), solve the maximal feasible (u) with 100-decimal-digit direct-table arithmetic;
-4. retain the largest verified feasible (A+u);
+3. for every retained $(A,G)$, solve the maximal feasible $u$ with 100-decimal-digit direct-table arithmetic;
+4. retain the largest verified feasible $A+u$;
 5. locally refine the best 20 grid points using deterministic bounded optimization;
 6. accept only directly verified feasible points.
 
@@ -4765,30 +4728,30 @@ Run every configured stress case.
 
 For cases with `rho_offset_above_true_information`:
 
-[
+$$
 \rho=I_{\text{true}}+\text{offset}.
-]
+$$
 
 For minimum-information completion:
 
-[
-\rho=\tau+\texttt{rho_offset_above_compatibility_floor}.
-]
+$$
+\rho=\tau+\texttt{rho\_offset\_above\_compatibility\_floor}.
+$$
 
 All stress cases except near-certification use:
 
-[
-\beta=\texttt{budgets.primary_risk}.
-]
+$$
+\beta=\texttt{budgets.primary\_risk}.
+$$
 
 Near-certification uses:
 
-[
+$$
 \beta=\theta_U(\rho)+
-\texttt{beta_offset_above_true_upper_bound}.
-]
+\texttt{beta\_offset\_above\_true\_upper\_bound}.
+$$
 
-If derived (\beta>1):
+If derived $\beta>1$:
 
 ```text
 planned case = INVALID
@@ -4798,7 +4761,7 @@ and it is not clipped.
 
 The four configured method labels are executed exactly.
 
-`TrajCert` and `Time-uniform observable-law projection` share the same valid (U_n(\rho)) artifact but expose different reporting semantics under Section 7.9.
+`TrajCert` and `Time-uniform observable-law projection` share the same valid $U_n(\rho)$ artifact but expose different reporting semantics under Section 7.9.
 
 The ignorable-delay reference is valid only for `Independent resolution control`.
 
@@ -4820,9 +4783,9 @@ Every primary TrajCert stress cell must pass Section 9.8.
 
 giving:
 
-[
+$$
 6\times4\times15=360
-]
+$$
 
 cells.
 
@@ -4834,21 +4797,19 @@ Population claim qualification is evaluated only on the primary 8-band partition
 
 For one compatible 8-band cell:
 
-[
+$$
 \text{absolute tightening}
-==========================
-
+=
 (A+c)-\theta_U(\rho).
-]
+$$
 
-When (c>0),
+When $c>0$,
 
-[
+$$
 \text{relative unresolved gain}
-===============================
-
+=
 \frac{(A+c)-\theta_U(\rho)}{c}.
-]
+$$
 
 A compatible rho value is materially nonvacuous iff:
 
@@ -4921,15 +4882,15 @@ beta = budgets.primary_risk
 
 Axis derivations:
 
-* **Terminal unresolved severity:** (q_1=q_0) at configured levels.
-* **Timing contrast:** (\lambda_1=d/2,\lambda_0=-d/2).
-* **Harmful prevalence:** set (\theta).
-* **Path resolution:** set (K).
-* **Sensitivity margin above compatibility:** (\rho=\tau+d).
-* **Risk-budget offset from intrinsic boundary:** (\beta=\operatorname{clip}(\theta^\dagger+d,0,1)).
-* **Matured sample size:** use balanced-prefix at configured (n).
-* **Terminal-selection asymmetry:** use configured ((q_1,q_0)).
-* **Optimizer-node budget:** use configured diagnostic node cap and deterministic (n=500).
+* **Terminal unresolved severity:** $q_1=q_0$ at configured levels.
+* **Timing contrast:** $\lambda_1=d/2,\lambda_0=-d/2$.
+* **Harmful prevalence:** set $\theta$.
+* **Path resolution:** set $K$.
+* **Sensitivity margin above compatibility:** $\rho=\tau+d$.
+* **Risk-budget offset from intrinsic boundary:** $\beta=\operatorname{clip}(\theta^\dagger+d,0,1)$.
+* **Matured sample size:** use balanced-prefix at configured $n$.
+* **Terminal-selection asymmetry:** use configured $(q_1,q_0)$.
+* **Optimizer-node budget:** use configured diagnostic node cap and deterministic $n=500$.
 
 Population-valued axes use exact population calculations.
 
@@ -4950,7 +4911,7 @@ No current real-trajectory command or foreign-information mechanism exists.
 
 ## 18.12 Computational scaling
 
-Use all configured (K) values.
+Use all configured $K$ values.
 
 Population solver:
 
@@ -5065,9 +5026,9 @@ solver_oracle_validation.tex
 
 Median/IQR quantiles use linear interpolation at index:
 
-[
+$$
 (n-1)q.
-]
+$$
 
 Display rounding never feeds scientific comparison.
 
@@ -5412,7 +5373,7 @@ Source:
 outputs/experiments/statistical-synthesis/evaluations/aggregates/figure_partition_coherence.parquet
 ```
 
-The source combines exact (\rho=0.10) population outputs from:
+The source combines exact $\rho=0.10$ population outputs from:
 
 * `Population Sensitivity Utility` for:
 
@@ -5500,7 +5461,7 @@ x = matured event count
 y = U_n(rho)
 ```
 
-Include true (\theta), (\beta), evidence-gate region, and state changes.
+Include true $\theta$, $\beta$, evidence-gate region, and state changes.
 
 ## Figure 5 — Anytime stress validity
 
@@ -5528,7 +5489,7 @@ line = partition
 facet = utility law
 ```
 
-Plot all 15 sensitivity values, including exact (\log2).
+Plot all 15 sensitivity values, including exact $\log2$.
 
 Show incompatible points explicitly.
 
@@ -5555,7 +5516,7 @@ population solver runtime vs K
 outer projection runtime/node count vs K
 ```
 
-Use log2 (K).
+Use log2 $K$.
 
 Runtime may use a log scale only if every recorded runtime is strictly positive.
 
@@ -5565,7 +5526,7 @@ Runtime may use a log scale only if every recorded runtime is strictly positive.
 
 Claim:
 
-> Under fixed PIS (\rho) and a common terminal horizon, deterministic refinement cannot widen the sharp population risk set.
+> Under fixed PIS $\rho$ and a common terminal horizon, deterministic refinement cannot widen the sharp population risk set.
 
 Required:
 
@@ -5590,9 +5551,9 @@ NOT_SUPPORTED
 
 Claim:
 
-[
+$$
 I(L;J_\Pi)=\tau_\Pi+I(L;R).
-]
+$$
 
 Required:
 
@@ -5605,9 +5566,9 @@ Support requires residual no greater than `numerics.deterministic_identity_toler
 
 Claim:
 
-[
+$$
 \rho_{\min}=\tau.
-]
+$$
 
 Required:
 
@@ -5664,7 +5625,7 @@ Required:
 * safety identities;
 * all 40 Safety and Intrinsic Impossibility cells.
 
-Support requires all five deterministic beta regimes and all applicable (\rho^\star) identities to pass.
+Support requires all five deterministic beta regimes and all applicable $\rho^\star$ identities to pass.
 
 ## 21.7 Anytime-Valid Local Certificate
 
@@ -5762,7 +5723,7 @@ Null:
 
 Claim:
 
-> Population computation uses O(K) sufficient-statistic construction plus scalar branch root solving and maintains numerical accuracy over the tested K range.
+> Population computation uses O$K$ sufficient-statistic construction plus scalar branch root solving and maintains numerical accuracy over the tested K range.
 
 Required:
 
@@ -6048,13 +6009,13 @@ Required deterministic/unit coverage includes:
 Required property checks, with deterministic Hypothesis settings:
 
 * generated laws stay on the simplex;
-* [
+* $$
   \mathcal S(u)\ge\tau-
-  \texttt{numerics.deterministic_identity_tolerance};
-  ]
+  \texttt{numerics.deterministic\_identity\_tolerance};
+  $$
 * convexity for nondegenerate laws;
-* (u^\dagger\in[0,c]);
-* refinement does not reduce (\mathcal S);
+* $u^\dagger\in[0,c]$;
+* refinement does not reduce $\mathcal S$;
 * PIS feasible set is an interval;
 * independent oracle agrees on random low-dimensional cases;
 * cache/no-cache calculations agree;
@@ -6091,7 +6052,7 @@ Integration/regression coverage verifies:
 
 Statistical Synthesis must produce machine-readable evidence pointers verifying:
 
-* **Target/scope:** binary estimand justification; common terminal horizon across refinement; no post-outcome partition choice; (\rho) described as sensitivity assumption; (\beta) only in its configured benchmark role; absence of real operational validation stated; prohibited novelty/privacy/federation claims absent.
+* **Target/scope:** binary estimand justification; common terminal horizon across refinement; no post-outcome partition choice; $\rho$ described as sensitivity assumption; $\beta$ only in its configured benchmark role; absence of real operational validation stated; prohibited novelty/privacy/federation claims absent.
 * **Comparators:** assumptions explicit; generic oracle structurally independent; observation access fair; paired stochastic streams shared; no comparator receives hidden extra information.
 * **Sequential/statistical validity:** deployed sequential construction is time-uniform; independent stream is the Monte Carlo unit; Monte Carlo counts/tests/multiplicity/materiality are prespecified before claim evaluation; incompatible cells remain visible; undefined values are null; failed seeds are retained.
 * **Identity/recovery:** no duplicate active semantic result; each reusable artifact has one producer; partial outputs never become active evidence; checkpoints never cross dependency incompatibility; stale descendants are removed; caches never become evidence.
