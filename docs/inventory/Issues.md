@@ -2280,460 +2280,235 @@ No requirement may exist only implicitly in acceptance criteria, tests, or imple
 
 The following is the complete atomic requirement set assigned to this issue. Implementation-bearing requirements must be implemented; `NON_IMPLEMENTATION` entries are binding scope, terminology, assumption, invariant, exclusion, or claim constraints that must be preserved and verified without inventing fictitious implementation work.
 
-- [ ] **REQ-1294** — **Architecture** — Required repository root directory 'trajcert/' must exist.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1295** — **Architecture** — Required architecture file 'trajcert/README.md' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1296** — **Architecture** — Required architecture file 'trajcert/pyproject.toml' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1297** — **Architecture** — Required architecture file 'trajcert/requirements.lock' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1298** — **Architecture** — Required architecture file 'trajcert/Dockerfile' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1299** — **Architecture** — Required architecture file 'trajcert/noxfile.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1300** — **Architecture** — Required architecture file 'trajcert/Makefile' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1301** — **Architecture** — Required architecture file 'trajcert/.gitignore' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1302** — **Architecture** — Required architecture directory 'trajcert/configs/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1303** — **Architecture** — Required architecture file 'trajcert/configs/trajcert.yaml' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1304** — **Architecture** — Required architecture file 'trajcert/configs/tests.yml' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1305** — **Architecture** — Required architecture file 'trajcert/configs/smoke.yml' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1306** — **Architecture** — Required architecture directory 'trajcert/data/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1307** — **Architecture** — Required architecture file 'trajcert/data/raw -> /external/datasets' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1308** — **Architecture** — Required architecture directory 'trajcert/outputs/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1309** — **Architecture** — Required architecture directory 'trajcert/outputs/preprocessing/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1310** — **Architecture** — Required architecture directory 'trajcert/outputs/preprocessing/inventories/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1311** — **Architecture** — Required architecture directory 'trajcert/outputs/preprocessing/validation/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1312** — **Architecture** — Required architecture directory 'trajcert/outputs/preprocessing/prepared/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1313** — **Architecture** — Required architecture directory 'trajcert/outputs/preprocessing/metadata/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1314** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1315** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/fitted/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1316** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/baselines/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1317** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/derived/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1318** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/derived/plans/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1319** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/derived/streams/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1320** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/derived/population/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1321** — **Architecture** — Required architecture directory 'trajcert/outputs/artifacts/derived/sequential/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1322** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1323** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1324** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/artifacts/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1325** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/artifacts/fitted/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1326** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/artifacts/derived/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1327** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1328** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/records/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1329** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/comparisons/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1330** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/aggregates/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1331** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1332** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/per_seed/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1333** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/per_condition/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1334** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/aggregate/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1335** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1336** — **Testing** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/tests/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
-- [ ] **REQ-1337** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/confidence_intervals/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1338** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/effects/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1339** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/multiplicity/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1340** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/checkpoints/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1341** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/checkpoints/execution/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1342** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1343** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/scientific/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1344** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/numerical/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1345** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/runtime/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1346** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/logs/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1347** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/logs/execution/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1348** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/logs/failures/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1349** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1350** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/configuration/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1351** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/data/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1352** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/seeds/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1353** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/code/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1354** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/environment/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1355** — **Architecture** — Required architecture directory 'trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/dependencies/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1356** — **Architecture** — Required architecture directory 'trajcert/outputs/cache/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1357** — **Architecture** — Required architecture directory 'trajcert/outputs/cache/preprocessing/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1358** — **Architecture** — Required architecture directory 'trajcert/outputs/cache/evaluation/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1359** — **Architecture** — Required architecture directory 'trajcert/outputs/cache/analysis/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1360** — **Architecture** — Required architecture directory 'trajcert/results/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1361** — **Architecture** — Required architecture directory 'trajcert/results/experiments/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1362** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1363** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/figures/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1364** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/figures/main/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1365** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/figures/supplementary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1366** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/tables/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1367** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/tables/main/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1368** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/tables/supplementary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1369** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/metrics/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1370** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/metrics/primary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1371** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/metrics/secondary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1372** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/metrics/summary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1373** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/statistics/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1374** — **Testing** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/statistics/tests/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
-- [ ] **REQ-1375** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/statistics/confidence_intervals/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1376** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/statistics/effects/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1377** — **Architecture** — Required architecture directory 'trajcert/results/experiments/<descriptive-experiment-name>/statistics/multiplicity/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1378** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1379** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/figures/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1380** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/figures/main/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1381** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/figures/supplementary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1382** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/tables/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1383** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/tables/main/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1384** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/tables/supplementary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1385** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/metrics/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1386** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/metrics/primary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1387** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/metrics/summary/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1388** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/statistics/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1389** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/statistics/comparisons/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1390** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/statistics/confidence_intervals/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1391** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/statistics/effects/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1392** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/statistics/multiplicity/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1393** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/claims/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1394** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/reproducibility/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1395** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/reproducibility/configuration/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1396** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/reproducibility/datasets/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1397** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/reproducibility/seeds/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1398** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/reproducibility/software/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1399** — **Architecture** — Required architecture directory 'trajcert/results/project_summary/reproducibility/execution/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1400** — **Architecture** — Required architecture directory 'trajcert/docs/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1401** — **Architecture** — Required architecture file 'trajcert/docs/Roadmap.md' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1402** — **Architecture** — Required architecture directory 'trajcert/src/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1403** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1404** — **Architecture** — Required architecture file 'trajcert/src/trajcert/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1405** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/configuration/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1406** — **Architecture** — Required architecture file 'trajcert/src/trajcert/configuration/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1407** — **Architecture** — Required architecture file 'trajcert/src/trajcert/configuration/models.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1408** — **Architecture** — Required architecture file 'trajcert/src/trajcert/configuration/loading.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1409** — **Architecture** — Required architecture file 'trajcert/src/trajcert/configuration/validation.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1410** — **Architecture** — Required architecture file 'trajcert/src/trajcert/configuration/protocol.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1411** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/domain/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1412** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1413** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/enums.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1414** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/identity.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1415** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/operational.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1416** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/manifests.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1417** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/domain/records/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1418** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/records/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1419** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/records/artifacts.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1420** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/records/execution.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1421** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/records/results.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1422** — **Architecture** — Required architecture file 'trajcert/src/trajcert/domain/records/claims.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1423** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/data/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1424** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1425** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/inventory.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1426** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/integrity.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1427** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/partitions.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1428** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/apportionment.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1429** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/data/synthetic/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1430** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/synthetic/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1431** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/synthetic/laws.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1432** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/synthetic/generator.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1433** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/synthetic/ledger.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1434** — **Architecture** — Required architecture file 'trajcert/src/trajcert/data/synthetic/preprocessing.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1435** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/math/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1436** — **Architecture** — Required architecture file 'trajcert/src/trajcert/math/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1437** — **Architecture** — Required architecture file 'trajcert/src/trajcert/math/entropy.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1438** — **Architecture** — Required architecture file 'trajcert/src/trajcert/math/information_profile.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1439** — **Architecture** — Required architecture file 'trajcert/src/trajcert/math/risk_set.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1440** — **Architecture** — Required architecture file 'trajcert/src/trajcert/math/solver.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1441** — **Architecture** — Required architecture file 'trajcert/src/trajcert/math/refinement.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1442** — **Architecture** — Required architecture file 'trajcert/src/trajcert/math/safety.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1443** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/inference/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1444** — **Architecture** — Required architecture file 'trajcert/src/trajcert/inference/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1445** — **Architecture** — Required architecture file 'trajcert/src/trajcert/inference/confidence_sequence.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1446** — **Architecture** — Required architecture file 'trajcert/src/trajcert/inference/envelope.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1447** — **Architecture** — Required architecture file 'trajcert/src/trajcert/inference/projection.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1448** — **Architecture** — Required architecture file 'trajcert/src/trajcert/inference/compatibility.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1449** — **Architecture** — Required architecture file 'trajcert/src/trajcert/inference/states.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1450** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/baselines/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1451** — **Architecture** — Required architecture file 'trajcert/src/trajcert/baselines/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1452** — **Architecture** — Required architecture file 'trajcert/src/trajcert/baselines/references.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1453** — **Architecture** — Required architecture file 'trajcert/src/trajcert/baselines/legacy_odds.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1454** — **Architecture** — Required architecture file 'trajcert/src/trajcert/baselines/callbacks.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1455** — **Architecture** — Required architecture file 'trajcert/src/trajcert/baselines/pattern_mixture.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1456** — **Architecture** — Required architecture file 'trajcert/src/trajcert/baselines/information_oracle.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1457** — **Architecture** — Required architecture file 'trajcert/src/trajcert/baselines/sequential_references.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1458** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/experiments/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1459** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1460** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/registry.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1461** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/planning.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1462** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/execution.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1463** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/lifecycle.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1464** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/recovery.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1465** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/experiments/definitions/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1466** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1467** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/scientific_inventory.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1468** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/formal_mathematics.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1469** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/solver_validation.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1470** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/comparator_reduction.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1471** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/partition_timing.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1472** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/compatibility_sharpness_safety.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1473** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/anytime_validation.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1474** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/utility_analysis.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1475** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/failure_boundaries.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1476** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/computational_scaling.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1477** — **Architecture** — Required architecture file 'trajcert/src/trajcert/experiments/definitions/statistical_synthesis.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1478** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/evaluation/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1479** — **Architecture** — Required architecture file 'trajcert/src/trajcert/evaluation/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1480** — **Architecture** — Required architecture file 'trajcert/src/trajcert/evaluation/theorem_validation.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1481** — **Architecture** — Required architecture file 'trajcert/src/trajcert/evaluation/oracle_validation.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1482** — **Architecture** — Required architecture file 'trajcert/src/trajcert/evaluation/projection_oracle.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1483** — **Architecture** — Required architecture file 'trajcert/src/trajcert/evaluation/coverage_validation.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1484** — **Architecture** — Required architecture file 'trajcert/src/trajcert/evaluation/benchmarking.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1485** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/analysis/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1486** — **Architecture** — Required architecture file 'trajcert/src/trajcert/analysis/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1487** — **Architecture** — Required architecture file 'trajcert/src/trajcert/analysis/metrics.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1488** — **Architecture** — Required architecture file 'trajcert/src/trajcert/analysis/statistics.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1489** — **Architecture** — Required architecture file 'trajcert/src/trajcert/analysis/materiality.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1490** — **Architecture** — Required architecture file 'trajcert/src/trajcert/analysis/claims.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1491** — **Architecture** — Required architecture file 'trajcert/src/trajcert/analysis/evidence.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1492** — **Architecture** — Required architecture file 'trajcert/src/trajcert/analysis/synthesis.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1493** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/infrastructure/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1494** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1495** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/workspace.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1496** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/storage.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1497** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/artifacts.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1498** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/fingerprints.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1499** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/components.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1500** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/provenance.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1501** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/environment.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1502** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/evidence_manifest.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1503** — **Architecture** — Required architecture file 'trajcert/src/trajcert/infrastructure/diagnostics.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1504** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/reporting/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1505** — **Architecture** — Required architecture file 'trajcert/src/trajcert/reporting/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1506** — **Architecture** — Required architecture file 'trajcert/src/trajcert/reporting/tables.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1507** — **Architecture** — Required architecture file 'trajcert/src/trajcert/reporting/figures.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1508** — **Architecture** — Required architecture file 'trajcert/src/trajcert/reporting/export.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1509** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/cli/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1510** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1511** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/main.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1512** — **Architecture** — Required architecture directory 'trajcert/src/trajcert/cli/commands/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1513** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/__init__.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1514** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/doctor.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1515** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/preprocess.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1516** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/plan.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1517** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/smoke.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1518** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/run.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1519** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/status.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
-- [ ] **REQ-1520** — **Architecture** — Required architecture file 'trajcert/src/trajcert/cli/commands/report.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
+- [ ] **REQ-1294–REQ-1520 (Architecture; excludes REQ-1336, REQ-1374 — see Testing group below)** — Each required repository/package/module file or directory listed below must exist at its exact roadmap-defined location; item type is a directory if its path ends in `/`, otherwise a file.
+  - [ ] **Verification (applies to every REQ-ID in this group):** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture, enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
+  - REQ-1294 — `trajcert/`
+  - REQ-1295 — `trajcert/README.md`
+  - REQ-1296 — `trajcert/pyproject.toml`
+  - REQ-1297 — `trajcert/requirements.lock`
+  - REQ-1298 — `trajcert/Dockerfile`
+  - REQ-1299 — `trajcert/noxfile.py`
+  - REQ-1300 — `trajcert/Makefile`
+  - REQ-1301 — `trajcert/.gitignore`
+  - REQ-1302 — `trajcert/configs/`
+  - REQ-1303 — `trajcert/configs/trajcert.yaml`
+  - REQ-1304 — `trajcert/configs/tests.yml`
+  - REQ-1305 — `trajcert/configs/smoke.yml`
+  - REQ-1306 — `trajcert/data/`
+  - REQ-1307 — `trajcert/data/raw -> /external/datasets`
+  - REQ-1308 — `trajcert/outputs/`
+  - REQ-1309 — `trajcert/outputs/preprocessing/`
+  - REQ-1310 — `trajcert/outputs/preprocessing/inventories/`
+  - REQ-1311 — `trajcert/outputs/preprocessing/validation/`
+  - REQ-1312 — `trajcert/outputs/preprocessing/prepared/`
+  - REQ-1313 — `trajcert/outputs/preprocessing/metadata/`
+  - REQ-1314 — `trajcert/outputs/artifacts/`
+  - REQ-1315 — `trajcert/outputs/artifacts/fitted/`
+  - REQ-1316 — `trajcert/outputs/artifacts/baselines/`
+  - REQ-1317 — `trajcert/outputs/artifacts/derived/`
+  - REQ-1318 — `trajcert/outputs/artifacts/derived/plans/`
+  - REQ-1319 — `trajcert/outputs/artifacts/derived/streams/`
+  - REQ-1320 — `trajcert/outputs/artifacts/derived/population/`
+  - REQ-1321 — `trajcert/outputs/artifacts/derived/sequential/`
+  - REQ-1322 — `trajcert/outputs/experiments/`
+  - REQ-1323 — `trajcert/outputs/experiments/<descriptive-experiment-name>/`
+  - REQ-1324 — `trajcert/outputs/experiments/<descriptive-experiment-name>/artifacts/`
+  - REQ-1325 — `trajcert/outputs/experiments/<descriptive-experiment-name>/artifacts/fitted/`
+  - REQ-1326 — `trajcert/outputs/experiments/<descriptive-experiment-name>/artifacts/derived/`
+  - REQ-1327 — `trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/`
+  - REQ-1328 — `trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/records/`
+  - REQ-1329 — `trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/comparisons/`
+  - REQ-1330 — `trajcert/outputs/experiments/<descriptive-experiment-name>/evaluations/aggregates/`
+  - REQ-1331 — `trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/`
+  - REQ-1332 — `trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/per_seed/`
+  - REQ-1333 — `trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/per_condition/`
+  - REQ-1334 — `trajcert/outputs/experiments/<descriptive-experiment-name>/metrics/aggregate/`
+  - REQ-1335 — `trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/`
+  - REQ-1337 — `trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/confidence_intervals/`
+  - REQ-1338 — `trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/effects/`
+  - REQ-1339 — `trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/multiplicity/`
+  - REQ-1340 — `trajcert/outputs/experiments/<descriptive-experiment-name>/checkpoints/`
+  - REQ-1341 — `trajcert/outputs/experiments/<descriptive-experiment-name>/checkpoints/execution/`
+  - REQ-1342 — `trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/`
+  - REQ-1343 — `trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/scientific/`
+  - REQ-1344 — `trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/numerical/`
+  - REQ-1345 — `trajcert/outputs/experiments/<descriptive-experiment-name>/diagnostics/runtime/`
+  - REQ-1346 — `trajcert/outputs/experiments/<descriptive-experiment-name>/logs/`
+  - REQ-1347 — `trajcert/outputs/experiments/<descriptive-experiment-name>/logs/execution/`
+  - REQ-1348 — `trajcert/outputs/experiments/<descriptive-experiment-name>/logs/failures/`
+  - REQ-1349 — `trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/`
+  - REQ-1350 — `trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/configuration/`
+  - REQ-1351 — `trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/data/`
+  - REQ-1352 — `trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/seeds/`
+  - REQ-1353 — `trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/code/`
+  - REQ-1354 — `trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/environment/`
+  - REQ-1355 — `trajcert/outputs/experiments/<descriptive-experiment-name>/provenance/dependencies/`
+  - REQ-1356 — `trajcert/outputs/cache/`
+  - REQ-1357 — `trajcert/outputs/cache/preprocessing/`
+  - REQ-1358 — `trajcert/outputs/cache/evaluation/`
+  - REQ-1359 — `trajcert/outputs/cache/analysis/`
+  - REQ-1360 — `trajcert/results/`
+  - REQ-1361 — `trajcert/results/experiments/`
+  - REQ-1362 — `trajcert/results/experiments/<descriptive-experiment-name>/`
+  - REQ-1363 — `trajcert/results/experiments/<descriptive-experiment-name>/figures/`
+  - REQ-1364 — `trajcert/results/experiments/<descriptive-experiment-name>/figures/main/`
+  - REQ-1365 — `trajcert/results/experiments/<descriptive-experiment-name>/figures/supplementary/`
+  - REQ-1366 — `trajcert/results/experiments/<descriptive-experiment-name>/tables/`
+  - REQ-1367 — `trajcert/results/experiments/<descriptive-experiment-name>/tables/main/`
+  - REQ-1368 — `trajcert/results/experiments/<descriptive-experiment-name>/tables/supplementary/`
+  - REQ-1369 — `trajcert/results/experiments/<descriptive-experiment-name>/metrics/`
+  - REQ-1370 — `trajcert/results/experiments/<descriptive-experiment-name>/metrics/primary/`
+  - REQ-1371 — `trajcert/results/experiments/<descriptive-experiment-name>/metrics/secondary/`
+  - REQ-1372 — `trajcert/results/experiments/<descriptive-experiment-name>/metrics/summary/`
+  - REQ-1373 — `trajcert/results/experiments/<descriptive-experiment-name>/statistics/`
+  - REQ-1375 — `trajcert/results/experiments/<descriptive-experiment-name>/statistics/confidence_intervals/`
+  - REQ-1376 — `trajcert/results/experiments/<descriptive-experiment-name>/statistics/effects/`
+  - REQ-1377 — `trajcert/results/experiments/<descriptive-experiment-name>/statistics/multiplicity/`
+  - REQ-1378 — `trajcert/results/project_summary/`
+  - REQ-1379 — `trajcert/results/project_summary/figures/`
+  - REQ-1380 — `trajcert/results/project_summary/figures/main/`
+  - REQ-1381 — `trajcert/results/project_summary/figures/supplementary/`
+  - REQ-1382 — `trajcert/results/project_summary/tables/`
+  - REQ-1383 — `trajcert/results/project_summary/tables/main/`
+  - REQ-1384 — `trajcert/results/project_summary/tables/supplementary/`
+  - REQ-1385 — `trajcert/results/project_summary/metrics/`
+  - REQ-1386 — `trajcert/results/project_summary/metrics/primary/`
+  - REQ-1387 — `trajcert/results/project_summary/metrics/summary/`
+  - REQ-1388 — `trajcert/results/project_summary/statistics/`
+  - REQ-1389 — `trajcert/results/project_summary/statistics/comparisons/`
+  - REQ-1390 — `trajcert/results/project_summary/statistics/confidence_intervals/`
+  - REQ-1391 — `trajcert/results/project_summary/statistics/effects/`
+  - REQ-1392 — `trajcert/results/project_summary/statistics/multiplicity/`
+  - REQ-1393 — `trajcert/results/project_summary/claims/`
+  - REQ-1394 — `trajcert/results/project_summary/reproducibility/`
+  - REQ-1395 — `trajcert/results/project_summary/reproducibility/configuration/`
+  - REQ-1396 — `trajcert/results/project_summary/reproducibility/datasets/`
+  - REQ-1397 — `trajcert/results/project_summary/reproducibility/seeds/`
+  - REQ-1398 — `trajcert/results/project_summary/reproducibility/software/`
+  - REQ-1399 — `trajcert/results/project_summary/reproducibility/execution/`
+  - REQ-1400 — `trajcert/docs/`
+  - REQ-1401 — `trajcert/docs/Roadmap.md`
+  - REQ-1402 — `trajcert/src/`
+  - REQ-1403 — `trajcert/src/trajcert/`
+  - REQ-1404 — `trajcert/src/trajcert/__init__.py`
+  - REQ-1405 — `trajcert/src/trajcert/configuration/`
+  - REQ-1406 — `trajcert/src/trajcert/configuration/__init__.py`
+  - REQ-1407 — `trajcert/src/trajcert/configuration/models.py`
+  - REQ-1408 — `trajcert/src/trajcert/configuration/loading.py`
+  - REQ-1409 — `trajcert/src/trajcert/configuration/validation.py`
+  - REQ-1410 — `trajcert/src/trajcert/configuration/protocol.py`
+  - REQ-1411 — `trajcert/src/trajcert/domain/`
+  - REQ-1412 — `trajcert/src/trajcert/domain/__init__.py`
+  - REQ-1413 — `trajcert/src/trajcert/domain/enums.py`
+  - REQ-1414 — `trajcert/src/trajcert/domain/identity.py`
+  - REQ-1415 — `trajcert/src/trajcert/domain/operational.py`
+  - REQ-1416 — `trajcert/src/trajcert/domain/manifests.py`
+  - REQ-1417 — `trajcert/src/trajcert/domain/records/`
+  - REQ-1418 — `trajcert/src/trajcert/domain/records/__init__.py`
+  - REQ-1419 — `trajcert/src/trajcert/domain/records/artifacts.py`
+  - REQ-1420 — `trajcert/src/trajcert/domain/records/execution.py`
+  - REQ-1421 — `trajcert/src/trajcert/domain/records/results.py`
+  - REQ-1422 — `trajcert/src/trajcert/domain/records/claims.py`
+  - REQ-1423 — `trajcert/src/trajcert/data/`
+  - REQ-1424 — `trajcert/src/trajcert/data/__init__.py`
+  - REQ-1425 — `trajcert/src/trajcert/data/inventory.py`
+  - REQ-1426 — `trajcert/src/trajcert/data/integrity.py`
+  - REQ-1427 — `trajcert/src/trajcert/data/partitions.py`
+  - REQ-1428 — `trajcert/src/trajcert/data/apportionment.py`
+  - REQ-1429 — `trajcert/src/trajcert/data/synthetic/`
+  - REQ-1430 — `trajcert/src/trajcert/data/synthetic/__init__.py`
+  - REQ-1431 — `trajcert/src/trajcert/data/synthetic/laws.py`
+  - REQ-1432 — `trajcert/src/trajcert/data/synthetic/generator.py`
+  - REQ-1433 — `trajcert/src/trajcert/data/synthetic/ledger.py`
+  - REQ-1434 — `trajcert/src/trajcert/data/synthetic/preprocessing.py`
+  - REQ-1435 — `trajcert/src/trajcert/math/`
+  - REQ-1436 — `trajcert/src/trajcert/math/__init__.py`
+  - REQ-1437 — `trajcert/src/trajcert/math/entropy.py`
+  - REQ-1438 — `trajcert/src/trajcert/math/information_profile.py`
+  - REQ-1439 — `trajcert/src/trajcert/math/risk_set.py`
+  - REQ-1440 — `trajcert/src/trajcert/math/solver.py`
+  - REQ-1441 — `trajcert/src/trajcert/math/refinement.py`
+  - REQ-1442 — `trajcert/src/trajcert/math/safety.py`
+  - REQ-1443 — `trajcert/src/trajcert/inference/`
+  - REQ-1444 — `trajcert/src/trajcert/inference/__init__.py`
+  - REQ-1445 — `trajcert/src/trajcert/inference/confidence_sequence.py`
+  - REQ-1446 — `trajcert/src/trajcert/inference/envelope.py`
+  - REQ-1447 — `trajcert/src/trajcert/inference/projection.py`
+  - REQ-1448 — `trajcert/src/trajcert/inference/compatibility.py`
+  - REQ-1449 — `trajcert/src/trajcert/inference/states.py`
+  - REQ-1450 — `trajcert/src/trajcert/baselines/`
+  - REQ-1451 — `trajcert/src/trajcert/baselines/__init__.py`
+  - REQ-1452 — `trajcert/src/trajcert/baselines/references.py`
+  - REQ-1453 — `trajcert/src/trajcert/baselines/legacy_odds.py`
+  - REQ-1454 — `trajcert/src/trajcert/baselines/callbacks.py`
+  - REQ-1455 — `trajcert/src/trajcert/baselines/pattern_mixture.py`
+  - REQ-1456 — `trajcert/src/trajcert/baselines/information_oracle.py`
+  - REQ-1457 — `trajcert/src/trajcert/baselines/sequential_references.py`
+  - REQ-1458 — `trajcert/src/trajcert/experiments/`
+  - REQ-1459 — `trajcert/src/trajcert/experiments/__init__.py`
+  - REQ-1460 — `trajcert/src/trajcert/experiments/registry.py`
+  - REQ-1461 — `trajcert/src/trajcert/experiments/planning.py`
+  - REQ-1462 — `trajcert/src/trajcert/experiments/execution.py`
+  - REQ-1463 — `trajcert/src/trajcert/experiments/lifecycle.py`
+  - REQ-1464 — `trajcert/src/trajcert/experiments/recovery.py`
+  - REQ-1465 — `trajcert/src/trajcert/experiments/definitions/`
+  - REQ-1466 — `trajcert/src/trajcert/experiments/definitions/__init__.py`
+  - REQ-1467 — `trajcert/src/trajcert/experiments/definitions/scientific_inventory.py`
+  - REQ-1468 — `trajcert/src/trajcert/experiments/definitions/formal_mathematics.py`
+  - REQ-1469 — `trajcert/src/trajcert/experiments/definitions/solver_validation.py`
+  - REQ-1470 — `trajcert/src/trajcert/experiments/definitions/comparator_reduction.py`
+  - REQ-1471 — `trajcert/src/trajcert/experiments/definitions/partition_timing.py`
+  - REQ-1472 — `trajcert/src/trajcert/experiments/definitions/compatibility_sharpness_safety.py`
+  - REQ-1473 — `trajcert/src/trajcert/experiments/definitions/anytime_validation.py`
+  - REQ-1474 — `trajcert/src/trajcert/experiments/definitions/utility_analysis.py`
+  - REQ-1475 — `trajcert/src/trajcert/experiments/definitions/failure_boundaries.py`
+  - REQ-1476 — `trajcert/src/trajcert/experiments/definitions/computational_scaling.py`
+  - REQ-1477 — `trajcert/src/trajcert/experiments/definitions/statistical_synthesis.py`
+  - REQ-1478 — `trajcert/src/trajcert/evaluation/`
+  - REQ-1479 — `trajcert/src/trajcert/evaluation/__init__.py`
+  - REQ-1480 — `trajcert/src/trajcert/evaluation/theorem_validation.py`
+  - REQ-1481 — `trajcert/src/trajcert/evaluation/oracle_validation.py`
+  - REQ-1482 — `trajcert/src/trajcert/evaluation/projection_oracle.py`
+  - REQ-1483 — `trajcert/src/trajcert/evaluation/coverage_validation.py`
+  - REQ-1484 — `trajcert/src/trajcert/evaluation/benchmarking.py`
+  - REQ-1485 — `trajcert/src/trajcert/analysis/`
+  - REQ-1486 — `trajcert/src/trajcert/analysis/__init__.py`
+  - REQ-1487 — `trajcert/src/trajcert/analysis/metrics.py`
+  - REQ-1488 — `trajcert/src/trajcert/analysis/statistics.py`
+  - REQ-1489 — `trajcert/src/trajcert/analysis/materiality.py`
+  - REQ-1490 — `trajcert/src/trajcert/analysis/claims.py`
+  - REQ-1491 — `trajcert/src/trajcert/analysis/evidence.py`
+  - REQ-1492 — `trajcert/src/trajcert/analysis/synthesis.py`
+  - REQ-1493 — `trajcert/src/trajcert/infrastructure/`
+  - REQ-1494 — `trajcert/src/trajcert/infrastructure/__init__.py`
+  - REQ-1495 — `trajcert/src/trajcert/infrastructure/workspace.py`
+  - REQ-1496 — `trajcert/src/trajcert/infrastructure/storage.py`
+  - REQ-1497 — `trajcert/src/trajcert/infrastructure/artifacts.py`
+  - REQ-1498 — `trajcert/src/trajcert/infrastructure/fingerprints.py`
+  - REQ-1499 — `trajcert/src/trajcert/infrastructure/components.py`
+  - REQ-1500 — `trajcert/src/trajcert/infrastructure/provenance.py`
+  - REQ-1501 — `trajcert/src/trajcert/infrastructure/environment.py`
+  - REQ-1502 — `trajcert/src/trajcert/infrastructure/evidence_manifest.py`
+  - REQ-1503 — `trajcert/src/trajcert/infrastructure/diagnostics.py`
+  - REQ-1504 — `trajcert/src/trajcert/reporting/`
+  - REQ-1505 — `trajcert/src/trajcert/reporting/__init__.py`
+  - REQ-1506 — `trajcert/src/trajcert/reporting/tables.py`
+  - REQ-1507 — `trajcert/src/trajcert/reporting/figures.py`
+  - REQ-1508 — `trajcert/src/trajcert/reporting/export.py`
+  - REQ-1509 — `trajcert/src/trajcert/cli/`
+  - REQ-1510 — `trajcert/src/trajcert/cli/__init__.py`
+  - REQ-1511 — `trajcert/src/trajcert/cli/main.py`
+  - REQ-1512 — `trajcert/src/trajcert/cli/commands/`
+  - REQ-1513 — `trajcert/src/trajcert/cli/commands/__init__.py`
+  - REQ-1514 — `trajcert/src/trajcert/cli/commands/doctor.py`
+  - REQ-1515 — `trajcert/src/trajcert/cli/commands/preprocess.py`
+  - REQ-1516 — `trajcert/src/trajcert/cli/commands/plan.py`
+  - REQ-1517 — `trajcert/src/trajcert/cli/commands/smoke.py`
+  - REQ-1518 — `trajcert/src/trajcert/cli/commands/run.py`
+  - REQ-1519 — `trajcert/src/trajcert/cli/commands/status.py`
+  - REQ-1520 — `trajcert/src/trajcert/cli/commands/report.py`
+- [ ] **REQ-1336, REQ-1374 (Testing)** — Required test directories must exist at their exact roadmap-defined locations: `trajcert/outputs/experiments/<descriptive-experiment-name>/statistics/tests/`, `trajcert/results/experiments/<descriptive-experiment-name>/statistics/tests/`.
+  - [ ] **Verification (applies to REQ-1336 and REQ-1374):** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
 ## Dependencies
 
 ### Blocked By
@@ -2839,18 +2614,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 ### Requirements
 
-- `REQ-1521`, `REQ-1522`, `REQ-1523`, `REQ-1524`, `REQ-1525`, `REQ-1526`, `REQ-1527`, `REQ-1528`, `REQ-1529`, `REQ-1530`, `REQ-1531`, `REQ-1532`
-- `REQ-1533`, `REQ-1534`, `REQ-1535`, `REQ-1536`, `REQ-1537`, `REQ-1538`, `REQ-1539`, `REQ-1540`, `REQ-1541`, `REQ-1542`, `REQ-1543`, `REQ-1544`
-- `REQ-1545`, `REQ-1546`, `REQ-1547`, `REQ-1548`, `REQ-1549`, `REQ-1550`, `REQ-1551`, `REQ-1552`, `REQ-1553`, `REQ-1554`, `REQ-1555`, `REQ-1556`
-- `REQ-1557`, `REQ-1558`, `REQ-1559`, `REQ-1560`, `REQ-1561`, `REQ-1562`, `REQ-1563`, `REQ-1564`, `REQ-1565`, `REQ-1566`, `REQ-1567`, `REQ-1568`
-- `REQ-1569`, `REQ-1570`, `REQ-1571`, `REQ-1572`, `REQ-1573`, `REQ-1574`, `REQ-1575`, `REQ-1576`, `REQ-1577`, `REQ-1578`, `REQ-1579`, `REQ-1580`
-- `REQ-1581`, `REQ-1582`, `REQ-1583`, `REQ-1584`, `REQ-1585`, `REQ-1586`, `REQ-1587`, `REQ-1588`, `REQ-1589`, `REQ-1590`, `REQ-1591`, `REQ-1592`
-- `REQ-1593`, `REQ-1594`, `REQ-1595`, `REQ-1596`, `REQ-1597`, `REQ-1598`, `REQ-1599`, `REQ-1600`, `REQ-1601`, `REQ-1602`, `REQ-1603`, `REQ-1604`
-- `REQ-1605`, `REQ-1606`, `REQ-1607`, `REQ-1608`, `REQ-1609`, `REQ-1610`, `REQ-1611`, `REQ-1612`, `REQ-1613`, `REQ-1614`, `REQ-1615`, `REQ-1616`
-- `REQ-1617`, `REQ-1618`, `REQ-1619`, `REQ-1620`, `REQ-1621`, `REQ-1622`, `REQ-1623`, `REQ-1624`, `REQ-1625`, `REQ-1626`, `REQ-1627`, `REQ-1628`
-- `REQ-1629`, `REQ-1630`, `REQ-1631`, `REQ-1632`, `REQ-1633`, `REQ-1634`, `REQ-1635`, `REQ-1636`, `REQ-1637`, `REQ-1638`, `REQ-1639`, `REQ-1640`
-- `REQ-1641`, `REQ-1642`, `REQ-1643`, `REQ-1644`, `REQ-1645`, `REQ-1646`, `REQ-1647`, `REQ-1648`, `REQ-1649`, `REQ-1650`, `REQ-1651`, `REQ-1652`
-- `REQ-1653`, `REQ-1654`, `REQ-1655`, `REQ-1656`, `REQ-1657`, `REQ-1658`
+- **Requirement IDs:** REQ-1521–REQ-1658 (138 total).
 ## Objective
 
 Establish the complete roadmap-defined test-suite tree and automated architecture invariants that enforce layering, type boundaries, configuration ownership, canonical vocabulary, code hygiene, static quality, and dependency hygiene.
@@ -3037,85 +2801,85 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - [ ] **REQ-1603** — **Testing** — Required architecture file 'trajcert/tests/unit/infrastructure/test_evidence_manifest.py' must exist at the exact roadmap-defined location.
   - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
 - [ ] **REQ-1604** — **Testing** — Required architecture directory 'trajcert/tests/unit/reporting/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1605** — **Testing** — Required architecture file 'trajcert/tests/unit/reporting/test_tables.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1606** — **Testing** — Required architecture file 'trajcert/tests/unit/reporting/test_figures.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1607** — **Testing** — Required architecture file 'trajcert/tests/unit/reporting/test_export.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1608** — **Testing** — Required architecture directory 'trajcert/tests/unit/cli/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1609** — **Testing** — Required architecture file 'trajcert/tests/unit/cli/test_commands.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1610** — **Testing** — Required architecture directory 'trajcert/tests/scientific/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1611** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_data_invariants.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1612** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_population_identities.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1613** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_refinement_and_timing.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1614** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_sharpness_against_independent_oracle.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1615** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_safety_and_impossibility.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1616** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_anytime_validity_contract.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1617** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_experiment_contracts.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1618** — **Testing** — Required architecture file 'trajcert/tests/scientific/test_claim_boundaries.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1619** — **Testing** — Required architecture directory 'trajcert/tests/integration/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1620** — **Testing** — Required architecture directory 'trajcert/tests/integration/data/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1621** — **Testing** — Required architecture file 'trajcert/tests/integration/data/test_synthetic_preprocessing_pipeline.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1622** — **Testing** — Required architecture directory 'trajcert/tests/integration/population/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1623** — **Testing** — Required architecture file 'trajcert/tests/integration/population/test_population_solver_pipeline.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1624** — **Testing** — Required architecture file 'trajcert/tests/integration/population/test_oracle_comparator_pipeline.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1625** — **Testing** — Required architecture directory 'trajcert/tests/integration/sequential/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1626** — **Testing** — Required architecture file 'trajcert/tests/integration/sequential/test_stream_confidence_pipeline.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1627** — **Testing** — Required architecture file 'trajcert/tests/integration/sequential/test_projection_state_pipeline.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1628** — **Testing** — Required architecture directory 'trajcert/tests/integration/execution/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1629** — **Testing** — Required architecture file 'trajcert/tests/integration/execution/test_inventory_to_population.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1630** — **Testing** — Required architecture file 'trajcert/tests/integration/execution/test_reuse_and_selective_invalidation.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1631** — **Testing** — Required architecture file 'trajcert/tests/integration/execution/test_checkpoint_recovery.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1632** — **Testing** — Required architecture file 'trajcert/tests/integration/execution/test_atomic_completion.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1633** — **Testing** — Required architecture file 'trajcert/tests/integration/execution/test_evidence_completion.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1634** — **Testing** — Required architecture directory 'trajcert/tests/integration/reporting/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1635** — **Testing** — Required architecture file 'trajcert/tests/integration/reporting/test_outputs_to_results_export.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1636** — **Testing** — Required architecture file 'trajcert/tests/integration/reporting/test_results_evidence_filter.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1637** — **Testing** — Required architecture directory 'trajcert/tests/e2e/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1638** — **Testing** — Required architecture file 'trajcert/tests/e2e/test_preprocess_smoke_plan.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1639** — **Testing** — Required architecture file 'trajcert/tests/e2e/test_run_status_report.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1640** — **Testing** — Required architecture file 'trajcert/tests/e2e/test_reuse_overwrite_recovery.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1641** — **Testing** — Required architecture file 'trajcert/tests/e2e/test_full_execution_and_report.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1642** — **Testing** — Required architecture directory 'trajcert/tests/smoke/' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1643** — **Testing** — Required architecture file 'trajcert/tests/smoke/test_smoke.py' must exist at the exact roadmap-defined location.
-  - [ ] **Verification:** The required architecture/unit/scientific/integration/e2e test coverage in §10 — Reference Implementation Architecture exists and passes with at least one positive fixture and, where rejection is meaningful, one negative/regression fixture proving the stated invariant.
+  - [ ] **Verification:** Same as REQ-1521 (identical shared test-coverage verification).
 - [ ] **REQ-1644** — **Architecture** — configs/trajcert.yaml: sole production YAML containing the roadmap-defined configurable scientific and runtime values.
   - [ ] **Verification:** Repository architecture tests assert the required path/component or responsibility in §10 — Reference Implementation Architecture (L3041), enforce declared dependency directions/ownership, and fail when the component is missing, misplaced, duplicated, or assigned forbidden responsibilities.
 - [ ] **REQ-1645** — **Architecture** — The `Responsibilities` contract must include `configs/tests.yml and configs/smoke.yml: test-runner and smoke-runner settings only.`.
@@ -3190,10 +2954,6 @@ Exact file placement follows the repository architecture unless the roadmap expl
 
 ## Acceptance Criteria
 
-- [ ] Create every required `tests/architecture`, `tests/unit`, `tests/scientific`, `tests/integration`, `tests/e2e`, and `tests/smoke` path/module at the exact roadmap-defined location.
-- [ ] Implement the architecture tests for dependency boundaries, public type boundaries, no `Any`/anonymous dict payloads, primitive leaks, hardcoded governed values, configuration ownership, duplicate constants, dead code, enum integrity, no test-only production code, no redirects/shims/re-exports, naming policy, canonical vocabulary, no source comments/docstrings, no TODO/temporary code, strict Pyright, Ruff quality, and dependency hygiene.
-- [ ] Enforce one-way dependency direction and the declared responsibilities of configuration, domain, data, math, inference, baselines, experiments, evaluation, analysis, infrastructure, reporting, and CLI.
-- [ ] Require meaningful enums/frozen domain types at public/domain boundaries and reject bypass by equivalent free-form strings or duplicated primitives.
 - [ ] Every implementation-bearing requirement in **Implementation Requirements** is implemented completely and its listed verification condition passes.
 - [ ] Every `NON_IMPLEMENTATION` requirement in **Implementation Requirements** remains traceable and is preserved exactly as a scope, terminology, assumption, invariant, exclusion, or claim constraint.
 - [ ] All scope items are implemented completely.
@@ -4422,7 +4182,7 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1962`–`REQ-2106`
 ## Objective
 
-Implement all canonical scientific-result, metric/statistical, failure, claim, completion-marker, and status record schemas so numerical results and exceptional states are explicit, typed, serializable, and machine-verifiable.
+Implement all canonical scientific-result, metric/statistical, failure, claim, completion-marker, and status record schemas so results and exceptional states are explicit, typed, serializable, and machine-verifiable.
 
 ## Scope
 
@@ -4430,13 +4190,13 @@ Implement only the work required to satisfy the referenced roadmap requirements:
 
 - Implement every §13.5 method/metric/evaluation/statistical result record and field with exact numeric/null/status semantics.
 - Implement §13.6 failure, claim, and completion records with exact vocabularies, required fields, evidence links, and invalid-combination rejection.
-- Ensure exceptional states are represented by explicit status fields rather than NaN/infinity or missing required evidence.
+- Represent exceptional states via explicit status fields, not NaN/infinity or missing required evidence.
 
 No requirement may exist only implicitly in acceptance criteria, tests, or implementation notes.
 
 ## Implementation Requirements
 
-The following is the complete atomic requirement set assigned to this issue. Implementation-bearing requirements must be implemented; `NON_IMPLEMENTATION` entries are binding scope, terminology, assumption, invariant, exclusion, or claim constraints that must be preserved and verified without inventing fictitious implementation work.
+The following is the complete atomic requirement set for this issue. Implementation-bearing requirements must be implemented; `NON_IMPLEMENTATION` entries are binding scope/terminology/assumption/invariant/exclusion/claim constraints to preserve and verify without inventing implementation work.
 
 - [ ] **REQ-1962** — **Artifact** — The population-metrics record must include field `law_name`.
   - [ ] **Verification:** Artifact-schema/workspace integration tests materialize the exact field/path/layout contract in §13.5 — Scientific result records (L3564), validate canonical active placement and schema/checksum rules, and reject missing, stale, partial, or incorrectly located artifacts.
@@ -4733,12 +4493,12 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocked By
 
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — approved milestone entry gate: `M01` must be complete with audit result `PASS` before M02 implementation proceeds.
-- M02 — I13 Implement Canonical Physical Types and Common Artifact Envelope — provides **Versioned common artifact schema/envelope** required by this issue.
-- M02 — I15 Implement Cell, Execution, Dependency, and Provenance Schemas — provides **Canonical cell/execution/dependency/provenance records** required by this issue.
+- M02 — I13 Implement Canonical Physical Types and Common Artifact Envelope — provides **Versioned common artifact schema/envelope**.
+- M02 — I15 Implement Cell, Execution, Dependency, and Provenance Schemas — provides **Canonical cell/execution/dependency/provenance records**.
 
 ### Blocks
 
-- M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
+- M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, and provenance before the milestone can pass.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -4761,15 +4521,12 @@ Expected areas affected by this issue:
 - Failure/claim/completion schemas
 - Round-trip and negative schema evidence
 
-Exact file placement follows the repository architecture unless the roadmap explicitly mandates a path.
+File placement follows the repository architecture unless the roadmap mandates a path.
 
 ## Acceptance Criteria
 
-- [ ] Implement every §13.5 method/metric/evaluation/statistical result record and field with exact numeric/null/status semantics.
-- [ ] Implement §13.6 failure, claim, and completion records with exact vocabularies, required fields, evidence links, and invalid-combination rejection.
-- [ ] Ensure exceptional states are represented by explicit status fields rather than NaN/infinity or missing required evidence.
 - [ ] Every implementation-bearing requirement in **Implementation Requirements** is implemented completely and its listed verification condition passes.
-- [ ] Every `NON_IMPLEMENTATION` requirement in **Implementation Requirements** remains traceable and is preserved exactly as a scope, terminology, assumption, invariant, exclusion, or claim constraint.
+- [ ] Every `NON_IMPLEMENTATION` requirement in **Implementation Requirements** is preserved exactly as a scope/terminology/assumption/invariant/exclusion/claim constraint.
 - [ ] All scope items are implemented completely.
 - [ ] Roadmap semantics are preserved exactly.
 - [ ] Configuration values are consumed from their authoritative source.
@@ -11635,11 +11392,7 @@ This audit issue is complete only when **all** of the following are true:
 ---
 # M07 — I47 Implement Manuscript Evidence Contract and Generate Tables 1–9
 
-> Every issue is an executable unit of roadmap work.
->
-> The roadmap is the scientific and implementation authority. This issue may clarify execution and verification, but it must not silently expand, reinterpret, redesign, or weaken roadmap requirements.
->
-> The mandatory engineering and research checklist in this template applies to **every issue**. It is a compliance gate, not additional scientific scope.
+> Every issue is an executable unit of roadmap work. The roadmap is the scientific and implementation authority; this issue may clarify execution and verification but must not expand, reinterpret, redesign, or weaken roadmap requirements. The mandatory engineering and research checklist applies to **every issue** as a compliance gate, not additional scientific scope.
 
 ## Issue Summary
 
@@ -11666,25 +11419,15 @@ This audit issue is complete only when **all** of the following are true:
 
 ### Requirements
 
-- `REQ-1744`, `REQ-1745`, `REQ-1746`, `REQ-1747`, `REQ-1748`, `REQ-1749`, `REQ-1750`, `REQ-1751`, `REQ-1752`, `REQ-1753`, `REQ-1754`, `REQ-1755`
-- `REQ-1756`, `REQ-1757`, `REQ-1758`, `REQ-1759`, `REQ-1760`, `REQ-1761`, `REQ-1762`, `REQ-1763`, `REQ-2875`, `REQ-2876`, `REQ-2877`, `REQ-2879`
-- `REQ-2880`, `REQ-2881`, `REQ-2882`, `REQ-2884`, `REQ-2885`, `REQ-2887`, `REQ-2888`, `REQ-2889`, `REQ-2890`, `REQ-2891`, `REQ-2892`, `REQ-2893`
-- `REQ-2894`, `REQ-2895`, `REQ-2896`, `REQ-2897`, `REQ-2898`, `REQ-2899`, `REQ-2900`, `REQ-2901`, `REQ-2902`, `REQ-2903`, `REQ-2904`, `REQ-2905`
-- `REQ-2906`, `REQ-2907`, `REQ-2908`, `REQ-2909`, `REQ-2910`, `REQ-2911`, `REQ-2912`, `REQ-2913`, `REQ-2914`, `REQ-2915`, `REQ-2916`, `REQ-2917`
-- `REQ-2918`, `REQ-2919`, `REQ-2920`, `REQ-2921`, `REQ-2922`, `REQ-2923`, `REQ-2924`, `REQ-2925`, `REQ-2926`, `REQ-2927`, `REQ-2928`, `REQ-2929`
-- `REQ-2930`, `REQ-2931`, `REQ-2932`, `REQ-2933`, `REQ-2934`, `REQ-2935`, `REQ-2936`, `REQ-2937`, `REQ-2938`, `REQ-2939`, `REQ-2940`, `REQ-2941`
-- `REQ-2942`, `REQ-2943`, `REQ-2944`, `REQ-2945`, `REQ-2946`, `REQ-2947`, `REQ-2948`, `REQ-2949`, `REQ-2950`, `REQ-2951`, `REQ-2952`, `REQ-2953`
-- `REQ-2954`, `REQ-2955`, `REQ-2956`, `REQ-2957`, `REQ-2958`, `REQ-2959`, `REQ-2960`, `REQ-2961`, `REQ-2962`, `REQ-2963`, `REQ-2964`, `REQ-2965`
-- `REQ-2966`, `REQ-2967`, `REQ-2968`, `REQ-2969`, `REQ-2970`, `REQ-2971`, `REQ-2972`, `REQ-2973`, `REQ-2974`, `REQ-2975`, `REQ-2976`, `REQ-2977`
-- `REQ-2978`, `REQ-2979`, `REQ-2980`, `REQ-2981`, `REQ-2982`, `REQ-2983`, `REQ-2984`, `REQ-2985`, `REQ-2986`, `REQ-2987`, `REQ-2988`, `REQ-2989`
-- `REQ-2990`, `REQ-2991`
+- `REQ-1744`–`REQ-1763`, `REQ-2875`–`REQ-2877`, `REQ-2879`–`REQ-2882`, `REQ-2884`–`REQ-2885`, `REQ-2887`–`REQ-2991` (134 requirements total; full itemized list with individual descriptions appears in Implementation Requirements below)
+
 ## Objective
 
 Implement the manuscript evidence-source contract and deterministically generate Tables 1–9 directly from verified machine-readable artifacts with exact schemas, source paths, ordering, formatting, status visibility, and evidence-role separation.
 
 ## Scope
 
-Implement only the work required to satisfy the referenced roadmap requirements:
+Required work:
 
 - Treat machine-readable source data as manuscript-number authority; renderers may format but never recompute or manually embed scientific results.
 - Keep exploratory, diagnostic, nonconfirmatory, invalid, failed, incompatible, and boundary evidence roles/states visible exactly as required and reject missing, stale, malformed, or unverified source artifacts.
@@ -11692,280 +11435,278 @@ Implement only the work required to satisfy the referenced roadmap requirements:
 - Generate Tables 5–9 with the exact theorem-validation, production/oracle, partition/timing, compatibility/sharpness/safety, and anytime-validity columns/content/order, including required tolerances, differences, confidence limits, planned-validity fields, and failed-seed accounting.
 - Write stable source-data artifacts plus manuscript-facing CSV/TeX outputs to canonical results locations with deterministic formatting and complete provenance.
 
-No requirement may exist only implicitly in acceptance criteria, tests, or implementation notes.
-
 ## Implementation Requirements
 
-The following is the complete atomic requirement set assigned to this issue. Implementation-bearing requirements must be implemented; `NON_IMPLEMENTATION` entries are binding scope, terminology, assumption, invariant, exclusion, or claim constraints that must be preserved and verified without inventing fictitious implementation work.
+Complete atomic requirement set for this issue. Implementation-bearing requirements must be implemented; `NON_IMPLEMENTATION` entries are binding scope, terminology, assumption, invariant, exclusion, or claim constraints preserved without inventing implementation work.
 
 - [ ] **REQ-1744** — **Reporting** — The compact manuscript-facing workspace is rooted at artifacts.results_root.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3192) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3192) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1745** — **Reporting** — report exports only completed, schema-valid, dependency-valid, provenance-valid evidence.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3194) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3194) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1746** — **Reporting** — Experiment-specific manuscript evidence must be published under exact root `results/experiments/<descriptive-experiment-name>/`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3199) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3199) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1747** — **Reporting** — Cross-experiment claim and synthesis artifacts owned by Statistical Synthesis must be published under exact root `results/project_summary/`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3205) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3205) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1748** — **Reporting** — Every figure and table is rendered only from authoritative machine-readable evidence under outputs/.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3208) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3208) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1749** — **Reporting** — results/ is never consumed as scientific computational input.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3210) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3210) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1750** — **Reporting** — Table and figure ordering is deterministic.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3212) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3212) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1751** — **Reporting** — Favorable axis-limit selection, seed-subset selection, hiding incompatible points, and undeclared smoothing or fitted trends used as claim evidence are forbidden.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3214) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3214) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1752** — **Reporting** — Rendering-only changes may regenerate SVG/PNG/TeX/CSV without invalidating scientific source data, metrics, statistical results, or experiment cells.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3216) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3216) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1753** — **Reporting** — `results/` must not contain `cache files`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3221) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3221) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1754** — **Reporting** — `results/` must not contain `debug logs`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3222) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3222) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1755** — **Reporting** — `results/` must not contain `failed cells`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3223) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3223) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1756** — **Reporting** — `results/` must not contain `invalid cells`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3224) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3224) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1757** — **Reporting** — `results/` must not contain `stale cells`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3225) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3225) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1758** — **Reporting** — `results/` must not contain `temporary artifacts`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3226) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3226) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1759** — **Reporting** — `results/` must not contain `partial artifacts`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3227) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3227) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1760** — **Reporting** — `results/` must not contain `drafts`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3228) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3228) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1761** — **Reporting** — `results/` must not contain `checkpoints`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3229) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3229) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1762** — **Reporting** — `results/` must not contain `authoritative computational provenance payloads`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3230) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3230) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-1763** — **Reporting** — Only compact verified reproducibility summaries are exported.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §12 — Manuscript Evidence Contract (L3233) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §12 — Manuscript Evidence Contract (L3233) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2875** — **Reporting** — All manuscript tables are deterministic renders of authoritative Parquet.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5009) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5009) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2876** — **Reporting** — The manuscript-table contract at §19 — Required Tables (L5014) must use exact value `.csv`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5014) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5014) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2877** — **Reporting** — The manuscript-table contract at §19 — Required Tables (L5015) must use exact value `.tex`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5015) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5015) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2879** — **Reporting** — The manuscript-table contract at §19 — Required Tables (L5023) must use exact value `solver_oracle_validation.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5023) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5023) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2880** — **Reporting** — The manuscript-table contract at §19 — Required Tables (L5024) must use exact value `solver_oracle_validation.csv`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5024) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5024) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2881** — **Reporting** — The manuscript-table contract at §19 — Required Tables (L5025) must use exact value `solver_oracle_validation.tex`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5025) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5025) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2882** — **Reporting** — The implementation must preserve and evaluate the roadmap mathematical contract: $$(n-1)q.$$
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5030) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5030) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2884** — **Reporting** — Display rounding never feeds scientific comparison.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5034) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5034) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2885** — **Reporting** — The manuscript-table contract at §19 — Required Tables (L5039) must use exact value `<0.0001`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §19 — Required Tables (L5039) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §19 — Required Tables (L5039) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2887** — **Reporting** — The required manuscript table at Table 1 — Scientific constants and numerical protocol (L5047) must use authoritative source path `outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/protocol_constants.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 1 — Scientific constants and numerical protocol (L5047) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 1 — Scientific constants and numerical protocol (L5047) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2888** — **Reporting** — The required manuscript table schema at Table 1 — Scientific constants and numerical protocol (L5053) must include column `quantity`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 1 — Scientific constants and numerical protocol (L5053) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 1 — Scientific constants and numerical protocol (L5053) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2889** — **Reporting** — The required manuscript table schema at Table 1 — Scientific constants and numerical protocol (L5054) must include column `value`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 1 — Scientific constants and numerical protocol (L5054) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 1 — Scientific constants and numerical protocol (L5054) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2890** — **Reporting** — The required manuscript table schema at Table 1 — Scientific constants and numerical protocol (L5055) must include column `unit`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 1 — Scientific constants and numerical protocol (L5055) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 1 — Scientific constants and numerical protocol (L5055) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2891** — **Reporting** — The required manuscript table schema at Table 1 — Scientific constants and numerical protocol (L5056) must include column `value_class`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 1 — Scientific constants and numerical protocol (L5056) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 1 — Scientific constants and numerical protocol (L5056) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2892** — **Reporting** — The required manuscript table schema at Table 1 — Scientific constants and numerical protocol (L5057) must include column `fixed_or_swept`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 1 — Scientific constants and numerical protocol (L5057) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 1 — Scientific constants and numerical protocol (L5057) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2893** — **Reporting** — The required manuscript table schema at Table 1 — Scientific constants and numerical protocol (L5058) must include column `scientific_role`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 1 — Scientific constants and numerical protocol (L5058) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 1 — Scientific constants and numerical protocol (L5058) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2894** — **Reporting** — The required manuscript table at Table 2 — Synthetic laws (L5064) must use authoritative source path `outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/synthetic_laws.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5064) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5064) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2895** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5070) must include column `law_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5070) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5070) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2896** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5071) must include column `theta`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5071) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5071) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2897** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5072) must include column `q1`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5072) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5072) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2898** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5073) must include column `q0`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5073) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5073) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2899** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5074) must include column `lambda1`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5074) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5074) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2900** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5075) must include column `lambda0`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5075) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5075) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2901** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5076) must include column `K`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5076) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5076) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2902** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5077) must include column `A`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5077) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5077) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2903** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5078) must include column `G`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5078) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5078) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2904** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5079) must include column `c`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5079) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5079) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2905** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5080) must include column `tau_at_8_band_partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5080) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5080) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2906** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5081) must include column `true_mutual_information_at_8_band_partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5081) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5081) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2907** — **Reporting** — The required manuscript table schema at Table 2 — Synthetic laws (L5082) must include column `scientific_role`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 2 — Synthetic laws (L5082) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 2 — Synthetic laws (L5082) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2908** — **Reporting** — The required manuscript table at Table 3 — Baseline assumptions (L5088) must use authoritative source path `outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/baselines.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5088) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5088) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2909** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5094) must include column `baseline_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5094) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5094) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2910** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5095) must include column `purpose`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5095) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5095) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2911** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5096) must include column `observation_access`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5096) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5096) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2912** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5097) must include column `assumption`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5097) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5097) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2913** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5098) must include column `numerical_contract`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5098) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5098) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2914** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5099) must include column `sensitivity_grid`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5099) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5099) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2915** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5100) must include column `seed_pairing`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5100) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5100) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2916** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5101) must include column `metrics`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5101) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5101) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2917** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5102) must include column `valid_scope`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5102) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5102) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2918** — **Reporting** — The required manuscript table schema at Table 3 — Baseline assumptions (L5103) must include column `forbidden_interpretation`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 3 — Baseline assumptions (L5103) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 3 — Baseline assumptions (L5103) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2919** — **Reporting** — The required manuscript table at Table 4 — Experiment matrix (L5109) must use authoritative source path `outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/experiment_matrix.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5109) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5109) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2920** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5115) must include column `execution_group`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5115) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5115) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2921** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5116) must include column `experiment_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5116) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5116) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2922** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5117) must include column `classification`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5117) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5117) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2923** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5118) must include column `purpose`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5118) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5118) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2924** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5119) must include column `cell_expansion`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5119) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5119) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2925** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5120) must include column `cell_count`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5120) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5120) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2926** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5121) must include column `primary_metrics`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5121) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5121) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2927** — **Reporting** — The required manuscript table schema at Table 4 — Experiment matrix (L5122) must include column `claim_ids`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 4 — Experiment matrix (L5122) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 4 — Experiment matrix (L5122) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2928** — **Reporting** — The required manuscript table at Table 5 — Theorem validation (L5128) must use authoritative source path `outputs/experiments/statistical-synthesis/evaluations/aggregates/theorem_validation_summary.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5128) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5128) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2929** — **Reporting** — The required manuscript table schema at Table 5 — Theorem validation (L5134) must include column `theorem_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5134) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5134) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2930** — **Reporting** — The required manuscript table schema at Table 5 — Theorem validation (L5135) must include column `case_count`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5135) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5135) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2931** — **Reporting** — The required manuscript table schema at Table 5 — Theorem validation (L5136) must include column `maximum_absolute_error`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5136) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5136) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2932** — **Reporting** — The required manuscript table schema at Table 5 — Theorem validation (L5137) must include column `minimum_inequality_margin`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5137) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5137) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2933** — **Reporting** — The required manuscript table schema at Table 5 — Theorem validation (L5138) must include column `all_cases_pass`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5138) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5138) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2934** — **Reporting** — The required manuscript table schema at Table 5 — Theorem validation (L5139) must include column `primary_artifact`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5139) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5139) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2935** — **Reporting** — The required manuscript table schema at Table 5 — Theorem validation (L5140) must include column `scientific_consequence`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 5 — Theorem validation (L5140) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 5 — Theorem validation (L5140) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2936** — **Reporting** — The required manuscript table at Table 6 — Production/oracle validation (L5146) must use authoritative source path `outputs/experiments/production-solver-vs-independent-oracle/evaluations/aggregates/solver_oracle_validation.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5146) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5146) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2937** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5152) must include column `partition_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5152) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5152) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2938** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5153) must include column `rho_offset_mode`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5153) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5153) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2939** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5154) must include column `cell_count`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5154) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5154) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2940** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5155) must include column `max_abs_u_lower_error`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5155) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5155) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2941** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5156) must include column `max_abs_u_upper_error`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5156) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5156) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2942** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5157) must include column `max_abs_risk_upper_error`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5157) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5157) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2943** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5158) must include column `max_abs_rho_star_error`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5158) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5158) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2944** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5159) must include column `rho_star_applicable_cell_count`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5159) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5159) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2945** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5160) must include column `state_mismatch_count`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5160) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5160) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2946** — **Reporting** — The required manuscript table schema at Table 6 — Production/oracle validation (L5161) must include column `pass`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 6 — Production/oracle validation (L5161) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 6 — Production/oracle validation (L5161) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2947** — **Reporting** — The required manuscript table at Table 7 — Partition coherence and timing (L5167) must use authoritative source path `outputs/experiments/statistical-synthesis/evaluations/aggregates/partition_timing_results.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5167) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5167) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2948** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5173) must include column `law_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5173) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5173) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2949** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5174) must include column `coarse_partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5174) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5174) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2950** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5175) must include column `fine_partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5175) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5175) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2951** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5176) must include column `rho`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5176) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5176) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2952** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5177) must include column `tau_coarse`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5177) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5177) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2953** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5178) must include column `tau_fine`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5178) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5178) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2954** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5179) must include column `delta_tau`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5179) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5179) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2955** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5180) must include column `coarse_risk_upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5180) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5180) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2956** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5181) must include column `fine_risk_upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5181) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5181) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2957** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5182) must include column `bound_gain`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5182) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5182) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2958** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5183) must include column `fine_subset_coarse`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5183) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5183) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2959** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5184) must include column `theorem_condition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5184) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5184) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2960** — **Reporting** — The required manuscript table schema at Table 7 — Partition coherence and timing (L5185) must include column `pass`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 7 — Partition coherence and timing (L5185) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 7 — Partition coherence and timing (L5185) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2961** — **Reporting** — The required manuscript table at Table 8 — Compatibility, sharpness, safety (L5191) must use authoritative source path `outputs/experiments/statistical-synthesis/evaluations/aggregates/compatibility_safety.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5191) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5191) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2962** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5197) must include column `law_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5197) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5197) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2963** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5198) must include column `partition_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5198) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5198) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2964** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5199) must include column `rho`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5199) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5199) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2965** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5200) must include column `beta`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5200) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5200) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2966** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5201) must include column `tau`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5201) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5201) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2967** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5202) must include column `theta_dagger`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5202) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5202) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2968** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5203) must include column `risk_lower`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5203) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5203) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2969** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5204) must include column `risk_upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5204) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5204) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2970** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5205) must include column `rho_star`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5205) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5205) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2971** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5206) must include column `expected_regime`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5206) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5206) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2972** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5207) must include column `observed_regime`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5207) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5207) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2973** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5208) must include column `oracle_error`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5208) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5208) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2974** — **Reporting** — The required manuscript table schema at Table 8 — Compatibility, sharpness, safety (L5209) must include column `pass`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 8 — Compatibility, sharpness, safety (L5209) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 8 — Compatibility, sharpness, safety (L5209) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2975** — **Reporting** — The required manuscript table at Table 9 — Anytime validity (L5215) must use authoritative source path `outputs/experiments/anytime-coverage-stress/evaluations/aggregates/anytime_coverage.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5215) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5215) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2976** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5221) must include column `stress_cell`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5221) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5221) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2977** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5222) must include column `method_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5222) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5222) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2978** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5223) must include column `K`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5223) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5223) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2979** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5224) must include column `true_theta`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5224) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5224) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2980** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5225) must include column `true_mutual_information`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5225) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5225) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2981** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5226) must include column `rho`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5226) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5226) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2982** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5227) must include column `beta`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5227) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5227) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2983** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5228) must include column `delta`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5228) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5228) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2984** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5229) must include column `independent_streams`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5229) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5229) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2985** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5230) must include column `ever_violations`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5230) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5230) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2986** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5231) must include column `violation_rate`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5231) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5231) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2987** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5232) must include column `clopper_pearson_upper_95`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5232) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5232) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2988** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5233) must include column `criterion_pass`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5233) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5233) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2989** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5234) must include column `median_first_certified_n`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5234) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5234) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2990** — **Reporting** — The required manuscript table schema at Table 9 — Anytime validity (L5235) must include column `median_certified_update_fraction`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5235) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5235) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2991** — **Reporting** — Invalid-by-design controls appear in a separately labeled block.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 9 — Anytime validity (L5238) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 9 — Anytime validity (L5238) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 ## Dependencies
 
 ### Blocked By
@@ -11978,7 +11719,7 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 ## Implementation Surface
 
-Expected areas affected by this issue:
+Affected areas:
 
 ### Production Code
 
@@ -11997,7 +11738,7 @@ Expected areas affected by this issue:
 - Tables 1–9 manuscript renderings
 - Evidence/provenance links
 
-Exact file placement follows the repository architecture unless the roadmap explicitly mandates a path.
+File placement follows repository architecture unless the roadmap mandates otherwise.
 
 ## Acceptance Criteria
 
@@ -12009,22 +11750,15 @@ Exact file placement follows the repository architecture unless the roadmap expl
 - [ ] Generate partition/timing and compatibility/sharpness/safety tables with exact law/partition/rho/beta/state/bound fields and no suppression of unfavorable or boundary outcomes.
 - [ ] Generate anytime-validity table from coverage-stress evidence including independent stream counts, ever-violation rates, intervals, planned validity, and failure accounting.
 - [ ] Keep all manuscript values sourced from persisted verified machine-readable records.
-- [ ] Every implementation-bearing requirement in **Implementation Requirements** is implemented completely and its listed verification condition passes.
-- [ ] Every `NON_IMPLEMENTATION` requirement in **Implementation Requirements** remains traceable and is preserved exactly as a scope, terminology, assumption, invariant, exclusion, or claim constraint.
-- [ ] All scope items are implemented completely.
-- [ ] Roadmap semantics are preserved exactly.
-- [ ] Configuration values are consumed from their authoritative source.
-- [ ] Invalid, unavailable, infeasible, unsupported, and insufficient-evidence states follow the declared behavior.
-- [ ] Determinism and reproducibility requirements are satisfied where required.
-- [ ] Integration with required upstream and downstream contracts works.
-- [ ] Required artifacts and evidence are produced with the correct identity, schema, integrity, and provenance.
+- [ ] Every implementation-bearing requirement is implemented completely and passes its listed verification; every `NON_IMPLEMENTATION` requirement remains traceable and preserved exactly as a scope, terminology, assumption, invariant, exclusion, or claim constraint.
+- [ ] All scope items are implemented completely, roadmap semantics are preserved exactly, and configuration values are consumed from their authoritative source.
+- [ ] Invalid, unavailable, infeasible, unsupported, and insufficient-evidence states follow the declared behavior; determinism and reproducibility requirements are satisfied where required.
+- [ ] Integration with required upstream and downstream contracts works, and required artifacts/evidence are produced with the correct identity, schema, integrity, and provenance.
 - [ ] No unrelated scientific or product behavior has been introduced.
 
 ## Required Tests
 
-
-Specify the concrete tests required for this issue. A category that genuinely does not apply must be recorded as `N/A — <reason>` in the completion record rather than silently ignored.
-Each test must prove an acceptance criterion, invariant, failure path, or previously observed defect. Avoid tests that merely duplicate implementation details.
+Concrete tests required for this issue; record genuine non-applicability as `N/A — <reason>` in the completion record. Each test must prove an acceptance criterion, invariant, failure path, or known defect, not merely duplicate implementation details.
 
 ## Required Outputs
 
@@ -12034,17 +11768,13 @@ Each test must prove an acceptance criterion, invariant, failure path, or previo
 - [ ] Tables 5–9 stable source data
 - [ ] Tables 5–9 manuscript renderings
 
-For each required output, its expected identity or location is the roadmap/repository-defined canonical location whenever one is specified.
+Expected identity/location follows the roadmap/repository-defined canonical location where specified.
 
 ## Evidence / Completion Requirements
 
-
-- [ ] Every requirement above has objective evidence satisfying its nested **Verification** checkbox.
-- [ ] Every required output exists, is readable, schema/contract-valid, integrity-valid, and provenance-compatible.
-- [ ] Every persisted artifact has the required semantic identity, dependency identity, content digest, schema version, parent lineage, and canonical active path where applicable.
-- [ ] No stale, corrupt, incompatible, partial, invalid, failed, or otherwise non-authoritative artifact is cited as completion evidence.
-- [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
-- [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
+- [ ] Every requirement above has objective evidence satisfying its nested **Verification** checkbox, and every required output exists, is readable, schema/contract-valid, integrity-valid, and provenance-compatible.
+- [ ] Every persisted artifact has the required semantic identity, dependency identity, content digest, schema version, parent lineage, and canonical active path where applicable; no stale, corrupt, incompatible, partial, invalid, failed, or otherwise non-authoritative artifact is cited as completion evidence.
+- [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable, and completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
 # M07 — I48 Generate Required Scientific Figures 1–8
 
@@ -12103,129 +11833,129 @@ No requirement may exist only implicitly in acceptance criteria, tests, or imple
 The following is the complete atomic requirement set assigned to this issue. Implementation-bearing requirements must be implemented; `NON_IMPLEMENTATION` entries are binding scope, terminology, assumption, invariant, exclusion, or claim constraints that must be preserved and verified without inventing fictitious implementation work.
 
 - [ ] **REQ-3052** — **Reporting** — The required figure contract at §20 — Required Figures (L5355) must use exact plot/source value `.svg`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §20 — Required Figures (L5355) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §20 — Required Figures (L5355) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3053** — **Reporting** — The required figure contract at §20 — Required Figures (L5356) must use exact plot/source value `.png`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §20 — Required Figures (L5356) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §20 — Required Figures (L5356) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3055** — **Reporting** — No smoothing, favorable post-selection, seed filtering, or hidden removal of incompatible points is allowed.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in §20 — Required Figures (L5361) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders §20 — Required Figures (L5361) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3056** — **Reporting** — The figure at Figure 1 — Partition coherence at fixed sensitivity (L5368) must be owned by `Statistical Synthesis`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5368) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5368) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3057** — **Reporting** — The figure at Figure 1 — Partition coherence at fixed sensitivity (L5374) must use authoritative source/setting `outputs/experiments/statistical-synthesis/evaluations/aggregates/figure_partition_coherence.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5374) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5374) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3058** — **Reporting** — Figure 1 source must include the exact $\rho=0.10$ population outputs from `Population Sensitivity Utility`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5379) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5379) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3059** — **Reporting** — Figure 1 source data must include the three population laws `Timing only: harmful outcomes resolve late`, `Terminal only: harmful outcomes remain unresolved`, and `Timing and terminal: harmful outcomes resolve late`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5381) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5381) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3060** — **Reporting** — Figure 1 source must include the `Same Endpoint, Different Timing` ablation contribution listed below.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5386) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5386) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3061** — **Reporting** — Figure 1 source data must include the `Same endpoint with timing information` law from the `Same Endpoint, Different Timing` ablation.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5388) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5388) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3062** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5395) must include `Endpoint-only partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5395) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5395) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3063** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5396) must include `2-band partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5396) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5396) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3064** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5397) must include `4-band partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5397) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5397) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3065** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5398) must include `8-band partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5398) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5398) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3066** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5404) must include `x = latent risk interval`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5404) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5404) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3067** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5405) must include `y = partition K`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5405) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5405) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3068** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5406) must include `facet = law`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5406) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5406) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3069** — **Reporting** — The figure specification at Figure 1 — Partition coherence at fixed sensitivity (L5407) must include `annotation = tau`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 1 — Partition coherence at fixed sensitivity (L5407) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 1 — Partition coherence at fixed sensitivity (L5407) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3070** — **Reporting** — The figure at Figure 2 — Exact timing value (L5413) must use authoritative source/setting `outputs/experiments/strict-timing-gain/evaluations/aggregates/figure_timing_value.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 2 — Exact timing value (L5413) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 2 — Exact timing value (L5413) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3071** — **Reporting** — The figure at Figure 2 — Exact timing value (L5417) must use authoritative source/setting `x = Delta tau`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 2 — Exact timing value (L5417) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 2 — Exact timing value (L5417) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3072** — **Reporting** — The figure at Figure 2 — Exact timing value (L5418) must use authoritative source/setting `y = coarse risk upper - fine risk upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 2 — Exact timing value (L5418) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 2 — Exact timing value (L5418) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3073** — **Reporting** — The figure at Figure 2 — Exact timing value (L5419) must use authoritative source/setting `group = semantic timing case`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 2 — Exact timing value (L5419) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 2 — Exact timing value (L5419) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3074** — **Reporting** — The figure at Figure 2 — Exact timing value (L5420) must use authoritative source/setting `facet = configured rho offset`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 2 — Exact timing value (L5420) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 2 — Exact timing value (L5420) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3075** — **Reporting** — The figure at Figure 2 — Exact timing value (L5421) must use authoritative source/setting `vertical reference = Delta tau = 0`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 2 — Exact timing value (L5421) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 2 — Exact timing value (L5421) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3076** — **Reporting** — The figure at Figure 3 — Information profile and safety corridor (L5427) must use authoritative source/setting `outputs/experiments/safety-and-intrinsic-impossibility/evaluations/aggregates/figure_information_profile.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5427) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5427) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3077** — **Reporting** — The figure at Figure 3 — Information profile and safety corridor (L5431) must use authoritative source/setting `law = Timing and terminal: harmful outcomes resolve late`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5431) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5431) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3078** — **Reporting** — The figure at Figure 3 — Information profile and safety corridor (L5432) must use authoritative source/setting `K = method.primary_finest_resolved_bands`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5432) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5432) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3079** — **Reporting** — The figure at Figure 3 — Information profile and safety corridor (L5433) must use authoritative source/setting `beta = budgets.primary_risk`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5433) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5433) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3080** — **Reporting** — The figure at Figure 3 — Information profile and safety corridor (L5434) must use authoritative source/setting `rho = budgets.primary_information_nats`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5434) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5434) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3081** — **Reporting** — The figure at Figure 3 — Information profile and safety corridor (L5435) must use authoritative source/setting `grid = numerics.information_profile_figure_grid_points`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5435) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5435) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3082** — **Reporting** — The figure specification at Figure 3 — Information profile and safety corridor (L5441) must include `u_dagger`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5441) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5441) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3083** — **Reporting** — The figure specification at Figure 3 — Information profile and safety corridor (L5442) must include `tau`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5442) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5442) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3084** — **Reporting** — The figure specification at Figure 3 — Information profile and safety corridor (L5443) must include `rho`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5443) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5443) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3085** — **Reporting** — The figure specification at Figure 3 — Information profile and safety corridor (L5444) must include `u_beta when in domain`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5444) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5444) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3086** — **Reporting** — The figure specification at Figure 3 — Information profile and safety corridor (L5445) must include `rho_star`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5445) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5445) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3087** — **Reporting** — The figure specification at Figure 3 — Information profile and safety corridor (L5446) must include `exact feasible interval`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 3 — Information profile and safety corridor (L5446) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 3 — Information profile and safety corridor (L5446) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3088** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5452) must use authoritative source/setting `outputs/experiments/anytime-coverage-stress/evaluations/aggregates/figure_anytime_paths.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5452) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5452) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3089** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5456) must use authoritative source/setting `seed indices = [0,1,2,3]`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5456) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5456) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3090** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5457) must use authoritative source/setting `law = Timing and terminal: harmful outcomes resolve late`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5457) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5457) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3091** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5458) must use authoritative source/setting `K = 8`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5458) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5458) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3092** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5459) must use authoritative source/setting `rho = I_true + 0.01`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5459) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5459) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3093** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5460) must use authoritative source/setting `beta = budgets.primary_risk`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5460) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5460) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3094** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5461) must use authoritative source/setting `x = matured event count`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5461) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5461) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3095** — **Reporting** — The figure at Figure 4 — Representative anytime certificates (L5462) must use authoritative source/setting `y = U_n(rho)`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5462) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5462) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3096** — **Reporting** — Include true $\theta$, $\beta$, evidence-gate region, and state changes.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 4 — Representative anytime certificates (L5465) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 4 — Representative anytime certificates (L5465) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3097** — **Reporting** — The figure at Figure 5 — Anytime stress validity (L5470) must use authoritative source/setting `outputs/experiments/anytime-coverage-stress/evaluations/aggregates/figure_anytime_coverage.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 5 — Anytime stress validity (L5470) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 5 — Anytime stress validity (L5470) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3098** — **Reporting** — The figure specification at Figure 5 — Anytime stress validity (L5476) must include `confidence.anytime_delta`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 5 — Anytime stress validity (L5476) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 5 — Anytime stress validity (L5476) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3099** — **Reporting** — The figure specification at Figure 5 — Anytime stress validity (L5477) must include `sequential_inference.coverage_validation.acceptance_upper_limit`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 5 — Anytime stress validity (L5477) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 5 — Anytime stress validity (L5477) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3100** — **Reporting** — The figure at Figure 6 — Full rho sensitivity (L5483) must use authoritative source/setting `outputs/experiments/population-sensitivity-utility/evaluations/aggregates/figure_rho_sensitivity.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 6 — Full rho sensitivity (L5483) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 6 — Full rho sensitivity (L5483) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3101** — **Reporting** — The figure at Figure 6 — Full rho sensitivity (L5487) must use authoritative source/setting `x = rho`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 6 — Full rho sensitivity (L5487) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 6 — Full rho sensitivity (L5487) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3102** — **Reporting** — The figure at Figure 6 — Full rho sensitivity (L5488) must use authoritative source/setting `y = risk upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 6 — Full rho sensitivity (L5488) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 6 — Full rho sensitivity (L5488) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3103** — **Reporting** — The figure at Figure 6 — Full rho sensitivity (L5489) must use authoritative source/setting `line = partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 6 — Full rho sensitivity (L5489) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 6 — Full rho sensitivity (L5489) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3104** — **Reporting** — The figure at Figure 6 — Full rho sensitivity (L5490) must use authoritative source/setting `facet = utility law`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 6 — Full rho sensitivity (L5490) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 6 — Full rho sensitivity (L5490) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3105** — **Reporting** — Plot all 15 sensitivity values, including exact $\log2$.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 6 — Full rho sensitivity (L5493) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 6 — Full rho sensitivity (L5493) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3106** — **Reporting** — Show incompatible points explicitly.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 6 — Full rho sensitivity (L5495) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 6 — Full rho sensitivity (L5495) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3107** — **Reporting** — The figure at Figure 7 — Failure-boundary atlas (L5500) must use authoritative source/setting `outputs/experiments/failure-boundary-atlas/evaluations/aggregates/figure_failure_boundaries.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 7 — Failure-boundary atlas (L5500) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 7 — Failure-boundary atlas (L5500) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3108** — **Reporting** — One panel per configured axis.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 7 — Failure-boundary atlas (L5503) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 7 — Failure-boundary atlas (L5503) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3109** — **Reporting** — No interpolated heatmap may imply untested configurations.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 7 — Failure-boundary atlas (L5505) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 7 — Failure-boundary atlas (L5505) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3110** — **Reporting** — The figure at Figure 8 — Computational scaling (L5510) must use authoritative source/setting `outputs/experiments/computational-scaling/evaluations/aggregates/figure_computational_scaling.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 8 — Computational scaling (L5510) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 8 — Computational scaling (L5510) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3111** — **Reporting** — The figure specification at Figure 8 — Computational scaling (L5516) must include `population solver runtime vs K`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 8 — Computational scaling (L5516) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 8 — Computational scaling (L5516) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3112** — **Reporting** — The figure specification at Figure 8 — Computational scaling (L5517) must include `outer projection runtime/node count vs K`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 8 — Computational scaling (L5517) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 8 — Computational scaling (L5517) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3113** — **Reporting** — Use log2 $K$.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 8 — Computational scaling (L5520) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 8 — Computational scaling (L5520) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3114** — **Reporting** — Runtime may use a log scale only if every recorded runtime is strictly positive.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Figure 8 — Computational scaling (L5522) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Figure 8 — Computational scaling (L5522) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 ## Dependencies
 
 ### Blocked By
@@ -12923,125 +12653,125 @@ No requirement may exist only implicitly in acceptance criteria, tests, or imple
 The following is the complete atomic requirement set assigned to this issue. Implementation-bearing requirements must be implemented; `NON_IMPLEMENTATION` entries are binding scope, terminology, assumption, invariant, exclusion, or claim constraints that must be preserved and verified without inventing fictitious implementation work.
 
 - [ ] **REQ-2992** — **Reporting** — The required manuscript table at Table 10 — Sensitivity and utility (L5243) must use authoritative source path `outputs/experiments/statistical-synthesis/evaluations/aggregates/rho_utility.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5243) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5243) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2993** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5249) must include column `analysis_type = POPULATION`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5249) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5249) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2994** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5250) must include column `law_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5250) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5250) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2995** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5251) must include column `rho`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5251) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5251) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2996** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5252) must include column `partition_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5252) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5252) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2997** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5253) must include column `metric_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5253) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5253) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2998** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5254) must include column `metric_value`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5254) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5254) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-2999** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5255) must include column `compatibility_state`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5255) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5255) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3000** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5256) must include column `tau`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5256) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5256) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3001** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5257) must include column `risk_upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5257) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5257) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3002** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5258) must include column `identified_width`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5258) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5258) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3003** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5259) must include column `worst_case_upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5259) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5259) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3004** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5260) must include column `absolute_tightening`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5260) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5260) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3005** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5261) must include column `relative_unresolved_gain`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5261) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5261) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3006** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5262) must include column `materiality_pass`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5262) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5262) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3007** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5268) must include column `analysis_type = SEQUENTIAL`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5268) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5268) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3008** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5271) must include column `partition_name = 8-band partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5271) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5271) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3009** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5272) must include column `baseline_partition_name = Endpoint-only partition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5272) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5272) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3010** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5274) must include column `method_mean`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5274) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5274) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3011** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5275) must include column `baseline_mean`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5275) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5275) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3012** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5276) must include column `mean_paired_difference`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5276) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5276) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3013** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5277) must include column `bootstrap_lower_95`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5277) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5277) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3014** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5278) must include column `bootstrap_upper_95`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5278) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5278) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3015** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5279) must include column `holm_adjusted_p`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5279) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5279) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3016** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5281) must include column `never_certified_fraction_method`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5281) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5281) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3017** — **Reporting** — The required manuscript table schema at Table 10 — Sensitivity and utility (L5282) must include column `never_certified_fraction_baseline`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5282) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5282) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3018** — **Reporting** — The never-certified columns are populated only where relevant to Time to first certification; otherwise they are null.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 10 — Sensitivity and utility (L5285) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 10 — Sensitivity and utility (L5285) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3019** — **Reporting** — The required manuscript table at Table 11 — Failure boundaries (L5290) must use authoritative source path `outputs/experiments/failure-boundary-atlas/evaluations/aggregates/failure_boundaries.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5290) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5290) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3020** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5296) must include column `axis`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5296) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5296) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3021** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5297) must include column `level`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5297) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5297) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3022** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5298) must include column `controlled_value_json`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5298) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5298) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3023** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5299) must include column `rho`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5299) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5299) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3024** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5300) must include column `beta`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5300) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5300) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3025** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5301) must include column `tau`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5301) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5301) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3026** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5302) must include column `risk_upper`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5302) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5302) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3027** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5303) must include column `operational_state`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5303) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5303) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3028** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5304) must include column `optimizer_gap`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5304) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5304) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3029** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5305) must include column `runtime_ms`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5305) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5305) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3030** — **Reporting** — The required manuscript table schema at Table 11 — Failure boundaries (L5306) must include column `scientific_interpretation`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 11 — Failure boundaries (L5306) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 11 — Failure boundaries (L5306) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3031** — **Reporting** — The required manuscript table at Table 12 — Computational scaling (L5312) must use authoritative source path `outputs/experiments/computational-scaling/evaluations/aggregates/computational_scaling.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5312) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5312) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3032** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5318) must include column `K`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5318) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5318) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3033** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5319) must include column `population_median_runtime_ms`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5319) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5319) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3034** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5320) must include column `population_iqr_runtime_ms`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5320) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5320) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3035** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5321) must include column `outer_median_runtime_ms`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5321) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5321) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3036** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5322) must include column `outer_iqr_runtime_ms`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5322) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5322) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3037** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5323) must include column `peak_memory_mib`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5323) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5323) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3038** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5324) must include column `median_root_iterations`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5324) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5324) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3039** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5325) must include column `median_outer_nodes`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5325) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5325) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3040** — **Reporting** — The required manuscript table schema at Table 12 — Computational scaling (L5326) must include column `max_oracle_error`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 12 — Computational scaling (L5326) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 12 — Computational scaling (L5326) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3041** — **Reporting** — The required manuscript table at Table 13 — Claim registry (L5332) must use authoritative source path `outputs/experiments/statistical-synthesis/evaluations/aggregates/claim_registry.parquet`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5332) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5332) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3042** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5338) must include column `claim_name`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5338) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5338) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3043** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5339) must include column `claim`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5339) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5339) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3044** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5340) must include column `required_experiments`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5340) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5340) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3045** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5341) must include column `primary_metric`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5341) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5341) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3046** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5342) must include column `minimum_support_condition`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5342) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5342) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3047** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5343) must include column `final_state`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5343) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5343) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3048** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5344) must include column `supporting_table`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5344) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5344) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3049** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5345) must include column `supporting_figure`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5345) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5345) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3050** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5346) must include column `scope`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5346) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5346) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 - [ ] **REQ-3051** — **Reporting** — The required manuscript table schema at Table 13 — Claim registry (L5347) must include column `forbidden_extrapolation`.
-  - [ ] **Verification:** `trajcert report` integration tests render the exact table/figure/export contract in Table 13 — Claim registry (L5347) solely from verified `outputs/` source data; expected paths, columns/plot fields, ordering, null/display rules, and forbidden result contents are asserted.
+  - [ ] **Verification:** `trajcert report` renders Table 13 — Claim registry (L5347) contract from verified `outputs/`; paths/fields/ordering/null-rules/forbidden-contents asserted.
 ## Dependencies
 
 ### Blocked By
