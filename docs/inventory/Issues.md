@@ -274,33 +274,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -391,60 +364,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -617,33 +536,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -724,60 +616,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -906,33 +744,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -1009,60 +820,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -1269,33 +1026,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -1377,60 +1107,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -1767,33 +1443,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -1880,60 +1529,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -2246,33 +1841,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -2356,60 +1924,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -2730,33 +2244,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -2841,60 +2328,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -3057,21 +2490,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M01 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -3143,63 +2561,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -3741,33 +3102,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -3851,60 +3185,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -4281,33 +3561,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -4389,60 +3642,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -4661,33 +3860,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -4763,60 +3935,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -4951,33 +4069,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -5053,60 +4144,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -5314,33 +4351,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -5415,60 +4425,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -5747,33 +4703,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -5851,60 +4780,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -6098,33 +4973,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -6198,60 +5046,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -6629,33 +5423,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -6732,60 +5499,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -6970,21 +5683,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M02 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -7056,63 +5754,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -7319,33 +5960,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -7424,60 +6038,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -7777,33 +6337,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -7881,60 +6414,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -8169,33 +6648,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -8277,60 +6729,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -8486,33 +6884,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -8591,60 +6962,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -8870,33 +7187,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -8980,60 +7270,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -9162,33 +7398,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -9266,60 +7475,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -9467,21 +7622,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M03 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -9554,63 +7694,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -9775,33 +7858,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -9880,60 +7936,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -10104,33 +8106,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -10214,60 +8189,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -10377,33 +8298,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -10477,60 +8371,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -10707,33 +8547,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -10812,60 +8625,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -10993,21 +8752,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M04 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -11079,63 +8823,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -11308,33 +8995,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -11411,60 +9071,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -11684,33 +9290,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -11789,60 +9368,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -12067,33 +9592,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -12168,60 +9666,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -12405,33 +9849,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -12509,60 +9926,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -12867,33 +10230,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -12974,60 +10310,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -13191,33 +10473,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -13293,60 +10548,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -13608,33 +10809,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -13713,60 +10887,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -13919,21 +11039,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M05 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -14006,63 +11111,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -14362,33 +11410,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -14465,60 +11486,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -14738,33 +11705,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -14839,60 +11779,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -15016,33 +11902,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -15116,60 +11975,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -15386,33 +12191,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -15496,60 +12274,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -15806,33 +12530,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -15910,60 +12607,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -16139,33 +12782,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -16246,60 +12862,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -16491,33 +13053,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -16595,60 +13130,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -16774,33 +13255,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -16878,60 +13332,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -17086,21 +13486,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M06 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -17173,63 +13558,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -17605,34 +13933,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -17717,62 +14017,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 
@@ -18000,34 +14244,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -18110,62 +14326,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 
@@ -18326,33 +14486,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -18427,60 +14560,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -18693,33 +14772,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -18798,60 +14850,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -18966,33 +14964,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -19066,60 +15037,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -19337,33 +15254,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -19441,60 +15331,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -19639,21 +15475,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M07 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -19726,63 +15547,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -19959,33 +15723,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M08 — I56 Audit Evidence Closure, Reproducibility, and Manuscript Export Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -20064,60 +15801,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -20261,33 +15944,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M08 — I56 Audit Evidence Closure, Reproducibility, and Manuscript Export Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -20366,60 +16022,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -20540,21 +16142,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - M09 — I57–I59 — approved entry gate requires M08 complete with audit result `PASS` before M09 implementation proceeds.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -20626,63 +16213,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
@@ -20900,33 +16430,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M09 — I60 Audit Roadmap-Wide Verification and Operator Readiness Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -21001,60 +16504,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -21166,33 +16615,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M09 — I60 Audit Roadmap-Wide Verification and Operator Readiness Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -21268,60 +16690,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -21487,33 +16855,6 @@ Do not introduce speculative features, alternative scientific behavior, unrelate
 - M09 — I60 Audit Roadmap-Wide Verification and Operator Readiness Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
 
 Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
-
-## Non-Negotiable Implementation Contracts
-
-The implementation must preserve exactly, where defined by the roadmap:
-
-- roadmap-defined algorithmic semantics;
-- formulas, thresholds, equality semantics, tolerances, and numerical conventions;
-- configuration authority and ownership;
-- dataset, split, eligibility, chronology, and preprocessing semantics;
-- experiment coordinates, controls, comparators, seeds, and statistical procedures;
-- deterministic and reproducibility requirements;
-- failure, unavailable, infeasible, insufficient-evidence, suppression, and abstention semantics;
-- artifact, integrity, completion, and provenance requirements;
-- scientific claim boundaries.
-
-Do not introduce:
-
-- undocumented defaults;
-- hidden fallbacks;
-- alternative algorithms or scientific behavior;
-- post-hoc scientific choices;
-- duplicated scientific constants;
-- silent compatibility behavior;
-- agent-invented values or assumptions.
-
-If the roadmap is genuinely missing or contradictory on a decision that materially affects scientific or implementation behavior, do not guess. Record it under **Roadmap Deviations / Follow-Ups** and create a dedicated clarification or correction issue.
-
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -21596,60 +16937,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - [ ] Required numerical diagnostics, brackets, tolerances, statistical records, state records, source-data pointers, or claim gates are persisted when applicable.
 - [ ] Completion is established from verified evidence rather than process exit status or file existence alone.
 - [ ] The completion record below is filled with reproducible commands, results, artifact locations, provenance checks, and relevant commit SHA(s).
-## Roadmap Deviations / Follow-Ups
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the issue.
-
-### Implementation
-
-- **Implementation locations:** ...
-- **Configuration/domain changes:** ...
-- **CLI/application changes:** ...
-
-### Tests
-
-- **Tests added/updated:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Test results:** ...
-
-### Outputs / Evidence
-
-- **Artifacts generated:** ...
-- **Artifact/provenance verification:** ...
-- **Scientific gates / completion verification:** ...
-
-### Traceability
-
-- **Requirements satisfied:** ...
-- **Relevant commit SHA(s):** ...
-- **Linked clarification/correction/follow-up issues:** ...
-
 ## Definition of Done
 
 This issue is complete only when **all** of the following are true:
@@ -21779,21 +17066,6 @@ When a blocking defect is found, record it precisely, return `FAIL`, and route c
 - None — this is the final milestone completion gate; project completion requires this audit to `PASS`.
 
 Dependencies preserve the milestone dependency order and make audit `PASS` the explicit downstream entry gate.
-
-## Non-Negotiable Implementation Contracts
-
-This audit is an independent, read-only completion gate. It must preserve exactly:
-
-- roadmap and inventory authority;
-- milestone ownership and dependency order;
-- exact requirement wording and applicability;
-- test and validation pass/fail semantics;
-- artifact identity, integrity, lineage, provenance, reuse, and staleness semantics;
-- scientific-state, execution-state, failure, null, unsupported, and claim-boundary semantics;
-- all milestone-specific exit criteria and acceptance-evidence conditions.
-
-The audit must not invent defaults, recompute missing scientific evidence as a substitute for the owning issue, mutate authoritative artifacts, suppress failures, or reinterpret a requirement to obtain `PASS`.
-
 ## Implementation Surface
 
 Expected areas examined by this audit:
@@ -21865,63 +17137,6 @@ No alternate or versioned audit artifact is created; evidence remains at canonic
   - [ ] **Audit:** Milestone audit issue **Pass condition:** Final result is `PASS` with no unresolved blocking findings
 - [ ] No evidence pointer resolves to stale, incompatible, malformed, partial, invalid, failed, or non-authoritative data.
 - [ ] The audit result and all blocking findings are reproducible from the recorded evidence without relying on unstated judgment.
-## Roadmap Deviations / Follow-Ups
-
-### Roadmap Deviations
-
-`None.`
-
-If a genuine deviation is unavoidable, replace `None` with one entry per deviation containing:
-
-- roadmap section / requirement;
-- exact deviation;
-- reason;
-- scientific or implementation impact;
-- linked clarification/correction issue.
-
-No deviation may be hidden in implementation notes, comments, commits, or completion evidence.
-
-### Follow-Up Issues
-
-- None.
-
-Record only genuinely separate work discovered during implementation. Do not move unfinished scope from this issue into a follow-up merely to close the issue.
-
-## Completion Record
-
-Complete this section before closing the audit issue.
-
-### Implementation
-
-- **Audited implementation issues:** ...
-- **Requirement coverage map:** ...
-- **Blocking findings:** ...
-
-### Tests
-
-- **Tests/validations independently executed or verified:** ...
-- **Required-test categories marked N/A with reasons:** ...
-
-### Validation
-
-- **Commands executed:** ...
-- **Quality-gate results:** ...
-- **Milestone-specific exit-criteria results:** ...
-
-### Outputs / Evidence
-
-- **Deliverables verified:** ...
-- **Artifact/provenance/staleness verification:** ...
-- **Downstream-consumer readiness:** ...
-
-### Traceability
-
-- **Requirements audited:** ...
-- **Evidence pointers:** ...
-- **Audit result:** `PASS` / `FAIL`
-- **Relevant commit SHA(s):** ...
-- **Linked correction/re-audit issues:** ...
-
 ## Definition of Done
 
 This audit issue is complete only when **all** of the following are true:
