@@ -32,9 +32,6 @@
 - `REQ-075`, `REQ-076`, `REQ-077`, `REQ-078`, `REQ-079`, `REQ-080`, `REQ-081`, `REQ-082`, `REQ-083`, `REQ-084`, `REQ-085`, `REQ-086`
 - `REQ-087`, `REQ-088`, `REQ-089`, `REQ-090`, `REQ-091`, `REQ-092`, `REQ-093`, `REQ-094`, `REQ-095`, `REQ-096`, `REQ-3408`, `REQ-3409`
 - `REQ-3410`, `REQ-3411`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Encode the authoritative TrajCert identity, exact state/evidence vocabularies, local unit of validity, epoch immutability rules, research-question boundaries, and prohibited extrapolations as typed contracts and enforceable validation without broadening the scientific scope.
@@ -261,8 +258,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M01 — I02 Implement Formal Observation, Ledger Maturation, and Integrity Contract — consumes this issue's validated **Typed authoritative vocabulary and identity contracts** contract/evidence.
 - M01 — I05 Implement Authoritative Configuration Schema, Core Scientific Values, and Validation — consumes this issue's validated **Typed authoritative vocabulary and identity contracts** contract/evidence.
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -367,9 +362,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-123`, `REQ-124`, `REQ-125`, `REQ-127`, `REQ-128`, `REQ-130`, `REQ-131`, `REQ-132`, `REQ-133`, `REQ-134`, `REQ-135`, `REQ-136`
 - `REQ-137`, `REQ-138`, `REQ-139`, `REQ-140`, `REQ-141`, `REQ-142`, `REQ-143`, `REQ-144`, `REQ-145`, `REQ-147`, `REQ-148`, `REQ-149`
 - `REQ-150`, `REQ-151`, `REQ-152`, `REQ-153`, `REQ-154`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the observable trajectory representation and fixed-horizon event-ledger semantics so matured categorical observations are constructed exactly once, in deterministic order, with integrity failures rejected before scientific inference.
@@ -481,8 +473,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M01 — I03 Implement PIS, Timing Information, Information Profile, and Compatibility Floor — consumes this issue's validated **Validated matured-event/category records** contract/evidence.
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -577,9 +567,6 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - `REQ-155`, `REQ-156`, `REQ-157`, `REQ-158`, `REQ-159`, `REQ-160`, `REQ-161`, `REQ-163`, `REQ-164`, `REQ-166`, `REQ-167`, `REQ-170`
 - `REQ-172`, `REQ-175`, `REQ-178`, `REQ-181`, `REQ-182`, `REQ-184`, `REQ-186`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the core PIS mathematics, observable timing information, exact one-dimensional information profile, derivatives/convexity behavior, and minimum-information completion that establishes the exact compatibility floor.
@@ -647,8 +634,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M01 — I04 Implement Sharp Risk Sets, Refinement, Safety Regimes, and Population Solver — consumes this issue's validated **Population information-profile API** contract/evidence.
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -743,9 +728,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-230`, `REQ-231`, `REQ-232`, `REQ-233`, `REQ-234`, `REQ-235`, `REQ-236`, `REQ-237`, `REQ-238`, `REQ-239`, `REQ-240`, `REQ-242`
 - `REQ-245`, `REQ-247`, `REQ-248`, `REQ-249`, `REQ-250`, `REQ-251`, `REQ-252`, `REQ-253`, `REQ-254`, `REQ-255`, `REQ-256`, `REQ-257`
 - `REQ-258`, `REQ-260`, `REQ-261`, `REQ-262`, `REQ-263`, `REQ-264`, `REQ-265`, `REQ-266`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the exact sharp latent-risk set, refinement/timing-value relations, safety and intrinsic-impossibility regimes, endpoint-only special case, and deterministic production population solver with certified numerical diagnostics.
@@ -887,8 +869,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -989,9 +969,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-351`, `REQ-352`, `REQ-353`, `REQ-354`, `REQ-355`, `REQ-356`, `REQ-357`, `REQ-358`, `REQ-359`, `REQ-360`, `REQ-361`, `REQ-362`
 - `REQ-363`, `REQ-364`, `REQ-365`, `REQ-366`, `REQ-367`, `REQ-368`, `REQ-369`, `REQ-370`, `REQ-371`, `REQ-372`, `REQ-373`, `REQ-374`
 - `REQ-375`, `REQ-376`, `REQ-377`, `REQ-378`, `REQ-379`, `REQ-380`, `REQ-381`, `REQ-382`, `REQ-383`, `REQ-384`, `REQ-385`, `REQ-386`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the immutable, unknown-field-rejecting typed configuration contract for the core method, budgets, confidence/evidence gates, artifact/CLI values, failure/materiality settings, method/numerics, partitions, comparators, and all associated cross-field rules.
@@ -1262,8 +1239,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M01 — I06 Complete Runtime, Sensitivity, Sequential, Smoke, and Statistical Configuration — consumes this issue's validated **Validated frozen production configuration model** contract/evidence.
 - M01 — I07 Complete Strict-Timing, Synthetic-Law Configuration, and Locked Dependency Contract — consumes this issue's validated **Validated frozen production configuration model** contract/evidence.
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -1369,9 +1344,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-471`, `REQ-472`, `REQ-473`, `REQ-474`, `REQ-475`, `REQ-476`, `REQ-477`, `REQ-478`, `REQ-479`, `REQ-480`, `REQ-481`, `REQ-482`
 - `REQ-483`, `REQ-484`, `REQ-485`, `REQ-486`, `REQ-487`, `REQ-488`, `REQ-489`, `REQ-490`, `REQ-491`, `REQ-492`, `REQ-493`, `REQ-494`
 - `REQ-495`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Complete the authoritative runtime/environment, sensitivity grids, sequential inference/stress, smoke, statistics, runtime benchmark, and reproducibility-related configuration surface with exact values and deterministic validation.
@@ -1618,8 +1590,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M01 — I07 Complete Strict-Timing, Synthetic-Law Configuration, and Locked Dependency Contract — consumes this issue's validated **Validated runtime/sensitivity/sequential/statistics configuration** contract/evidence.
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -1723,9 +1693,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-580`, `REQ-581`, `REQ-582`, `REQ-583`, `REQ-584`, `REQ-585`, `REQ-586`, `REQ-587`, `REQ-588`, `REQ-589`, `REQ-590`, `REQ-591`
 - `REQ-592`, `REQ-593`, `REQ-594`, `REQ-595`, `REQ-596`, `REQ-597`, `REQ-598`, `REQ-599`, `REQ-600`, `REQ-601`, `REQ-602`, `REQ-603`
 - `REQ-609`, `REQ-610`, `REQ-611`, `REQ-612`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Complete the strict-timing and synthetic-law catalog/role configuration and establish the exact hash-locked Python 3.13.15 dependency-resolution and installation contract required for reproducible authoritative execution.
@@ -1979,8 +1946,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M01 — I08 Audit Scientific and Configuration Contract Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -2296,9 +2261,6 @@ This audit issue is complete only when **all** of the following are true:
 ### Requirements
 
 - `REQ-1294`–`REQ-1520`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Establish the complete roadmap-defined repository and `src/trajcert/` package structure with exact module placement, package responsibilities, and canonical production boundaries.
@@ -2785,8 +2747,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M02 — I12 Implement Canonical Semantic Serialization and Filesystem-Safe Rendering — consumes this issue's validated **Canonical repository/source-package architecture** contract/evidence.
 - M02 — I13 Implement Canonical Physical Types and Common Artifact Envelope — consumes this issue's validated **Canonical repository/source-package architecture** contract/evidence.
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -2891,9 +2851,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1629`, `REQ-1630`, `REQ-1631`, `REQ-1632`, `REQ-1633`, `REQ-1634`, `REQ-1635`, `REQ-1636`, `REQ-1637`, `REQ-1638`, `REQ-1639`, `REQ-1640`
 - `REQ-1641`, `REQ-1642`, `REQ-1643`, `REQ-1644`, `REQ-1645`, `REQ-1646`, `REQ-1647`, `REQ-1648`, `REQ-1649`, `REQ-1650`, `REQ-1651`, `REQ-1652`
 - `REQ-1653`, `REQ-1654`, `REQ-1655`, `REQ-1656`, `REQ-1657`, `REQ-1658`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Establish the complete roadmap-defined test-suite tree and automated architecture invariants that enforce layering, type boundaries, configuration ownership, canonical vocabulary, code hygiene, static quality, and dependency hygiene.
@@ -3202,8 +3159,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M02 — I12 Implement Canonical Semantic Serialization and Filesystem-Safe Rendering — consumes this issue's validated **Canonical test-suite architecture** contract/evidence.
 - M02 — I13 Implement Canonical Physical Types and Common Artifact Envelope — consumes this issue's validated **Canonical test-suite architecture** contract/evidence.
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -3300,9 +3255,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1695`, `REQ-1696`, `REQ-1697`, `REQ-1698`, `REQ-1699`, `REQ-1700`, `REQ-1701`, `REQ-1702`, `REQ-1703`, `REQ-1704`, `REQ-1705`, `REQ-1706`
 - `REQ-1707`, `REQ-1708`, `REQ-1709`, `REQ-1710`, `REQ-1711`, `REQ-1712`, `REQ-1713`, `REQ-1714`, `REQ-1715`, `REQ-1716`, `REQ-1717`, `REQ-1718`
 - `REQ-1719`, `REQ-1720`, `REQ-1721`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement deterministic centralized path construction and lifecycle placement for every authoritative output, reusable artifact, experiment workspace, checkpoint, diagnostic, log, provenance record, result, project summary, and completion marker.
@@ -3459,8 +3411,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -3548,9 +3498,6 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - `REQ-1722`, `REQ-1723`, `REQ-1724`, `REQ-1725`, `REQ-1726`, `REQ-1727`, `REQ-1728`, `REQ-1729`, `REQ-1730`, `REQ-1731`, `REQ-1732`, `REQ-1733`
 - `REQ-1734`, `REQ-1735`, `REQ-1736`, `REQ-1737`, `REQ-1738`, `REQ-1739`, `REQ-1740`, `REQ-1741`, `REQ-1742`, `REQ-1743`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement stable RFC-8785 semantic serialization and reversible/collision-safe filesystem rendering so semantic identities, artifact paths, and numeric coordinates remain deterministic across runs and platforms.
@@ -3626,8 +3573,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M02 — I13 Implement Canonical Physical Types and Common Artifact Envelope — consumes this issue's validated **Canonical semantic serializer** contract/evidence.
 - M02 — I14 Implement Plan and Manifest Schemas — consumes this issue's validated **Canonical semantic serializer** contract/evidence.
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -3719,9 +3664,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1788`, `REQ-1789`, `REQ-1790`, `REQ-1791`, `REQ-1792`, `REQ-1793`, `REQ-1794`, `REQ-1795`, `REQ-1796`, `REQ-1797`, `REQ-1798`, `REQ-1799`
 - `REQ-1800`, `REQ-1801`, `REQ-1802`, `REQ-1803`, `REQ-1804`, `REQ-1805`, `REQ-1806`, `REQ-1807`, `REQ-1808`, `REQ-1809`, `REQ-1810`, `REQ-1811`
 - `REQ-1812`, `REQ-1813`, `REQ-1814`, `REQ-1815`, `REQ-1816`, `REQ-1817`, `REQ-1818`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement schema authority, exact Arrow-compatible physical types, null/finite-number semantics, schema versioning, and the shared machine-readable artifact envelope used by scientific-cell and reusable evidence.
@@ -3866,8 +3808,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M02 — I15 Implement Cell, Execution, Dependency, and Provenance Schemas — consumes this issue's validated **Versioned common artifact schema/envelope** contract/evidence.
 - M02 — I16 Implement Scientific Result, Failure, Claim, and Completion Schemas — consumes this issue's validated **Versioned common artifact schema/envelope** contract/evidence.
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -3959,9 +3899,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1879`, `REQ-1880`, `REQ-1881`, `REQ-1882`, `REQ-1883`, `REQ-1884`, `REQ-1885`, `REQ-1886`, `REQ-1887`, `REQ-1888`, `REQ-1889`, `REQ-1890`
 - `REQ-1891`, `REQ-1892`, `REQ-1893`, `REQ-1894`, `REQ-1895`, `REQ-1896`, `REQ-1897`, `REQ-1898`, `REQ-1899`, `REQ-1900`, `REQ-1901`, `REQ-1902`
 - `REQ-1903`, `REQ-1904`, `REQ-1905`, `REQ-1906`, `REQ-1907`, `REQ-1908`, `REQ-1909`, `REQ-1910`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement canonical schemas for plan rows/files and dataset, partition, seed, reusable-artifact, configuration, software/environment, and other roadmap-defined manifests with exact fields, types, ordering, and digests.
@@ -4176,8 +4113,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M02 — I15 Implement Cell, Execution, Dependency, and Provenance Schemas — consumes this issue's validated **Canonical plan schemas** contract/evidence.
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -4269,9 +4204,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1935`, `REQ-1936`, `REQ-1937`, `REQ-1938`, `REQ-1939`, `REQ-1940`, `REQ-1941`, `REQ-1942`, `REQ-1943`, `REQ-1944`, `REQ-1945`, `REQ-1946`
 - `REQ-1947`, `REQ-1948`, `REQ-1949`, `REQ-1950`, `REQ-1951`, `REQ-1952`, `REQ-1953`, `REQ-1954`, `REQ-1955`, `REQ-1956`, `REQ-1957`, `REQ-1958`
 - `REQ-1959`, `REQ-1960`, `REQ-1961`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the exact typed records that represent semantic cells, execution lifecycle, dependency lineage, and provenance so all downstream execution and evidence can be validated structurally and semantically.
@@ -4404,8 +4336,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M02 — I16 Implement Scientific Result, Failure, Claim, and Completion Schemas — consumes this issue's validated **Canonical cell/execution/dependency/provenance records** contract/evidence.
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -4490,9 +4420,6 @@ For each required output, its expected identity or location is the roadmap/repos
 ### Requirements
 
 - `REQ-1962`–`REQ-2106`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement all canonical scientific-result, metric/statistical, failure, claim, completion-marker, and status record schemas so numerical results and exceptional states are explicit, typed, serializable, and machine-verifiable.
@@ -4812,8 +4739,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M02 — I17 Audit Reference Architecture, Workspace, and Schemas Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -5149,9 +5074,6 @@ This audit issue is complete only when **all** of the following are true:
 - `REQ-2131`, `REQ-2132`, `REQ-2133`, `REQ-2134`, `REQ-2135`, `REQ-2136`, `REQ-2137`, `REQ-2138`, `REQ-2139`, `REQ-2140`, `REQ-2141`, `REQ-2142`
 - `REQ-2143`, `REQ-2144`, `REQ-2145`, `REQ-2146`, `REQ-2147`, `REQ-2148`, `REQ-2149`, `REQ-2150`, `REQ-2151`, `REQ-2152`, `REQ-2153`, `REQ-2154`
 - `REQ-2155`, `REQ-2156`, `REQ-2157`, `REQ-2158`, `REQ-2159`, `REQ-2160`, `REQ-2161`, `REQ-2162`, `REQ-2163`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement deterministic scientific-cell identity, the TrajCert execution dependency chain, and canonical reusable artifact layers so identity contains only material semantic coordinates and reuse cannot be keyed by incidental run metadata.
@@ -5297,8 +5219,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M03 — I19 Implement Explicit Producer Dependency and Component-Digest Contracts — consumes this issue's validated **Scientific identity engine** contract/evidence.
 - M03 — I21 Implement Structured Logging, Environment Capture, and Provenance — consumes this issue's validated **Scientific identity engine** contract/evidence.
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -5395,9 +5315,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2236`, `REQ-2237`, `REQ-2238`, `REQ-2239`, `REQ-2240`, `REQ-2241`, `REQ-2242`, `REQ-2243`, `REQ-2244`, `REQ-2245`, `REQ-2246`, `REQ-2247`
 - `REQ-2248`, `REQ-2249`, `REQ-2250`, `REQ-2251`, `REQ-2252`, `REQ-2253`, `REQ-2254`, `REQ-2255`, `REQ-2256`, `REQ-2257`, `REQ-2258`, `REQ-2259`
 - `REQ-2260`, `REQ-2261`, `REQ-2262`, `REQ-2263`, `REQ-2264`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement producer-by-producer scientific dependency, implementation-component, runtime-dependency, and parent-artifact contracts so every authoritative artifact fingerprints exactly the material inputs declared by the roadmap.
@@ -5632,8 +5549,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M03 — I20 Implement Selective Invalidation, Atomic Replacement, Idempotency, and Checkpoint Recovery — consumes this issue's validated **Authoritative producer registry** contract/evidence.
 - M03 — I21 Implement Structured Logging, Environment Capture, and Provenance — consumes this issue's validated **Authoritative producer registry** contract/evidence.
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -5729,9 +5644,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2301`, `REQ-2302`, `REQ-2303`, `REQ-2304`, `REQ-2305`, `REQ-2306`, `REQ-2307`, `REQ-2308`, `REQ-2309`, `REQ-2310`, `REQ-2311`, `REQ-2312`
 - `REQ-2313`, `REQ-2314`, `REQ-2315`, `REQ-2316`, `REQ-2317`, `REQ-2318`, `REQ-2319`, `REQ-2320`, `REQ-2321`, `REQ-2322`, `REQ-2323`, `REQ-2324`
 - `REQ-2325`, `REQ-2326`, `REQ-2327`, `REQ-2328`, `REQ-2329`, `REQ-2330`, `REQ-2331`, `REQ-2332`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement dependency-aware artifact validation, selective stale-descendant invalidation, atomic replacement, idempotent reuse/overwrite semantics, and nearest-valid checkpoint recovery without discarding unrelated valid evidence.
@@ -5901,8 +5813,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M03 — I22 Implement Exact Public CLI and Deterministic Acceptance Fixtures — consumes this issue's validated **Selective invalidation/reuse engine** contract/evidence.
 - M03 — I23 Implement Roadmap Failure Classification and Precedence Semantics — consumes this issue's validated **Selective invalidation/reuse engine** contract/evidence.
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -5996,9 +5906,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2333`, `REQ-2334`, `REQ-2335`, `REQ-2336`, `REQ-2337`, `REQ-2338`, `REQ-2339`, `REQ-2340`, `REQ-2341`, `REQ-2342`, `REQ-2343`, `REQ-2344`
 - `REQ-2345`, `REQ-2346`, `REQ-2347`, `REQ-2348`, `REQ-2349`, `REQ-2350`, `REQ-2351`, `REQ-2352`, `REQ-2353`, `REQ-2354`, `REQ-2355`, `REQ-2356`
 - `REQ-2357`, `REQ-2358`, `REQ-2359`, `REQ-2360`, `REQ-2361`, `REQ-2362`, `REQ-2363`, `REQ-2364`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the reusable provenance envelope and structured execution/failure logging with complete runtime, software, hardware, code, dependency, lineage, reuse, and timing information while guaranteeing read-only commands do not mutate active scientific artifacts.
@@ -6095,8 +6002,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M03 — I22 Implement Exact Public CLI and Deterministic Acceptance Fixtures — consumes this issue's validated **Structured provenance records** contract/evidence.
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -6191,9 +6096,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2401`, `REQ-2402`, `REQ-2403`, `REQ-2404`, `REQ-2405`, `REQ-2406`, `REQ-2407`, `REQ-2408`, `REQ-2409`, `REQ-2410`, `REQ-2411`, `REQ-2412`
 - `REQ-2413`, `REQ-2414`, `REQ-2415`, `REQ-2416`, `REQ-2417`, `REQ-2418`, `REQ-2419`, `REQ-2420`, `REQ-2421`, `REQ-2422`, `REQ-2423`, `REQ-2424`
 - `REQ-2425`, `REQ-2426`, `REQ-2427`, `REQ-2428`, `REQ-2429`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the exact public `trajcert` command surface, arguments, forbidden scientific overrides, exit-code semantics, mutating/read-only behavior, and deterministic smoke/acceptance fixtures.
@@ -6356,8 +6258,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M03 — I23 Implement Roadmap Failure Classification and Precedence Semantics — consumes this issue's validated **Public `trajcert` CLI** contract/evidence.
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -6452,9 +6352,6 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - `REQ-3285`, `REQ-3286`, `REQ-3287`, `REQ-3288`, `REQ-3289`, `REQ-3290`, `REQ-3291`, `REQ-3292`, `REQ-3293`, `REQ-3294`, `REQ-3295`, `REQ-3296`
 - `REQ-3297`, `REQ-3298`, `REQ-3299`, `REQ-3300`, `REQ-3301`, `REQ-3302`, `REQ-3303`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement exact classification and execution/evidence consequences for technical failures, stale/incompatible artifacts, data/validation failures, scientific falsifications, scientific null/boundary results, and planned nonapplicability.
@@ -6525,8 +6422,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M03 — I24 Audit Semantic Identity, Provenance, CLI, and Failure Semantics Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -6826,9 +6721,6 @@ This audit issue is complete only when **all** of the following are true:
 - `REQ-613`, `REQ-614`, `REQ-617`, `REQ-619`, `REQ-622`, `REQ-624`, `REQ-627`, `REQ-629`, `REQ-630`, `REQ-631`, `REQ-632`, `REQ-634`
 - `REQ-635`, `REQ-636`, `REQ-637`, `REQ-638`, `REQ-639`, `REQ-640`, `REQ-641`, `REQ-642`, `REQ-643`, `REQ-644`, `REQ-645`, `REQ-646`
 - `REQ-647`, `REQ-648`, `REQ-650`, `REQ-652`, `REQ-653`, `REQ-654`, `REQ-655`, `REQ-656`, `REQ-657`, `REQ-658`, `REQ-659`, `REQ-660`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the exact synthetic full-law generator, primary law-role catalog, minimum-information derived laws, fixed-horizon K-scaling construction, and deterministic probability validation.
@@ -6933,8 +6825,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M04 — I26 Implement Synthetic Streams, Ledger, Preprocessing, and Hamilton Apportionment — consumes this issue's validated **Validated synthetic law catalog/full-law tables** contract/evidence.
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -7029,9 +6919,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-679`, `REQ-680`, `REQ-681`, `REQ-682`, `REQ-683`, `REQ-684`, `REQ-685`, `REQ-686`, `REQ-687`, `REQ-688`, `REQ-689`, `REQ-690`
 - `REQ-691`, `REQ-692`, `REQ-693`, `REQ-694`, `REQ-695`, `REQ-696`, `REQ-697`, `REQ-698`, `REQ-699`, `REQ-700`, `REQ-701`, `REQ-703`
 - `REQ-704`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement deterministic-seeded IID stream generation, canonical synthetic ledger records, strictly limited preprocessing, and Hamilton integer-count apportionment with exact category/tie ordering.
@@ -7139,8 +7026,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M04 — I27 Implement Deterministic Balanced-Prefix Construction — consumes this issue's validated **Validated synthetic event streams/ledgers** contract/evidence.
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -7235,9 +7120,6 @@ For each required output, its expected identity or location is the roadmap/repos
 ### Requirements
 
 - `REQ-705`, `REQ-706`, `REQ-707`, `REQ-709`, `REQ-711`, `REQ-713`, `REQ-714`, `REQ-715`, `REQ-716`, `REQ-717`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the authoritative balanced-prefix sequence algorithm so every deterministic sequential fixture has reproducible prefix counts and exact final-count recovery.
@@ -7289,8 +7171,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -7377,9 +7257,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-730`, `REQ-731`, `REQ-732`, `REQ-733`, `REQ-734`, `REQ-735`, `REQ-736`, `REQ-737`, `REQ-738`, `REQ-739`, `REQ-740`, `REQ-741`
 - `REQ-742`, `REQ-743`, `REQ-744`, `REQ-745`, `REQ-746`, `REQ-747`, `REQ-748`, `REQ-749`, `REQ-750`, `REQ-751`, `REQ-752`, `REQ-753`
 - `REQ-754`, `REQ-755`, `REQ-756`, `REQ-757`, `REQ-758`, `REQ-759`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement external-dataset inventory/provenance validation and exact eligibility/nonapplicability decisions while preserving the current synthetic-only confirmatory plan and prohibiting fabricated real-trajectory semantics.
@@ -7496,8 +7373,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M04 — I29 Audit Synthetic Trajectories and Dataset Authority Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -7779,9 +7654,6 @@ This audit issue is complete only when **all** of the following are true:
 - `REQ-780`, `REQ-782`, `REQ-783`, `REQ-784`, `REQ-786`, `REQ-789`, `REQ-790`, `REQ-791`, `REQ-792`, `REQ-793`, `REQ-795`, `REQ-796`
 - `REQ-798`, `REQ-799`, `REQ-801`, `REQ-802`, `REQ-805`, `REQ-807`, `REQ-809`, `REQ-811`, `REQ-813`, `REQ-815`, `REQ-816`, `REQ-817`
 - `REQ-818`, `REQ-819`, `REQ-820`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement complete-case, unresolved-as-harm, endpoint-only, and legacy bandwise odds-ratio comparator contracts including exact structural-zero/extended-real behavior and deterministic partition-incoherence counterexamples.
@@ -7892,8 +7764,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M05 — I31 Implement Sensitivity Callbacks, Pattern Mixture, and Independent Full-Law Oracle — consumes this issue's validated **Foundational comparator results** contract/evidence.
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -7988,9 +7858,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-871`, `REQ-872`, `REQ-874`, `REQ-876`, `REQ-878`, `REQ-879`, `REQ-881`, `REQ-883`, `REQ-884`, `REQ-885`, `REQ-886`, `REQ-887`
 - `REQ-888`, `REQ-889`, `REQ-890`, `REQ-891`, `REQ-892`, `REQ-893`, `REQ-895`, `REQ-896`, `REQ-897`, `REQ-898`, `REQ-899`, `REQ-900`
 - `REQ-901`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the roadmap’s high-precision callback comparators, repeated-attempt pattern-mixture baseline, and structurally independent direct-table information oracle with exact applicability, numerical stability, root-search, and status semantics.
@@ -8145,8 +8012,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -8241,9 +8106,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-979`, `REQ-980`, `REQ-981`, `REQ-982`, `REQ-983`, `REQ-984`, `REQ-985`, `REQ-986`, `REQ-987`, `REQ-988`, `REQ-990`, `REQ-991`
 - `REQ-992`, `REQ-993`, `REQ-994`, `REQ-995`, `REQ-996`, `REQ-997`, `REQ-998`, `REQ-999`, `REQ-1001`, `REQ-1002`, `REQ-1003`, `REQ-1004`
 - `REQ-1005`, `REQ-1006`, `REQ-1007`, `REQ-1008`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement every roadmap-defined scientific, sequential, utility, coverage, computational, and state metric with exact direction, denominator, aggregation unit, edge-case/null semantics, and serialization behavior.
@@ -8405,8 +8267,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M05 — I36 Implement Statistical Validation, Paired Inference, Failed-Seed Accounting, and Semantic Randomness — consumes this issue's validated **Canonical metric/aggregation library** contract/evidence.
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -8497,9 +8357,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1025`, `REQ-1027`, `REQ-1029`, `REQ-1031`, `REQ-1033`, `REQ-1034`, `REQ-1035`, `REQ-1036`, `REQ-1038`, `REQ-1039`, `REQ-1040`, `REQ-1041`
 - `REQ-1042`, `REQ-1043`, `REQ-1045`, `REQ-1046`, `REQ-1047`, `REQ-1049`, `REQ-1051`, `REQ-1052`, `REQ-1053`, `REQ-1054`, `REQ-1056`, `REQ-1058`
 - `REQ-1061`, `REQ-1063`, `REQ-1064`, `REQ-1067`, `REQ-1069`, `REQ-1072`, `REQ-1074`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the independent-unit contract, time-uniform categorical mixture confidence sequence, conservative outward root inversion/running intersections, simplex feasibility, and roadmap-defined summary envelope.
@@ -8620,8 +8477,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M05 — I34 Implement Certified Outer Projection, Compatibility, Intrinsic Impossibility, and State Gates — consumes this issue's validated **Categorical CS trajectories with outward endpoint brackets** contract/evidence.
 - M05 — I35 Implement Sequential References, Negative Control, Ignorable-Delay Reference, and Ablations — consumes this issue's validated **Categorical CS trajectories with outward endpoint brackets** contract/evidence.
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -8720,9 +8575,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1166`, `REQ-1167`, `REQ-1168`, `REQ-1169`, `REQ-1170`, `REQ-1171`, `REQ-1172`, `REQ-1173`, `REQ-1176`, `REQ-1177`, `REQ-1178`, `REQ-1179`
 - `REQ-1180`, `REQ-1181`, `REQ-1182`, `REQ-1183`, `REQ-1184`, `REQ-1185`, `REQ-1186`, `REQ-1187`, `REQ-1188`, `REQ-1189`, `REQ-1190`, `REQ-1191`
 - `REQ-1192`, `REQ-1193`, `REQ-1194`, `REQ-1196`, `REQ-1199`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the certified finite-sample outer optimizer and conservative compatibility/impossibility/state classification pipeline with exact interval arithmetic, termination/fallback rules, evidence gates, and precedence.
@@ -8959,8 +8811,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M05 — I35 Implement Sequential References, Negative Control, Ignorable-Delay Reference, and Ablations — consumes this issue's validated **Certified projection results/diagnostics** contract/evidence.
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -9056,9 +8906,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-902`, `REQ-903`, `REQ-904`, `REQ-905`, `REQ-906`, `REQ-907`, `REQ-908`, `REQ-909`, `REQ-910`, `REQ-911`, `REQ-912`, `REQ-913`
 - `REQ-914`, `REQ-917`, `REQ-920`, `REQ-922`, `REQ-924`, `REQ-925`, `REQ-926`, `REQ-927`, `REQ-928`, `REQ-929`, `REQ-931`, `REQ-932`
 - `REQ-933`, `REQ-934`, `REQ-935`, `REQ-936`, `REQ-937`, `REQ-938`, `REQ-939`, `REQ-940`, `REQ-941`, `REQ-942`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the raw time-uniform projection reference, deliberately invalid repeated-static-monitoring negative control, conditionally valid ignorable-delay anytime reference, and exactly three declared ablations without creating additional scientific methods.
@@ -9160,8 +9007,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -9260,9 +9105,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-1263`, `REQ-1264`, `REQ-1265`, `REQ-1266`, `REQ-1267`, `REQ-1268`, `REQ-1269`, `REQ-1270`, `REQ-1271`, `REQ-1272`, `REQ-1273`, `REQ-1274`
 - `REQ-1275`, `REQ-1276`, `REQ-1277`, `REQ-1278`, `REQ-1279`, `REQ-1280`, `REQ-1281`, `REQ-1282`, `REQ-1283`, `REQ-1284`, `REQ-1285`, `REQ-1286`
 - `REQ-1287`, `REQ-1288`, `REQ-1289`, `REQ-1290`, `REQ-1291`, `REQ-1292`, `REQ-1293`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement all prespecified validation and paired statistical procedures, deterministic semantic seed derivation, failed-seed retention, and rerun/reuse reproducibility semantics used by confirmatory stochastic evidence.
@@ -9454,8 +9296,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M05 — I37 Audit Comparators, Metrics, and Statistical Certification Engine Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -9764,9 +9604,6 @@ This audit issue is complete only when **all** of the following are true:
 - `REQ-2502`, `REQ-2503`, `REQ-2504`, `REQ-2505`, `REQ-2506`, `REQ-2507`, `REQ-2508`, `REQ-2509`, `REQ-2510`, `REQ-2511`, `REQ-2512`, `REQ-2513`
 - `REQ-2514`, `REQ-2515`, `REQ-2516`, `REQ-2517`, `REQ-2518`, `REQ-2519`, `REQ-2520`, `REQ-2521`, `REQ-2522`, `REQ-2523`, `REQ-2524`, `REQ-2525`
 - `REQ-2526`, `REQ-2527`, `REQ-2528`, `REQ-2529`, `REQ-2530`, `REQ-3412`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the immutable authoritative experiment registry and deterministic plan expansion so it produces exactly 1,423 planned cells in the declared experiment/row order with exact names, evidence classes, execution groups, semantic coordinates, validity, and zero-cell nonapplicabilities.
@@ -10003,8 +9840,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M06 — I39 Implement Experiment Dependency, Output, and Completion Map — consumes this issue's validated **`outputs/artifacts/derived/plans/experiment_plan.json`** contract/evidence.
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -10096,9 +9931,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2567`, `REQ-2568`, `REQ-2569`, `REQ-2570`, `REQ-2571`, `REQ-2572`, `REQ-2573`, `REQ-2574`, `REQ-2575`, `REQ-2576`, `REQ-2577`, `REQ-2578`
 - `REQ-2579`, `REQ-2580`, `REQ-2581`, `REQ-2582`, `REQ-2583`, `REQ-2584`, `REQ-2585`, `REQ-2586`, `REQ-2587`, `REQ-2588`, `REQ-2589`, `REQ-2590`
 - `REQ-2591`, `REQ-2592`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the authoritative per-experiment dependency/output/completion contract so each registry family consumes exactly the declared reusable inputs, produces exactly the declared evidence, and is complete only under its roadmap-defined conditions.
@@ -10256,8 +10088,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M06 — I40 Implement Scientific/Data Inventory Experiment and Deterministic Rho-Offset Resolution — consumes this issue's validated **Machine-readable experiment dependency/output map** contract/evidence.
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -10345,9 +10175,6 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - `REQ-2593`, `REQ-2594`, `REQ-2595`, `REQ-2596`, `REQ-2597`, `REQ-2598`, `REQ-2599`, `REQ-2601`, `REQ-2603`, `REQ-2605`, `REQ-2606`, `REQ-2607`
 - `REQ-2608`, `REQ-2609`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the authoritative scientific/data inventory experiment and deterministic sensitivity-offset resolution used by downstream validation cells, including exact invalid/nonapplicable conditions and persisted derived coordinates.
@@ -10411,8 +10238,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M06 — I42 Execute Anytime Hand Cases and Independent Certified-Projection Oracle — consumes this issue's validated **Scientific/data inventory experiment records** contract/evidence.
 - M06 — I44 Execute Failure-Boundary Atlas, Planned Nonapplicabilities, and Computational Scaling — consumes this issue's validated **Scientific/data inventory experiment records** contract/evidence.
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -10503,9 +10328,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2636`, `REQ-2637`, `REQ-2638`, `REQ-2639`, `REQ-2640`, `REQ-2641`, `REQ-2642`, `REQ-2643`, `REQ-2644`, `REQ-2645`, `REQ-2646`, `REQ-2647`
 - `REQ-2648`, `REQ-2649`, `REQ-2650`, `REQ-2651`, `REQ-2652`, `REQ-2653`, `REQ-2654`, `REQ-2655`, `REQ-2656`, `REQ-2657`, `REQ-2658`, `REQ-2660`
 - `REQ-2661`, `REQ-2662`, `REQ-2663`, `REQ-2664`, `REQ-2665`, `REQ-2668`, `REQ-2670`, `REQ-2671`, `REQ-2672`, `REQ-2673`, `REQ-2675`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement and execute the authoritative deterministic experiment families that validate population solver sharpness, comparator reductions, partition coherence/timing mechanism, compatibility boundaries, safety regimes, and intrinsic impossibility.
@@ -10658,8 +10480,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M06 — I45 Implement Authoritative Statistical Synthesis — consumes this issue's validated **Authoritative population/oracle validation evidence** contract/evidence.
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -10761,9 +10581,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2727`, `REQ-2728`, `REQ-2729`, `REQ-2731`, `REQ-2732`, `REQ-2733`, `REQ-2735`, `REQ-2736`, `REQ-2738`, `REQ-2740`, `REQ-2741`, `REQ-2742`
 - `REQ-2743`, `REQ-2744`, `REQ-2745`, `REQ-2746`, `REQ-2747`, `REQ-2748`, `REQ-2749`, `REQ-2750`, `REQ-2751`, `REQ-2752`, `REQ-2753`, `REQ-2754`
 - `REQ-2755`, `REQ-2756`, `REQ-2757`, `REQ-2758`, `REQ-2759`, `REQ-2760`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement all ten exact finite-sample hand cases plus their applicability logic and an independent high-precision projection oracle capable of detecting anti-conservative production bounds.
@@ -10955,8 +10772,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M06 — I43 Execute Anytime Coverage Stress, Population Materiality, and Sequential Utility Analysis — consumes this issue's validated **Ten hand-case result/evidence sets** contract/evidence.
 - M06 — I45 Implement Authoritative Statistical Synthesis — consumes this issue's validated **Ten hand-case result/evidence sets** contract/evidence.
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -11050,9 +10865,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2777`, `REQ-2778`, `REQ-2779`, `REQ-2780`, `REQ-2781`, `REQ-2782`, `REQ-2785`, `REQ-2786`, `REQ-2787`, `REQ-2790`, `REQ-2792`, `REQ-2793`
 - `REQ-2794`, `REQ-2795`, `REQ-2797`, `REQ-2799`, `REQ-2800`, `REQ-2801`, `REQ-2802`, `REQ-2803`, `REQ-2804`, `REQ-2805`, `REQ-2806`, `REQ-2807`
 - `REQ-2808`, `REQ-2809`, `REQ-2810`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Execute the prespecified anytime stress, coverage-validation, population materiality, and paired sequential-utility experiments using exact stream counts, checkpoints, rho/beta constructions, comparator roles, metrics, and acceptance gates.
@@ -11165,8 +10977,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M06 — I45 Implement Authoritative Statistical Synthesis — consumes this issue's validated **Anytime coverage-stress evidence** contract/evidence.
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -11262,9 +11072,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-2823`, `REQ-2824`, `REQ-2825`, `REQ-2826`, `REQ-2827`, `REQ-2828`, `REQ-2829`, `REQ-2830`, `REQ-2831`, `REQ-2832`, `REQ-2833`, `REQ-2834`
 - `REQ-2835`, `REQ-2836`, `REQ-2837`, `REQ-2838`, `REQ-2839`, `REQ-2840`, `REQ-2841`, `REQ-2842`, `REQ-2843`, `REQ-2844`, `REQ-2845`, `REQ-2846`
 - `REQ-2847`, `REQ-2848`, `REQ-2849`, `REQ-2850`, `REQ-2851`, `REQ-2852`, `REQ-2853`, `REQ-2854`, `REQ-2855`, `REQ-2856`, `REQ-2857`, `REQ-2858`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Execute the complete predeclared failure-boundary and scaling experiments while explicitly preserving zero-cell nonapplicabilities and isolated benchmark methodology.
@@ -11394,8 +11201,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M06 — I45 Implement Authoritative Statistical Synthesis — consumes this issue's validated **Failure-boundary atlas source data** contract/evidence.
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -11484,9 +11289,6 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - `REQ-2859`, `REQ-2860`, `REQ-2861`, `REQ-2862`, `REQ-2863`, `REQ-2864`, `REQ-2865`, `REQ-2866`, `REQ-2867`, `REQ-2868`, `REQ-2869`, `REQ-2870`
 - `REQ-2871`, `REQ-2872`, `REQ-2873`, `REQ-2874`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the project-level Statistical Synthesis experiment that consumes only complete verified authoritative evidence, applies the prespecified statistical/materiality/completeness rules, and blocks on any mandatory evidence or reviewer-verification failure.
@@ -11554,8 +11356,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M06 — I46 Audit Authoritative Experiment Registry and Execution Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -11878,9 +11678,6 @@ This audit issue is complete only when **all** of the following are true:
 - `REQ-2966`, `REQ-2967`, `REQ-2968`, `REQ-2969`, `REQ-2970`, `REQ-2971`, `REQ-2972`, `REQ-2973`, `REQ-2974`, `REQ-2975`, `REQ-2976`, `REQ-2977`
 - `REQ-2978`, `REQ-2979`, `REQ-2980`, `REQ-2981`, `REQ-2982`, `REQ-2983`, `REQ-2984`, `REQ-2985`, `REQ-2986`, `REQ-2987`, `REQ-2988`, `REQ-2989`
 - `REQ-2990`, `REQ-2991`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the manuscript evidence-source contract and deterministically generate Tables 1–9 directly from verified machine-readable artifacts with exact schemas, source paths, ordering, formatting, status visibility, and evidence-role separation.
@@ -12179,8 +11976,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -12288,9 +12083,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-3089`, `REQ-3090`, `REQ-3091`, `REQ-3092`, `REQ-3093`, `REQ-3094`, `REQ-3095`, `REQ-3096`, `REQ-3097`, `REQ-3098`, `REQ-3099`, `REQ-3100`
 - `REQ-3101`, `REQ-3102`, `REQ-3103`, `REQ-3104`, `REQ-3105`, `REQ-3106`, `REQ-3107`, `REQ-3108`, `REQ-3109`, `REQ-3110`, `REQ-3111`, `REQ-3112`
 - `REQ-3113`, `REQ-3114`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Generate Figures 1–8 deterministically from completed verified source data, preserving every roadmap-defined panel, axis, curve, annotation, status, ordering, and source-data contract without scientific recomputation inside rendering.
@@ -12444,8 +12236,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -12545,9 +12335,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-3115`, `REQ-3116`, `REQ-3117`, `REQ-3118`, `REQ-3119`, `REQ-3120`, `REQ-3121`, `REQ-3122`, `REQ-3124`, `REQ-3125`, `REQ-3126`, `REQ-3127`
 - `REQ-3129`, `REQ-3130`, `REQ-3131`, `REQ-3132`, `REQ-3133`, `REQ-3134`, `REQ-3135`, `REQ-3136`, `REQ-3137`, `REQ-3138`, `REQ-3139`, `REQ-3140`
 - `REQ-3141`, `REQ-3142`, `REQ-3143`, `REQ-3144`, `REQ-3145`, `REQ-3146`, `REQ-3147`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement mechanical evidence gates and claim-state evaluation for the first six scientific claims, preserving exact wording, scopes, theorem/experiment support, failure conditions, and unfavorable/null outcomes.
@@ -12641,8 +12428,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M07 — I51 Evaluate Real-Trajectory Claim and Enforce Exact Claim-State Semantics — consumes this issue's validated **Machine-readable claim records for §21.1–§21.6** contract/evidence.
 - M07 — I52 Generate Sensitivity, Utility, Failure, Scaling, and Claim Tables 10–13 — consumes this issue's validated **Machine-readable claim records for §21.1–§21.6** contract/evidence.
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -12737,9 +12522,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-3172`, `REQ-3173`, `REQ-3174`, `REQ-3175`, `REQ-3176`, `REQ-3177`, `REQ-3178`, `REQ-3179`, `REQ-3180`, `REQ-3181`, `REQ-3182`, `REQ-3183`
 - `REQ-3184`, `REQ-3185`, `REQ-3186`, `REQ-3187`, `REQ-3188`, `REQ-3189`, `REQ-3190`, `REQ-3191`, `REQ-3192`, `REQ-3193`, `REQ-3194`, `REQ-3195`
 - `REQ-3196`, `REQ-3197`, `REQ-3198`, `REQ-3199`, `REQ-3200`, `REQ-3201`, `REQ-3202`, `REQ-3203`, `REQ-3204`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Mechanically evaluate the anytime-validity, synthetic nonvacuity, operational-gain, tractability, and local-validity claims and independently prove that core local inference neither statically nor dynamically consumes foreign-client information.
@@ -12885,8 +12667,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M07 — I51 Evaluate Real-Trajectory Claim and Enforce Exact Claim-State Semantics — consumes this issue's validated **Claim records for §21.7–§21.11** contract/evidence.
 - M07 — I52 Generate Sensitivity, Utility, Failure, Scaling, and Claim Tables 10–13 — consumes this issue's validated **Claim records for §21.7–§21.11** contract/evidence.
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -12976,9 +12756,6 @@ For each required output, its expected identity or location is the roadmap/repos
 ### Requirements
 
 - `REQ-3205`, `REQ-3206`, `REQ-3207`, `REQ-3208`, `REQ-3209`, `REQ-3210`, `REQ-3211`, `REQ-3212`, `REQ-3213`, `REQ-3214`, `REQ-3215`, `REQ-3413`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Represent the real-trajectory value claim exactly as untested under the current zero-cell plan and enforce the complete closed claim-state vocabulary and semantics across claim records and manuscript-facing evidence.
@@ -13035,8 +12812,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M07 — I52 Generate Sensitivity, Utility, Failure, Scaling, and Claim Tables 10–13 — consumes this issue's validated **Real-trajectory `NOT_TESTED` claim record** contract/evidence.
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -13127,9 +12902,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-3016`, `REQ-3017`, `REQ-3018`, `REQ-3019`, `REQ-3020`, `REQ-3021`, `REQ-3022`, `REQ-3023`, `REQ-3024`, `REQ-3025`, `REQ-3026`, `REQ-3027`
 - `REQ-3028`, `REQ-3029`, `REQ-3030`, `REQ-3031`, `REQ-3032`, `REQ-3033`, `REQ-3034`, `REQ-3035`, `REQ-3036`, `REQ-3037`, `REQ-3038`, `REQ-3039`
 - `REQ-3040`, `REQ-3041`, `REQ-3042`, `REQ-3043`, `REQ-3044`, `REQ-3045`, `REQ-3046`, `REQ-3047`, `REQ-3048`, `REQ-3049`, `REQ-3050`, `REQ-3051`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Generate Tables 10–13 from verified evidence, preserving exact sensitivity/utility statistics, failure-boundary visibility, computational-scaling measurements, and mechanical claim-state/evidence mapping.
@@ -13283,8 +13055,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M07 — I53 Audit Manuscript Evidence and Claim Evaluation Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -13579,9 +13349,6 @@ This audit issue is complete only when **all** of the following are true:
 - `REQ-3228`, `REQ-3229`, `REQ-3230`, `REQ-3231`, `REQ-3232`, `REQ-3233`, `REQ-3234`, `REQ-3235`, `REQ-3236`, `REQ-3237`, `REQ-3238`, `REQ-3239`
 - `REQ-3240`, `REQ-3241`, `REQ-3242`, `REQ-3243`, `REQ-3244`, `REQ-3245`, `REQ-3246`, `REQ-3247`, `REQ-3248`, `REQ-3249`, `REQ-3250`, `REQ-3251`
 - `REQ-3252`, `REQ-3253`, `REQ-3254`, `REQ-3255`, `REQ-3256`, `REQ-3257`, `REQ-3258`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement a single authoritative completion definition for cells, experiments, and project evidence that accepts valid scientific null/boundary/falsification outcomes but rejects missing, stale, invalid, partial, failed, or provenance-incompatible evidence.
@@ -13700,8 +13467,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M08 — I55 Implement Reproducibility Bundle and Verified Manuscript Export — consumes this issue's validated **Canonical cell/experiment/project completion verifier** contract/evidence.
 - M08 — I56 Audit Evidence Closure, Reproducibility, and Manuscript Export Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -13793,9 +13558,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-3259`, `REQ-3260`, `REQ-3261`, `REQ-3262`, `REQ-3263`, `REQ-3264`, `REQ-3265`, `REQ-3266`, `REQ-3267`, `REQ-3268`, `REQ-3269`, `REQ-3270`
 - `REQ-3271`, `REQ-3272`, `REQ-3273`, `REQ-3274`, `REQ-3275`, `REQ-3276`, `REQ-3277`, `REQ-3278`, `REQ-3279`, `REQ-3280`, `REQ-3281`, `REQ-3282`
 - `REQ-3283`, `REQ-3284`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the complete reproducibility evidence bundle and deterministic manuscript export so every published number, table, figure, claim, source dataset, configuration, seed, software/container identity, and dependency has verifiable lineage to completed authoritative evidence.
@@ -13879,8 +13641,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M08 — I56 Audit Evidence Closure, Reproducibility, and Manuscript Export Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -14152,9 +13912,6 @@ This audit issue is complete only when **all** of the following are true:
 - `REQ-3328`, `REQ-3329`, `REQ-3330`, `REQ-3331`, `REQ-3332`, `REQ-3333`, `REQ-3336`, `REQ-3337`, `REQ-3338`, `REQ-3339`, `REQ-3340`, `REQ-3341`
 - `REQ-3342`, `REQ-3343`, `REQ-3344`, `REQ-3345`, `REQ-3346`, `REQ-3347`, `REQ-3348`, `REQ-3349`, `REQ-3350`, `REQ-3351`, `REQ-3352`, `REQ-3353`
 - `REQ-3354`, `REQ-3355`, `REQ-3356`, `REQ-3357`, `REQ-3358`, `REQ-3359`, `REQ-3360`, `REQ-3361`, `REQ-3362`, `REQ-3363`, `REQ-3364`, `REQ-3365`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement and enforce the complete roadmap-wide test contract spanning exact mathematics, schemas, identity, seeds, fingerprints, numerical conservatism, lifecycle/recovery, evidence completion, reporting, and every discovered scientific/numerical regression.
@@ -14313,8 +14070,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 - M09 — I58 Implement Hostile Reviewer Verification and Evidence-Pointer Gate — consumes this issue's validated **Complete automated roadmap test suite** contract/evidence.
 - M09 — I59 Implement and Verify Normal Registry-Driven Operator Workflow — consumes this issue's validated **Complete automated roadmap test suite** contract/evidence.
 - M09 — I60 Audit Roadmap-Wide Verification and Operator Readiness Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -14399,9 +14154,6 @@ For each required output, its expected identity or location is the roadmap/repos
 ### Requirements
 
 - `REQ-3366`, `REQ-3367`, `REQ-3368`, `REQ-3369`, `REQ-3370`, `REQ-3371`, `REQ-3372`, `REQ-3373`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement the independent hostile-review verification gate required by Statistical Synthesis, producing machine-readable evidence pointers for target/scope, comparator fairness, sequential/statistical validity, identity/recovery, evidence lineage, local validity, and complete 1,423-cell accounting.
@@ -14456,8 +14208,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 
 - M09 — I59 Implement and Verify Normal Registry-Driven Operator Workflow — consumes this issue's validated **Hostile-review machine-readable evidence pointers** contract/evidence.
 - M09 — I60 Audit Roadmap-Wide Verification and Operator Readiness Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
@@ -14545,9 +14295,6 @@ For each required output, its expected identity or location is the roadmap/repos
 - `REQ-3374`, `REQ-3375`, `REQ-3376`, `REQ-3377`, `REQ-3378`, `REQ-3379`, `REQ-3380`, `REQ-3381`, `REQ-3382`, `REQ-3383`, `REQ-3384`, `REQ-3385`
 - `REQ-3386`, `REQ-3387`, `REQ-3388`, `REQ-3389`, `REQ-3390`, `REQ-3391`, `REQ-3392`, `REQ-3393`, `REQ-3394`, `REQ-3395`, `REQ-3396`, `REQ-3397`
 - `REQ-3398`, `REQ-3399`, `REQ-3400`, `REQ-3401`, `REQ-3402`, `REQ-3403`, `REQ-3404`, `REQ-3405`, `REQ-3406`, `REQ-3407`
-
-Every scope item, acceptance criterion, required output, and claim-bearing behavior in this issue must trace to the referenced roadmap authority or to prerequisite implementation strictly necessary to satisfy it.
-
 ## Objective
 
 Implement and end-to-end verify the exact normal operator workflow, automatic validation/reuse/invalidation/recovery behavior, experiment-family-only operator choice, and successful recovery from later failures without restarting valid earlier work.
@@ -14654,8 +14401,6 @@ The following is the complete atomic requirement set assigned to this issue. Imp
 ### Blocks
 
 - M09 — I60 Audit Roadmap-Wide Verification and Operator Readiness Milestone Completion — independently verifies this issue's closed requirements, tests, outputs, provenance, and downstream readiness before the milestone can pass.
-
-Dependencies describe the actual contract or evidence exchanged between issues and preserve the milestone dependency order.
 ## Implementation Surface
 
 Expected areas affected by this issue:
