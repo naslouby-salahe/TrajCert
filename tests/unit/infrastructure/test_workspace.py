@@ -21,6 +21,14 @@ def test_experiment_workspace_has_no_execution_phase_directory(tmp_path: Path) -
     assert not (experiment_root / "execution").exists()
 
 
+def test_result_experiment_workspace_is_separate_from_outputs(tmp_path: Path) -> None:
+    workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
+    result_root = workspace.materialize_result_experiment("population-sensitivity-utility")
+    assert result_root.is_relative_to(workspace.results_root)
+    assert (result_root / "figures/main").is_dir()
+    assert (result_root / "metrics/secondary").is_dir()
+
+
 def test_experiment_name_must_not_be_empty(tmp_path: Path) -> None:
     workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
     with pytest.raises(ValueError):
