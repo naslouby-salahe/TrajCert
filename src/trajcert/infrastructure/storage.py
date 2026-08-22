@@ -78,13 +78,15 @@ def _canonical_json(value: JSONValue) -> str:
         return _canonical_json_string(value)
     if isinstance(value, Mapping):
         entries: list[str] = []
-        for key in sorted(value):
+        for key in sorted(value, key=_utf16_sort_key):
             entries.append(f"{_canonical_json_string(key)}:{_canonical_json(value[key])}")
         return "{" + ",".join(entries) + "}"
     return "[" + ",".join(_canonical_json(item) for item in value) + "]"
 
 
 def _canonical_json_string(value: str) -> str:
+    if any(0xD800 <= ord(character) <= 0xDFFF for character in value):
+        raise ValueError("canonical JSON strings must not contain surrogate code points")
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     escaped = escaped.replace("\b", "\\b").replace("\f", "\\f")
     escaped = escaped.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
@@ -98,7 +100,13 @@ def _canonical_json_string(value: str) -> str:
     )
 
 
+def _utf16_sort_key(value: str) -> bytes:
+    return value.encode("utf-16be")
+
+
 def filesystem_safe_name(value: str) -> str:
+    if not value.isascii():
+        raise ValueError("semantic names must use ASCII text")
     rendered = SEMANTIC_NAME_PATTERN.sub("-", value.casefold()).strip("-")
     if not rendered:
         raise ValueError("semantic name must contain at least one ASCII alphanumeric character")

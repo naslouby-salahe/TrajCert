@@ -29,6 +29,11 @@ def test_canonical_json_rejects_nonfinite_values() -> None:
         canonical_json_bytes({"value": math.nan})
 
 
+def test_canonical_json_rejects_surrogates() -> None:
+    with pytest.raises(ValueError, match="surrogate"):
+        canonical_json_bytes({"value": "\ud800"})
+
+
 def test_canonical_json_uses_jcs_number_tokens_and_control_escaping() -> None:
     assert canonical_json_bytes({"small": 1e-7, "large": 1e20, "zero": -0.0}) == (
         b'{"large":100000000000000000000,"small":1e-7,"zero":0}'
@@ -56,6 +61,11 @@ def test_semantic_name_is_filesystem_safe() -> None:
     assert semantic_coordinate_segment("rho", 0.05) == "rho=0.05"
     assert semantic_coordinate_segment("rho", "log(2)") == "rho=log2"
     assert temporary_sibling_path(Path("result.json")).name == "result.json.partial"
+
+
+def test_semantic_names_reject_non_ascii_input() -> None:
+    with pytest.raises(ValueError, match="ASCII"):
+        filesystem_safe_name("résolution")
 
 
 def test_atomic_write_validates_before_promotion(tmp_path: Path) -> None:
