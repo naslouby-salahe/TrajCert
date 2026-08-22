@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from trajcert.domain.records.artifacts import CanonicalJson
 
-Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$", min_length=1)]
+Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]*$", min_length=1)]
 
 
 class LocalCertificateIdentity(BaseModel):
