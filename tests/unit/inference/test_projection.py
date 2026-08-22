@@ -62,3 +62,35 @@ def test_invalid_summary_envelope_uses_the_conservative_projection_fallback() ->
 
     assert result.proven_upper == 1
     assert result.termination_reason is ProjectionTermination.CONSERVATIVE_FALLBACK
+
+
+def test_node_budget_exhaustion_never_uses_the_feasible_incumbent_as_a_certified_upper() -> None:
+    configuration = load_configuration()
+    numerics = configuration.numerics.model_copy(update={"outer_max_visited_nodes": 1})
+
+    result = certified_outer_projection(ProjectionInput(valid_envelope(), 1, numerics))
+
+    assert result.termination_reason is ProjectionTermination.NODE_CAP
+    assert result.feasible_incumbent is not None
+    assert result.proven_upper >= result.feasible_incumbent
+
+
+def test_zero_terminal_mass_uses_the_exact_continuous_entropy_boundary() -> None:
+    resolved_entropy = -0.1 * math.log(0.1) - 0.9 * math.log(0.9)
+    envelope = ConservativeSummaryEnvelope(
+        SummaryEnvelopeState.VALID,
+        0.1,
+        0.1,
+        0.9,
+        0.9,
+        0,
+        0,
+        resolved_entropy,
+        resolved_entropy,
+    )
+
+    result = certified_outer_projection(ProjectionInput(envelope, 1, load_configuration().numerics))
+
+    assert result.feasible_incumbent is not None
+    assert math.isclose(result.feasible_incumbent, 0.1)
+    assert result.proven_upper >= 0.1
