@@ -340,7 +340,7 @@ def test_reusable_artifact_manifest_requires_valid_lineage_and_utc_validation() 
         semantic_coordinates="{}",
         scientific_content_digest=digest,
         payload_paths=("outputs/preprocessing/prepared/law.json",),
-        payload_sha256_map="{}",
+        payload_sha256_map='{"outputs/preprocessing/prepared/law.json":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}',
         schema_name="reusable_artifact",
         status=ArtifactValidationStatus.VALID,
         created_timestamp=datetime(2026, 1, 1, tzinfo=UTC),
@@ -351,6 +351,10 @@ def test_reusable_artifact_manifest_requires_valid_lineage_and_utc_validation() 
     with pytest.raises(ValidationError, match="validation timestamp"):
         ReusableArtifactManifest.model_validate(
             manifest.model_dump() | {"validated_timestamp": None}
+        )
+    with pytest.raises(ValidationError, match="checksum map"):
+        ReusableArtifactManifest.model_validate(
+            manifest.model_dump() | {"payload_sha256_map": "{}"}
         )
 
 
