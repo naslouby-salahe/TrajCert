@@ -38,6 +38,11 @@ class EvidenceClass(StrEnum):
     DIAGNOSTIC = "DIAGNOSTIC"
 
 
+class DatasetKind(StrEnum):
+    SYNTHETIC = "SYNTHETIC"
+    EXTERNAL = "EXTERNAL"
+
+
 AUTHORITATIVE_EVIDENCE_CLASSES = frozenset(EvidenceClass) - {EvidenceClass.EXPLORATORY}
 
 
