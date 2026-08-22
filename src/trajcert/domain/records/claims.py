@@ -1,3 +1,74 @@
-from trajcert.analysis.claims import RESEARCH_QUESTIONS
+from __future__ import annotations
 
-__all__ = ["RESEARCH_QUESTIONS"]
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from trajcert.domain.records.artifacts import CanonicalJson, Digest
+
+
+class FailureRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    failure_record_key: str = Field(min_length=1)
+    semantic_cell_key: str = Field(min_length=1)
+    dependency_fingerprint: Digest
+    provenance_fingerprint: Digest
+    failure_class: str = Field(min_length=1)
+    execution_group: str = Field(min_length=1)
+    reason_code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    exception_type: str | None = None
+    seed_index: int | None = Field(default=None, ge=0)
+    input_artifact_keys: tuple[str, ...] = ()
+    input_artifact_digests: tuple[Digest, ...] = ()
+    last_valid_checkpoint: str | None = None
+    retry_allowed: bool
+    downstream_blocking: bool
+
+    @model_validator(mode="after")
+    def validate_input_lineage(self) -> FailureRecord:
+        if len(self.input_artifact_keys) != len(self.input_artifact_digests):
+            raise ValueError("failure input artifact keys and digests must align")
+        return self
+
+
+class CompletionMarker(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    cell_plan_digest: Digest
+    scientific_specification_digest: Digest
+    scientific_dependency_digest: Digest
+    manifest_digest: Digest
+    required_artifact_keys: tuple[str, ...]
+    produced_artifact_keys: tuple[str, ...]
+    expected_artifact_count: int = Field(ge=0)
+    artifact_sha256_map: CanonicalJson
+    completed_seed_count: int = Field(ge=0)
+    expected_seed_count: int = Field(ge=0)
+    metrics_complete: bool
+    statistics_complete: bool
+    schema_validation_pass: bool
+    invariant_validation_pass: bool
+    dependency_validation_pass: bool
+    provenance_record_complete: bool
+    exit_status: int
+
+    @model_validator(mode="after")
+    def validate_completion_evidence(self) -> CompletionMarker:
+        if len(self.produced_artifact_keys) != self.expected_artifact_count:
+            raise ValueError("produced artifact count must equal the expected artifact count")
+        if self.completed_seed_count != self.expected_seed_count:
+            raise ValueError("completed seed count must equal expected seed count")
+        if not all(
+            (
+                self.metrics_complete,
+                self.statistics_complete,
+                self.schema_validation_pass,
+                self.invariant_validation_pass,
+                self.dependency_validation_pass,
+                self.provenance_record_complete,
+            )
+        ):
+            raise ValueError("completion markers require every validation gate to pass")
+        if self.exit_status != 0:
+            raise ValueError("completion markers require a successful exit status")
+        return self

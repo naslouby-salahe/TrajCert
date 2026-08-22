@@ -20,6 +20,7 @@ from trajcert.domain.manifests import (
     SeedManifest,
 )
 from trajcert.domain.records.artifacts import ArtifactEnvelope
+from trajcert.domain.records.claims import CompletionMarker, FailureRecord
 from trajcert.domain.records.execution import (
     ActiveSemanticCellManifest,
     DependencyFingerprintInput,
@@ -366,3 +367,43 @@ def test_stream_metrics_require_coherent_certification_timing() -> None:
     assert metrics.never_certified is True
     with pytest.raises(ValidationError, match="never-certified"):
         StreamMetricsRecord.model_validate(metrics.model_dump() | {"never_certified": False})
+
+
+def test_failure_and_completion_records_require_valid_lineage_and_evidence() -> None:
+    digest = "a" * 64
+    failure = FailureRecord(
+        failure_record_key="failure-population-cell",
+        semantic_cell_key="population-cell",
+        dependency_fingerprint=digest,
+        provenance_fingerprint=digest,
+        failure_class="TECHNICAL_FAIL",
+        execution_group="Solver validation",
+        reason_code="ARITHMETIC_EXCEPTION",
+        message="interval evaluation failed",
+        retry_allowed=True,
+        downstream_blocking=True,
+    )
+    marker = CompletionMarker(
+        cell_plan_digest=digest,
+        scientific_specification_digest=digest,
+        scientific_dependency_digest=digest,
+        manifest_digest=digest,
+        required_artifact_keys=("result",),
+        produced_artifact_keys=("result",),
+        expected_artifact_count=1,
+        artifact_sha256_map="{}",
+        completed_seed_count=0,
+        expected_seed_count=0,
+        metrics_complete=True,
+        statistics_complete=True,
+        schema_validation_pass=True,
+        invariant_validation_pass=True,
+        dependency_validation_pass=True,
+        provenance_record_complete=True,
+        exit_status=0,
+    )
+
+    assert failure.downstream_blocking is True
+    assert marker.exit_status == 0
+    with pytest.raises(ValidationError, match="every validation gate"):
+        CompletionMarker.model_validate(marker.model_dump() | {"metrics_complete": False})
