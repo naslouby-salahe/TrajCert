@@ -45,6 +45,11 @@ def synthetic_ledger_records(
         raise ValueError("synthetic stream index must be nonnegative")
     if any(event.action_index != index for index, event in enumerate(events)):
         raise ValueError("synthetic events must have contiguous canonical action indices")
+    if any(
+        event.resolution_band is not None and event.resolution_band > law.resolved_band_count
+        for event in events
+    ):
+        raise ValueError("synthetic event resolution band exceeds the law band count")
     horizon = _integral_age_unit(law.terminal_horizon)
     law_slug = synthetic_law_slug(law.name)
     identity = LocalCertificateIdentity(
