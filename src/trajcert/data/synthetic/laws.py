@@ -12,6 +12,9 @@ from trajcert.math.information_profile import InformationProfile
 SYNTHETIC_LAW_CATALOG_RELATIVE_PATH = Path(
     "outputs/preprocessing/metadata/synthetic_law_catalog.json"
 )
+SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH = Path(
+    "outputs/preprocessing/metadata/synthetic_scaling_law_catalog.json"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,6 +158,20 @@ def write_synthetic_law_catalog(
     payload = canonical_synthetic_law_catalog(laws)
     return atomic_write_bytes(
         project_root / SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
+        payload,
+        lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
+    )
+
+
+def write_synthetic_scaling_catalog(
+    project_root: Path,
+    law: SyntheticTrajectoryLaw,
+    resolved_band_counts: tuple[int, ...],
+) -> str:
+    laws = synthetic_scaling_laws(law, resolved_band_counts)
+    payload = canonical_synthetic_law_catalog(laws)
+    return atomic_write_bytes(
+        project_root / SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
         payload,
         lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
     )
