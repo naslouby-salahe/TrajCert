@@ -1,0 +1,21 @@
+rules:
+  - id: no-any-annotation
+    languages: [python]
+    message: Public and domain boundaries must not use Any.
+    paths:
+      include:
+        - /src/trajcert/**
+    patterns:
+      - pattern-either:
+          - pattern: "$NAME: Any"
+          - pattern: "def $FUNCTION(..., $NAME: Any, ...): ..."
+    severity: ERROR
+  - id: no-temporary-markers
+    languages: [python]
+    message: Temporary implementation markers are prohibited.
+    paths:
+      include:
+        - /src/trajcert/**
+        - /tests/**
+    pattern-regex: "(?i)\\b(todo|fixme|hack|xxx)\\b"
+    severity: ERROR

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import hashlib
-import importlib
 from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol, cast
+
+import pyarrow as pyarrow
+import pyarrow.parquet as pyarrow_parquet
 
 from trajcert.domain.records.execution import ExperimentPlanRow
 from trajcert.domain.serialization import JSONValue, canonical_json_bytes
@@ -47,8 +49,8 @@ class ParquetModule(Protocol):
     ) -> None: ...
 
 
-ARROW = cast(ArrowModule, importlib.import_module("pyarrow"))
-PARQUET = cast(ParquetModule, importlib.import_module("pyarrow.parquet"))
+ARROW = cast(ArrowModule, pyarrow)
+PARQUET = cast(ParquetModule, pyarrow_parquet)
 
 
 def ordered_plan_rows(rows: tuple[ExperimentPlanRow, ...]) -> tuple[ExperimentPlanRow, ...]:
