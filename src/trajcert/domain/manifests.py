@@ -60,6 +60,16 @@ class DatasetManifest(BaseModel):
     def validate_dataset_kind_contract(self) -> DatasetManifest:
         if self.dataset_kind is DatasetKind.SYNTHETIC and not self.known_full_law:
             raise ValueError("synthetic datasets require a known full law")
+        if (
+            self.eligibility_status is DatasetEligibilityStatus.INELIGIBLE
+            and not self.ineligibility_reason
+        ):
+            raise ValueError("ineligible datasets require an ineligibility reason")
+        if (
+            self.eligibility_status is DatasetEligibilityStatus.ELIGIBLE
+            and self.ineligibility_reason
+        ):
+            raise ValueError("eligible datasets cannot have an ineligibility reason")
         return self
 
 

@@ -325,6 +325,10 @@ def test_dataset_partition_and_seed_manifests_enforce_canonical_contracts() -> N
     )
 
     assert dataset.dataset_kind is DatasetKind.SYNTHETIC
+    with pytest.raises(ValidationError, match="ineligibility reason"):
+        DatasetManifest.model_validate(
+            dataset.model_dump() | {"eligibility_status": DatasetEligibilityStatus.INELIGIBLE}
+        )
     assert partition.K == 2
     assert seeds.seed_count == 2
 
