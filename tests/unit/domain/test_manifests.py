@@ -214,6 +214,68 @@ def test_plan_and_manifest_models_cover_the_complete_roadmap_field_contract() ->
     }
 
 
+def test_execution_and_provenance_models_cover_the_complete_roadmap_field_contract() -> None:
+    assert set(ActiveSemanticCellManifest.model_fields) == set(ArtifactEnvelope.model_fields) | {
+        "resolved_scientific_parameters",
+        "expected_artifacts",
+        "required_artifact_keys",
+        "produced_artifact_keys",
+        "execution_start_timestamp",
+        "execution_end_timestamp",
+        "host_runtime_fingerprint",
+        "checkpoint_recovery_history",
+    }
+    assert set(ExecutionStateRecord.model_fields) == {
+        "state",
+        "semantic_cell_key",
+        "state_sequence_number",
+        "last_transition_timestamp",
+        "reason_code",
+        "reason_text",
+        "failed_seed_indices",
+        "completed_seed_indices",
+        "completed_batch_indices",
+        "checkpoint_recovery_eligible",
+        "stale_artifact_keys",
+        "blocking_artifact_keys",
+    }
+    assert set(ExperimentAggregateRecord.model_fields) == {
+        "experiment_name",
+        "overall_state",
+        "expected_semantic_cells",
+        "completed_semantic_cells",
+        "failed_semantic_cells",
+        "invalid_semantic_cells",
+        "stale_semantic_cells",
+        "blocking_dependencies",
+        "active_provenance_digest",
+        "last_execution_outcome",
+        "results_export_state",
+    }
+    assert set(ProvenanceFingerprintInput.model_fields) == {
+        "scientific_specification_digest",
+        "code_commit",
+        "dirty_tree_flag",
+        "environment_lock_digest",
+        "container_image_digest",
+        "dataset_preprocessing_checksums",
+        "partition_checksum",
+        "seed_manifest_checksums",
+        "plan_digest",
+    }
+    assert set(DependencyFingerprintInput.model_fields) == {
+        "artifact_type",
+        "semantic_coordinates",
+        "scientific_dependency_digest",
+        "implementation_component_digest",
+        "environment_dependency_digest",
+        "seed_manifest_digest",
+        "parent_artifact_keys",
+        "parent_scientific_content_digests",
+        "producer_immutable_inputs",
+    }
+
+
 @pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
 def test_artifact_envelope_rejects_nonfinite_claim_bearing_values(value: float) -> None:
     with pytest.raises(ValidationError, match="finite"):
