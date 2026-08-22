@@ -23,3 +23,21 @@ def implementation_component_digest(project_root: Path, relative_paths: tuple[Pa
         digest.update(file_digest.encode("ascii"))
         digest.update(b"\n")
     return digest.hexdigest()
+
+
+def scientific_dependency_digest(
+    clause_text: tuple[str, ...],
+    configuration_fragments: tuple[bytes, ...],
+) -> str:
+    if not clause_text:
+        raise ValueError("scientific dependency digest requires at least one clause")
+    digest = hashlib.sha256()
+    for clause in clause_text:
+        if not clause:
+            raise ValueError("scientific dependency clauses must be nonempty")
+        digest.update(clause.encode("utf-8"))
+        digest.update(b"\x00")
+    for fragment in configuration_fragments:
+        digest.update(fragment)
+        digest.update(b"\x00")
+    return digest.hexdigest()
