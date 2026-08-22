@@ -18,7 +18,12 @@ from trajcert.data.synthetic.laws import (
     write_synthetic_law_catalog,
     write_synthetic_scaling_catalog,
 )
-from trajcert.data.synthetic.ledger import prepare_synthetic_ledger, synthetic_ledger_records
+from trajcert.data.synthetic.ledger import (
+    SYNTHETIC_LEDGER_RELATIVE_PATH,
+    prepare_synthetic_ledger,
+    synthetic_ledger_records,
+    write_prepared_synthetic_ledger,
+)
 from trajcert.math.information_profile import InformationProfile
 
 
@@ -88,7 +93,7 @@ def test_synthetic_ledger_records_have_canonical_identity_and_terminal_semantics
     assert records[1].adjudication is None
 
 
-def test_synthetic_preparation_returns_canonical_checksum_and_manifest() -> None:
+def test_synthetic_preparation_returns_canonical_checksum_and_manifest(tmp_path: Path) -> None:
     law = SyntheticTrajectoryLaw("Test law", 0.5, 0.0, 1.0, 0.0, 0.0, 2, 8.0)
     events = (SyntheticEvent(0, True, 1, True), SyntheticEvent(1, False, None, True))
 
@@ -107,6 +112,8 @@ def test_synthetic_preparation_returns_canonical_checksum_and_manifest() -> None
         "test-law::S000003::E000000",
         "test-law::S000003::E000001",
     )
+    assert write_prepared_synthetic_ledger(tmp_path, prepared) == prepared.ledger_checksum
+    assert (tmp_path / SYNTHETIC_LEDGER_RELATIVE_PATH).is_file()
 
 
 def test_minimum_information_completion_preserves_observable_law_and_hits_floor() -> None:
