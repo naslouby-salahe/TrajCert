@@ -103,7 +103,7 @@ def synthetic_law_catalog(
     synthetic_data: SyntheticDataConfiguration,
     method: MethodConfiguration,
 ) -> tuple[SyntheticTrajectoryLaw, ...]:
-    return tuple(
+    base_laws = tuple(
         SyntheticTrajectoryLaw(
             law.name,
             law.theta,
@@ -115,6 +115,10 @@ def synthetic_law_catalog(
             float(method.synthetic_terminal_horizon_age_units),
         )
         for law in synthetic_data.laws
+    )
+    derived_sources = set(synthetic_data.minimum_information_completion_laws)
+    return base_laws + tuple(
+        law.minimum_information_completion() for law in base_laws if law.name in derived_sources
     )
 
 

@@ -39,6 +39,7 @@ class SyntheticLawConfiguration(FrozenConfiguration):
 
 class SyntheticDataConfiguration(FrozenConfiguration):
     laws: tuple[SyntheticLawConfiguration, ...]
+    minimum_information_completion_laws: tuple[str, ...]
     utility_and_coherence_laws: tuple[str, ...]
     sharpness_oracle_laws: tuple[str, ...]
     safety_and_impossibility_laws: tuple[str, ...]
@@ -50,6 +51,7 @@ class SyntheticDataConfiguration(FrozenConfiguration):
             raise ValueError("synthetic law names must be unique")
         configured = set(names)
         lists = (
+            self.minimum_information_completion_laws,
             self.utility_and_coherence_laws,
             self.sharpness_oracle_laws,
             self.safety_and_impossibility_laws,
