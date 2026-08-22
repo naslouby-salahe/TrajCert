@@ -29,6 +29,17 @@ def test_population_solver_classifies_and_brackets_roots() -> None:
     assert math.isclose(singleton.lower_risk or -1.0, floor.latent_risk or -1.0)
 
 
+def test_population_solver_returns_exact_boundary_saturated_interval() -> None:
+    profile = InformationProfile(ObservableLaw((0.3,), (0.3,), 0.4))
+    result = solve_population_risk_set(profile, 1.0, load_configuration().numerics)
+
+    assert result.state is PopulationRiskSetState.INTERVAL
+    assert math.isclose(result.lower_risk or -1.0, 0.3)
+    assert math.isclose(result.upper_risk or -1.0, 0.7)
+    assert result.lower_root is None
+    assert result.upper_root is None
+
+
 def test_safety_regimes_are_explicit() -> None:
     profile = InformationProfile(ObservableLaw((0.1,), (0.3,), 0.6))
 

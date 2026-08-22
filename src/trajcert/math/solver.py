@@ -39,24 +39,36 @@ def solve_population_risk_set(
         return PopulationRiskSet(PopulationRiskSetState.SINGLETON, risk, risk, None, None)
     if floor.hidden_harmful_mass is None:
         raise ValueError("interval roots require a defined minimum-information completion")
-    lower = bisect_branch(
-        profile,
-        rho,
-        0.0,
-        floor.hidden_harmful_mass,
-        numerics,
+    lower = (
+        None
+        if profile.value(0.0) <= rho + tolerance
+        else bisect_branch(
+            profile,
+            rho,
+            0.0,
+            floor.hidden_harmful_mass,
+            numerics,
+        )
     )
-    upper = bisect_branch(
-        profile,
-        rho,
-        floor.hidden_harmful_mass,
-        profile.unresolved_mass,
-        numerics,
+    upper = (
+        None
+        if profile.value(profile.unresolved_mass) <= rho + tolerance
+        else bisect_branch(
+            profile,
+            rho,
+            floor.hidden_harmful_mass,
+            profile.unresolved_mass,
+            numerics,
+        )
     )
     return PopulationRiskSet(
         PopulationRiskSetState.INTERVAL,
-        profile.harmful_total + lower.returned_root,
-        profile.harmful_total + upper.returned_root,
+        profile.harmful_total if lower is None else profile.harmful_total + lower.returned_root,
+        (
+            profile.harmful_total + profile.unresolved_mass
+            if upper is None
+            else profile.harmful_total + upper.returned_root
+        ),
         lower,
         upper,
     )

@@ -3,8 +3,10 @@ import math
 from trajcert.baselines.references import (
     complete_case_arrival_only,
     endpoint_only_observable_law,
+    endpoint_only_pis_risk_set,
     unresolved_as_harm_worst_case,
 )
+from trajcert.configuration.loading import load_configuration
 from trajcert.data.partitions import ObservableLaw
 
 
@@ -21,6 +23,12 @@ def test_foundational_references_preserve_their_declared_semantics() -> None:
     assert math.isclose(endpoint.harmful_total, 0.3)
     assert math.isclose(endpoint.correct_total, 0.3)
     assert endpoint.unresolved_mass == 0.4
+
+    numerics = load_configuration().numerics
+    rho = 1.0
+    risk_set = endpoint_only_pis_risk_set(law, rho, numerics)
+    assert risk_set.lower_risk is not None
+    assert risk_set.upper_risk is not None
 
 
 def test_complete_case_is_inapplicable_without_resolved_mass() -> None:
