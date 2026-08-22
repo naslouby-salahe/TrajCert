@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from trajcert.domain.records.artifacts import ArtifactEnvelope
 from trajcert.domain.serialization import (
     canonical_json_bytes,
     canonical_json_text,
@@ -116,6 +117,7 @@ def test_canonical_physical_types_match_the_arrow_contract() -> None:
 
 def test_artifact_envelope_arrow_schema_preserves_nullable_scientific_fields() -> None:
     schema = artifact_envelope_arrow_schema()
+    assert set(schema.names) == set(ArtifactEnvelope.model_fields)
     assert schema.field("artifact_key").nullable is False
     assert schema.field("scientific_specification_digest").nullable is False
     assert schema.field("rho").nullable is True
