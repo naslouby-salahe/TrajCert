@@ -49,7 +49,11 @@ class SyntheticTrajectoryLaw:
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("synthetic law name must be nonempty")
-        if self.resolved_band_count < 1 or self.terminal_horizon <= 0:
+        if (
+            self.resolved_band_count < 1
+            or not math.isfinite(self.terminal_horizon)
+            or self.terminal_horizon <= 0
+        ):
             raise ValueError("synthetic law requires positive band count and terminal horizon")
         if any(not 0 <= value <= 1 for value in (self.theta, self.q1, self.q0)):
             raise ValueError("synthetic probabilities must lie in [0, 1]")

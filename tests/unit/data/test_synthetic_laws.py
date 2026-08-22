@@ -126,6 +126,8 @@ def test_synthetic_event_rejects_invalid_indices_bands_and_admission() -> None:
         SyntheticEvent(0, True, 0, True)
     with pytest.raises(ValueError, match="admitted"):
         SyntheticEvent(0, True, 1, False)
+    with pytest.raises(ValueError, match="positive band count and terminal horizon"):
+        SyntheticTrajectoryLaw("invalid", 0.5, 0.1, 0.1, 0.0, 0.0, 2, float("nan"))
 
 
 def test_synthetic_ledger_records_have_canonical_identity_and_terminal_semantics() -> None:

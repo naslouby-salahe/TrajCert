@@ -16,6 +16,8 @@ class SyntheticEvent:
     def __post_init__(self) -> None:
         if self.action_index < 0:
             raise ValueError("synthetic action index must be nonnegative")
+        if type(self.label) is not bool:
+            raise ValueError("synthetic label must be boolean")
         if self.resolution_band is not None and self.resolution_band < 1:
             raise ValueError("synthetic resolution band must be positive")
         if not self.admitted:
