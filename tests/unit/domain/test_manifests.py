@@ -28,6 +28,7 @@ from trajcert.domain.records.execution import (
     ExperimentPlanRow,
     ProvenanceFingerprintInput,
 )
+from trajcert.domain.records.results import PopulationMetricsRecord
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
 from trajcert.infrastructure.fingerprints import dependency_fingerprint, provenance_fingerprint
 
@@ -316,3 +317,19 @@ def test_fingerprints_are_deterministic_and_change_for_material_inputs() -> None
     assert dependency_fingerprint(dependency) != dependency_fingerprint(
         dependency.model_copy(update={"artifact_type": "other_result"})
     )
+
+
+def test_population_metrics_use_nulls_for_undefined_quantities_and_reject_nonfinite_values() -> (
+    None
+):
+    metrics = PopulationMetricsRecord(
+        law_name="Timing and terminal",
+        A=0.05,
+        G=0.65,
+        c=0.30,
+        numeric_status="VALID",
+    )
+
+    assert metrics.tau is None
+    with pytest.raises(ValidationError, match="finite"):
+        PopulationMetricsRecord.model_validate(metrics.model_dump() | {"risk_upper": math.inf})
