@@ -67,12 +67,16 @@ class ActiveSemanticCellManifest(ArtifactEnvelope):
 
     @model_validator(mode="after")
     def validate_execution_timestamps(self) -> ActiveSemanticCellManifest:
+        if self.execution_end_timestamp is not None and self.execution_start_timestamp is None:
+            raise ValueError("execution end requires an execution start")
         if (
             self.execution_start_timestamp is not None
             and self.execution_end_timestamp is not None
             and self.execution_end_timestamp < self.execution_start_timestamp
         ):
             raise ValueError("execution end cannot precede execution start")
+        if not set(self.produced_artifact_keys).issubset(self.required_artifact_keys):
+            raise ValueError("produced artifacts must be required artifacts")
         return self
 
 
