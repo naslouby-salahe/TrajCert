@@ -80,6 +80,35 @@ def test_external_inventory_requires_all_real_study_semantics_for_eligibility() 
     ).established
 
 
+def test_external_inventory_rejects_mappings_without_equivalence_status() -> None:
+    with pytest.raises(ValidationError, match="must be semantically equivalent"):
+        ExternalDatasetInventory(
+            documented_expected_value='{"columns":["event_id"]}',
+            observed_raw_dataset_value='{"columns":["event_identifier"]}',
+            expected_source_release="release-1",
+            official_documentation_reference="documentation",
+            raw_checksum="a" * 64,
+            file_count=1,
+            row_count=10,
+            entity_count=2,
+            raw_schema='{"event_identifier":"string"}',
+            labels=("correct",),
+            temporal_fields=("issued_at",),
+            client_entity_identifiers=("client",),
+            discrepancy_status="MAPPED",
+            field_mapping_status="NO_MAPPING",
+            field_mappings=(
+                DeterministicFieldMapping(
+                    required_semantic="immutable event identifier",
+                    observed_raw_field="event_identifier",
+                    equivalence_evidence="release documentation maps event_identifier to event_id",
+                ),
+            ),
+            eligibility_status=DatasetEligibilityStatus.INELIGIBLE,
+            required_semantics_established=False,
+        )
+
+
 def test_real_trajectory_boundary_rejects_non_synthetic_or_nonzero_plan() -> None:
     with pytest.raises(ValidationError, match="synthetic benchmark"):
         RealTrajectoryBoundary(
@@ -87,6 +116,15 @@ def test_real_trajectory_boundary_rejects_non_synthetic_or_nonzero_plan() -> Non
             confirmatory_dataset_kind=DatasetKind.EXTERNAL,
             validation_experiment_name="Real-Trajectory Validation",
             validation_cell_count=0,
+            claim_state="NOT_TESTED",
+            future_real_study_is_separate=True,
+        )
+    with pytest.raises(ValidationError, match="zero cells"):
+        RealTrajectoryBoundary(
+            planning_status="NOT_IN_CURRENT_CONFIRMATORY_PLAN",
+            confirmatory_dataset_kind=DatasetKind.SYNTHETIC,
+            validation_experiment_name="Real-Trajectory Validation",
+            validation_cell_count=1,
             claim_state="NOT_TESTED",
             future_real_study_is_separate=True,
         )
