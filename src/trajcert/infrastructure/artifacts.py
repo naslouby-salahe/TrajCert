@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 import importlib
+from collections.abc import Mapping
 from typing import Protocol, cast
 
 from trajcert.domain.records.artifacts import ArtifactEnvelope
+from trajcert.infrastructure.storage import (
+    JSONValue,
+    canonical_json_bytes,
+    semantic_coordinate_segment,
+)
 
 
 class ArrowDataType(Protocol):
@@ -57,6 +63,24 @@ class ArrowModule(Protocol):
 
 type ArtifactValue = str | float | int | list[str] | None
 ARROW = cast(ArrowModule, importlib.import_module("pyarrow"))
+
+
+def semantic_cell_key(experiment_name: str, coordinates: Mapping[str, JSONValue]) -> str:
+    if not experiment_name.strip():
+        raise ValueError("experiment name must not be empty")
+    return f"{experiment_name}:{canonical_json_bytes(coordinates).decode('utf-8')}"
+
+
+def descriptive_artifact_key(
+    artifact_type: str,
+    coordinates: Mapping[str, float | str],
+) -> str:
+    if not artifact_type.strip():
+        raise ValueError("artifact type must not be empty")
+    segments = [artifact_type]
+    for name in sorted(coordinates):
+        segments.append(semantic_coordinate_segment(name, coordinates[name]))
+    return "-".join(segments)
 
 
 def canonical_physical_types() -> dict[str, ArrowDataType]:
