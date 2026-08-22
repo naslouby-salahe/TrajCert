@@ -15,3 +15,9 @@ def test_synthetic_trajectory_law_preserves_conditional_probability_and_horizon_
     assert correct[-1] < correct[0]
     assert law.band_horizons() == (2.0, 4.0, 6.0, 8.0)
     assert law.with_resolved_band_count(8).terminal_horizon == law.terminal_horizon
+    assert math.isclose(
+        law.observable_law().harmful_total
+        + law.observable_law().correct_total
+        + law.observable_law().c,
+        1.0,
+    )

@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from trajcert.data.partitions import ObservableLaw
+
 
 @dataclass(frozen=True, slots=True)
 class SyntheticTrajectoryLaw:
@@ -44,6 +46,18 @@ class SyntheticTrajectoryLaw:
 
     def conditional_terminal_mass(self, label: bool) -> float:
         return self.q1 if label else self.q0
+
+    def observable_law(self) -> ObservableLaw:
+        harmful_masses = tuple(
+            self.theta * mass for mass in self.conditional_resolution_masses(True)
+        )
+        correct_masses = tuple(
+            (1 - self.theta) * mass for mass in self.conditional_resolution_masses(False)
+        )
+        unresolved_mass = self.theta * self.conditional_terminal_mass(True) + (
+            1 - self.theta
+        ) * self.conditional_terminal_mass(False)
+        return ObservableLaw(harmful_masses, correct_masses, unresolved_mass)
 
     def band_horizons(self) -> tuple[float, ...]:
         return tuple(
