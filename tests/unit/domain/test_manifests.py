@@ -1,14 +1,21 @@
 import math
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
 
-from trajcert.domain.enums import DatasetKind, EvidenceClass, PublicExecutionState
+from trajcert.domain.enums import (
+    ArtifactValidationStatus,
+    DatasetKind,
+    EvidenceClass,
+    PublicExecutionState,
+)
 from trajcert.domain.identity import LocalCertificateIdentity
 from trajcert.domain.manifests import (
     DatasetManifest,
     EpochManifest,
     PartitionManifest,
+    ReusableArtifactManifest,
     SeedManifest,
 )
 from trajcert.domain.records.artifacts import ArtifactEnvelope
@@ -190,3 +197,31 @@ def test_dataset_partition_and_seed_manifests_enforce_canonical_contracts() -> N
     assert dataset.dataset_kind is DatasetKind.SYNTHETIC
     assert partition.K == 2
     assert seeds.seed_count == 2
+
+
+def test_reusable_artifact_manifest_requires_valid_lineage_and_utc_validation() -> None:
+    digest = "d" * 64
+    manifest = ReusableArtifactManifest(
+        artifact_key="prepared-law",
+        artifact_type="prepared_law",
+        artifact_owner="preprocessing",
+        producer_component="trajcert.data.synthetic.preprocessing",
+        dependency_fingerprint=digest,
+        implementation_component_digest=digest,
+        environment_dependency_digest=digest,
+        scientific_dependency_digest=digest,
+        semantic_coordinates="{}",
+        scientific_content_digest=digest,
+        payload_paths=("outputs/preprocessing/prepared/law.json",),
+        payload_sha256_map="{}",
+        schema_name="reusable_artifact",
+        status=ArtifactValidationStatus.VALID,
+        created_timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        validated_timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+
+    assert manifest.status is ArtifactValidationStatus.VALID
+    with pytest.raises(ValidationError, match="validation timestamp"):
+        ReusableArtifactManifest.model_validate(
+            manifest.model_dump() | {"validated_timestamp": None}
+        )

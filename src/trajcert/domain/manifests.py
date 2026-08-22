@@ -3,10 +3,12 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from trajcert.domain.enums import DatasetKind
+from trajcert.domain.enums import ArtifactValidationStatus, DatasetKind
 from trajcert.domain.identity import Identifier, LocalCertificateIdentity
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
 
@@ -105,6 +107,48 @@ class SeedManifest(BaseModel):
             raise ValueError("seed count must match the declared index range")
         if any(UNSIGNED_DECIMAL_PATTERN.fullmatch(seed) is None for seed in self.seeds):
             raise ValueError("seeds must be unsigned decimal strings")
+        return self
+
+
+class ReusableArtifactManifest(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    artifact_key: str = Field(min_length=1)
+    artifact_type: str = Field(min_length=1)
+    artifact_owner: str = Field(min_length=1)
+    producer_component: str = Field(min_length=1)
+    dependency_fingerprint: Digest
+    implementation_component_digest: Digest
+    environment_dependency_digest: Digest
+    scientific_dependency_digest: Digest
+    semantic_coordinates: CanonicalJson
+    parent_artifact_keys: tuple[str, ...] = ()
+    parent_artifact_digests: tuple[Digest, ...] = ()
+    scientific_content_digest: Digest
+    payload_paths: tuple[str, ...]
+    payload_sha256_map: CanonicalJson
+    schema_name: str = Field(min_length=1)
+    schema_version: Literal[1] = 1
+    status: ArtifactValidationStatus
+    created_timestamp: datetime
+    validated_timestamp: datetime | None = None
+    declared_downstream_consumers: tuple[str, ...] = ()
+
+    @field_validator("created_timestamp", "validated_timestamp")
+    @classmethod
+    def validate_utc_timestamp(cls, value: datetime | None) -> datetime | None:
+        if value is not None:
+            offset = value.utcoffset()
+            if offset is None or offset.total_seconds() != 0:
+                raise ValueError("artifact timestamps must be UTC")
+        return value
+
+    @model_validator(mode="after")
+    def validate_artifact_lineage(self) -> ReusableArtifactManifest:
+        if len(self.parent_artifact_keys) != len(self.parent_artifact_digests):
+            raise ValueError("parent artifact keys and digests must align")
+        if self.status is ArtifactValidationStatus.VALID and self.validated_timestamp is None:
+            raise ValueError("valid reusable artifacts require a validation timestamp")
         return self
 
 
