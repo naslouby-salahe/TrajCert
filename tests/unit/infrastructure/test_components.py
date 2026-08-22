@@ -1,4 +1,10 @@
-from trajcert.infrastructure.components import EXECUTION_DEPENDENCY_CHAIN, REUSABLE_ARTIFACT_LAYERS
+import pytest
+
+from trajcert.infrastructure.components import (
+    EXECUTION_DEPENDENCY_CHAIN,
+    REUSABLE_ARTIFACT_LAYERS,
+    ValidatedStreamPrefix,
+)
 
 
 def test_execution_dependency_chain_preserves_roadmap_order_and_exclusions() -> None:
@@ -18,3 +24,15 @@ def test_execution_dependency_chain_preserves_roadmap_order_and_exclusions() -> 
     assert training.reusable_authoritative_artifacts == ()
     assert calibration.reusable_authoritative_artifacts == ("no fitted calibration artifact",)
     assert len(REUSABLE_ARTIFACT_LAYERS) == 10
+
+
+def test_validated_stream_prefix_reuse_and_extension_require_same_semantic_stream() -> None:
+    prefix = ValidatedStreamPrefix("generator-v1", "seed-set-a", 100)
+    same_stream = ValidatedStreamPrefix("generator-v1", "seed-set-a", 200)
+    other_seed = ValidatedStreamPrefix("generator-v1", "seed-set-b", 200)
+
+    assert prefix.can_serve(25)
+    assert prefix.can_extend_to(200, same_stream)
+    assert not prefix.can_extend_to(200, other_seed)
+    with pytest.raises(ValueError, match="nonnegative"):
+        prefix.can_serve(-1)
