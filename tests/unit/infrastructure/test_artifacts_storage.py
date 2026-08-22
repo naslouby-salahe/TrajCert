@@ -87,6 +87,17 @@ def test_atomic_write_rejects_payload_before_creating_a_partial_file(tmp_path: P
     assert not temporary_sibling_path(destination).exists()
 
 
+def test_atomic_write_preserves_existing_artifact_when_validation_rejects_payload(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "artifact.json"
+    destination.write_bytes(b"previous")
+    with pytest.raises(ValueError, match="unexpected payload"):
+        atomic_write_bytes(destination, b"invalid", assert_valid_payload)
+    assert destination.read_bytes() == b"previous"
+    assert not temporary_sibling_path(destination).exists()
+
+
 def assert_valid_payload(value: bytes) -> None:
     if value != b"{}":
         raise ValueError("unexpected payload")
