@@ -72,3 +72,32 @@ class CompletionMarker(BaseModel):
         if self.exit_status != 0:
             raise ValueError("completion markers require a successful exit status")
         return self
+
+
+class ClaimRegistryRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    claim_name: str = Field(min_length=1)
+    exact_claim: str = Field(min_length=1)
+    research_question: str = Field(min_length=1)
+    hypotheses_or_theorems: tuple[str, ...] = ()
+    supporting_experiments: tuple[str, ...]
+    primary_metric: str = Field(min_length=1)
+    secondary_metrics: tuple[str, ...] = ()
+    statistical_comparison: str | None = None
+    effect_size_rule: str | None = None
+    minimum_support_condition: str = Field(min_length=1)
+    failure_condition: str = Field(min_length=1)
+    valid_scope: str = Field(min_length=1)
+    forbidden_extrapolation: str = Field(min_length=1)
+    supporting_tables: tuple[str, ...] = ()
+    supporting_figures: tuple[str, ...] = ()
+    final_state: str = Field(min_length=1)
+    final_state_reason: str = Field(min_length=1)
+    evidence_artifact_digests: tuple[Digest, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_claim_evidence(self) -> ClaimRegistryRecord:
+        if self.final_state == "SUPPORTED" and not self.evidence_artifact_digests:
+            raise ValueError("supported claims require evidence artifact digests")
+        return self
