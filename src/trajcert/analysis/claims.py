@@ -8,6 +8,24 @@ VERIFICATION_SETTING = (
     "Delayed, selective/outcome-dependent, and potentially unresolved outcome verification"
 )
 THEORETICAL_PRINCIPLE = "Path-Information Sensitivity (PIS)"
+AUTHORITATIVE_ROADMAP_PATH = "docs/TrajCert_Roadmap.md"
+LEGACY_COMPARATOR_NAME = "Legacy bandwise odds-ratio sensitivity"
+RESEARCH_QUESTIONS = (
+    "Does one fixed path-information sensitivity budget retain its meaning under deterministic "
+    "trajectory coarsening and generate nested sharp risk sets?",
+    "Is resolved timing information identifiable, and when does finer timing strictly improve "
+    "the upper risk bound?",
+    "Does the one-dimensional information profile generate the exact compatible latent-risk set?",
+    "Can the method distinguish model contradiction, sensitivity-driven non-certification, "
+    "and intrinsic impossibility?",
+    "Does projection of a simultaneous observable-law confidence sequence through the "
+    "conservative sharp-map envelope provide the declared time-uniform upper-risk guarantee?",
+    "Over a predeclared rho domain, when is the certificate informative, incompatible, "
+    "or practically vacuous?",
+    "If a future eligible action/adjudication ledger exists, does real resolved timing "
+    "materially improve certification?",
+    "Does local validity remain independent of foreign-client information?",
+)
 
 PROHIBITED_CLAIM_TERMS = frozenset(
     {
