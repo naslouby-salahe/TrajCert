@@ -1,3 +1,7 @@
+from typing import cast
+
+import pytest
+
 from trajcert.data.synthetic.preprocessing import (
     BALANCED_PREFIX_CONSTRUCTION_IDENTITY,
     BalancedPrefixConstruction,
@@ -29,6 +33,24 @@ def test_balanced_prefix_construction_preserves_identity_and_terminal_counts() -
         (1, 1, 1),
         (2, 1, 1),
     )
+
+
+def test_balanced_prefix_updates_only_the_selected_category_at_each_step() -> None:
+    construction = BalancedPrefixConstruction.from_terminal_counts((4, 2, 1))
+
+    assert construction.sequence == balanced_prefix(construction.target_probabilities, 7)
+    for before, after in zip(
+        construction.prefix_counts[:-1], construction.prefix_counts[1:], strict=True
+    ):
+        assert sum(after) == sum(before) + 1
+        assert (
+            sum(current != previous for previous, current in zip(before, after, strict=True)) == 1
+        )
+
+
+def test_balanced_prefix_rejects_noninteger_terminal_counts() -> None:
+    with pytest.raises(ValueError, match="nonempty nonnegative integers"):
+        BalancedPrefixConstruction.from_terminal_counts(cast(tuple[int, ...], (1, 0.5)))
 
 
 def test_balanced_prefix_zero_terminal_counts_preserve_category_identity() -> None:

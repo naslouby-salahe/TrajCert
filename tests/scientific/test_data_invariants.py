@@ -1,7 +1,9 @@
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from trajcert.data.synthetic.preprocessing import BalancedPrefixConstruction
 
 
-def test_test_data_invariants_target_exists() -> None:
-    assert (PROJECT_ROOT / "src/trajcert/data/integrity.py").is_file()
+def test_balanced_prefix_starts_at_zero_and_recovers_exact_terminal_counts() -> None:
+    construction = BalancedPrefixConstruction.from_terminal_counts((3, 2, 0, 1))
+
+    assert construction.prefix_counts[0] == (0, 0, 0, 0)
+    assert construction.prefix_counts[-1] == (3, 2, 0, 1)
+    assert construction.final_counts == construction.terminal_counts

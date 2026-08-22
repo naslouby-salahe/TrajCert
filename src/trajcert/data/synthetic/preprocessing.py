@@ -43,7 +43,7 @@ class BalancedPrefixConstruction:
 
     @classmethod
     def from_terminal_counts(cls, counts: tuple[int, ...]) -> BalancedPrefixConstruction:
-        if not counts or any(count < 0 for count in counts):
+        if not counts or any(type(count) is not int or count < 0 for count in counts):
             raise ValueError("balanced-prefix counts must be nonempty nonnegative integers")
         total = sum(counts)
         if total == 0:
