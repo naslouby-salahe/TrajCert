@@ -17,6 +17,24 @@ minimum_evidence:
   matured_events: 200
   resolved_events: 50
 
+synthetic_data:
+  laws:
+    - {name: "No outcome-path dependence", theta: 0.05, q1: 0.10, q0: 0.10, lambda1: 0.00, lambda0: 0.00}
+    - {name: "Timing only: harmful outcomes resolve late", theta: 0.05, q1: 0.10, q0: 0.10, lambda1: 0.45, lambda0: -0.15}
+    - {name: "Terminal only: harmful outcomes remain unresolved", theta: 0.05, q1: 0.30, q0: 0.05, lambda1: 0.00, lambda0: 0.00}
+    - {name: "Timing and terminal: harmful outcomes resolve late", theta: 0.05, q1: 0.30, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
+    - {name: "Timing and terminal: harmful outcomes resolve early", theta: 0.05, q1: 0.05, q0: 0.30, lambda1: -0.45, lambda0: 0.15}
+    - {name: "High terminal unresolvedness", theta: 0.05, q1: 0.70, q0: 0.40, lambda1: 0.35, lambda0: -0.10}
+    - {name: "Low error prevalence", theta: 0.01, q1: 0.30, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
+    - {name: "High error prevalence", theta: 0.20, q1: 0.30, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
+    - {name: "Intrinsic safety impossibility", theta: 0.15, q1: 0.10, q0: 0.10, lambda1: 0.00, lambda0: 0.00}
+    - {name: "Near numerical degeneracy", theta: 0.01, q1: 0.90, q0: 0.01, lambda1: 0.80, lambda0: -0.80}
+    - {name: "Same endpoint without timing information", theta: 0.05, q1: 0.20, q0: 0.10, lambda1: 0.00, lambda0: 0.00}
+    - {name: "Same endpoint with timing information", theta: 0.05, q1: 0.20, q0: 0.10, lambda1: 0.60, lambda0: -0.20}
+  utility_and_coherence_laws: ["No outcome-path dependence", "Timing only: harmful outcomes resolve late", "Terminal only: harmful outcomes remain unresolved", "Timing and terminal: harmful outcomes resolve late", "High terminal unresolvedness", "Low error prevalence"]
+  sharpness_oracle_laws: ["No outcome-path dependence", "Timing only: harmful outcomes resolve late", "Terminal only: harmful outcomes remain unresolved", "Timing and terminal: harmful outcomes resolve late", "Timing and terminal: harmful outcomes resolve early", "High terminal unresolvedness", "Low error prevalence", "High error prevalence", "Intrinsic safety impossibility", "Near numerical degeneracy"]
+  safety_and_impossibility_laws: ["No outcome-path dependence", "Timing only: harmful outcomes resolve late", "Terminal only: harmful outcomes remain unresolved", "Timing and terminal: harmful outcomes resolve late", "Timing and terminal: harmful outcomes resolve early", "High terminal unresolvedness", "Low error prevalence", "Intrinsic safety impossibility"]
+
 partitions:
   primary:
     - name: "8-band partition"
@@ -61,6 +79,16 @@ numerics:
   constructive_profile_grid_points: 2001
   convexity_profile_grid_points: 1001
   information_profile_figure_grid_points: 1001
+
+strict_timing_cases:
+  zero_information_controls:
+    - {law: "No outcome-path dependence", fine_partition: "8-band partition", coarse_partition: "4-band partition"}
+    - {law: "Terminal only: harmful outcomes remain unresolved", fine_partition: "8-band partition", coarse_partition: "4-band partition"}
+    - {law: "Same endpoint without timing information", fine_partition: "8-band partition", coarse_partition: "2-band partition"}
+  positive_information_cases:
+    - {law: "Timing only: harmful outcomes resolve late", fine_partition: "8-band partition", coarse_partition: "4-band partition"}
+    - {law: "Timing and terminal: harmful outcomes resolve late", fine_partition: "8-band partition", coarse_partition: "4-band partition"}
+    - {law: "Same endpoint with timing information", fine_partition: "8-band partition", coarse_partition: "2-band partition"}
 
 legacy_partition_incoherence:
   gamma_values: [1.5, 2, 4]
