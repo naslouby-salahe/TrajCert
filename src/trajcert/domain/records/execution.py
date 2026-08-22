@@ -6,7 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from trajcert.domain.enums import InternalExecutionState
-from trajcert.domain.records.artifacts import ArtifactEnvelope, CanonicalJson, Digest
+from trajcert.domain.records.artifacts import ArtifactEnvelope, CanonicalJson, Digest, GitCommit
 
 
 class ExperimentPlanRow(ArtifactEnvelope):
@@ -124,4 +124,38 @@ class ExperimentAggregateRecord(BaseModel):
                 or self.stale_semantic_cells
             ):
                 raise ValueError("completed experiments cannot retain terminal failure states")
+        return self
+
+
+class ProvenanceFingerprintInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    scientific_specification_digest: Digest
+    code_commit: GitCommit
+    dirty_tree_flag: bool
+    environment_lock_digest: Digest
+    container_image_digest: str = Field(min_length=1)
+    dataset_preprocessing_checksums: tuple[Digest, ...]
+    partition_checksum: Digest
+    seed_manifest_checksums: tuple[Digest, ...]
+    plan_digest: Digest
+
+
+class DependencyFingerprintInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    artifact_type: str = Field(min_length=1)
+    semantic_coordinates: CanonicalJson
+    scientific_dependency_digest: Digest
+    implementation_component_digest: Digest
+    environment_dependency_digest: Digest
+    seed_manifest_digest: Digest | None = None
+    parent_artifact_keys: tuple[str, ...] = ()
+    parent_scientific_content_digests: tuple[Digest, ...] = ()
+    producer_immutable_inputs: CanonicalJson
+
+    @model_validator(mode="after")
+    def validate_parent_lineage(self) -> DependencyFingerprintInput:
+        if len(self.parent_artifact_keys) != len(self.parent_scientific_content_digests):
+            raise ValueError("parent artifact keys and scientific content digests must align")
         return self
