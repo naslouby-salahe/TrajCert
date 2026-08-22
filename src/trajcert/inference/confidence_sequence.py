@@ -126,7 +126,7 @@ def categorical_confidence_sequence(
     )
 
 
-def category_log_mixture(count: int, matured_events: int, probability: float) -> float:
+def _category_log_mixture(count: int, matured_events: int, probability: float) -> float:
     if count < 0 or matured_events < count or probability < 0 or probability > 1:
         raise ValueError("invalid categorical mixture inputs")
     beta_difference = (
@@ -152,7 +152,7 @@ def _raw_interval(
     empirical = count / matured_events if matured_events else 0.5
 
     def objective(probability: float) -> float:
-        return category_log_mixture(count, matured_events, probability) - threshold
+        return _category_log_mixture(count, matured_events, probability) - threshold
 
     lower_bracket = None if objective(0) <= 0 else _bisect(objective, 0, empirical, numerics)
     upper_bracket = None if objective(1) <= 0 else _bisect(objective, empirical, 1, numerics)

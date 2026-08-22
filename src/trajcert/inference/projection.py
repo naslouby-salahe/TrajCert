@@ -40,6 +40,19 @@ class ProjectionInput:
 
 
 @dataclass(frozen=True, slots=True)
+class InformationSlackInput:
+    harmful_mass: float
+    correct_mass: float
+    timing_entropy: float
+    hidden_harmful_mass: float
+
+
+@dataclass(frozen=True, slots=True)
+class InformationSlackValue:
+    value: float
+
+
+@dataclass(frozen=True, slots=True)
 class CertifiedProjectionResult:
     initial_envelope: ConservativeSummaryEnvelope
     precision_bits: int
@@ -131,15 +144,24 @@ def certified_outer_projection(input_value: ProjectionInput) -> CertifiedProject
         ctx.prec = prior_precision
 
 
-def information_slack(
-    harmful_mass: float, correct_mass: float, timing_entropy: float, hidden_harmful_mass: float
-) -> float:
-    if harmful_mass < 0 or correct_mass < 0 or hidden_harmful_mass < 0:
+def information_slack(input_value: InformationSlackInput) -> InformationSlackValue:
+    if (
+        input_value.harmful_mass < 0
+        or input_value.correct_mass < 0
+        or input_value.hidden_harmful_mass < 0
+    ):
         raise ValueError("information slack masses must be nonnegative")
-    terminal_mass = 1 - harmful_mass - correct_mass
-    if terminal_mass < 0 or hidden_harmful_mass > terminal_mass:
+    terminal_mass = 1 - input_value.harmful_mass - input_value.correct_mass
+    if terminal_mass < 0 or input_value.hidden_harmful_mass > terminal_mass:
         raise ValueError("hidden harmful mass must lie in terminal mass")
-    return _point_slack(harmful_mass, correct_mass, timing_entropy, hidden_harmful_mass)
+    return InformationSlackValue(
+        _point_slack(
+            input_value.harmful_mass,
+            input_value.correct_mass,
+            input_value.timing_entropy,
+            input_value.hidden_harmful_mass,
+        )
+    )
 
 
 def _fallback_result(
@@ -192,12 +214,16 @@ def _box_incumbent(box: _ProjectionBox, input_value: ProjectionInput) -> float |
     if minimum_hidden > upper_hidden:
         return None
     if (
-        _point_slack(harmful, correct, input_value.envelope.timing_entropy_upper, minimum_hidden)
+        _point_slack_upper(
+            harmful, correct, input_value.envelope.timing_entropy_upper, minimum_hidden
+        )
         > input_value.information_budget
     ):
         return None
     if (
-        _point_slack(harmful, correct, input_value.envelope.timing_entropy_upper, upper_hidden)
+        _point_slack_upper(
+            harmful, correct, input_value.envelope.timing_entropy_upper, upper_hidden
+        )
         <= input_value.information_budget
     ):
         return harmful + upper_hidden
@@ -206,7 +232,9 @@ def _box_incumbent(box: _ProjectionBox, input_value: ProjectionInput) -> float |
     while upper - lower > input_value.numerics.population_root_absolute_tolerance:
         midpoint = (lower + upper) / 2
         if (
-            _point_slack(harmful, correct, input_value.envelope.timing_entropy_upper, midpoint)
+            _point_slack_upper(
+                harmful, correct, input_value.envelope.timing_entropy_upper, midpoint
+            )
             <= input_value.information_budget
         ):
             lower = midpoint
@@ -215,7 +243,7 @@ def _box_incumbent(box: _ProjectionBox, input_value: ProjectionInput) -> float |
     candidate = harmful + lower
     return (
         candidate
-        if _point_slack(harmful, correct, input_value.envelope.timing_entropy_upper, lower)
+        if _point_slack_upper(harmful, correct, input_value.envelope.timing_entropy_upper, lower)
         <= input_value.information_budget
         else None
     )
@@ -236,12 +264,33 @@ def _slack_lower(box: _ProjectionBox, timing_entropy_upper: float) -> float:
 def _point_slack(
     harmful_mass: float, correct_mass: float, timing_entropy: float, hidden_harmful_mass: float
 ) -> float:
+    return float(
+        _point_slack_enclosure(harmful_mass, correct_mass, timing_entropy, hidden_harmful_mass)
+    )
+
+
+def _point_slack_upper(
+    harmful_mass: float, correct_mass: float, timing_entropy: float, hidden_harmful_mass: float
+) -> float:
+    return math.nextafter(
+        float(
+            _point_slack_enclosure(
+                harmful_mass, correct_mass, timing_entropy, hidden_harmful_mass
+            ).upper()
+        ),
+        math.inf,
+    )
+
+
+def _point_slack_enclosure(
+    harmful_mass: float, correct_mass: float, timing_entropy: float, hidden_harmful_mass: float
+) -> flint.Arb:
     terminal_mass = 1 - harmful_mass - correct_mass
     latent = _arb_entropy(harmful_mass + hidden_harmful_mass)
     terminal: flint.Arb = flint.arb(0)
     if terminal_mass != 0:
         terminal = flint.arb(str(terminal_mass)) * _arb_entropy(hidden_harmful_mass / terminal_mass)
-    return float(latent - flint.arb(str(timing_entropy)) - terminal)
+    return latent - flint.arb(str(timing_entropy)) - terminal
 
 
 def _arb_entropy(probability: float) -> flint.Arb:
@@ -255,9 +304,9 @@ def _arb_entropy(probability: float) -> flint.Arb:
 def _entropy_lower(interval: ClosedInterval) -> float:
     if interval.lower <= 0 or interval.upper >= 1:
         return 0
-    lower = _arb_entropy(interval.lower)
-    upper = _arb_entropy(interval.upper)
-    return min(float(lower), float(upper))
+    lower = _arb_entropy(interval.lower).lower()
+    upper = _arb_entropy(interval.upper).lower()
+    return math.nextafter(min(float(lower), float(upper)), -math.inf)
 
 
 def _split_box(
