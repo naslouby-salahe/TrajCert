@@ -410,6 +410,8 @@ def test_cell_manifest_and_execution_state_reject_impossible_lifecycle_data() ->
             completed_seed_indices=(1,),
             checkpoint_recovery_eligible=False,
         )
+    with pytest.raises(ValidationError, match="completed seed indices must be unique"):
+        ExecutionStateRecord.model_validate(state.model_dump() | {"completed_seed_indices": (1, 1)})
 
 
 def test_experiment_aggregate_rejects_inconsistent_completion_counts() -> None:

@@ -109,6 +109,12 @@ class ExecutionStateRecord(BaseModel):
             raise ValueError("seed indices must be nonnegative")
         if any(index < 0 for index in self.completed_batch_indices):
             raise ValueError("batch indices must be nonnegative")
+        if len(set(self.failed_seed_indices)) != len(self.failed_seed_indices):
+            raise ValueError("failed seed indices must be unique")
+        if len(set(self.completed_seed_indices)) != len(self.completed_seed_indices):
+            raise ValueError("completed seed indices must be unique")
+        if len(set(self.completed_batch_indices)) != len(self.completed_batch_indices):
+            raise ValueError("completed batch indices must be unique")
         if set(self.failed_seed_indices) & set(self.completed_seed_indices):
             raise ValueError("a seed cannot be both failed and completed")
         has_reason = self.reason_code is not None or self.reason_text is not None
