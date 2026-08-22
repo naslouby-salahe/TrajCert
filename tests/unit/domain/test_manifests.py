@@ -8,6 +8,7 @@ from trajcert.domain.identity import LocalCertificateIdentity
 from trajcert.domain.manifests import EpochManifest
 from trajcert.domain.records.artifacts import ArtifactEnvelope
 from trajcert.domain.records.execution import ExperimentPlanRow
+from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
 
 
 def manifest(*, action_policy: str = "policy-a", epoch_id: str = "epoch-01") -> EpochManifest:
@@ -114,3 +115,24 @@ def test_experiment_plan_row_enforces_invalid_and_seed_range_semantics() -> None
     assert plan.executable is True
     with pytest.raises(ValidationError, match="invalid reason"):
         ExperimentPlanRow.model_validate(plan.model_dump() | {"executable": False})
+
+
+def test_plan_ordering_and_digests_are_canonical() -> None:
+    common = artifact_envelope().model_dump() | {
+        "executable": True,
+        "sensitivity_parameter_json": '{"rho":0.05}',
+        "expected_stream_count": 0,
+        "expected_artifact_schema": "population_result",
+        "expected_output_path": "outputs/experiments/population/records",
+        "dependency_coordinates": '{"law":"Timing"}',
+    }
+    unspecified = ExperimentPlanRow.model_validate(
+        common | {"semantic_cell_key": "cell-unspecified"}
+    )
+    specified = ExperimentPlanRow.model_validate(
+        common | {"semantic_cell_key": "cell-specified", "rho": 0.05}
+    )
+
+    assert ordered_plan_rows((specified, unspecified)) == (unspecified, specified)
+    assert plan_digest((specified, unspecified)) == plan_digest((unspecified, specified))
+    assert cell_plan_digest(specified) != cell_plan_digest(unspecified)
