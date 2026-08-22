@@ -36,6 +36,12 @@ def test_canonical_json_uses_jcs_number_tokens_and_control_escaping() -> None:
     assert canonical_number_token(1e21) == "1e+21"
 
 
+def test_canonical_json_matches_rfc_8785_derived_number_vector() -> None:
+    assert canonical_json_bytes([333333333.33333329, 1e30, 4.5, 0.002, 1e-27]) == (
+        b"[333333333.3333333,1e+30,4.5,0.002,1e-27]"
+    )
+
+
 def test_semantic_name_is_filesystem_safe() -> None:
     assert filesystem_safe_name("Timing & Terminal Outcomes") == "timing-terminal-outcomes"
     assert semantic_coordinate_segment("rho", 0.05) == "rho=0.05"
