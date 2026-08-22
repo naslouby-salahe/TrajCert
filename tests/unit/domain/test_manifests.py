@@ -23,6 +23,7 @@ from trajcert.domain.records.artifacts import ArtifactEnvelope
 from trajcert.domain.records.execution import (
     ActiveSemanticCellManifest,
     ExecutionStateRecord,
+    ExperimentAggregateRecord,
     ExperimentPlanRow,
 )
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
@@ -264,4 +265,23 @@ def test_cell_manifest_and_execution_state_reject_impossible_lifecycle_data() ->
             failed_seed_indices=(1,),
             completed_seed_indices=(1,),
             checkpoint_recovery_eligible=False,
+        )
+
+
+def test_experiment_aggregate_rejects_inconsistent_completion_counts() -> None:
+    aggregate = ExperimentAggregateRecord(
+        experiment_name="Population Sensitivity Utility",
+        overall_state=InternalExecutionState.COMPLETED,
+        expected_semantic_cells=2,
+        completed_semantic_cells=2,
+        failed_semantic_cells=0,
+        invalid_semantic_cells=0,
+        stale_semantic_cells=0,
+        results_export_state="NOT_EXPORTED",
+    )
+
+    assert aggregate.completed_semantic_cells == 2
+    with pytest.raises(ValidationError, match="all semantic cells"):
+        ExperimentAggregateRecord.model_validate(
+            aggregate.model_dump() | {"completed_semantic_cells": 1}
         )
