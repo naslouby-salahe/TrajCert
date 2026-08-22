@@ -3,9 +3,14 @@ import math
 import pytest
 from pydantic import ValidationError
 
-from trajcert.domain.enums import EvidenceClass, PublicExecutionState
+from trajcert.domain.enums import DatasetKind, EvidenceClass, PublicExecutionState
 from trajcert.domain.identity import LocalCertificateIdentity
-from trajcert.domain.manifests import EpochManifest
+from trajcert.domain.manifests import (
+    DatasetManifest,
+    EpochManifest,
+    PartitionManifest,
+    SeedManifest,
+)
 from trajcert.domain.records.artifacts import ArtifactEnvelope
 from trajcert.domain.records.execution import ExperimentPlanRow
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
@@ -136,3 +141,52 @@ def test_plan_ordering_and_digests_are_canonical() -> None:
     assert ordered_plan_rows((specified, unspecified)) == (unspecified, specified)
     assert plan_digest((specified, unspecified)) == plan_digest((unspecified, specified))
     assert cell_plan_digest(specified) != cell_plan_digest(unspecified)
+
+
+def test_dataset_partition_and_seed_manifests_enforce_canonical_contracts() -> None:
+    digest = "c" * 64
+    dataset = DatasetManifest(
+        dataset_name="synthetic-timing",
+        dataset_kind=DatasetKind.SYNTHETIC,
+        generator_name="synthetic-generator",
+        generator_code_digest=digest,
+        source_version="1",
+        source_checksum=digest,
+        event_semantics="action",
+        label_semantics="harmful",
+        time_semantics="maturity",
+        terminal_horizon=8,
+        finest_partition_name="8-band",
+        number_of_categories=17,
+        documented_expected_structure="{}",
+        observed_raw_structure="{}",
+        field_mapping_json="{}",
+        known_full_law=True,
+        preprocessing_digest=digest,
+        eligibility_status="ELIGIBLE",
+    )
+    partition = PartitionManifest(
+        partition_name="2-band",
+        finest_partition_name="8-band",
+        terminal_horizon=8,
+        K=2,
+        boundaries=(4.0, 8.0),
+        coarsening_map_from_finest="{}",
+        is_endpoint_only=False,
+        is_precommitted=True,
+        checksum=digest,
+    )
+    seeds = SeedManifest(
+        seed_set_key="stream-seeds",
+        namespace="Event stream|law=Timing|K=8",
+        index_start=0,
+        index_stop_exclusive=2,
+        derivation_algorithm="SHA256",
+        seeds_sha256=digest,
+        seed_count=2,
+        seeds=("1", "9223372036854775807"),
+    )
+
+    assert dataset.dataset_kind is DatasetKind.SYNTHETIC
+    assert partition.K == 2
+    assert seeds.seed_count == 2
