@@ -1,18 +1,47 @@
 from __future__ import annotations
 
+import json
 import math
 import re
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
 
 from trajcert.domain.enums import EvidenceClass, PublicExecutionState
 
 Digest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 GitCommit = Annotated[str, Field(pattern=r"^[0-9a-f]{40}([0-9a-f]{24})?$")]
 DescriptiveKey = Annotated[str, Field(min_length=1, pattern=r"^[A-Za-z0-9][A-Za-z0-9._=-]*$")]
-CanonicalJson = Annotated[str, Field(min_length=2)]
 SCHEMA_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, str]]) -> Mapping[str, str]:
+    value = dict[str, str]()
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("canonical JSON forbids duplicate object keys")
+        value[key] = item
+    return value
+
+
+def _reject_nonfinite_json_constant(value: str) -> str:
+    raise ValueError(f"canonical JSON forbids nonfinite value {value}")
+
+
+def _validate_canonical_json_text(value: str) -> str:
+    try:
+        json.loads(
+            value,
+            object_pairs_hook=_reject_duplicate_json_keys,
+            parse_constant=_reject_nonfinite_json_constant,
+        )
+    except json.JSONDecodeError as error:
+        raise ValueError("canonical JSON text must be valid JSON") from error
+    return value
+
+
+CanonicalJson = Annotated[str, Field(min_length=2), AfterValidator(_validate_canonical_json_text)]
 
 
 class ArtifactEnvelope(BaseModel):
