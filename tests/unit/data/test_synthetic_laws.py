@@ -6,7 +6,9 @@ from pathlib import Path
 from trajcert.configuration.loading import load_configuration
 from trajcert.data.synthetic.generator import SyntheticEvent, generate_synthetic_stream
 from trajcert.data.synthetic.laws import (
+    SYNTHETIC_LAW_CATALOG_MANIFEST_RELATIVE_PATH,
     SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
+    SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH,
     SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
     SyntheticTrajectoryLaw,
     canonical_synthetic_law_catalog,
@@ -177,6 +179,7 @@ def test_synthetic_law_catalog_is_canonical_and_atomically_materialized(tmp_path
 
     assert digest == hashlib.sha256(payload).hexdigest()
     assert payload == canonical_synthetic_law_catalog((law,))
+    assert (tmp_path / SYNTHETIC_LAW_CATALOG_MANIFEST_RELATIVE_PATH).is_file()
 
 
 def test_synthetic_scaling_catalog_is_canonical_and_materialized(tmp_path: Path) -> None:
@@ -187,3 +190,4 @@ def test_synthetic_scaling_catalog_is_canonical_and_materialized(tmp_path: Path)
 
     assert digest == hashlib.sha256(payload).hexdigest()
     assert payload == canonical_synthetic_law_catalog(synthetic_scaling_laws(law, (2, 8, 16)))
+    assert (tmp_path / SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH).is_file()
