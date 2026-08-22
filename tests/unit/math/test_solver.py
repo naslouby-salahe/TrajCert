@@ -3,7 +3,7 @@ import math
 from trajcert.configuration.loading import load_configuration
 from trajcert.data.partitions import ObservableLaw
 from trajcert.math.information_profile import InformationProfile
-from trajcert.math.risk_set_solver import (
+from trajcert.math.solver import (
     PopulationRiskSetState,
     SafetyState,
     conditional_timing_gain,
