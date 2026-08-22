@@ -122,3 +122,27 @@ class StreamMetricsRecord(BaseModel):
         if self.final_risk_upper is not None and not math.isfinite(self.final_risk_upper):
             raise ValueError("final risk upper must be finite")
         return self
+
+
+class PairedComparisonRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    claim_family: str = Field(min_length=1)
+    semantic_comparison_name: str = Field(min_length=1)
+    rho: float
+    partition_name: str = Field(min_length=1)
+    method_name: str = Field(min_length=1)
+    baseline_name: str = Field(min_length=1)
+    metric_name: str = Field(min_length=1)
+    method_value: float
+    baseline_value: float
+    paired_difference_favorable_direction: float
+
+    @field_validator(
+        "rho", "method_value", "baseline_value", "paired_difference_favorable_direction"
+    )
+    @classmethod
+    def validate_finite_comparison_value(cls, value: float) -> float:
+        if not math.isfinite(value):
+            raise ValueError("paired comparison values must be finite")
+        return value
