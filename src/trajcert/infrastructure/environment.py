@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -41,3 +43,30 @@ def scientific_dependency_digest(
         digest.update(fragment)
         digest.update(b"\x00")
     return digest.hexdigest()
+
+
+@dataclass(frozen=True, slots=True)
+class GitProvenance:
+    commit: str
+    dirty_tree: bool
+
+
+def git_provenance(project_root: Path) -> GitProvenance:
+    commit = _git_output(project_root, ("rev-parse", "HEAD"))
+    dirty_status = _git_output(project_root, ("status", "--porcelain=v1", "--untracked-files=all"))
+    if dirty_status:
+        raise ValueError("claim-bearing execution requires a clean Git worktree")
+    return GitProvenance(commit=commit, dirty_tree=False)
+
+
+def _git_output(project_root: Path, arguments: tuple[str, ...]) -> str:
+    completed = subprocess.run(
+        ("git", *arguments),
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        raise ValueError("Git metadata is unavailable; environment_or_prerequisite_block")
+    return completed.stdout.strip()
