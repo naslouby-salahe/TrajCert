@@ -16,11 +16,13 @@ from trajcert.infrastructure.storage import JSONValue, atomic_write_bytes, canon
 
 SYNTHETIC_CLIENT_ID = "synthetic-client"
 SYNTHETIC_ACTION_CHANNEL_ID = "automatic-action"
-SYNTHETIC_LEDGER_RELATIVE_PATH = Path("outputs/preprocessing/prepared/synthetic_ledger.json")
+SYNTHETIC_LEDGER_ROOT_RELATIVE_PATH = Path("outputs/preprocessing/prepared/synthetic_ledgers")
 
 
 @dataclass(frozen=True, slots=True)
 class PreparedSyntheticLedger:
+    law_slug: str
+    stream_index: int
     records: tuple[ActionRecord, ...]
     dataset_manifest: DatasetManifest
     ledger_checksum: str
@@ -118,7 +120,17 @@ def prepare_synthetic_ledger(
         preprocessing_digest=checksum,
         eligibility_status="ELIGIBLE",
     )
-    return PreparedSyntheticLedger(records, manifest, checksum)
+    return PreparedSyntheticLedger(
+        synthetic_law_slug(law.name), stream_index, records, manifest, checksum
+    )
+
+
+def prepared_synthetic_ledger_relative_path(prepared: PreparedSyntheticLedger) -> Path:
+    return (
+        SYNTHETIC_LEDGER_ROOT_RELATIVE_PATH
+        / f"law={prepared.law_slug}"
+        / f"stream={prepared.stream_index:06d}.json"
+    )
 
 
 def write_prepared_synthetic_ledger(
@@ -127,7 +139,7 @@ def write_prepared_synthetic_ledger(
 ) -> str:
     payload = canonical_json_bytes(_ledger_payload(prepared.records))
     digest = atomic_write_bytes(
-        project_root / SYNTHETIC_LEDGER_RELATIVE_PATH,
+        project_root / prepared_synthetic_ledger_relative_path(prepared),
         payload,
         lambda candidate: _validate_prepared_synthetic_ledger(candidate, prepared),
     )
@@ -211,11 +223,12 @@ def _validate_prepared_synthetic_ledger(
 __all__ = [
     "SYNTHETIC_ACTION_CHANNEL_ID",
     "SYNTHETIC_CLIENT_ID",
-    "SYNTHETIC_LEDGER_RELATIVE_PATH",
+    "SYNTHETIC_LEDGER_ROOT_RELATIVE_PATH",
     "ActionRecord",
     "MaturedCategory",
     "PreparedSyntheticLedger",
     "prepare_synthetic_ledger",
+    "prepared_synthetic_ledger_relative_path",
     "synthetic_law_slug",
     "synthetic_ledger_records",
     "write_prepared_synthetic_ledger",

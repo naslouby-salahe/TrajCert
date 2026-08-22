@@ -19,8 +19,9 @@ from trajcert.data.synthetic.laws import (
     write_synthetic_scaling_catalog,
 )
 from trajcert.data.synthetic.ledger import (
-    SYNTHETIC_LEDGER_RELATIVE_PATH,
+    SYNTHETIC_LEDGER_ROOT_RELATIVE_PATH,
     prepare_synthetic_ledger,
+    prepared_synthetic_ledger_relative_path,
     synthetic_ledger_records,
     write_prepared_synthetic_ledger,
 )
@@ -156,7 +157,10 @@ def test_synthetic_preparation_returns_canonical_checksum_and_manifest(tmp_path:
         "test-law::S000003::E000001",
     )
     assert write_prepared_synthetic_ledger(tmp_path, prepared) == prepared.ledger_checksum
-    assert (tmp_path / SYNTHETIC_LEDGER_RELATIVE_PATH).is_file()
+    assert prepared_synthetic_ledger_relative_path(prepared) == (
+        SYNTHETIC_LEDGER_ROOT_RELATIVE_PATH / "law=test-law" / "stream=000003.json"
+    )
+    assert (tmp_path / prepared_synthetic_ledger_relative_path(prepared)).is_file()
 
 
 def test_minimum_information_completion_preserves_observable_law_and_hits_floor() -> None:
