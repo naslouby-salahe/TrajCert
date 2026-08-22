@@ -545,6 +545,8 @@ def test_failure_and_completion_records_require_valid_lineage_and_evidence() -> 
     )
 
     assert failure.downstream_blocking is True
+    with pytest.raises(ValidationError, match="scientific outcomes"):
+        FailureRecord.model_validate(failure.model_dump() | {"failure_class": "UNCERTIFIED"})
     assert marker.exit_status == 0
     with pytest.raises(ValidationError, match="exactly match"):
         CompletionMarker.model_validate(

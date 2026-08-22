@@ -4,8 +4,9 @@ import json
 import re
 from typing import cast
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from trajcert.domain.enums import ScientificState
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
 from trajcert.domain.serialization import JSONValue
 
@@ -30,6 +31,13 @@ class FailureRecord(BaseModel):
     last_valid_checkpoint: str | None = None
     retry_allowed: bool
     downstream_blocking: bool
+
+    @field_validator("failure_class")
+    @classmethod
+    def reject_scientific_outcomes(cls, value: str) -> str:
+        if value in {state.value for state in ScientificState}:
+            raise ValueError("scientific outcomes must not enter failure records")
+        return value
 
     @model_validator(mode="after")
     def validate_input_lineage(self) -> FailureRecord:
