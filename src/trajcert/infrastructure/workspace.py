@@ -98,8 +98,12 @@ class Workspace:
             raise ValueError("execution workspace root must remain inside the project root")
         if not results_root.is_relative_to(resolved_project_root):
             raise ValueError("results root must remain inside the project root")
-        if execution_root == results_root:
-            raise ValueError("execution workspace and results roots must be distinct")
+        if (
+            execution_root == results_root
+            or execution_root.is_relative_to(results_root)
+            or results_root.is_relative_to(execution_root)
+        ):
+            raise ValueError("execution workspace and results roots must not overlap")
         return cls(execution_root, results_root)
 
     def materialize(self) -> None:
