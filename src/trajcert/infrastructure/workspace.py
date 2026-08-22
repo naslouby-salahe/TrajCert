@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from trajcert.configuration.models import ArtifactsConfiguration
+from trajcert.infrastructure.storage import canonical_number_token, semantic_coordinate_segment
 
 OUTPUT_DIRECTORIES = (
     "preprocessing/inventories",
@@ -78,6 +79,7 @@ RESULT_EXPERIMENT_DIRECTORIES = (
     "statistics/multiplicity",
 )
 NON_AUTHORITATIVE_OUTPUT_SEGMENTS = frozenset({"cache", "checkpoints", "diagnostics", "logs"})
+AUTHORITATIVE_OUTPUT_ROOTS = frozenset({"preprocessing", "artifacts", "experiments"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,7 +127,11 @@ class Workspace:
             relative_path = candidate_path.resolve().relative_to(self.execution_root)
         except ValueError:
             return False
-        return not any(part in NON_AUTHORITATIVE_OUTPUT_SEGMENTS for part in relative_path.parts)
+        return (
+            bool(relative_path.parts)
+            and relative_path.parts[0] in AUTHORITATIVE_OUTPUT_ROOTS
+            and not any(part in NON_AUTHORITATIVE_OUTPUT_SEGMENTS for part in relative_path.parts)
+        )
 
     def is_computational_input_path(self, candidate_path: Path) -> bool:
         try:
@@ -142,9 +148,26 @@ class Workspace:
         method_name: str,
         rho_name: str,
     ) -> Path:
-        coordinates = (law_name, partition_name, method_name, rho_name)
-        if any(not coordinate or Path(coordinate).name != coordinate for coordinate in coordinates):
-            raise ValueError("semantic path coordinates must be nonempty path components")
+        named_descriptive_coordinates = (
+            ("law", law_name),
+            ("partition", partition_name),
+            ("method", method_name),
+        )
+        if any(
+            not coordinate
+            or Path(coordinate).name != coordinate
+            or semantic_coordinate_segment(coordinate_name, coordinate)
+            != f"{coordinate_name}={coordinate}"
+            for coordinate_name, coordinate in named_descriptive_coordinates
+        ):
+            raise ValueError("semantic path coordinates must be canonical nonempty path components")
+        if rho_name != "log2":
+            try:
+                is_canonical_rho = canonical_number_token(float(rho_name)) == rho_name
+            except ValueError:
+                is_canonical_rho = False
+            if not is_canonical_rho:
+                raise ValueError("rho coordinate must be a canonical number token or log2")
         return (
             self.experiment_root(experiment_name)
             / "evaluations/records"

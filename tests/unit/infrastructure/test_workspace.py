@@ -50,6 +50,7 @@ def test_workspace_separates_authoritative_and_operational_paths(tmp_path: Path)
     )
     assert not workspace.is_authoritative_output_path(workspace.execution_root / "cache/analysis")
     assert not workspace.is_authoritative_output_path(experiment_root / "checkpoints/execution")
+    assert not workspace.is_authoritative_output_path(workspace.execution_root / "untracked")
 
 
 def test_evaluation_records_use_canonical_semantic_coordinates(tmp_path: Path) -> None:
@@ -67,6 +68,18 @@ def test_evaluation_records_use_canonical_semantic_coordinates(tmp_path: Path) -
         "method=trajcert",
         "rho=0.05",
     )
+
+
+def test_evaluation_records_reject_noncanonical_semantic_coordinates(tmp_path: Path) -> None:
+    workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
+    with pytest.raises(ValueError):
+        workspace.evaluation_record_path(
+            "population-sensitivity-utility",
+            "Timing and terminal",
+            "8-band-partition",
+            "trajcert",
+            "0.05",
+        )
 
 
 def test_results_are_not_computational_inputs(tmp_path: Path) -> None:
