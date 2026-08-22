@@ -124,6 +124,96 @@ def test_artifact_envelope_composes_required_common_fields() -> None:
     assert envelope.semantic_coordinates == '{"law":"Timing"}'
 
 
+def test_plan_and_manifest_models_cover_the_complete_roadmap_field_contract() -> None:
+    assert set(ExperimentPlanRow.model_fields) == set(ArtifactEnvelope.model_fields) | {
+        "executable",
+        "invalid_reason",
+        "gamma",
+        "sensitivity_parameter_json",
+        "seed_namespace",
+        "seed_index_start",
+        "seed_index_stop_exclusive",
+        "expected_stream_count",
+        "expected_artifact_schema",
+        "expected_output_path",
+        "upstream_artifact_types",
+        "dependency_coordinates",
+    }
+    assert set(DatasetManifest.model_fields) == {
+        "dataset_name",
+        "dataset_kind",
+        "generator_name",
+        "generator_code_digest",
+        "source_version",
+        "source_checksum",
+        "license_or_permission",
+        "official_documentation_reference",
+        "primary_publication_reference",
+        "event_semantics",
+        "label_semantics",
+        "time_semantics",
+        "terminal_horizon",
+        "finest_partition_name",
+        "number_of_categories",
+        "documented_expected_structure",
+        "observed_raw_structure",
+        "field_mapping_json",
+        "population_parameters",
+        "known_full_law",
+        "known_theta",
+        "known_observable_probabilities",
+        "known_terminal_harmful_mass",
+        "known_information",
+        "preprocessing_digest",
+        "eligibility_status",
+        "ineligibility_reason",
+    }
+    assert set(PartitionManifest.model_fields) == {
+        "partition_name",
+        "finest_partition_name",
+        "terminal_horizon",
+        "K",
+        "boundaries",
+        "coarsening_map_from_finest",
+        "parent_partition_name",
+        "is_endpoint_only",
+        "is_precommitted",
+        "checksum",
+    }
+    assert set(SeedManifest.model_fields) == {
+        "seed_set_key",
+        "namespace",
+        "index_start",
+        "index_stop_exclusive",
+        "derivation_algorithm",
+        "seeds_sha256",
+        "seed_count",
+        "seeds",
+    }
+    assert set(ReusableArtifactManifest.model_fields) == {
+        "artifact_key",
+        "artifact_type",
+        "artifact_owner",
+        "producer_component",
+        "dependency_fingerprint",
+        "implementation_component_digest",
+        "environment_dependency_digest",
+        "scientific_dependency_digest",
+        "semantic_coordinates",
+        "parent_artifact_keys",
+        "parent_artifact_digests",
+        "scientific_content_digest",
+        "payload_paths",
+        "payload_sha256_map",
+        "schema_name",
+        "schema_version",
+        "status",
+        "created_timestamp",
+        "validated_timestamp",
+        "declared_downstream_consumers",
+    }
+
+
 @pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
 def test_artifact_envelope_rejects_nonfinite_claim_bearing_values(value: float) -> None:
     with pytest.raises(ValidationError, match="finite"):
