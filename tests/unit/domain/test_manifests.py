@@ -7,6 +7,7 @@ from trajcert.domain.enums import EvidenceClass, PublicExecutionState
 from trajcert.domain.identity import LocalCertificateIdentity
 from trajcert.domain.manifests import EpochManifest
 from trajcert.domain.records.artifacts import ArtifactEnvelope
+from trajcert.domain.records.execution import ExperimentPlanRow
 
 
 def manifest(*, action_policy: str = "policy-a", epoch_id: str = "epoch-01") -> EpochManifest:
@@ -92,3 +93,24 @@ def test_artifact_envelope_accepts_git_commit_identity_without_treating_it_as_ar
     envelope = artifact_envelope(code_commit="b" * 40)
 
     assert envelope.code_commit == "b" * 40
+
+
+def test_experiment_plan_row_enforces_invalid_and_seed_range_semantics() -> None:
+    plan = ExperimentPlanRow.model_validate(
+        artifact_envelope().model_dump()
+        | {
+            "executable": True,
+            "sensitivity_parameter_json": '{"rho":0.05}',
+            "seed_namespace": "Event stream|law=Timing|K=8",
+            "seed_index_start": 0,
+            "seed_index_stop_exclusive": 10,
+            "expected_stream_count": 10,
+            "expected_artifact_schema": "population_result",
+            "expected_output_path": "outputs/experiments/population/records",
+            "dependency_coordinates": '{"law":"Timing"}',
+        }
+    )
+
+    assert plan.executable is True
+    with pytest.raises(ValidationError, match="invalid reason"):
+        ExperimentPlanRow.model_validate(plan.model_dump() | {"executable": False})
