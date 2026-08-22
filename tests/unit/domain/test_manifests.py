@@ -28,7 +28,11 @@ from trajcert.domain.records.execution import (
     ExperimentPlanRow,
     ProvenanceFingerprintInput,
 )
-from trajcert.domain.records.results import PopulationMetricsRecord, SequentialUpdateRecord
+from trajcert.domain.records.results import (
+    PopulationMetricsRecord,
+    SequentialUpdateRecord,
+    StreamMetricsRecord,
+)
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
 from trajcert.infrastructure.fingerprints import dependency_fingerprint, provenance_fingerprint
 
@@ -349,3 +353,16 @@ def test_sequential_update_requires_consistent_matured_category_counts() -> None
     assert record.n_unresolved == 3
     with pytest.raises(ValidationError, match="sum to matured"):
         SequentialUpdateRecord.model_validate(record.model_dump() | {"n_unresolved": 2})
+
+
+def test_stream_metrics_require_coherent_certification_timing() -> None:
+    metrics = StreamMetricsRecord(
+        ever_violation=False,
+        first_certified_n=None,
+        never_certified=True,
+        technical_failure=False,
+    )
+
+    assert metrics.never_certified is True
+    with pytest.raises(ValidationError, match="never-certified"):
+        StreamMetricsRecord.model_validate(metrics.model_dump() | {"never_certified": False})

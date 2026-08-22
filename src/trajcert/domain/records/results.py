@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 from trajcert.domain.enums import ScientificState
 
@@ -99,3 +99,26 @@ class SequentialUpdateRecord(BaseModel):
         if isinstance(matured, int) and isinstance(resolved, int) and resolved + value != matured:
             raise ValueError("resolved and unresolved counts must sum to matured events")
         return value
+
+
+class StreamMetricsRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    ever_violation: bool
+    first_certified_n: int | None = Field(default=None, ge=0)
+    never_certified: bool
+    certified_update_fraction: float | None = Field(default=None, ge=0, le=1)
+    model_incompatible_update_fraction: float | None = Field(default=None, ge=0, le=1)
+    intrinsically_uncertifiable_update_fraction: float | None = Field(default=None, ge=0, le=1)
+    uncertified_update_fraction: float | None = Field(default=None, ge=0, le=1)
+    insufficient_evidence_update_fraction: float | None = Field(default=None, ge=0, le=1)
+    final_risk_upper: float | None = None
+    technical_failure: bool
+
+    @model_validator(mode="after")
+    def validate_certification_timing(self) -> StreamMetricsRecord:
+        if self.never_certified != (self.first_certified_n is None):
+            raise ValueError("never-certified status must agree with first certified update")
+        if self.final_risk_upper is not None and not math.isfinite(self.final_risk_upper):
+            raise ValueError("final risk upper must be finite")
+        return self
