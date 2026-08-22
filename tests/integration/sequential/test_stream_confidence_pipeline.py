@@ -1,7 +1,33 @@
-from pathlib import Path
+from trajcert.configuration.loading import load_configuration
+from trajcert.inference.confidence_sequence import (
+    CategoryCounts,
+    ConfidenceSequenceInput,
+    ConfidenceSequenceState,
+    categorical_confidence_sequence,
+)
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
+def test_matured_stream_confidence_updates_preserve_running_intersection_and_simplex() -> None:
+    configuration = load_configuration()
+    first = categorical_confidence_sequence(
+        ConfidenceSequenceInput(
+            CategoryCounts((2, 1, 2)), configuration.confidence, configuration.numerics, None
+        )
+    )
+    second = categorical_confidence_sequence(
+        ConfidenceSequenceInput(
+            CategoryCounts((3, 2, 5)),
+            configuration.confidence,
+            configuration.numerics,
+            first.running_intervals,
+        )
+    )
 
-def test_test_stream_confidence_pipeline_target_exists() -> None:
-    assert (PROJECT_ROOT / "src/trajcert/inference/confidence_sequence.py").is_file()
+    assert first.state is ConfidenceSequenceState.VALID
+    assert second.state is ConfidenceSequenceState.VALID
+    assert all(
+        current.lower >= previous.lower and current.upper <= previous.upper
+        for previous, current in zip(first.running_intervals, second.running_intervals, strict=True)
+    )
+    assert sum(interval.lower for interval in second.running_intervals) <= 1
+    assert sum(interval.upper for interval in second.running_intervals) >= 1

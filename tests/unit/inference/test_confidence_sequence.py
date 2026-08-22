@@ -2,9 +2,12 @@ import math
 
 from trajcert.configuration.loading import load_configuration
 from trajcert.inference.confidence_sequence import (
+    INDEPENDENT_UNIT_CONTRACTS,
     CategoryCounts,
     ConfidenceSequenceInput,
     ConfidenceSequenceState,
+    IndependentAnalysis,
+    IndependentUnit,
     ProbabilityInterval,
     categorical_confidence_sequence,
     category_log_mixture,
@@ -36,6 +39,20 @@ def test_categorical_confidence_sequence_uses_outward_brackets_and_simplex_feasi
             assert interval.upper_bracket.upper - interval.upper_bracket.lower <= (
                 configuration.numerics.anytime_category_root_tolerance
             )
+
+
+def test_independent_unit_contracts_exclude_monitoring_times_and_optimizer_evaluations() -> None:
+    assert (IndependentAnalysis.THEOREM_IDENTITIES, IndependentUnit.DETERMINISTIC_CASE) in (
+        INDEPENDENT_UNIT_CONTRACTS
+    )
+    assert (IndependentAnalysis.ANYTIME_COVERAGE, IndependentUnit.INDEPENDENT_EVENT_STREAM) in (
+        INDEPENDENT_UNIT_CONTRACTS
+    )
+    assert (IndependentAnalysis.PAIRED_SEQUENTIAL_UTILITY, IndependentUnit.SHARED_EVENT_STREAM) in (
+        INDEPENDENT_UNIT_CONTRACTS
+    )
+    assert all("monitoring" not in unit for _, unit in INDEPENDENT_UNIT_CONTRACTS)
+    assert all("optimizer" not in unit for _, unit in INDEPENDENT_UNIT_CONTRACTS)
 
 
 def test_categorical_confidence_sequence_uses_exact_boundary_limits_and_running_intersections() -> (
