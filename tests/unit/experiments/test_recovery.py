@@ -12,6 +12,7 @@ from trajcert.experiments.recovery import (
     CheckpointRecoveryRequest,
     active_cell_reuse_decision,
     artifact_reuse_decision,
+    checkpoint_batch_count,
     missing_seed_ranges,
     nearest_valid_checkpoint,
 )
@@ -122,3 +123,8 @@ def test_selective_invalidation_boundaries_preserve_exact_recompute_scope() -> N
     assert boundaries["figures/tables/report"].must_not_recompute_solely_because == (
         "unrelated scientific code/tests/docs"
     )
+
+
+def test_configured_checkpoint_intervals_produce_the_declared_batch_counts() -> None:
+    assert checkpoint_batch_count(0, 5000, 100) == 50
+    assert checkpoint_batch_count(0, 500, 50) == 10
