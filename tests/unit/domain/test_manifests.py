@@ -36,7 +36,14 @@ from trajcert.domain.records.results import (
     StatisticalTestRecord,
     StreamMetricsRecord,
 )
-from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
+from trajcert.experiments.planning import (
+    PLAN_JSON_RELATIVE_PATH,
+    PLAN_PARQUET_RELATIVE_PATH,
+    canonical_plan_json,
+    cell_plan_digest,
+    ordered_plan_rows,
+    plan_digest,
+)
 from trajcert.infrastructure.fingerprints import dependency_fingerprint, provenance_fingerprint
 
 
@@ -164,6 +171,16 @@ def test_plan_ordering_and_digests_are_canonical() -> None:
 
     assert ordered_plan_rows((specified, unspecified)) == (unspecified, specified)
     assert plan_digest((specified, unspecified)) == plan_digest((unspecified, specified))
+    assert canonical_plan_json((specified, unspecified)) == canonical_plan_json(
+        (unspecified, specified)
+    )
+    assert (
+        PLAN_JSON_RELATIVE_PATH.as_posix() == "outputs/artifacts/derived/plans/experiment_plan.json"
+    )
+    assert (
+        PLAN_PARQUET_RELATIVE_PATH.as_posix()
+        == "outputs/artifacts/derived/plans/experiment_plan.parquet"
+    )
     assert cell_plan_digest(specified) != cell_plan_digest(unspecified)
 
 
