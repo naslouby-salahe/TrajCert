@@ -87,6 +87,25 @@ class ExecutionStateRecord(BaseModel):
             raise ValueError("batch indices must be nonnegative")
         if set(self.failed_seed_indices) & set(self.completed_seed_indices):
             raise ValueError("a seed cannot be both failed and completed")
+        has_reason = self.reason_code is not None or self.reason_text is not None
+        if (self.reason_code is None) != (self.reason_text is None):
+            raise ValueError("execution reasons require both a code and text")
+        if self.state in {InternalExecutionState.FAILED, InternalExecutionState.INVALID}:
+            if not has_reason:
+                raise ValueError("failed and invalid states require a reason")
+        elif has_reason:
+            raise ValueError("nonterminal execution states cannot retain a reason")
+        if self.state is InternalExecutionState.PLANNED and (
+            self.failed_seed_indices
+            or self.completed_seed_indices
+            or self.completed_batch_indices
+            or self.checkpoint_recovery_eligible
+        ):
+            raise ValueError("planned execution states cannot contain execution progress")
+        if self.state is InternalExecutionState.COMPLETED and (
+            self.failed_seed_indices or self.checkpoint_recovery_eligible
+        ):
+            raise ValueError("completed execution states cannot retain failures or recovery")
         return self
 
 
@@ -158,4 +177,6 @@ class DependencyFingerprintInput(BaseModel):
     def validate_parent_lineage(self) -> DependencyFingerprintInput:
         if len(self.parent_artifact_keys) != len(self.parent_scientific_content_digests):
             raise ValueError("parent artifact keys and scientific content digests must align")
+        if len(set(self.parent_artifact_keys)) != len(self.parent_artifact_keys):
+            raise ValueError("parent artifact keys must be unique")
         return self

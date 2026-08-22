@@ -156,6 +156,29 @@ def test_experiment_plan_row_enforces_invalid_and_seed_range_semantics() -> None
         ExperimentPlanRow.model_validate(plan.model_dump() | {"executable": False})
 
 
+def test_execution_state_rejects_incompatible_lifecycle_evidence() -> None:
+    base = {
+        "state": InternalExecutionState.PLANNED,
+        "semantic_cell_key": 'population:{"rho":0.05}',
+        "state_sequence_number": 0,
+        "last_transition_timestamp": datetime(2026, 1, 1, tzinfo=UTC),
+        "checkpoint_recovery_eligible": False,
+    }
+    assert ExecutionStateRecord.model_validate(base).state is InternalExecutionState.PLANNED
+    with pytest.raises(ValidationError, match="execution progress"):
+        ExecutionStateRecord.model_validate(base | {"completed_seed_indices": (0,)})
+    with pytest.raises(ValidationError, match="require a reason"):
+        ExecutionStateRecord.model_validate(base | {"state": InternalExecutionState.FAILED})
+    with pytest.raises(ValidationError, match="cannot retain failures"):
+        ExecutionStateRecord.model_validate(
+            base
+            | {
+                "state": InternalExecutionState.COMPLETED,
+                "failed_seed_indices": (0,),
+            }
+        )
+
+
 def test_plan_ordering_and_digests_are_canonical() -> None:
     common = artifact_envelope().model_dump() | {
         "executable": True,
