@@ -48,6 +48,10 @@ from trajcert.experiments.planning import (
     write_plan_artifacts,
 )
 from trajcert.infrastructure.fingerprints import dependency_fingerprint, provenance_fingerprint
+from trajcert.infrastructure.provenance import (
+    canonical_dependency_payload,
+    canonical_provenance_payload,
+)
 
 
 def manifest(*, action_policy: str = "policy-a", epoch_id: str = "epoch-01") -> EpochManifest:
@@ -389,6 +393,17 @@ def test_fingerprints_are_deterministic_and_change_for_material_inputs() -> None
     )
 
     assert provenance_fingerprint(provenance) == provenance_fingerprint(provenance)
+    assert canonical_provenance_payload(provenance).startswith(b'{"code_commit":"')
+    assert canonical_dependency_payload(dependency) == (
+        b'{"artifact_type":"population_result","environment_dependency_digest":"'
+        + digest.encode("ascii")
+        + b'","implementation_component_digest":"'
+        + digest.encode("ascii")
+        + b'","parent_artifact_keys":[],"parent_scientific_content_digests":[],'
+        b'"producer_immutable_inputs":"{}","scientific_dependency_digest":"'
+        + digest.encode("ascii")
+        + b'","seed_manifest_digest":null,"semantic_coordinates":"{}"}'
+    )
     assert dependency_fingerprint(dependency) != dependency_fingerprint(
         dependency.model_copy(update={"artifact_type": "other_result"})
     )
