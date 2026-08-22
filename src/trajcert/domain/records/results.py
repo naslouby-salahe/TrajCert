@@ -58,6 +58,7 @@ class PopulationMetricsRecord(BaseModel):
 class SequentialUpdateRecord(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
 
+    law_name: str = Field(min_length=1)
     stream_seed_index: int = Field(ge=0)
     n_matured: int = Field(ge=0)
     n_resolved: int = Field(ge=0)
@@ -104,6 +105,8 @@ class SequentialUpdateRecord(BaseModel):
 class StreamMetricsRecord(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
 
+    law_name: str = Field(min_length=1)
+    stream_seed_index: int = Field(ge=0)
     ever_violation: bool
     first_certified_n: int | None = Field(default=None, ge=0)
     never_certified: bool
@@ -129,11 +132,13 @@ class PairedComparisonRecord(BaseModel):
 
     claim_family: str = Field(min_length=1)
     semantic_comparison_name: str = Field(min_length=1)
+    law_name: str = Field(min_length=1)
     rho: float
     partition_name: str = Field(min_length=1)
     method_name: str = Field(min_length=1)
     baseline_name: str = Field(min_length=1)
     metric_name: str = Field(min_length=1)
+    stream_seed_index: int = Field(ge=0)
     method_value: float
     baseline_value: float
     paired_difference_favorable_direction: float
@@ -152,7 +157,9 @@ class StatisticalTestRecord(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
 
     claim_name: str = Field(min_length=1)
+    claim_family: str = Field(min_length=1)
     comparison_name: str = Field(min_length=1)
+    metric_name: str = Field(min_length=1)
     experimental_unit: str = Field(min_length=1)
     n_pairs: int = Field(ge=0)
     alternative: str = Field(min_length=1)
@@ -161,12 +168,94 @@ class StatisticalTestRecord(BaseModel):
     raw_p_value: float = Field(ge=0, le=1)
     holm_family_size: int = Field(gt=0)
     holm_adjusted_p_value: float | None = Field(default=None, ge=0, le=1)
-    standardized_effect: float | None = None
-    standardized_effect_status: str = Field(min_length=1)
+    decision_alpha: float = Field(gt=0, le=1)
+    reject_null: bool
 
-    @field_validator("raw_p_value", "holm_adjusted_p_value", "standardized_effect")
+    @field_validator("raw_p_value", "holm_adjusted_p_value", "decision_alpha")
     @classmethod
     def validate_finite_statistical_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("statistical values must be finite")
         return value
+
+
+class EffectSizeRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    claim_name: str = Field(min_length=1)
+    comparison_name: str = Field(min_length=1)
+    metric_name: str = Field(min_length=1)
+    n_pairs: int = Field(ge=0)
+    mean_paired_difference: float
+    sd_paired_difference: float | None = Field(default=None, ge=0)
+    standardized_paired_effect: float | None = None
+    standardized_effect_status: str = Field(min_length=1)
+
+    @field_validator("mean_paired_difference", "sd_paired_difference", "standardized_paired_effect")
+    @classmethod
+    def validate_finite_effect_value(cls, value: float | None) -> float | None:
+        if value is not None and not math.isfinite(value):
+            raise ValueError("effect-size values must be finite")
+        return value
+
+
+class ConfidenceIntervalRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    claim_name: str = Field(min_length=1)
+    comparison_name: str = Field(min_length=1)
+    metric_name: str = Field(min_length=1)
+    estimand: str = Field(min_length=1)
+    method: str = Field(min_length=1)
+    confidence_level: float = Field(gt=0, lt=1)
+    resample_count: int = Field(ge=0)
+    lower: float
+    estimate: float
+    upper: float
+
+    @model_validator(mode="after")
+    def validate_interval(self) -> ConfidenceIntervalRecord:
+        if not all(math.isfinite(value) for value in (self.lower, self.estimate, self.upper)):
+            raise ValueError("confidence interval values must be finite")
+        if not self.lower <= self.estimate <= self.upper:
+            raise ValueError("confidence interval must contain its estimate")
+        return self
+
+
+class TheoremValidationRecord(BaseModel):
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+        str_strip_whitespace=True,
+        populate_by_name=True,
+    )
+
+    theorem_name: str = Field(min_length=1)
+    case_name: str = Field(min_length=1)
+    law_name: str = Field(min_length=1)
+    partition_name: str = Field(min_length=1)
+    quantity: str = Field(min_length=1)
+    expected_relation: str = Field(min_length=1)
+    expected_value: float
+    observed_value: float
+    absolute_error: float = Field(ge=0)
+    tolerance: float = Field(ge=0)
+    passed: bool = Field(alias="pass", serialization_alias="pass")
+    failure_reason: str | None = None
+    details_json: str = Field(min_length=2)
+
+    @model_validator(mode="after")
+    def validate_theorem_result(self) -> TheoremValidationRecord:
+        if not all(
+            math.isfinite(value)
+            for value in (
+                self.expected_value,
+                self.observed_value,
+                self.absolute_error,
+                self.tolerance,
+            )
+        ):
+            raise ValueError("theorem validation values must be finite")
+        if self.passed != (self.failure_reason is None):
+            raise ValueError("theorem failure reason must agree with pass status")
+        return self
