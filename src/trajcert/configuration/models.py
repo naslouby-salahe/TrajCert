@@ -120,6 +120,92 @@ class ComparatorsConfiguration(FrozenConfiguration):
     repeated_attempt_pattern_mixture: PatternMixtureConfiguration
 
 
+class SeedIndicesConfiguration(FrozenConfiguration):
+    start: int = Field(ge=0)
+    stop_exclusive: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_range(self) -> SeedIndicesConfiguration:
+        if self.stop_exclusive <= self.start:
+            raise ValueError("seed range must be nonempty")
+        return self
+
+
+class CoverageValidationConfiguration(FrozenConfiguration):
+    n_max: int = Field(gt=0)
+    seed_indices: SeedIndicesConfiguration
+    checkpoint_batch_size: int = Field(gt=0)
+    clopper_pearson_confidence: float = Field(gt=0.0, lt=1.0)
+    acceptance_upper_limit: float = Field(gt=0.0, lt=1.0)
+
+
+class SequentialUtilityConfiguration(FrozenConfiguration):
+    n_max: int = Field(gt=0)
+    seed_indices: SeedIndicesConfiguration
+    checkpoint_batch_size: int = Field(gt=0)
+    rho_grid: tuple[float, ...]
+
+
+class SequentialInferenceConfiguration(FrozenConfiguration):
+    coverage_validation: CoverageValidationConfiguration
+    sequential_utility: SequentialUtilityConfiguration
+
+
+class BootstrapConfiguration(FrozenConfiguration):
+    resamples: int = Field(gt=0)
+
+
+class SignFlipConfiguration(FrozenConfiguration):
+    randomizations: int = Field(gt=0)
+
+
+class StatisticsConfiguration(FrozenConfiguration):
+    bootstrap: BootstrapConfiguration
+    sign_flip: SignFlipConfiguration
+    practical_metrics: tuple[str, ...]
+
+
+class SequentialStressCase(FrozenConfiguration):
+    name: str
+    law: str
+    resolved_bands: int = Field(gt=0)
+    rho_offset_above_true_information: float | None = None
+    rho_offset_above_compatibility_floor: float | None = None
+    beta_offset_above_true_upper_bound: float | None = None
+
+
+class RuntimeBenchmarkConfiguration(FrozenConfiguration):
+    warmup_repetitions: int = Field(ge=0)
+    measured_repetitions: int = Field(gt=0)
+    law: str
+    outer_projection_input: dict[str, int]
+    outer_projection_rho_offset_above_true_information: float
+
+
+class RuntimeEnvironmentConfiguration(FrozenConfiguration):
+    architecture: str
+    container_base_family: str
+    python_image: str
+    python_implementation: str
+    python_version: str
+    locale: str
+    timezone: str
+    environment_variables: dict[str, str]
+    authoritative_execution: str
+    direct_dependencies: dict[str, str | float]
+    reproducibility_tools: dict[str, str]
+    transitive_lock_file: str
+
+
+class SmokeConfiguration(FrozenConfiguration):
+    compatible_population_cases: int = Field(gt=0)
+    incompatible_population_cases: int = Field(gt=0)
+    endpoint_only_partition_cases: int = Field(gt=0)
+    refinement_cases: int = Field(gt=0)
+    deterministic_cs_event_count: int = Field(gt=0)
+    low_dimensional_interval_optimizer_hand_cases: int = Field(gt=0)
+
+
 class PopulationMaterialityConfiguration(FrozenConfiguration):
     minimum_absolute_tightening: float = Field(ge=0.0)
     minimum_relative_unresolved_gain: float = Field(ge=0.0, le=1.0)
@@ -219,11 +305,18 @@ class TrajCertConfiguration(FrozenConfiguration):
     numerics: NumericsConfiguration
     legacy_partition_incoherence: LegacyIncoherenceConfiguration
     comparators: ComparatorsConfiguration
+    sequential_inference: SequentialInferenceConfiguration
+    statistics: StatisticsConfiguration
     materiality: MaterialityConfiguration
     display: DisplayConfiguration
     failure_boundary: FailureBoundaryConfiguration
+    sequential_stress_cases: tuple[SequentialStressCase, ...]
+    sequential_stress_methods: tuple[str, ...]
+    runtime_benchmark: RuntimeBenchmarkConfiguration
+    runtime_environment: RuntimeEnvironmentConfiguration
     artifacts: ArtifactsConfiguration
     cli: CliConfiguration
+    smoke: SmokeConfiguration
 
     @model_validator(mode="after")
     def validate_contract(self) -> TrajCertConfiguration:
