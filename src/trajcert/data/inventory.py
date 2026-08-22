@@ -86,6 +86,8 @@ class ExternalDatasetInventory(BaseModel):
             raise ValueError("eligible datasets require every future-study semantic")
         if self.field_mapping_status == "SEMANTICALLY_EQUIVALENT" and not self.field_mappings:
             raise ValueError("semantically equivalent mappings require recorded field mappings")
+        if self.field_mappings and self.field_mapping_status != "SEMANTICALLY_EQUIVALENT":
+            raise ValueError("recorded field mappings must be semantically equivalent")
         return self
 
 
