@@ -43,6 +43,15 @@ class DatasetKind(StrEnum):
     EXTERNAL = "EXTERNAL"
 
 
+class ArtifactValidationStatus(StrEnum):
+    VALID = "VALID"
+    PARTIAL = "PARTIAL"
+    STALE = "STALE"
+    CORRUPT = "CORRUPT"
+    INCOMPATIBLE = "INCOMPATIBLE"
+    MISSING = "MISSING"
+
+
 AUTHORITATIVE_EVIDENCE_CLASSES = frozenset(EvidenceClass) - {EvidenceClass.EXPLORATORY}
 
 
