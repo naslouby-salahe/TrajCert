@@ -21,9 +21,14 @@ def test_workspace_rejects_roots_outside_or_equal_to_the_project(tmp_path: Path)
             artifacts.model_copy(update={"execution_workspace_root": "../outside"}),
             tmp_path,
         )
-    with pytest.raises(ValueError, match="distinct"):
+    with pytest.raises(ValueError, match="overlap"):
         Workspace.from_configuration(
             artifacts.model_copy(update={"results_root": artifacts.execution_workspace_root}),
+            tmp_path,
+        )
+    with pytest.raises(ValueError, match="overlap"):
+        Workspace.from_configuration(
+            artifacts.model_copy(update={"results_root": "outputs/results"}),
             tmp_path,
         )
 
