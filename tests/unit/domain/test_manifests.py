@@ -22,11 +22,14 @@ from trajcert.domain.manifests import (
 from trajcert.domain.records.artifacts import ArtifactEnvelope
 from trajcert.domain.records.execution import (
     ActiveSemanticCellManifest,
+    DependencyFingerprintInput,
     ExecutionStateRecord,
     ExperimentAggregateRecord,
     ExperimentPlanRow,
+    ProvenanceFingerprintInput,
 )
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
+from trajcert.infrastructure.fingerprints import dependency_fingerprint, provenance_fingerprint
 
 
 def manifest(*, action_policy: str = "policy-a", epoch_id: str = "epoch-01") -> EpochManifest:
@@ -285,3 +288,31 @@ def test_experiment_aggregate_rejects_inconsistent_completion_counts() -> None:
         ExperimentAggregateRecord.model_validate(
             aggregate.model_dump() | {"completed_semantic_cells": 1}
         )
+
+
+def test_fingerprints_are_deterministic_and_change_for_material_inputs() -> None:
+    digest = "e" * 64
+    provenance = ProvenanceFingerprintInput(
+        scientific_specification_digest=digest,
+        code_commit="f" * 40,
+        dirty_tree_flag=False,
+        environment_lock_digest=digest,
+        container_image_digest="sha256:image",
+        dataset_preprocessing_checksums=(digest,),
+        partition_checksum=digest,
+        seed_manifest_checksums=(digest,),
+        plan_digest=digest,
+    )
+    dependency = DependencyFingerprintInput(
+        artifact_type="population_result",
+        semantic_coordinates="{}",
+        scientific_dependency_digest=digest,
+        implementation_component_digest=digest,
+        environment_dependency_digest=digest,
+        producer_immutable_inputs="{}",
+    )
+
+    assert provenance_fingerprint(provenance) == provenance_fingerprint(provenance)
+    assert dependency_fingerprint(dependency) != dependency_fingerprint(
+        dependency.model_copy(update={"artifact_type": "other_result"})
+    )
