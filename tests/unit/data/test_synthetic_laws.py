@@ -148,6 +148,18 @@ def test_synthetic_ledger_records_have_canonical_identity_and_terminal_semantics
     assert records[1].adjudication is None
 
 
+def test_synthetic_ledger_rejects_band_outside_law_resolution() -> None:
+    law = SyntheticTrajectoryLaw("Test law", 0.5, 0.0, 1.0, 0.0, 0.0, 2, 8.0)
+
+    with pytest.raises(ValueError, match="exceeds"):
+        synthetic_ledger_records(
+            law,
+            0,
+            (SyntheticEvent(0, True, 3, True),),
+            datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+
 def test_synthetic_preparation_returns_canonical_checksum_and_manifest(tmp_path: Path) -> None:
     law = SyntheticTrajectoryLaw("Test law", 0.5, 0.0, 1.0, 0.0, 0.0, 2, 8.0)
     events = (SyntheticEvent(0, True, 1, True), SyntheticEvent(1, False, None, True))
