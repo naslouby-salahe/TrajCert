@@ -22,6 +22,8 @@ class ArrowField(Protocol):
 
 
 class ArrowSchema(Protocol):
+    names: list[str]
+
     def field(self, name: str) -> ArrowField: ...
 
 
