@@ -38,6 +38,14 @@ class MaturedCategory:
     band: int | None
     harmful: bool | None
 
+    def __post_init__(self) -> None:
+        if (self.band is None) != (self.harmful is None):
+            raise LedgerIntegrityError(
+                "resolved category requires both a band and correctness label"
+            )
+        if self.band is not None and self.band <= 0:
+            raise LedgerIntegrityError("resolved category band must be positive")
+
     @property
     def resolved(self) -> bool:
         return self.band is not None
