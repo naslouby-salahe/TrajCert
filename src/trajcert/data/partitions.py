@@ -76,3 +76,14 @@ class ObservableLaw:
             for harmful, correct in zip(self.harmful_masses, self.correct_masses, strict=True)
             if (mass := harmful + correct) > 0.0
         )
+
+    def coarsened(self, groups: tuple[tuple[int, ...], ...]) -> ObservableLaw:
+        finest_band_count = len(self.harmful_masses)
+        flattened = tuple(member for group in groups for member in group)
+        if flattened != tuple(range(1, finest_band_count + 1)):
+            raise ValueError("coarsening groups must partition the finest bands in order")
+        return ObservableLaw(
+            tuple(sum(self.harmful_masses[index - 1] for index in group) for group in groups),
+            tuple(sum(self.correct_masses[index - 1] for index in group) for group in groups),
+            self.unresolved_mass,
+        )
