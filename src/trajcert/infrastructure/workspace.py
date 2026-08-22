@@ -77,6 +77,7 @@ RESULT_EXPERIMENT_DIRECTORIES = (
     "statistics/effects",
     "statistics/multiplicity",
 )
+NON_AUTHORITATIVE_OUTPUT_SEGMENTS = frozenset({"cache", "checkpoints", "diagnostics", "logs"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +119,13 @@ class Workspace:
         for relative_path in RESULT_EXPERIMENT_DIRECTORIES:
             (experiment_root / relative_path).mkdir(parents=True, exist_ok=True)
         return experiment_root
+
+    def is_authoritative_output_path(self, candidate_path: Path) -> bool:
+        try:
+            relative_path = candidate_path.resolve().relative_to(self.execution_root)
+        except ValueError:
+            return False
+        return not any(part in NON_AUTHORITATIVE_OUTPUT_SEGMENTS for part in relative_path.parts)
 
     @staticmethod
     def validate_experiment_name(experiment_name: str) -> None:
