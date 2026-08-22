@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from trajcert.configuration.models import MethodConfiguration, SyntheticDataConfiguration
 from trajcert.data.partitions import ObservableLaw
+from trajcert.math.information_profile import InformationProfile
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +76,25 @@ class SyntheticTrajectoryLaw:
             self.lambda1,
             self.lambda0,
             resolved_band_count,
+            self.terminal_horizon,
+        )
+
+    def minimum_information_completion(self) -> SyntheticTrajectoryLaw:
+        observable_law = self.observable_law()
+        compatibility_floor = InformationProfile(observable_law).compatibility_floor()
+        hidden_harmful_mass = compatibility_floor.hidden_harmful_mass
+        if hidden_harmful_mass is None:
+            raise ValueError("minimum-information completion requires resolved mass")
+        harmful_probability = observable_law.harmful_total + hidden_harmful_mass
+        correct_probability = 1 - harmful_probability
+        return SyntheticTrajectoryLaw(
+            f"Minimum-information completion of {self.name}",
+            harmful_probability,
+            hidden_harmful_mass / harmful_probability,
+            (observable_law.c - hidden_harmful_mass) / correct_probability,
+            self.lambda1,
+            self.lambda0,
+            self.resolved_band_count,
             self.terminal_horizon,
         )
 
