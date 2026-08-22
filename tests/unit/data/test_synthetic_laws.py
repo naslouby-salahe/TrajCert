@@ -37,8 +37,9 @@ def test_synthetic_law_catalog_uses_authoritative_configuration() -> None:
     configuration = load_configuration()
     catalog = synthetic_law_catalog(configuration.synthetic_data, configuration.method)
 
-    assert tuple(law.name for law in catalog) == tuple(
-        law.name for law in configuration.synthetic_data.laws
+    assert tuple(law.name for law in catalog) == (
+        *(law.name for law in configuration.synthetic_data.laws),
+        "Minimum-information completion of Timing and terminal: harmful outcomes resolve late",
     )
     assert all(
         law.resolved_band_count == configuration.method.primary_finest_resolved_bands

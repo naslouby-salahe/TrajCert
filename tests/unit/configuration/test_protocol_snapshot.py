@@ -49,6 +49,9 @@ def test_synthetic_catalog_and_strict_timing_contract() -> None:
     configuration = load_configuration()
 
     assert len(configuration.synthetic_data.laws) == 12
+    assert configuration.synthetic_data.minimum_information_completion_laws == (
+        "Timing and terminal: harmful outcomes resolve late",
+    )
     assert configuration.synthetic_data.laws[0].name == "No outcome-path dependence"
     assert configuration.synthetic_data.laws[-1].name == "Same endpoint with timing information"
     assert len(configuration.strict_timing_cases.zero_information_controls) == 3
