@@ -50,3 +50,20 @@ def test_workspace_separates_authoritative_and_operational_paths(tmp_path: Path)
     )
     assert not workspace.is_authoritative_output_path(workspace.execution_root / "cache/analysis")
     assert not workspace.is_authoritative_output_path(experiment_root / "checkpoints/execution")
+
+
+def test_evaluation_records_use_canonical_semantic_coordinates(tmp_path: Path) -> None:
+    workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
+    record_path = workspace.evaluation_record_path(
+        "population-sensitivity-utility",
+        "timing-and-terminal-harmful-outcomes-resolve-late",
+        "8-band-partition",
+        "trajcert",
+        "0.05",
+    )
+    assert record_path.parts[-4:] == (
+        "law=timing-and-terminal-harmful-outcomes-resolve-late",
+        "partition=8-band-partition",
+        "method=trajcert",
+        "rho=0.05",
+    )
