@@ -1,7 +1,31 @@
-from pathlib import Path
+import math
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from trajcert.baselines.information_oracle import direct_information_oracle
+from trajcert.configuration.loading import load_configuration
+from trajcert.data.partitions import ObservableLaw
+from trajcert.math.information_profile import InformationProfile
+from trajcert.math.solver import solve_population_risk_set
 
 
-def test_test_sharpness_against_independent_oracle_target_exists() -> None:
-    assert (PROJECT_ROOT / "src/trajcert/baselines/information_oracle.py").is_file()
+def test_production_risk_set_agrees_with_independent_direct_table_oracle() -> None:
+    configuration = load_configuration()
+    law = ObservableLaw((0.1, 0.2), (0.2, 0.1), 0.4)
+    rho = 0.1
+
+    production = solve_population_risk_set(InformationProfile(law), rho, configuration.numerics)
+    oracle = direct_information_oracle(law, rho, configuration.numerics)
+
+    assert production.lower_risk is not None
+    assert production.upper_risk is not None
+    assert oracle.lower_risk is not None
+    assert oracle.upper_risk is not None
+    assert math.isclose(
+        production.lower_risk,
+        oracle.lower_risk,
+        abs_tol=configuration.numerics.deterministic_identity_tolerance,
+    )
+    assert math.isclose(
+        production.upper_risk,
+        oracle.upper_risk,
+        abs_tol=configuration.numerics.deterministic_identity_tolerance,
+    )
