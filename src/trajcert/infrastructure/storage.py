@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import os
 import re
@@ -17,6 +18,34 @@ type JSONValue = (
 
 def canonical_json_bytes(value: JSONValue) -> bytes:
     return _canonical_json(value).encode("utf-8")
+
+
+def canonical_json_text(value: str) -> str:
+    try:
+        parsed = json.loads(
+            value,
+            object_pairs_hook=_reject_duplicate_json_keys,
+            parse_constant=_reject_nonfinite_json_constant,
+        )
+    except json.JSONDecodeError as error:
+        raise ValueError("canonical JSON text must be valid JSON") from error
+    canonical = canonical_json_bytes(parsed).decode("utf-8")
+    if value != canonical:
+        raise ValueError("JSON text is not in canonical form")
+    return value
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, JSONValue]]) -> dict[str, JSONValue]:
+    result: dict[str, JSONValue] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("canonical JSON forbids duplicate object keys")
+        result[key] = value
+    return result
+
+
+def _reject_nonfinite_json_constant(value: str) -> JSONValue:
+    raise ValueError(f"canonical JSON forbids nonfinite value {value}")
 
 
 def canonical_number_token(value: float) -> str:

@@ -12,6 +12,7 @@ from trajcert.infrastructure.artifacts import (
 from trajcert.infrastructure.storage import (
     atomic_write_bytes,
     canonical_json_bytes,
+    canonical_json_text,
     canonical_number_token,
     filesystem_safe_name,
     semantic_coordinate_segment,
@@ -40,6 +41,14 @@ def test_canonical_json_matches_rfc_8785_derived_number_vector() -> None:
     assert canonical_json_bytes([333333333.33333329, 1e30, 4.5, 0.002, 1e-27]) == (
         b"[333333333.3333333,1e+30,4.5,0.002,1e-27]"
     )
+
+
+def test_canonical_json_text_rejects_duplicate_keys_and_noncanonical_rendering() -> None:
+    assert canonical_json_text('{"a":1,"b":2}') == '{"a":1,"b":2}'
+    with pytest.raises(ValueError, match="duplicate"):
+        canonical_json_text('{"a":1,"a":2}')
+    with pytest.raises(ValueError, match="canonical form"):
+        canonical_json_text('{"b":2,"a":1}')
 
 
 def test_semantic_name_is_filesystem_safe() -> None:
