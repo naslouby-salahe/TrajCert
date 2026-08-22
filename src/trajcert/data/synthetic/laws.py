@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from hashlib import sha256
 from pathlib import Path
 
 from trajcert.configuration.models import MethodConfiguration, SyntheticDataConfiguration
@@ -15,6 +16,22 @@ SYNTHETIC_LAW_CATALOG_RELATIVE_PATH = Path(
 SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH = Path(
     "outputs/preprocessing/metadata/synthetic_scaling_law_catalog.json"
 )
+SYNTHETIC_LAW_CATALOG_MANIFEST_RELATIVE_PATH = Path(
+    "outputs/preprocessing/metadata/synthetic_law_catalog.manifest.json"
+)
+SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH = Path(
+    "outputs/preprocessing/metadata/synthetic_scaling_law_catalog.manifest.json"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticLawCatalogManifest:
+    catalog_type: str
+    semantic_identity: str
+    dependency_identity: str
+    content_digest: str
+    payload_relative_path: str
+    schema_version: int = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,10 +173,51 @@ def write_synthetic_law_catalog(
     laws: tuple[SyntheticTrajectoryLaw, ...],
 ) -> str:
     payload = canonical_synthetic_law_catalog(laws)
-    return atomic_write_bytes(
+    digest = atomic_write_bytes(
         project_root / SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
         payload,
         lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
+    )
+    _write_synthetic_law_catalog_manifest(
+        project_root,
+        "synthetic-law-catalog",
+        SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
+        laws,
+    )
+    return digest
+
+
+def synthetic_law_catalog_manifest(
+    catalog_type: str,
+    payload_relative_path: Path,
+    laws: tuple[SyntheticTrajectoryLaw, ...],
+) -> SyntheticLawCatalogManifest:
+    payload = canonical_synthetic_law_catalog(laws)
+    source_names = tuple(sorted(law.name for law in laws))
+    semantic_identity = canonical_json_bytes(
+        {"catalog_type": catalog_type, "law_names": source_names}
+    ).decode("utf-8")
+    dependency_identity = sha256(
+        canonical_json_bytes(
+            tuple(
+                {
+                    "K": law.resolved_band_count,
+                    "lambda0": law.lambda0,
+                    "lambda1": law.lambda1,
+                    "q0": law.q0,
+                    "q1": law.q1,
+                    "theta": law.theta,
+                }
+                for law in sorted(laws, key=lambda law: law.name)
+            )
+        )
+    ).hexdigest()
+    return SyntheticLawCatalogManifest(
+        catalog_type,
+        semantic_identity,
+        dependency_identity,
+        sha256(payload).hexdigest(),
+        payload_relative_path.as_posix(),
     )
 
 
@@ -170,10 +228,46 @@ def write_synthetic_scaling_catalog(
 ) -> str:
     laws = synthetic_scaling_laws(law, resolved_band_counts)
     payload = canonical_synthetic_law_catalog(laws)
-    return atomic_write_bytes(
+    digest = atomic_write_bytes(
         project_root / SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
         payload,
         lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
+    )
+    _write_synthetic_law_catalog_manifest(
+        project_root,
+        "synthetic-scaling-law-catalog",
+        SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
+        laws,
+    )
+    return digest
+
+
+def _write_synthetic_law_catalog_manifest(
+    project_root: Path,
+    catalog_type: str,
+    payload_relative_path: Path,
+    laws: tuple[SyntheticTrajectoryLaw, ...],
+) -> str:
+    manifest_path = (
+        SYNTHETIC_LAW_CATALOG_MANIFEST_RELATIVE_PATH
+        if catalog_type == "synthetic-law-catalog"
+        else SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH
+    )
+    manifest = synthetic_law_catalog_manifest(catalog_type, payload_relative_path, laws)
+    payload = canonical_json_bytes(
+        {
+            "catalog_type": manifest.catalog_type,
+            "content_digest": manifest.content_digest,
+            "dependency_identity": manifest.dependency_identity,
+            "payload_relative_path": manifest.payload_relative_path,
+            "schema_version": manifest.schema_version,
+            "semantic_identity": manifest.semantic_identity,
+        }
+    )
+    return atomic_write_bytes(
+        project_root / manifest_path,
+        payload,
+        lambda candidate: _validate_synthetic_law_catalog_manifest(candidate, manifest),
     )
 
 
@@ -202,6 +296,24 @@ def _validate_synthetic_law_catalog(
 ) -> None:
     if payload != canonical_synthetic_law_catalog(laws):
         raise ValueError("synthetic law catalog payload is not canonical")
+
+
+def _validate_synthetic_law_catalog_manifest(
+    payload: bytes,
+    manifest: SyntheticLawCatalogManifest,
+) -> None:
+    expected = canonical_json_bytes(
+        {
+            "catalog_type": manifest.catalog_type,
+            "content_digest": manifest.content_digest,
+            "dependency_identity": manifest.dependency_identity,
+            "payload_relative_path": manifest.payload_relative_path,
+            "schema_version": manifest.schema_version,
+            "semantic_identity": manifest.semantic_identity,
+        }
+    )
+    if payload != expected:
+        raise ValueError("synthetic law catalog manifest payload is not canonical")
 
 
 @dataclass(frozen=True, slots=True)
