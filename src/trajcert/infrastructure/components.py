@@ -10,6 +10,33 @@ class ExecutionDependencyStage:
     reusable_authoritative_artifacts: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class ValidatedStreamPrefix:
+    generator_identity: str
+    seed_identity: str
+    validated_length: int
+
+    def __post_init__(self) -> None:
+        if not self.generator_identity or not self.seed_identity:
+            raise ValueError("stream identities must be nonempty")
+        if self.validated_length < 0:
+            raise ValueError("validated stream length must be nonnegative")
+
+    def can_serve(self, requested_length: int) -> bool:
+        if requested_length < 0:
+            raise ValueError("requested stream length must be nonnegative")
+        return requested_length <= self.validated_length
+
+    def can_extend_to(self, requested_length: int, candidate: ValidatedStreamPrefix) -> bool:
+        if requested_length < self.validated_length:
+            return False
+        return (
+            candidate.generator_identity == self.generator_identity
+            and candidate.seed_identity == self.seed_identity
+            and candidate.validated_length >= requested_length
+        )
+
+
 EXECUTION_DEPENDENCY_CHAIN = (
     ExecutionDependencyStage(
         "inputs",
