@@ -7,6 +7,7 @@ from trajcert.data.synthetic.laws import (
     synthetic_law_catalog,
     synthetic_law_roles,
 )
+from trajcert.math.information_profile import InformationProfile
 
 
 def test_synthetic_trajectory_law_preserves_conditional_probability_and_horizon_contract() -> None:
@@ -52,3 +53,36 @@ def test_synthetic_streams_are_seed_deterministic_and_hide_terminal_labels() -> 
     assert stream == generate_synthetic_stream(law, 7, 3)
     assert all(event.admitted for event in stream)
     assert all(event.resolution_band is None and event.observed_label is None for event in stream)
+
+
+def test_minimum_information_completion_preserves_observable_law_and_hits_floor() -> None:
+    law = SyntheticTrajectoryLaw("timing", 0.05, 0.3, 0.05, 0.45, -0.15, 8, 8.0)
+
+    derived = law.minimum_information_completion()
+    profile = InformationProfile(law.observable_law())
+    floor = profile.compatibility_floor().minimum_information_budget
+
+    assert derived.name == "Minimum-information completion of timing"
+    assert all(
+        math.isclose(actual, expected, abs_tol=1e-12)
+        for actual, expected in zip(
+            derived.observable_law().harmful_masses,
+            law.observable_law().harmful_masses,
+            strict=True,
+        )
+    )
+    assert all(
+        math.isclose(actual, expected, abs_tol=1e-12)
+        for actual, expected in zip(
+            derived.observable_law().correct_masses,
+            law.observable_law().correct_masses,
+            strict=True,
+        )
+    )
+    assert math.isclose(derived.observable_law().c, law.observable_law().c, abs_tol=1e-12)
+    assert floor is not None
+    assert math.isclose(
+        InformationProfile(derived.observable_law()).value(derived.theta * derived.q1),
+        floor,
+        abs_tol=1e-12,
+    )
