@@ -9,7 +9,7 @@ from pathlib import Path
 from trajcert.data.ledger import ActionRecord, Adjudication, MaturedCategory
 from trajcert.data.synthetic.generator import SyntheticEvent
 from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
-from trajcert.domain.enums import DatasetKind
+from trajcert.domain.enums import DatasetEligibilityStatus, DatasetKind
 from trajcert.domain.identity import LocalCertificateIdentity
 from trajcert.domain.manifests import DatasetManifest
 from trajcert.domain.serialization import JSONValue, canonical_json_bytes
@@ -124,7 +124,7 @@ def prepare_synthetic_ledger(
             {"probabilities": probabilities}
         ).decode("utf-8"),
         preprocessing_digest=checksum,
-        eligibility_status="ELIGIBLE",
+        eligibility_status=DatasetEligibilityStatus.ELIGIBLE,
     )
     return PreparedSyntheticLedger(
         synthetic_law_slug(law.name), stream_index, records, manifest, checksum

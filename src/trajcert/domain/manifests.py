@@ -9,7 +9,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from trajcert.domain.enums import ArtifactValidationStatus, DatasetKind
+from trajcert.domain.enums import ArtifactValidationStatus, DatasetEligibilityStatus, DatasetKind
 from trajcert.domain.identity import Identifier, LocalCertificateIdentity
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
 from trajcert.domain.serialization import JSONValue
@@ -46,7 +46,7 @@ class DatasetManifest(BaseModel):
     known_terminal_harmful_mass: float | None = None
     known_information: float | None = None
     preprocessing_digest: Digest
-    eligibility_status: str = Field(min_length=1)
+    eligibility_status: DatasetEligibilityStatus
     ineligibility_reason: str | None = None
 
     @field_validator("known_theta", "known_terminal_harmful_mass", "known_information")

@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from trajcert.domain.enums import (
     ArtifactValidationStatus,
+    DatasetEligibilityStatus,
     DatasetKind,
     EvidenceClass,
     InternalExecutionState,
@@ -299,7 +300,7 @@ def test_dataset_partition_and_seed_manifests_enforce_canonical_contracts() -> N
         field_mapping_json="{}",
         known_full_law=True,
         preprocessing_digest=digest,
-        eligibility_status="ELIGIBLE",
+        eligibility_status=DatasetEligibilityStatus.ELIGIBLE,
     )
     partition = PartitionManifest(
         partition_name="2-band",
