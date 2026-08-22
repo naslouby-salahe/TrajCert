@@ -3,6 +3,10 @@ from pathlib import Path
 
 import pytest
 
+from trajcert.infrastructure.artifacts import (
+    artifact_envelope_arrow_schema,
+    canonical_physical_types,
+)
 from trajcert.infrastructure.storage import (
     atomic_write_bytes,
     canonical_json_bytes,
@@ -55,3 +59,22 @@ def test_atomic_write_rejects_payload_before_creating_a_partial_file(tmp_path: P
 def assert_valid_payload(value: bytes) -> None:
     if value != b"{}":
         raise ValueError("unexpected payload")
+
+
+def test_canonical_physical_types_match_the_arrow_contract() -> None:
+    physical_types = canonical_physical_types()
+    assert str(physical_types["string"]) == "string"
+    assert str(physical_types["boolean"]) == "bool"
+    assert str(physical_types["integer"]) == "int64"
+    assert str(physical_types["large_identifier"]) == "uint64"
+    assert str(physical_types["scientific_real"]) == "double"
+    assert str(physical_types["timestamp"]) == "timestamp[us, tz=UTC]"
+    assert str(physical_types["string_list"]) == "list<item: string>"
+
+
+def test_artifact_envelope_arrow_schema_preserves_nullable_scientific_fields() -> None:
+    schema = artifact_envelope_arrow_schema()
+    assert schema.field("artifact_key").nullable is False
+    assert schema.field("scientific_specification_digest").nullable is False
+    assert schema.field("rho").nullable is True
+    assert schema.field("schema_version").type.bit_width == 64
