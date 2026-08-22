@@ -2,13 +2,16 @@ import pytest
 from pydantic import ValidationError
 
 from trajcert.data.inventory import (
+    CURRENT_REAL_TRAJECTORY_BOUNDARY,
     CURRENT_REAL_TRAJECTORY_STATUS,
     REAL_TRAJECTORY_VALIDATION_CELL_COUNT,
     REAL_TRAJECTORY_VALUE_CLAIM_STATE,
     DeterministicFieldMapping,
     ExternalDatasetInventory,
     FutureRealStudyEligibility,
+    RealTrajectoryBoundary,
 )
+from trajcert.domain.enums import DatasetKind
 
 
 def test_external_inventory_preserves_observed_and_documented_authority() -> None:
@@ -42,6 +45,7 @@ def test_external_inventory_preserves_observed_and_documented_authority() -> Non
     assert CURRENT_REAL_TRAJECTORY_STATUS == "NOT_IN_CURRENT_CONFIRMATORY_PLAN"
     assert REAL_TRAJECTORY_VALIDATION_CELL_COUNT == 0
     assert REAL_TRAJECTORY_VALUE_CLAIM_STATE == "NOT_TESTED"
+    assert CURRENT_REAL_TRAJECTORY_BOUNDARY.future_real_study_is_separate
     with pytest.raises(ValidationError, match="must be INELIGIBLE"):
         ExternalDatasetInventory.model_validate(
             inventory.model_dump() | {"eligibility_status": "ELIGIBLE"}
@@ -74,3 +78,15 @@ def test_external_inventory_requires_all_real_study_semantics_for_eligibility() 
         adjudication_time_provenance=True,
         requires_fabrication_or_unrelated_timestamp=True,
     ).established
+
+
+def test_real_trajectory_boundary_rejects_non_synthetic_or_nonzero_plan() -> None:
+    with pytest.raises(ValidationError, match="synthetic benchmark"):
+        RealTrajectoryBoundary(
+            planning_status="NOT_IN_CURRENT_CONFIRMATORY_PLAN",
+            confirmatory_dataset_kind=DatasetKind.EXTERNAL,
+            validation_experiment_name="Real-Trajectory Validation",
+            validation_cell_count=0,
+            claim_state="NOT_TESTED",
+            future_real_study_is_separate=True,
+        )

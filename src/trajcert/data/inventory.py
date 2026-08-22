@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from trajcert.domain.enums import DatasetKind
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
 
 
@@ -86,6 +89,35 @@ class ExternalDatasetInventory(BaseModel):
         return self
 
 
-CURRENT_REAL_TRAJECTORY_STATUS = "NOT_IN_CURRENT_CONFIRMATORY_PLAN"
-REAL_TRAJECTORY_VALIDATION_CELL_COUNT = 0
-REAL_TRAJECTORY_VALUE_CLAIM_STATE = "NOT_TESTED"
+class RealTrajectoryBoundary(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    planning_status: Literal["NOT_IN_CURRENT_CONFIRMATORY_PLAN"]
+    confirmatory_dataset_kind: DatasetKind
+    validation_experiment_name: Literal["Real-Trajectory Validation"]
+    validation_cell_count: int = Field(ge=0)
+    claim_state: Literal["NOT_TESTED"]
+    future_real_study_is_separate: bool
+
+    @model_validator(mode="after")
+    def validate_current_boundary(self) -> RealTrajectoryBoundary:
+        if self.confirmatory_dataset_kind is not DatasetKind.SYNTHETIC:
+            raise ValueError("current confirmatory plan must use the synthetic benchmark")
+        if self.validation_cell_count != 0:
+            raise ValueError("current real-trajectory validation must have zero cells")
+        if not self.future_real_study_is_separate:
+            raise ValueError("a future real study must remain separate from the current registry")
+        return self
+
+
+CURRENT_REAL_TRAJECTORY_BOUNDARY = RealTrajectoryBoundary(
+    planning_status="NOT_IN_CURRENT_CONFIRMATORY_PLAN",
+    confirmatory_dataset_kind=DatasetKind.SYNTHETIC,
+    validation_experiment_name="Real-Trajectory Validation",
+    validation_cell_count=0,
+    claim_state="NOT_TESTED",
+    future_real_study_is_separate=True,
+)
+CURRENT_REAL_TRAJECTORY_STATUS = CURRENT_REAL_TRAJECTORY_BOUNDARY.planning_status
+REAL_TRAJECTORY_VALIDATION_CELL_COUNT = CURRENT_REAL_TRAJECTORY_BOUNDARY.validation_cell_count
+REAL_TRAJECTORY_VALUE_CLAIM_STATE = CURRENT_REAL_TRAJECTORY_BOUNDARY.claim_state
