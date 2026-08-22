@@ -82,7 +82,7 @@ def certified_outer_projection(input_value: ProjectionInput) -> CertifiedProject
         initial_box = _ProjectionBox(
             ClosedInterval(input_value.envelope.harmful_lower, input_value.envelope.harmful_upper),
             ClosedInterval(input_value.envelope.correct_lower, input_value.envelope.correct_upper),
-            ClosedInterval(0, 1),
+            ClosedInterval(0, input_value.envelope.terminal_upper),
         )
         if not _box_is_feasible(initial_box, input_value.envelope):
             return _fallback_result(input_value, 0, 0, None)
@@ -123,9 +123,7 @@ def certified_outer_projection(input_value: ProjectionInput) -> CertifiedProject
                 if _box_is_feasible(child, input_value.envelope):
                     counter += 1
                     heapq.heappush(queue, (-_objective_upper(child), counter, child))
-        proven_upper = (
-            -queue[0][0] if queue else (feasible_incumbent if feasible_incumbent is not None else 1)
-        )
+        proven_upper = -queue[0][0] if queue else 1
         if not math.isfinite(proven_upper):
             proven_upper = 1
         return CertifiedProjectionResult(
@@ -272,13 +270,10 @@ def _point_slack(
 def _point_slack_upper(
     harmful_mass: float, correct_mass: float, timing_entropy: float, hidden_harmful_mass: float
 ) -> float:
-    return math.nextafter(
-        float(
-            _point_slack_enclosure(
-                harmful_mass, correct_mass, timing_entropy, hidden_harmful_mass
-            ).upper()
-        ),
-        math.inf,
+    return float(
+        _point_slack_enclosure(
+            harmful_mass, correct_mass, timing_entropy, hidden_harmful_mass
+        ).upper()
     )
 
 

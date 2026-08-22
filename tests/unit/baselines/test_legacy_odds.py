@@ -23,9 +23,7 @@ def test_legacy_feasible_interval_uses_analytic_constraints_and_structural_zeros
     compatible_law = legacy_partition_incoherence_cases(
         (2.0,), (0.1,), configuration.latent_outcome_probabilities, tolerance
     )[0].observable_law
-    interval = legacy_feasible_interval(
-        LegacyFeasibleIntervalInput(compatible_law, 2.0, tolerance)
-    )
+    interval = legacy_feasible_interval(LegacyFeasibleIntervalInput(compatible_law, 2.0, tolerance))
 
     assert interval.feasible
     assert interval.hidden_lower is not None

@@ -16,7 +16,7 @@ def test_certified_projection_compatibility_and_state_gates_share_one_summary_en
         SummaryEnvelopeState.VALID, 0.1, 0.1, 0.5, 0.5, 0.4, 0.4, 0, 0
     )
     projection = certified_outer_projection(ProjectionInput(envelope, 1, configuration.numerics))
-    compatibility_input = CompatibilityInput(envelope, configuration.numerics)
+    compatibility_input = CompatibilityInput(envelope, 1, configuration.numerics)
     compatibility = certified_compatibility_lower_bound(compatibility_input)
     intrinsic = certified_intrinsic_risk_lower_bound(compatibility_input)
     decision = classify_scientific_state(

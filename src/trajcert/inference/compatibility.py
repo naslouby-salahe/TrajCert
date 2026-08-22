@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import heapq
 import math
 from dataclasses import dataclass
 
@@ -8,11 +9,13 @@ from flint import ctx
 
 from trajcert.configuration.models import NumericsConfiguration
 from trajcert.inference.envelope import ConservativeSummaryEnvelope, SummaryEnvelopeState
+from trajcert.inference.projection import ClosedInterval, InformationSlackInput, information_slack
 
 
 @dataclass(frozen=True, slots=True)
 class CompatibilityInput:
     envelope: ConservativeSummaryEnvelope
+    information_budget: float
     numerics: NumericsConfiguration
 
 
@@ -21,6 +24,8 @@ class CompatibilityLowerBound:
     proven_lower: float | None
     precision_bits: int
     zero_resolved_mass_plausible: bool
+    visited_nodes: int
+    converged: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,24 +33,75 @@ class IntrinsicRiskLowerBound:
     proven_lower: float | None
     precision_bits: int
     zero_resolved_mass_plausible: bool
+    visited_nodes: int
+    converged: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _MassBox:
+    harmful: ClosedInterval
+    correct: ClosedInterval
+
+
+@dataclass(frozen=True, slots=True)
+class _IntrinsicBox:
+    harmful: ClosedInterval
+    correct: ClosedInterval
+    hidden: ClosedInterval
 
 
 def certified_compatibility_lower_bound(input_value: CompatibilityInput) -> CompatibilityLowerBound:
     if input_value.envelope.state is not SummaryEnvelopeState.VALID:
-        return CompatibilityLowerBound(
-            None, input_value.numerics.outer_minimum_arbitrary_precision_bits, True
-        )
+        return CompatibilityLowerBound(None, _precision(input_value), True, 0, False)
+    if input_value.information_budget < 0:
+        raise ValueError("information budget must be nonnegative")
     prior_precision = ctx.prec
-    ctx.prec = input_value.numerics.outer_minimum_arbitrary_precision_bits
+    ctx.prec = _precision(input_value)
     try:
-        zero_plausible = (
-            input_value.envelope.harmful_lower + input_value.envelope.correct_lower <= 0
+        initial = _MassBox(
+            ClosedInterval(input_value.envelope.harmful_lower, input_value.envelope.harmful_upper),
+            ClosedInterval(input_value.envelope.correct_lower, input_value.envelope.correct_upper),
         )
-        if zero_plausible:
-            return CompatibilityLowerBound(0, ctx.prec, True)
-        resolved_entropy_lower = _resolved_entropy_lower(input_value.envelope)
-        lower = resolved_entropy_lower - input_value.envelope.timing_entropy_upper
-        return CompatibilityLowerBound(math.nextafter(lower, -math.inf), ctx.prec, False)
+        if not _mass_box_feasible(initial, input_value.envelope):
+            return CompatibilityLowerBound(None, ctx.prec, True, 0, False)
+        queue: list[tuple[float, int, _MassBox]] = []
+        counter = 0
+        heapq.heappush(
+            queue, (_compatibility_lower(initial, input_value.envelope), counter, initial)
+        )
+        feasible_upper = math.inf
+        visited_nodes = 0
+        while queue and visited_nodes < input_value.numerics.outer_max_visited_nodes:
+            global_lower = queue[0][0]
+            if feasible_upper - global_lower <= input_value.numerics.outer_certified_gap:
+                return CompatibilityLowerBound(
+                    global_lower,
+                    ctx.prec,
+                    _zero_resolved_plausible(initial, input_value.envelope),
+                    visited_nodes,
+                    True,
+                )
+            _, _, box = heapq.heappop(queue)
+            visited_nodes += 1
+            feasible_upper = min(
+                feasible_upper, _compatibility_point_upper(box, input_value.envelope)
+            )
+            for child in _split_mass_box(box, initial, input_value.numerics):
+                if _mass_box_feasible(child, input_value.envelope):
+                    counter += 1
+                    heapq.heappush(
+                        queue,
+                        (_compatibility_lower(child, input_value.envelope), counter, child),
+                    )
+        return CompatibilityLowerBound(
+            queue[0][0] if queue else _compatibility_lower(initial, input_value.envelope),
+            ctx.prec,
+            _zero_resolved_plausible(initial, input_value.envelope),
+            visited_nodes,
+            False,
+        )
+    except (ArithmeticError, ValueError, ZeroDivisionError):
+        return CompatibilityLowerBound(None, _precision(input_value), True, 0, False)
     finally:
         ctx.prec = prior_precision
 
@@ -54,33 +110,145 @@ def certified_intrinsic_risk_lower_bound(
     input_value: CompatibilityInput,
 ) -> IntrinsicRiskLowerBound:
     if input_value.envelope.state is not SummaryEnvelopeState.VALID:
-        return IntrinsicRiskLowerBound(
-            None, input_value.numerics.outer_minimum_arbitrary_precision_bits, True
-        )
+        return IntrinsicRiskLowerBound(None, _precision(input_value), True, 0, False)
+    if input_value.information_budget < 0:
+        raise ValueError("information budget must be nonnegative")
     prior_precision = ctx.prec
-    ctx.prec = input_value.numerics.outer_minimum_arbitrary_precision_bits
+    ctx.prec = _precision(input_value)
     try:
-        zero_plausible = (
-            input_value.envelope.harmful_lower + input_value.envelope.correct_lower <= 0
+        initial = _IntrinsicBox(
+            ClosedInterval(input_value.envelope.harmful_lower, input_value.envelope.harmful_upper),
+            ClosedInterval(input_value.envelope.correct_lower, input_value.envelope.correct_upper),
+            ClosedInterval(0, input_value.envelope.terminal_upper),
         )
-        if zero_plausible:
-            return IntrinsicRiskLowerBound(None, ctx.prec, True)
-        denominator = input_value.envelope.harmful_lower + input_value.envelope.correct_upper
-        lower = input_value.envelope.harmful_lower / denominator
-        return IntrinsicRiskLowerBound(math.nextafter(lower, -math.inf), ctx.prec, False)
+        if not _intrinsic_box_feasible(initial, input_value.envelope):
+            return IntrinsicRiskLowerBound(None, ctx.prec, True, 0, False)
+        if _zero_resolved_compatible(input_value):
+            return IntrinsicRiskLowerBound(None, ctx.prec, True, 0, True)
+        queue: list[tuple[float, int, _IntrinsicBox]] = []
+        counter = 0
+        heapq.heappush(queue, (_intrinsic_lower(initial), counter, initial))
+        visited_nodes = 0
+        zero_resolved_plausible = False
+        feasible_upper = math.inf
+        while queue and visited_nodes < input_value.numerics.outer_max_visited_nodes:
+            global_lower = queue[0][0]
+            if feasible_upper - global_lower <= input_value.numerics.outer_certified_gap:
+                return IntrinsicRiskLowerBound(
+                    None if zero_resolved_plausible else global_lower,
+                    ctx.prec,
+                    zero_resolved_plausible,
+                    visited_nodes,
+                    not zero_resolved_plausible,
+                )
+            _, _, box = heapq.heappop(queue)
+            visited_nodes += 1
+            if (
+                _slack_lower(box, input_value.envelope.timing_entropy_upper)
+                > input_value.information_budget
+            ):
+                continue
+            if box.harmful.lower + box.correct.lower == 0:
+                zero_resolved_plausible = True
+            feasible_upper = min(
+                feasible_upper,
+                _intrinsic_point_upper(box, input_value.envelope, input_value.information_budget),
+            )
+            for child in _split_intrinsic_box(box, initial, input_value.numerics):
+                if _intrinsic_box_feasible(child, input_value.envelope):
+                    counter += 1
+                    heapq.heappush(queue, (_intrinsic_lower(child), counter, child))
+        global_lower = queue[0][0] if queue else math.inf
+        return IntrinsicRiskLowerBound(
+            None if zero_resolved_plausible or not math.isfinite(global_lower) else global_lower,
+            ctx.prec,
+            zero_resolved_plausible,
+            visited_nodes,
+            False,
+        )
+    except (ArithmeticError, ValueError, ZeroDivisionError):
+        return IntrinsicRiskLowerBound(None, _precision(input_value), True, 0, False)
     finally:
         ctx.prec = prior_precision
 
 
-def _resolved_entropy_lower(envelope: ConservativeSummaryEnvelope) -> float:
-    corners = (
-        (envelope.harmful_lower, envelope.correct_lower),
-        (envelope.harmful_lower, envelope.correct_upper),
-        (envelope.harmful_upper, envelope.correct_lower),
-        (envelope.harmful_upper, envelope.correct_upper),
+def _precision(input_value: CompatibilityInput) -> int:
+    return input_value.numerics.outer_minimum_arbitrary_precision_bits
+
+
+def _mass_box_feasible(box: _MassBox, envelope: ConservativeSummaryEnvelope) -> bool:
+    total = _sum_interval(box)
+    return total.upper >= 1 - envelope.terminal_upper and total.lower <= 1 - envelope.terminal_lower
+
+
+def _intrinsic_box_feasible(box: _IntrinsicBox, envelope: ConservativeSummaryEnvelope) -> bool:
+    terminal = _terminal_interval(box.harmful, box.correct)
+    return (
+        terminal.upper >= envelope.terminal_lower
+        and terminal.lower <= envelope.terminal_upper
+        and box.hidden.lower <= terminal.upper
     )
-    values = tuple(_resolved_entropy(harmful, correct) for harmful, correct in corners)
-    return min(values)
+
+
+def _sum_interval(box: _MassBox) -> ClosedInterval:
+    return ClosedInterval(
+        box.harmful.lower + box.correct.lower, box.harmful.upper + box.correct.upper
+    )
+
+
+def _terminal_interval(harmful: ClosedInterval, correct: ClosedInterval) -> ClosedInterval:
+    return ClosedInterval(
+        max(0, 1 - harmful.upper - correct.upper),
+        min(1, 1 - harmful.lower - correct.lower),
+    )
+
+
+def _compatibility_lower(box: _MassBox, envelope: ConservativeSummaryEnvelope) -> float:
+    points = _mass_vertices(box, envelope)
+    if not points:
+        return math.inf
+    return math.nextafter(
+        min(
+            _resolved_entropy(harmful, correct) - envelope.timing_entropy_upper
+            for harmful, correct in points
+        ),
+        -math.inf,
+    )
+
+
+def _compatibility_point_upper(box: _MassBox, envelope: ConservativeSummaryEnvelope) -> float:
+    points = _mass_vertices(box, envelope)
+    if not points:
+        return math.inf
+    return min(
+        _resolved_entropy(harmful, correct) - envelope.timing_entropy_upper
+        for harmful, correct in points
+    )
+
+
+def _mass_vertices(
+    box: _MassBox, envelope: ConservativeSummaryEnvelope
+) -> tuple[tuple[float, float], ...]:
+    lower_sum = 1 - envelope.terminal_upper
+    upper_sum = 1 - envelope.terminal_lower
+    candidates = {
+        (harmful, correct)
+        for harmful in (box.harmful.lower, box.harmful.upper)
+        for correct in (box.correct.lower, box.correct.upper)
+    }
+    for total in (lower_sum, upper_sum):
+        for harmful in (box.harmful.lower, box.harmful.upper):
+            candidates.add((harmful, total - harmful))
+        for correct in (box.correct.lower, box.correct.upper):
+            candidates.add((total - correct, correct))
+    return tuple(
+        (harmful, correct)
+        for harmful, correct in candidates
+        if box.harmful.lower <= harmful <= box.harmful.upper
+        and box.correct.lower <= correct <= box.correct.upper
+        and lower_sum <= harmful + correct <= upper_sum
+        and harmful + correct <= 1
+    )
 
 
 def _resolved_entropy(harmful_mass: float, correct_mass: float) -> float:
@@ -93,3 +261,120 @@ def _resolved_entropy(harmful_mass: float, correct_mass: float) -> float:
     harmful_term = flint.arb(0) if harmful_mass == 0 else -harmful * (harmful / total).log()
     correct_term = flint.arb(0) if correct_mass == 0 else -correct * (correct / total).log()
     return float(harmful_term + correct_term)
+
+
+def _slack_lower(box: _IntrinsicBox, timing_entropy_upper: float) -> float:
+    terminal = _terminal_interval(box.harmful, box.correct)
+    latent = ClosedInterval(
+        box.harmful.lower + box.hidden.lower,
+        min(1, box.harmful.upper + box.hidden.upper),
+    )
+    return _binary_entropy_lower(latent) - timing_entropy_upper - terminal.upper * math.log(2)
+
+
+def _binary_entropy_lower(interval: ClosedInterval) -> float:
+    if interval.lower <= 0 or interval.upper >= 1:
+        return 0
+    return math.nextafter(
+        min(_binary_entropy(interval.lower), _binary_entropy(interval.upper)), -math.inf
+    )
+
+
+def _binary_entropy(value: float) -> float:
+    point = flint.arb(str(value))
+    complement = flint.arb(1) - point
+    return float(-(point * point.log()) - (complement * complement.log()))
+
+
+def _intrinsic_lower(box: _IntrinsicBox) -> float:
+    denominator = box.harmful.upper + box.correct.upper
+    if denominator == 0:
+        return 0
+    return math.nextafter(box.harmful.lower / denominator, -math.inf)
+
+
+def _intrinsic_point_upper(
+    box: _IntrinsicBox,
+    envelope: ConservativeSummaryEnvelope,
+    information_budget: float,
+) -> float:
+    harmful = (box.harmful.lower + box.harmful.upper) / 2
+    correct = (box.correct.lower + box.correct.upper) / 2
+    terminal = 1 - harmful - correct
+    if terminal < 0 or harmful + correct == 0:
+        return math.inf
+    hidden = min(box.hidden.upper, terminal)
+    slack = information_slack(
+        InformationSlackInput(harmful, correct, envelope.timing_entropy_upper, hidden)
+    ).value
+    if slack > information_budget:
+        return math.inf
+    return harmful / (harmful + correct)
+
+
+def _zero_resolved_plausible(box: _MassBox, envelope: ConservativeSummaryEnvelope) -> bool:
+    return bool(_mass_vertices(box, envelope)) and box.harmful.lower + box.correct.lower == 0
+
+
+def _zero_resolved_compatible(input_value: CompatibilityInput) -> bool:
+    envelope = input_value.envelope
+    if not (
+        envelope.harmful_lower == 0
+        and envelope.correct_lower == 0
+        and envelope.terminal_lower <= 1 <= envelope.terminal_upper
+    ):
+        return False
+    return (
+        information_slack(InformationSlackInput(0, 0, envelope.timing_entropy_upper, 0)).value
+        <= input_value.information_budget
+    )
+
+
+def _split_mass_box(
+    box: _MassBox, initial: _MassBox, numerics: NumericsConfiguration
+) -> tuple[_MassBox, _MassBox]:
+    harmful_width = box.harmful.width / initial.harmful.width if initial.harmful.width else 0
+    correct_width = box.correct.width / initial.correct.width if initial.correct.width else 0
+    if harmful_width + numerics.outer_split_tie_tolerance >= correct_width:
+        midpoint = (box.harmful.lower + box.harmful.upper) / 2
+        return (
+            _MassBox(ClosedInterval(box.harmful.lower, midpoint), box.correct),
+            _MassBox(ClosedInterval(midpoint, box.harmful.upper), box.correct),
+        )
+    midpoint = (box.correct.lower + box.correct.upper) / 2
+    return (
+        _MassBox(box.harmful, ClosedInterval(box.correct.lower, midpoint)),
+        _MassBox(box.harmful, ClosedInterval(midpoint, box.correct.upper)),
+    )
+
+
+def _split_intrinsic_box(
+    box: _IntrinsicBox, initial: _IntrinsicBox, numerics: NumericsConfiguration
+) -> tuple[_IntrinsicBox, _IntrinsicBox]:
+    dimensions = (
+        (box.harmful.width / initial.harmful.width if initial.harmful.width else 0, "harmful"),
+        (box.correct.width / initial.correct.width if initial.correct.width else 0, "correct"),
+        (box.hidden.width / initial.hidden.width if initial.hidden.width else 0, "hidden"),
+    )
+    widest = max(width for width, _ in dimensions)
+    selected = next(
+        name for width, name in dimensions if widest - width <= numerics.outer_split_tie_tolerance
+    )
+    interval = getattr(box, selected)
+    midpoint = (interval.lower + interval.upper) / 2
+    lower = ClosedInterval(interval.lower, midpoint)
+    upper = ClosedInterval(midpoint, interval.upper)
+    if selected == "harmful":
+        return (
+            _IntrinsicBox(lower, box.correct, box.hidden),
+            _IntrinsicBox(upper, box.correct, box.hidden),
+        )
+    if selected == "correct":
+        return (
+            _IntrinsicBox(box.harmful, lower, box.hidden),
+            _IntrinsicBox(box.harmful, upper, box.hidden),
+        )
+    return (
+        _IntrinsicBox(box.harmful, box.correct, lower),
+        _IntrinsicBox(box.harmful, box.correct, upper),
+    )
