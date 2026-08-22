@@ -64,6 +64,19 @@ EXPERIMENT_DIRECTORIES = (
     "provenance/environment",
     "provenance/dependencies",
 )
+RESULT_EXPERIMENT_DIRECTORIES = (
+    "figures/main",
+    "figures/supplementary",
+    "tables/main",
+    "tables/supplementary",
+    "metrics/primary",
+    "metrics/secondary",
+    "metrics/summary",
+    "statistics/tests",
+    "statistics/confidence_intervals",
+    "statistics/effects",
+    "statistics/multiplicity",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,5 +107,16 @@ class Workspace:
     def materialize_experiment(self, experiment_name: str) -> Path:
         experiment_root = self.experiment_root(experiment_name)
         for relative_path in EXPERIMENT_DIRECTORIES:
+            (experiment_root / relative_path).mkdir(parents=True, exist_ok=True)
+        return experiment_root
+
+    def result_experiment_root(self, experiment_name: str) -> Path:
+        if not experiment_name:
+            raise ValueError("experiment name must not be empty")
+        return self.results_root / "experiments" / experiment_name
+
+    def materialize_result_experiment(self, experiment_name: str) -> Path:
+        experiment_root = self.result_experiment_root(experiment_name)
+        for relative_path in RESULT_EXPERIMENT_DIRECTORIES:
             (experiment_root / relative_path).mkdir(parents=True, exist_ok=True)
         return experiment_root
