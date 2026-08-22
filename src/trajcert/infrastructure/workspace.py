@@ -100,8 +100,7 @@ class Workspace:
             (self.results_root / relative_path).mkdir(parents=True, exist_ok=True)
 
     def experiment_root(self, experiment_name: str) -> Path:
-        if not experiment_name:
-            raise ValueError("experiment name must not be empty")
+        self.validate_experiment_name(experiment_name)
         return self.execution_root / "experiments" / experiment_name
 
     def materialize_experiment(self, experiment_name: str) -> Path:
@@ -111,8 +110,7 @@ class Workspace:
         return experiment_root
 
     def result_experiment_root(self, experiment_name: str) -> Path:
-        if not experiment_name:
-            raise ValueError("experiment name must not be empty")
+        self.validate_experiment_name(experiment_name)
         return self.results_root / "experiments" / experiment_name
 
     def materialize_result_experiment(self, experiment_name: str) -> Path:
@@ -120,3 +118,8 @@ class Workspace:
         for relative_path in RESULT_EXPERIMENT_DIRECTORIES:
             (experiment_root / relative_path).mkdir(parents=True, exist_ok=True)
         return experiment_root
+
+    @staticmethod
+    def validate_experiment_name(experiment_name: str) -> None:
+        if not experiment_name or Path(experiment_name).name != experiment_name:
+            raise ValueError("experiment name must be one nonempty path component")
