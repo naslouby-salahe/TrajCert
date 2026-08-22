@@ -1,13 +1,21 @@
 from __future__ import annotations
 
+import json
 import math
 import re
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from trajcert.domain.enums import EvidenceClass, PublicExecutionState
-from trajcert.infrastructure.storage import canonical_json_text
+from trajcert.infrastructure.storage import JSONValue, canonical_json_text
 
 Digest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 GitCommit = Annotated[str, Field(pattern=r"^[0-9a-f]{40}([0-9a-f]{24})?$")]
@@ -82,3 +90,45 @@ class ArtifactEnvelope(BaseModel):
         if value is not None and (value[0] not in "[{" or value[-1] not in "]}"):
             raise ValueError("semantic coordinates must be canonical JSON object or array text")
         return value
+
+    @model_validator(mode="after")
+    def validate_semantic_cell_fields(self) -> ArtifactEnvelope:
+        semantic_values = (
+            self.semantic_cell_key,
+            self.semantic_coordinates,
+            self.experiment_name,
+        )
+        if not any(value is not None for value in semantic_values):
+            return self
+        if any(value is None for value in semantic_values):
+            raise ValueError(
+                "semantic cell artifacts require key, coordinates, and experiment name together"
+            )
+        assert self.semantic_cell_key is not None
+        assert self.semantic_coordinates is not None
+        assert self.experiment_name is not None
+        parsed_coordinates = json.loads(self.semantic_coordinates)
+        if not isinstance(parsed_coordinates, dict):
+            raise ValueError("semantic coordinates must be a canonical JSON object")
+        coordinates = cast(dict[str, JSONValue], parsed_coordinates)
+        expected_key = f"{self.experiment_name}:{self.semantic_coordinates}"
+        if self.semantic_cell_key != expected_key:
+            raise ValueError("semantic cell key must match experiment name and coordinates")
+        coordinate_fields = (
+            ("method", "method_name"),
+            ("baseline", "baseline_name"),
+            ("dataset", "dataset_name"),
+            ("law", "synthetic_law_name"),
+            ("partition", "partition_name"),
+            ("rho", "rho"),
+            ("beta", "beta"),
+            ("delta", "delta"),
+        )
+        for coordinate_name, field_name in coordinate_fields:
+            coordinate_value = coordinates.get(coordinate_name)
+            field_value = getattr(self, field_name)
+            if coordinate_value is not None and field_value is None:
+                raise ValueError(f"{field_name} is required when {coordinate_name} is a coordinate")
+            if coordinate_value is not None and field_value != coordinate_value:
+                raise ValueError(f"{field_name} must match semantic coordinate {coordinate_name}")
+        return self

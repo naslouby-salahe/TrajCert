@@ -112,6 +112,8 @@ def test_artifact_envelope_composes_required_common_fields() -> None:
     envelope = artifact_envelope(
         semantic_cell_key='Population Sensitivity Utility:{"law":"Timing"}',
         semantic_coordinates='{"law":"Timing"}',
+        experiment_name="Population Sensitivity Utility",
+        synthetic_law_name="Timing",
         rho=0.05,
         seed_set_keys=("population-grid",),
     )
@@ -134,6 +136,24 @@ def test_artifact_envelope_rejects_invalid_digest_and_schema_version() -> None:
         artifact_envelope(schema_version=2)
     with pytest.raises(ValidationError, match="duplicate object keys"):
         artifact_envelope(semantic_coordinates='{"law":"Timing","law":"Other"}')
+
+
+def test_artifact_envelope_requires_consistent_semantic_cell_fields() -> None:
+    with pytest.raises(ValidationError, match="require key"):
+        artifact_envelope(experiment_name="Population Sensitivity Utility")
+    with pytest.raises(ValidationError, match="must match"):
+        artifact_envelope(
+            semantic_cell_key='Population Sensitivity Utility:{"law":"Timing"}',
+            semantic_coordinates='{"law":"Timing"}',
+            experiment_name="Other Experiment",
+            synthetic_law_name="Timing",
+        )
+    with pytest.raises(ValidationError, match="synthetic_law_name"):
+        artifact_envelope(
+            semantic_cell_key='Population Sensitivity Utility:{"law":"Timing"}',
+            semantic_coordinates='{"law":"Timing"}',
+            experiment_name="Population Sensitivity Utility",
+        )
 
 
 def test_artifact_envelope_accepts_git_commit_identity_without_treating_it_as_artifact_digest() -> (
@@ -198,10 +218,21 @@ def test_plan_ordering_and_digests_are_canonical() -> None:
         "dependency_coordinates": '{"law":"Timing"}',
     }
     unspecified = ExperimentPlanRow.model_validate(
-        common | {"semantic_cell_key": "cell-unspecified"}
+        common
+        | {
+            "semantic_cell_key": 'population:{"condition":"unspecified"}',
+            "semantic_coordinates": '{"condition":"unspecified"}',
+            "experiment_name": "population",
+        }
     )
     specified = ExperimentPlanRow.model_validate(
-        common | {"semantic_cell_key": "cell-specified", "rho": 0.05}
+        common
+        | {
+            "semantic_cell_key": 'population:{"rho":0.05}',
+            "semantic_coordinates": '{"rho":0.05}',
+            "experiment_name": "population",
+            "rho": 0.05,
+        }
     )
 
     assert ordered_plan_rows((specified, unspecified)) == (unspecified, specified)
