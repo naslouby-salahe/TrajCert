@@ -57,3 +57,22 @@ def test_every_declared_command_dispatches_to_its_explicit_handler() -> None:
     assert main(("run", "population-sensitivity-utility")) == 0
     assert main(("status",)) == 0
     assert main(("report",)) == 0
+
+
+def test_public_cli_rejects_every_forbidden_scientific_or_internal_selector() -> None:
+    forbidden_flags = (
+        "--execution-group",
+        "--seed",
+        "--rho",
+        "--beta",
+        "--delta",
+        "--partition",
+        "--baseline",
+        "--method",
+        "--variant",
+        "--scientific-configuration-file",
+        "--cache-checkpoint-mode",
+        "--internal-semantic-cell",
+    )
+    for flag in forbidden_flags:
+        assert main(("run", "population-sensitivity-utility", flag, "value")) == 2
