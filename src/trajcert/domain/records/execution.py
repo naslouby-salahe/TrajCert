@@ -3,10 +3,18 @@ from __future__ import annotations
 import math
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from trajcert.domain.enums import InternalExecutionState
 from trajcert.domain.records.artifacts import ArtifactEnvelope, CanonicalJson, Digest, GitCommit
+
+
+def _validate_utc_timestamp(value: datetime | None) -> datetime | None:
+    if value is not None:
+        offset = value.utcoffset()
+        if offset is None or offset.total_seconds() != 0:
+            raise ValueError("timestamps must be UTC")
+    return value
 
 
 class ExperimentPlanRow(ArtifactEnvelope):
@@ -52,6 +60,11 @@ class ActiveSemanticCellManifest(ArtifactEnvelope):
     host_runtime_fingerprint: Digest | None = None
     checkpoint_recovery_history: CanonicalJson
 
+    @field_validator("execution_start_timestamp", "execution_end_timestamp")
+    @classmethod
+    def validate_utc_execution_timestamp(cls, value: datetime | None) -> datetime | None:
+        return _validate_utc_timestamp(value)
+
     @model_validator(mode="after")
     def validate_execution_timestamps(self) -> ActiveSemanticCellManifest:
         if (
@@ -78,6 +91,13 @@ class ExecutionStateRecord(BaseModel):
     checkpoint_recovery_eligible: bool
     stale_artifact_keys: tuple[str, ...] = ()
     blocking_artifact_keys: tuple[str, ...] = ()
+
+    @field_validator("last_transition_timestamp")
+    @classmethod
+    def validate_utc_transition_timestamp(cls, value: datetime) -> datetime:
+        validated = _validate_utc_timestamp(value)
+        assert validated is not None
+        return validated
 
     @model_validator(mode="after")
     def validate_execution_state(self) -> ExecutionStateRecord:
