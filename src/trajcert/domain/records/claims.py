@@ -54,8 +54,14 @@ class CompletionMarker(BaseModel):
 
     @model_validator(mode="after")
     def validate_completion_evidence(self) -> CompletionMarker:
+        if len(set(self.required_artifact_keys)) != len(self.required_artifact_keys):
+            raise ValueError("required artifact keys must be unique")
+        if len(set(self.produced_artifact_keys)) != len(self.produced_artifact_keys):
+            raise ValueError("produced artifact keys must be unique")
         if len(self.produced_artifact_keys) != self.expected_artifact_count:
             raise ValueError("produced artifact count must equal the expected artifact count")
+        if set(self.produced_artifact_keys) != set(self.required_artifact_keys):
+            raise ValueError("produced artifact keys must exactly match required artifact keys")
         if self.completed_seed_count != self.expected_seed_count:
             raise ValueError("completed seed count must equal expected seed count")
         if not all(

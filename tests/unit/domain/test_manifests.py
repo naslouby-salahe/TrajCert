@@ -496,6 +496,10 @@ def test_failure_and_completion_records_require_valid_lineage_and_evidence() -> 
 
     assert failure.downstream_blocking is True
     assert marker.exit_status == 0
+    with pytest.raises(ValidationError, match="exactly match"):
+        CompletionMarker.model_validate(
+            marker.model_dump() | {"produced_artifact_keys": ("other",)}
+        )
     with pytest.raises(ValidationError, match="every validation gate"):
         CompletionMarker.model_validate(marker.model_dump() | {"metrics_complete": False})
 
