@@ -154,6 +154,8 @@ def test_artifact_envelope_requires_consistent_semantic_cell_fields() -> None:
             semantic_coordinates='{"law":"Timing"}',
             experiment_name="Population Sensitivity Utility",
         )
+    with pytest.raises(ValidationError):
+        artifact_envelope(execution_group="")
 
 
 def test_artifact_envelope_accepts_git_commit_identity_without_treating_it_as_artifact_digest() -> (
