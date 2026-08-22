@@ -13,10 +13,41 @@ class ConfidenceSequenceState(StrEnum):
     TECHNICAL_FAIL = "TECHNICAL_FAIL"
 
 
+class IndependentAnalysis(StrEnum):
+    THEOREM_IDENTITIES = "theorem identities"
+    PRODUCTION_ORACLE_VALIDATION = "production/oracle validation"
+    ANYTIME_COVERAGE = "anytime coverage"
+    PAIRED_SEQUENTIAL_UTILITY = "paired sequential utility"
+    RUNTIME = "runtime"
+    FUTURE_REAL_ANALYSIS = "future real analysis"
+
+
+class IndependentUnit(StrEnum):
+    DETERMINISTIC_CASE = "deterministic case; no stochastic unit"
+    EXACT_LAW_PARTITION_SENSITIVITY_CELL = "exact law x partition x sensitivity cell"
+    INDEPENDENT_EVENT_STREAM = "one independent event stream"
+    SHARED_EVENT_STREAM = "one independent event stream shared across methods"
+    ISOLATED_MEASURED_INVOCATION = "one isolated measured invocation"
+    STABLE_STREAM_EPOCH = "one stable stream/epoch"
+
+
 @dataclass(frozen=True, slots=True)
 class ProbabilityBracket:
     lower: float
     upper: float
+
+
+INDEPENDENT_UNIT_CONTRACTS = (
+    (IndependentAnalysis.THEOREM_IDENTITIES, IndependentUnit.DETERMINISTIC_CASE),
+    (
+        IndependentAnalysis.PRODUCTION_ORACLE_VALIDATION,
+        IndependentUnit.EXACT_LAW_PARTITION_SENSITIVITY_CELL,
+    ),
+    (IndependentAnalysis.ANYTIME_COVERAGE, IndependentUnit.INDEPENDENT_EVENT_STREAM),
+    (IndependentAnalysis.PAIRED_SEQUENTIAL_UTILITY, IndependentUnit.SHARED_EVENT_STREAM),
+    (IndependentAnalysis.RUNTIME, IndependentUnit.ISOLATED_MEASURED_INVOCATION),
+    (IndependentAnalysis.FUTURE_REAL_ANALYSIS, IndependentUnit.STABLE_STREAM_EPOCH),
+)
 
 
 @dataclass(frozen=True, slots=True)
