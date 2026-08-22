@@ -1,49 +1,10 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
-from enum import StrEnum
 
 from trajcert.configuration.models import NumericsConfiguration
 from trajcert.math.information_profile import InformationProfile
-
-
-class PopulationRiskSetState(StrEnum):
-    INCOMPATIBLE = "INCOMPATIBLE"
-    SINGLETON = "SINGLETON"
-    INTERVAL = "INTERVAL"
-
-
-class SafetyState(StrEnum):
-    RESOLVED_HARM_EXCEEDS_BUDGET = "RESOLVED_HARM_EXCEEDS_BUDGET"
-    INTRINSICALLY_UNCERTIFIABLE = "INTRINSICALLY_UNCERTIFIABLE"
-    FRONTIER = "FRONTIER"
-    ASSUMPTION_FREE_SAFE = "ASSUMPTION_FREE_SAFE"
-    DEGENERATE_SAFETY_INTERVAL = "DEGENERATE_SAFETY_INTERVAL"
-
-
-@dataclass(frozen=True, slots=True)
-class RootDiagnostics:
-    lower_bracket: float
-    upper_bracket: float
-    returned_root: float
-    residual: float
-    iterations: int
-
-
-@dataclass(frozen=True, slots=True)
-class PopulationRiskSet:
-    state: PopulationRiskSetState
-    lower_risk: float | None
-    upper_risk: float | None
-    lower_root: RootDiagnostics | None
-    upper_root: RootDiagnostics | None
-
-
-@dataclass(frozen=True, slots=True)
-class SafetyResult:
-    state: SafetyState
-    frontier_information_budget: float | None
+from trajcert.math.risk_set import PopulationRiskSet, PopulationRiskSetState, RootDiagnostics
 
 
 def conditional_timing_gain(
@@ -136,18 +97,3 @@ def bisect_branch(
             break
     root = (lower + upper) / 2.0
     return RootDiagnostics(lower, upper, root, abs(profile.value(root) - rho), completed_iterations)
-
-
-def safety_result(profile: InformationProfile, beta: float) -> SafetyResult:
-    if not 0.0 <= beta <= 1.0:
-        raise ValueError("risk budget must lie in [0, 1]")
-    if beta < profile.harmful_total:
-        return SafetyResult(SafetyState.RESOLVED_HARM_EXCEEDS_BUDGET, None)
-    floor = profile.compatibility_floor()
-    if floor.latent_risk is None:
-        return SafetyResult(SafetyState.DEGENERATE_SAFETY_INTERVAL, None)
-    if beta < floor.latent_risk:
-        return SafetyResult(SafetyState.INTRINSICALLY_UNCERTIFIABLE, None)
-    if beta >= profile.harmful_total + profile.unresolved_mass:
-        return SafetyResult(SafetyState.ASSUMPTION_FREE_SAFE, None)
-    return SafetyResult(SafetyState.FRONTIER, profile.value(beta - profile.harmful_total))

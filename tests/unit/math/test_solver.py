@@ -3,13 +3,9 @@ import math
 from trajcert.configuration.loading import load_configuration
 from trajcert.data.partitions import ObservableLaw
 from trajcert.math.information_profile import InformationProfile
-from trajcert.math.solver import (
-    PopulationRiskSetState,
-    SafetyState,
-    conditional_timing_gain,
-    safety_result,
-    solve_population_risk_set,
-)
+from trajcert.math.risk_set import PopulationRiskSetState
+from trajcert.math.safety import SafetyState, safety_result
+from trajcert.math.solver import conditional_timing_gain, solve_population_risk_set
 
 
 def test_population_solver_classifies_and_brackets_roots() -> None:
