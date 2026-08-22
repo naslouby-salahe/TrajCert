@@ -1,15 +1,27 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from hashlib import sha256
 
 from trajcert.data.ledger import ActionRecord, Adjudication, MaturedCategory
 from trajcert.data.synthetic.generator import SyntheticEvent
 from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
+from trajcert.domain.enums import DatasetKind
 from trajcert.domain.identity import LocalCertificateIdentity
+from trajcert.domain.manifests import DatasetManifest
+from trajcert.infrastructure.storage import JSONValue, canonical_json_bytes
 
 SYNTHETIC_CLIENT_ID = "synthetic-client"
 SYNTHETIC_ACTION_CHANNEL_ID = "automatic-action"
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedSyntheticLedger:
+    records: tuple[ActionRecord, ...]
+    dataset_manifest: DatasetManifest
+    ledger_checksum: str
 
 
 def synthetic_law_slug(name: str) -> str:
@@ -42,6 +54,71 @@ def synthetic_ledger_records(
     )
 
 
+def prepare_synthetic_ledger(
+    law: SyntheticTrajectoryLaw,
+    stream_index: int,
+    events: tuple[SyntheticEvent, ...],
+    epoch_start: datetime,
+    scientific_comparison_guard: float,
+) -> PreparedSyntheticLedger:
+    if scientific_comparison_guard < 0:
+        raise ValueError("scientific comparison guard must be nonnegative")
+    observable_law = law.observable_law()
+    probabilities = (
+        *observable_law.harmful_masses,
+        *observable_law.correct_masses,
+        observable_law.unresolved_mass,
+    )
+    if any(not 0 <= probability <= 1 for probability in probabilities):
+        raise ValueError("synthetic probabilities must lie in [0, 1]")
+    if abs(sum(probabilities) - 1) > scientific_comparison_guard:
+        raise ValueError("synthetic probabilities must sum to one within comparison guard")
+    records = tuple(
+        sorted(
+            synthetic_ledger_records(law, stream_index, events, epoch_start),
+            key=lambda record: record.event_id,
+        )
+    )
+    payload = canonical_json_bytes(_ledger_payload(records))
+    checksum = sha256(payload).hexdigest()
+    law_payload = canonical_json_bytes(_law_payload(law))
+    source_checksum = sha256(law_payload).hexdigest()
+    manifest = DatasetManifest(
+        dataset_name=law.name,
+        dataset_kind=DatasetKind.SYNTHETIC,
+        generator_name="trajcert.data.synthetic.generator",
+        generator_code_digest=source_checksum,
+        source_version="synthetic-law-v1",
+        source_checksum=source_checksum,
+        event_semantics="IID sampled (L,J) trajectory events",
+        label_semantics="L is revealed only for finite J",
+        time_semantics="issue and maturity ages are fixed synthetic age units",
+        terminal_horizon=_integral_age_unit(law.terminal_horizon),
+        finest_partition_name=f"{law.resolved_band_count}-band partition",
+        number_of_categories=2 * law.resolved_band_count + 1,
+        documented_expected_structure=law_payload.decode("utf-8"),
+        observed_raw_structure=canonical_json_bytes(
+            {"event_count": len(records), "stream_index": stream_index}
+        ).decode("utf-8"),
+        field_mapping_json=canonical_json_bytes(
+            {
+                "correctness_label": "sampled L when finite J",
+                "resolution_band": "sampled finite J band",
+                "terminal": "unresolved J=infinity",
+            }
+        ).decode("utf-8"),
+        population_parameters=law_payload.decode("utf-8"),
+        known_full_law=True,
+        known_theta=law.theta,
+        known_observable_probabilities=canonical_json_bytes(
+            {"probabilities": probabilities}
+        ).decode("utf-8"),
+        preprocessing_digest=checksum,
+        eligibility_status="ELIGIBLE",
+    )
+    return PreparedSyntheticLedger(records, manifest, checksum)
+
+
 def _synthetic_action_record(
     law: SyntheticTrajectoryLaw,
     event: SyntheticEvent,
@@ -71,11 +148,48 @@ def _integral_age_unit(value: float) -> int:
     return int(value)
 
 
+def _law_payload(law: SyntheticTrajectoryLaw) -> dict[str, float | int | str]:
+    return {
+        "K": law.resolved_band_count,
+        "lambda0": law.lambda0,
+        "lambda1": law.lambda1,
+        "name": law.name,
+        "q0": law.q0,
+        "q1": law.q1,
+        "terminal_horizon": law.terminal_horizon,
+        "theta": law.theta,
+    }
+
+
+def _ledger_payload(records: tuple[ActionRecord, ...]) -> tuple[dict[str, JSONValue], ...]:
+    return tuple(
+        {
+            "action_channel_id": record.identity.action_channel_id,
+            "adjudication_completion_age": (
+                None
+                if record.adjudication is None
+                else (record.adjudication.timestamp - record.issued_at).days
+            ),
+            "client_id": record.identity.client_id,
+            "correctness_label": None
+            if record.adjudication is None
+            else record.adjudication.harmful,
+            "epoch_id": record.identity.epoch_id,
+            "event_id": record.event_id,
+            "issue_age_unit": record.issued_at.isoformat(),
+            "maturity_age_unit": record.maturity_timestamp.isoformat(),
+        }
+        for record in records
+    )
+
+
 __all__ = [
     "SYNTHETIC_ACTION_CHANNEL_ID",
     "SYNTHETIC_CLIENT_ID",
     "ActionRecord",
     "MaturedCategory",
+    "PreparedSyntheticLedger",
+    "prepare_synthetic_ledger",
     "synthetic_law_slug",
     "synthetic_ledger_records",
 ]

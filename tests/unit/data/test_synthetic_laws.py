@@ -9,7 +9,7 @@ from trajcert.data.synthetic.laws import (
     synthetic_law_roles,
     synthetic_scaling_laws,
 )
-from trajcert.data.synthetic.ledger import synthetic_ledger_records
+from trajcert.data.synthetic.ledger import prepare_synthetic_ledger, synthetic_ledger_records
 from trajcert.math.information_profile import InformationProfile
 
 
@@ -76,6 +76,27 @@ def test_synthetic_ledger_records_have_canonical_identity_and_terminal_semantics
     assert records[0].adjudication is not None
     assert records[0].adjudication.timestamp == datetime(2026, 1, 5, tzinfo=UTC)
     assert records[1].adjudication is None
+
+
+def test_synthetic_preparation_returns_canonical_checksum_and_manifest() -> None:
+    law = SyntheticTrajectoryLaw("Test law", 0.5, 0.0, 1.0, 0.0, 0.0, 2, 8.0)
+    events = (SyntheticEvent(0, True, 1, True), SyntheticEvent(1, False, None, True))
+
+    prepared = prepare_synthetic_ledger(
+        law,
+        3,
+        events,
+        datetime(2026, 1, 1, tzinfo=UTC),
+        1e-12,
+    )
+
+    assert prepared.ledger_checksum == prepared.dataset_manifest.preprocessing_digest
+    assert prepared.dataset_manifest.known_full_law
+    assert prepared.dataset_manifest.number_of_categories == 5
+    assert tuple(record.event_id for record in prepared.records) == (
+        "test-law::S000003::E000000",
+        "test-law::S000003::E000001",
+    )
 
 
 def test_minimum_information_completion_preserves_observable_law_and_hits_floor() -> None:
