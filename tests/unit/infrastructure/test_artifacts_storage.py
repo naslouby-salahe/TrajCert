@@ -11,6 +11,7 @@ from trajcert.domain.serialization import (
 )
 from trajcert.infrastructure.artifacts import (
     artifact_envelope_arrow_schema,
+    canonical_active_path,
     canonical_physical_types,
     descriptive_artifact_key,
     semantic_cell_key,
@@ -137,3 +138,11 @@ def test_semantic_identity_constructors_are_deterministic_and_not_hashes() -> No
     assert key == 'Population Sensitivity Utility:{"law":"Timing and terminal","rho":0.05}'
     assert artifact_key == "population_result-law=timing-and-terminal-rho=0.05"
     assert len(key) != 64
+
+
+def test_each_semantic_cell_has_one_deterministic_active_location(tmp_path: Path) -> None:
+    key = semantic_cell_key("population", {"rho": 0.05})
+    assert canonical_active_path(tmp_path, key) == canonical_active_path(tmp_path, key)
+    assert canonical_active_path(tmp_path, key) != canonical_active_path(
+        tmp_path, semantic_cell_key("population", {"rho": 0.1})
+    )

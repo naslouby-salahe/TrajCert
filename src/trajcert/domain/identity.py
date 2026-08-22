@@ -1,4 +1,5 @@
 import math
+from collections.abc import Mapping, MutableMapping
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -50,3 +51,31 @@ class ScientificCellIdentity(BaseModel):
         if value is not None and not math.isfinite(value):
             raise ValueError("scientific identity coordinates must be finite")
         return value
+
+    def semantic_coordinates(self) -> Mapping[str, CanonicalJson | float | int | str]:
+        coordinates: MutableMapping[str, CanonicalJson | float | int | str] = {
+            "experiment_name": self.experiment_name,
+            "dataset_id_or_synthetic_law_name": self.dataset_id_or_synthetic_law_name,
+        }
+        optional_coordinates = (
+            ("partition_name", self.partition_name),
+            ("comparison_pair_name", self.comparison_pair_name),
+            ("method_name", self.method_name),
+            ("baseline_name", self.baseline_name),
+            ("rho", self.rho),
+            ("beta", self.beta),
+            ("delta", self.delta),
+            ("Gamma", self.gamma),
+            ("pattern_mixture_C", self.pattern_mixture_c),
+            ("failure_boundary_axis_and_level", self.failure_boundary_axis_and_level),
+            ("K", self.k),
+            ("seed_index_or_deterministic_seed_block", self.seed_index_or_deterministic_seed_block),
+            (
+                "other_explicit_sensitivity_or_ablation_coordinates",
+                self.other_explicit_sensitivity_or_ablation_coordinates,
+            ),
+        )
+        for name, value in optional_coordinates:
+            if value is not None:
+                coordinates[name] = value
+        return coordinates
