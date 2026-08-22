@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from trajcert.domain.enums import ScientificState
 
@@ -52,4 +52,50 @@ class PopulationMetricsRecord(BaseModel):
     def validate_finite_scientific_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("scientific result values must be finite")
+        return value
+
+
+class SequentialUpdateRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    stream_seed_index: int = Field(ge=0)
+    n_matured: int = Field(ge=0)
+    n_resolved: int = Field(ge=0)
+    n_unresolved: int = Field(ge=0)
+    confidence_region_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    rho_comp_lower: float | None = None
+    theta_dagger_lower: float | None = None
+    risk_upper_anytime: float | None = None
+    operational_state: ScientificState | None = None
+    evidence_gate_pass: bool
+    optimizer_proven_upper: float | None = None
+    optimizer_feasible_lower: float | None = None
+    optimizer_gap: float | None = Field(default=None, ge=0)
+    optimizer_node_count: int | None = Field(default=None, ge=0)
+    optimizer_termination: str | None = None
+    true_theta: float | None = None
+    ever_violation_to_date: bool
+
+    @field_validator(
+        "rho_comp_lower",
+        "theta_dagger_lower",
+        "risk_upper_anytime",
+        "optimizer_proven_upper",
+        "optimizer_feasible_lower",
+        "optimizer_gap",
+        "true_theta",
+    )
+    @classmethod
+    def validate_finite_sequential_value(cls, value: float | None) -> float | None:
+        if value is not None and not math.isfinite(value):
+            raise ValueError("sequential result values must be finite")
+        return value
+
+    @field_validator("n_unresolved")
+    @classmethod
+    def validate_count_decomposition(cls, value: int, info: ValidationInfo) -> int:
+        matured = info.data.get("n_matured")
+        resolved = info.data.get("n_resolved")
+        if isinstance(matured, int) and isinstance(resolved, int) and resolved + value != matured:
+            raise ValueError("resolved and unresolved counts must sum to matured events")
         return value
