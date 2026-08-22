@@ -33,6 +33,7 @@ from trajcert.domain.records.results import (
     PairedComparisonRecord,
     PopulationMetricsRecord,
     SequentialUpdateRecord,
+    StatisticalTestRecord,
     StreamMetricsRecord,
 )
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
@@ -448,3 +449,22 @@ def test_paired_comparison_rejects_nonfinite_metric_values() -> None:
     assert comparison.paired_difference_favorable_direction > 0
     with pytest.raises(ValidationError, match="finite"):
         PairedComparisonRecord.model_validate(comparison.model_dump() | {"rho": math.nan})
+
+
+def test_statistical_test_record_rejects_invalid_probability_values() -> None:
+    statistical_test = StatisticalTestRecord(
+        claim_name="Timing value",
+        comparison_name="timing-risk-upper",
+        experimental_unit="event stream",
+        n_pairs=500,
+        alternative="greater",
+        test_name="sign-flip",
+        permutation_count=20000,
+        raw_p_value=0.01,
+        holm_family_size=54,
+        standardized_effect_status="FINITE",
+    )
+
+    assert statistical_test.raw_p_value == 0.01
+    with pytest.raises(ValidationError):
+        StatisticalTestRecord.model_validate(statistical_test.model_dump() | {"raw_p_value": 1.1})

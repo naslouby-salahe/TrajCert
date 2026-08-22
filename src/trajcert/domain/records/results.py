@@ -146,3 +146,27 @@ class PairedComparisonRecord(BaseModel):
         if not math.isfinite(value):
             raise ValueError("paired comparison values must be finite")
         return value
+
+
+class StatisticalTestRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    claim_name: str = Field(min_length=1)
+    comparison_name: str = Field(min_length=1)
+    experimental_unit: str = Field(min_length=1)
+    n_pairs: int = Field(ge=0)
+    alternative: str = Field(min_length=1)
+    test_name: str = Field(min_length=1)
+    permutation_count: int = Field(ge=0)
+    raw_p_value: float = Field(ge=0, le=1)
+    holm_family_size: int = Field(gt=0)
+    holm_adjusted_p_value: float | None = Field(default=None, ge=0, le=1)
+    standardized_effect: float | None = None
+    standardized_effect_status: str = Field(min_length=1)
+
+    @field_validator("raw_p_value", "holm_adjusted_p_value", "standardized_effect")
+    @classmethod
+    def validate_finite_statistical_value(cls, value: float | None) -> float | None:
+        if value is not None and not math.isfinite(value):
+            raise ValueError("statistical values must be finite")
+        return value
