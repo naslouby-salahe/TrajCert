@@ -127,6 +127,26 @@ class Workspace:
             return False
         return not any(part in NON_AUTHORITATIVE_OUTPUT_SEGMENTS for part in relative_path.parts)
 
+    def evaluation_record_path(
+        self,
+        experiment_name: str,
+        law_name: str,
+        partition_name: str,
+        method_name: str,
+        rho_name: str,
+    ) -> Path:
+        coordinates = (law_name, partition_name, method_name, rho_name)
+        if any(not coordinate or Path(coordinate).name != coordinate for coordinate in coordinates):
+            raise ValueError("semantic path coordinates must be nonempty path components")
+        return (
+            self.experiment_root(experiment_name)
+            / "evaluations/records"
+            / f"law={law_name}"
+            / f"partition={partition_name}"
+            / f"method={method_name}"
+            / f"rho={rho_name}"
+        )
+
     @staticmethod
     def validate_experiment_name(experiment_name: str) -> None:
         if not experiment_name or Path(experiment_name).name != experiment_name:
