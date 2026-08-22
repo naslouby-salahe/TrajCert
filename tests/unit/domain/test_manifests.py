@@ -377,6 +377,14 @@ def test_cell_manifest_and_execution_state_reject_impossible_lifecycle_data() ->
 
     assert cell.expected_artifacts == ("population_result",)
     assert state.state is InternalExecutionState.RUNNING
+    with pytest.raises(ValidationError, match="UTC"):
+        ExecutionStateRecord.model_validate(
+            state.model_dump() | {"last_transition_timestamp": datetime(2026, 1, 1)}
+        )
+    with pytest.raises(ValidationError, match="UTC"):
+        ActiveSemanticCellManifest.model_validate(
+            cell.model_dump() | {"execution_start_timestamp": datetime(2026, 1, 1)}
+        )
     with pytest.raises(ValidationError, match="both failed and completed"):
         ExecutionStateRecord(
             state=InternalExecutionState.FAILED,
