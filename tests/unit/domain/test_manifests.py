@@ -84,3 +84,11 @@ def test_artifact_envelope_rejects_invalid_digest_and_schema_version() -> None:
         artifact_envelope(scientific_specification_digest="wrong")
     with pytest.raises(ValidationError):
         artifact_envelope(schema_version=2)
+
+
+def test_artifact_envelope_accepts_git_commit_identity_without_treating_it_as_artifact_digest() -> (
+    None
+):
+    envelope = artifact_envelope(code_commit="b" * 40)
+
+    assert envelope.code_commit == "b" * 40
