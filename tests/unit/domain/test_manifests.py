@@ -20,7 +20,7 @@ from trajcert.domain.manifests import (
     SeedManifest,
 )
 from trajcert.domain.records.artifacts import ArtifactEnvelope
-from trajcert.domain.records.claims import CompletionMarker, FailureRecord
+from trajcert.domain.records.claims import ClaimRegistryRecord, CompletionMarker, FailureRecord
 from trajcert.domain.records.execution import (
     ActiveSemanticCellManifest,
     DependencyFingerprintInput,
@@ -407,3 +407,24 @@ def test_failure_and_completion_records_require_valid_lineage_and_evidence() -> 
     assert marker.exit_status == 0
     with pytest.raises(ValidationError, match="every validation gate"):
         CompletionMarker.model_validate(marker.model_dump() | {"metrics_complete": False})
+
+
+def test_supported_claims_require_persisted_evidence_digests() -> None:
+    claim = ClaimRegistryRecord(
+        claim_name="Timing value",
+        exact_claim="Resolved timing tightens the upper risk bound under the declared conditions.",
+        research_question="Does resolved timing improve certification?",
+        supporting_experiments=("Partition Coherence",),
+        primary_metric="Risk upper bound",
+        minimum_support_condition="Declared evidence gate passes.",
+        failure_condition="Evidence gate fails.",
+        valid_scope="Synthetic local epoch.",
+        forbidden_extrapolation="No real-trajectory claim.",
+        final_state="SUPPORTED",
+        final_state_reason="All configured cells passed.",
+        evidence_artifact_digests=("b" * 64,),
+    )
+
+    assert claim.final_state == "SUPPORTED"
+    with pytest.raises(ValidationError, match="evidence artifact digests"):
+        ClaimRegistryRecord.model_validate(claim.model_dump() | {"evidence_artifact_digests": ()})
