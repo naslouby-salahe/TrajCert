@@ -2,6 +2,7 @@ from pathlib import Path
 
 from trajcert.domain.enums import (
     AUTHORITATIVE_EVIDENCE_CLASSES,
+    DatasetEligibilityStatus,
     EvidenceClass,
     InternalExecutionState,
     PublicExecutionState,
@@ -12,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_authoritative_vocabularies_are_exact() -> None:
+    assert {entry.value for entry in DatasetEligibilityStatus} == {"ELIGIBLE", "INELIGIBLE"}
     assert {entry.value for entry in ScientificState} == {
         "CERTIFIED",
         "UNCERTIFIED",
