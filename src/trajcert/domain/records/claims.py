@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import json
+import re
+from typing import cast
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
+from trajcert.infrastructure.storage import JSONValue
+
+DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 
 class FailureRecord(BaseModel):
@@ -34,9 +41,12 @@ class FailureRecord(BaseModel):
 class CompletionMarker(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
 
+    semantic_cell_key: str = Field(min_length=1)
     cell_plan_digest: Digest
     scientific_specification_digest: Digest
     scientific_dependency_digest: Digest
+    provenance_fingerprint: Digest
+    dependency_fingerprint: Digest
     manifest_digest: Digest
     required_artifact_keys: tuple[str, ...]
     produced_artifact_keys: tuple[str, ...]
@@ -62,6 +72,17 @@ class CompletionMarker(BaseModel):
             raise ValueError("produced artifact count must equal the expected artifact count")
         if set(self.produced_artifact_keys) != set(self.required_artifact_keys):
             raise ValueError("produced artifact keys must exactly match required artifact keys")
+        parsed_artifact_digests = json.loads(self.artifact_sha256_map)
+        if not isinstance(parsed_artifact_digests, dict):
+            raise ValueError("artifact checksum map must be a canonical JSON object")
+        artifact_digests = cast(dict[str, JSONValue], parsed_artifact_digests)
+        if set(artifact_digests) != set(self.produced_artifact_keys):
+            raise ValueError("artifact checksum map must exactly match produced artifact keys")
+        if not all(
+            isinstance(digest, str) and DIGEST_PATTERN.fullmatch(digest)
+            for digest in artifact_digests.values()
+        ):
+            raise ValueError("artifact checksum map values must be SHA-256 digests")
         if self.completed_seed_count != self.expected_seed_count:
             raise ValueError("completed seed count must equal expected seed count")
         if not all(

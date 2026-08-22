@@ -518,14 +518,17 @@ def test_failure_and_completion_records_require_valid_lineage_and_evidence() -> 
         downstream_blocking=True,
     )
     marker = CompletionMarker(
+        semantic_cell_key="population-cell",
         cell_plan_digest=digest,
         scientific_specification_digest=digest,
         scientific_dependency_digest=digest,
+        provenance_fingerprint=digest,
+        dependency_fingerprint=digest,
         manifest_digest=digest,
         required_artifact_keys=("result",),
         produced_artifact_keys=("result",),
         expected_artifact_count=1,
-        artifact_sha256_map="{}",
+        artifact_sha256_map='{"result":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}',
         completed_seed_count=0,
         expected_seed_count=0,
         metrics_complete=True,
@@ -545,6 +548,8 @@ def test_failure_and_completion_records_require_valid_lineage_and_evidence() -> 
         )
     with pytest.raises(ValidationError, match="every validation gate"):
         CompletionMarker.model_validate(marker.model_dump() | {"metrics_complete": False})
+    with pytest.raises(ValidationError, match="checksum map"):
+        CompletionMarker.model_validate(marker.model_dump() | {"artifact_sha256_map": "{}"})
 
 
 def test_supported_claims_require_persisted_evidence_digests() -> None:
