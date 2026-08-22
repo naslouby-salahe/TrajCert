@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -71,8 +72,8 @@ def prepare_synthetic_ledger(
     epoch_start: datetime,
     scientific_comparison_guard: float,
 ) -> PreparedSyntheticLedger:
-    if scientific_comparison_guard < 0:
-        raise ValueError("scientific comparison guard must be nonnegative")
+    if not math.isfinite(scientific_comparison_guard) or scientific_comparison_guard < 0:
+        raise ValueError("scientific comparison guard must be finite and nonnegative")
     observable_law = law.observable_law()
     probabilities = (
         *observable_law.harmful_masses,
