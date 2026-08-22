@@ -1,2 +1,2 @@
 class LedgerIntegrityError(ValueError):
-    pass
+    __slots__ = ()
