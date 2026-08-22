@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from trajcert.domain.enums import EvidenceClass, PublicExecutionState
 
 Digest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+GitCommit = Annotated[str, Field(pattern=r"^[0-9a-f]{40}([0-9a-f]{24})?$")]
 DescriptiveKey = Annotated[str, Field(min_length=1, pattern=r"^[A-Za-z0-9][A-Za-z0-9._=-]*$")]
 CanonicalJson = Annotated[str, Field(min_length=2)]
 SCHEMA_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -45,7 +46,7 @@ class ArtifactEnvelope(BaseModel):
     beta: float | None = None
     delta: float | None = None
     environment_lock_digest: Digest | None = None
-    code_commit: Digest | None = None
+    code_commit: GitCommit | None = None
     seed_set_keys: tuple[str, ...] = ()
     parent_artifact_keys: tuple[str, ...] = ()
     parent_artifact_digests: tuple[Digest, ...] = ()
