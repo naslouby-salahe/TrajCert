@@ -28,7 +28,7 @@ from trajcert.domain.records.execution import (
     ExperimentPlanRow,
     ProvenanceFingerprintInput,
 )
-from trajcert.domain.records.results import PopulationMetricsRecord
+from trajcert.domain.records.results import PopulationMetricsRecord, SequentialUpdateRecord
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
 from trajcert.infrastructure.fingerprints import dependency_fingerprint, provenance_fingerprint
 
@@ -333,3 +333,19 @@ def test_population_metrics_use_nulls_for_undefined_quantities_and_reject_nonfin
     assert metrics.tau is None
     with pytest.raises(ValidationError, match="finite"):
         PopulationMetricsRecord.model_validate(metrics.model_dump() | {"risk_upper": math.inf})
+
+
+def test_sequential_update_requires_consistent_matured_category_counts() -> None:
+    record = SequentialUpdateRecord(
+        stream_seed_index=0,
+        n_matured=10,
+        n_resolved=7,
+        n_unresolved=3,
+        confidence_region_digest="0" * 64,
+        evidence_gate_pass=False,
+        ever_violation_to_date=False,
+    )
+
+    assert record.n_unresolved == 3
+    with pytest.raises(ValidationError, match="sum to matured"):
+        SequentialUpdateRecord.model_validate(record.model_dump() | {"n_unresolved": 2})
