@@ -30,6 +30,7 @@ from trajcert.domain.records.execution import (
     ProvenanceFingerprintInput,
 )
 from trajcert.domain.records.results import (
+    PairedComparisonRecord,
     PopulationMetricsRecord,
     SequentialUpdateRecord,
     StreamMetricsRecord,
@@ -428,3 +429,22 @@ def test_supported_claims_require_persisted_evidence_digests() -> None:
     assert claim.final_state == "SUPPORTED"
     with pytest.raises(ValidationError, match="evidence artifact digests"):
         ClaimRegistryRecord.model_validate(claim.model_dump() | {"evidence_artifact_digests": ()})
+
+
+def test_paired_comparison_rejects_nonfinite_metric_values() -> None:
+    comparison = PairedComparisonRecord(
+        claim_family="Trajectory operational gain",
+        semantic_comparison_name="timing-risk-upper",
+        rho=0.05,
+        partition_name="8-band partition",
+        method_name="TrajCert",
+        baseline_name="Endpoint-only path information",
+        metric_name="Risk upper bound",
+        method_value=0.04,
+        baseline_value=0.06,
+        paired_difference_favorable_direction=0.02,
+    )
+
+    assert comparison.paired_difference_favorable_direction > 0
+    with pytest.raises(ValidationError, match="finite"):
+        PairedComparisonRecord.model_validate(comparison.model_dump() | {"rho": math.nan})
