@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -51,12 +53,26 @@ class GitProvenance:
     dirty_tree: bool
 
 
+CONTAINER_IMAGE_DIGEST_PATTERN = re.compile(
+    r"^(sha256:[0-9a-f]{64}|[A-Za-z0-9][A-Za-z0-9._:@/-]*)$"
+)
+
+
 def git_provenance(project_root: Path) -> GitProvenance:
     commit = _git_output(project_root, ("rev-parse", "HEAD"))
     dirty_status = _git_output(project_root, ("status", "--porcelain=v1", "--untracked-files=all"))
     if dirty_status:
         raise ValueError("claim-bearing execution requires a clean Git worktree")
     return GitProvenance(commit=commit, dirty_tree=False)
+
+
+def authoritative_container_image_digest() -> str:
+    value = os.environ.get("TRAJCERT_CONTAINER_IMAGE_DIGEST", "")
+    if not CONTAINER_IMAGE_DIGEST_PATTERN.fullmatch(value):
+        raise ValueError(
+            "environment_or_prerequisite_block: missing immutable container image digest"
+        )
+    return value
 
 
 def _git_output(project_root: Path, arguments: tuple[str, ...]) -> str:
