@@ -33,3 +33,9 @@ def test_experiment_name_must_not_be_empty(tmp_path: Path) -> None:
     workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
     with pytest.raises(ValueError):
         workspace.experiment_root("")
+
+
+def test_experiment_name_must_not_escape_workspace_root(tmp_path: Path) -> None:
+    workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
+    with pytest.raises(ValueError):
+        workspace.experiment_root("../escaped")
