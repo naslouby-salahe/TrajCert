@@ -67,3 +67,14 @@ def test_evaluation_records_use_canonical_semantic_coordinates(tmp_path: Path) -
         "method=trajcert",
         "rho=0.05",
     )
+
+
+def test_results_are_not_computational_inputs(tmp_path: Path) -> None:
+    workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
+    workspace.materialize()
+    assert not workspace.is_computational_input_path(
+        workspace.results_root / "project_summary/claims"
+    )
+    assert workspace.is_computational_input_path(
+        workspace.execution_root / "artifacts/derived/plans"
+    )
