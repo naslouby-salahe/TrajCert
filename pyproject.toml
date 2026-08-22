@@ -22,6 +22,9 @@ dependencies = [
     "sympy==1.13.3",
 ]
 
+[project.scripts]
+trajcert = "trajcert.cli.main:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/trajcert"]
 
