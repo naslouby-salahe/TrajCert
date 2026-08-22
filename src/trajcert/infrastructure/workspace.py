@@ -91,10 +91,16 @@ class Workspace:
     def from_configuration(
         cls, configuration: ArtifactsConfiguration, project_root: Path
     ) -> Workspace:
-        return cls(
-            (project_root / configuration.execution_workspace_root).resolve(),
-            (project_root / configuration.results_root).resolve(),
-        )
+        resolved_project_root = project_root.resolve()
+        execution_root = (resolved_project_root / configuration.execution_workspace_root).resolve()
+        results_root = (resolved_project_root / configuration.results_root).resolve()
+        if not execution_root.is_relative_to(resolved_project_root):
+            raise ValueError("execution workspace root must remain inside the project root")
+        if not results_root.is_relative_to(resolved_project_root):
+            raise ValueError("results root must remain inside the project root")
+        if execution_root == results_root:
+            raise ValueError("execution workspace and results roots must be distinct")
+        return cls(execution_root, results_root)
 
     def materialize(self) -> None:
         for relative_path in OUTPUT_DIRECTORIES:
