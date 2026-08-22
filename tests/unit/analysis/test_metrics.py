@@ -1,4 +1,5 @@
 import math
+import sys
 from dataclasses import replace
 
 import pytest
@@ -16,6 +17,7 @@ from trajcert.analysis.metrics import (
     numeric_first_certification_time,
     population_metric_values,
     population_metrics_record,
+    sequential_metric_values,
 )
 from trajcert.domain.enums import ScientificState
 from trajcert.domain.records.results import SequentialUpdateRecord
@@ -111,6 +113,14 @@ def test_population_metrics_preserve_null_semantics_and_reject_nonfinite_values(
     assert record.theta_dagger is None
     with pytest.raises(ValueError, match="finite"):
         population_metric_values(replace(population_inputs(), production_value=math.inf))
+    with pytest.raises(ValueError, match="finite"):
+        population_metric_values(
+            replace(
+                population_inputs(),
+                harmful_mass=sys.float_info.max,
+                latent_hidden_mass=sys.float_info.max,
+            )
+        )
 
 
 def test_stream_aggregation_uses_only_eligible_updates_for_certification_fractions() -> None:
@@ -136,6 +146,10 @@ def test_stream_aggregation_uses_only_eligible_updates_for_certification_fractio
         ScientificState.CERTIFIED,
         ScientificState.UNCERTIFIED,
     } == ELIGIBLE_SCIENTIFIC_STATES
+    sequential_values = sequential_metric_values(updates[2])
+    assert_close(sequential_values.anytime_upper_risk, 0.4)
+    assert sequential_values.anytime_compatibility_floor is None
+    assert sequential_values.ever_violation_indicator is True
 
 
 def test_never_certified_stream_uses_n_max_plus_one_only_for_numeric_comparison() -> None:

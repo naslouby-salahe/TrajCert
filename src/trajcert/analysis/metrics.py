@@ -133,6 +133,13 @@ class ComputationMetricValues:
 
 
 @dataclass(frozen=True, slots=True)
+class SequentialMetricValues:
+    anytime_upper_risk: float | None
+    anytime_compatibility_floor: float | None
+    ever_violation_indicator: bool
+
+
+@dataclass(frozen=True, slots=True)
 class StreamAggregationInputs:
     law_name: str
     stream_seed_index: int
@@ -188,7 +195,7 @@ def population_metric_values(inputs: PopulationMetricInputs) -> PopulationMetric
     observed_timing_information = (
         inputs.timing_entropy if inputs.harmful_mass + inputs.correct_mass > 0 else None
     )
-    return PopulationMetricValues(
+    values = PopulationMetricValues(
         latent_risk,
         observed_timing_information,
         inputs.conditional_timing_gain,
@@ -204,6 +211,24 @@ def population_metric_values(inputs: PopulationMetricInputs) -> PopulationMetric
         consumption,
         oracle_error,
     )
+    for value in (
+        values.latent_error_risk,
+        values.observed_timing_information,
+        values.conditional_timing_gain,
+        values.minimum_compatible_sensitivity_budget,
+        values.minimum_information_risk,
+        values.risk_lower_bound,
+        values.risk_upper_bound,
+        values.identified_set_width,
+        values.safety_frontier_sensitivity_budget,
+        values.bound_gain_versus_endpoint_only,
+        values.absolute_tightening_versus_unresolved_as_harm,
+        values.relative_unresolved_mass_gain,
+        values.compatibility_budget_consumption,
+        values.oracle_absolute_error,
+    ):
+        _validate_optional_finite(value)
+    return values
 
 
 def computation_metric_values(measurement: ComputationMeasurement) -> ComputationMetricValues:
@@ -212,6 +237,14 @@ def computation_metric_values(measurement: ComputationMeasurement) -> Computatio
     if not math.isfinite(measurement.peak_rss_mib) or measurement.peak_rss_mib < 0:
         raise ValueError("peak RSS MiB must be finite and nonnegative")
     return ComputationMetricValues(measurement.elapsed_seconds, measurement.peak_rss_mib)
+
+
+def sequential_metric_values(update: SequentialUpdateRecord) -> SequentialMetricValues:
+    return SequentialMetricValues(
+        update.risk_upper_anytime,
+        update.rho_comp_lower,
+        update.ever_violation_to_date,
+    )
 
 
 def population_metrics_record(inputs: PopulationMetricInputs) -> PopulationMetricsRecord:
