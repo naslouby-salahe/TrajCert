@@ -60,6 +60,10 @@ class DatasetManifest(BaseModel):
     def validate_dataset_kind_contract(self) -> DatasetManifest:
         if self.dataset_kind is DatasetKind.SYNTHETIC and not self.known_full_law:
             raise ValueError("synthetic datasets require a known full law")
+        if self.dataset_kind is DatasetKind.SYNTHETIC and (
+            self.generator_name is None or self.generator_code_digest is None
+        ):
+            raise ValueError("synthetic datasets require generator provenance")
         if (
             self.eligibility_status is DatasetEligibilityStatus.INELIGIBLE
             and not self.ineligibility_reason
