@@ -1,1 +1,50 @@
 from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+
+from trajcert.domain.enums import PublicExecutionState, ScientificState
+
+
+class FailureKind(StrEnum):
+    TECHNICAL_FAILURE = "TECHNICAL_FAILURE"
+    STALE_DEPENDENCY_INCOMPATIBLE = "STALE_DEPENDENCY_INCOMPATIBLE"
+    DATA_VALIDATION_FAILURE = "DATA_VALIDATION_FAILURE"
+    SCIENTIFIC_FALSIFICATION = "SCIENTIFIC_FALSIFICATION"
+    SCIENTIFIC_NULL_BOUNDARY = "SCIENTIFIC_NULL_BOUNDARY"
+    PLANNED_NONAPPLICABILITY = "PLANNED_NONAPPLICABILITY"
+
+
+@dataclass(frozen=True, slots=True)
+class FailureConsequence:
+    execution_state: PublicExecutionState
+    scientific_state: ScientificState | None
+    claim_state: str | None
+    recovery_required: bool
+    blocks_downstream_evidence: bool
+
+
+FAILURE_CONSEQUENCES = {
+    FailureKind.TECHNICAL_FAILURE: FailureConsequence(
+        PublicExecutionState.FAILED, None, None, True, True
+    ),
+    FailureKind.STALE_DEPENDENCY_INCOMPATIBLE: FailureConsequence(
+        PublicExecutionState.BLOCKED, None, None, True, True
+    ),
+    FailureKind.DATA_VALIDATION_FAILURE: FailureConsequence(
+        PublicExecutionState.INVALID, None, None, False, True
+    ),
+    FailureKind.SCIENTIFIC_FALSIFICATION: FailureConsequence(
+        PublicExecutionState.COMPLETED, ScientificState.UNCERTIFIED, "NOT_SUPPORTED", False, False
+    ),
+    FailureKind.SCIENTIFIC_NULL_BOUNDARY: FailureConsequence(
+        PublicExecutionState.COMPLETED, ScientificState.UNCERTIFIED, None, False, False
+    ),
+    FailureKind.PLANNED_NONAPPLICABILITY: FailureConsequence(
+        PublicExecutionState.NOT_STARTED, None, None, False, False
+    ),
+}
+
+
+def failure_consequence(kind: FailureKind) -> FailureConsequence:
+    return FAILURE_CONSEQUENCES[kind]
