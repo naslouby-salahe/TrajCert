@@ -39,9 +39,9 @@ class ArtifactEnvelope(BaseModel):
     producer_component: str = Field(min_length=1)
     semantic_cell_key: str | None = None
     semantic_coordinates: CanonicalJson | None = None
-    experiment_name: str | None = None
+    experiment_name: str | None = Field(default=None, min_length=1)
     classification: EvidenceClass | None = None
-    execution_group: str | None = None
+    execution_group: str | None = Field(default=None, min_length=1)
     scientific_specification_digest: Digest
     scientific_dependency_digest: Digest
     provenance_fingerprint: Digest

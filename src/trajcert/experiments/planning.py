@@ -117,8 +117,8 @@ def _validate_plan_parquet(payload: bytes) -> None:
 def _plan_sort_key(
     row: ExperimentPlanRow,
 ) -> tuple[
-    str,
-    str,
+    tuple[int, str],
+    tuple[int, str],
     tuple[int, str],
     tuple[int, str],
     tuple[int, str],
@@ -128,8 +128,8 @@ def _plan_sort_key(
     tuple[int, str],
 ]:
     return (
-        row.execution_group or "",
-        row.experiment_name or "",
+        _nullable_string(row.execution_group),
+        _nullable_string(row.experiment_name),
         _nullable_string(row.synthetic_law_name),
         _nullable_string(row.partition_name),
         _nullable_string(row.method_name),
