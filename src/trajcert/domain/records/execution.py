@@ -88,3 +88,40 @@ class ExecutionStateRecord(BaseModel):
         if set(self.failed_seed_indices) & set(self.completed_seed_indices):
             raise ValueError("a seed cannot be both failed and completed")
         return self
+
+
+class ExperimentAggregateRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    experiment_name: str = Field(min_length=1)
+    overall_state: InternalExecutionState
+    expected_semantic_cells: int = Field(ge=0)
+    completed_semantic_cells: int = Field(ge=0)
+    failed_semantic_cells: int = Field(ge=0)
+    invalid_semantic_cells: int = Field(ge=0)
+    stale_semantic_cells: int = Field(ge=0)
+    blocking_dependencies: tuple[str, ...] = ()
+    active_provenance_digest: Digest | None = None
+    last_execution_outcome: str | None = None
+    results_export_state: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_semantic_cell_counts(self) -> ExperimentAggregateRecord:
+        completed_or_terminal = (
+            self.completed_semantic_cells
+            + self.failed_semantic_cells
+            + self.invalid_semantic_cells
+            + self.stale_semantic_cells
+        )
+        if completed_or_terminal > self.expected_semantic_cells:
+            raise ValueError("semantic cell counts cannot exceed the expected total")
+        if self.overall_state is InternalExecutionState.COMPLETED:
+            if self.completed_semantic_cells != self.expected_semantic_cells:
+                raise ValueError("completed experiments require all semantic cells to complete")
+            if (
+                self.failed_semantic_cells
+                or self.invalid_semantic_cells
+                or self.stale_semantic_cells
+            ):
+                raise ValueError("completed experiments cannot retain terminal failure states")
+        return self
