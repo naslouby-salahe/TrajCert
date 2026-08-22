@@ -3,7 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from trajcert.analysis.claims import LEGACY_COMPARATOR_NAME
+from trajcert.configuration.models import NumericsConfiguration
 from trajcert.data.partitions import ObservableLaw
+from trajcert.math.information_profile import InformationProfile
+from trajcert.math.risk_set import PopulationRiskSet
+from trajcert.math.solver import solve_population_risk_set
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,11 +42,20 @@ def endpoint_only_observable_law(observable_law: ObservableLaw) -> ObservableLaw
     )
 
 
+def endpoint_only_pis_risk_set(
+    observable_law: ObservableLaw, rho: float, numerics: NumericsConfiguration
+) -> PopulationRiskSet:
+    return solve_population_risk_set(
+        InformationProfile(endpoint_only_observable_law(observable_law)), rho, numerics
+    )
+
+
 __all__ = [
     "LEGACY_COMPARATOR_NAME",
     "CompleteCaseReference",
     "WorstCaseReference",
     "complete_case_arrival_only",
     "endpoint_only_observable_law",
+    "endpoint_only_pis_risk_set",
     "unresolved_as_harm_worst_case",
 ]

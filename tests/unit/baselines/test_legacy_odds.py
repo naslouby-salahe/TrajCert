@@ -2,6 +2,8 @@ import math
 
 from trajcert.baselines.legacy_odds import (
     LegacyBandStatus,
+    LegacyIncoherenceDirection,
+    legacy_band_evaluations,
     legacy_feasible_interval,
     legacy_partition_incoherence_cases,
     odds_shift,
@@ -15,7 +17,10 @@ def test_legacy_feasible_interval_uses_analytic_constraints_and_structural_zeros
     law = ObservableLaw((0.2, 0.1), (0.1, 0.2), 0.4)
 
     assert not legacy_feasible_interval(law, 2.0, tolerance).feasible
-    compatible_law = legacy_partition_incoherence_cases((2.0,), (0.1,), tolerance)[0].observable_law
+    configuration = load_configuration().legacy_partition_incoherence
+    compatible_law = legacy_partition_incoherence_cases(
+        (2.0,), (0.1,), configuration.latent_outcome_probabilities, tolerance
+    )[0].observable_law
     interval = legacy_feasible_interval(compatible_law, 2.0, tolerance)
 
     assert interval.feasible
@@ -23,6 +28,8 @@ def test_legacy_feasible_interval_uses_analytic_constraints_and_structural_zeros
     assert interval.hidden_upper is not None
     assert 0 <= interval.hidden_lower <= interval.hidden_upper <= compatible_law.c
     assert interval.band_statuses == (LegacyBandStatus.INFORMATIVE, LegacyBandStatus.INFORMATIVE)
+    assert interval.gamma == 2.0
+    assert interval.solution_method == "analytic linear-rational interval"
     assert not legacy_feasible_interval(ObservableLaw((0.0,), (0.2,), 0.8), 2.0, tolerance).feasible
     assert legacy_feasible_interval(
         ObservableLaw((0.0,), (0.0,), 1.0), 2.0, tolerance
@@ -33,7 +40,10 @@ def test_configured_partition_incoherence_cases_are_fine_feasible_and_noninvaria
     configuration = load_configuration().legacy_partition_incoherence
     tolerance = load_configuration().numerics.deterministic_identity_tolerance
     cases = legacy_partition_incoherence_cases(
-        configuration.gamma_values, configuration.q_values, tolerance
+        configuration.gamma_values,
+        configuration.q_values,
+        configuration.latent_outcome_probabilities,
+        tolerance,
     )
 
     assert len(cases) == len(configuration.gamma_values) * len(configuration.q_values)
@@ -45,4 +55,9 @@ def test_configured_partition_incoherence_cases_are_fine_feasible_and_noninvaria
         assert case.fine_interval.hidden_lower - tolerance <= case.true_hidden_harmful_mass
         assert case.true_hidden_harmful_mass <= case.fine_interval.hidden_upper + tolerance
         assert not math.isclose(case.endpoint_difference, 0.0, abs_tol=tolerance)
+        assert case.endpoint_difference_magnitude > tolerance
+        assert case.endpoint_difference_direction in LegacyIncoherenceDirection
         assert odds_shift(case.q, case.gamma) > case.q
+        evaluations = legacy_band_evaluations(case.observable_law, case.true_hidden_harmful_mass)
+        assert math.isclose(evaluations[0].odds_ratio or 0.0, case.gamma, abs_tol=tolerance)
+        assert math.isclose(evaluations[1].odds_ratio or 0.0, 1 / case.gamma, abs_tol=tolerance)
