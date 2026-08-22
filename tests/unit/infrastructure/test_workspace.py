@@ -39,3 +39,14 @@ def test_experiment_name_must_not_escape_workspace_root(tmp_path: Path) -> None:
     workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
     with pytest.raises(ValueError):
         workspace.experiment_root("../escaped")
+
+
+def test_workspace_separates_authoritative_and_operational_paths(tmp_path: Path) -> None:
+    workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
+    workspace.materialize()
+    experiment_root = workspace.materialize_experiment("population-sensitivity-utility")
+    assert workspace.is_authoritative_output_path(
+        workspace.execution_root / "artifacts/derived/plans"
+    )
+    assert not workspace.is_authoritative_output_path(workspace.execution_root / "cache/analysis")
+    assert not workspace.is_authoritative_output_path(experiment_root / "checkpoints/execution")
