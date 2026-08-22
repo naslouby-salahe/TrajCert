@@ -87,8 +87,8 @@ class ArtifactEnvelope(BaseModel):
     @field_validator("semantic_coordinates")
     @classmethod
     def validate_canonical_json_text(cls, value: str | None) -> str | None:
-        if value is not None and (value[0] not in "[{" or value[-1] not in "]}"):
-            raise ValueError("semantic coordinates must be canonical JSON object or array text")
+        if value is not None and (value[0] != "{" or value[-1] != "}"):
+            raise ValueError("semantic coordinates must be canonical JSON object text")
         return value
 
     @model_validator(mode="after")
