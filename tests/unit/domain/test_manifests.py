@@ -1,5 +1,6 @@
 import math
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -40,9 +41,11 @@ from trajcert.experiments.planning import (
     PLAN_JSON_RELATIVE_PATH,
     PLAN_PARQUET_RELATIVE_PATH,
     canonical_plan_json,
+    canonical_plan_parquet,
     cell_plan_digest,
     ordered_plan_rows,
     plan_digest,
+    write_plan_artifacts,
 )
 from trajcert.infrastructure.fingerprints import dependency_fingerprint, provenance_fingerprint
 
@@ -182,6 +185,31 @@ def test_plan_ordering_and_digests_are_canonical() -> None:
         == "outputs/artifacts/derived/plans/experiment_plan.parquet"
     )
     assert cell_plan_digest(specified) != cell_plan_digest(unspecified)
+
+
+def test_plan_artifacts_are_canonical_and_atomically_materialized(tmp_path: Path) -> None:
+    plan = ExperimentPlanRow.model_validate(
+        artifact_envelope().model_dump()
+        | {
+            "executable": True,
+            "sensitivity_parameter_json": '{"rho":0.05}',
+            "expected_stream_count": 0,
+            "expected_artifact_schema": "population_result",
+            "expected_output_path": "outputs/experiments/population/records",
+            "dependency_coordinates": '{"law":"Timing"}',
+        }
+    )
+
+    json_digest, parquet_digest = write_plan_artifacts(tmp_path, (plan,))
+
+    json_path = tmp_path / PLAN_JSON_RELATIVE_PATH
+    parquet_path = tmp_path / PLAN_PARQUET_RELATIVE_PATH
+    assert json_path.read_bytes() == canonical_plan_json((plan,))
+    assert parquet_path.read_bytes() == canonical_plan_parquet((plan,))
+    assert len(json_digest) == 64
+    assert len(parquet_digest) == 64
+    assert not json_path.with_name(f"{json_path.name}.partial").exists()
+    assert not parquet_path.with_name(f"{parquet_path.name}.partial").exists()
 
 
 def test_dataset_partition_and_seed_manifests_enforce_canonical_contracts() -> None:
