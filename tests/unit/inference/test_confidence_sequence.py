@@ -9,8 +9,8 @@ from trajcert.inference.confidence_sequence import (
     IndependentAnalysis,
     IndependentUnit,
     ProbabilityInterval,
+    _category_log_mixture,
     categorical_confidence_sequence,
-    category_log_mixture,
 )
 
 
@@ -75,8 +75,8 @@ def test_categorical_confidence_sequence_uses_exact_boundary_limits_and_running_
 
     assert first.raw_intervals[0].lower == 0
     assert first.raw_intervals[2].lower == 0
-    assert math.isfinite(category_log_mixture(0, 2, 0))
-    assert category_log_mixture(1, 2, 0) == math.inf
+    assert math.isfinite(_category_log_mixture(0, 2, 0))
+    assert _category_log_mixture(1, 2, 0) == math.inf
     assert second.running_intervals[0].lower >= first.running_intervals[0].lower
     assert second.running_intervals[0].upper <= first.running_intervals[0].upper
 
