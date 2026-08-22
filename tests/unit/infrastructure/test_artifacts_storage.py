@@ -6,6 +6,8 @@ import pytest
 from trajcert.infrastructure.artifacts import (
     artifact_envelope_arrow_schema,
     canonical_physical_types,
+    descriptive_artifact_key,
+    semantic_cell_key,
 )
 from trajcert.infrastructure.storage import (
     atomic_write_bytes,
@@ -78,3 +80,18 @@ def test_artifact_envelope_arrow_schema_preserves_nullable_scientific_fields() -
     assert schema.field("scientific_specification_digest").nullable is False
     assert schema.field("rho").nullable is True
     assert schema.field("schema_version").type.bit_width == 64
+
+
+def test_semantic_identity_constructors_are_deterministic_and_not_hashes() -> None:
+    key = semantic_cell_key(
+        "Population Sensitivity Utility",
+        {"rho": 0.05, "law": "Timing and terminal"},
+    )
+    artifact_key = descriptive_artifact_key(
+        "population_result",
+        {"rho": 0.05, "law": "Timing and terminal"},
+    )
+
+    assert key == 'Population Sensitivity Utility:{"law":"Timing and terminal","rho":0.05}'
+    assert artifact_key == "population_result-law=timing-and-terminal-rho=0.05"
+    assert len(key) != 64
