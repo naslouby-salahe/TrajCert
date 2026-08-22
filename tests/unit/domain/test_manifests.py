@@ -132,6 +132,8 @@ def test_artifact_envelope_rejects_invalid_digest_and_schema_version() -> None:
         artifact_envelope(scientific_specification_digest="wrong")
     with pytest.raises(ValidationError):
         artifact_envelope(schema_version=2)
+    with pytest.raises(ValidationError, match="duplicate object keys"):
+        artifact_envelope(semantic_coordinates='{"law":"Timing","law":"Other"}')
 
 
 def test_artifact_envelope_accepts_git_commit_identity_without_treating_it_as_artifact_digest() -> (
