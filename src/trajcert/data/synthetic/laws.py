@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from trajcert.configuration.models import MethodConfiguration, SyntheticDataConfiguration
 from trajcert.data.partitions import ObservableLaw
 
 
@@ -76,3 +77,22 @@ class SyntheticTrajectoryLaw:
             resolved_band_count,
             self.terminal_horizon,
         )
+
+
+def synthetic_law_catalog(
+    synthetic_data: SyntheticDataConfiguration,
+    method: MethodConfiguration,
+) -> tuple[SyntheticTrajectoryLaw, ...]:
+    return tuple(
+        SyntheticTrajectoryLaw(
+            law.name,
+            law.theta,
+            law.q1,
+            law.q0,
+            law.lambda1,
+            law.lambda0,
+            method.primary_finest_resolved_bands,
+            float(method.synthetic_terminal_horizon_age_units),
+        )
+        for law in synthetic_data.laws
+    )

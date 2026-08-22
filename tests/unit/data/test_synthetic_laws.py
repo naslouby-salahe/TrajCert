@@ -1,6 +1,7 @@
 import math
 
-from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
+from trajcert.configuration.loading import load_configuration
+from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw, synthetic_law_catalog
 
 
 def test_synthetic_trajectory_law_preserves_conditional_probability_and_horizon_contract() -> None:
@@ -20,4 +21,17 @@ def test_synthetic_trajectory_law_preserves_conditional_probability_and_horizon_
         + law.observable_law().correct_total
         + law.observable_law().c,
         1.0,
+    )
+
+
+def test_synthetic_law_catalog_uses_authoritative_configuration() -> None:
+    configuration = load_configuration()
+    catalog = synthetic_law_catalog(configuration.synthetic_data, configuration.method)
+
+    assert tuple(law.name for law in catalog) == tuple(
+        law.name for law in configuration.synthetic_data.laws
+    )
+    assert all(
+        law.resolved_band_count == configuration.method.primary_finest_resolved_bands
+        for law in catalog
     )
