@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import importlib
 from collections.abc import Mapping
 from typing import Protocol, cast
+
+import pyarrow as pyarrow
 
 from trajcert.domain.records.artifacts import ArtifactEnvelope
 from trajcert.domain.serialization import JSONValue, canonical_json_bytes
@@ -59,7 +60,7 @@ class ArrowModule(Protocol):
 
 
 type ArtifactValue = str | float | int | list[str] | None
-ARROW = cast(ArrowModule, importlib.import_module("pyarrow"))
+ARROW = cast(ArrowModule, pyarrow)
 
 
 def semantic_cell_key(experiment_name: str, coordinates: Mapping[str, JSONValue]) -> str:
