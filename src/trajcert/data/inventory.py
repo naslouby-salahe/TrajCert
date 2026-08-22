@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from trajcert.domain.enums import DatasetKind
+from trajcert.domain.enums import DatasetEligibilityStatus, DatasetKind
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
 
 
@@ -70,7 +70,7 @@ class ExternalDatasetInventory(BaseModel):
     discrepancy_status: str = Field(min_length=1)
     field_mapping_status: str = Field(min_length=1)
     field_mappings: tuple[DeterministicFieldMapping, ...] = ()
-    eligibility_status: str = Field(min_length=1)
+    eligibility_status: DatasetEligibilityStatus
     required_semantics_established: bool
     future_real_study_eligibility: FutureRealStudyEligibility = Field(
         default_factory=FutureRealStudyEligibility

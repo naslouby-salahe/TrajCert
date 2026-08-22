@@ -11,7 +11,7 @@ from trajcert.data.inventory import (
     FutureRealStudyEligibility,
     RealTrajectoryBoundary,
 )
-from trajcert.domain.enums import DatasetKind
+from trajcert.domain.enums import DatasetEligibilityStatus, DatasetKind
 
 
 def test_external_inventory_preserves_observed_and_documented_authority() -> None:
@@ -37,7 +37,7 @@ def test_external_inventory_preserves_observed_and_documented_authority() -> Non
                 equivalence_evidence="release documentation maps event_identifier to event_id",
             ),
         ),
-        eligibility_status="INELIGIBLE",
+        eligibility_status=DatasetEligibilityStatus.INELIGIBLE,
         required_semantics_established=False,
     )
 

@@ -43,6 +43,11 @@ class DatasetKind(StrEnum):
     EXTERNAL = "EXTERNAL"
 
 
+class DatasetEligibilityStatus(StrEnum):
+    ELIGIBLE = "ELIGIBLE"
+    INELIGIBLE = "INELIGIBLE"
+
+
 class ArtifactValidationStatus(StrEnum):
     VALID = "VALID"
     PARTIAL = "PARTIAL"
