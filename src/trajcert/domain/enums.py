@@ -1,4 +1,100 @@
+from dataclasses import dataclass
 from enum import StrEnum
+
+
+class ExecutionPhase(StrEnum):
+    INPUTS = "inputs"
+    PREPROCESSING = "preprocessing"
+    TRAINING = "training"
+    SCORING = "scoring"
+    CALIBRATION_THRESHOLDING = "calibration/thresholding"
+    EVALUATION = "evaluation"
+    ANALYSIS = "analysis"
+    REPORTING = "reporting"
+
+
+class ReusableArtifactLayer(StrEnum):
+    PREPARED_LAW_AND_PARTITION = "prepared_law_and_partition"
+    STOCHASTIC_EVENT_STREAM = "stochastic_event_stream"
+    DETERMINISTIC_COARSENING_AND_COUNT_PREFIX = "deterministic_coarsening_and_count_prefix"
+    POPULATION_SUFFICIENT_SUMMARY = "population_sufficient_summary"
+    POPULATION_SOLVER_AND_ORACLE = "population_solver_and_oracle"
+    COMPARATOR_FIT_AND_REFERENCE = "comparator_fit_and_reference"
+    SEQUENTIAL_CONFIDENCE = "sequential_confidence"
+    SEQUENTIAL_PROJECTION = "sequential_projection"
+    EVALUATION_AND_STATISTICAL = "evaluation_and_statistical"
+    SOURCE_DATA_AND_DISPLAY = "source_data_and_display"
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionPhaseContract:
+    phase: ExecutionPhase
+    trajcert_meaning: str
+    reusable_authoritative_artifacts: tuple[str, ...]
+
+
+EXECUTION_DEPENDENCY_CHAIN = tuple(ExecutionPhase)
+EXECUTION_PHASE_CONTRACTS = (
+    ExecutionPhaseContract(
+        ExecutionPhase.INPUTS,
+        "configuration, synthetic-law parameters, external-source inventory if ever eligible, "
+        "partition definitions, seed manifests",
+        (
+            "configuration snapshot",
+            "dataset/law manifests",
+            "partition manifests",
+            "seed manifests",
+        ),
+    ),
+    ExecutionPhaseContract(
+        ExecutionPhase.PREPROCESSING,
+        "synthetic law construction/validation, finest-to-coarse mappings, deterministic "
+        "hand/count construction",
+        (
+            "prepared laws",
+            "observable/full-law tables",
+            "partition maps",
+            "deterministic count sequences",
+        ),
+    ),
+    ExecutionPhaseContract(ExecutionPhase.TRAINING, "not applicable", ("none",)),
+    ExecutionPhaseContract(
+        ExecutionPhase.SCORING,
+        "population solver/oracle/comparator calculations and sequential confidence/envelope/"
+        "projection calculations",
+        (
+            "population summaries",
+            "profiles",
+            "comparator fits",
+            "streams",
+            "CS trajectories",
+            "envelopes",
+            "projections",
+        ),
+    ),
+    ExecutionPhaseContract(
+        ExecutionPhase.CALIBRATION_THRESHOLDING,
+        "no learned calibration; rho, beta, delta, materiality thresholds, and multiplicity "
+        "rules are prespecified",
+        ("no fitted calibration artifact",),
+    ),
+    ExecutionPhaseContract(
+        ExecutionPhase.EVALUATION,
+        "theorem/oracle checks, state assignment, stream metrics, runtime measurements",
+        ("validated results", "stream metrics", "validation records", "runtime records"),
+    ),
+    ExecutionPhaseContract(
+        ExecutionPhase.ANALYSIS,
+        "paired comparisons, bootstrap CIs, sign-flip tests, Holm adjustment, materiality and "
+        "claim synthesis",
+        ("statistical artifacts", "claim-state artifacts", "source-data Parquet"),
+    ),
+    ExecutionPhaseContract(
+        ExecutionPhase.REPORTING,
+        "deterministic rendering/export only",
+        ("CSV/TeX/SVG/PNG and report summaries",),
+    ),
+)
 
 
 class ScientificState(StrEnum):

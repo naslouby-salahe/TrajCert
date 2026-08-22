@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Protocol, cast
 
 import pyarrow as pyarrow
@@ -69,6 +71,13 @@ def semantic_cell_key(experiment_name: str, coordinates: Mapping[str, JSONValue]
     if not experiment_name.strip():
         raise ValueError("experiment name must not be empty")
     return f"{experiment_name}:{canonical_json_bytes(coordinates).decode('utf-8')}"
+
+
+def canonical_active_path(workspace_root: Path, semantic_cell_key: str) -> Path:
+    if not semantic_cell_key.strip():
+        raise ValueError("semantic cell key must not be empty")
+    cell_digest = hashlib.sha256(semantic_cell_key.encode("utf-8")).hexdigest()
+    return workspace_root / "artifacts" / "active" / cell_digest
 
 
 def descriptive_artifact_key(

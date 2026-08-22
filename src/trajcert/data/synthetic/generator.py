@@ -26,6 +26,19 @@ class SyntheticEvent:
         return self.label if self.resolution_band is not None else None
 
 
+@dataclass(frozen=True, slots=True)
+class ValidatedEventStream:
+    generator_identity: str
+    seed: int
+    events: tuple[SyntheticEvent, ...]
+
+    def __post_init__(self) -> None:
+        if not self.generator_identity:
+            raise ValueError("generator identity must be nonempty")
+        if tuple(event.action_index for event in self.events) != tuple(range(len(self.events))):
+            raise ValueError("validated streams must have consecutive action indices")
+
+
 def generate_synthetic_stream(
     law: SyntheticTrajectoryLaw,
     seed: int,
@@ -37,6 +50,27 @@ def generate_synthetic_stream(
     return tuple(
         _generate_event(law, generator, action_index) for action_index in range(event_count)
     )
+
+
+def reuse_or_extend_validated_stream(
+    existing: ValidatedEventStream | None,
+    law: SyntheticTrajectoryLaw,
+    generator_identity: str,
+    seed: int,
+    event_count: int,
+) -> ValidatedEventStream:
+    if event_count < 0:
+        raise ValueError("synthetic event count must be nonnegative")
+    if existing is not None and (
+        existing.generator_identity != generator_identity or existing.seed != seed
+    ):
+        raise ValueError("stream reuse requires the same generator and seed identity")
+    generated = generate_synthetic_stream(law, seed, event_count)
+    if existing is not None:
+        comparable_count = min(len(existing.events), event_count)
+        if existing.events[:comparable_count] != generated[:comparable_count]:
+            raise ValueError("existing stream is not a validated prefix of the semantic stream")
+    return ValidatedEventStream(generator_identity, seed, generated)
 
 
 def _generate_event(
