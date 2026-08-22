@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from pathlib import Path
 
 from trajcert.configuration.models import MethodConfiguration, SyntheticDataConfiguration
 from trajcert.data.partitions import ObservableLaw
+from trajcert.infrastructure.storage import JSONValue, atomic_write_bytes, canonical_json_bytes
 from trajcert.math.information_profile import InformationProfile
+
+SYNTHETIC_LAW_CATALOG_RELATIVE_PATH = Path(
+    "outputs/preprocessing/metadata/synthetic_law_catalog.json"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +138,53 @@ def synthetic_scaling_laws(
         law.with_resolved_band_count(resolved_band_count)
         for resolved_band_count in resolved_band_counts
     )
+
+
+def canonical_synthetic_law_catalog(
+    laws: tuple[SyntheticTrajectoryLaw, ...],
+) -> bytes:
+    return canonical_json_bytes(
+        tuple(_synthetic_law_table_row(law) for law in sorted(laws, key=lambda law: law.name))
+    )
+
+
+def write_synthetic_law_catalog(
+    project_root: Path,
+    laws: tuple[SyntheticTrajectoryLaw, ...],
+) -> str:
+    payload = canonical_synthetic_law_catalog(laws)
+    return atomic_write_bytes(
+        project_root / SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
+        payload,
+        lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
+    )
+
+
+def _synthetic_law_table_row(law: SyntheticTrajectoryLaw) -> dict[str, JSONValue]:
+    observable_law = law.observable_law()
+    return {
+        "conditional_terminal_mass_label_0": law.conditional_terminal_mass(False),
+        "conditional_terminal_mass_label_1": law.conditional_terminal_mass(True),
+        "correct_masses": observable_law.correct_masses,
+        "harmful_masses": observable_law.harmful_masses,
+        "lambda0": law.lambda0,
+        "lambda1": law.lambda1,
+        "name": law.name,
+        "q0": law.q0,
+        "q1": law.q1,
+        "resolved_band_count": law.resolved_band_count,
+        "terminal_horizon": law.terminal_horizon,
+        "unresolved_mass": observable_law.unresolved_mass,
+        "theta": law.theta,
+    }
+
+
+def _validate_synthetic_law_catalog(
+    payload: bytes,
+    laws: tuple[SyntheticTrajectoryLaw, ...],
+) -> None:
+    if payload != canonical_synthetic_law_catalog(laws):
+        raise ValueError("synthetic law catalog payload is not canonical")
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,13 +1,18 @@
+import hashlib
 import math
 from datetime import UTC, datetime
+from pathlib import Path
 
 from trajcert.configuration.loading import load_configuration
 from trajcert.data.synthetic.generator import SyntheticEvent, generate_synthetic_stream
 from trajcert.data.synthetic.laws import (
+    SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
     SyntheticTrajectoryLaw,
+    canonical_synthetic_law_catalog,
     synthetic_law_catalog,
     synthetic_law_roles,
     synthetic_scaling_laws,
+    write_synthetic_law_catalog,
 )
 from trajcert.data.synthetic.ledger import prepare_synthetic_ledger, synthetic_ledger_records
 from trajcert.math.information_profile import InformationProfile
@@ -160,3 +165,13 @@ def test_synthetic_scaling_laws_change_only_resolution() -> None:
         )
         for candidate in scaled
     )
+
+
+def test_synthetic_law_catalog_is_canonical_and_atomically_materialized(tmp_path: Path) -> None:
+    law = SyntheticTrajectoryLaw("timing", 0.05, 0.3, 0.05, 0.45, -0.15, 8, 8.0)
+
+    digest = write_synthetic_law_catalog(tmp_path, (law,))
+    payload = (tmp_path / SYNTHETIC_LAW_CATALOG_RELATIVE_PATH).read_bytes()
+
+    assert digest == hashlib.sha256(payload).hexdigest()
+    assert payload == canonical_synthetic_law_catalog((law,))
