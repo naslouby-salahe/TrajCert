@@ -64,6 +64,49 @@ def test_synthetic_law_catalog_uses_authoritative_configuration() -> None:
     )
 
 
+def test_primary_synthetic_law_roles_have_declared_parameter_patterns() -> None:
+    configuration = load_configuration()
+    laws = {law.name: law for law in configuration.synthetic_data.laws}
+
+    assert laws["No outcome-path dependence"].q1 == laws["No outcome-path dependence"].q0
+    assert laws["No outcome-path dependence"].lambda1 == laws["No outcome-path dependence"].lambda0
+    assert (
+        laws["Timing only: harmful outcomes resolve late"].q1
+        == laws["Timing only: harmful outcomes resolve late"].q0
+    )
+    assert (
+        laws["Timing only: harmful outcomes resolve late"].lambda1
+        > laws["Timing only: harmful outcomes resolve late"].lambda0
+    )
+    assert (
+        laws["Terminal only: harmful outcomes remain unresolved"].q1
+        > laws["Terminal only: harmful outcomes remain unresolved"].q0
+    )
+    assert (
+        laws["Terminal only: harmful outcomes remain unresolved"].lambda1
+        == laws["Terminal only: harmful outcomes remain unresolved"].lambda0
+    )
+    assert (
+        laws["Timing and terminal: harmful outcomes resolve late"].q1
+        > laws["Timing and terminal: harmful outcomes resolve late"].q0
+    )
+    assert (
+        laws["Timing and terminal: harmful outcomes resolve early"].lambda1
+        < laws["Timing and terminal: harmful outcomes resolve early"].lambda0
+    )
+    assert laws["Low error prevalence"].theta < laws["High error prevalence"].theta
+    assert laws["High terminal unresolvedness"].q1 > 0.5
+    assert laws["Near numerical degeneracy"].q1 > 0.5
+    assert (
+        laws["Same endpoint without timing information"].q1
+        == laws["Same endpoint with timing information"].q1
+    )
+    assert (
+        laws["Same endpoint without timing information"].q0
+        == laws["Same endpoint with timing information"].q0
+    )
+
+
 def test_synthetic_streams_are_seed_deterministic_and_hide_terminal_labels() -> None:
     law = SyntheticTrajectoryLaw("terminal", 0.5, 1.0, 1.0, 0.0, 0.0, 2, 8.0)
     stream = generate_synthetic_stream(law, 7, 3)
