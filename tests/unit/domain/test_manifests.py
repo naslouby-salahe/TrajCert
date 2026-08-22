@@ -391,6 +391,15 @@ def test_cell_manifest_and_execution_state_reject_impossible_lifecycle_data() ->
         ActiveSemanticCellManifest.model_validate(
             cell.model_dump() | {"execution_start_timestamp": datetime(2026, 1, 1)}
         )
+    with pytest.raises(ValidationError, match="execution start"):
+        ActiveSemanticCellManifest.model_validate(
+            cell.model_dump()
+            | {"execution_start_timestamp": None, "execution_end_timestamp": timestamp}
+        )
+    with pytest.raises(ValidationError, match="required artifacts"):
+        ActiveSemanticCellManifest.model_validate(
+            cell.model_dump() | {"produced_artifact_keys": ("unexpected",)}
+        )
     with pytest.raises(ValidationError, match="both failed and completed"):
         ExecutionStateRecord(
             state=InternalExecutionState.FAILED,
