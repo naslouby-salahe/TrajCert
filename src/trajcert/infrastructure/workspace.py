@@ -127,6 +127,13 @@ class Workspace:
             return False
         return not any(part in NON_AUTHORITATIVE_OUTPUT_SEGMENTS for part in relative_path.parts)
 
+    def is_computational_input_path(self, candidate_path: Path) -> bool:
+        try:
+            candidate_path.resolve().relative_to(self.results_root)
+        except ValueError:
+            return True
+        return False
+
     def evaluation_record_path(
         self,
         experiment_name: str,
