@@ -7,7 +7,7 @@ name = "trajcert"
 version = "0.1.0"
 description = "Trajectory-aware partial-identification and sensitivity-certification framework"
 requires-python = ">=3.12"
-dependencies = ["pydantic>=2.10,<3"]
+dependencies = ["pydantic>=2.10,<3", "PyYAML>=6.0,<7"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/trajcert"]
