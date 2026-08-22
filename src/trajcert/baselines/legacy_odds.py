@@ -44,9 +44,13 @@ class LegacyIncoherenceCase:
         return self.endpoint_interval.risk_upper - self.fine_interval.risk_upper
 
 
-def legacy_feasible_interval(observable_law: ObservableLaw, gamma: float) -> LegacyFeasibleInterval:
+def legacy_feasible_interval(
+    observable_law: ObservableLaw, gamma: float, deterministic_identity_tolerance: float
+) -> LegacyFeasibleInterval:
     if not math.isfinite(gamma) or gamma < 1:
         raise ValueError("legacy gamma must be finite and at least one")
+    if not math.isfinite(deterministic_identity_tolerance) or deterministic_identity_tolerance <= 0:
+        raise ValueError("deterministic identity tolerance must be positive and finite")
     lower = 0.0
     upper = observable_law.c
     statuses: list[LegacyBandStatus] = []
@@ -75,7 +79,9 @@ def legacy_feasible_interval(observable_law: ObservableLaw, gamma: float) -> Leg
             (gamma * harmful * (later_correct + observable_law.c) - correct * later_harmful)
             / (gamma * harmful + correct),
         )
-    if lower > upper and not math.isclose(lower, upper, rel_tol=0.0, abs_tol=1e-12):
+    if lower > upper and not math.isclose(
+        lower, upper, rel_tol=0.0, abs_tol=deterministic_identity_tolerance
+    ):
         return _infeasible(tuple(statuses))
     if lower > upper:
         lower = upper
@@ -94,7 +100,9 @@ def odds_shift(q: float, gamma: float) -> float:
     return gamma * q / (1 - q + gamma * q)
 
 
-def legacy_partition_incoherence_case(gamma: float, q: float) -> LegacyIncoherenceCase:
+def legacy_partition_incoherence_case(
+    gamma: float, q: float, deterministic_identity_tolerance: float
+) -> LegacyIncoherenceCase:
     harmful_first = 0.5 * odds_shift(q, gamma)
     harmful_second = 0.5 * (1 - odds_shift(q, gamma)) * odds_shift(q, 1 / gamma)
     hidden_harmful = 0.5 * (1 - odds_shift(q, gamma)) * (1 - odds_shift(q, 1 / gamma))
@@ -106,9 +114,11 @@ def legacy_partition_incoherence_case(gamma: float, q: float) -> LegacyIncoheren
         (correct_first, correct_second),
         hidden_harmful + hidden_correct,
     )
-    fine_interval = legacy_feasible_interval(observable_law, gamma)
+    fine_interval = legacy_feasible_interval(
+        observable_law, gamma, deterministic_identity_tolerance
+    )
     endpoint_interval = legacy_feasible_interval(
-        endpoint_only_observable_law(observable_law), gamma
+        endpoint_only_observable_law(observable_law), gamma, deterministic_identity_tolerance
     )
     return LegacyIncoherenceCase(
         gamma, q, observable_law, hidden_harmful, fine_interval, endpoint_interval
@@ -116,10 +126,14 @@ def legacy_partition_incoherence_case(gamma: float, q: float) -> LegacyIncoheren
 
 
 def legacy_partition_incoherence_cases(
-    gamma_values: tuple[float, ...], q_values: tuple[float, ...]
+    gamma_values: tuple[float, ...],
+    q_values: tuple[float, ...],
+    deterministic_identity_tolerance: float,
 ) -> tuple[LegacyIncoherenceCase, ...]:
     return tuple(
-        legacy_partition_incoherence_case(gamma, q) for gamma in gamma_values for q in q_values
+        legacy_partition_incoherence_case(gamma, q, deterministic_identity_tolerance)
+        for gamma in gamma_values
+        for q in q_values
     )
 
 
