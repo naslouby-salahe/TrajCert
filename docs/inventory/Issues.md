@@ -10,7 +10,7 @@
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Typed authoritative vocabulary and identity contracts
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 98 total (47 implementation-bearing; 51 non-implementation constraints)
 
 ## Roadmap Authority
@@ -346,7 +346,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Validated matured-event/category records
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 41 total (41 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -551,7 +551,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Population information-profile API
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 19 total (19 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -708,7 +708,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Sharp-risk-set and solver results with final brackets/residuals/iterations
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 56 total (56 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -948,7 +948,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Validated frozen production configuration model
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 120 total (120 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -1323,7 +1323,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Validated runtime/sensitivity/sequential/statistics configuration
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 109 total (109 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -1671,7 +1671,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Complete strict-timing/synthetic-law configuration registry
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 112 total (112 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -2028,7 +2028,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M01 — Scientific and Configuration Contract
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 555 audit targets (0 primary implementation requirements; 555 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -2249,7 +2249,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Canonical repository/source-package architecture
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 227 total (227 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -2603,7 +2603,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Canonical test-suite architecture
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 138 total (138 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -2998,7 +2998,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Deterministic workspace/path API
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 63 total (63 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -3244,7 +3244,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Canonical semantic serializer
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 22 total (22 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -3406,7 +3406,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Versioned common artifact schema/envelope
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 55 total (55 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -3640,7 +3640,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Canonical plan schemas
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 92 total (92 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -3948,7 +3948,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Canonical cell/execution/dependency/provenance records
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 51 total (51 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -4167,7 +4167,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Canonical scientific result schemas
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 145 total (145 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -4570,7 +4570,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M02 — Reference Architecture, Workspace, and Schemas
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 793 audit targets (0 primary implementation requirements; 793 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -4813,7 +4813,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M03 — Semantic Identity, Provenance, CLI, and Failure Semantics
 - **Primary deliverable:** Scientific identity engine
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 57 total (57 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -5052,7 +5052,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M03 — Semantic Identity, Provenance, CLI, and Failure Semantics
 - **Primary deliverable:** Authoritative producer registry
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 101 total (101 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -5381,7 +5381,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M03 — Semantic Identity, Provenance, CLI, and Failure Semantics
 - **Primary deliverable:** Selective invalidation/reuse engine
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 68 total (68 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -5649,7 +5649,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M03 — Semantic Identity, Provenance, CLI, and Failure Semantics
 - **Primary deliverable:** Structured provenance records
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 32 total (32 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -5835,7 +5835,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M03 — Semantic Identity, Provenance, CLI, and Failure Semantics
 - **Primary deliverable:** Public `trajcert` CLI
-- **Issue type:** Infrastructure
+- **Issue type:** Infrastructure / Implementation
 - **Requirement count:** 65 total (65 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -6096,7 +6096,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M03 — Semantic Identity, Provenance, CLI, and Failure Semantics
 - **Primary deliverable:** Failure-classification/state-precedence engine
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 19 total (19 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -6254,7 +6254,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M03 — Semantic Identity, Provenance, CLI, and Failure Semantics
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 342 audit targets (0 primary implementation requirements; 342 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -6461,7 +6461,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M04 — Synthetic Trajectories and Dataset Authority
 - **Primary deliverable:** Validated synthetic law catalog/full-law tables
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 36 total (36 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -6658,7 +6658,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M04 — Synthetic Trajectories and Dataset Authority
 - **Primary deliverable:** Validated synthetic event streams/ledgers
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 37 total (37 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -6864,7 +6864,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M04 — Synthetic Trajectories and Dataset Authority
 - **Primary deliverable:** Balanced-prefix sequence implementation
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 10 total (10 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -6999,7 +6999,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M04 — Synthetic Trajectories and Dataset Authority
 - **Primary deliverable:** External dataset inventory records
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 42 total (42 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -7206,7 +7206,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M04 — Synthetic Trajectories and Dataset Authority
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 125 audit targets (0 primary implementation requirements; 125 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -7392,7 +7392,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Foundational comparator results
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 39 total (39 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -7595,7 +7595,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Callback comparator results
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 61 total (61 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -7845,7 +7845,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Canonical metric/aggregation library
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 64 total (64 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -8096,7 +8096,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Categorical CS trajectories with outward endpoint brackets
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 43 total (43 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -8309,7 +8309,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Certified projection results/diagnostics
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 101 total (101 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -8646,7 +8646,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Sequential reference trajectories
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 34 total (34 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -8837,7 +8837,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Statistical interval/test/effect/multiplicity records
-- **Issue type:** Implementation
+- **Issue type:** Implementation / Validation
 - **Requirement count:** 79 total (79 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -9129,7 +9129,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M05 — Comparators, Metrics, and Statistical Certification Engine
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 421 audit targets (0 primary implementation requirements; 421 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -9341,7 +9341,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** `outputs/artifacts/derived/plans/experiment_plan.json`
-- **Issue type:** Experiment
+- **Issue type:** Experiment / Validation
 - **Requirement count:** 102 total (102 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -9671,7 +9671,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Machine-readable experiment dependency/output map
-- **Issue type:** Experiment
+- **Issue type:** Experiment / Validation
 - **Requirement count:** 62 total (62 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -9917,7 +9917,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Scientific/data inventory experiment records
-- **Issue type:** Experiment
+- **Issue type:** Experiment / Validation
 - **Requirement count:** 14 total (14 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -10066,7 +10066,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Authoritative population/oracle validation evidence
-- **Issue type:** Experiment
+- **Issue type:** Experiment / Validation
 - **Requirement count:** 59 total (59 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -10318,7 +10318,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Ten hand-case result/evidence sets
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 78 total (78 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -10604,7 +10604,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Anytime coverage-stress evidence
-- **Issue type:** Experiment
+- **Issue type:** Experiment / Validation
 - **Requirement count:** 39 total (39 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -10812,7 +10812,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Failure-boundary atlas source data
-- **Issue type:** Experiment
+- **Issue type:** Experiment / Validation
 - **Requirement count:** 48 total (48 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -11033,7 +11033,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Project-level statistical synthesis records
-- **Issue type:** Experiment
+- **Issue type:** Experiment / Validation
 - **Requirement count:** 16 total (16 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -11188,7 +11188,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M06 — Authoritative Experiment Registry and Execution
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 418 audit targets (0 primary implementation requirements; 418 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -11398,7 +11398,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M07 — Manuscript Evidence and Claim Evaluation
 - **Primary deliverable:** Tables 1–9 verified source data and manuscript renderings
-- **Issue type:** Reporting
+- **Issue type:** Reporting / Validation
 - **Requirement count:** 134 total (134 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -11788,7 +11788,7 @@ Expected identity/location follows the roadmap/repository-defined canonical loca
 
 - **Milestone:** M07 — Manuscript Evidence and Claim Evaluation
 - **Primary deliverable:** Figures 1–8 verified source-data artifacts and deterministic SVG/PNG renderings
-- **Issue type:** Reporting
+- **Issue type:** Reporting / Validation
 - **Requirement count:** 62 total (62 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -12046,7 +12046,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M07 — Manuscript Evidence and Claim Evaluation
 - **Primary deliverable:** Machine-readable claim records for §21.1–§21.6
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 31 total (30 implementation-bearing; 1 non-implementation constraints)
 
 ## Roadmap Authority
@@ -12230,7 +12230,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M07 — Manuscript Evidence and Claim Evaluation
 - **Primary deliverable:** Claim records for §21.7–§21.11
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 57 total (57 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -12473,7 +12473,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M07 — Manuscript Evidence and Claim Evaluation
 - **Primary deliverable:** Real-trajectory `NOT_TESTED` claim record
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 12 total (11 implementation-bearing; 1 non-implementation constraints)
 
 ## Roadmap Authority
@@ -12613,7 +12613,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M07 — Manuscript Evidence and Claim Evaluation
 - **Primary deliverable:** Tables 10–13 stable source data
-- **Issue type:** Reporting
+- **Issue type:** Reporting / Validation
 - **Requirement count:** 60 total (60 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -12860,7 +12860,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M07 — Manuscript Evidence and Claim Evaluation
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 356 audit targets (0 primary implementation requirements; 356 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -13064,7 +13064,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M08 — Evidence Closure, Reproducibility, and Manuscript Export
 - **Primary deliverable:** Canonical cell/experiment/project completion verifier
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 43 total (43 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -13273,7 +13273,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M08 — Evidence Closure, Reproducibility, and Manuscript Export
 - **Primary deliverable:** Complete project reproducibility bundle
-- **Issue type:** Reporting
+- **Issue type:** Reporting / Validation
 - **Requirement count:** 26 total (26 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -13447,7 +13447,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M08 — Evidence Closure, Reproducibility, and Manuscript Export
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 69 audit targets (0 primary implementation requirements; 69 milestone-owned verification targets)
 
 ## Roadmap Authority
@@ -13626,7 +13626,7 @@ This audit issue is complete only when **all** of the following are true:
 
 - **Milestone:** M09 — Roadmap-Wide Verification and Operator Readiness
 - **Primary deliverable:** Complete automated roadmap test suite
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 60 total (60 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -13872,7 +13872,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M09 — Roadmap-Wide Verification and Operator Readiness
 - **Primary deliverable:** Hostile-review machine-readable evidence pointers
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 8 total (8 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -14011,7 +14011,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M09 — Roadmap-Wide Verification and Operator Readiness
 - **Primary deliverable:** Verified normal operator workflow
-- **Issue type:** Validation
+- **Issue type:** Validation / Statistical Analysis
 - **Requirement count:** 34 total (34 implementation-bearing; 0 non-implementation constraints)
 
 ## Roadmap Authority
@@ -14211,7 +14211,7 @@ For each required output, its expected identity or location is the roadmap/repos
 
 - **Milestone:** M09 — Roadmap-Wide Verification and Operator Readiness
 - **Primary deliverable:** Independent milestone audit result with complete requirement, test, deliverable, provenance, and downstream-readiness evidence
-- **Issue type:** Audit
+- **Issue type:** Verification / Audit
 - **Requirement count:** 102 audit targets (0 primary implementation requirements; 102 milestone-owned verification targets)
 
 ## Roadmap Authority
