@@ -4,6 +4,7 @@ import pytest
 
 import trajcert.infrastructure.environment as environment
 from trajcert.infrastructure.environment import (
+    authoritative_container_image_digest,
     git_provenance,
     implementation_component_digest,
     scientific_dependency_digest,
@@ -49,3 +50,13 @@ def test_git_provenance_requires_clean_repository(monkeypatch: pytest.MonkeyPatc
 
     assert len(provenance.commit) == 40
     assert provenance.dirty_tree is False
+
+
+def test_authoritative_container_image_digest_requires_launcher_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("TRAJCERT_CONTAINER_IMAGE_DIGEST", raising=False)
+    with pytest.raises(ValueError, match="environment_or_prerequisite_block"):
+        authoritative_container_image_digest()
+    monkeypatch.setenv("TRAJCERT_CONTAINER_IMAGE_DIGEST", "sha256:" + "b" * 64)
+    assert authoritative_container_image_digest() == "sha256:" + "b" * 64
