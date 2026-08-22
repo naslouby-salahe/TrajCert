@@ -1,18 +1,21 @@
 from __future__ import annotations
 
+import json
 import math
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from trajcert.domain.enums import ArtifactValidationStatus, DatasetKind
 from trajcert.domain.identity import Identifier, LocalCertificateIdentity
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
+from trajcert.domain.serialization import JSONValue
 
 UNSIGNED_DECIMAL_PATTERN = re.compile(r"^(0|[1-9][0-9]*)$")
+DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 
 class DatasetManifest(BaseModel):
@@ -149,6 +152,17 @@ class ReusableArtifactManifest(BaseModel):
             raise ValueError("parent artifact keys and digests must align")
         if self.status is ArtifactValidationStatus.VALID and self.validated_timestamp is None:
             raise ValueError("valid reusable artifacts require a validation timestamp")
+        parsed_checksums = json.loads(self.payload_sha256_map)
+        if not isinstance(parsed_checksums, dict):
+            raise ValueError("payload checksum map must be a canonical JSON object")
+        payload_checksums = cast(dict[str, JSONValue], parsed_checksums)
+        if set(payload_checksums) != set(self.payload_paths):
+            raise ValueError("payload checksum map must exactly match payload paths")
+        if not all(
+            isinstance(digest, str) and DIGEST_PATTERN.fullmatch(digest)
+            for digest in payload_checksums.values()
+        ):
+            raise ValueError("payload checksum map values must be SHA-256 digests")
         return self
 
 
