@@ -56,6 +56,8 @@ def test_canonical_json_text_rejects_duplicate_keys_and_noncanonical_rendering()
         canonical_json_text('{"a":1,"a":2}')
     with pytest.raises(ValueError, match="canonical form"):
         canonical_json_text('{"b":2,"a":1}')
+    with pytest.raises(ValueError, match="nonfinite"):
+        canonical_json_text('{"value":NaN}')
 
 
 def test_semantic_name_is_filesystem_safe() -> None:
