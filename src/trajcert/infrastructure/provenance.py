@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from trajcert.domain.records.execution import DependencyFingerprintInput, ProvenanceFingerprintInput
-from trajcert.infrastructure.storage import JSONValue, canonical_json_bytes
+from trajcert.domain.serialization import JSONValue, canonical_json_bytes
 
 
 def canonical_provenance_payload(value: ProvenanceFingerprintInput) -> bytes:

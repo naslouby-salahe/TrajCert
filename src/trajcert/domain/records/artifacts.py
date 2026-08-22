@@ -15,7 +15,7 @@ from pydantic import (
 )
 
 from trajcert.domain.enums import EvidenceClass, PublicExecutionState
-from trajcert.infrastructure.storage import JSONValue, canonical_json_text
+from trajcert.domain.serialization import JSONValue, canonical_json_text
 
 Digest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 GitCommit = Annotated[str, Field(pattern=r"^[0-9a-f]{40}([0-9a-f]{24})?$")]

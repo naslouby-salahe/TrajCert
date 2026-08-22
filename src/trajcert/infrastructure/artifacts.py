@@ -5,11 +5,8 @@ from collections.abc import Mapping
 from typing import Protocol, cast
 
 from trajcert.domain.records.artifacts import ArtifactEnvelope
-from trajcert.infrastructure.storage import (
-    JSONValue,
-    canonical_json_bytes,
-    semantic_coordinate_segment,
-)
+from trajcert.domain.serialization import JSONValue, canonical_json_bytes
+from trajcert.infrastructure.storage import semantic_coordinate_segment
 
 
 class ArrowDataType(Protocol):
