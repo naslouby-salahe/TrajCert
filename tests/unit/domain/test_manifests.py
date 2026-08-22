@@ -31,11 +31,14 @@ from trajcert.domain.records.execution import (
     ProvenanceFingerprintInput,
 )
 from trajcert.domain.records.results import (
+    ConfidenceIntervalRecord,
+    EffectSizeRecord,
     PairedComparisonRecord,
     PopulationMetricsRecord,
     SequentialUpdateRecord,
     StatisticalTestRecord,
     StreamMetricsRecord,
+    TheoremValidationRecord,
 )
 from trajcert.experiments.planning import (
     PLAN_JSON_RELATIVE_PATH,
@@ -427,6 +430,7 @@ def test_population_metrics_use_nulls_for_undefined_quantities_and_reject_nonfin
 
 def test_sequential_update_requires_consistent_matured_category_counts() -> None:
     record = SequentialUpdateRecord(
+        law_name="Timing and terminal",
         stream_seed_index=0,
         n_matured=10,
         n_resolved=7,
@@ -443,6 +447,8 @@ def test_sequential_update_requires_consistent_matured_category_counts() -> None
 
 def test_stream_metrics_require_coherent_certification_timing() -> None:
     metrics = StreamMetricsRecord(
+        law_name="Timing and terminal",
+        stream_seed_index=0,
         ever_violation=False,
         first_certified_n=None,
         never_certified=True,
@@ -519,11 +525,13 @@ def test_paired_comparison_rejects_nonfinite_metric_values() -> None:
     comparison = PairedComparisonRecord(
         claim_family="Trajectory operational gain",
         semantic_comparison_name="timing-risk-upper",
+        law_name="Timing and terminal",
         rho=0.05,
         partition_name="8-band partition",
         method_name="TrajCert",
         baseline_name="Endpoint-only path information",
         metric_name="Risk upper bound",
+        stream_seed_index=0,
         method_value=0.04,
         baseline_value=0.06,
         paired_difference_favorable_direction=0.02,
@@ -537,7 +545,9 @@ def test_paired_comparison_rejects_nonfinite_metric_values() -> None:
 def test_statistical_test_record_rejects_invalid_probability_values() -> None:
     statistical_test = StatisticalTestRecord(
         claim_name="Timing value",
+        claim_family="Trajectory operational gain",
         comparison_name="timing-risk-upper",
+        metric_name="Risk upper bound",
         experimental_unit="event stream",
         n_pairs=500,
         alternative="greater",
@@ -545,9 +555,57 @@ def test_statistical_test_record_rejects_invalid_probability_values() -> None:
         permutation_count=20000,
         raw_p_value=0.01,
         holm_family_size=54,
-        standardized_effect_status="FINITE",
+        decision_alpha=0.05,
+        reject_null=True,
     )
 
     assert statistical_test.raw_p_value == 0.01
     with pytest.raises(ValidationError):
         StatisticalTestRecord.model_validate(statistical_test.model_dump() | {"raw_p_value": 1.1})
+
+
+def test_effect_interval_and_theorem_records_enforce_numeric_contracts() -> None:
+    effect = EffectSizeRecord(
+        claim_name="Timing value",
+        comparison_name="timing-risk-upper",
+        metric_name="Risk upper bound",
+        n_pairs=2,
+        mean_paired_difference=0.02,
+        sd_paired_difference=0.01,
+        standardized_paired_effect=2.0,
+        standardized_effect_status="FINITE",
+    )
+    interval = ConfidenceIntervalRecord(
+        claim_name="Timing value",
+        comparison_name="timing-risk-upper",
+        metric_name="Risk upper bound",
+        estimand="mean difference",
+        method="bootstrap",
+        confidence_level=0.95,
+        resample_count=10000,
+        lower=0.01,
+        estimate=0.02,
+        upper=0.03,
+    )
+    theorem = TheoremValidationRecord.model_validate(
+        {
+            "theorem_name": "Information floor",
+            "case_name": "zero timing entropy",
+            "law_name": "Timing and terminal",
+            "partition_name": "8-band",
+            "quantity": "rho_star",
+            "expected_relation": "equals",
+            "expected_value": 0.0,
+            "observed_value": 0.0,
+            "absolute_error": 0.0,
+            "tolerance": 1e-12,
+            "pass": True,
+            "details_json": "{}",
+        }
+    )
+
+    assert effect.standardized_paired_effect == 2.0
+    assert interval.estimate == 0.02
+    assert theorem.passed is True
+    with pytest.raises(ValidationError, match="contain its estimate"):
+        ConfidenceIntervalRecord.model_validate(interval.model_dump() | {"upper": 0.015})
