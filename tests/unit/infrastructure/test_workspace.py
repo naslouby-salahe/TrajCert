@@ -14,6 +14,20 @@ def test_workspace_materializes_canonical_roots(tmp_path: Path) -> None:
     assert (workspace.results_root / "project_summary/claims").is_dir()
 
 
+def test_workspace_rejects_roots_outside_or_equal_to_the_project(tmp_path: Path) -> None:
+    artifacts = load_configuration().artifacts
+    with pytest.raises(ValueError, match="inside"):
+        Workspace.from_configuration(
+            artifacts.model_copy(update={"execution_workspace_root": "../outside"}),
+            tmp_path,
+        )
+    with pytest.raises(ValueError, match="distinct"):
+        Workspace.from_configuration(
+            artifacts.model_copy(update={"results_root": artifacts.execution_workspace_root}),
+            tmp_path,
+        )
+
+
 def test_experiment_workspace_has_no_execution_phase_directory(tmp_path: Path) -> None:
     workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
     experiment_root = workspace.materialize_experiment("population-sensitivity-utility")
