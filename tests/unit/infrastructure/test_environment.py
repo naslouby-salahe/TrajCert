@@ -7,6 +7,7 @@ from trajcert.infrastructure.environment import (
     authoritative_container_image_digest,
     git_provenance,
     implementation_component_digest,
+    runtime_environment_manifest,
     scientific_dependency_digest,
 )
 
@@ -60,3 +61,17 @@ def test_authoritative_container_image_digest_requires_launcher_value(
         authoritative_container_image_digest()
     monkeypatch.setenv("TRAJCERT_CONTAINER_IMAGE_DIGEST", "sha256:" + "b" * 64)
     assert authoritative_container_image_digest() == "sha256:" + "b" * 64
+
+
+def test_runtime_environment_manifest_captures_execution_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TRAJCERT_CONTAINER_IMAGE_DIGEST", "sha256:" + "b" * 64)
+    monkeypatch.setenv("OMP_NUM_THREADS", "1")
+    manifest = runtime_environment_manifest()
+
+    assert manifest.python_implementation_version
+    assert manifest.os_kernel
+    assert manifest.cpu_model
+    assert manifest.package_versions
+    assert "OMP_NUM_THREADS=1" in manifest.arithmetic_threading_environment
