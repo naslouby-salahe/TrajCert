@@ -1,0 +1,142 @@
+schema_version: 1
+
+method:
+  primary_finest_resolved_bands: 8
+  synthetic_terminal_horizon_age_units: 8
+
+budgets:
+  primary_risk: 0.05
+  primary_information_nats: 0.05
+
+confidence:
+  anytime_delta: 0.05
+  non_anytime_level: 0.95
+  confirmatory_alpha: 0.05
+
+minimum_evidence:
+  matured_events: 200
+  resolved_events: 50
+
+partitions:
+  primary:
+    - name: "8-band partition"
+      groups: [[1], [2], [3], [4], [5], [6], [7], [8]]
+    - name: "4-band partition"
+      groups: [[1, 2], [3, 4], [5, 6], [7, 8]]
+    - name: "2-band partition"
+      groups: [[1, 2, 3, 4], [5, 6, 7, 8]]
+    - name: "Endpoint-only partition"
+      groups: [[1, 2, 3, 4, 5, 6, 7, 8]]
+  computational_scaling_resolved_bands: [1, 2, 4, 8, 16, 32, 64, 128]
+
+sensitivity:
+  primary_rho_grid: [0, 0.0025, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50]
+  primary_beta_grid: [0.01, 0.025, 0.05, 0.10, 0.20]
+  same_endpoint_rho_grid: [0.01, 0.05, 0.10, 0.20, 0.40]
+  theorem_rho_offsets:
+    sharp_set: [0, 0.005, 0.025, 0.100]
+    oracle_validation: [0, 0.0025, 0.010, 0.050, 0.150]
+    refinement_above_fine_tau: [0.005, 0.025, 0.100]
+  confirmatory_sharpness_oracle_offset_above_tau: 0.05
+
+numerics:
+  population_root_absolute_tolerance: 1.0e-12
+  deterministic_identity_tolerance: 1.0e-10
+  scientific_comparison_guard: 1.0e-12
+  oracle_boundary_bracket_width: 1.0e-14
+  oracle_decimal_digits: 100
+  callback_equality_tolerance: 1.0e-10
+  callback_root_dedup_tolerance: 1.0e-12
+  callback_grid_points: 10001
+  callback_golden_section_width: 1.0e-30
+  callback_q_acceptance: 1.0e-20
+  pattern_mixture_initial_probability_clip: 1.0e-8
+  pattern_mixture_bound_touch_tolerance: 1.0e-8
+  pattern_mixture_gradient_infinity_limit: 1.0e-8
+  anytime_category_root_tolerance: 1.0e-12
+  outer_certified_gap: 1.0e-6
+  outer_max_visited_nodes: 2000000
+  outer_minimum_arbitrary_precision_bits: 128
+  outer_split_tie_tolerance: 1.0e-30
+  constructive_profile_grid_points: 2001
+  convexity_profile_grid_points: 1001
+  information_profile_figure_grid_points: 1001
+
+legacy_partition_incoherence:
+  gamma_values: [1.5, 2, 4]
+  q_values: [0.1, 0.3]
+  latent_outcome_probabilities: [0.5, 0.5]
+
+comparators:
+  legacy_bandwise_odds_ratio_sensitivity:
+    gamma_grid: [1, 1.25, 1.5, 2, 4, 8]
+  repeated_attempt_pattern_mixture:
+    c_grid: [0, 1, 2, 3]
+    coefficient_bounds: [-20, 20]
+    ftol: 1.0e-15
+    gtol: 1.0e-12
+    max_iterations: 10000
+    initial_zeta1: 0
+
+materiality:
+  population:
+    minimum_absolute_tightening: 0.005
+    minimum_relative_unresolved_gain: 0.20
+    minimum_qualifying_laws: 3
+    minimum_compatible_rho_values_per_qualifying_law: 2
+  sequential:
+    minimum_certified_update_fraction_gain: 0.05
+    minimum_qualifying_laws: 3
+    paired_bootstrap_lower_bound_must_exceed: 0
+
+display:
+  decimals:
+    risk_probability: 4
+    information_nats: 5
+    p_value: 4
+    runtime_milliseconds: 2
+  pvalue_display_below: 0.0001
+
+failure_boundary:
+  base_law: "Timing and terminal: harmful outcomes resolve late"
+  axes:
+    - name: "Terminal unresolved severity"
+      q1_equals_q0_values: [0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
+    - name: "Timing contrast"
+      d_values: [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
+    - name: "Harmful prevalence"
+      theta_values: [0.001, 0.005, 0.01, 0.025, 0.05, 0.10, 0.20]
+    - name: "Path resolution"
+      resolved_band_values: [1, 2, 4, 8, 16, 32, 64]
+    - name: "Sensitivity margin above compatibility"
+      d_values: [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05]
+    - name: "Risk-budget offset from intrinsic boundary"
+      d_values: [-0.05, -0.02, -0.005, 0, 0.005, 0.02, 0.05]
+    - name: "Matured sample size"
+      n_values: [25, 50, 100, 200, 500, 1000, 2000]
+    - name: "Terminal-selection asymmetry"
+      q1_q0_pairs: [[0.01, 0.50], [0.02, 0.40], [0.05, 0.30], [0.10, 0.10], [0.30, 0.05], [0.40, 0.02], [0.50, 0.01]]
+    - name: "Optimizer-node budget"
+      node_values: [1000, 5000, 20000, 100000, 500000, 1000000, 2000000]
+      deterministic_matured_sample_size: 500
+
+artifacts:
+  execution_workspace_root: outputs
+  execution_workspace_directories: [preprocessing, artifacts, experiments, cache]
+  reusable_artifact_directories: [fitted, baselines, derived/plans, derived/streams, derived/population, derived/sequential]
+  results_root: results
+  results_experiments_directory: experiments
+  results_project_summary_directory: project_summary
+  result_experiment_directories: [figures/main, figures/supplementary, tables/main, tables/supplementary, metrics/primary, metrics/secondary, metrics/summary, statistics/tests, statistics/confidence_intervals, statistics/effects, statistics/multiplicity]
+  project_summary_directories: [figures/main, figures/supplementary, tables/main, tables/supplementary, metrics/primary, metrics/summary, statistics/comparisons, statistics/confidence_intervals, statistics/effects, statistics/multiplicity, claims, reproducibility/configuration, reproducibility/datasets, reproducibility/seeds, reproducibility/software, reproducibility/execution]
+  plan_json_filename: experiment_plan.json
+  plan_parquet_filename: experiment_plan.parquet
+  completion_marker_file: COMPLETED.json
+
+cli:
+  exit_codes:
+    success_or_scientific_noop: 0
+    usage_or_unknown_name: 2
+    environment_or_prerequisite_block: 10
+    technical_execution_failure: 20
+    completion_or_evidence_failure: 30
