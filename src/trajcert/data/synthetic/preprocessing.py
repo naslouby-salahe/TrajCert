@@ -19,6 +19,15 @@ class BalancedPrefixConstruction:
             self.sequence.count(category) for category in range(len(self.target_probabilities))
         )
 
+    @property
+    def prefix_counts(self) -> tuple[tuple[int, ...], ...]:
+        counts = [0] * len(self.target_probabilities)
+        prefixes = [tuple(counts)]
+        for category in self.sequence:
+            counts[category] += 1
+            prefixes.append(tuple(counts))
+        return tuple(prefixes)
+
     @classmethod
     def from_probabilities(
         cls,

@@ -22,6 +22,13 @@ def test_balanced_prefix_construction_preserves_identity_and_terminal_counts() -
     assert construction.target_probabilities == (0.5, 0.25, 0.25)
     assert construction.terminal_counts == (2, 1, 1)
     assert construction.final_counts == construction.terminal_counts
+    assert construction.prefix_counts == (
+        (0, 0, 0),
+        (1, 0, 0),
+        (1, 1, 0),
+        (1, 1, 1),
+        (2, 1, 1),
+    )
 
 
 def test_balanced_prefix_zero_terminal_counts_preserve_category_identity() -> None:
