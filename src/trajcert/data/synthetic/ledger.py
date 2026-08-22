@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from hashlib import sha256
+from pathlib import Path
 
 from trajcert.data.ledger import ActionRecord, Adjudication, MaturedCategory
 from trajcert.data.synthetic.generator import SyntheticEvent
@@ -11,10 +12,11 @@ from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
 from trajcert.domain.enums import DatasetKind
 from trajcert.domain.identity import LocalCertificateIdentity
 from trajcert.domain.manifests import DatasetManifest
-from trajcert.infrastructure.storage import JSONValue, canonical_json_bytes
+from trajcert.infrastructure.storage import JSONValue, atomic_write_bytes, canonical_json_bytes
 
 SYNTHETIC_CLIENT_ID = "synthetic-client"
 SYNTHETIC_ACTION_CHANNEL_ID = "automatic-action"
+SYNTHETIC_LEDGER_RELATIVE_PATH = Path("outputs/preprocessing/prepared/synthetic_ledger.json")
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +121,21 @@ def prepare_synthetic_ledger(
     return PreparedSyntheticLedger(records, manifest, checksum)
 
 
+def write_prepared_synthetic_ledger(
+    project_root: Path,
+    prepared: PreparedSyntheticLedger,
+) -> str:
+    payload = canonical_json_bytes(_ledger_payload(prepared.records))
+    digest = atomic_write_bytes(
+        project_root / SYNTHETIC_LEDGER_RELATIVE_PATH,
+        payload,
+        lambda candidate: _validate_prepared_synthetic_ledger(candidate, prepared),
+    )
+    if digest != prepared.ledger_checksum:
+        raise ValueError("prepared synthetic ledger checksum does not match its canonical payload")
+    return digest
+
+
 def _synthetic_action_record(
     law: SyntheticTrajectoryLaw,
     event: SyntheticEvent,
@@ -183,13 +200,23 @@ def _ledger_payload(records: tuple[ActionRecord, ...]) -> tuple[dict[str, JSONVa
     )
 
 
+def _validate_prepared_synthetic_ledger(
+    payload: bytes,
+    prepared: PreparedSyntheticLedger,
+) -> None:
+    if payload != canonical_json_bytes(_ledger_payload(prepared.records)):
+        raise ValueError("prepared synthetic ledger payload is not canonical")
+
+
 __all__ = [
     "SYNTHETIC_ACTION_CHANNEL_ID",
     "SYNTHETIC_CLIENT_ID",
+    "SYNTHETIC_LEDGER_RELATIVE_PATH",
     "ActionRecord",
     "MaturedCategory",
     "PreparedSyntheticLedger",
     "prepare_synthetic_ledger",
     "synthetic_law_slug",
     "synthetic_ledger_records",
+    "write_prepared_synthetic_ledger",
 ]
