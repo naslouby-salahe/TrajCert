@@ -329,6 +329,8 @@ def test_dataset_partition_and_seed_manifests_enforce_canonical_contracts() -> N
         DatasetManifest.model_validate(
             dataset.model_dump() | {"eligibility_status": DatasetEligibilityStatus.INELIGIBLE}
         )
+    with pytest.raises(ValidationError, match="generator provenance"):
+        DatasetManifest.model_validate(dataset.model_dump() | {"generator_code_digest": None})
     assert partition.K == 2
     assert seeds.seed_count == 2
 
