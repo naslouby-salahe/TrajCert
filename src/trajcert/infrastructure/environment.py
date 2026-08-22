@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import os
+import platform
 import re
 import subprocess
 from dataclasses import dataclass
@@ -51,6 +53,39 @@ def scientific_dependency_digest(
 class GitProvenance:
     commit: str
     dirty_tree: bool
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeEnvironmentManifest:
+    python_implementation_version: str
+    os_kernel: str
+    cpu_model: str
+    package_versions: tuple[str, ...]
+    arithmetic_threading_environment: tuple[str, ...]
+    container_image_digest: str
+
+
+def runtime_environment_manifest() -> RuntimeEnvironmentManifest:
+    package_versions = tuple(
+        sorted(
+            f"{distribution.metadata['Name']}=={distribution.version}"
+            for distribution in importlib.metadata.distributions()
+        )
+    )
+    arithmetic_environment = tuple(
+        f"{name}={os.environ[name]}"
+        for name in sorted(os.environ)
+        if name
+        in {"OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"}
+    )
+    return RuntimeEnvironmentManifest(
+        f"{platform.python_implementation()} {platform.python_version()}",
+        f"{platform.system()} {platform.release()}",
+        platform.processor() or platform.machine(),
+        package_versions,
+        arithmetic_environment,
+        authoritative_container_image_digest(),
+    )
 
 
 CONTAINER_IMAGE_DIGEST_PATTERN = re.compile(
