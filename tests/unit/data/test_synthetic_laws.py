@@ -1,13 +1,15 @@
 import math
+from datetime import UTC, datetime
 
 from trajcert.configuration.loading import load_configuration
-from trajcert.data.synthetic.generator import generate_synthetic_stream
+from trajcert.data.synthetic.generator import SyntheticEvent, generate_synthetic_stream
 from trajcert.data.synthetic.laws import (
     SyntheticTrajectoryLaw,
     synthetic_law_catalog,
     synthetic_law_roles,
     synthetic_scaling_laws,
 )
+from trajcert.data.synthetic.ledger import synthetic_ledger_records
 from trajcert.math.information_profile import InformationProfile
 
 
@@ -54,6 +56,26 @@ def test_synthetic_streams_are_seed_deterministic_and_hide_terminal_labels() -> 
     assert stream == generate_synthetic_stream(law, 7, 3)
     assert all(event.admitted for event in stream)
     assert all(event.resolution_band is None and event.observed_label is None for event in stream)
+
+
+def test_synthetic_ledger_records_have_canonical_identity_and_terminal_semantics() -> None:
+    law = SyntheticTrajectoryLaw("Test law", 0.5, 0.0, 1.0, 0.0, 0.0, 2, 8.0)
+    events = (
+        SyntheticEvent(0, True, 1, True),
+        SyntheticEvent(1, False, None, True),
+    )
+
+    records = synthetic_ledger_records(law, 3, events, datetime(2026, 1, 1, tzinfo=UTC))
+
+    assert records[0].identity.client_id == "synthetic-client"
+    assert records[0].identity.action_channel_id == "automatic-action"
+    assert records[0].identity.epoch_id == "test-law::static-epoch"
+    assert records[0].event_id == "test-law::S000003::E000000"
+    assert records[1].event_id == "test-law::S000003::E000001"
+    assert records[0].maturity_timestamp == datetime(2026, 1, 9, tzinfo=UTC)
+    assert records[0].adjudication is not None
+    assert records[0].adjudication.timestamp == datetime(2026, 1, 5, tzinfo=UTC)
+    assert records[1].adjudication is None
 
 
 def test_minimum_information_completion_preserves_observable_law_and_hits_floor() -> None:
