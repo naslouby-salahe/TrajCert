@@ -6,6 +6,7 @@ from trajcert.data.synthetic.laws import (
     SyntheticTrajectoryLaw,
     synthetic_law_catalog,
     synthetic_law_roles,
+    synthetic_scaling_laws,
 )
 from trajcert.math.information_profile import InformationProfile
 
@@ -85,4 +86,33 @@ def test_minimum_information_completion_preserves_observable_law_and_hits_floor(
         InformationProfile(derived.observable_law()).value(derived.theta * derived.q1),
         floor,
         abs_tol=1e-12,
+    )
+
+
+def test_synthetic_scaling_laws_change_only_resolution() -> None:
+    law = SyntheticTrajectoryLaw("timing", 0.05, 0.3, 0.05, 0.45, -0.15, 8, 8.0)
+
+    scaled = synthetic_scaling_laws(law, (1, 2, 4, 8, 16))
+
+    assert tuple(candidate.resolved_band_count for candidate in scaled) == (1, 2, 4, 8, 16)
+    assert all(
+        (
+            candidate.name,
+            candidate.theta,
+            candidate.q1,
+            candidate.q0,
+            candidate.lambda1,
+            candidate.lambda0,
+            candidate.terminal_horizon,
+        )
+        == (
+            law.name,
+            law.theta,
+            law.q1,
+            law.q0,
+            law.lambda1,
+            law.lambda0,
+            law.terminal_horizon,
+        )
+        for candidate in scaled
     )

@@ -118,6 +118,18 @@ def synthetic_law_catalog(
     )
 
 
+def synthetic_scaling_laws(
+    law: SyntheticTrajectoryLaw,
+    resolved_band_counts: tuple[int, ...],
+) -> tuple[SyntheticTrajectoryLaw, ...]:
+    if not resolved_band_counts:
+        raise ValueError("synthetic scaling requires at least one resolved-band count")
+    return tuple(
+        law.with_resolved_band_count(resolved_band_count)
+        for resolved_band_count in resolved_band_counts
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class SyntheticLawRoles:
     utility_and_coherence: tuple[str, ...]
