@@ -12,7 +12,8 @@ from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
 from trajcert.domain.enums import DatasetKind
 from trajcert.domain.identity import LocalCertificateIdentity
 from trajcert.domain.manifests import DatasetManifest
-from trajcert.infrastructure.storage import JSONValue, atomic_write_bytes, canonical_json_bytes
+from trajcert.domain.serialization import JSONValue, canonical_json_bytes
+from trajcert.infrastructure.storage import atomic_write_bytes
 
 SYNTHETIC_CLIENT_ID = "synthetic-client"
 SYNTHETIC_ACTION_CHANNEL_ID = "automatic-action"

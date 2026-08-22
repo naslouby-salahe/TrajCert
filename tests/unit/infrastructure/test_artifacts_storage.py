@@ -3,6 +3,11 @@ from pathlib import Path
 
 import pytest
 
+from trajcert.domain.serialization import (
+    canonical_json_bytes,
+    canonical_json_text,
+    canonical_number_token,
+)
 from trajcert.infrastructure.artifacts import (
     artifact_envelope_arrow_schema,
     canonical_physical_types,
@@ -11,9 +16,6 @@ from trajcert.infrastructure.artifacts import (
 )
 from trajcert.infrastructure.storage import (
     atomic_write_bytes,
-    canonical_json_bytes,
-    canonical_json_text,
-    canonical_number_token,
     filesystem_safe_name,
     semantic_coordinate_segment,
     temporary_sibling_path,

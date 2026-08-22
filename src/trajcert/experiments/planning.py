@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Protocol, cast
 
 from trajcert.domain.records.execution import ExperimentPlanRow
-from trajcert.infrastructure.storage import JSONValue, atomic_write_bytes, canonical_json_bytes
+from trajcert.domain.serialization import JSONValue, canonical_json_bytes
+from trajcert.infrastructure.storage import atomic_write_bytes
 
 PLAN_JSON_RELATIVE_PATH = Path("outputs/artifacts/derived/plans/experiment_plan.json")
 PLAN_PARQUET_RELATIVE_PATH = Path("outputs/artifacts/derived/plans/experiment_plan.parquet")

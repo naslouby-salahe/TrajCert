@@ -7,7 +7,8 @@ from pathlib import Path
 
 from trajcert.configuration.models import MethodConfiguration, SyntheticDataConfiguration
 from trajcert.data.partitions import ObservableLaw
-from trajcert.infrastructure.storage import JSONValue, atomic_write_bytes, canonical_json_bytes
+from trajcert.domain.serialization import JSONValue, canonical_json_bytes
+from trajcert.infrastructure.storage import atomic_write_bytes
 from trajcert.math.information_profile import InformationProfile
 
 SYNTHETIC_LAW_CATALOG_RELATIVE_PATH = Path(

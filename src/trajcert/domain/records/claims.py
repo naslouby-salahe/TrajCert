@@ -7,7 +7,7 @@ from typing import cast
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from trajcert.domain.records.artifacts import CanonicalJson, Digest
-from trajcert.infrastructure.storage import JSONValue
+from trajcert.domain.serialization import JSONValue
 
 DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
