@@ -3,15 +3,36 @@ from pathlib import Path
 import pytest
 
 from trajcert.configuration.loading import load_configuration
-from trajcert.infrastructure.workspace import Workspace
+from trajcert.infrastructure.workspace import (
+    EXPERIMENT_DIRECTORIES,
+    OUTPUT_DIRECTORIES,
+    RESULT_DIRECTORIES,
+    RESULT_EXPERIMENT_DIRECTORIES,
+    Workspace,
+)
 
 
 def test_workspace_materializes_canonical_roots(tmp_path: Path) -> None:
     workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
     workspace.materialize()
-    assert (workspace.execution_root / "preprocessing/inventories").is_dir()
-    assert (workspace.execution_root / "artifacts/derived/population").is_dir()
-    assert (workspace.results_root / "project_summary/claims").is_dir()
+    assert all(
+        (workspace.execution_root / relative_path).is_dir() for relative_path in OUTPUT_DIRECTORIES
+    )
+    assert all(
+        (workspace.results_root / relative_path).is_dir() for relative_path in RESULT_DIRECTORIES
+    )
+
+
+def test_workspace_materializes_every_experiment_and_result_subtree(tmp_path: Path) -> None:
+    workspace = Workspace.from_configuration(load_configuration().artifacts, tmp_path)
+    experiment_root = workspace.materialize_experiment("population-sensitivity-utility")
+    result_root = workspace.materialize_result_experiment("population-sensitivity-utility")
+    assert all(
+        (experiment_root / relative_path).is_dir() for relative_path in EXPERIMENT_DIRECTORIES
+    )
+    assert all(
+        (result_root / relative_path).is_dir() for relative_path in RESULT_EXPERIMENT_DIRECTORIES
+    )
 
 
 def test_workspace_rejects_roots_outside_or_equal_to_the_project(tmp_path: Path) -> None:
