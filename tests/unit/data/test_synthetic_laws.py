@@ -1,6 +1,7 @@
 import math
 
 from trajcert.configuration.loading import load_configuration
+from trajcert.data.synthetic.generator import generate_synthetic_stream
 from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw, synthetic_law_catalog
 
 
@@ -35,3 +36,12 @@ def test_synthetic_law_catalog_uses_authoritative_configuration() -> None:
         law.resolved_band_count == configuration.method.primary_finest_resolved_bands
         for law in catalog
     )
+
+
+def test_synthetic_streams_are_seed_deterministic_and_hide_terminal_labels() -> None:
+    law = SyntheticTrajectoryLaw("terminal", 0.5, 1.0, 1.0, 0.0, 0.0, 2, 8.0)
+    stream = generate_synthetic_stream(law, 7, 3)
+
+    assert stream == generate_synthetic_stream(law, 7, 3)
+    assert all(event.admitted for event in stream)
+    assert all(event.resolution_band is None and event.observed_label is None for event in stream)
