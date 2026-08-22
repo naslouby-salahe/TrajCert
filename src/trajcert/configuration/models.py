@@ -28,6 +28,37 @@ class MinimumEvidenceConfiguration(FrozenConfiguration):
     resolved_events: int = Field(gt=0)
 
 
+class SyntheticLawConfiguration(FrozenConfiguration):
+    name: str
+    theta: float = Field(gt=0.0, lt=1.0)
+    q1: float = Field(ge=0.0, lt=1.0)
+    q0: float = Field(ge=0.0, lt=1.0)
+    lambda1: float
+    lambda0: float
+
+
+class SyntheticDataConfiguration(FrozenConfiguration):
+    laws: tuple[SyntheticLawConfiguration, ...]
+    utility_and_coherence_laws: tuple[str, ...]
+    sharpness_oracle_laws: tuple[str, ...]
+    safety_and_impossibility_laws: tuple[str, ...]
+
+    @model_validator(mode="after")
+    def validate_law_references(self) -> SyntheticDataConfiguration:
+        names = tuple(law.name for law in self.laws)
+        if len(set(names)) != len(names):
+            raise ValueError("synthetic law names must be unique")
+        configured = set(names)
+        lists = (
+            self.utility_and_coherence_laws,
+            self.sharpness_oracle_laws,
+            self.safety_and_impossibility_laws,
+        )
+        if any(not set(entries).issubset(configured) for entries in lists):
+            raise ValueError("synthetic law role lists must reference configured laws")
+        return self
+
+
 class PartitionConfiguration(FrozenConfiguration):
     name: str = Field(min_length=1)
     groups: tuple[tuple[int, ...], ...]
@@ -94,6 +125,17 @@ class NumericsConfiguration(FrozenConfiguration):
     constructive_profile_grid_points: int = Field(gt=0)
     convexity_profile_grid_points: int = Field(gt=0)
     information_profile_figure_grid_points: int = Field(gt=0)
+
+
+class StrictTimingCase(FrozenConfiguration):
+    law: str
+    fine_partition: str
+    coarse_partition: str
+
+
+class StrictTimingConfiguration(FrozenConfiguration):
+    zero_information_controls: tuple[StrictTimingCase, ...]
+    positive_information_cases: tuple[StrictTimingCase, ...]
 
 
 class LegacyIncoherenceConfiguration(FrozenConfiguration):
@@ -300,9 +342,11 @@ class TrajCertConfiguration(FrozenConfiguration):
     budgets: BudgetConfiguration
     confidence: ConfidenceConfiguration
     minimum_evidence: MinimumEvidenceConfiguration
+    synthetic_data: SyntheticDataConfiguration
     partitions: PartitionsConfiguration
     sensitivity: SensitivityConfiguration
     numerics: NumericsConfiguration
+    strict_timing_cases: StrictTimingConfiguration
     legacy_partition_incoherence: LegacyIncoherenceConfiguration
     comparators: ComparatorsConfiguration
     sequential_inference: SequentialInferenceConfiguration

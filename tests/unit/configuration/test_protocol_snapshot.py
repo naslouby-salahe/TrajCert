@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from trajcert.configuration.loading import load_configuration
 
 
@@ -41,3 +43,20 @@ def test_core_protocol_snapshot_is_exact() -> None:
         "completion_or_evidence_failure": 30,
     }
     assert len(configuration.failure_boundary.axes) == 9
+
+
+def test_synthetic_catalog_and_strict_timing_contract() -> None:
+    configuration = load_configuration()
+
+    assert len(configuration.synthetic_data.laws) == 12
+    assert configuration.synthetic_data.laws[0].name == "No outcome-path dependence"
+    assert configuration.synthetic_data.laws[-1].name == "Same endpoint with timing information"
+    assert len(configuration.strict_timing_cases.zero_information_controls) == 3
+    assert len(configuration.strict_timing_cases.positive_information_cases) == 3
+
+
+def test_lock_is_hashed_and_declares_the_authoritative_python_version() -> None:
+    lock = Path("requirements.lock").read_text(encoding="utf-8")
+
+    assert "Python 3.13" in lock
+    assert "--hash=sha256:" in lock
