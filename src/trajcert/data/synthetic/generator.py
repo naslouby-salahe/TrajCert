@@ -13,6 +13,14 @@ class SyntheticEvent:
     resolution_band: int | None
     admitted: bool
 
+    def __post_init__(self) -> None:
+        if self.action_index < 0:
+            raise ValueError("synthetic action index must be nonnegative")
+        if self.resolution_band is not None and self.resolution_band < 1:
+            raise ValueError("synthetic resolution band must be positive")
+        if not self.admitted:
+            raise ValueError("every synthetic action must be admitted")
+
     @property
     def observed_label(self) -> bool | None:
         return self.label if self.resolution_band is not None else None

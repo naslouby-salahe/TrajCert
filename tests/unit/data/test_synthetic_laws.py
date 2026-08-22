@@ -3,6 +3,8 @@ import math
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from trajcert.configuration.loading import load_configuration
 from trajcert.data.synthetic.generator import SyntheticEvent, generate_synthetic_stream
 from trajcert.data.synthetic.laws import (
@@ -115,6 +117,15 @@ def test_synthetic_streams_are_seed_deterministic_and_hide_terminal_labels() -> 
     assert stream == generate_synthetic_stream(law, 7, 3)
     assert all(event.admitted for event in stream)
     assert all(event.resolution_band is None and event.observed_label is None for event in stream)
+
+
+def test_synthetic_event_rejects_invalid_indices_bands_and_admission() -> None:
+    with pytest.raises(ValueError, match="nonnegative"):
+        SyntheticEvent(-1, True, 1, True)
+    with pytest.raises(ValueError, match="positive"):
+        SyntheticEvent(0, True, 0, True)
+    with pytest.raises(ValueError, match="admitted"):
+        SyntheticEvent(0, True, 1, False)
 
 
 def test_synthetic_ledger_records_have_canonical_identity_and_terminal_semantics() -> None:
