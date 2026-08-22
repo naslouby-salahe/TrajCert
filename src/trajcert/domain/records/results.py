@@ -5,6 +5,7 @@ import math
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 from trajcert.domain.enums import ScientificState
+from trajcert.domain.records.artifacts import CanonicalJson
 
 
 class PopulationMetricsRecord(BaseModel):
@@ -242,7 +243,7 @@ class TheoremValidationRecord(BaseModel):
     tolerance: float = Field(ge=0)
     passed: bool = Field(alias="pass", serialization_alias="pass")
     failure_reason: str | None = None
-    details_json: str = Field(min_length=2)
+    details_json: CanonicalJson
 
     @model_validator(mode="after")
     def validate_theorem_result(self) -> TheoremValidationRecord:

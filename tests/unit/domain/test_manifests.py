@@ -659,5 +659,9 @@ def test_effect_interval_and_theorem_records_enforce_numeric_contracts() -> None
     assert effect.standardized_paired_effect == 2.0
     assert interval.estimate == 0.02
     assert theorem.passed is True
+    with pytest.raises(ValidationError, match="canonical form"):
+        TheoremValidationRecord.model_validate(
+            theorem.model_dump() | {"details_json": '{"z":1,"a":2}'}
+        )
     with pytest.raises(ValidationError, match="contain its estimate"):
         ConfidenceIntervalRecord.model_validate(interval.model_dump() | {"upper": 0.015})
