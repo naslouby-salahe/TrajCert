@@ -8,6 +8,7 @@ from trajcert.domain.enums import (
     ArtifactValidationStatus,
     DatasetKind,
     EvidenceClass,
+    InternalExecutionState,
     PublicExecutionState,
 )
 from trajcert.domain.identity import LocalCertificateIdentity
@@ -19,7 +20,11 @@ from trajcert.domain.manifests import (
     SeedManifest,
 )
 from trajcert.domain.records.artifacts import ArtifactEnvelope
-from trajcert.domain.records.execution import ExperimentPlanRow
+from trajcert.domain.records.execution import (
+    ActiveSemanticCellManifest,
+    ExecutionStateRecord,
+    ExperimentPlanRow,
+)
 from trajcert.experiments.planning import cell_plan_digest, ordered_plan_rows, plan_digest
 
 
@@ -224,4 +229,39 @@ def test_reusable_artifact_manifest_requires_valid_lineage_and_utc_validation() 
     with pytest.raises(ValidationError, match="validation timestamp"):
         ReusableArtifactManifest.model_validate(
             manifest.model_dump() | {"validated_timestamp": None}
+        )
+
+
+def test_cell_manifest_and_execution_state_reject_impossible_lifecycle_data() -> None:
+    timestamp = datetime(2026, 1, 1, tzinfo=UTC)
+    cell = ActiveSemanticCellManifest.model_validate(
+        artifact_envelope().model_dump()
+        | {
+            "resolved_scientific_parameters": "{}",
+            "expected_artifacts": ("population_result",),
+            "required_artifact_keys": ("population-result",),
+            "checkpoint_recovery_history": "[]",
+            "execution_start_timestamp": timestamp,
+            "execution_end_timestamp": timestamp,
+        }
+    )
+    state = ExecutionStateRecord(
+        state=InternalExecutionState.RUNNING,
+        semantic_cell_key="population-cell",
+        state_sequence_number=1,
+        last_transition_timestamp=timestamp,
+        checkpoint_recovery_eligible=True,
+    )
+
+    assert cell.expected_artifacts == ("population_result",)
+    assert state.state is InternalExecutionState.RUNNING
+    with pytest.raises(ValidationError, match="both failed and completed"):
+        ExecutionStateRecord(
+            state=InternalExecutionState.FAILED,
+            semantic_cell_key="population-cell",
+            state_sequence_number=2,
+            last_transition_timestamp=timestamp,
+            failed_seed_indices=(1,),
+            completed_seed_indices=(1,),
+            checkpoint_recovery_eligible=False,
         )

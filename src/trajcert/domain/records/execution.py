@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import math
+from datetime import datetime
 
-from pydantic import Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from trajcert.domain.records.artifacts import ArtifactEnvelope, CanonicalJson
+from trajcert.domain.enums import InternalExecutionState
+from trajcert.domain.records.artifacts import ArtifactEnvelope, CanonicalJson, Digest
 
 
 class ExperimentPlanRow(ArtifactEnvelope):
@@ -37,4 +39,52 @@ class ExperimentPlanRow(ArtifactEnvelope):
             raise ValueError("seed range stop must not precede its start")
         if self.gamma is not None and not math.isfinite(self.gamma):
             raise ValueError("gamma must be finite")
+        return self
+
+
+class ActiveSemanticCellManifest(ArtifactEnvelope):
+    resolved_scientific_parameters: CanonicalJson
+    expected_artifacts: tuple[str, ...]
+    required_artifact_keys: tuple[str, ...]
+    produced_artifact_keys: tuple[str, ...] = ()
+    execution_start_timestamp: datetime | None = None
+    execution_end_timestamp: datetime | None = None
+    host_runtime_fingerprint: Digest | None = None
+    checkpoint_recovery_history: CanonicalJson
+
+    @model_validator(mode="after")
+    def validate_execution_timestamps(self) -> ActiveSemanticCellManifest:
+        if (
+            self.execution_start_timestamp is not None
+            and self.execution_end_timestamp is not None
+            and self.execution_end_timestamp < self.execution_start_timestamp
+        ):
+            raise ValueError("execution end cannot precede execution start")
+        return self
+
+
+class ExecutionStateRecord(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
+
+    state: InternalExecutionState
+    semantic_cell_key: str = Field(min_length=1)
+    state_sequence_number: int = Field(ge=0)
+    last_transition_timestamp: datetime
+    reason_code: str | None = None
+    reason_text: str | None = None
+    failed_seed_indices: tuple[int, ...] = ()
+    completed_seed_indices: tuple[int, ...] = ()
+    completed_batch_indices: tuple[int, ...] = ()
+    checkpoint_recovery_eligible: bool
+    stale_artifact_keys: tuple[str, ...] = ()
+    blocking_artifact_keys: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_execution_state(self) -> ExecutionStateRecord:
+        if any(index < 0 for index in self.failed_seed_indices + self.completed_seed_indices):
+            raise ValueError("seed indices must be nonnegative")
+        if any(index < 0 for index in self.completed_batch_indices):
+            raise ValueError("batch indices must be nonnegative")
+        if set(self.failed_seed_indices) & set(self.completed_seed_indices):
+            raise ValueError("a seed cannot be both failed and completed")
         return self
