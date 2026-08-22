@@ -22,6 +22,24 @@ class LegacyIncoherenceDirection(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class LegacyFeasibleIntervalInput:
+    observable_law: ObservableLaw
+    gamma: float
+    deterministic_identity_tolerance: float
+
+
+@dataclass(frozen=True, slots=True)
+class OddsShiftInput:
+    probability: float
+    odds_multiplier: float
+
+
+@dataclass(frozen=True, slots=True)
+class OddsShiftValue:
+    value: float
+
+
+@dataclass(frozen=True, slots=True)
 class LegacyBandEvaluation:
     band_index: int
     harmful_hazard: float
@@ -134,9 +152,10 @@ def legacy_band_evaluations(
     return tuple(evaluations)
 
 
-def legacy_feasible_interval(
-    observable_law: ObservableLaw, gamma: float, deterministic_identity_tolerance: float
-) -> LegacyFeasibleInterval:
+def legacy_feasible_interval(input_value: LegacyFeasibleIntervalInput) -> LegacyFeasibleInterval:
+    observable_law = input_value.observable_law
+    gamma = input_value.gamma
+    deterministic_identity_tolerance = input_value.deterministic_identity_tolerance
     if not math.isfinite(gamma) or gamma < 1:
         raise ValueError("legacy gamma must be finite and at least one")
     if not math.isfinite(deterministic_identity_tolerance) or deterministic_identity_tolerance <= 0:
@@ -191,7 +210,11 @@ def legacy_feasible_interval(
     )
 
 
-def odds_shift(q: float, gamma: float) -> float:
+def odds_shift(input_value: OddsShiftInput) -> OddsShiftValue:
+    return OddsShiftValue(_odds_shift(input_value.probability, input_value.odds_multiplier))
+
+
+def _odds_shift(q: float, gamma: float) -> float:
     if not 0 < q < 1 or not math.isfinite(gamma) or gamma <= 0:
         raise ValueError("odds shift requires q in (0, 1) and positive finite gamma")
     return gamma * q / (1 - q + gamma * q)
@@ -213,10 +236,10 @@ def legacy_partition_incoherence_case(
         abs_tol=deterministic_identity_tolerance,
     ):
         raise ValueError("latent outcome probabilities must be positive and sum to one")
-    harmful_first = harmful_probability * odds_shift(q, gamma)
-    harmful_second = harmful_probability * (1 - odds_shift(q, gamma)) * odds_shift(q, 1 / gamma)
+    harmful_first = harmful_probability * _odds_shift(q, gamma)
+    harmful_second = harmful_probability * (1 - _odds_shift(q, gamma)) * _odds_shift(q, 1 / gamma)
     hidden_harmful = (
-        harmful_probability * (1 - odds_shift(q, gamma)) * (1 - odds_shift(q, 1 / gamma))
+        harmful_probability * (1 - _odds_shift(q, gamma)) * (1 - _odds_shift(q, 1 / gamma))
     )
     correct_first = correct_probability * q
     correct_second = correct_probability * (1 - q) * q
@@ -227,10 +250,12 @@ def legacy_partition_incoherence_case(
         hidden_harmful + hidden_correct,
     )
     fine_interval = legacy_feasible_interval(
-        observable_law, gamma, deterministic_identity_tolerance
+        LegacyFeasibleIntervalInput(observable_law, gamma, deterministic_identity_tolerance)
     )
     endpoint_interval = legacy_feasible_interval(
-        endpoint_only_observable_law(observable_law), gamma, deterministic_identity_tolerance
+        LegacyFeasibleIntervalInput(
+            endpoint_only_observable_law(observable_law), gamma, deterministic_identity_tolerance
+        )
     )
     return LegacyIncoherenceCase(
         gamma, q, observable_law, hidden_harmful, fine_interval, endpoint_interval
