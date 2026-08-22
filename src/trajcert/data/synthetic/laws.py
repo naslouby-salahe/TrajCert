@@ -96,3 +96,18 @@ def synthetic_law_catalog(
         )
         for law in synthetic_data.laws
     )
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticLawRoles:
+    utility_and_coherence: tuple[str, ...]
+    sharpness_oracle: tuple[str, ...]
+    safety_and_impossibility: tuple[str, ...]
+
+
+def synthetic_law_roles(synthetic_data: SyntheticDataConfiguration) -> SyntheticLawRoles:
+    return SyntheticLawRoles(
+        synthetic_data.utility_and_coherence_laws,
+        synthetic_data.sharpness_oracle_laws,
+        synthetic_data.safety_and_impossibility_laws,
+    )

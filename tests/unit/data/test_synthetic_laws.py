@@ -2,7 +2,11 @@ import math
 
 from trajcert.configuration.loading import load_configuration
 from trajcert.data.synthetic.generator import generate_synthetic_stream
-from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw, synthetic_law_catalog
+from trajcert.data.synthetic.laws import (
+    SyntheticTrajectoryLaw,
+    synthetic_law_catalog,
+    synthetic_law_roles,
+)
 
 
 def test_synthetic_trajectory_law_preserves_conditional_probability_and_horizon_contract() -> None:
@@ -35,6 +39,9 @@ def test_synthetic_law_catalog_uses_authoritative_configuration() -> None:
     assert all(
         law.resolved_band_count == configuration.method.primary_finest_resolved_bands
         for law in catalog
+    )
+    assert synthetic_law_roles(configuration.synthetic_data).utility_and_coherence == (
+        configuration.synthetic_data.utility_and_coherence_laws
     )
 
 
