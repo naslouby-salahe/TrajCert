@@ -259,3 +259,16 @@ def missing_seed_ranges(
         previous = index
     ranges.append((range_start, previous + 1))
     return tuple(ranges)
+
+
+def checkpoint_batch_count(
+    seed_index_start: int,
+    seed_index_stop_exclusive: int,
+    checkpoint_batch_size: int,
+) -> int:
+    if seed_index_start < 0 or seed_index_stop_exclusive <= seed_index_start:
+        raise ValueError("declared seed interval is invalid")
+    if checkpoint_batch_size < 1:
+        raise ValueError("checkpoint batch size must be positive")
+    seed_count = seed_index_stop_exclusive - seed_index_start
+    return (seed_count + checkpoint_batch_size - 1) // checkpoint_batch_size
