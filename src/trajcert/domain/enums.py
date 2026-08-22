@@ -1,0 +1,45 @@
+from enum import StrEnum
+
+
+class ScientificState(StrEnum):
+    CERTIFIED = "CERTIFIED"
+    UNCERTIFIED = "UNCERTIFIED"
+    MODEL_INCOMPATIBLE = "MODEL_INCOMPATIBLE"
+    INTRINSICALLY_UNCERTIFIABLE = "INTRINSICALLY_UNCERTIFIABLE"
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+
+
+class PublicExecutionState(StrEnum):
+    NOT_STARTED = "NOT_STARTED"
+    BLOCKED = "BLOCKED"
+    READY = "READY"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    INVALID = "INVALID"
+
+
+class InternalExecutionState(StrEnum):
+    PLANNED = "PLANNED"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    INVALID = "INVALID"
+
+
+class EvidenceClass(StrEnum):
+    VALIDATION = "VALIDATION"
+    EXPLORATORY = "EXPLORATORY"
+    CONFIRMATORY = "CONFIRMATORY"
+    ABLATION = "ABLATION"
+    ROBUSTNESS = "ROBUSTNESS"
+    GENERALIZATION = "GENERALIZATION"
+    FAILURE_BOUNDARY = "FAILURE_BOUNDARY"
+    DIAGNOSTIC = "DIAGNOSTIC"
+
+
+AUTHORITATIVE_EVIDENCE_CLASSES = frozenset(EvidenceClass) - {EvidenceClass.EXPLORATORY}
+
+
+def is_authoritative_evidence_class(evidence_class: EvidenceClass) -> bool:
+    return evidence_class in AUTHORITATIVE_EVIDENCE_CLASSES
