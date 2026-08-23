@@ -337,7 +337,7 @@ def _zero_resolved_compatible(input_value: CompatibilityInput) -> bool:
     ):
         return False
     return (
-        information_slack(InformationSlackInput(0, 0, envelope.timing_entropy_upper, 0)).value
+        information_slack(InformationSlackInput(0, 0, envelope.timing_entropy_upper, 0)).upper
         <= input_value.information_budget
     )
 
