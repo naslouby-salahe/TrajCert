@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -83,7 +84,7 @@ class CompletionMarker(BaseModel):
         parsed_artifact_digests = json.loads(self.artifact_sha256_map)
         if not isinstance(parsed_artifact_digests, dict):
             raise ValueError("artifact checksum map must be a canonical JSON object")
-        artifact_digests = cast(dict[str, JSONValue], parsed_artifact_digests)
+        artifact_digests = cast(Mapping[str, JSONValue], parsed_artifact_digests)
         if set(artifact_digests) != set(self.produced_artifact_keys):
             raise ValueError("artifact checksum map must exactly match produced artifact keys")
         if not all(

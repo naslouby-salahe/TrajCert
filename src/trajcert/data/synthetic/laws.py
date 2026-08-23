@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
@@ -276,7 +277,7 @@ def _write_synthetic_law_catalog_manifest(
     )
 
 
-def _synthetic_law_table_row(law: SyntheticTrajectoryLaw) -> dict[str, JSONValue]:
+def _synthetic_law_table_row(law: SyntheticTrajectoryLaw) -> Mapping[str, JSONValue]:
     observable_law = law.observable_law()
     return {
         "conditional_terminal_mass_label_0": law.conditional_terminal_mass(False),

@@ -65,7 +65,7 @@ def direct_full_law_information(
         )
         row_marginals = tuple(sum(row, zero) for row in table)
         column_marginals = tuple(
-            sum((table[row][column] for row in range(2)), zero) for column in range(len(table[0]))
+            sum((row[column] for row in table), zero) for column in range(len(table[0]))
         )
         information: MPFloat = zero
         for row, values in enumerate(table):
@@ -181,7 +181,11 @@ def _golden_section_minimum(
 
 
 def _bisect_oracle_boundary(
-    objective: Callable[[float], float], rho: float, lower: float, upper: float, width: float
+    objective: Callable[[float], float],
+    rho: float,
+    lower: float,
+    upper: float,
+    width: float,
 ) -> OracleBracket:
     left = lower
     right = upper

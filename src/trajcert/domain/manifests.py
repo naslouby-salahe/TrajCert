@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal, cast
@@ -169,7 +170,7 @@ class ReusableArtifactManifest(BaseModel):
         parsed_checksums = json.loads(self.payload_sha256_map)
         if not isinstance(parsed_checksums, dict):
             raise ValueError("payload checksum map must be a canonical JSON object")
-        payload_checksums = cast(dict[str, JSONValue], parsed_checksums)
+        payload_checksums = cast(Mapping[str, JSONValue], parsed_checksums)
         if set(payload_checksums) != set(self.payload_paths):
             raise ValueError("payload checksum map must exactly match payload paths")
         if not all(

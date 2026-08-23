@@ -218,11 +218,26 @@ class SequentialStressCase(FrozenConfiguration):
     beta_offset_above_true_upper_bound: float | None = None
 
 
+class NamedIntegerConfiguration(FrozenConfiguration):
+    name: str = Field(min_length=1)
+    value: int
+
+
+class NamedStringConfiguration(FrozenConfiguration):
+    name: str = Field(min_length=1)
+    value: str = Field(min_length=1)
+
+
+class NamedVersionConfiguration(FrozenConfiguration):
+    name: str = Field(min_length=1)
+    value: str = Field(min_length=1)
+
+
 class RuntimeBenchmarkConfiguration(FrozenConfiguration):
     warmup_repetitions: int = Field(ge=0)
     measured_repetitions: int = Field(gt=0)
     law: str
-    outer_projection_input: dict[str, int]
+    outer_projection_input: tuple[NamedIntegerConfiguration, ...]
     outer_projection_rho_offset_above_true_information: float
 
 
@@ -234,10 +249,10 @@ class RuntimeEnvironmentConfiguration(FrozenConfiguration):
     python_version: str
     locale: str
     timezone: str
-    environment_variables: dict[str, str]
+    environment_variables: tuple[NamedStringConfiguration, ...]
     authoritative_execution: str
-    direct_dependencies: dict[str, str | float]
-    reproducibility_tools: dict[str, str]
+    direct_dependencies: tuple[NamedVersionConfiguration, ...]
+    reproducibility_tools: tuple[NamedVersionConfiguration, ...]
     transitive_lock_file: str
 
 

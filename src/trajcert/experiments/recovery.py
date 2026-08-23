@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -133,12 +134,14 @@ def artifact_reuse_decision(
 
 def active_cell_reuse_decision(
     required_artifacts: tuple[ActiveArtifact, ...],
-    expected_dependency_fingerprints: dict[str, str],
+    expected_dependency_fingerprints: Mapping[str, str],
     completion_marker: ActiveArtifact | None,
     overwrite_roots: tuple[str, ...] = (),
-    replacement_content_digests: dict[str, str] | None = None,
+    replacement_content_digests: Mapping[str, str] | None = None,
 ) -> ActiveCellReuseDecision:
-    replacement_digests = {} if replacement_content_digests is None else replacement_content_digests
+    replacement_digests: Mapping[str, str] = (
+        {} if replacement_content_digests is None else replacement_content_digests
+    )
     roots = set(overwrite_roots)
     stale_descendants: set[str] = set()
     for artifact in required_artifacts:
@@ -203,7 +206,7 @@ class CheckpointRecoveryRequest(BaseModel):
 def nearest_valid_checkpoint(
     request: CheckpointRecoveryRequest,
     checkpoints: tuple[CheckpointRecord, ...],
-    result_payloads: dict[str, bytes],
+    result_payloads: Mapping[str, bytes],
 ) -> CheckpointRecord | None:
     candidates = tuple(
         checkpoint
@@ -218,7 +221,7 @@ def nearest_valid_checkpoint(
 def _checkpoint_is_valid(
     request: CheckpointRecoveryRequest,
     checkpoint: CheckpointRecord,
-    result_payloads: dict[str, bytes],
+    result_payloads: Mapping[str, bytes],
 ) -> bool:
     payload = result_payloads.get(checkpoint.artifact_key)
     return (

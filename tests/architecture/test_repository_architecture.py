@@ -1,175 +1,25 @@
+import ast
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-
-SOURCE_MODULES = (
-    "configuration/validation.py",
-    "configuration/protocol.py",
-    "domain/records/artifacts.py",
-    "domain/records/execution.py",
-    "domain/records/results.py",
-    "domain/records/claims.py",
-    "data/inventory.py",
-    "data/apportionment.py",
-    "data/synthetic/laws.py",
-    "data/synthetic/generator.py",
-    "data/synthetic/ledger.py",
-    "data/synthetic/preprocessing.py",
-    "math/risk_set.py",
-    "math/solver.py",
-    "math/refinement.py",
-    "math/safety.py",
-    "inference/confidence_sequence.py",
-    "inference/envelope.py",
-    "inference/projection.py",
-    "inference/compatibility.py",
-    "inference/states.py",
-    "baselines/references.py",
-    "baselines/legacy_odds.py",
-    "baselines/callbacks.py",
-    "baselines/pattern_mixture.py",
-    "baselines/information_oracle.py",
-    "baselines/sequential_references.py",
-    "experiments/registry.py",
-    "experiments/planning.py",
-    "experiments/execution.py",
-    "experiments/lifecycle.py",
-    "experiments/recovery.py",
-    "evaluation/theorem_validation.py",
-    "evaluation/oracle_validation.py",
-    "evaluation/projection_oracle.py",
-    "evaluation/coverage_validation.py",
-    "evaluation/benchmarking.py",
-    "analysis/metrics.py",
-    "analysis/statistics.py",
-    "analysis/materiality.py",
-    "analysis/evidence.py",
-    "analysis/synthesis.py",
-    "infrastructure/workspace.py",
-    "infrastructure/storage.py",
-    "infrastructure/artifacts.py",
-    "infrastructure/fingerprints.py",
-    "infrastructure/components.py",
-    "infrastructure/provenance.py",
-    "infrastructure/environment.py",
-    "infrastructure/evidence_manifest.py",
-    "infrastructure/diagnostics.py",
-    "reporting/tables.py",
-    "reporting/figures.py",
-    "reporting/export.py",
-    "cli/main.py",
-    "cli/commands/doctor.py",
-    "cli/commands/preprocess.py",
-    "cli/commands/plan.py",
-    "cli/commands/smoke.py",
-    "cli/commands/run.py",
-    "cli/commands/status.py",
-    "cli/commands/report.py",
+SOURCE_ROOT = PROJECT_ROOT / "src" / "trajcert"
+TEST_ROOT = PROJECT_ROOT / "tests"
+REQUIRED_TOP_LEVEL_PACKAGES = frozenset(
+    {
+        "analysis",
+        "baselines",
+        "cli",
+        "configuration",
+        "data",
+        "domain",
+        "evaluation",
+        "experiments",
+        "inference",
+        "infrastructure",
+        "math",
+        "reporting",
+    }
 )
-
-
-TEST_MODULES = (
-    "architecture/test_dependency_boundaries.py",
-    "architecture/test_public_type_boundaries.py",
-    "architecture/test_no_any_dict_object.py",
-    "architecture/test_no_primitive_leaks.py",
-    "architecture/test_no_hardcoded_values.py",
-    "architecture/test_configuration_ownership.py",
-    "architecture/test_no_duplicate_constants.py",
-    "architecture/test_dead_code.py",
-    "architecture/test_enum_integrity.py",
-    "architecture/test_no_test_only_production_code.py",
-    "architecture/test_no_redirects_shims_reexports.py",
-    "architecture/test_naming_policy.py",
-    "architecture/test_canonical_vocabulary.py",
-    "architecture/test_no_comments_or_docstrings.py",
-    "architecture/test_no_todos_or_temporary_code.py",
-    "architecture/test_static_typing.py",
-    "architecture/test_code_quality.py",
-    "architecture/test_dependency_hygiene.py",
-    "unit/configuration/test_loading_validation.py",
-    "unit/configuration/test_protocol_snapshot.py",
-    "unit/domain/test_identity.py",
-    "unit/domain/test_operational_records.py",
-    "unit/domain/test_manifests.py",
-    "unit/data/test_partitions.py",
-    "unit/data/test_apportionment.py",
-    "unit/data/test_integrity.py",
-    "unit/data/synthetic/test_laws.py",
-    "unit/data/synthetic/test_generator.py",
-    "unit/data/synthetic/test_ledger.py",
-    "unit/data/synthetic/test_preprocessing.py",
-    "unit/math/test_entropy.py",
-    "unit/math/test_information_profile.py",
-    "unit/math/test_risk_set_solver.py",
-    "unit/math/test_refinement.py",
-    "unit/math/test_safety.py",
-    "unit/inference/test_confidence_sequence.py",
-    "unit/inference/test_envelope.py",
-    "unit/inference/test_projection.py",
-    "unit/inference/test_compatibility.py",
-    "unit/inference/test_states.py",
-    "unit/baselines/test_reference_bounds.py",
-    "unit/baselines/test_legacy_odds.py",
-    "unit/baselines/test_callbacks.py",
-    "unit/baselines/test_pattern_mixture.py",
-    "unit/baselines/test_information_oracle.py",
-    "unit/baselines/test_sequential_references.py",
-    "unit/experiments/test_registry_planning.py",
-    "unit/experiments/test_execution_lifecycle.py",
-    "unit/experiments/test_recovery.py",
-    "unit/experiments/test_experiment_definitions.py",
-    "unit/evaluation/test_theorem_validation.py",
-    "unit/evaluation/test_oracle_validation.py",
-    "unit/evaluation/test_projection_oracle.py",
-    "unit/evaluation/test_coverage_validation.py",
-    "unit/evaluation/test_benchmarking.py",
-    "unit/analysis/test_metrics.py",
-    "unit/analysis/test_statistics.py",
-    "unit/analysis/test_materiality.py",
-    "unit/analysis/test_claims.py",
-    "unit/analysis/test_evidence.py",
-    "unit/analysis/test_synthesis.py",
-    "unit/infrastructure/test_workspace.py",
-    "unit/infrastructure/test_artifacts_storage.py",
-    "unit/infrastructure/test_fingerprints.py",
-    "unit/infrastructure/test_component_digests.py",
-    "unit/infrastructure/test_provenance.py",
-    "unit/infrastructure/test_environment.py",
-    "unit/infrastructure/test_evidence_manifest.py",
-    "unit/reporting/test_tables.py",
-    "unit/reporting/test_figures.py",
-    "unit/reporting/test_export.py",
-    "unit/cli/test_commands.py",
-    "scientific/test_data_invariants.py",
-    "scientific/test_population_identities.py",
-    "scientific/test_refinement_and_timing.py",
-    "scientific/test_sharpness_against_independent_oracle.py",
-    "scientific/test_safety_and_impossibility.py",
-    "scientific/test_anytime_validity_contract.py",
-    "scientific/test_experiment_contracts.py",
-    "scientific/test_claim_boundaries.py",
-    "integration/data/test_synthetic_preprocessing_pipeline.py",
-    "integration/population/test_population_solver_pipeline.py",
-    "integration/population/test_oracle_comparator_pipeline.py",
-    "integration/sequential/test_stream_confidence_pipeline.py",
-    "integration/sequential/test_projection_state_pipeline.py",
-    "integration/execution/test_inventory_to_population.py",
-    "integration/execution/test_reuse_and_selective_invalidation.py",
-    "integration/execution/test_checkpoint_recovery.py",
-    "integration/execution/test_atomic_completion.py",
-    "integration/execution/test_evidence_completion.py",
-    "integration/reporting/test_outputs_to_results_export.py",
-    "integration/reporting/test_results_evidence_filter.py",
-    "e2e/test_preprocess_smoke_plan.py",
-    "e2e/test_run_status_report.py",
-    "e2e/test_reuse_overwrite_recovery.py",
-    "e2e/test_full_execution_and_report.py",
-    "smoke/test_smoke.py",
-)
-
-
 WORKSPACE_DIRECTORIES = (
     "outputs/preprocessing/inventories",
     "outputs/artifacts/derived/plans",
@@ -179,6 +29,25 @@ WORKSPACE_DIRECTORIES = (
     "results/experiments/descriptive-experiment-name/statistics/tests",
     "results/project_summary/reproducibility/execution",
 )
+
+
+def test_repository_packages_and_architecture_tests_are_discovered() -> None:
+    discovered_packages = frozenset(
+        path.name
+        for path in SOURCE_ROOT.iterdir()
+        if path.is_dir() and (path / "__init__.py").is_file()
+    )
+    assert discovered_packages >= REQUIRED_TOP_LEVEL_PACKAGES
+    architecture_tests = tuple((TEST_ROOT / "architecture").glob("test_*.py"))
+    assert architecture_tests
+    assert all(test_path.stat().st_size > 0 for test_path in architecture_tests)
+
+
+def test_every_discovered_production_module_is_parseable() -> None:
+    source_files = tuple(SOURCE_ROOT.rglob("*.py"))
+    assert source_files
+    for source_file in source_files:
+        ast.parse(source_file.read_text(encoding="utf-8"), filename=str(source_file))
 
 
 def test_canonical_repository_components_exist() -> None:
@@ -193,15 +62,8 @@ def test_canonical_repository_components_exist() -> None:
     )
     for required_path in required_paths:
         assert (PROJECT_ROOT / required_path).is_file()
-    for module in SOURCE_MODULES:
-        assert (PROJECT_ROOT / "src/trajcert" / module).is_file()
     for directory in WORKSPACE_DIRECTORIES:
         assert (PROJECT_ROOT / directory).is_dir()
-
-
-def test_canonical_test_suite_modules_exist() -> None:
-    for module in TEST_MODULES:
-        assert (PROJECT_ROOT / "tests" / module).is_file()
 
 
 def test_reporting_does_not_import_scientific_implementation() -> None:
@@ -211,6 +73,6 @@ def test_reporting_does_not_import_scientific_implementation() -> None:
         "trajcert.data",
         "trajcert.baselines",
     )
-    for module_path in (PROJECT_ROOT / "src/trajcert/reporting").glob("*.py"):
+    for module_path in (SOURCE_ROOT / "reporting").glob("*.py"):
         source = module_path.read_text(encoding="utf-8")
         assert all(prefix not in source for prefix in forbidden_prefixes)

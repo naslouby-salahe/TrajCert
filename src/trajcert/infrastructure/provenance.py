@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -61,7 +62,7 @@ def canonical_provenance_envelope_payload(value: ProvenanceEnvelope) -> bytes:
 
 
 def canonical_provenance_payload(value: ProvenanceFingerprintInput) -> bytes:
-    payload: dict[str, JSONValue] = {
+    payload: Mapping[str, JSONValue] = {
         "code_commit": value.code_commit,
         "container_image_digest": value.container_image_digest,
         "dataset_preprocessing_checksums": tuple(
@@ -80,7 +81,7 @@ def canonical_provenance_payload(value: ProvenanceFingerprintInput) -> bytes:
 
 
 def canonical_dependency_payload(value: DependencyFingerprintInput) -> bytes:
-    payload: dict[str, JSONValue] = {
+    payload: Mapping[str, JSONValue] = {
         "artifact_type": value.artifact_type,
         "environment_dependency_digest": value.environment_dependency_digest,
         "implementation_component_digest": value.implementation_component_digest,
