@@ -64,6 +64,9 @@ numerics:
   scientific_comparison_guard: 1.0e-12
   oracle_boundary_bracket_width: 1.0e-14
   oracle_decimal_digits: 100
+  projection_oracle_grid_points: 1001
+  projection_oracle_retained_candidates: 20
+  projection_oracle_refinement_passes: 32
   callback_equality_tolerance: 1.0e-10
   callback_root_dedup_tolerance: 1.0e-12
   callback_grid_points: 10001

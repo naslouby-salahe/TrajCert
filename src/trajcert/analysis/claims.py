@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from trajcert.domain.enums import EvidenceClass
+
 FRAMEWORK_NAME = (
     "TrajCert — Trajectory-Aware Partial-Identification and Sensitivity-Certification Framework"
 )
@@ -70,6 +72,6 @@ class ClaimScopeGuard:
         if violations:
             raise ValueError(f"claim exceeds TrajCert scope: {', '.join(sorted(violations))}")
 
-    def validate_evidence_class(self, evidence_class: str) -> None:
-        if evidence_class == "EXPLORATORY":
+    def validate_evidence_class(self, evidence_class: EvidenceClass) -> None:
+        if evidence_class is EvidenceClass.EXPLORATORY:
             raise ValueError("exploratory evidence cannot be promoted to confirmatory evidence")

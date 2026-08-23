@@ -10,6 +10,7 @@ from trajcert.analysis.claims import (
     VERIFICATION_SETTING,
     ClaimScopeGuard,
 )
+from trajcert.domain.enums import EvidenceClass
 
 
 def test_authoritative_scope_vocabulary_is_traceable() -> None:
@@ -36,4 +37,4 @@ def test_scope_guard_rejects_prohibited_claims() -> None:
 
 def test_exploratory_evidence_cannot_be_promoted_to_confirmatory_evidence() -> None:
     with pytest.raises(ValueError, match="cannot be promoted"):
-        ClaimScopeGuard().validate_evidence_class("EXPLORATORY")
+        ClaimScopeGuard().validate_evidence_class(EvidenceClass.EXPLORATORY)
