@@ -3,10 +3,15 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import StrEnum
 from statistics import NormalDist
 
 from trajcert.configuration.models import ConfidenceConfiguration, NumericsConfiguration
+from trajcert.domain.enums import (
+    ReferenceApplicability,
+    ScientificState,
+    SequentialAblation,
+    SequentialReferenceMethod,
+)
 from trajcert.inference.confidence_sequence import ProbabilityInterval
 from trajcert.inference.envelope import (
     ConservativeSummaryEnvelope,
@@ -18,25 +23,6 @@ from trajcert.inference.projection import (
     ProjectionInput,
     certified_outer_projection,
 )
-
-
-class SequentialReferenceMethod(StrEnum):
-    TRAJCERT = "TrajCert"
-    TIME_UNIFORM_OBSERVABLE_LAW_PROJECTION = "Time-uniform observable-law projection"
-    REPEATED_STATIC_MONITORING_NEGATIVE_CONTROL = "Repeated-static-monitoring negative control"
-    IGNORABLE_DELAY_ANYTIME_REFERENCE = "Ignorable-delay anytime reference"
-
-
-class ReferenceApplicability(StrEnum):
-    VALID = "VALID"
-    ASSUMPTION_VIOLATED = "ASSUMPTION_VIOLATED"
-    NEGATIVE_CONTROL = "NEGATIVE_CONTROL"
-
-
-class SequentialAblation(StrEnum):
-    ENDPOINT_ONLY_PATH_INFORMATION = "Endpoint-only path information"
-    SAME_ENDPOINT_DIFFERENT_TIMING = "Same Endpoint, Different Timing"
-    RHO_LOG_TWO = "rho = log(2)"
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +50,25 @@ class TimeUniformProjectionReference:
     method: SequentialReferenceMethod
     projection: CertifiedProjectionResult
     valid_for_deployment: bool
+
+
+@dataclass(frozen=True, slots=True)
+class TrajCertReferenceInput:
+    projection: CertifiedProjectionResult
+    evidence_gate_passed: bool
+    compatibility_floor: float | None
+    intrinsic_risk_lower: float | None
+    operational_state: ScientificState
+
+
+@dataclass(frozen=True, slots=True)
+class TrajCertReference:
+    method: SequentialReferenceMethod
+    projection: CertifiedProjectionResult
+    evidence_gate_passed: bool
+    compatibility_floor: float | None
+    intrinsic_risk_lower: float | None
+    operational_state: ScientificState
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +108,7 @@ class IgnorableDelayReference:
     interval: ProbabilityInterval | None
     applicability: ReferenceApplicability
     evidence_gate_passed: bool
+    valid_method_ranking_eligible: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,8 +134,15 @@ def time_uniform_observable_law_projection(
     )
 
 
-def trajcert_reference(projection: CertifiedProjectionResult) -> TimeUniformProjectionReference:
-    return TimeUniformProjectionReference(SequentialReferenceMethod.TRAJCERT, projection, True)
+def trajcert_reference(input_value: TrajCertReferenceInput) -> TrajCertReference:
+    return TrajCertReference(
+        SequentialReferenceMethod.TRAJCERT,
+        input_value.projection,
+        input_value.evidence_gate_passed,
+        input_value.compatibility_floor,
+        input_value.intrinsic_risk_lower,
+        input_value.operational_state,
+    )
 
 
 def repeated_static_monitoring_negative_control(
@@ -177,6 +190,7 @@ def ignorable_delay_anytime_reference(input_value: IgnorableDelayInput) -> Ignor
             None,
             ReferenceApplicability.ASSUMPTION_VIOLATED,
             input_value.evidence_gate_passed,
+            False,
         )
     interval = (
         input_value.previous_interval
@@ -195,6 +209,7 @@ def ignorable_delay_anytime_reference(input_value: IgnorableDelayInput) -> Ignor
         interval,
         ReferenceApplicability.VALID,
         input_value.evidence_gate_passed,
+        True,
     )
 
 

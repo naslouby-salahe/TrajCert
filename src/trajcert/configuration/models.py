@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from trajcert.domain.enums import SequentialReferenceMethod
+
 
 class FrozenConfiguration(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -372,7 +374,7 @@ class TrajCertConfiguration(FrozenConfiguration):
     display: DisplayConfiguration
     failure_boundary: FailureBoundaryConfiguration
     sequential_stress_cases: tuple[SequentialStressCase, ...]
-    sequential_stress_methods: tuple[str, ...]
+    sequential_stress_methods: tuple[SequentialReferenceMethod, ...]
     runtime_benchmark: RuntimeBenchmarkConfiguration
     runtime_environment: RuntimeEnvironmentConfiguration
     artifacts: ArtifactsConfiguration
@@ -383,6 +385,8 @@ class TrajCertConfiguration(FrozenConfiguration):
     def validate_contract(self) -> TrajCertConfiguration:
         if self.schema_version != 1:
             raise ValueError("unsupported configuration schema version")
+        if self.sequential_stress_methods != tuple(SequentialReferenceMethod):
+            raise ValueError("sequential stress methods must equal the canonical method registry")
         if self.method.primary_finest_resolved_bands != len(self.partitions.primary[0].groups):
             raise ValueError("finest partition must match configured finest resolved bands")
         if self.minimum_evidence.resolved_events > self.minimum_evidence.matured_events:
