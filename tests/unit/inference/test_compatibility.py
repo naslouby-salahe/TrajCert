@@ -32,6 +32,9 @@ def test_certified_compatibility_and_intrinsic_lower_bounds_use_fixed_arb_precis
     assert intrinsic.converged is True
     assert compatibility.visited_nodes > 0
     assert intrinsic.visited_nodes > 0
+    expected_compatibility = 0.6 * (-(1 / 6) * math.log(1 / 6) - (5 / 6) * math.log(5 / 6))
+    assert compatibility.proven_lower <= expected_compatibility
+    assert math.isclose(compatibility.proven_lower, expected_compatibility)
     assert math.isclose(intrinsic.proven_lower, 1 / 6)
     assert compatibility.zero_resolved_mass_plausible is False
     assert intrinsic.zero_resolved_mass_plausible is False
