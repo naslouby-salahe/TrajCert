@@ -75,6 +75,16 @@ def test_node_budget_exhaustion_never_uses_the_feasible_incumbent_as_a_certified
     assert result.proven_upper >= result.feasible_incumbent
 
 
+def test_initial_hidden_coordinate_is_intersected_with_the_terminal_simplex_constraint() -> None:
+    configuration = load_configuration()
+    numerics = configuration.numerics.model_copy(update={"outer_max_visited_nodes": 0})
+
+    result = certified_outer_projection(ProjectionInput(valid_envelope(), 1, numerics))
+
+    assert result.termination_reason is ProjectionTermination.NODE_CAP
+    assert result.proven_upper == 0.5
+
+
 def test_zero_terminal_mass_uses_the_exact_continuous_entropy_boundary() -> None:
     resolved_entropy = -0.1 * math.log(0.1) - 0.9 * math.log(0.9)
     envelope = ConservativeSummaryEnvelope(

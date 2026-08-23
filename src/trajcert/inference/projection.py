@@ -79,12 +79,13 @@ def certified_outer_projection(input_value: ProjectionInput) -> CertifiedProject
     prior_precision = ctx.prec
     ctx.prec = input_value.numerics.outer_minimum_arbitrary_precision_bits
     try:
-        initial_box = _ProjectionBox(
+        unbounded_initial_box = _ProjectionBox(
             ClosedInterval(input_value.envelope.harmful_lower, input_value.envelope.harmful_upper),
             ClosedInterval(input_value.envelope.correct_lower, input_value.envelope.correct_upper),
-            ClosedInterval(0, input_value.envelope.terminal_upper),
+            ClosedInterval(0, 1),
         )
-        if not _box_is_feasible(initial_box, input_value.envelope):
+        initial_box = _intersect_terminal_constraints(unbounded_initial_box, input_value.envelope)
+        if initial_box is None:
             return _fallback_result(input_value, 0, 0, None)
         queue: list[tuple[float, int, _ProjectionBox]] = []
         counter = 0
@@ -120,9 +121,12 @@ def certified_outer_projection(input_value: ProjectionInput) -> CertifiedProject
             ):
                 feasible_incumbent = incumbent
             for child in _split_box(box, initial_box, input_value.numerics):
-                if _box_is_feasible(child, input_value.envelope):
+                constrained_child = _intersect_terminal_constraints(child, input_value.envelope)
+                if constrained_child is not None:
                     counter += 1
-                    heapq.heappush(queue, (-_objective_upper(child), counter, child))
+                    heapq.heappush(
+                        queue, (-_objective_upper(constrained_child), counter, constrained_child)
+                    )
         proven_upper = -queue[0][0] if queue else 1
         if not math.isfinite(proven_upper):
             proven_upper = 1
@@ -180,12 +184,20 @@ def _fallback_result(
     )
 
 
-def _box_is_feasible(box: _ProjectionBox, envelope: ConservativeSummaryEnvelope) -> bool:
+def _intersect_terminal_constraints(
+    box: _ProjectionBox, envelope: ConservativeSummaryEnvelope
+) -> _ProjectionBox | None:
     terminal = _terminal_interval(box)
-    return (
-        terminal.upper >= envelope.terminal_lower
-        and terminal.lower <= envelope.terminal_upper
-        and box.hidden.lower <= terminal.upper
+    if (
+        terminal.upper < envelope.terminal_lower
+        or terminal.lower > envelope.terminal_upper
+        or box.hidden.lower > terminal.upper
+    ):
+        return None
+    return _ProjectionBox(
+        box.harmful,
+        box.correct,
+        ClosedInterval(box.hidden.lower, min(box.hidden.upper, terminal.upper)),
     )
 
 
