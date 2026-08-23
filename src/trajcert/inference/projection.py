@@ -166,6 +166,24 @@ def information_slack(input_value: InformationSlackInput) -> InformationSlackVal
     )
 
 
+def information_slack_upper(input_value: InformationSlackInput) -> float:
+    if (
+        input_value.harmful_mass < 0
+        or input_value.correct_mass < 0
+        or input_value.hidden_harmful_mass < 0
+    ):
+        raise ValueError("information slack masses must be nonnegative")
+    terminal_mass = 1 - input_value.harmful_mass - input_value.correct_mass
+    if terminal_mass < 0 or input_value.hidden_harmful_mass > terminal_mass:
+        raise ValueError("hidden harmful mass must lie in terminal mass")
+    return _point_slack_upper(
+        input_value.harmful_mass,
+        input_value.correct_mass,
+        input_value.timing_entropy,
+        input_value.hidden_harmful_mass,
+    )
+
+
 def _fallback_result(
     input_value: ProjectionInput,
     visited_nodes: int,

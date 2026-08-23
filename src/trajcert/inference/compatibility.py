@@ -9,7 +9,12 @@ from flint import ctx
 
 from trajcert.configuration.models import NumericsConfiguration
 from trajcert.inference.envelope import ConservativeSummaryEnvelope, SummaryEnvelopeState
-from trajcert.inference.projection import ClosedInterval, InformationSlackInput, information_slack
+from trajcert.inference.projection import (
+    ClosedInterval,
+    InformationSlackInput,
+    information_slack,
+    information_slack_upper,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -209,7 +214,7 @@ def _compatibility_lower(box: _MassBox, envelope: ConservativeSummaryEnvelope) -
         return math.inf
     return math.nextafter(
         min(
-            _resolved_entropy(harmful, correct) - envelope.timing_entropy_upper
+            _resolved_entropy_lower(harmful, correct) - envelope.timing_entropy_upper
             for harmful, correct in points
         ),
         -math.inf,
@@ -221,7 +226,7 @@ def _compatibility_point_upper(box: _MassBox, envelope: ConservativeSummaryEnvel
     if not points:
         return math.inf
     return min(
-        _resolved_entropy(harmful, correct) - envelope.timing_entropy_upper
+        _resolved_entropy_upper(harmful, correct) - envelope.timing_entropy_upper
         for harmful, correct in points
     )
 
@@ -251,16 +256,24 @@ def _mass_vertices(
     )
 
 
-def _resolved_entropy(harmful_mass: float, correct_mass: float) -> float:
+def _resolved_entropy_enclosure(harmful_mass: float, correct_mass: float) -> flint.Arb:
     resolved_mass = harmful_mass + correct_mass
     if resolved_mass == 0:
-        return 0
+        return flint.arb(0)
     harmful = flint.arb(str(harmful_mass))
     correct = flint.arb(str(correct_mass))
     total = flint.arb(str(resolved_mass))
     harmful_term = flint.arb(0) if harmful_mass == 0 else -harmful * (harmful / total).log()
     correct_term = flint.arb(0) if correct_mass == 0 else -correct * (correct / total).log()
-    return float(harmful_term + correct_term)
+    return harmful_term + correct_term
+
+
+def _resolved_entropy_lower(harmful_mass: float, correct_mass: float) -> float:
+    return float(_resolved_entropy_enclosure(harmful_mass, correct_mass).lower())
+
+
+def _resolved_entropy_upper(harmful_mass: float, correct_mass: float) -> float:
+    return float(_resolved_entropy_enclosure(harmful_mass, correct_mass).upper())
 
 
 def _slack_lower(box: _IntrinsicBox, timing_entropy_upper: float) -> float:
@@ -304,9 +317,9 @@ def _intrinsic_point_upper(
     if terminal < 0 or harmful + correct == 0:
         return math.inf
     hidden = min(box.hidden.upper, terminal)
-    slack = information_slack(
+    slack = information_slack_upper(
         InformationSlackInput(harmful, correct, envelope.timing_entropy_upper, hidden)
-    ).value
+    )
     if slack > information_budget:
         return math.inf
     return harmful / (harmful + correct)

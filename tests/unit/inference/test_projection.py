@@ -8,6 +8,7 @@ from trajcert.inference.projection import (
     ProjectionTermination,
     certified_outer_projection,
     information_slack,
+    information_slack_upper,
 )
 
 
@@ -18,7 +19,8 @@ def valid_envelope() -> ConservativeSummaryEnvelope:
 
 
 def test_information_slack_uses_the_roadmap_entropy_identity() -> None:
-    value = information_slack(InformationSlackInput(0.1, 0.5, 0, 0.2))
+    input_value = InformationSlackInput(0.1, 0.5, 0, 0.2)
+    value = information_slack(input_value)
     expected = (
         -0.3 * math.log(0.3)
         - 0.7 * math.log(0.7)
@@ -26,6 +28,7 @@ def test_information_slack_uses_the_roadmap_entropy_identity() -> None:
     )
 
     assert math.isclose(value.value, expected)
+    assert information_slack_upper(input_value) >= expected
 
 
 def test_certified_outer_projection_persists_conservative_diagnostics() -> None:
