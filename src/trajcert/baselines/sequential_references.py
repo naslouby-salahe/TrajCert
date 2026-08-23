@@ -224,7 +224,7 @@ def _jeffreys_interval(
     numerics: NumericsConfiguration,
 ) -> ProbabilityInterval:
     estimate = harmful_count / resolved_count
-    threshold = math.log(1 / delta)
+    threshold = math.log(2 / delta)
 
     def objective(probability: float) -> float:
         return _binary_log_mixture(harmful_count, resolved_count, probability) - threshold

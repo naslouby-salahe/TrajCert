@@ -28,12 +28,19 @@ class PatternMixtureResult:
     sensitivity_c: int
 
 
-def repeated_attempt_pattern_mixture(
-    observable_law: ObservableLaw,
-    sensitivity_c: int,
-    configuration: PatternMixtureConfiguration,
-    numerics: NumericsConfiguration,
-) -> PatternMixtureResult:
+@dataclass(frozen=True, slots=True)
+class PatternMixtureInput:
+    observable_law: ObservableLaw
+    sensitivity_c: int
+    configuration: PatternMixtureConfiguration
+    numerics: NumericsConfiguration
+
+
+def repeated_attempt_pattern_mixture(input_value: PatternMixtureInput) -> PatternMixtureResult:
+    observable_law = input_value.observable_law
+    sensitivity_c = input_value.sensitivity_c
+    configuration = input_value.configuration
+    numerics = input_value.numerics
     if sensitivity_c < 0:
         raise ValueError("pattern-mixture sensitivity C must be nonnegative")
     bands = tuple(

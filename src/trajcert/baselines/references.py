@@ -23,6 +23,13 @@ class WorstCaseReference:
     assumption: str = "assumption-free unresolved-as-harm upper risk"
 
 
+@dataclass(frozen=True, slots=True)
+class EndpointOnlyPISInput:
+    observable_law: ObservableLaw
+    information_budget: float
+    numerics: NumericsConfiguration
+
+
 def complete_case_arrival_only(observable_law: ObservableLaw) -> CompleteCaseReference:
     resolved_mass = observable_law.harmful_total + observable_law.correct_total
     if resolved_mass == 0:
@@ -42,11 +49,11 @@ def endpoint_only_observable_law(observable_law: ObservableLaw) -> ObservableLaw
     )
 
 
-def endpoint_only_pis_risk_set(
-    observable_law: ObservableLaw, rho: float, numerics: NumericsConfiguration
-) -> PopulationRiskSet:
+def endpoint_only_pis_risk_set(input_value: EndpointOnlyPISInput) -> PopulationRiskSet:
     return solve_population_risk_set(
-        InformationProfile(endpoint_only_observable_law(observable_law)), rho, numerics
+        InformationProfile(endpoint_only_observable_law(input_value.observable_law)),
+        input_value.information_budget,
+        input_value.numerics,
     )
 
 

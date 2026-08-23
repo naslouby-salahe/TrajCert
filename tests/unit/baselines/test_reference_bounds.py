@@ -1,6 +1,7 @@
 import math
 
 from trajcert.baselines.references import (
+    EndpointOnlyPISInput,
     complete_case_arrival_only,
     endpoint_only_observable_law,
     endpoint_only_pis_risk_set,
@@ -26,7 +27,7 @@ def test_foundational_references_preserve_their_declared_semantics() -> None:
 
     numerics = load_configuration().numerics
     rho = 1.0
-    risk_set = endpoint_only_pis_risk_set(law, rho, numerics)
+    risk_set = endpoint_only_pis_risk_set(EndpointOnlyPISInput(law, rho, numerics))
     assert risk_set.lower_risk is not None
     assert risk_set.upper_risk is not None
 

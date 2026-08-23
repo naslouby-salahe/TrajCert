@@ -1,9 +1,11 @@
 import math
 
 from trajcert.baselines.legacy_odds import (
+    LegacyBandEvaluationsInput,
     LegacyBandStatus,
     LegacyFeasibleIntervalInput,
     LegacyIncoherenceDirection,
+    LegacyPartitionIncoherenceGridInput,
     OddsShiftInput,
     legacy_band_evaluations,
     legacy_feasible_interval,
@@ -21,7 +23,9 @@ def test_legacy_feasible_interval_uses_analytic_constraints_and_structural_zeros
     assert not legacy_feasible_interval(LegacyFeasibleIntervalInput(law, 2.0, tolerance)).feasible
     configuration = load_configuration().legacy_partition_incoherence
     compatible_law = legacy_partition_incoherence_cases(
-        (2.0,), (0.1,), configuration.latent_outcome_probabilities, tolerance
+        LegacyPartitionIncoherenceGridInput(
+            (2.0,), (0.1,), configuration.latent_outcome_probabilities, tolerance
+        )
     )[0].observable_law
     interval = legacy_feasible_interval(LegacyFeasibleIntervalInput(compatible_law, 2.0, tolerance))
 
@@ -44,10 +48,12 @@ def test_configured_partition_incoherence_cases_are_fine_feasible_and_noninvaria
     configuration = load_configuration().legacy_partition_incoherence
     tolerance = load_configuration().numerics.deterministic_identity_tolerance
     cases = legacy_partition_incoherence_cases(
-        configuration.gamma_values,
-        configuration.q_values,
-        configuration.latent_outcome_probabilities,
-        tolerance,
+        LegacyPartitionIncoherenceGridInput(
+            configuration.gamma_values,
+            configuration.q_values,
+            configuration.latent_outcome_probabilities,
+            tolerance,
+        )
     )
 
     assert len(cases) == len(configuration.gamma_values) * len(configuration.q_values)
@@ -62,6 +68,8 @@ def test_configured_partition_incoherence_cases_are_fine_feasible_and_noninvaria
         assert case.endpoint_difference_magnitude > tolerance
         assert case.endpoint_difference_direction in LegacyIncoherenceDirection
         assert odds_shift(OddsShiftInput(case.q, case.gamma)).value > case.q
-        evaluations = legacy_band_evaluations(case.observable_law, case.true_hidden_harmful_mass)
+        evaluations = legacy_band_evaluations(
+            LegacyBandEvaluationsInput(case.observable_law, case.true_hidden_harmful_mass)
+        )
         assert math.isclose(evaluations[0].odds_ratio or 0.0, case.gamma, abs_tol=tolerance)
         assert math.isclose(evaluations[1].odds_ratio or 0.0, 1 / case.gamma, abs_tol=tolerance)

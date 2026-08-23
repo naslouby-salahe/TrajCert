@@ -49,6 +49,12 @@ class LegacyBandEvaluation:
 
 
 @dataclass(frozen=True, slots=True)
+class LegacyBandEvaluationsInput:
+    observable_law: ObservableLaw
+    hidden_harmful_mass: float
+
+
+@dataclass(frozen=True, slots=True)
 class LegacyFeasibleInterval:
     gamma: float
     hidden_lower: float | None
@@ -89,9 +95,27 @@ class LegacyIncoherenceCase:
         return LegacyIncoherenceDirection.ENDPOINT_NARROWER
 
 
+@dataclass(frozen=True, slots=True)
+class LegacyPartitionIncoherenceInput:
+    gamma: float
+    q: float
+    latent_outcome_probabilities: tuple[float, float]
+    deterministic_identity_tolerance: float
+
+
+@dataclass(frozen=True, slots=True)
+class LegacyPartitionIncoherenceGridInput:
+    gamma_values: tuple[float, ...]
+    q_values: tuple[float, ...]
+    latent_outcome_probabilities: tuple[float, float]
+    deterministic_identity_tolerance: float
+
+
 def legacy_band_evaluations(
-    observable_law: ObservableLaw, hidden_harmful_mass: float
+    input_value: LegacyBandEvaluationsInput,
 ) -> tuple[LegacyBandEvaluation, ...]:
+    observable_law = input_value.observable_law
+    hidden_harmful_mass = input_value.hidden_harmful_mass
     if not observable_law.hidden_harmful_mass_is_valid(hidden_harmful_mass):
         raise ValueError("hidden terminal harmful mass must lie in [0, c]")
     evaluations: list[LegacyBandEvaluation] = []
@@ -163,7 +187,8 @@ def legacy_feasible_interval(input_value: LegacyFeasibleIntervalInput) -> Legacy
     if observable_law.c == 0:
         risk = observable_law.harmful_total
         terminal_statuses = tuple(
-            item.status for item in legacy_band_evaluations(observable_law, 0.0)
+            item.status
+            for item in legacy_band_evaluations(LegacyBandEvaluationsInput(observable_law, 0.0))
         )
         return LegacyFeasibleInterval(gamma, 0.0, 0.0, risk, risk, terminal_statuses)
     lower = 0.0
@@ -221,11 +246,12 @@ def _odds_shift(q: float, gamma: float) -> float:
 
 
 def legacy_partition_incoherence_case(
-    gamma: float,
-    q: float,
-    latent_outcome_probabilities: tuple[float, float],
-    deterministic_identity_tolerance: float,
+    input_value: LegacyPartitionIncoherenceInput,
 ) -> LegacyIncoherenceCase:
+    gamma = input_value.gamma
+    q = input_value.q
+    latent_outcome_probabilities = input_value.latent_outcome_probabilities
+    deterministic_identity_tolerance = input_value.deterministic_identity_tolerance
     harmful_probability, correct_probability = latent_outcome_probabilities
     if not all(
         math.isfinite(value) and 0 < value < 1 for value in latent_outcome_probabilities
@@ -263,17 +289,19 @@ def legacy_partition_incoherence_case(
 
 
 def legacy_partition_incoherence_cases(
-    gamma_values: tuple[float, ...],
-    q_values: tuple[float, ...],
-    latent_outcome_probabilities: tuple[float, float],
-    deterministic_identity_tolerance: float,
+    input_value: LegacyPartitionIncoherenceGridInput,
 ) -> tuple[LegacyIncoherenceCase, ...]:
     return tuple(
         legacy_partition_incoherence_case(
-            gamma, q, latent_outcome_probabilities, deterministic_identity_tolerance
+            LegacyPartitionIncoherenceInput(
+                gamma,
+                q,
+                input_value.latent_outcome_probabilities,
+                input_value.deterministic_identity_tolerance,
+            )
         )
-        for gamma in gamma_values
-        for q in q_values
+        for gamma in input_value.gamma_values
+        for q in input_value.q_values
     )
 
 
