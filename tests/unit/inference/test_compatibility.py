@@ -66,3 +66,14 @@ def test_zero_terminal_mass_uses_the_continuous_intrinsic_boundary() -> None:
     assert result.proven_lower is not None
     assert math.isclose(result.proven_lower, 0.1)
     assert result.zero_resolved_mass_plausible is False
+
+
+def test_compatibility_node_cap_returns_a_conservative_lower_enclosure() -> None:
+    configuration = load_configuration()
+    numerics = configuration.numerics.model_copy(update={"outer_max_visited_nodes": 1})
+    result = certified_compatibility_lower_bound(CompatibilityInput(point_envelope(), 1, numerics))
+    expected = 0.6 * (-(1 / 6) * math.log(1 / 6) - (5 / 6) * math.log(5 / 6))
+
+    assert result.proven_lower is not None
+    assert result.converged is False
+    assert result.proven_lower <= expected
