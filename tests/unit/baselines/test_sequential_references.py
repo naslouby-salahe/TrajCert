@@ -4,11 +4,9 @@ from statistics import NormalDist
 from trajcert.baselines.sequential_references import (
     CategoryCountVector,
     IgnorableDelayInput,
-    ReferenceApplicability,
-    SequentialAblation,
-    SequentialReferenceMethod,
     StaticMonitoringInput,
     TimeUniformProjectionInput,
+    TrajCertReferenceInput,
     declared_ablations,
     ignorable_delay_anytime_reference,
     repeated_static_monitoring_negative_control,
@@ -16,6 +14,12 @@ from trajcert.baselines.sequential_references import (
     trajcert_reference,
 )
 from trajcert.configuration.loading import load_configuration
+from trajcert.domain.enums import (
+    ReferenceApplicability,
+    ScientificState,
+    SequentialAblation,
+    SequentialReferenceMethod,
+)
 from trajcert.inference.confidence_sequence import ProbabilityInterval
 from trajcert.inference.envelope import ConservativeSummaryEnvelope, SummaryEnvelopeState
 
@@ -31,12 +35,18 @@ def test_raw_projection_and_trajcert_share_the_same_projection_identity() -> Non
     raw = time_uniform_observable_law_projection(
         TimeUniformProjectionInput(projection_envelope(), 1, numerics)
     )
-    trajcert = trajcert_reference(raw.projection)
+    trajcert = trajcert_reference(
+        TrajCertReferenceInput(raw.projection, True, 0.1, 0.2, ScientificState.CERTIFIED)
+    )
 
     assert raw.method is SequentialReferenceMethod.TIME_UNIFORM_OBSERVABLE_LAW_PROJECTION
     assert trajcert.method is SequentialReferenceMethod.TRAJCERT
     assert trajcert.projection is raw.projection
     assert raw.valid_for_deployment is True
+    assert trajcert.evidence_gate_passed is True
+    assert trajcert.compatibility_floor == 0.1
+    assert trajcert.intrinsic_risk_lower == 0.2
+    assert trajcert.operational_state is ScientificState.CERTIFIED
 
 
 def test_repeated_static_monitoring_is_a_nondeployable_bonferroni_negative_control() -> None:
@@ -91,9 +101,11 @@ def test_ignorable_delay_retains_the_previous_interval_and_rejects_outcome_depen
     assert retained.interval is previous
     assert retained.risk_upper == previous.upper
     assert retained.applicability is ReferenceApplicability.VALID
+    assert retained.valid_method_ranking_eligible is True
     assert violated.interval is None
     assert violated.risk_upper is None
     assert violated.applicability is ReferenceApplicability.ASSUMPTION_VIOLATED
+    assert violated.valid_method_ranking_eligible is False
 
 
 def test_ignorable_delay_uses_the_two_category_jeffreys_allocation() -> None:
@@ -141,7 +153,9 @@ def test_ignorable_delay_uses_the_two_category_jeffreys_allocation() -> None:
 
 def test_declared_ablations_are_exact_and_log_two_uses_the_binary_maximum() -> None:
     ablations = declared_ablations()
+    configuration = load_configuration()
 
     assert tuple(definition.ablation for definition in ablations) == tuple(SequentialAblation)
+    assert configuration.sequential_stress_methods == tuple(SequentialReferenceMethod)
     assert ablations[-1].information_budget is not None
     assert math.isclose(ablations[-1].information_budget, math.log(2))

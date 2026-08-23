@@ -111,6 +111,25 @@ class ProjectionTermination(StrEnum):
     CONSERVATIVE_FALLBACK = "CONSERVATIVE_FALLBACK"
 
 
+class SequentialReferenceMethod(StrEnum):
+    TRAJCERT = "TrajCert"
+    TIME_UNIFORM_OBSERVABLE_LAW_PROJECTION = "Time-uniform observable-law projection"
+    REPEATED_STATIC_MONITORING_NEGATIVE_CONTROL = "Repeated-static-monitoring negative control"
+    IGNORABLE_DELAY_ANYTIME_REFERENCE = "Ignorable-delay anytime reference"
+
+
+class ReferenceApplicability(StrEnum):
+    VALID = "VALID"
+    ASSUMPTION_VIOLATED = "ASSUMPTION_VIOLATED"
+    NEGATIVE_CONTROL = "NEGATIVE_CONTROL"
+
+
+class SequentialAblation(StrEnum):
+    ENDPOINT_ONLY_PATH_INFORMATION = "Endpoint-only path information"
+    SAME_ENDPOINT_DIFFERENT_TIMING = "Same Endpoint, Different Timing"
+    RHO_LOG_TWO = "rho = log(2)"
+
+
 class PublicExecutionState(StrEnum):
     NOT_STARTED = "NOT_STARTED"
     BLOCKED = "BLOCKED"
