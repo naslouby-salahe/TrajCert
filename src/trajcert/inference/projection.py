@@ -49,7 +49,12 @@ class InformationSlackInput:
 
 @dataclass(frozen=True, slots=True)
 class InformationSlackValue:
-    value: float
+    lower: float
+    upper: float
+
+    @property
+    def value(self) -> float:
+        return self.lower
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,31 +161,15 @@ def information_slack(input_value: InformationSlackInput) -> InformationSlackVal
     terminal_mass = 1 - input_value.harmful_mass - input_value.correct_mass
     if terminal_mass < 0 or input_value.hidden_harmful_mass > terminal_mass:
         raise ValueError("hidden harmful mass must lie in terminal mass")
-    return InformationSlackValue(
-        _point_slack(
-            input_value.harmful_mass,
-            input_value.correct_mass,
-            input_value.timing_entropy,
-            input_value.hidden_harmful_mass,
-        )
-    )
-
-
-def information_slack_upper(input_value: InformationSlackInput) -> float:
-    if (
-        input_value.harmful_mass < 0
-        or input_value.correct_mass < 0
-        or input_value.hidden_harmful_mass < 0
-    ):
-        raise ValueError("information slack masses must be nonnegative")
-    terminal_mass = 1 - input_value.harmful_mass - input_value.correct_mass
-    if terminal_mass < 0 or input_value.hidden_harmful_mass > terminal_mass:
-        raise ValueError("hidden harmful mass must lie in terminal mass")
-    return _point_slack_upper(
+    enclosure = _point_slack_enclosure(
         input_value.harmful_mass,
         input_value.correct_mass,
         input_value.timing_entropy,
         input_value.hidden_harmful_mass,
+    )
+    return InformationSlackValue(
+        float(enclosure.lower()),
+        float(enclosure.upper()),
     )
 
 
@@ -287,14 +276,6 @@ def _slack_lower(box: _ProjectionBox, timing_entropy_upper: float) -> float:
     )
     terminal_entropy_upper = terminal.upper * math.log(2)
     return latent_entropy_lower - timing_entropy_upper - terminal_entropy_upper
-
-
-def _point_slack(
-    harmful_mass: float, correct_mass: float, timing_entropy: float, hidden_harmful_mass: float
-) -> float:
-    return float(
-        _point_slack_enclosure(harmful_mass, correct_mass, timing_entropy, hidden_harmful_mass)
-    )
 
 
 def _point_slack_upper(

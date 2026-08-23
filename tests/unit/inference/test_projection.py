@@ -8,7 +8,6 @@ from trajcert.inference.projection import (
     ProjectionTermination,
     certified_outer_projection,
     information_slack,
-    information_slack_upper,
 )
 
 
@@ -28,7 +27,7 @@ def test_information_slack_uses_the_roadmap_entropy_identity() -> None:
     )
 
     assert math.isclose(value.value, expected)
-    assert information_slack_upper(input_value) >= expected
+    assert value.upper >= expected
 
 
 def test_certified_outer_projection_persists_conservative_diagnostics() -> None:

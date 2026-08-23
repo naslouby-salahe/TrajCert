@@ -13,7 +13,6 @@ from trajcert.inference.projection import (
     ClosedInterval,
     InformationSlackInput,
     information_slack,
-    information_slack_upper,
 )
 
 
@@ -317,9 +316,9 @@ def _intrinsic_point_upper(
     if terminal < 0 or harmful + correct == 0:
         return math.inf
     hidden = min(box.hidden.upper, terminal)
-    slack = information_slack_upper(
+    slack = information_slack(
         InformationSlackInput(harmful, correct, envelope.timing_entropy_upper, hidden)
-    )
+    ).upper
     if slack > information_budget:
         return math.inf
     return harmful / (harmful + correct)
