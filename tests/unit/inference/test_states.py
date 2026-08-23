@@ -70,3 +70,35 @@ def test_substantive_state_precedence_and_strict_comparison_guard() -> None:
     assert incompatible.scientific_state is ScientificState.MODEL_INCOMPATIBLE
     assert impossible.scientific_state is ScientificState.INTRINSICALLY_UNCERTIFIABLE
     assert certified.scientific_state is ScientificState.CERTIFIED
+
+
+def test_zero_resolved_mass_and_validity_take_precedence_over_strong_scientific_states() -> None:
+    valid = state_input()
+    guard = valid.numerics.scientific_comparison_guard
+    withheld = classify_scientific_state(
+        replace(
+            valid,
+            intrinsic_risk_lower_bound=valid.deployment_risk_budget + 2 * guard,
+            zero_resolved_mass_plausible=True,
+            proven_upper_risk=valid.deployment_risk_budget + guard,
+        )
+    )
+    invalid = classify_scientific_state(
+        replace(
+            valid,
+            validity=InferenceValidity.INVALID,
+            compatibility_lower_bound=valid.deployment_information_budget + 2 * guard,
+            intrinsic_risk_lower_bound=valid.deployment_risk_budget + 2 * guard,
+        )
+    )
+    technical_failure = classify_scientific_state(
+        replace(
+            valid,
+            validity=InferenceValidity.TECHNICAL_FAIL,
+            proven_upper_risk=valid.deployment_risk_budget,
+        )
+    )
+
+    assert withheld.scientific_state is ScientificState.UNCERTIFIED
+    assert invalid.scientific_state is None
+    assert technical_failure.scientific_state is None
