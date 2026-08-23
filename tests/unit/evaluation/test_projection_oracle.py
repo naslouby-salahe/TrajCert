@@ -74,6 +74,11 @@ def test_oracle_finds_an_interior_feasible_information_profile() -> None:
     budget = 0.01
 
     oracle = independent_projection_oracle(ProjectionOracleInput(envelope, budget, observable_law))
+    numerics = load_configuration().numerics.model_copy(update={"outer_max_visited_nodes": 1})
+    production = certified_outer_projection(
+        ProjectionInput(envelope, budget, numerics)
+    )
 
     assert oracle.best_feasible_lower is not None
     assert oracle.best_feasible_lower > observable_law.harmful_total
+    assert production.proven_upper >= oracle.best_feasible_lower
