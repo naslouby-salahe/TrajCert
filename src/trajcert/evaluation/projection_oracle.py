@@ -191,11 +191,12 @@ def _maximal_feasible_hidden(
     terminal = 1 - harmful - correct
     if terminal < 0:
         return None
-    if _direct_slack(harmful, correct, timing_entropy, 0) > information_budget:
+    minimum = _information_minimizer(harmful, correct, terminal)
+    if _direct_slack(harmful, correct, timing_entropy, minimum) > information_budget:
         return None
     if _direct_slack(harmful, correct, timing_entropy, terminal) <= information_budget:
         return terminal
-    lower = 0.0
+    lower = minimum
     upper = terminal
     while upper - lower > 1.0e-14:
         midpoint = (lower + upper) / 2
@@ -207,11 +208,16 @@ def _maximal_feasible_hidden(
 
 
 def _maximal_law_hidden(observable_law: ObservableLaw, information_budget: float) -> float | None:
-    if _direct_full_law_information(observable_law, 0) > information_budget:
+    minimum = _information_minimizer(
+        observable_law.harmful_total,
+        observable_law.correct_total,
+        observable_law.c,
+    )
+    if _direct_full_law_information(observable_law, minimum) > information_budget:
         return None
     if _direct_full_law_information(observable_law, observable_law.c) <= information_budget:
         return observable_law.c
-    lower = 0.0
+    lower = minimum
     upper = observable_law.c
     while upper - lower > 1.0e-14:
         midpoint = (lower + upper) / 2
@@ -220,6 +226,11 @@ def _maximal_law_hidden(observable_law: ObservableLaw, information_budget: float
         else:
             upper = midpoint
     return lower
+
+
+def _information_minimizer(harmful: float, correct: float, terminal: float) -> float:
+    resolved = harmful + correct
+    return 0 if resolved == 0 else harmful * terminal / resolved
 
 
 def _direct_full_law_information(

@@ -55,3 +55,25 @@ def test_singleton_oracle_rejects_an_envelope_without_its_required_observable_la
 
     with pytest.raises(ValueError, match="observable law"):
         independent_projection_oracle(ProjectionOracleInput(envelope, 1))
+
+
+def test_oracle_finds_an_interior_feasible_information_profile() -> None:
+    observable_law = ObservableLaw((0.2,), (0.4,), 0.4)
+    timing_entropy = observable_law.resolved_entropy_sum()
+    envelope = ConservativeSummaryEnvelope(
+        SummaryEnvelopeState.VALID,
+        observable_law.harmful_total,
+        observable_law.harmful_total,
+        observable_law.correct_total,
+        observable_law.correct_total,
+        observable_law.c,
+        observable_law.c,
+        timing_entropy,
+        timing_entropy,
+    )
+    budget = 0.01
+
+    oracle = independent_projection_oracle(ProjectionOracleInput(envelope, budget, observable_law))
+
+    assert oracle.best_feasible_lower is not None
+    assert oracle.best_feasible_lower > observable_law.harmful_total
