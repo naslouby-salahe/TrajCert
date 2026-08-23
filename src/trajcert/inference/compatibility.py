@@ -281,7 +281,11 @@ def _slack_lower(box: _IntrinsicBox, timing_entropy_upper: float) -> float:
         box.harmful.lower + box.hidden.lower,
         min(1, box.harmful.upper + box.hidden.upper),
     )
-    return _binary_entropy_lower(latent) - timing_entropy_upper - terminal.upper * math.log(2)
+    return (
+        _binary_entropy_lower(latent)
+        - timing_entropy_upper
+        - terminal.upper * _binary_entropy_maximum()
+    )
 
 
 def _binary_entropy_lower(interval: ClosedInterval) -> float:
@@ -296,6 +300,10 @@ def _binary_entropy(value: float) -> float:
     point = flint.arb(str(value))
     complement = flint.arb(1) - point
     return float(-(point * point.log()) - (complement * complement.log()))
+
+
+def _binary_entropy_maximum() -> float:
+    return float(flint.arb(2).log().upper())
 
 
 def _intrinsic_lower(box: _IntrinsicBox) -> float:

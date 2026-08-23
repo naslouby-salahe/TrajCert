@@ -274,7 +274,7 @@ def _slack_lower(box: _ProjectionBox, timing_entropy_upper: float) -> float:
             min(1, box.harmful.upper + box.hidden.upper),
         )
     )
-    terminal_entropy_upper = terminal.upper * math.log(2)
+    terminal_entropy_upper = terminal.upper * _binary_entropy_maximum()
     return latent_entropy_lower - timing_entropy_upper - terminal_entropy_upper
 
 
@@ -305,6 +305,10 @@ def _arb_entropy(probability: float) -> flint.Arb:
     value = flint.arb(str(probability))
     complement = flint.arb(1) - value
     return -(value * value.log()) - (complement * complement.log())
+
+
+def _binary_entropy_maximum() -> float:
+    return float(flint.arb(2).log().upper())
 
 
 def _entropy_lower(interval: ClosedInterval) -> float:
