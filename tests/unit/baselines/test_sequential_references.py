@@ -1,4 +1,5 @@
 import math
+from statistics import NormalDist
 
 from trajcert.baselines.sequential_references import (
     CategoryCountVector,
@@ -55,6 +56,22 @@ def test_repeated_static_monitoring_is_a_nondeployable_bonferroni_negative_contr
     assert result.applicability is ReferenceApplicability.NEGATIVE_CONTROL
     assert result.valid_for_deployment is False
     assert all(0 <= interval.lower <= interval.upper <= 1 for interval in result.category_intervals)
+    count = 4
+    total = 10
+    dimensions = 3
+    delta = configuration.confidence.anytime_delta
+    z_value = NormalDist().inv_cdf(1 - delta / (2 * dimensions))
+    estimate = count / total
+    denominator = 1 + z_value**2 / total
+    center = (estimate + z_value**2 / (2 * total)) / denominator
+    half_width = (
+        z_value
+        / denominator
+        * math.sqrt(estimate * (1 - estimate) / total + z_value**2 / (4 * total**2))
+    )
+
+    assert math.isclose(result.category_intervals[0].lower, center - half_width)
+    assert math.isclose(result.category_intervals[0].upper, center + half_width)
 
 
 def test_ignorable_delay_retains_the_previous_interval_and_rejects_outcome_dependence() -> None:
@@ -77,6 +94,49 @@ def test_ignorable_delay_retains_the_previous_interval_and_rejects_outcome_depen
     assert violated.interval is None
     assert violated.risk_upper is None
     assert violated.applicability is ReferenceApplicability.ASSUMPTION_VIOLATED
+
+
+def test_ignorable_delay_uses_the_two_category_jeffreys_allocation() -> None:
+    configuration = load_configuration()
+    result = ignorable_delay_anytime_reference(
+        IgnorableDelayInput(
+            5, 5, None, True, configuration.confidence, configuration.numerics, True
+        )
+    )
+    threshold = math.log(2 / configuration.confidence.anytime_delta)
+
+    def objective(probability: float) -> float:
+        beta_difference = (
+            math.lgamma(5.5)
+            + math.lgamma(5.5)
+            - math.lgamma(11)
+            - (2 * math.lgamma(0.5) - math.lgamma(1))
+        )
+        return (
+            beta_difference - 5 * math.log(probability) - 5 * math.log1p(-probability) - threshold
+        )
+
+    lower_left = 0.0
+    lower_right = 0.5
+    while lower_right - lower_left > configuration.numerics.anytime_category_root_tolerance / 2:
+        midpoint = (lower_left + lower_right) / 2
+        if objective(midpoint) <= 0:
+            lower_right = midpoint
+        else:
+            lower_left = midpoint
+    upper_left = 0.5
+    upper_right = 1.0
+    while upper_right - upper_left > configuration.numerics.anytime_category_root_tolerance / 2:
+        midpoint = (upper_left + upper_right) / 2
+        if objective(midpoint) <= 0:
+            upper_left = midpoint
+        else:
+            upper_right = midpoint
+
+    assert result.interval is not None
+    assert result.interval.lower <= lower_right
+    assert result.interval.upper >= upper_left
+    assert result.interval.upper - result.interval.lower > 0
 
 
 def test_declared_ablations_are_exact_and_log_two_uses_the_binary_maximum() -> None:

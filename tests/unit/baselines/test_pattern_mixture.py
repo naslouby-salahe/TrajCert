@@ -1,4 +1,5 @@
 from trajcert.baselines.pattern_mixture import (
+    PatternMixtureInput,
     PatternMixtureState,
     repeated_attempt_pattern_mixture,
 )
@@ -12,10 +13,12 @@ def test_pattern_mixture_fits_weighted_logit_and_extrapolates_at_configured_c() 
     sensitivity_c = configuration.comparators.repeated_attempt_pattern_mixture.c_grid[-1]
 
     result = repeated_attempt_pattern_mixture(
-        law,
-        sensitivity_c,
-        configuration.comparators.repeated_attempt_pattern_mixture,
-        configuration.numerics,
+        PatternMixtureInput(
+            law,
+            sensitivity_c,
+            configuration.comparators.repeated_attempt_pattern_mixture,
+            configuration.numerics,
+        )
     )
 
     assert result.state is PatternMixtureState.FIT
@@ -30,10 +33,12 @@ def test_pattern_mixture_fits_weighted_logit_and_extrapolates_at_configured_c() 
 def test_pattern_mixture_rejects_single_nonempty_band() -> None:
     configuration = load_configuration()
     result = repeated_attempt_pattern_mixture(
-        ObservableLaw((0.1, 0.0), (0.2, 0.0), 0.7),
-        configuration.comparators.repeated_attempt_pattern_mixture.c_grid[0],
-        configuration.comparators.repeated_attempt_pattern_mixture,
-        configuration.numerics,
+        PatternMixtureInput(
+            ObservableLaw((0.1, 0.0), (0.2, 0.0), 0.7),
+            configuration.comparators.repeated_attempt_pattern_mixture.c_grid[0],
+            configuration.comparators.repeated_attempt_pattern_mixture,
+            configuration.numerics,
+        )
     )
 
     assert result.state is PatternMixtureState.NOT_APPLICABLE

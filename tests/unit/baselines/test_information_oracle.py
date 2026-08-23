@@ -3,6 +3,8 @@ import math
 from pathlib import Path
 
 from trajcert.baselines.information_oracle import (
+    DirectFullLawInformationInput,
+    DirectInformationOracleInput,
     DirectOracleState,
     direct_full_law_information,
     direct_information_oracle,
@@ -16,10 +18,19 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 def test_direct_table_oracle_handles_zero_cells_and_retains_boundary_brackets() -> None:
     configuration = load_configuration()
     law = ObservableLaw((0.1, 0.2), (0.2, 0.1), 0.4)
-    incompatible = direct_information_oracle(law, 0.0, configuration.numerics)
-    result = direct_information_oracle(law, 0.1, configuration.numerics)
+    incompatible = direct_information_oracle(
+        DirectInformationOracleInput(law, 0.0, configuration.numerics)
+    )
+    result = direct_information_oracle(
+        DirectInformationOracleInput(law, 0.1, configuration.numerics)
+    )
 
-    assert direct_full_law_information(law, 0.2, configuration.numerics.oracle_decimal_digits) >= 0
+    assert (
+        direct_full_law_information(
+            DirectFullLawInformationInput(law, 0.2, configuration.numerics.oracle_decimal_digits)
+        ).information
+        >= 0
+    )
     assert incompatible.state is DirectOracleState.MODEL_INCOMPATIBLE
     assert result.state is DirectOracleState.INTERVAL
     assert result.lower_risk is not None
@@ -30,15 +41,21 @@ def test_direct_table_oracle_handles_zero_cells_and_retains_boundary_brackets() 
     assert result.upper_bracket.width <= configuration.numerics.oracle_boundary_bracket_width
     assert math.isclose(
         result.minimum_information,
-        direct_full_law_information(law, 0.2, configuration.numerics.oracle_decimal_digits),
+        direct_full_law_information(
+            DirectFullLawInformationInput(law, 0.2, configuration.numerics.oracle_decimal_digits)
+        ).information,
     )
 
 
 def test_direct_table_oracle_reports_the_tangent_case_as_a_singleton() -> None:
     configuration = load_configuration()
     law = ObservableLaw((0.1, 0.2), (0.2, 0.1), 0.4)
-    probe = direct_information_oracle(law, 0.1, configuration.numerics)
-    tangent = direct_information_oracle(law, probe.minimum_information, configuration.numerics)
+    probe = direct_information_oracle(
+        DirectInformationOracleInput(law, 0.1, configuration.numerics)
+    )
+    tangent = direct_information_oracle(
+        DirectInformationOracleInput(law, probe.minimum_information, configuration.numerics)
+    )
 
     assert tangent.state is DirectOracleState.SINGLETON
     assert tangent.lower_risk == tangent.upper_risk

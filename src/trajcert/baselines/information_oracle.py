@@ -21,6 +21,25 @@ class DirectOracleState(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class DirectFullLawInformationInput:
+    observable_law: ObservableLaw
+    hidden_harmful_mass: float
+    decimal_digits: int
+
+
+@dataclass(frozen=True, slots=True)
+class DirectInformationOracleInput:
+    observable_law: ObservableLaw
+    information_budget: float
+    numerics: NumericsConfiguration
+
+
+@dataclass(frozen=True, slots=True)
+class DirectFullLawInformationResult:
+    information: float
+
+
+@dataclass(frozen=True, slots=True)
 class OracleBracket:
     lower: float
     upper: float
@@ -43,8 +62,11 @@ class DirectInformationOracleResult:
 
 
 def direct_full_law_information(
-    observable_law: ObservableLaw, hidden_harmful_mass: float, digits: int
-) -> float:
+    input_value: DirectFullLawInformationInput,
+) -> DirectFullLawInformationResult:
+    observable_law = input_value.observable_law
+    hidden_harmful_mass = input_value.hidden_harmful_mass
+    digits = input_value.decimal_digits
     if not observable_law.hidden_harmful_mass_is_valid(hidden_harmful_mass):
         raise ValueError("hidden terminal harmful mass must lie in [0, c]")
     if digits < 1:
@@ -74,12 +96,15 @@ def direct_full_law_information(
                     information += value * mp.log(
                         value / (row_marginals[row] * column_marginals[column])
                     )
-        return float(information)
+        return DirectFullLawInformationResult(float(information))
 
 
 def direct_information_oracle(
-    observable_law: ObservableLaw, rho: float, numerics: NumericsConfiguration
+    input_value: DirectInformationOracleInput,
 ) -> DirectInformationOracleResult:
+    observable_law = input_value.observable_law
+    rho = input_value.information_budget
+    numerics = input_value.numerics
     if rho < 0:
         raise ValueError("PIS budget must be nonnegative")
     if observable_law.c == 0:
@@ -89,7 +114,9 @@ def direct_information_oracle(
             DirectOracleState.SINGLETON,
             risk,
             risk,
-            direct_full_law_information(observable_law, 0.0, numerics.oracle_decimal_digits),
+            direct_full_law_information(
+                DirectFullLawInformationInput(observable_law, 0.0, numerics.oracle_decimal_digits)
+            ).information,
             bracket,
             None,
             None,
@@ -97,7 +124,9 @@ def direct_information_oracle(
         )
 
     def objective(value: float) -> float:
-        return direct_full_law_information(observable_law, value, numerics.oracle_decimal_digits)
+        return direct_full_law_information(
+            DirectFullLawInformationInput(observable_law, value, numerics.oracle_decimal_digits)
+        ).information
 
     minimum_bracket = _golden_section_minimum(
         objective, 0.0, observable_law.c, numerics.oracle_boundary_bracket_width

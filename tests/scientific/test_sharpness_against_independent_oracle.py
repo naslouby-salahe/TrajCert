@@ -1,6 +1,9 @@
 import math
 
-from trajcert.baselines.information_oracle import direct_information_oracle
+from trajcert.baselines.information_oracle import (
+    DirectInformationOracleInput,
+    direct_information_oracle,
+)
 from trajcert.configuration.loading import load_configuration
 from trajcert.data.partitions import ObservableLaw
 from trajcert.math.information_profile import InformationProfile
@@ -13,7 +16,9 @@ def test_production_risk_set_agrees_with_independent_direct_table_oracle() -> No
     rho = 0.1
 
     production = solve_population_risk_set(InformationProfile(law), rho, configuration.numerics)
-    oracle = direct_information_oracle(law, rho, configuration.numerics)
+    oracle = direct_information_oracle(
+        DirectInformationOracleInput(law, rho, configuration.numerics)
+    )
 
     assert production.lower_risk is not None
     assert production.upper_risk is not None
