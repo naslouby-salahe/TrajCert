@@ -11,6 +11,7 @@ from trajcert.domain.enums import (
     DatasetKind,
     EvidenceClass,
     InternalExecutionState,
+    ProjectionTermination,
     PublicExecutionState,
 )
 from trajcert.domain.identity import LocalCertificateIdentity
@@ -840,10 +841,12 @@ def test_sequential_update_requires_consistent_matured_category_counts() -> None
         n_unresolved=3,
         confidence_region_digest="0" * 64,
         evidence_gate_pass=False,
+        optimizer_termination=ProjectionTermination.NODE_CAP,
         ever_violation_to_date=False,
     )
 
     assert record.n_unresolved == 3
+    assert record.optimizer_termination is ProjectionTermination.NODE_CAP
     with pytest.raises(ValidationError, match="sum to matured"):
         SequentialUpdateRecord.model_validate(record.model_dump() | {"n_unresolved": 2})
 

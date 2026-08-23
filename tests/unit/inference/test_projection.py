@@ -1,11 +1,11 @@
 import math
 
 from trajcert.configuration.loading import load_configuration
+from trajcert.domain.enums import ProjectionTermination
 from trajcert.inference.envelope import ConservativeSummaryEnvelope, SummaryEnvelopeState
 from trajcert.inference.projection import (
     InformationSlackInput,
     ProjectionInput,
-    ProjectionTermination,
     certified_outer_projection,
     information_slack,
 )

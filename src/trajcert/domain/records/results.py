@@ -4,7 +4,7 @@ import math
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
-from trajcert.domain.enums import ScientificState
+from trajcert.domain.enums import ProjectionTermination, ScientificState
 from trajcert.domain.records.artifacts import CanonicalJson
 
 
@@ -74,7 +74,7 @@ class SequentialUpdateRecord(BaseModel):
     optimizer_feasible_lower: float | None = None
     optimizer_gap: float | None = Field(default=None, ge=0)
     optimizer_node_count: int | None = Field(default=None, ge=0)
-    optimizer_termination: str | None = None
+    optimizer_termination: ProjectionTermination | None = None
     true_theta: float | None = None
     ever_violation_to_date: bool
 

@@ -3,19 +3,13 @@ from __future__ import annotations
 import heapq
 import math
 from dataclasses import dataclass
-from enum import StrEnum
 
 import flint
 from flint import ctx
 
 from trajcert.configuration.models import NumericsConfiguration
+from trajcert.domain.enums import ProjectionTermination
 from trajcert.inference.envelope import ConservativeSummaryEnvelope, SummaryEnvelopeState
-
-
-class ProjectionTermination(StrEnum):
-    CERTIFIED_GAP = "CERTIFIED_GAP"
-    NODE_CAP = "NODE_CAP"
-    CONSERVATIVE_FALLBACK = "CONSERVATIVE_FALLBACK"
 
 
 @dataclass(frozen=True, slots=True)
