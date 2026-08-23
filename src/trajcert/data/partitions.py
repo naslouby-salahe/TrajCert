@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
+from trajcert.configuration.loading import load_configuration
 from trajcert.math.entropy import binary_entropy
 
 
@@ -40,7 +42,8 @@ class ObservableLaw:
         values = (*self.harmful_masses, *self.correct_masses, self.unresolved_mass)
         if any(not 0.0 <= value <= 1.0 for value in values):
             raise ValueError("observable masses must lie in [0, 1]")
-        if abs(sum(values) - 1.0) > 1e-12:
+        comparison_guard = load_configuration().numerics.scientific_comparison_guard
+        if not math.isclose(math.fsum(values), 1.0, rel_tol=0.0, abs_tol=comparison_guard):
             raise ValueError("observable masses must sum to one")
 
     @property

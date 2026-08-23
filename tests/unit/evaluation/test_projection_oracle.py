@@ -19,7 +19,9 @@ def test_singleton_oracle_proves_a_feasible_lower_bound_below_the_certified_uppe
         SummaryEnvelopeState.VALID, 0.1, 0.1, 0.5, 0.5, 0.4, 0.4, timing_entropy, timing_entropy
     )
     configuration = load_configuration()
-    oracle = independent_projection_oracle(ProjectionOracleInput(envelope, 1, observable_law))
+    oracle = independent_projection_oracle(
+        ProjectionOracleInput(envelope, 1, configuration.numerics, observable_law)
+    )
     production = certified_outer_projection(ProjectionInput(envelope, 1, configuration.numerics))
 
     assert oracle.best_feasible_lower is not None
@@ -42,7 +44,9 @@ def test_singleton_oracle_uses_the_independent_full_law_information_calculation(
         timing_entropy,
     )
 
-    oracle = independent_projection_oracle(ProjectionOracleInput(envelope, 1, observable_law))
+    oracle = independent_projection_oracle(
+        ProjectionOracleInput(envelope, 1, load_configuration().numerics, observable_law)
+    )
 
     assert oracle.best_feasible_lower is not None
     assert math.isclose(oracle.best_feasible_lower, observable_law.latent_risk(observable_law.c))
@@ -54,7 +58,9 @@ def test_singleton_oracle_rejects_an_envelope_without_its_required_observable_la
     )
 
     with pytest.raises(ValueError, match="observable law"):
-        independent_projection_oracle(ProjectionOracleInput(envelope, 1))
+        independent_projection_oracle(
+            ProjectionOracleInput(envelope, 1, load_configuration().numerics)
+        )
 
 
 def test_oracle_finds_an_interior_feasible_information_profile() -> None:
@@ -73,8 +79,10 @@ def test_oracle_finds_an_interior_feasible_information_profile() -> None:
     )
     budget = 0.01
 
-    oracle = independent_projection_oracle(ProjectionOracleInput(envelope, budget, observable_law))
     numerics = load_configuration().numerics.model_copy(update={"outer_max_visited_nodes": 1})
+    oracle = independent_projection_oracle(
+        ProjectionOracleInput(envelope, budget, numerics, observable_law)
+    )
     production = certified_outer_projection(ProjectionInput(envelope, budget, numerics))
 
     assert oracle.best_feasible_lower is not None

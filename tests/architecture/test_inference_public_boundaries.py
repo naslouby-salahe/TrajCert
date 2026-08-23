@@ -12,9 +12,9 @@ def _annotation_names(annotation: ast.expr | None) -> frozenset[str]:
 
 
 def test_scientific_module_public_functions_use_structured_boundaries() -> None:
-    scientific_packages = ("baselines", "inference")
+    scientific_packages = ("analysis", "baselines", "evaluation", "inference")
     for package_name in scientific_packages:
-        for source_file in (PROJECT_ROOT / "src/trajcert" / package_name).glob("*.py"):
+        for source_file in (PROJECT_ROOT / "src/trajcert" / package_name).rglob("*.py"):
             tree = ast.parse(source_file.read_text(encoding="utf-8"))
             public_functions = (
                 node

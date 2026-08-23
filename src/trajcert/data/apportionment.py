@@ -44,7 +44,7 @@ def hamilton_apportionment(total: int, probabilities: tuple[float, ...]) -> tupl
         raise ValueError("apportionment total must be nonnegative")
     if not probabilities or any(not math.isfinite(value) or value < 0 for value in probabilities):
         raise ValueError("apportionment probabilities must be finite nonnegative values")
-    if not math.isclose(sum(probabilities), 1.0, rel_tol=0.0, abs_tol=1e-12):
+    if math.fsum(probabilities) != 1.0:
         raise ValueError("apportionment probabilities must sum to one")
     quotas = tuple(total * probability for probability in probabilities)
     floors = tuple(math.floor(quota) for quota in quotas)

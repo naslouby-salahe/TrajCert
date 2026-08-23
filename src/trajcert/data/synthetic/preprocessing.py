@@ -75,7 +75,7 @@ def _balanced_prefix_sequence(probabilities: tuple[float, ...], length: int) -> 
         raise ValueError("balanced-prefix length must be nonnegative")
     if not probabilities or any(not math.isfinite(value) or value < 0 for value in probabilities):
         raise ValueError("balanced-prefix probabilities must be finite nonnegative values")
-    if not math.isclose(sum(probabilities), 1.0, rel_tol=0.0, abs_tol=1e-12):
+    if math.fsum(probabilities) != 1.0:
         raise ValueError("balanced-prefix probabilities must sum to one")
     counts = [0] * len(probabilities)
     sequence: list[int] = []

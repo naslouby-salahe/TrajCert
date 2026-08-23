@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal, localcontext
 
+from trajcert.configuration.models import NumericsConfiguration
 from trajcert.data.partitions import ObservableLaw
 from trajcert.inference.envelope import ConservativeSummaryEnvelope, SummaryEnvelopeState
 
@@ -11,6 +12,7 @@ from trajcert.inference.envelope import ConservativeSummaryEnvelope, SummaryEnve
 class ProjectionOracleInput:
     envelope: ConservativeSummaryEnvelope
     information_budget: float
+    numerics: NumericsConfiguration
     observable_law: ObservableLaw | None = None
 
 
@@ -30,7 +32,9 @@ def independent_projection_oracle(input_value: ProjectionOracleInput) -> Project
     if _is_singleton(input_value.envelope):
         if input_value.observable_law is None:
             raise ValueError("singleton projection oracle requires the observable law")
-        candidate = _maximal_law_hidden(input_value.observable_law, input_value.information_budget)
+        candidate = _maximal_law_hidden(
+            input_value.observable_law, input_value.information_budget, input_value.numerics
+        )
         return ProjectionOracleResult(
             None if candidate is None else input_value.envelope.harmful_lower + candidate,
             1,
@@ -51,7 +55,7 @@ def _is_singleton(envelope: ConservativeSummaryEnvelope) -> bool:
 
 def _grid_oracle(input_value: ProjectionOracleInput) -> ProjectionOracleResult:
     envelope = input_value.envelope
-    grid_size = 1001
+    grid_size = input_value.numerics.projection_oracle_grid_points
     best_value: float | None = None
     candidates: list[tuple[float, float, float]] = []
     evaluated_points = 0
@@ -72,6 +76,7 @@ def _grid_oracle(input_value: ProjectionOracleInput) -> ProjectionOracleResult:
                 correct,
                 envelope.timing_entropy_upper,
                 input_value.information_budget,
+                input_value.numerics,
             )
             if hidden is None:
                 continue
@@ -80,7 +85,11 @@ def _grid_oracle(input_value: ProjectionOracleInput) -> ProjectionOracleResult:
             candidates.append((value, harmful, correct))
             if best_value is None or value > best_value:
                 best_value = value
-    best_candidates = tuple(sorted(candidates, reverse=True)[:20])
+    best_candidates = tuple(
+        sorted(candidates, reverse=True)[
+            : input_value.numerics.projection_oracle_retained_candidates
+        ]
+    )
     refined_values = tuple(
         _refine_candidate(candidate_harmful, candidate_correct, input_value)
         for _, candidate_harmful, candidate_correct in best_candidates
@@ -109,15 +118,16 @@ def _refine_candidate(
     harmful: float, correct: float, input_value: ProjectionOracleInput
 ) -> float | None:
     envelope = input_value.envelope
-    harmful_span = (envelope.harmful_upper - envelope.harmful_lower) / 1000
-    correct_span = (envelope.correct_upper - envelope.correct_lower) / 1000
+    grid_intervals = input_value.numerics.projection_oracle_grid_points - 1
+    harmful_span = (envelope.harmful_upper - envelope.harmful_lower) / grid_intervals
+    correct_span = (envelope.correct_upper - envelope.correct_lower) / grid_intervals
     harmful_lower = max(envelope.harmful_lower, harmful - harmful_span)
     harmful_upper = min(envelope.harmful_upper, harmful + harmful_span)
     correct_lower = max(envelope.correct_lower, correct - correct_span)
     correct_upper = min(envelope.correct_upper, correct + correct_span)
     best_harmful, best_correct = harmful, correct
     best_value = _candidate_value(best_harmful, best_correct, input_value)
-    for _ in range(32):
+    for _ in range(input_value.numerics.projection_oracle_refinement_passes):
         best_harmful, best_value = _bounded_coordinate_step(
             harmful_lower,
             harmful_upper,
@@ -178,6 +188,7 @@ def _candidate_value(
         correct,
         envelope.timing_entropy_upper,
         input_value.information_budget,
+        input_value.numerics,
     )
     return None if hidden is None else harmful + hidden
 
@@ -187,41 +198,52 @@ def _maximal_feasible_hidden(
     correct: float,
     timing_entropy: float,
     information_budget: float,
+    numerics: NumericsConfiguration,
 ) -> float | None:
     terminal = 1 - harmful - correct
     if terminal < 0:
         return None
     minimum = _information_minimizer(harmful, correct, terminal)
-    if _direct_slack(harmful, correct, timing_entropy, minimum) > information_budget:
+    if _direct_slack(harmful, correct, timing_entropy, minimum, numerics) > information_budget:
         return None
-    if _direct_slack(harmful, correct, timing_entropy, terminal) <= information_budget:
+    if _direct_slack(harmful, correct, timing_entropy, terminal, numerics) <= information_budget:
         return terminal
     lower = minimum
     upper = terminal
-    while upper - lower > 1.0e-14:
+    while upper - lower > numerics.oracle_boundary_bracket_width:
         midpoint = (lower + upper) / 2
-        if _direct_slack(harmful, correct, timing_entropy, midpoint) <= information_budget:
+        if (
+            _direct_slack(harmful, correct, timing_entropy, midpoint, numerics)
+            <= information_budget
+        ):
             lower = midpoint
         else:
             upper = midpoint
     return lower
 
 
-def _maximal_law_hidden(observable_law: ObservableLaw, information_budget: float) -> float | None:
+def _maximal_law_hidden(
+    observable_law: ObservableLaw,
+    information_budget: float,
+    numerics: NumericsConfiguration,
+) -> float | None:
     minimum = _information_minimizer(
         observable_law.harmful_total,
         observable_law.correct_total,
         observable_law.c,
     )
-    if _direct_full_law_information(observable_law, minimum) > information_budget:
+    if _direct_full_law_information(observable_law, minimum, numerics) > information_budget:
         return None
-    if _direct_full_law_information(observable_law, observable_law.c) <= information_budget:
+    if (
+        _direct_full_law_information(observable_law, observable_law.c, numerics)
+        <= information_budget
+    ):
         return observable_law.c
     lower = minimum
     upper = observable_law.c
-    while upper - lower > 1.0e-14:
+    while upper - lower > numerics.oracle_boundary_bracket_width:
         midpoint = (lower + upper) / 2
-        if _direct_full_law_information(observable_law, midpoint) <= information_budget:
+        if _direct_full_law_information(observable_law, midpoint, numerics) <= information_budget:
             lower = midpoint
         else:
             upper = midpoint
@@ -234,12 +256,14 @@ def _information_minimizer(harmful: float, correct: float, terminal: float) -> f
 
 
 def _direct_full_law_information(
-    observable_law: ObservableLaw, hidden_harmful_mass: float
+    observable_law: ObservableLaw,
+    hidden_harmful_mass: float,
+    numerics: NumericsConfiguration,
 ) -> float:
     if not observable_law.hidden_harmful_mass_is_valid(hidden_harmful_mass):
         raise ValueError("hidden terminal harmful mass must lie in [0, c]")
     with localcontext() as context:
-        context.prec = 100
+        context.prec = numerics.oracle_decimal_digits
         zero = _decimal(0)
         hidden = _decimal(hidden_harmful_mass)
         unresolved = _decimal(observable_law.c)
@@ -261,10 +285,16 @@ def _direct_full_law_information(
         return float(information)
 
 
-def _direct_slack(harmful: float, correct: float, timing_entropy: float, hidden: float) -> float:
+def _direct_slack(
+    harmful: float,
+    correct: float,
+    timing_entropy: float,
+    hidden: float,
+    numerics: NumericsConfiguration,
+) -> float:
     terminal = 1 - harmful - correct
     with localcontext() as context:
-        context.prec = 100
+        context.prec = numerics.oracle_decimal_digits
         harmful_value = _decimal(harmful)
         terminal_value = _decimal(terminal)
         hidden_value = _decimal(hidden)
