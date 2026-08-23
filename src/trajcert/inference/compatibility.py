@@ -48,6 +48,12 @@ class _MassBox:
 
 
 @dataclass(frozen=True, slots=True)
+class _CompatibilityEnclosure:
+    lower: float
+    upper: float
+
+
+@dataclass(frozen=True, slots=True)
 class _IntrinsicBox:
     harmful: ClosedInterval
     correct: ClosedInterval
@@ -222,16 +228,30 @@ def _terminal_interval(harmful: ClosedInterval, correct: ClosedInterval) -> Clos
 
 
 def _compatibility_lower(box: _MassBox, envelope: ConservativeSummaryEnvelope) -> float:
+    return _compatibility_enclosure(box, envelope).lower
+
+
+def _compatibility_enclosure(
+    box: _MassBox, envelope: ConservativeSummaryEnvelope
+) -> _CompatibilityEnclosure:
     points = _mass_vertices(box, envelope)
     if not points:
-        return math.inf
-    return math.nextafter(
+        return _CompatibilityEnclosure(math.inf, math.inf)
+    lower = math.nextafter(
         min(
             _resolved_entropy_lower(harmful, correct) - envelope.timing_entropy_upper
             for harmful, correct in points
         ),
         -math.inf,
     )
+    maximum_resolved_mass = min(
+        1,
+        1 - envelope.terminal_lower,
+        box.harmful.upper + box.correct.upper,
+    )
+    entropy_upper = flint.arb(str(maximum_resolved_mass)) * flint.arb(2).log()
+    upper = float((entropy_upper - flint.arb(str(envelope.timing_entropy_upper))).upper())
+    return _CompatibilityEnclosure(lower, upper)
 
 
 def _compatibility_point_upper(box: _MassBox, envelope: ConservativeSummaryEnvelope) -> float:
