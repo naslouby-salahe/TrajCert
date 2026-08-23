@@ -52,3 +52,8 @@ def test_architectural_layers_do_not_reverse_dependency_direction() -> None:
                 for forbidden in forbidden_modules
                 for imported in imports
             )
+
+
+def test_independent_projection_oracle_never_imports_the_certified_implementation() -> None:
+    oracle_path = PROJECT_ROOT / "src/trajcert/evaluation/projection_oracle.py"
+    assert "trajcert.inference.projection" not in imported_modules(oracle_path)
