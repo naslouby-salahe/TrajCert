@@ -274,8 +274,13 @@ def _slack_lower(box: _ProjectionBox, timing_entropy_upper: float) -> float:
             min(1, box.harmful.upper + box.hidden.upper),
         )
     )
-    terminal_entropy_upper = terminal.upper * _binary_entropy_maximum()
-    return latent_entropy_lower - timing_entropy_upper - terminal_entropy_upper
+    positive_terminal_lower = (
+        latent_entropy_lower - timing_entropy_upper - terminal.upper * _binary_entropy_maximum()
+    )
+    if terminal.lower == 0 < terminal.upper and box.hidden.lower == 0:
+        zero_terminal_lower = latent_entropy_lower - timing_entropy_upper
+        return min(zero_terminal_lower, positive_terminal_lower)
+    return positive_terminal_lower
 
 
 def _point_slack_upper(

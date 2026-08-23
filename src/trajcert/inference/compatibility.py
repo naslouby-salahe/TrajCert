@@ -295,11 +295,14 @@ def _slack_lower(box: _IntrinsicBox, timing_entropy_upper: float) -> float:
         box.harmful.lower + box.hidden.lower,
         min(1, box.harmful.upper + box.hidden.upper),
     )
-    return (
-        _binary_entropy_lower(latent)
-        - timing_entropy_upper
-        - terminal.upper * _binary_entropy_maximum()
+    latent_entropy_lower = _binary_entropy_lower(latent)
+    positive_terminal_lower = (
+        latent_entropy_lower - timing_entropy_upper - terminal.upper * _binary_entropy_maximum()
     )
+    if terminal.lower == 0 < terminal.upper and box.hidden.lower == 0:
+        zero_terminal_lower = latent_entropy_lower - timing_entropy_upper
+        return min(zero_terminal_lower, positive_terminal_lower)
+    return positive_terminal_lower
 
 
 def _binary_entropy_lower(interval: ClosedInterval) -> float:

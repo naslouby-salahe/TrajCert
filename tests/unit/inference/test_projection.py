@@ -106,3 +106,18 @@ def test_zero_terminal_mass_uses_the_exact_continuous_entropy_boundary() -> None
     assert result.feasible_incumbent is not None
     assert math.isclose(result.feasible_incumbent, 0.1)
     assert result.proven_upper >= 0.1
+
+
+def test_terminal_interval_touching_zero_preserves_a_conservative_projection_bound() -> None:
+    configuration = load_configuration()
+    envelope = ConservativeSummaryEnvelope(
+        SummaryEnvelopeState.VALID, 0.1, 0.5, 0.5, 0.9, 0, 0.4, 0, 0
+    )
+    numerics = configuration.numerics.model_copy(update={"outer_max_visited_nodes": 1})
+
+    result = certified_outer_projection(ProjectionInput(envelope, 1, numerics))
+
+    assert result.termination_reason is ProjectionTermination.NODE_CAP
+    assert result.proven_upper <= 1
+    assert result.feasible_incumbent is not None
+    assert result.proven_upper >= result.feasible_incumbent
