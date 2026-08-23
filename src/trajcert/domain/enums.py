@@ -105,6 +105,12 @@ class ScientificState(StrEnum):
     INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
 
 
+class ProjectionTermination(StrEnum):
+    CERTIFIED_GAP = "CERTIFIED_GAP"
+    NODE_CAP = "NODE_CAP"
+    CONSERVATIVE_FALLBACK = "CONSERVATIVE_FALLBACK"
+
+
 class PublicExecutionState(StrEnum):
     NOT_STARTED = "NOT_STARTED"
     BLOCKED = "BLOCKED"
