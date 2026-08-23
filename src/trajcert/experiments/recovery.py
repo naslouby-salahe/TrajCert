@@ -119,6 +119,41 @@ class ActiveCellReuseDecision:
     stale_descendants_to_remove: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class StochasticSeedAccountingInput:
+    seed_index_start: int
+    seed_index_stop_exclusive: int
+    completed_seed_indices: tuple[int, ...]
+    failed_seed_indices: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class StochasticSeedAccounting:
+    expected_seed_indices: tuple[int, ...]
+    completed_seed_indices: tuple[int, ...]
+    failed_seed_indices: tuple[int, ...]
+    missing_seed_indices: tuple[int, ...]
+    complete: bool
+
+
+def stochastic_seed_accounting(
+    input_value: StochasticSeedAccountingInput,
+) -> StochasticSeedAccounting:
+    expected = tuple(range(input_value.seed_index_start, input_value.seed_index_stop_exclusive))
+    completed = tuple(sorted(input_value.completed_seed_indices))
+    failed = tuple(sorted(input_value.failed_seed_indices))
+    if len(set(completed)) != len(completed) or len(set(failed)) != len(failed):
+        raise ValueError("stochastic seed accounting requires unique seed indices")
+    if set(completed) & set(failed):
+        raise ValueError("failed seeds cannot be treated as completed observations")
+    if not set(completed).union(failed).issubset(expected):
+        raise ValueError("stochastic seed accounting contains undeclared seed indices")
+    missing = tuple(index for index in expected if index not in set(completed).union(failed))
+    return StochasticSeedAccounting(
+        expected, completed, failed, missing, not failed and not missing
+    )
+
+
 def artifact_reuse_decision(
     status: ArtifactValidationStatus,
     current_dependency_fingerprint: str,

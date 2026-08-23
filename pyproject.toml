@@ -9,6 +9,7 @@ description = "Trajectory-aware partial-identification and sensitivity-certifica
 requires-python = ">=3.12"
 dependencies = [
     "mpmath==1.3.0",
+    "numpy==2.5.2",
     "pydantic==2.13.4",
     "pyarrow==25.0.1",
     "python-flint==0.9.0",
@@ -55,7 +56,7 @@ root_package = "trajcert"
 [tool.deptry]
 extend_exclude = ["noxfile.py"]
 known_first_party = ["trajcert"]
-package_module_name_map = { PyYAML = "yaml", coverage = "coverage", "import-linter" = "import_linter", mpmath = "mpmath", nox = "nox", pydantic = "pydantic", pyarrow = "pyarrow", "python-flint" = "flint", pyright = "pyright", pytest = "pytest", ruff = "ruff", scipy = "scipy", semgrep = "semgrep", vulture = "vulture" }
+package_module_name_map = { PyYAML = "yaml", coverage = "coverage", "import-linter" = "import_linter", mpmath = "mpmath", nox = "nox", numpy = "numpy", pydantic = "pydantic", pyarrow = "pyarrow", "python-flint" = "flint", pyright = "pyright", pytest = "pytest", ruff = "ruff", scipy = "scipy", semgrep = "semgrep", vulture = "vulture" }
 optional_dependencies_dev_groups = ["quality"]
 
 [[tool.importlinter.contracts]]

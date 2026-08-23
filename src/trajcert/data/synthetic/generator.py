@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import random
 from dataclasses import dataclass
+
+import numpy as np
 
 from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
 
@@ -48,7 +49,7 @@ def generate_synthetic_stream(
 ) -> tuple[SyntheticEvent, ...]:
     if event_count < 0:
         raise ValueError("synthetic event count must be nonnegative")
-    generator = random.Random(seed)
+    generator = np.random.Generator(np.random.PCG64(seed))
     return tuple(
         _generate_event(law, generator, action_index) for action_index in range(event_count)
     )
@@ -77,7 +78,7 @@ def reuse_or_extend_validated_stream(
 
 def _generate_event(
     law: SyntheticTrajectoryLaw,
-    generator: random.Random,
+    generator: np.random.Generator,
     action_index: int,
 ) -> SyntheticEvent:
     label = generator.random() < law.theta

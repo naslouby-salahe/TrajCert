@@ -1,9 +1,13 @@
+import ast
+from pathlib import Path
 from typing import cast
 
 import pytest
 
 from trajcert.data.synthetic.generator import SyntheticEvent, generate_synthetic_stream
 from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
+
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 
 def test_seeded_stream_is_iid_deterministic_and_hides_terminal_labels() -> None:
@@ -19,3 +23,23 @@ def test_seeded_stream_is_iid_deterministic_and_hides_terminal_labels() -> None:
 def test_synthetic_events_reject_non_boolean_labels() -> None:
     with pytest.raises(ValueError, match="boolean"):
         SyntheticEvent(0, cast(bool, 1), 1, True)
+
+
+def test_synthetic_generator_uses_a_local_pcg64_generator() -> None:
+    tree = ast.parse(
+        (PROJECT_ROOT / "src/trajcert/data/synthetic/generator.py").read_text(encoding="utf-8")
+    )
+    imported_modules = {
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    calls = {
+        node.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load)
+    }
+
+    assert "random" not in imported_modules
+    assert {"Generator", "PCG64"}.issubset(calls)

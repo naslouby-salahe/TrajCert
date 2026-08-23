@@ -10,11 +10,13 @@ from trajcert.experiments.recovery import (
     ActiveArtifact,
     CheckpointRecord,
     CheckpointRecoveryRequest,
+    StochasticSeedAccountingInput,
     active_cell_reuse_decision,
     artifact_reuse_decision,
     checkpoint_batch_count,
     missing_seed_ranges,
     nearest_valid_checkpoint,
+    stochastic_seed_accounting,
 )
 
 
@@ -128,3 +130,16 @@ def test_selective_invalidation_boundaries_preserve_exact_recompute_scope() -> N
 def test_configured_checkpoint_intervals_produce_the_declared_batch_counts() -> None:
     assert checkpoint_batch_count(0, 5000, 100) == 50
     assert checkpoint_batch_count(0, 500, 50) == 10
+
+
+def test_stochastic_seed_accounting_retains_failures_and_forbids_complete_case_substitution() -> (
+    None
+):
+    accounting = stochastic_seed_accounting(StochasticSeedAccountingInput(0, 4, (0, 2), (1,)))
+
+    assert accounting.expected_seed_indices == (0, 1, 2, 3)
+    assert accounting.failed_seed_indices == (1,)
+    assert accounting.missing_seed_indices == (3,)
+    assert accounting.complete is False
+    with pytest.raises(ValueError, match="cannot be treated as completed"):
+        stochastic_seed_accounting(StochasticSeedAccountingInput(0, 2, (0, 1), (1,)))
