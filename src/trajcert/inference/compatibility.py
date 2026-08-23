@@ -120,12 +120,13 @@ def certified_intrinsic_risk_lower_bound(
     prior_precision = ctx.prec
     ctx.prec = _precision(input_value)
     try:
-        initial = _IntrinsicBox(
+        unbounded_initial = _IntrinsicBox(
             ClosedInterval(input_value.envelope.harmful_lower, input_value.envelope.harmful_upper),
             ClosedInterval(input_value.envelope.correct_lower, input_value.envelope.correct_upper),
-            ClosedInterval(0, input_value.envelope.terminal_upper),
+            ClosedInterval(0, 1),
         )
-        if not _intrinsic_box_feasible(initial, input_value.envelope):
+        initial = _intersect_intrinsic_terminal_constraints(unbounded_initial, input_value.envelope)
+        if initial is None:
             return IntrinsicRiskLowerBound(None, ctx.prec, True, 0, False)
         if _zero_resolved_compatible(input_value):
             return IntrinsicRiskLowerBound(None, ctx.prec, True, 0, True)
@@ -159,9 +160,14 @@ def certified_intrinsic_risk_lower_bound(
                 _intrinsic_point_upper(box, input_value.envelope, input_value.information_budget),
             )
             for child in _split_intrinsic_box(box, initial, input_value.numerics):
-                if _intrinsic_box_feasible(child, input_value.envelope):
+                constrained_child = _intersect_intrinsic_terminal_constraints(
+                    child, input_value.envelope
+                )
+                if constrained_child is not None:
                     counter += 1
-                    heapq.heappush(queue, (_intrinsic_lower(child), counter, child))
+                    heapq.heappush(
+                        queue, (_intrinsic_lower(constrained_child), counter, constrained_child)
+                    )
         global_lower = queue[0][0] if queue else math.inf
         return IntrinsicRiskLowerBound(
             None if zero_resolved_plausible or not math.isfinite(global_lower) else global_lower,
@@ -185,12 +191,20 @@ def _mass_box_feasible(box: _MassBox, envelope: ConservativeSummaryEnvelope) -> 
     return total.upper >= 1 - envelope.terminal_upper and total.lower <= 1 - envelope.terminal_lower
 
 
-def _intrinsic_box_feasible(box: _IntrinsicBox, envelope: ConservativeSummaryEnvelope) -> bool:
+def _intersect_intrinsic_terminal_constraints(
+    box: _IntrinsicBox, envelope: ConservativeSummaryEnvelope
+) -> _IntrinsicBox | None:
     terminal = _terminal_interval(box.harmful, box.correct)
-    return (
-        terminal.upper >= envelope.terminal_lower
-        and terminal.lower <= envelope.terminal_upper
-        and box.hidden.lower <= terminal.upper
+    if (
+        terminal.upper < envelope.terminal_lower
+        or terminal.lower > envelope.terminal_upper
+        or box.hidden.lower > terminal.upper
+    ):
+        return None
+    return _IntrinsicBox(
+        box.harmful,
+        box.correct,
+        ClosedInterval(box.hidden.lower, min(box.hidden.upper, terminal.upper)),
     )
 
 
