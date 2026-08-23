@@ -51,3 +51,18 @@ def test_zero_resolved_mass_withholds_strong_intrinsic_state() -> None:
 
     assert result.proven_lower is None
     assert result.zero_resolved_mass_plausible is True
+
+
+def test_zero_terminal_mass_uses_the_continuous_intrinsic_boundary() -> None:
+    configuration = load_configuration()
+    envelope = ConservativeSummaryEnvelope(
+        SummaryEnvelopeState.VALID, 0.1, 0.1, 0.9, 0.9, 0, 0, 0, 0
+    )
+
+    result = certified_intrinsic_risk_lower_bound(
+        CompatibilityInput(envelope, 1, configuration.numerics)
+    )
+
+    assert result.proven_lower is not None
+    assert math.isclose(result.proven_lower, 0.1)
+    assert result.zero_resolved_mass_plausible is False
