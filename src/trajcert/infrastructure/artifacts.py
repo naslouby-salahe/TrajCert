@@ -36,7 +36,7 @@ class ArrowTable(Protocol):
 class ArrowTableFactory(Protocol):
     def from_pylist(
         self,
-        rows: tuple[dict[str, ArtifactValue], ...],
+        rows: tuple[Mapping[str, ArtifactValue], ...],
         schema: ArrowSchema,
     ) -> ArrowTable: ...
 
@@ -46,19 +46,23 @@ class ArrowModule(Protocol):
 
     def bool_(self) -> ArrowDataType: ...
 
-    def field(self, name: str, field_type: ArrowDataType, nullable: bool = True) -> ArrowField: ...
+    def field(self, name: str, field_type: ArrowDataType, nullable: bool = True) -> ArrowField:
+        raise NotImplementedError((name, field_type, nullable))
 
     def float64(self) -> ArrowDataType: ...
 
     def int64(self) -> ArrowDataType: ...
 
-    def list_(self, value_type: ArrowDataType) -> ArrowDataType: ...
+    def list_(self, value_type: ArrowDataType) -> ArrowDataType:
+        raise NotImplementedError(value_type)
 
-    def schema(self, fields: tuple[ArrowField, ...]) -> ArrowSchema: ...
+    def schema(self, fields: tuple[ArrowField, ...]) -> ArrowSchema:
+        raise NotImplementedError(fields)
 
     def string(self) -> ArrowDataType: ...
 
-    def timestamp(self, unit: str, tz: str) -> ArrowDataType: ...
+    def timestamp(self, unit: str, tz: str) -> ArrowDataType:
+        raise NotImplementedError((unit, tz))
 
     def uint64(self) -> ArrowDataType: ...
 
@@ -92,7 +96,7 @@ def descriptive_artifact_key(
     return "-".join(segments)
 
 
-def canonical_physical_types() -> dict[str, ArrowDataType]:
+def canonical_physical_types() -> Mapping[str, ArrowDataType]:
     return {
         "string": ARROW.string(),
         "boolean": ARROW.bool_(),

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from hashlib import sha256
@@ -184,7 +185,7 @@ def _integral_age_unit(value: float) -> int:
     return int(value)
 
 
-def _law_payload(law: SyntheticTrajectoryLaw) -> dict[str, float | int | str]:
+def _law_payload(law: SyntheticTrajectoryLaw) -> Mapping[str, float | int | str]:
     return {
         "K": law.resolved_band_count,
         "lambda0": law.lambda0,
@@ -197,7 +198,7 @@ def _law_payload(law: SyntheticTrajectoryLaw) -> dict[str, float | int | str]:
     }
 
 
-def _ledger_payload(records: tuple[ActionRecord, ...]) -> tuple[dict[str, JSONValue], ...]:
+def _ledger_payload(records: tuple[ActionRecord, ...]) -> tuple[Mapping[str, JSONValue], ...]:
     return tuple(
         {
             "action_channel_id": record.identity.action_channel_id,

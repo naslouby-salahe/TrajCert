@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from collections.abc import Mapping
 from typing import Annotated, Literal, cast
 
 from pydantic import (
@@ -110,7 +111,7 @@ class ArtifactEnvelope(BaseModel):
         parsed_coordinates = json.loads(self.semantic_coordinates)
         if not isinstance(parsed_coordinates, dict):
             raise ValueError("semantic coordinates must be a canonical JSON object")
-        coordinates = cast(dict[str, JSONValue], parsed_coordinates)
+        coordinates = cast(Mapping[str, JSONValue], parsed_coordinates)
         expected_key = f"{self.experiment_name}:{self.semantic_coordinates}"
         if self.semantic_cell_key != expected_key:
             raise ValueError("semantic cell key must match experiment name and coordinates")

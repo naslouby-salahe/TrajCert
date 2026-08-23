@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Protocol, cast
 
@@ -29,7 +29,7 @@ class ArrowTable(Protocol):
 
 
 class ArrowTableFactory(Protocol):
-    def from_pylist(self, rows: list[dict[str, JSONValue]]) -> ArrowTable: ...
+    def from_pylist(self, rows: list[Mapping[str, JSONValue]]) -> ArrowTable: ...
 
 
 class ArrowModule(Protocol):
@@ -46,7 +46,8 @@ class ParquetModule(Protocol):
         compression: str,
         use_dictionary: bool,
         write_statistics: bool,
-    ) -> None: ...
+    ) -> None:
+        raise NotImplementedError((table, where, compression, use_dictionary, write_statistics))
 
 
 ARROW = cast(ArrowModule, pyarrow)
@@ -75,7 +76,7 @@ def cell_plan_digest(row: ExperimentPlanRow) -> str:
 def canonical_plan_parquet(rows: tuple[ExperimentPlanRow, ...]) -> bytes:
     ordered_rows = ordered_plan_rows(rows)
     serialized_rows = [
-        cast(dict[str, JSONValue], row.model_dump(mode="json")) for row in ordered_rows
+        cast(Mapping[str, JSONValue], row.model_dump(mode="json")) for row in ordered_rows
     ]
     destination = ARROW.BufferOutputStream()
     PARQUET.write_table(
