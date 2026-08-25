@@ -21,11 +21,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --extra quality --locked --no-build
-      - run: uv run --no-sync --no-build ruff format --check .
-      - run: uv run --no-sync --no-build ruff check .
-      - run: uv run --no-sync --no-build pyright
+      - run: uv run --no-sync --no-build ruff format --check src tests tools noxfile.py
+      - run: uv run --no-sync --no-build ruff check src tests tools noxfile.py
+      - run: uv run --no-sync --no-build basedpyright
       - run: PYTHONPATH=src uv run --no-sync --no-build lint-imports
-      - run: uv run --no-sync --no-build semgrep --config semgrep.yml src tests
+      - run: uv run --no-sync --no-build semgrep --config semgrep src/trajcert
       - run: uv run --no-sync --no-build vulture src/trajcert --min-confidence 100 --ignore-names table,where,compression,use_dictionary,write_statistics,field_type,nullable,value_type,fields,tz,unit
       - run: uv run --no-sync --no-build deptry .
       - run: uv run --no-sync --no-build coverage run -m pytest -q

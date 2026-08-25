@@ -49,6 +49,8 @@ class NDArrayFloat64Annotation:
     def __get_pydantic_core_schema__(
         cls, source_type: type[object], handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
+        _ = source_type
+        _ = handler
         return core_schema.no_info_after_validator_function(
             cls.validate,
             core_schema.any_schema(),
