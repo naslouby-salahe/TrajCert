@@ -25,13 +25,27 @@ class SharpRiskSet:
             return None
         return self.latent_risk.width
 
-def sharp_risk_set(summary: ObservableSummary, sensitivity_budget: SensitivityBudget, root_atol: ToleranceValue, identity_atol: ToleranceValue) -> SharpRiskSet:
-    solved = solve_hidden_mass_interval(summary=summary, sensitivity_budget=sensitivity_budget, root_atol=root_atol, identity_atol=identity_atol)
+
+def sharp_risk_set(
+    summary: ObservableSummary,
+    sensitivity_budget: SensitivityBudget,
+    root_atol: ToleranceValue,
+    identity_atol: ToleranceValue,
+) -> SharpRiskSet:
+    solved = solve_hidden_mass_interval(
+        summary=summary,
+        sensitivity_budget=sensitivity_budget,
+        root_atol=root_atol,
+        identity_atol=identity_atol,
+    )
     if solved.interval is None:
         return SharpRiskSet(hidden_mass=None, latent_risk=None, solve_result=solved)
     harmful = float(summary.resolved_harmful_mass)
-    risk = RiskInterval(lower=harmful + float(solved.interval.lower), upper=harmful + float(solved.interval.upper))
+    risk = RiskInterval(
+        lower=harmful + float(solved.interval.lower), upper=harmful + float(solved.interval.upper)
+    )
     return SharpRiskSet(hidden_mass=solved.interval, latent_risk=risk, solve_result=solved)
+
 
 def unresolved_as_harm_upper(summary: ObservableSummary) -> RiskValue:
     return float(summary.resolved_harmful_mass) + float(summary.unresolved_mass)

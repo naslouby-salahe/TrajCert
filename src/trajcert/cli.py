@@ -11,9 +11,7 @@ from trajcert.types import CliCommand
 
 def main() -> None:
     parser = ArgumentParser(prog="trajcert")
-    parser.add_argument(
-        "command", choices=tuple(command.value for command in CliCommand)
-    )
+    parser.add_argument("command", choices=tuple(command.value for command in CliCommand))
     arguments = parser.parse_args()
     command = CliCommand(arguments.command)
     if command is CliCommand.DOCTOR:
@@ -21,7 +19,7 @@ def main() -> None:
 
 
 def _doctor() -> None:
-    configuration = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     partitions = configured_partitions()
     laws = configured_laws()
     for law in laws:
