@@ -121,7 +121,7 @@ def safety_budget_cases(summary: ObservableSummary) -> tuple[SafetyBudgetCase, .
         ),
         SafetyBudgetCase(
             name=SafetyCaseName("Between resolved mass and intrinsic boundary"),
-            risk_budget=(harmful + theta_dagger / 2.0) if between_is_valid else None,
+            risk_budget=((harmful + theta_dagger) / 2.0) if between_is_valid else None,
             valid=between_is_valid,
             invalid_reason=None if between_is_valid else ReasonCode("DEGENERATE_SAFETY_INTERVAL"),
         ),
@@ -133,7 +133,7 @@ def safety_budget_cases(summary: ObservableSummary) -> tuple[SafetyBudgetCase, .
         ),
         SafetyBudgetCase(
             name=SafetyCaseName("Interior safety frontier"),
-            risk_budget=(theta_dagger + theta_max / 2.0),
+            risk_budget=(theta_dagger + theta_max) / 2.0,
             valid=True,
             invalid_reason=None,
         ),
