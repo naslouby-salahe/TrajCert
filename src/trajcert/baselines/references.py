@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from trajcert.analysis.claims import LEGACY_COMPARATOR_NAME
 from trajcert.configuration.models import NumericsConfiguration
 from trajcert.data.partitions import ObservableLaw
 from trajcert.math.information_profile import InformationProfile
@@ -64,7 +63,6 @@ def endpoint_only_pis_risk_set(input_value: EndpointOnlyPISInput) -> PopulationR
 
 
 __all__ = [
-    "LEGACY_COMPARATOR_NAME",
     "CompleteCaseReference",
     "WorstCaseReference",
     "complete_case_arrival_only",

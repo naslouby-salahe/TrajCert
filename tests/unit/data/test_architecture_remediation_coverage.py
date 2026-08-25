@@ -1,6 +1,5 @@
 import pytest
 
-from trajcert.analysis.claims import ClaimScopeGuard, ClaimText
 from trajcert.data.apportionment import (
     ApportionmentTotal,
     SyntheticCategoryProbabilities,
@@ -21,7 +20,6 @@ from trajcert.data.synthetic.preprocessing import (
     BalancedPrefixInput,
     balanced_prefix,
 )
-from trajcert.domain.enums import EvidenceClass
 from trajcert.domain.seeds import ResolvedBandCount
 
 
@@ -63,12 +61,3 @@ def test_balanced_prefix_handles_empty_terminal_counts_and_invalid_probabilities
     assert balanced_prefix(BalancedPrefixInput((0.5, 0.5), 4)).sequence == (0, 1, 0, 1)
     with pytest.raises(ValueError, match="sum to one"):
         balanced_prefix(BalancedPrefixInput((0.4, 0.4), 2))
-
-
-def test_claim_scope_guard_rejects_prohibited_claims_and_exploratory_promotion() -> None:
-    guard = ClaimScopeGuard()
-    guard.validate(ClaimText(value="A bounded TrajCert certificate."))
-    with pytest.raises(ValueError, match="scope"):
-        guard.validate(ClaimText(value="This guarantees privacy protection."))
-    with pytest.raises(ValueError, match="exploratory"):
-        guard.validate_evidence_class(EvidenceClass.EXPLORATORY)

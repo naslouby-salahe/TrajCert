@@ -362,7 +362,7 @@ AUTHORITATIVE_PRODUCERS = (
     _producer(
         "claims",
         "§21",
-        ("src/trajcert/analysis/claims.py", "src/trajcert/analysis/synthesis.py"),
+        ("src/trajcert/analysis/synthesis.py",),
         ("Pandas",),
         ("required evidence artifacts",),
     ),
