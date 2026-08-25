@@ -144,9 +144,7 @@ def _matching_failure_status(
     )
 
 
-def _aggregate_state(
-    counts: StateCounts, declared_cells: NonNegativeInt
-) -> PublicExecutionState:
+def _aggregate_state(counts: StateCounts, declared_cells: NonNegativeInt) -> PublicExecutionState:
     if declared_cells == 0 or counts.invalid_cells == declared_cells:
         return PublicExecutionState.INVALID
     if counts.failed_cells > 0:

@@ -46,11 +46,15 @@ class ObservableSummaryEnvelope(DomainModel):
 
     @property
     def is_singleton(self) -> bool:
-        intervals = self.harmful_by_band + self.correct_by_band + (
-            self.unresolved,
-            self.resolved_harmful,
-            self.resolved_correct,
-            self.resolved_entropy,
+        intervals = (
+            self.harmful_by_band
+            + self.correct_by_band
+            + (
+                self.unresolved,
+                self.resolved_harmful,
+                self.resolved_correct,
+                self.resolved_entropy,
+            )
         )
         return all(interval.is_singleton for interval in intervals)
 
@@ -101,8 +105,12 @@ def summary_envelope_from_confidence(
 
 
 def singleton_summary_envelope(summary: ObservableSummary) -> ObservableSummaryEnvelope:
-    harmful = tuple(ScalarEnvelope(lower=float(value), upper=float(value)) for value in summary.harmful_by_band)
-    correct = tuple(ScalarEnvelope(lower=float(value), upper=float(value)) for value in summary.correct_by_band)
+    harmful = tuple(
+        ScalarEnvelope(lower=float(value), upper=float(value)) for value in summary.harmful_by_band
+    )
+    correct = tuple(
+        ScalarEnvelope(lower=float(value), upper=float(value)) for value in summary.correct_by_band
+    )
     entropy = _resolved_entropy_exact(
         tuple(float(value) for value in summary.harmful_by_band),
         tuple(float(value) for value in summary.correct_by_band),
@@ -160,7 +168,10 @@ def _resolved_entropy_envelope(
 
 
 def _resolved_entropy_exact(harmful: tuple[float, ...], correct: tuple[float, ...]) -> float:
-    return sum(_binary_entropy_from_masses(left, right) for left, right in zip(harmful, correct, strict=True))
+    return sum(
+        _binary_entropy_from_masses(left, right)
+        for left, right in zip(harmful, correct, strict=True)
+    )
 
 
 def _binary_entropy_from_masses(harmful: float, correct: float) -> float:

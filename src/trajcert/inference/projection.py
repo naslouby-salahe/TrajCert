@@ -94,7 +94,9 @@ def finite_sample_compatibility_lower_bound(
     vertices = _resolved_vertices(envelope)
     if not vertices:
         return 0.0
-    entropy_minimum = min(_binary_entropy_from_masses(harmful, correct) for harmful, correct in vertices)
+    entropy_minimum = min(
+        _binary_entropy_from_masses(harmful, correct) for harmful, correct in vertices
+    )
     return max(0.0, entropy_minimum - envelope.resolved_entropy.upper)
 
 
@@ -106,9 +108,7 @@ def finite_sample_intrinsic_risk_lower_bound(
         return None
     vertices = _resolved_vertices(envelope)
     ratios = tuple(
-        harmful / (harmful + correct)
-        for harmful, correct in vertices
-        if harmful + correct > 0.0
+        harmful / (harmful + correct) for harmful, correct in vertices if harmful + correct > 0.0
     )
     if not ratios:
         return None

@@ -130,7 +130,9 @@ def run_cell(
         result = executor(cell, context)
         _validate_execution_result(result, context)
         _verify_artifacts(result.artifact_index, context.workspace_root)
-        atomic_write_model(cell_artifact_index_path(cell, context.workspace_root), result.artifact_index)
+        atomic_write_model(
+            cell_artifact_index_path(cell, context.workspace_root), result.artifact_index
+        )
         completion = _completion_record(cell, context, result)
         write_completion_last(completion_path.parent, completion)
         failure_path.unlink(missing_ok=True)
@@ -169,8 +171,7 @@ def dependency_block_reason(
     if any(name not in supplied for name in cell.required_experiments):
         return ReasonCode("MISSING_DEPENDENCY_STATUS")
     if any(
-        supplied[name] is not PublicExecutionState.COMPLETED
-        for name in cell.required_experiments
+        supplied[name] is not PublicExecutionState.COMPLETED for name in cell.required_experiments
     ):
         return ReasonCode("UPSTREAM_EXPERIMENT_NOT_COMPLETED")
     return None
@@ -238,9 +239,7 @@ def _completion_identity_matches(
     return all(checks)
 
 
-def _validate_execution_result(
-    result: CellExecutionResult, context: ExecutionContext
-) -> None:
+def _validate_execution_result(result: CellExecutionResult, context: ExecutionContext) -> None:
     produced = tuple(entry.artifact_key for entry in result.artifact_index.artifacts)
     if len(produced) != len(set(produced)):
         raise InvariantViolationError("executor produced duplicate artifact keys")
@@ -266,9 +265,13 @@ def _verify_artifacts(index: CellArtifactIndex, workspace_root: Path) -> None:
         if not artifact_path.is_relative_to(root):
             raise InvariantViolationError("artifact path escapes the workspace root")
         if not artifact_path.is_file():
-            raise InvariantViolationError(f"required produced artifact is missing: {entry.artifact_key}")
+            raise InvariantViolationError(
+                f"required produced artifact is missing: {entry.artifact_key}"
+            )
         if file_digest(artifact_path) != entry.sha256:
-            raise InvariantViolationError(f"produced artifact checksum mismatch: {entry.artifact_key}")
+            raise InvariantViolationError(
+                f"produced artifact checksum mismatch: {entry.artifact_key}"
+            )
 
 
 def _verify_completion_artifacts(

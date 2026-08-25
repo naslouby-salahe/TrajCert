@@ -79,12 +79,8 @@ def solve_information_oracle(
                 singleton,
                 singleton,
             )
-        lower_boundary = _left_boundary(
-            harmful, correct, unresolved, rho, minimum_hidden
-        )
-        upper_boundary = _right_boundary(
-            harmful, correct, unresolved, rho, minimum_hidden
-        )
+        lower_boundary = _left_boundary(harmful, correct, unresolved, rho, minimum_hidden)
+        upper_boundary = _right_boundary(harmful, correct, unresolved, rho, minimum_hidden)
         regime = (
             CompatibilityRegime.NO_UNRESOLVED_MASS
             if unresolved == 0
