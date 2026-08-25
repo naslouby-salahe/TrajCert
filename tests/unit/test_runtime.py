@@ -149,8 +149,9 @@ def test_config_cross_field_contracts(mutate, message: str) -> None:
 
 def test_config_loads_freezes_laws_and_reports_bad_files(tmp_path: Path) -> None:
     configuration = TrajCertConfig.from_yaml(Path("configs/trajcert.yaml"))
+    laws = cast(Any, configuration.laws)
     with pytest.raises(AttributeError):
-        cast(Any, configuration.laws).clear()
+        laws.clear()
     invalid = tmp_path / "invalid.yaml"
     invalid.write_text("- not-a-mapping\n", encoding="utf-8")
     with pytest.raises(ConfigurationError, match="configuration root"):
@@ -204,7 +205,9 @@ def test_seed_namespaces_are_descriptive_and_deterministic(
 ) -> None:
     namespace = factory()
     assert role.value in namespace
-    assert derive_seed(namespace, 1) == derive_seed(namespace, 1)
+    first_seed = derive_seed(namespace, 1)
+    repeated_seed = derive_seed(namespace, 1)
+    assert first_seed == repeated_seed
     assert not np.array_equal(
         generator_for(namespace, 1).random(3), generator_for(namespace, 2).random(3)
     )
@@ -212,10 +215,12 @@ def test_seed_namespaces_are_descriptive_and_deterministic(
 
 @pytest.mark.parametrize("descriptor", ["", " padded "])
 def test_seed_descriptor_and_event_band_validation(descriptor: str) -> None:
+    semantic_key = SemanticComparisonKey(descriptor)
+    law_name = LawName("law")
     with pytest.raises(InvalidScientificDataError):
-        bootstrap_namespace(SemanticComparisonKey(descriptor))
+        bootstrap_namespace(semantic_key)
     with pytest.raises(InvalidScientificDataError):
-        event_stream_namespace(LawName("law"), 0)
+        event_stream_namespace(law_name, 0)
 
 
 def test_cli_doctor_validates_inputs_and_reports_success(

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 # pytest's comparison helpers are intentionally dynamically typed.
 # pyright: reportUnknownMemberType=false
-from typing import cast
-
 import numpy as np
 import pytest
 from pydantic import ValidationError
@@ -33,7 +31,7 @@ from trajcert.exceptions import (
     InvalidProbabilityError,
     InvalidScientificDataError,
 )
-from trajcert.types import HiddenMassInterval, LawKey, LawName, PartitionName, RiskInterval
+from trajcert.types import HiddenMassInterval, LawKey, LawName, RiskInterval
 
 
 @pytest.fixture
@@ -90,15 +88,16 @@ def test_partition_name(bands: int, expected: str) -> None:
 
 
 def test_partition_model_rejects_inconsistent_mapping() -> None:
+    invalid_partition = {
+        "name": "bad",
+        "finest_band_count": 4,
+        "band_count": 2,
+        "terminal_horizon": 8.0,
+        "boundaries": (4.0, 8.0),
+        "coarsening_map_from_finest": (1, 2, 1, 2),
+    }
     with pytest.raises(InvalidPartitionError, match="inconsistent"):
-        TrajectoryPartition(
-            name=cast(PartitionName, "bad"),
-            finest_band_count=4,
-            band_count=2,
-            terminal_horizon=8.0,
-            boundaries=(4.0, 8.0),
-            coarsening_map_from_finest=(1, 2, 1, 2),
-        )
+        TrajectoryPartition.model_validate(invalid_partition)
 
 
 @pytest.mark.parametrize(
@@ -167,12 +166,9 @@ def test_summary_helpers_reject_mismatched_inputs() -> None:
     )
     with pytest.raises(InvalidScientificDataError, match="resolution"):
         summarize_full_law(partition, law, 1e-12)
+    invalid_counts = ObservableCounts(harmful_by_band=(1,), correct_by_band=(1,), unresolved=0)
     with pytest.raises(InvalidScientificDataError, match="count vectors"):
-        summarize_counts(
-            partition,
-            ObservableCounts(harmful_by_band=(1,), correct_by_band=(1,), unresolved=0),
-            1e-12,
-        )
+        summarize_counts(partition, invalid_counts, 1e-12)
 
 
 @pytest.mark.parametrize("slope", [-2.0, 0.0, 2.0])

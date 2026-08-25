@@ -20,17 +20,17 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
-      - run: uv sync --extra quality --locked
-      - run: uv run --no-sync ruff format --check .
-      - run: uv run --no-sync ruff check .
-      - run: uv run --no-sync pyright
-      - run: PYTHONPATH=src uv run --no-sync lint-imports
-      - run: uv run --no-sync semgrep --config semgrep.yml src tests
-      - run: uv run --no-sync vulture src/trajcert --min-confidence 100 --ignore-names table,where,compression,use_dictionary,write_statistics,field_type,nullable,value_type,fields,tz,unit
-      - run: uv run --no-sync deptry .
-      - run: uv run --no-sync coverage run -m pytest -q
-      - run: uv run --no-sync coverage report --fail-under=95
-      - run: uv run --no-sync coverage xml
+      - run: uv sync --extra quality --locked --no-build
+      - run: uv run --no-sync --no-build ruff format --check .
+      - run: uv run --no-sync --no-build ruff check .
+      - run: uv run --no-sync --no-build pyright
+      - run: PYTHONPATH=src uv run --no-sync --no-build lint-imports
+      - run: uv run --no-sync --no-build semgrep --config semgrep.yml src tests
+      - run: uv run --no-sync --no-build vulture src/trajcert --min-confidence 100 --ignore-names table,where,compression,use_dictionary,write_statistics,field_type,nullable,value_type,fields,tz,unit
+      - run: uv run --no-sync --no-build deptry .
+      - run: uv run --no-sync --no-build coverage run -m pytest -q
+      - run: uv run --no-sync --no-build coverage report --fail-under=95
+      - run: uv run --no-sync --no-build coverage xml
       - name: SonarQube Cloud scan
         uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f
         env:
