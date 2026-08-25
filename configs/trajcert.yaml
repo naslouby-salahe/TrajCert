@@ -212,37 +212,6 @@ runtime_benchmark:
     - {name: n, value: 500}
   outer_projection_rho_offset_above_true_information: 0.01
 
-runtime_environment:
-  architecture: Linux x86_64
-  container_base_family: Debian 12 / bookworm
-  python_image: python:3.13.15-slim-bookworm
-  python_implementation: CPython
-  python_version: 3.13.15
-  locale: C.UTF-8
-  timezone: UTC
-  environment_variables:
-    - {name: PYTHONHASHSEED, value: "0"}
-    - {name: OMP_NUM_THREADS, value: "1"}
-    - {name: OPENBLAS_NUM_THREADS, value: "1"}
-    - {name: MKL_NUM_THREADS, value: "1"}
-    - {name: NUMEXPR_NUM_THREADS, value: "1"}
-  authoritative_execution: CPU
-  direct_dependencies:
-    - {name: numpy, value: "2.5.2"}
-    - {name: scipy, value: "1.18.0"}
-    - {name: pandas, value: "2.3.3"}
-    - {name: pyarrow, value: "25.0.1"}
-    - {name: python-flint, value: "0.9.0"}
-    - {name: sympy, value: "1.13.3"}
-    - {name: mpmath, value: "1.3.0"}
-    - {name: matplotlib, value: "3.10.0"}
-    - {name: pyyaml, value: "6.0.3"}
-    - {name: pytest, value: "8.3.5"}
-    - {name: hypothesis, value: "6.125.3"}
-  reproducibility_tools:
-    - {name: pip-tools, value: "7.6.0"}
-  transitive_lock_file: requirements.lock
-
 artifacts:
   execution_workspace_root: outputs
   execution_workspace_directories: [preprocessing, artifacts, experiments, cache]
