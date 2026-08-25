@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Hashable, Mapping
+from contextvars import ContextVar
 from itertools import pairwise
 from pathlib import Path
 from types import MappingProxyType
 from typing import Annotated, Literal, Self, cast
-from contextvars import ContextVar
 
 import yaml
 from pydantic import Field, StrictFloat, field_validator, model_validator
@@ -22,11 +22,11 @@ from trajcert.types import (
     UnitFloat,
 )
 
-type YamlValue = None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[
-    str, "YamlValue"
-]
+type YamlValue = (
+    None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
+)
 
-active_config: ContextVar["TrajCertConfig"] = ContextVar("active_config")
+active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
 
 
 class ConfigModel(DomainModel):
@@ -45,9 +45,7 @@ class BudgetsConfig(ConfigModel):
     @model_validator(mode="after")
     def validate_information_budget(self) -> BudgetsConfig:
         if self.information_nats > BINARY_MAX_INFORMATION_NATS:
-            raise ValueError(
-                "information_nats cannot exceed log(2) for binary latent outcomes"
-            )
+            raise ValueError("information_nats cannot exceed log(2) for binary latent outcomes")
         return self
 
 
@@ -98,12 +96,8 @@ class GridsConfig(ConfigModel):
         _require_strictly_increasing(self.scaling_bands, "grids.scaling_bands")
         _require_strictly_increasing(self.rho, "grids.rho")
         _require_strictly_increasing(self.beta, "grids.beta")
-        if any(
-            bool(x) for x in (value > BINARY_MAX_INFORMATION_NATS for value in self.rho)
-        ):
-            raise ValueError(
-                "grids.rho cannot exceed log(2) for binary latent outcomes"
-            )
+        if any(bool(x) for x in (value > BINARY_MAX_INFORMATION_NATS for value in self.rho)):
+            raise ValueError("grids.rho cannot exceed log(2) for binary latent outcomes")
         return self
 
 
@@ -131,9 +125,7 @@ class PatternMixtureConfig(ConfigModel):
         _require_unique(self.c, "comparators.pattern_mixture.c")
         lower, upper = self.coefficient_bounds
         if lower >= upper:
-            raise ValueError(
-                "pattern-mixture coefficient bounds must be strictly ordered"
-            )
+            raise ValueError("pattern-mixture coefficient bounds must be strictly ordered")
         return self
 
 
@@ -173,9 +165,7 @@ class SequentialUtilityConfig(ConfigModel):
             raise ValueError("utility checkpoint_every cannot exceed max_events")
         _require_unique(self.rho, "sequential.utility.rho")
         _require_strictly_increasing(self.rho, "sequential.utility.rho")
-        if any(
-            bool(x) for x in (value > BINARY_MAX_INFORMATION_NATS for value in self.rho)
-        ):
+        if any(bool(x) for x in (value > BINARY_MAX_INFORMATION_NATS for value in self.rho)):
             raise ValueError("sequential.utility.rho cannot exceed log(2)")
         return self
 
@@ -266,33 +256,22 @@ class TrajCertConfig(ConfigModel):
             raise ValueError("at least one synthetic law is required")
         finest_bands = self.method.finest_bands
         if self.grids.partitions[0] != finest_bands:
-            raise ValueError(
-                "the first configured partition must equal method.finest_bands"
-            )
+            raise ValueError("the first configured partition must equal method.finest_bands")
         if self.grids.partitions[-1] != 1:
-            raise ValueError(
-                "the configured partitions must end with the endpoint-only partition"
-            )
+            raise ValueError("the configured partitions must end with the endpoint-only partition")
         if any(
             bool(x)
-            for x in (
-                finest_bands % band_count != 0 for band_count in self.grids.partitions
-            )
+            for x in (finest_bands % band_count != 0 for band_count in self.grids.partitions)
         ):
             raise ValueError(
-                "every configured analysis partition must deterministically coarsen the finest partition"
+                "every configured analysis partition must deterministically coarsen "
+                "the finest partition"
             )
         if any(
-            bool(x)
-            for x in (band_count > finest_bands for band_count in self.grids.partitions)
+            bool(x) for x in (band_count > finest_bands for band_count in self.grids.partitions)
         ):
-            raise ValueError(
-                "an analysis partition cannot be finer than method.finest_bands"
-            )
-        if any(
-            bool(x)
-            for x in (rho not in self.grids.rho for rho in self.sequential.utility.rho)
-        ):
+            raise ValueError("an analysis partition cannot be finer than method.finest_bands")
+        if any(bool(x) for x in (rho not in self.grids.rho for rho in self.sequential.utility.rho)):
             raise ValueError("sequential.utility.rho must be a subset of grids.rho")
         return self
 
@@ -327,8 +306,7 @@ class TrajCertConfig(ConfigModel):
                 )
         if overrides.benchmark is not None:
             benchmark = BenchmarkConfig.model_validate(
-                benchmark.model_dump()
-                | overrides.benchmark.model_dump(exclude_none=True)
+                benchmark.model_dump() | overrides.benchmark.model_dump(exclude_none=True)
             )
         config = self.model_copy(
             update={
@@ -369,25 +347,19 @@ class RunnerOverrides(ConfigModel):
     benchmark: BenchmarkOverrides | None = None
 
 
-def load_config_with_runner_overrides(
-    production_path: Path, override_path: Path
-) -> TrajCertConfig:
+def load_config_with_runner_overrides(production_path: Path, override_path: Path) -> TrajCertConfig:
     production = TrajCertConfig.from_yaml(production_path)
     payload = _load_yaml_mapping(override_path, allow_empty=True)
     try:
         overrides = (
-            RunnerOverrides()
-            if payload is None
-            else RunnerOverrides.model_validate(payload)
+            RunnerOverrides() if payload is None else RunnerOverrides.model_validate(payload)
         )
         return production.with_runner_overrides(overrides)
     except Exception as exc:
         raise ConfigurationError(f"invalid runner overrides: {override_path}") from exc
 
 
-def _load_yaml_mapping(
-    path: Path, *, allow_empty: bool
-) -> Mapping[str, YamlValue] | None:
+def _load_yaml_mapping(path: Path, *, allow_empty: bool) -> Mapping[str, YamlValue] | None:
     try:
         with path.open("r", encoding="utf-8") as stream:
             payload = yaml.safe_load(stream)

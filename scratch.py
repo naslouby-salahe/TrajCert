@@ -1,8 +1,10 @@
-from pydantic import BaseModel, ConfigDict, PlainSerializer, GetCoreSchemaHandler
-from pydantic_core import core_schema
-from typing import Any, Annotated
+from typing import Annotated, Any
+
 import numpy as np
 from numpy.typing import NDArray
+from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler
+from pydantic_core import core_schema
+
 
 class NDArrayFloat64Annotation:
     @classmethod
@@ -18,17 +20,21 @@ class NDArrayFloat64Annotation:
                 return_schema=core_schema.list_schema(core_schema.float_schema()),
             ),
         )
+
     @classmethod
     def validate(cls, v: Any) -> NDArray[np.float64]:
         if isinstance(v, np.ndarray):
             return v.astype(np.float64)
         return np.array(v, dtype=np.float64)
 
+
 Vector = Annotated[NDArray[np.float64], NDArrayFloat64Annotation]
+
 
 class TestModel(BaseModel):
     model_config = ConfigDict(frozen=True)
     arr: Vector
+
 
 m = TestModel(arr=[1.0, 2.0, 3.0])
 print(type(m.arr))
