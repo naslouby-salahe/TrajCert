@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Hashable, Mapping
 from contextvars import ContextVar
 from itertools import pairwise
+from math import isclose
 from pathlib import Path
 from types import MappingProxyType
 from typing import Annotated, Literal, Self, cast
@@ -56,7 +57,7 @@ class ConfidenceConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_level_alpha_pair(self) -> ConfidenceConfig:
-        if self.level != 1.0 - self.alpha:
+        if not isclose(self.level, 1.0 - self.alpha, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError("confidence.level must equal 1 - confidence.alpha")
         return self
 
@@ -386,12 +387,12 @@ def _require_unique[HashableValue: Hashable](
 def _require_strictly_increasing(
     values: tuple[int, ...] | tuple[float, ...], field_name: str
 ) -> None:
-    if any(bool(x) for x in ((left >= right for left, right in pairwise(values)))):
+    if any(bool(x) for x in (left >= right for left, right in pairwise(values))):
         raise ValueError(f"{field_name} must be strictly increasing")
 
 
 def _require_strictly_decreasing(
     values: tuple[int, ...] | tuple[float, ...], field_name: str
 ) -> None:
-    if any(bool(x) for x in ((left <= right for left, right in pairwise(values)))):
+    if any(bool(x) for x in (left <= right for left, right in pairwise(values))):
         raise ValueError(f"{field_name} must be strictly decreasing")

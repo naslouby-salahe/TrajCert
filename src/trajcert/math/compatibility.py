@@ -42,7 +42,7 @@ def assess_compatibility(
     tau_value = float(tau)
     if rho < tau_value:
         regime = CompatibilityRegime.MODEL_INCOMPATIBLE
-    elif float(summary.unresolved_mass) == 0.0:
+    elif float(summary.unresolved_mass) <= 0.0:
         regime = CompatibilityRegime.NO_UNRESOLVED_MASS
     elif rho == tau_value:
         regime = CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
