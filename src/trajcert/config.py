@@ -8,38 +8,31 @@ from typing import Annotated, Literal, Self, cast
 
 import yaml
 from pydantic import (
-    BaseModel,
-    ConfigDict,
     Field,
     StrictFloat,
-    StrictInt,
     field_validator,
     model_validator,
 )
 
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.exceptions import ConfigurationError
-from trajcert.types import LawKey
+from trajcert.types import (
+    DomainModel,
+    LawKey,
+    NonNegativeFloat,
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
+    UnitFloat,
+)
 
 type YamlValue = (
     None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
 )
 
 
-UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0)]
-PositiveFloat = Annotated[StrictFloat, Field(gt=0.0)]
-NonNegativeFloat = Annotated[StrictFloat, Field(ge=0.0)]
-PositiveInt = Annotated[StrictInt, Field(gt=0)]
-NonNegativeInt = Annotated[StrictInt, Field(ge=0)]
-
-
-class ConfigModel(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        frozen=True,
-        validate_default=True,
-        allow_inf_nan=False,
-    )
+class ConfigModel(DomainModel):
+    pass
 
 
 class MethodConfig(ConfigModel):
@@ -53,7 +46,7 @@ class BudgetsConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_information_budget(self) -> BudgetsConfig:
-        if self.information_nats > float(BINARY_MAX_INFORMATION_NATS):
+        if self.information_nats > BINARY_MAX_INFORMATION_NATS:
             raise ValueError("information_nats cannot exceed log(2) for binary latent outcomes")
         return self
 
@@ -121,7 +114,7 @@ class GridsConfig(ConfigModel):
             "grids.beta",
         )
 
-        if any(value > float(BINARY_MAX_INFORMATION_NATS) for value in self.rho):
+        if any(value > BINARY_MAX_INFORMATION_NATS for value in self.rho):
             raise ValueError("grids.rho cannot exceed log(2) for binary latent outcomes")
 
         return self
@@ -212,7 +205,7 @@ class SequentialUtilityConfig(ConfigModel):
             "sequential.utility.rho",
         )
 
-        if any(value > float(BINARY_MAX_INFORMATION_NATS) for value in self.rho):
+        if any(value > BINARY_MAX_INFORMATION_NATS for value in self.rho):
             raise ValueError("sequential.utility.rho cannot exceed log(2)")
 
         return self
