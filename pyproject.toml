@@ -11,19 +11,30 @@ dependencies = [
     "numpy==2.5.2",
     "pydantic==2.13.4",
     "PyYAML==6.0.3",
+    "scipy==1.17.1",
 ]
 
 [project.optional-dependencies]
 quality = [
     "coverage==7.15.4",
+    "basedpyright==1.37.2",
+    "complexipy==5.0.0",
+    "crosshair-tool==0.0.104",
     "deptry==0.25.1",
     "import-linter==2.13",
+    "libcst==1.8.6",
+    "mutmut==3.4.0",
     "nox==2026.8.10",
-    "pyright==1.1.411",
+    "pip-audit==2.10.0",
     "pytest==8.3.5",
+    "pytest-archon==0.0.6",
+    "pytest-cov==6.2.1",
+    "pytest-randomly==3.16.0",
+    "pytest-timeout==2.4.0",
     "ruff==0.14.13",
     "semgrep==1.174.0",
     "vulture==2.16",
+    "wemake-python-styleguide==1.4.0",
 ]
 
 [project.scripts]
@@ -33,16 +44,16 @@ trajcert = "trajcert.cli:main"
 packages = ["src/trajcert"]
 
 [tool.pytest.ini_options]
-addopts = ["--strict-config", "--strict-markers"]
+addopts = ["--strict-config", "--strict-markers", "--randomly-seed=last", "--timeout=30"]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 
 [tool.coverage.run]
 branch = true
 source = ["trajcert"]
 
 [tool.coverage.report]
-fail_under = 85
+fail_under = 90
 show_missing = true
 skip_covered = true
 
@@ -70,16 +81,46 @@ forbidden_modules = [
     "trajcert.reporting",
 ]
 
+[[tool.importlinter.contracts]]
+name = "independent-oracle-does-not-reuse-production-solver"
+type = "forbidden"
+source_modules = ["trajcert.math.oracle", "trajcert.comparators.information_optimization"]
+forbidden_modules = ["trajcert.math.solver", "trajcert.math.information"]
+
+[[tool.importlinter.contracts]]
+name = "data-does-not-orchestrate"
+type = "forbidden"
+source_modules = ["trajcert.data"]
+forbidden_modules = ["trajcert.experiments", "trajcert.reporting", "trajcert.cli"]
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C90", "PL", "PERF", "RUF", "ARG", "PTH", "ANN", "ERA"]
 
-[tool.pyright]
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 9
+
+[tool.basedpyright]
 include = ["src", "tests"]
-typeCheckingMode = "strict"
+typeCheckingMode = "all"
+failOnWarnings = true
 pythonVersion = "3.12"
 reportMissingTypeStubs = false
 stubPath = "typings"
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+
+[tool.complexipy]
+paths = ["src/trajcert"]
+max_complexity = 10
+
+[tool.mutmut]
+paths_to_mutate = ["src/trajcert/config.py", "src/trajcert/types.py", "src/trajcert/math", "src/trajcert/data"]
+tests_dir = ["tests/unit", "tests/architecture"]

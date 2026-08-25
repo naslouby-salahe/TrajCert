@@ -1,0 +1,9 @@
+rules:
+  - id: TC-COMPAT-001
+    languages: [python]
+    severity: ERROR
+    message: Backwards-compatibility aliases and forwarding wrappers are forbidden.
+    patterns:
+      - pattern-either:
+          - pattern-regex: "(?m)^(Old[A-Za-z0-9_]*\\s*=|\\s*def\\s+old_)"
+          - pattern: warnings.warn(..., DeprecationWarning, ...)

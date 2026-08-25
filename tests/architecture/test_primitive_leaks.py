@@ -1,63 +1,30 @@
 from __future__ import annotations
 
-import ast
 from pathlib import Path
 
-FORBIDDEN_BOUNDARY_PRIMITIVES = {
-    "bool",
-    "bytes",
-    "dict",
-    "float",
-    "int",
-    "list",
-    "set",
-    "str",
-}
+from tools.source_audit import RULE_PRIMITIVE, RULE_UNTYPED, audit_path, audit_tree
+
 SOURCE_ROOT = Path(__file__).parents[2] / "src" / "trajcert"
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def test_public_callables_do_not_expose_raw_primitives() -> None:
-    violations = tuple(
-        violation
-        for path in sorted(SOURCE_ROOT.rglob("*.py"))
-        for violation in _primitive_boundary_violations(path)
-    )
-
+def test_production_has_no_raw_primitive_or_untyped_domain_boundaries() -> None:
+    findings = audit_tree(SOURCE_ROOT)
+    violations = [
+        finding.render()
+        for finding in findings
+        if finding.rule_id in {RULE_PRIMITIVE, RULE_UNTYPED}
+    ]
     assert not violations, "\n".join(violations)
 
 
-def _primitive_boundary_violations(path: Path) -> tuple[str, ...]:
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    return tuple(
-        violation
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
-        for violation in _callable_primitive_violations(path, node)
-    )
+def test_raw_identifier_fixture_is_rejected_with_primitive_rule() -> None:
+    rule_ids = {
+        finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "raw_string_identifier.py")
+    }
+    assert RULE_PRIMITIVE in rule_ids
 
 
-def _callable_primitive_violations(
-    path: Path,
-    node: ast.FunctionDef,
-) -> tuple[str, ...]:
-    annotations = (
-        *(argument.annotation for argument in node.args.args),
-        *(argument.annotation for argument in node.args.kwonlyargs),
-        node.returns,
-    )
-    primitive_names = tuple(
-        _primitive_names(annotation) for annotation in annotations if annotation is not None
-    )
-    flattened = tuple(name for names in primitive_names for name in names)
-    if not flattened:
-        return ()
-
-    return (f"{path}:{node.lineno}: {', '.join(flattened)}",)
-
-
-def _primitive_names(annotation: ast.expr) -> tuple[str, ...]:
-    return tuple(
-        descendant.id
-        for descendant in ast.walk(annotation)
-        if isinstance(descendant, ast.Name) and descendant.id in FORBIDDEN_BOUNDARY_PRIMITIVES
-    )
+def test_untyped_boundary_fixture_is_rejected_with_untyped_rule() -> None:
+    rule_ids = {finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "any_boundary.py")}
+    assert RULE_UNTYPED in rule_ids

@@ -26,18 +26,9 @@ class TrajectoryPartition(DomainModel):
         finest = self.finest_band_count
         bands = self.band_count
         horizon = self.terminal_horizon
-        if finest <= 0 or bands <= 0:
-            raise InvalidPartitionError("partition band counts must be positive")
-        if bands > finest or finest % bands != 0:
-            raise InvalidPartitionError(
-                "partition must be a deterministic coarsening of the finest partition"
-            )
-        if not isfinite(horizon) or horizon <= 0.0:
-            raise InvalidPartitionError("terminal horizon must be finite and positive")
-        if len(self.boundaries) != bands:
-            raise InvalidPartitionError("partition boundary count does not match band count")
-        if len(self.coarsening_map_from_finest) != finest:
-            raise InvalidPartitionError("coarsening map length does not match finest band count")
+        _validate_partition_shape(
+            finest, bands, horizon, self.boundaries, self.coarsening_map_from_finest
+        )
         boundary_values = self.boundaries
         if any(not isfinite(value) for value in boundary_values):
             raise InvalidPartitionError("partition boundaries must be finite")
@@ -59,6 +50,27 @@ class TrajectoryPartition(DomainModel):
         if index < 1 or index > self.finest_band_count:
             raise InvalidPartitionError("finest-band index is outside the partition domain")
         return self.coarsening_map_from_finest[index - 1]
+
+
+def _validate_partition_shape(
+    finest: BandCount,
+    bands: BandCount,
+    horizon: TerminalHorizon,
+    boundaries: tuple[TerminalHorizon, ...],
+    coarsening_map: tuple[BandIndex, ...],
+) -> None:
+    if finest <= 0 or bands <= 0:
+        raise InvalidPartitionError("partition band counts must be positive")
+    if bands > finest or finest % bands != 0:
+        raise InvalidPartitionError(
+            "partition must be a deterministic coarsening of the finest partition"
+        )
+    if not isfinite(horizon) or horizon <= 0.0:
+        raise InvalidPartitionError("terminal horizon must be finite and positive")
+    if len(boundaries) != bands:
+        raise InvalidPartitionError("partition boundary count does not match band count")
+    if len(coarsening_map) != finest:
+        raise InvalidPartitionError("coarsening map length does not match finest band count")
 
 
 def build_partition(

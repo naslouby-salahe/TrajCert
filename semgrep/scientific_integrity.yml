@@ -1,0 +1,14 @@
+rules:
+  - id: TC-ROADMAP-001
+    languages: [python]
+    severity: ERROR
+    message: The roadmap is a development authority, not a runtime input.
+    patterns:
+      - pattern-either:
+          - pattern: open("...Roadmap...", ...)
+          - pattern: Path("...Roadmap...").read_text(...)
+  - id: TC-CLAIM-001
+    languages: [python]
+    severity: ERROR
+    message: Runtime manuscript claim machinery is forbidden.
+    pattern-regex: "(?i)(claim_registry|claim_state|claim_manifest|evidence_manifest|claim_evaluator)"

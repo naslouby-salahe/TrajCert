@@ -1,0 +1,21 @@
+rules:
+  - id: TC-PRIMITIVE-001
+    languages: [python]
+    severity: ERROR
+    message: Domain identifiers and budgets require named domain types.
+    patterns:
+      - pattern-either:
+          - pattern: "def $F(..., client_id: str, ...): ..."
+          - pattern: "def $F(..., event_id: str, ...): ..."
+          - pattern: "def $F(..., seed: int, ...): ..."
+          - pattern: "def $F(..., rho: float, ...): ..."
+  - id: TC-PRIMITIVE-002
+    languages: [python]
+    severity: ERROR
+    message: Generic untyped domain boundaries are forbidden.
+    patterns:
+      - pattern-either:
+          - pattern: "def $F(..., $X: dict[str, Any], ...): ..."
+          - pattern: "def $F(..., $X: dict[str, object], ...): ..."
+          - pattern: "def $F(..., $X: Any, ...): ..."
+          - pattern: "cast(Any, ...)"

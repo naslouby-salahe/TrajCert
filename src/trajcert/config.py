@@ -20,6 +20,7 @@ from trajcert.types import (
     NonNegativeInt,
     PositiveFloat,
     PositiveInt,
+    SensitivityBudget,
     UnitFloat,
 )
 
@@ -84,7 +85,7 @@ class LawConfig(ConfigModel):
 class GridsConfig(ConfigModel):
     partitions: tuple[PositiveInt, ...]
     scaling_bands: tuple[PositiveInt, ...]
-    rho: tuple[NonNegativeFloat, ...]
+    rho: tuple[SensitivityBudget, ...]
     beta: tuple[UnitFloat, ...]
 
     @model_validator(mode="after")
@@ -158,7 +159,7 @@ class SequentialUtilityConfig(ConfigModel):
     streams: PositiveInt
     max_events: PositiveInt
     checkpoint_every: PositiveInt
-    rho: tuple[NonNegativeFloat, ...]
+    rho: tuple[SensitivityBudget, ...]
 
     @model_validator(mode="after")
     def validate_utility(self) -> SequentialUtilityConfig:

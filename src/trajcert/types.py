@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
-from typing import Annotated, Any, NewType
+from typing import Annotated, NewType
 
 import numpy as np
 from numpy.typing import NDArray
@@ -47,23 +47,26 @@ ToleranceValue = PositiveFloat
 class NDArrayFloat64Annotation:
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: Any, handler: GetCoreSchemaHandler
+        cls, source_type: type[object], handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls.validate,
             core_schema.any_schema(),
             serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda x: x.tolist(),
-                info_arg=False,
+                cls.serialize,
                 return_schema=core_schema.list_schema(core_schema.float_schema()),
             ),
         )
 
     @classmethod
-    def validate(cls, v: Any) -> NDArray[np.float64]:
-        if isinstance(v, np.ndarray):
-            return v.astype(np.float64)  # type: ignore
-        return np.array(v, dtype=np.float64)
+    def validate(cls, value: object) -> NDArray[np.float64]:
+        if not isinstance(value, np.ndarray):
+            raise ValueError("scientific vectors must be NumPy arrays")
+        return value.astype(np.float64)
+
+    @classmethod
+    def serialize(cls, value: NDArray[np.float64]) -> list[float]:
+        return [float(element) for element in value.tolist()]
 
 
 Vector = Annotated[NDArray[np.float64], NDArrayFloat64Annotation]

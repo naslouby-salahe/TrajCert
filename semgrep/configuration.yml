@@ -1,0 +1,20 @@
+rules:
+  - id: TC-CONFIG-001
+    languages: [python]
+    severity: ERROR
+    message: Only trajcert.config may parse YAML configuration.
+    paths:
+      exclude: ["/src/trajcert/config.py"]
+    patterns:
+      - pattern-either:
+          - pattern: yaml.safe_load(...)
+          - pattern: yaml.load(...)
+  - id: TC-CONFIG-002
+    languages: [python]
+    severity: ERROR
+    message: Scientific configuration may not be read from environment variables.
+    patterns:
+      - pattern-either:
+          - pattern: os.getenv(...)
+          - pattern: os.environ[$X]
+          - pattern: os.environ.get(...)
