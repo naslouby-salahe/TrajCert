@@ -39,17 +39,11 @@ class ObservableSummary:
 
     @property
     def resolved_mass(self) -> Mass:
-        return Mass(
-            float(self.resolved_harmful_mass)
-            + float(self.resolved_correct_mass)
-        )
+        return Mass(float(self.resolved_harmful_mass) + float(self.resolved_correct_mass))
 
     @property
     def total_mass(self) -> Mass:
-        return Mass(
-            float(self.resolved_mass)
-            + float(self.unresolved_mass)
-        )
+        return Mass(float(self.resolved_mass) + float(self.unresolved_mass))
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,14 +55,8 @@ class ObservableCounts:
     @property
     def total(self) -> Count:
         return Count(
-            sum(
-                int(value)
-                for value in self.harmful_by_band
-            )
-            + sum(
-                int(value)
-                for value in self.correct_by_band
-            )
+            sum(int(value) for value in self.harmful_by_band)
+            + sum(int(value) for value in self.correct_by_band)
             + int(self.unresolved)
         )
 
@@ -82,13 +70,9 @@ def summarize_observable_masses(
 ) -> ObservableSummary:
     bands = int(partition.band_count)
 
-    if (
-        len(harmful_by_band) != bands
-        or len(correct_by_band) != bands
-    ):
+    if len(harmful_by_band) != bands or len(correct_by_band) != bands:
         raise InvalidScientificDataError(
-            "observable mass vectors must match "
-            "the partition band count"
+            "observable mass vectors must match the partition band count"
         )
 
     _validate_mass_vector(
@@ -106,44 +90,21 @@ def summarize_observable_masses(
 
     guard = float(comparison_guard)
 
-    if (
-        not isfinite(guard)
-        or guard <= 0.0
-    ):
-        raise InvalidScientificDataError(
-            "comparison guard must be finite and positive"
-        )
+    if not isfinite(guard) or guard <= 0.0:
+        raise InvalidScientificDataError("comparison guard must be finite and positive")
 
-    harmful_total = Mass(
-        sum(
-            float(value)
-            for value in harmful_by_band
-        )
-    )
-    correct_total = Mass(
-        sum(
-            float(value)
-            for value in correct_by_band
-        )
-    )
+    harmful_total = Mass(sum(float(value) for value in harmful_by_band))
+    correct_total = Mass(sum(float(value) for value in correct_by_band))
 
-    total = (
-        float(harmful_total)
-        + float(correct_total)
-        + float(unresolved_mass)
-    )
+    total = float(harmful_total) + float(correct_total) + float(unresolved_mass)
 
     if abs(total - 1.0) > guard:
         raise InvalidProbabilityError(
-            "observable masses do not sum to one "
-            "within the configured comparison guard"
+            "observable masses do not sum to one within the configured comparison guard"
         )
 
     band_mass = tuple(
-        Mass(
-            float(harmful)
-            + float(correct)
-        )
+        Mass(float(harmful) + float(correct))
         for harmful, correct in zip(
             harmful_by_band,
             correct_by_band,
@@ -152,14 +113,7 @@ def summarize_observable_masses(
     )
 
     harmful_rate = tuple(
-        (
-            None
-            if float(total_band) == 0.0
-            else Probability(
-                float(harmful)
-                / float(total_band)
-            )
-        )
+        (None if float(total_band) == 0.0 else Probability(float(harmful) / float(total_band)))
         for harmful, total_band in zip(
             harmful_by_band,
             band_mass,
@@ -184,14 +138,8 @@ def summarize_full_law(
     full_law: FullLawProbabilities,
     comparison_guard: ToleranceValue,
 ) -> ObservableSummary:
-    if (
-        len(full_law.harmful_resolved)
-        != int(partition.band_count)
-    ):
-        raise InvalidScientificDataError(
-            "full law resolution does not "
-            "match the partition"
-        )
+    if len(full_law.harmful_resolved) != int(partition.band_count):
+        raise InvalidScientificDataError("full law resolution does not match the partition")
 
     return summarize_observable_masses(
         partition=partition,
@@ -209,59 +157,33 @@ def summarize_counts(
 ) -> ObservableSummary:
     bands = int(partition.band_count)
 
-    if (
-        len(counts.harmful_by_band) != bands
-        or len(counts.correct_by_band) != bands
-    ):
+    if len(counts.harmful_by_band) != bands or len(counts.correct_by_band) != bands:
         raise InvalidScientificDataError(
-            "observable count vectors must match "
-            "the partition band count"
+            "observable count vectors must match the partition band count"
         )
 
-    count_values = (
-        tuple(
-            int(value)
-            for value in (
-                counts.harmful_by_band
-                + counts.correct_by_band
-            )
+    count_values = tuple(
+        int(value)
+        for value in (
+            *counts.harmful_by_band,
+            *counts.correct_by_band,
+            counts.unresolved,
         )
-        + (int(counts.unresolved),)
     )
 
-    if any(
-        value < 0
-        for value in count_values
-    ):
-        raise InvalidScientificDataError(
-            "observable counts cannot be negative"
-        )
+    if any(value < 0 for value in count_values):
+        raise InvalidScientificDataError("observable counts cannot be negative")
 
     total = int(counts.total)
 
     if total <= 0:
-        raise InvalidScientificDataError(
-            "observable counts must contain "
-            "at least one event"
-        )
+        raise InvalidScientificDataError("observable counts must contain at least one event")
 
     return summarize_observable_masses(
         partition=partition,
-        harmful_by_band=tuple(
-            Mass(
-                int(value) / total
-            )
-            for value in counts.harmful_by_band
-        ),
-        correct_by_band=tuple(
-            Mass(
-                int(value) / total
-            )
-            for value in counts.correct_by_band
-        ),
-        unresolved_mass=Mass(
-            int(counts.unresolved) / total
-        ),
+        harmful_by_band=tuple(Mass(int(value) / total) for value in counts.harmful_by_band),
+        correct_by_band=tuple(Mass(int(value) / total) for value in counts.correct_by_band),
+        unresolved_mass=Mass(int(counts.unresolved) / total),
         comparison_guard=comparison_guard,
     )
 
@@ -308,12 +230,5 @@ def _validate_mass(
 ) -> None:
     numeric = float(value)
 
-    if (
-        not isfinite(numeric)
-        or numeric < 0.0
-        or numeric > 1.0
-    ):
-        raise InvalidProbabilityError(
-            f"{field_name} contains "
-            "a non-probability mass"
-        )
+    if not isfinite(numeric) or numeric < 0.0 or numeric > 1.0:
+        raise InvalidProbabilityError(f"{field_name} contains a non-probability mass")

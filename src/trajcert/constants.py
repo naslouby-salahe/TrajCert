@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import log
+from pathlib import Path
 
 from trajcert.types import InformationNats
 
@@ -16,6 +17,6 @@ SHA256_HEX_LENGTH = 64
 TERMINAL_CATEGORY_NAME = "infinity"
 ENDPOINT_PARTITION_NAME = "Endpoint-only partition"
 
-BINARY_MAX_INFORMATION_NATS = InformationNats(
-    log(2.0)
-)
+BINARY_MAX_INFORMATION_NATS = InformationNats(log(2.0))
+
+PRODUCTION_CONFIG_PATH = Path("configs/trajcert.yaml")

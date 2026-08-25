@@ -29,9 +29,7 @@ def derive_seed(
     numeric_index = int(index)
 
     if numeric_index < 0:
-        raise InvalidScientificDataError(
-            "seed index must be zero-based and nonnegative"
-        )
+        raise InvalidScientificDataError("seed index must be zero-based and nonnegative")
 
     material = SEED_FIELD_SEPARATOR.join(
         (
@@ -41,9 +39,7 @@ def derive_seed(
         )
     ).encode("utf-8")
 
-    digest_prefix = sha256(material).digest()[
-        :SEED_DIGEST_BYTES
-    ]
+    digest_prefix = sha256(material).digest()[:SEED_DIGEST_BYTES]
 
     seed = (
         int.from_bytes(
@@ -60,9 +56,7 @@ def derive_seed(
 def generator(
     seed: SeedValue,
 ) -> np.random.Generator:
-    return np.random.Generator(
-        np.random.PCG64(int(seed))
-    )
+    return np.random.Generator(np.random.PCG64(int(seed)))
 
 
 def generator_for(
@@ -82,9 +76,7 @@ def event_stream_namespace(
     band_count: BandCount,
 ) -> SeedNamespace:
     if int(band_count) <= 0:
-        raise InvalidScientificDataError(
-            "event-stream band count must be positive"
-        )
+        raise InvalidScientificDataError("event-stream band count must be positive")
 
     return SeedNamespace(
         f"{SeedNamespaceRole.EVENT_STREAM.value}"
@@ -122,18 +114,11 @@ def _descriptor_namespace(
     descriptor: SemanticComparisonKey,
 ) -> SeedNamespace:
     if not descriptor:
-        raise InvalidScientificDataError(
-            "seed namespace descriptor cannot be empty"
-        )
+        raise InvalidScientificDataError("seed namespace descriptor cannot be empty")
 
     if descriptor != descriptor.strip():
         raise InvalidScientificDataError(
-            "seed namespace descriptor cannot contain "
-            "leading or trailing whitespace"
+            "seed namespace descriptor cannot contain leading or trailing whitespace"
         )
 
-    return SeedNamespace(
-        f"{role.value}"
-        f"{SEED_FIELD_SEPARATOR}"
-        f"{descriptor}"
-    )
+    return SeedNamespace(f"{role.value}{SEED_FIELD_SEPARATOR}{descriptor}")

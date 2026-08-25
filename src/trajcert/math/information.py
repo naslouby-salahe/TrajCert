@@ -46,70 +46,40 @@ def resolved_timing_entropy(
 def observed_timing_information(
     summary: ObservableSummary,
 ) -> InformationNats | None:
-    resolved_mass = float(
-        summary.resolved_mass
-    )
+    resolved_mass = float(summary.resolved_mass)
 
     if resolved_mass == 0.0:
         return None
 
-    marginal_entropy = (
-        binary_entropy_from_masses(
-            summary.resolved_harmful_mass,
-            summary.resolved_correct_mass,
-        )
+    marginal_entropy = binary_entropy_from_masses(
+        summary.resolved_harmful_mass,
+        summary.resolved_correct_mass,
     )
-    timing_entropy = resolved_timing_entropy(
-        summary
-    )
+    timing_entropy = resolved_timing_entropy(summary)
 
-    value = (
-        float(marginal_entropy)
-        - float(timing_entropy)
-    )
+    value = float(marginal_entropy) - float(timing_entropy)
 
-    return InformationNats(
-        _nonnegative_roundoff_guard(value)
-    )
+    return InformationNats(_nonnegative_roundoff_guard(value))
 
 
 def minimum_information_point(
     summary: ObservableSummary,
 ) -> MinimumInformationPoint | None:
-    resolved_mass = float(
-        summary.resolved_mass
-    )
+    resolved_mass = float(summary.resolved_mass)
 
     if resolved_mass == 0.0:
         return None
 
-    harmful = float(
-        summary.resolved_harmful_mass
-    )
-    unresolved = float(
-        summary.unresolved_mass
-    )
+    harmful = float(summary.resolved_harmful_mass)
+    unresolved = float(summary.unresolved_mass)
 
-    hidden_mass = Mass(
-        harmful
-        * unresolved
-        / resolved_mass
-    )
-    latent_risk = RiskValue(
-        harmful / resolved_mass
-    )
+    hidden_mass = Mass(harmful * unresolved / resolved_mass)
+    latent_risk = RiskValue(harmful / resolved_mass)
 
-    information_floor = (
-        observed_timing_information(
-            summary
-        )
-    )
+    information_floor = observed_timing_information(summary)
 
     if information_floor is None:
-        raise InvalidScientificDataError(
-            "resolved timing information "
-            "unexpectedly undefined"
-        )
+        raise InvalidScientificDataError("resolved timing information unexpectedly undefined")
 
     return MinimumInformationPoint(
         hidden_terminal_harmful_mass=hidden_mass,
@@ -127,12 +97,7 @@ def latent_risk(
         hidden_terminal_harmful_mass,
     )
 
-    return RiskValue(
-        float(
-            summary.resolved_harmful_mass
-        )
-        + hidden
-    )
+    return RiskValue(float(summary.resolved_harmful_mass) + hidden)
 
 
 def information_profile(
@@ -144,49 +109,23 @@ def information_profile(
         hidden_terminal_harmful_mass,
     )
 
-    harmful = float(
-        summary.resolved_harmful_mass
-    )
-    unresolved = float(
-        summary.unresolved_mass
-    )
+    harmful = float(summary.resolved_harmful_mass)
+    unresolved = float(summary.unresolved_mass)
 
-    timing_entropy = float(
-        resolved_timing_entropy(summary)
-    )
+    timing_entropy = float(resolved_timing_entropy(summary))
 
     theta = harmful + hidden
 
-    total_entropy = float(
-        binary_entropy(
-            Probability(theta)
-        )
-    )
+    total_entropy = float(binary_entropy(Probability(theta)))
 
     terminal_entropy = 0.0
 
     if unresolved > 0.0:
-        terminal_entropy = (
-            unresolved
-            * float(
-                binary_entropy(
-                    Probability(
-                        hidden
-                        / unresolved
-                    )
-                )
-            )
-        )
+        terminal_entropy = unresolved * float(binary_entropy(Probability(hidden / unresolved)))
 
-    value = (
-        total_entropy
-        - timing_entropy
-        - terminal_entropy
-    )
+    value = total_entropy - timing_entropy - terminal_entropy
 
-    return InformationNats(
-        _nonnegative_roundoff_guard(value)
-    )
+    return InformationNats(_nonnegative_roundoff_guard(value))
 
 
 def information_profile_derivative(
@@ -198,36 +137,15 @@ def information_profile_derivative(
         hidden_terminal_harmful_mass,
     )
 
-    harmful = float(
-        summary.resolved_harmful_mass
-    )
-    correct = float(
-        summary.resolved_correct_mass
-    )
-    unresolved = float(
-        summary.unresolved_mass
-    )
+    harmful = float(summary.resolved_harmful_mass)
+    correct = float(summary.resolved_correct_mass)
+    unresolved = float(summary.unresolved_mass)
 
-    numerator = (
-        hidden
-        * (
-            correct
-            + unresolved
-            - hidden
-        )
-    )
+    numerator = hidden * (correct + unresolved - hidden)
 
-    denominator = (
-        (harmful + hidden)
-        * (unresolved - hidden)
-    )
+    denominator = (harmful + hidden) * (unresolved - hidden)
 
-    return InformationDerivative(
-        log(
-            numerator
-            / denominator
-        )
-    )
+    return InformationDerivative(log(numerator / denominator))
 
 
 def information_profile_second_derivative(
@@ -239,39 +157,15 @@ def information_profile_second_derivative(
         hidden_terminal_harmful_mass,
     )
 
-    harmful = float(
-        summary.resolved_harmful_mass
-    )
-    correct = float(
-        summary.resolved_correct_mass
-    )
-    unresolved = float(
-        summary.unresolved_mass
-    )
+    harmful = float(summary.resolved_harmful_mass)
+    correct = float(summary.resolved_correct_mass)
+    unresolved = float(summary.unresolved_mass)
 
-    left = (
-        harmful
-        / (
-            hidden
-            * (harmful + hidden)
-        )
-    )
+    left = harmful / (hidden * (harmful + hidden))
 
-    right = (
-        correct
-        / (
-            (unresolved - hidden)
-            * (
-                correct
-                + unresolved
-                - hidden
-            )
-        )
-    )
+    right = correct / ((unresolved - hidden) * (correct + unresolved - hidden))
 
-    return InformationCurvature(
-        left + right
-    )
+    return InformationCurvature(left + right)
 
 
 def timing_gain(
@@ -279,18 +173,10 @@ def timing_gain(
     coarse: ObservableSummary,
     identity_tolerance: ToleranceValue,
 ) -> InformationNats:
-    tolerance = float(
-        identity_tolerance
-    )
+    tolerance = float(identity_tolerance)
 
-    if (
-        not isfinite(tolerance)
-        or tolerance <= 0.0
-    ):
-        raise InvalidScientificDataError(
-            "identity tolerance must be "
-            "finite and positive"
-        )
+    if not isfinite(tolerance) or tolerance <= 0.0:
+        raise InvalidScientificDataError("identity tolerance must be finite and positive")
 
     for (
         fine_value,
@@ -313,40 +199,16 @@ def timing_gain(
             "unresolved mass",
         ),
     ):
-        if (
-            abs(
-                float(fine_value)
-                - float(coarse_value)
-            )
-            > tolerance
-        ):
-            raise InvalidScientificDataError(
-                "fine and coarse summaries "
-                f"disagree on {field_name}"
-            )
+        if abs(float(fine_value) - float(coarse_value)) > tolerance:
+            raise InvalidScientificDataError(f"fine and coarse summaries disagree on {field_name}")
 
-    fine_tau = observed_timing_information(
-        fine
-    )
-    coarse_tau = observed_timing_information(
-        coarse
-    )
+    fine_tau = observed_timing_information(fine)
+    coarse_tau = observed_timing_information(coarse)
 
-    if (
-        fine_tau is None
-        or coarse_tau is None
-    ):
-        raise InvalidScientificDataError(
-            "timing gain is undefined "
-            "when resolved mass is zero"
-        )
+    if fine_tau is None or coarse_tau is None:
+        raise InvalidScientificDataError("timing gain is undefined when resolved mass is zero")
 
-    return InformationNats(
-        _nonnegative_roundoff_guard(
-            float(fine_tau)
-            - float(coarse_tau)
-        )
-    )
+    return InformationNats(_nonnegative_roundoff_guard(float(fine_tau) - float(coarse_tau)))
 
 
 def profile_difference(
@@ -383,19 +245,10 @@ def _hidden_mass(
 ) -> float:
     hidden = float(value)
 
-    unresolved = float(
-        summary.unresolved_mass
-    )
+    unresolved = float(summary.unresolved_mass)
 
-    if (
-        not isfinite(hidden)
-        or hidden < 0.0
-        or hidden > unresolved
-    ):
-        raise InvalidScientificDataError(
-            "hidden terminal harmful mass "
-            "must lie in [0, c]"
-        )
+    if not isfinite(hidden) or hidden < 0.0 or hidden > unresolved:
+        raise InvalidScientificDataError("hidden terminal harmful mass must lie in [0, c]")
 
     return hidden
 
@@ -409,19 +262,10 @@ def _strictly_interior_hidden_mass(
         value,
     )
 
-    unresolved = float(
-        summary.unresolved_mass
-    )
+    unresolved = float(summary.unresolved_mass)
 
-    if (
-        unresolved <= 0.0
-        or hidden <= 0.0
-        or hidden >= unresolved
-    ):
-        raise InvalidScientificDataError(
-            "profile derivatives require "
-            "0 < u < c"
-        )
+    if unresolved <= 0.0 or hidden <= 0.0 or hidden >= unresolved:
+        raise InvalidScientificDataError("profile derivatives require 0 < u < c")
 
     return hidden
 
@@ -432,13 +276,7 @@ def _nonnegative_roundoff_guard(
     if value >= 0.0:
         return value
 
-    if (
-        value
-        >= -_FLOAT_ROUNDOFF_ULPS
-        * ulp(1.0)
-    ):
+    if value >= -_FLOAT_ROUNDOFF_ULPS * ulp(1.0):
         return 0.0
 
-    raise InvalidScientificDataError(
-        "information quantity is negative"
-    )
+    raise InvalidScientificDataError("information quantity is negative")

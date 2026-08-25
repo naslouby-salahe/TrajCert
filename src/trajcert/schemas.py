@@ -92,9 +92,7 @@ class SyntheticLawSchema(PersistedSchema):
 
 
 class PartitionSchema(PersistedSchema):
-    schema_name: Literal[
-        "trajectory_partition"
-    ] = "trajectory_partition"
+    schema_name: Literal["trajectory_partition"] = "trajectory_partition"
 
     partition_name: PartitionName
     finest_band_count: PositiveInt
@@ -111,9 +109,7 @@ class PartitionSchema(PersistedSchema):
 
 
 class ObservableSummarySchema(PersistedSchema):
-    schema_name: Literal[
-        "observable_summary"
-    ] = "observable_summary"
+    schema_name: Literal["observable_summary"] = "observable_summary"
 
     partition_name: PartitionName
     band_count: PositiveInt
@@ -142,9 +138,7 @@ class ObservableSummarySchema(PersistedSchema):
 
 
 class RootBracketSchema(PersistedSchema):
-    schema_name: Literal[
-        "root_bracket"
-    ] = "root_bracket"
+    schema_name: Literal["root_bracket"] = "root_bracket"
 
     branch: RootBranch
     status: RootStatus
@@ -159,9 +153,7 @@ class RootBracketSchema(PersistedSchema):
 
 
 class PopulationBoundSchema(PersistedSchema):
-    schema_name: Literal[
-        "population_bound"
-    ] = "population_bound"
+    schema_name: Literal["population_bound"] = "population_bound"
 
     law_name: LawName | None = None
     partition_name: PartitionName
@@ -190,9 +182,7 @@ class PopulationBoundSchema(PersistedSchema):
 
 
 class SafetyAssessmentSchema(PersistedSchema):
-    schema_name: Literal[
-        "safety_assessment"
-    ] = "safety_assessment"
+    schema_name: Literal["safety_assessment"] = "safety_assessment"
 
     partition_name: PartitionName
 
@@ -207,18 +197,12 @@ class SafetyAssessmentSchema(PersistedSchema):
 
 
 class SeedDerivationSchema(PersistedSchema):
-    schema_name: Literal[
-        "seed_derivation"
-    ] = "seed_derivation"
+    schema_name: Literal["seed_derivation"] = "seed_derivation"
 
     namespace: SeedNamespace
     index: NonNegativeInt
     seed: NonNegativeInt
 
-    algorithm: Literal[
-        "SHA256-prefix-uint64-mod-2^63"
-    ] = "SHA256-prefix-uint64-mod-2^63"
+    algorithm: Literal["SHA256-prefix-uint64-mod-2^63"] = "SHA256-prefix-uint64-mod-2^63"
 
-    generator: Literal[
-        "numpy.random.Generator(PCG64)"
-    ] = "numpy.random.Generator(PCG64)"
+    generator: Literal["numpy.random.Generator(PCG64)"] = "numpy.random.Generator(PCG64)"

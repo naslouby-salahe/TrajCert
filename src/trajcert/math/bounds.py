@@ -52,23 +52,11 @@ def sharp_risk_set(
             solve_result=solved,
         )
 
-    harmful = float(
-        summary.resolved_harmful_mass
-    )
+    harmful = float(summary.resolved_harmful_mass)
 
     risk = RiskInterval(
-        lower=RiskValue(
-            harmful
-            + float(
-                solved.interval.lower
-            )
-        ),
-        upper=RiskValue(
-            harmful
-            + float(
-                solved.interval.upper
-            )
-        ),
+        lower=RiskValue(harmful + float(solved.interval.lower)),
+        upper=RiskValue(harmful + float(solved.interval.upper)),
     )
 
     return SharpRiskSet(
@@ -81,11 +69,4 @@ def sharp_risk_set(
 def unresolved_as_harm_upper(
     summary: ObservableSummary,
 ) -> RiskValue:
-    return RiskValue(
-        float(
-            summary.resolved_harmful_mass
-        )
-        + float(
-            summary.unresolved_mass
-        )
-    )
+    return RiskValue(float(summary.resolved_harmful_mass) + float(summary.unresolved_mass))
