@@ -1,90 +1,52 @@
 from __future__ import annotations
 
-from math import isfinite, log
+import numpy as np
+from scipy.special import entr
 
 from trajcert.exceptions import InvalidProbabilityError
 from trajcert.types import (
     EntropyValue,
     Mass,
     Probability,
+    Vector,
 )
 
 
 def xlogx(
-    value: Probability,
-) -> EntropyValue:
-    numeric = _probability(value)
-
-    if numeric == 0.0:
-        return EntropyValue(0.0)
-
-    return EntropyValue(numeric * log(numeric))
+    value: Probability | Vector,
+) -> EntropyValue | Vector:
+    return -entr(value)
 
 
 def binary_entropy(
-    probability: Probability,
-) -> EntropyValue:
-    p = _probability(probability)
-
-    if p == 0.0 or p == 1.0:
-        return EntropyValue(0.0)
-
-    return EntropyValue(-p * log(p) - (1.0 - p) * log(1.0 - p))
+    probability: Probability | Vector,
+) -> EntropyValue | Vector:
+    return entr(probability) + entr(1.0 - probability)
 
 
 def binary_entropy_from_masses(
-    harmful: Mass,
-    correct: Mass,
-) -> EntropyValue:
-    a = _mass(harmful)
-    b = _mass(correct)
+    harmful: Mass | Vector,
+    correct: Mass | Vector,
+) -> EntropyValue | Vector:
+    total = harmful + correct
 
-    total = a + b
+    # Handle division by zero where total == 0
+    with np.errstate(divide='ignore', invalid='ignore'):
+        p = harmful / total
 
-    if total == 0.0:
-        return EntropyValue(0.0)
+    # Where total is 0, entropy is 0
+    entropy = np.where(total > 0, (entr(p) + entr(1.0 - p)) * total, 0.0)
 
-    harmful_term = 0.0 if a == 0.0 else -a * log(a / total)
-    correct_term = 0.0 if b == 0.0 else -b * log(b / total)
-
-    return EntropyValue(harmful_term + correct_term)
+    return entropy
 
 
 def weighted_binary_entropy(
-    total_mass: Mass,
-    harmful_rate: Probability | None,
-) -> EntropyValue:
-    total = _mass(total_mass)
-
-    if total == 0.0:
-        if harmful_rate is not None:
-            _probability(harmful_rate)
-
-        return EntropyValue(0.0)
-
+    total_mass: Mass | Vector,
+    harmful_rate: Probability | Vector | None,
+) -> EntropyValue | Vector:
     if harmful_rate is None:
-        raise InvalidProbabilityError("a positive mass requires a defined harmful rate")
-
-    return EntropyValue(total * float(binary_entropy(harmful_rate)))
-
-
-def _probability(
-    value: Probability,
-) -> float:
-    numeric = float(value)
-
-    if not isfinite(numeric) or numeric < 0.0 or numeric > 1.0:
-        raise InvalidProbabilityError("probability must be finite and lie in [0, 1]")
-
-    return numeric
-
-
-def _mass(
-    value: Mass,
-) -> float:
-    numeric = float(value)
-
-    if not isfinite(numeric) or numeric < 0.0 or numeric > 1.0:
-        raise InvalidProbabilityError("probability mass must be finite and lie in [0, 1]")
-
-    return numeric
+        if np.any(total_mass > 0):
+            raise InvalidProbabilityError("a positive mass requires a defined harmful rate")
+        return total_mass * 0.0
+    
+    return total_mass * binary_entropy(harmful_rate)

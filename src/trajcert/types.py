@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import IntEnum, StrEnum
-from typing import NewType
+from typing import Annotated, Any, NewType
+
+import numpy as np
+from numpy.typing import NDArray
+from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, StrictFloat, StrictInt
+from pydantic_core import core_schema
 
 ActionChannelId = NewType("ActionChannelId", str)
 ClientId = NewType("ClientId", str)
@@ -15,26 +19,65 @@ SafetyCaseName = NewType("SafetyCaseName", str)
 SeedNamespace = NewType("SeedNamespace", str)
 SemanticComparisonKey = NewType("SemanticComparisonKey", str)
 
-BandCount = NewType("BandCount", int)
-BandIndex = NewType("BandIndex", int)
-Count = NewType("Count", int)
-IterationCount = NewType("IterationCount", int)
-SeedIndex = NewType("SeedIndex", int)
-SeedValue = NewType("SeedValue", int)
+# Centralized constrained scalars
+UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
+PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
+NonNegativeFloat = Annotated[StrictFloat, Field(ge=0.0, allow_inf_nan=False)]
+FiniteFloat = Annotated[StrictFloat, Field(allow_inf_nan=False)]
 
-EntropyValue = NewType("EntropyValue", float)
-InformationCurvature = NewType("InformationCurvature", float)
-InformationDerivative = NewType("InformationDerivative", float)
-InformationNats = NewType("InformationNats", float)
-Mass = NewType("Mass", float)
-Probability = NewType("Probability", float)
-RiskBudget = NewType("RiskBudget", float)
-RiskValue = NewType("RiskValue", float)
-SensitivityBudget = NewType("SensitivityBudget", float)
-SlopeValue = NewType("SlopeValue", float)
-TerminalHorizon = NewType("TerminalHorizon", float)
-ToleranceValue = NewType("ToleranceValue", float)
+PositiveInt = Annotated[StrictInt, Field(gt=0)]
+NonNegativeInt = Annotated[StrictInt, Field(ge=0)]
 
+BandCount = PositiveInt
+BandIndex = PositiveInt
+Count = NonNegativeInt
+IterationCount = NonNegativeInt
+SeedIndex = NonNegativeInt
+SeedValue = NonNegativeInt
+
+EntropyValue = NonNegativeFloat
+InformationCurvature = FiniteFloat
+InformationDerivative = FiniteFloat
+InformationNats = NonNegativeFloat
+Mass = UnitFloat
+Probability = UnitFloat
+RiskBudget = UnitFloat
+RiskValue = UnitFloat
+SensitivityBudget = UnitFloat
+SlopeValue = FiniteFloat
+TerminalHorizon = PositiveFloat
+ToleranceValue = PositiveFloat
+
+class NDArrayFloat64Annotation:
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate,
+            core_schema.any_schema(),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda x: x.tolist(),
+                info_arg=False,
+                return_schema=core_schema.list_schema(core_schema.float_schema()),
+            ),
+        )
+
+    @classmethod
+    def validate(cls, v: Any) -> NDArray[np.float64]:
+        if isinstance(v, np.ndarray):
+            return v.astype(np.float64)
+        return np.array(v, dtype=np.float64)
+
+Vector = Annotated[NDArray[np.float64], NDArrayFloat64Annotation]
+
+class DomainModel(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        validate_default=True,
+        allow_inf_nan=False,
+    )
 
 class ScientificState(StrEnum):
     CERTIFIED = "CERTIFIED"
@@ -42,7 +85,6 @@ class ScientificState(StrEnum):
     MODEL_INCOMPATIBLE = "MODEL_INCOMPATIBLE"
     INTRINSICALLY_UNCERTIFIABLE = "INTRINSICALLY_UNCERTIFIABLE"
     INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
-
 
 class PublicExecutionState(StrEnum):
     NOT_STARTED = "NOT_STARTED"
@@ -53,14 +95,12 @@ class PublicExecutionState(StrEnum):
     FAILED = "FAILED"
     INVALID = "INVALID"
 
-
 class InternalExecutionState(StrEnum):
     PLANNED = "PLANNED"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     INVALID = "INVALID"
-
 
 class EvidenceClass(StrEnum):
     VALIDATION = "VALIDATION"
@@ -72,13 +112,11 @@ class EvidenceClass(StrEnum):
     FAILURE_BOUNDARY = "FAILURE_BOUNDARY"
     DIAGNOSTIC = "DIAGNOSTIC"
 
-
 class NumericStatus(StrEnum):
     FINITE = "FINITE"
     NOT_APPLICABLE = "NOT_APPLICABLE"
     DEGENERATE = "DEGENERATE"
     TECHNICAL_FAIL = "TECHNICAL_FAIL"
-
 
 class CompatibilityRegime(StrEnum):
     NO_RESOLVED_MASS = "NO_RESOLVED_MASS"
@@ -87,17 +125,14 @@ class CompatibilityRegime(StrEnum):
     MINIMUM_INFORMATION_SINGLETON = "MINIMUM_INFORMATION_SINGLETON"
     COMPATIBLE_INTERVAL = "COMPATIBLE_INTERVAL"
 
-
 class RootBranch(StrEnum):
     LOWER = "LOWER"
     UPPER = "UPPER"
-
 
 class RootStatus(StrEnum):
     BISECTION = "BISECTION"
     EXACT_BOUNDARY = "EXACT_BOUNDARY"
     MINIMUM_SINGLETON = "MINIMUM_SINGLETON"
-
 
 class SafetyRegime(StrEnum):
     NO_RESOLVED_MASS = "NO_RESOLVED_MASS"
@@ -105,7 +140,6 @@ class SafetyRegime(StrEnum):
     INTRINSICALLY_UNCERTIFIABLE = "INTRINSICALLY_UNCERTIFIABLE"
     INTERIOR_SAFETY_FRONTIER = "INTERIOR_SAFETY_FRONTIER"
     ASSUMPTION_FREE_SAFE = "ASSUMPTION_FREE_SAFE"
-
 
 class SeedNamespaceRole(StrEnum):
     SYNTHETIC_LAW = "Synthetic law"
@@ -116,15 +150,12 @@ class SeedNamespaceRole(StrEnum):
     PERMUTATION = "Permutation"
     RUNTIME = "Runtime"
 
-
 class CliCommand(StrEnum):
     DOCTOR = "doctor"
-
 
 class OutcomeLabel(IntEnum):
     CORRECT = 0
     HARMFUL = 1
-
 
 class LawKey(StrEnum):
     NO_PATH_DEPENDENCE = "no_path_dependence"
@@ -140,16 +171,12 @@ class LawKey(StrEnum):
     SAME_ENDPOINT_NO_TIMING = "same_endpoint_no_timing"
     SAME_ENDPOINT_WITH_TIMING = "same_endpoint_with_timing"
 
-
-@dataclass(frozen=True, slots=True)
-class MinimumInformationPoint:
+class MinimumInformationPoint(DomainModel):
     hidden_terminal_harmful_mass: Mass
     latent_risk: RiskValue
     information_floor: InformationNats
 
-
-@dataclass(frozen=True, slots=True)
-class RootBracket:
+class RootBracket(DomainModel):
     branch: RootBranch
     status: RootStatus
     lower: Mass
@@ -159,22 +186,18 @@ class RootBracket:
     residual: InformationNats
     iterations: IterationCount
 
-
-@dataclass(frozen=True, slots=True)
-class HiddenMassInterval:
+class HiddenMassInterval(DomainModel):
     lower: Mass
     upper: Mass
 
     @property
     def width(self) -> Mass:
-        return Mass(float(self.upper) - float(self.lower))
+        return self.upper - self.lower
 
-
-@dataclass(frozen=True, slots=True)
-class RiskInterval:
+class RiskInterval(DomainModel):
     lower: RiskValue
     upper: RiskValue
 
     @property
     def width(self) -> RiskValue:
-        return RiskValue(float(self.upper) - float(self.lower))
+        return self.upper - self.lower
