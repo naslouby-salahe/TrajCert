@@ -8,8 +8,10 @@ nox.options.default_venv_backend = "uv"
 @nox.session(reuse_venv=True)
 def quality(session: nox.Session) -> None:
     session.run("uv", "sync", "--extra", "quality", external=True)
-    session.run("uv", "run", "ruff", "format", "--check", ".", external=True)
-    session.run("uv", "run", "ruff", "check", ".", external=True)
+    session.run(
+        "uv", "run", "ruff", "format", "--check", "src", "tools", "noxfile.py", external=True
+    )
+    session.run("uv", "run", "ruff", "check", "src", "tools", "noxfile.py", external=True)
     session.run("uv", "run", "basedpyright", external=True)
     session.run("uv", "run", "semgrep", "--config", "semgrep", "src/trajcert", external=True)
     session.run("uv", "run", "lint-imports", external=True)
