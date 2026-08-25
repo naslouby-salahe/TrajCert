@@ -502,7 +502,7 @@ The iteration cap is
 $$
 \left\lceil
 \log_2\frac{w_0}
-{\texttt{numerics.population＿root＿absolute＿tolerance}}
+{\texttt{numerics.root_atol}}
 \right\rceil+2,
 $$
 
@@ -525,7 +525,7 @@ This section is the single authoritative source for values that are genuinely su
 
 Derived quantities, mathematical formulas, fixed scientific or algorithmic behavior, validation and failure semantics, provenance rules, reporting procedures, semantic-identity rules, experiment-registry definitions, and claim wording are intentionally excluded from YAML. Those requirements are defined in the authoritative roadmap sections where they belong and are computed or enforced by the implementation.
 
-One production scientific/runtime configuration file is sufficient for the current study. `configs/tests.yml` and `configs/smoke.yml` contain runner settings only and do not define independently editable production scientific values.
+One production scientific/runtime configuration file is sufficient for the current study. `configs/tests.yaml` and `configs/smoke.yaml` contain runner settings only and do not define independently editable production scientific values.
 
 ## `configs/trajcert.yaml`
 
@@ -1021,7 +1021,7 @@ Current real-trajectory planning status is exactly:
 NOT_IN_CURRENT_CONFIRMATORY_PLAN
 ```
 
-Current confirmatory execution uses the synthetic benchmark defined under `synthetic_data`. `Real-Trajectory Validation` is a zero-cell planned nonapplicability in the authoritative registry, no current real-trajectory execution exists, and the Real-Trajectory Value claim remains `NOT_TESTED`.
+Current confirmatory execution uses the synthetic benchmark defined under `laws`. `Real-Trajectory Validation` is a zero-cell planned nonapplicability in the authoritative registry, no current real-trajectory execution exists, and the Real-Trajectory Value claim remains `NOT_TESTED`.
 
 The synthetic generator is authoritative, so generated and expected probability tables must agree within deterministic numerical tolerance.
 
@@ -1224,22 +1224,22 @@ $$
 The model is compatible when an accepted root satisfies:
 
 $$
-Q(u)\le\texttt{numerics.callback＿q＿acceptance}.
+Q(u)\le\texttt{the fixed callback acceptance tolerance of 1e-20}.
 $$
 
-`numerics.callback_q_acceptance` is the common-slope acceptance tolerance.
+The common-slope acceptance tolerance is fixed at 1e-20.
 
 Algorithm:
 
 1. use `numerics.oracle_digits` decimal digits;
-2. evaluate exactly `numerics.callback_grid_points` equally spaced $u$ points including `0` and `c`;
+2. evaluate exactly `10,001` equally spaced $u$ points including `0` and `c`;
 3. every point no greater than available immediate neighbors defines a local minimization bracket;
 4. endpoints are brackets when locally minimal;
 5. apply deterministic golden-section minimization;
-6. stop when bracket width is no greater than `numerics.callback_golden_section_width`;
-7. accept if $Q(u)\le\texttt{numerics.callback＿q＿acceptance}$;
+6. stop when bracket width is no greater than `1e-30`;
+7. accept if $Q(u)\le\texttt{the fixed callback acceptance tolerance of 1e-20}$;
 8. sort accepted roots;
-9. deduplicate roots whose absolute difference is no greater than `numerics.callback_root_dedup_tolerance`, retaining the smaller root;
+9. deduplicate roots whose absolute difference is no greater than `1e-12`, retaining the smaller root;
 10. if no accepted root, return `MODEL_INCOMPATIBLE`;
 11. risk set is the convex hull of $A+u$ over accepted roots.
 
@@ -1268,10 +1268,10 @@ Use the same high-precision grid/local-minimization procedure as Section 7.5, re
 Accept a root when
 
 $$
-E(u)\le\texttt{numerics.callback＿equality＿tolerance}.
+E(u)\le\texttt{the fixed callback equality tolerance of 1e-10}.
 $$
 
-Sort and deduplicate accepted roots using `numerics.callback_root_dedup_tolerance`.
+Sort and deduplicate accepted roots using `1e-12`.
 
 Attempts after the second add no identifying equality restriction.
 
@@ -1315,8 +1315,8 @@ $$
 \mathrm{clip}
 \left(
 \frac{A}{A+G},
-\texttt{numerics.pattern＿mixture＿initial＿probability＿clip},
-1-\texttt{numerics.pattern＿mixture＿initial＿probability＿clip}
+\texttt{1e-8},
+1-\texttt{1e-8}
 \right)
 \right].
 $$
@@ -1324,10 +1324,10 @@ $$
 Successful fit requires:
 
 * optimizer convergence;
-* gradient infinity norm no greater than `numerics.pattern_mixture_gradient_infinity_limit`;
+* gradient infinity norm no greater than `1e-8`;
 * finite objective;
 * finite gradient;
-* neither coefficient within `numerics.pattern_mixture_bound_touch_tolerance` of a configured bound.
+* neither coefficient within `1e-8` of a configured bound.
 
 Otherwise:
 
@@ -1373,7 +1373,7 @@ Oracle precision:
 
 ```text
 decimal digits = numerics.oracle_digits
-boundary bracket width <= numerics.oracle_boundary_bracket_width
+boundary bracket width <= 1e-14
 ```
 
 The oracle uses `mpmath` at exactly `numerics.oracle_digits` decimal digits.
@@ -1383,16 +1383,16 @@ Its independent algorithm is:
 1. construct the full table directly from $(a_k,b_k,c,u)$;
 2. evaluate mutual information using the table formula above with exact zero-cell limits;
 3. locate the global minimum over $[0,c]$ using an independently implemented golden-section search on the direct table objective;
-4. stop minimum search when its $u$-bracket width is no greater than `numerics.oracle_boundary_bracket_width`;
+4. stop minimum search when its $u$-bracket width is no greater than `1e-14`;
 5. let $I_{\min}$ be the minimum direct-table value at the midpoint;
 6. define the oracle equality tolerance as
    $$
-   \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle＿decimal＿digits}/2\rfloor};
+   \epsilon_{\text{oracle}}=10^{-\lfloor \texttt{numerics.oracle_digits}/2\rfloor};
 $$
 7. if $\rho\lt I_{\min}-\epsilon_{\text{oracle}}$, return `MODEL_INCOMPATIBLE`;
 8. if $|\rho-I_{\min}|\le\epsilon_{\text{oracle}}$, return the singleton minimum bracket midpoint as both endpoints;
 9. otherwise solve the left and right direct-table equations $I(L;J)=\rho$ by independent bisection on the two sides of the minimum;
-10. terminate each boundary bisection when its bracket width is no greater than `numerics.oracle_boundary_bracket_width`;
+10. terminate each boundary bisection when its bracket width is no greater than `1e-14`;
 11. return boundary bracket midpoints and retain the complete boundary brackets for validation.
 
 This procedure detects the $\rho=\tau$ tangent/singleton case explicitly and therefore does not depend on arbitrary subdivision discovering a zero-width feasible component.
@@ -1620,7 +1620,7 @@ Monitoring times within one stream and optimizer evaluations are never independe
 For $K$ finite bands, let
 
 $$
-\delta=\texttt{confidence.anytime＿delta}
+\delta=\texttt{confidence.anytime_delta}
 $$
 
 and
@@ -1873,7 +1873,7 @@ $$
 14. normalized coordinate width is physical box width divided by that coordinate's width in the initial box;
 15. if an initial coordinate width is zero, its normalized width is zero;
 16. split the coordinate with longest normalized width;
-17. normalized-width ties within `numerics.outer_split_tie_tolerance` use:
+17. normalized-width ties within `1e-30` use:
 
 ```text
 A, then G, then u
@@ -1884,7 +1884,7 @@ A, then G, then u
     $$
     U_{\text{queue}}-L_{\text{feasible}}
     \le
-    \texttt{numerics.outer＿certified＿gap};
+    \texttt{numerics.outer_gap};
 $$
 20. stop at `numerics.outer_max_nodes` if not already converged.
 
@@ -1940,7 +1940,7 @@ The certified lower bound is computed by deterministic Arb branch-and-bound over
    $$
    \texttt{feasible＿upper}-\texttt{global＿lower}
    \le
-   \texttt{numerics.outer＿certified＿gap};
+   \texttt{numerics.outer_gap};
 $$
 7. use the same node cap and exact Arb precision as Section 9.4;
 8. on node cap or ambiguity, return the current `global_lower`.
@@ -1953,7 +1953,7 @@ $$
 \underline\rho_n^{comp} \gt 
 \rho_{\text{deploy}}
 +
-\texttt{numerics.scientific＿comparison＿guard}.
+\texttt{numerics.comparison_guard}.
 $$
 
 ## 9.6 Finite-sample intrinsic impossibility
@@ -2008,7 +2008,7 @@ $$
 * `zero_resolved_mass_plausible=false`;
 * $$
   \underline\theta_n^\dagger \gt 
-  \beta+\texttt{numerics.scientific＿comparison＿guard}.
+  \beta+\texttt{numerics.comparison_guard}.
 $$
 
 ## 9.7 Evidence gate, failure precedence, and scientific-state precedence
@@ -2105,7 +2105,7 @@ $$
 The theoretical target remains
 
 $$
-\delta=\texttt{confidence.anytime＿delta}.
+\delta=\texttt{confidence.anytime_delta}.
 $$
 
 The acceptance upper limit is only the Monte Carlo implementation-validation tolerance.
@@ -2186,7 +2186,7 @@ with seed index `0`.
 With
 
 $$
-B=\texttt{statistics.sign＿flip.randomizations},
+B=\texttt{statistics.sign_flip_randomizations},
 $$
 
 the one-sided p-value is
@@ -2319,445 +2319,607 @@ Module-global random-number generators are forbidden.
 Required project structure:
 
 ```text
-trajcert/
-│
-├── README.md
-├── pyproject.toml
-├── requirements.lock
-├── Dockerfile
-├── noxfile.py
-├── Makefile
-├── .gitignore
+TrajCert/
 │
 ├── configs/
 │   ├── trajcert.yaml
-│   ├── tests.yml
-│   └── smoke.yml
+│   │   # Production scientific configuration only.
+│   │   # Genuine selected/swept values: laws, rho/beta grids,
+│   │   # tolerances, sample counts, statistical settings, etc.
+│   │
+│   ├── smoke.yaml
+│   │   # Tiny execution-size overrides for smoke runs.
+│   │   # Must not redefine scientific methodology.
+│   │
+│   └── tests.yaml
+│       # Test-only execution-size/settings overrides.
+│       # No independent scientific values.
 │
-├── data/
-│   └── raw -> /external/datasets
+├── docs/
+│   └── TrajCert_Roadmap.md
+│       # Standalone authoritative scientific specification.
+│       # No duplicated protocol docs, claim registry, generated audits,
+│       # or roadmap-transcription documents.
+│
+├── src/
+│   └── trajcert/
+│       │
+│       ├── __init__.py
+│       │   # Minimal package marker / intentionally small public API.
+│       │
+│       ├── cli.py
+│       │   # Public Typer CLI.
+│       │   # doctor / preprocess / plan / smoke / run / status / report.
+│       │
+│       ├── config.py
+│       │   # Pydantic configuration models, loading, validation,
+│       │   # defaults that are genuinely implementation-level,
+│       │   # and cross-field consistency checks.
+│       │
+│       ├── types.py
+│       │   # Shared enums, dataclasses, identifiers, scientific states,
+│       │   # execution states, result objects, typed numeric concepts.
+│       │
+│       ├── constants.py
+│       │   # Fixed implementation constants only.
+│       │   # No configurable scientific numbers.
+│       │
+│       ├── paths.py
+│       │   # Canonical outputs/results/config paths.
+│       │   # Keeps filesystem layout out of scientific modules.
+│       │
+│       ├── provenance.py
+│       │   # Compact reproducibility metadata:
+│       │   # commit, config digest, input hashes, seeds, environment.
+│       │   # Replaces evidence manifests/component digest machinery.
+│       │
+│       ├── storage.py
+│       │   # Atomic writes, Parquet/JSON persistence, result loading,
+│       │   # completion state, and filesystem validation.
+│       │
+│       ├── determinism.py
+│       │   # Deterministic seed derivation and runtime controls.
+│       │
+│       ├── exceptions.py
+│       │   # Small explicit exception hierarchy for invalid data,
+│       │   # numerical failure, configuration failure, etc.
+│       │
+│       ├── schemas.py
+│       │   # Stable persisted-data schemas where they are substantial
+│       │   # enough not to belong directly in types.py.
+│       │
+│       ├── data/
+│       │   ├── __init__.py
+│       │   │
+│       │   ├── laws.py
+│       │   │   # Synthetic-law definitions and validated law parameters.
+│       │   │
+│       │   ├── synthetic.py
+│       │   │   # Deterministic generation of full laws and event streams.
+│       │   │
+│       │   ├── ledger.py
+│       │   │   # Event/adjudication ledger ingestion and validation.
+│       │   │
+│       │   ├── maturity.py
+│       │   │   # Terminal-horizon maturation and deterministic event order.
+│       │   │
+│       │   ├── partitions.py
+│       │   │   # Finest trajectory partition and deterministic coarsening.
+│       │   │
+│       │   └── summaries.py
+│       │       # Observable masses and sufficient-statistic construction.
+│       │
+│       ├── math/
+│       │   ├── __init__.py
+│       │   │
+│       │   ├── entropy.py
+│       │   │   # Stable entropy/xlogy calculations with exact boundaries.
+│       │   │
+│       │   ├── information.py
+│       │   │   # tau, S(u), path information and refinement quantities.
+│       │   │
+│       │   ├── compatibility.py
+│       │   │   # Compatibility floor and model-compatibility classification.
+│       │   │
+│       │   ├── bounds.py
+│       │   │   # Sharp latent-risk interval construction.
+│       │   │
+│       │   ├── safety.py
+│       │   │   # beta regimes, intrinsic impossibility, rho-star frontier.
+│       │   │
+│       │   ├── solver.py
+│       │   │   # Production scalar branch/root solver.
+│       │   │
+│       │   └── oracle.py
+│       │       # Independent high-precision numerical oracle.
+│       │
+│       ├── inference/
+│       │   ├── __init__.py
+│       │   │
+│       │   ├── categorical.py
+│       │   │   # Sequential categorical-count process.
+│       │   │
+│       │   ├── confidence.py
+│       │   │   # Simultaneous/time-uniform confidence construction.
+│       │   │
+│       │   ├── envelope.py
+│       │   │   # Conservative observable-law uncertainty envelope.
+│       │   │
+│       │   ├── projection.py
+│       │   │   # Projection of observable uncertainty into risk bounds.
+│       │   │
+│       │   └── certification.py
+│       │       # CERTIFIED / UNCERTIFIED / MODEL_INCOMPATIBLE /
+│       │       # INTRINSICALLY_UNCERTIFIABLE / INSUFFICIENT_EVIDENCE.
+│       │
+│       ├── comparators/
+│       │   ├── __init__.py
+│       │   │
+│       │   ├── endpoint.py
+│       │   │   # Mandatory K=1 endpoint-only PIS baseline.
+│       │   │
+│       │   ├── legacy.py
+│       │   │   # Legacy bandwise odds-ratio sensitivity comparator.
+│       │   │
+│       │   ├── callback.py
+│       │   │   # Repeated-attempt callback-model reduction comparator.
+│       │   │
+│       │   ├── information_optimization.py
+│       │   │   # Generic information-constrained optimization comparator.
+│       │   │
+│       │   ├── pattern_mixture.py
+│       │   │   # Repeated-attempt pattern-mixture optimization.
+│       │   │
+│       │   ├── repeated_static.py
+│       │   │   # Deliberately non-anytime repeated-static monitoring control.
+│       │   │
+│       │   └── ignorable_delay.py
+│       │       # Anytime reference valid only under ignorable resolution.
+│       │
+│       ├── experiments/
+│       │   ├── __init__.py
+│       │   │
+│       │   ├── registry.py
+│       │   │   # Canonical experiment names, classes and dependencies.
+│       │   │   # Experiment registry only — no claim registry.
+│       │   │
+│       │   ├── plan.py
+│       │   │   # Deterministically expands the registry/config into cells.
+│       │   │
+│       │   ├── runner.py
+│       │   │   # Shared orchestration, resume, overwrite and failure handling.
+│       │   │
+│       │   ├── status.py
+│       │   │   # Experiment/cell execution-state inspection.
+│       │   │
+│       │   ├── inventory.py
+│       │   │   # Scientific/data inventory validation.
+│       │   │
+│       │   ├── mathematics.py
+│       │   │   # Mathematical identity validation experiments.
+│       │   │
+│       │   ├── solver_validation.py
+│       │   │   # Production-vs-independent-oracle experiments.
+│       │   │
+│       │   ├── comparator_reduction.py
+│       │   │   # Callback and generic optimization reduction experiments.
+│       │   │
+│       │   ├── timing.py
+│       │   │   # Partition coherence, same-endpoint, strict timing gain.
+│       │   │
+│       │   ├── safety.py
+│       │   │   # Compatibility, sharpness and intrinsic-impossibility study.
+│       │   │
+│       │   ├── anytime.py
+│       │   │   # Hand cases and anytime coverage stress.
+│       │   │
+│       │   ├── sensitivity.py
+│       │   │   # Population/sequential rho sensitivity experiments.
+│       │   │
+│       │   ├── failure_boundaries.py
+│       │   │   # One-at-a-time failure-boundary atlas.
+│       │   │
+│       │   ├── scaling.py
+│       │   │   # Runtime/memory/computational scaling experiments.
+│       │   │
+│       │   └── synthesis.py
+│       │       # Cross-experiment statistical aggregation only.
+│       │       # No manuscript-claim evaluation.
+│       │
+│       ├── analysis/
+│       │   ├── __init__.py
+│       │   │
+│       │   ├── metrics.py
+│       │   │   # Scientific and operational derived metrics.
+│       │   │
+│       │   ├── bootstrap.py
+│       │   │   # Paired bootstrap intervals.
+│       │   │
+│       │   ├── sign_flip.py
+│       │   │   # Paired randomization/sign-flip inference.
+│       │   │
+│       │   ├── multiplicity.py
+│       │   │   # Holm/multiple-comparison correction.
+│       │   │
+│       │   ├── aggregation.py
+│       │   │   # Per-stream/per-condition/per-law aggregation.
+│       │   │
+│       │   └── materiality.py
+│       │       # Predeclared practical-effect/materiality evaluation.
+│       │
+│       └── reporting/
+│           ├── __init__.py
+│           │
+│           ├── figures.py
+│           │   # Publication figures generated only from verified source data.
+│           │
+│           ├── tables.py
+│           │   # Publication tables generated only from verified source data.
+│           │
+│           ├── source_data.py
+│           │   # Compact figure/table source-data exports.
+│           │
+│           └── export.py
+│               # Deterministic copy/render from outputs into results.
+│
+├── tests/
+│   ├── unit/
+│   │   ├── test_config.py
+│   │   │   # Configuration parsing and cross-field validation.
+│   │   ├── test_laws.py
+│   │   │   # Synthetic-law validity and simplex constraints.
+│   │   ├── test_ledger.py
+│   │   │   # Ledger integrity and maturity rules.
+│   │   ├── test_partitions.py
+│   │   │   # Coarsening/refinement correctness.
+│   │   ├── test_entropy.py
+│   │   │   # Entropy boundaries and numerical stability.
+│   │   ├── test_information.py
+│   │   │   # tau and S(u) identities.
+│   │   ├── test_compatibility.py
+│   │   │   # Compatibility-floor behavior.
+│   │   ├── test_bounds.py
+│   │   │   # Sharp risk sets and root branches.
+│   │   ├── test_safety.py
+│   │   │   # Intrinsic impossibility and safety-frontier regimes.
+│   │   ├── test_solver.py
+│   │   │   # Solver bracketing/tolerance behavior.
+│   │   ├── test_oracle.py
+│   │   │   # Independent-oracle correctness.
+│   │   ├── test_confidence.py
+│   │   │   # Sequential confidence construction.
+│   │   ├── test_projection.py
+│   │   │   # Observable-law projection.
+│   │   ├── test_certification.py
+│   │   │   # Scientific state assignment.
+│   │   ├── test_comparators.py
+│   │   │   # Comparator formulas and assumptions.
+│   │   ├── test_metrics.py
+│   │   │   # Derived metrics.
+│   │   ├── test_statistics.py
+│   │   │   # Bootstrap/sign-flip/multiplicity.
+│   │   ├── test_materiality.py
+│   │   │   # Materiality decisions.
+│   │   └── test_storage.py
+│   │       # Persistence and atomic-write semantics.
+│   │
+│   ├── integration/
+│   │   ├── test_preprocessing.py
+│   │   │   # Config → laws → partitions → prepared artifacts.
+│   │   ├── test_planning.py
+│   │   │   # Registry expansion and deterministic cell identity.
+│   │   ├── test_experiment_runner.py
+│   │   │   # Representative experiment execution.
+│   │   ├── test_resume.py
+│   │   │   # Interrupted-run recovery/reuse behavior.
+│   │   ├── test_provenance.py
+│   │   │   # Compact provenance round-trip and invalidation.
+│   │   ├── test_reporting.py
+│   │   │   # Verified outputs → results export.
+│   │   └── test_cli.py
+│   │       # Public command behavior.
+│   │
+│   ├── e2e/
+│   │   ├── test_smoke.py
+│   │   │   # Tiny complete TrajCert workflow.
+│   │   └── test_reproduction.py
+│   │       # Representative config → final result reproduction.
+│   │
+│   └── architecture/
+│       ├── test_import_boundaries.py
+│       │   # Enforces package/layer ownership.
+│       ├── test_primitive_leaks.py
+│       │   # Prevents unsafe raw str/int/float domain leakage.
+│       ├── test_hardcoded_values.py
+│       │   # Detects scientific configuration hidden in implementation.
+│       ├── test_config_ownership.py
+│       │   # Ensures each scientific value has one authoritative location.
+│       ├── test_locality.py
+│       │   # Ensures local certificate computation cannot consume
+│       │   # foreign-client scientific inputs.
+│       ├── test_no_claim_machinery.py
+│       │   # Blocks claim registry, claims.py, evidence-manifest logic,
+│       │   # claim-state generation and similar architecture drift.
+│       ├── test_no_roadmap_runtime.py
+│       │   # Prevents roadmap parsing/hashing/runtime dependencies.
+│       ├── test_no_compatibility_shims.py
+│       │   # Blocks legacy redirects, aliases and compatibility wrappers.
+│       └── test_code_quality.py
+│           # Dead code, duplicate definitions and other structural checks.
 │
 ├── outputs/
+│   # Heavy/generated computational workspace.
+│   # Gitignored.
+│   # Later scientific computations MAY read from here.
+│   │
 │   ├── preprocessing/
-│   │   ├── inventories/
-│   │   ├── validation/
-│   │   ├── prepared/
-│   │   └── metadata/
+│   │   # Prepared synthetic laws, partitions and deterministic inputs.
 │   │
 │   ├── artifacts/
 │   │   ├── fitted/
+│   │   │   # Retained for the existing layout.
+│   │   │   # Normally empty for TrajCert because there is no predictive fit.
+│   │   │
 │   │   ├── baselines/
+│   │   │   # Reusable comparator/reference computations.
+│   │   │
 │   │   └── derived/
 │   │       ├── plans/
+│   │       │   # Reusable deterministic experiment-plan material.
 │   │       ├── streams/
+│   │       │   # Generated stochastic event streams / validated prefixes.
 │   │       ├── population/
+│   │       │   # Reusable population summaries and bound calculations.
 │   │       └── sequential/
+│   │           # Reusable CS/envelope/projection artifacts.
 │   │
 │   ├── experiments/
-│   │   └── <descriptive-experiment-name>/
-│   │       ├── artifacts/
-│   │       │   ├── fitted/
-│   │       │   └── derived/
-│   │       ├── evaluations/
-│   │       │   ├── records/
-│   │       │   ├── comparisons/
-│   │       │   └── aggregates/
-│   │       ├── metrics/
-│   │       │   ├── per_seed/
-│   │       │   ├── per_condition/
-│   │       │   └── aggregate/
-│   │       ├── statistics/
-│   │       │   ├── tests/
-│   │       │   ├── confidence_intervals/
-│   │       │   ├── effects/
-│   │       │   └── multiplicity/
-│   │       ├── checkpoints/
-│   │       │   └── execution/
-│   │       ├── diagnostics/
-│   │       │   ├── scientific/
-│   │       │   ├── numerical/
-│   │       │   └── runtime/
-│   │       ├── logs/
-│   │       │   ├── execution/
-│   │       │   └── failures/
-│   │       └── provenance/
-│   │           ├── configuration/
-│   │           ├── data/
-│   │           ├── seeds/
-│   │           ├── code/
-│   │           ├── environment/
-│   │           └── dependencies/
+│   │   │
+│   │   ├── scientific-and-data-inventory/
+│   │   │   # Protocol/data/configuration inventory validation.
+│   │   │
+│   │   ├── legacy-partition-incoherence-check/
+│   │   │   # Legacy sensitivity partition-incoherence counterexamples.
+│   │   │
+│   │   ├── path-information-decomposition/
+│   │   │   # Path-information decomposition identity checks.
+│   │   │
+│   │   ├── information-profile-convexity/
+│   │   │   # S(u) convexity validation.
+│   │   │
+│   │   ├── minimum-compatibility-identity/
+│   │   │   # rho_min = tau identity validation.
+│   │   │
+│   │   ├── sharp-set-constructive-identity/
+│   │   │   # Constructive sharp-set validation.
+│   │   │
+│   │   ├── refinement-dominance-identity/
+│   │   │   # Fine partition risk set must nest inside coarse partition.
+│   │   │
+│   │   ├── strict-timing-gain-identity/
+│   │   │   # Delta-tau / upper-root strict-gain identity.
+│   │   │
+│   │   ├── safety-boundary-identity/
+│   │   │   # Deterministic safety-budget regime identities.
+│   │   │
+│   │   ├── endpoint-special-case-identity/
+│   │   │   # K=1 endpoint-only theorem identity.
+│   │   │
+│   │   ├── anytime-projection-proof-check/
+│   │   │   # Validation of the sequential projection proof contract.
+│   │   │
+│   │   ├── population-complexity-proof-check/
+│   │   │   # O(K) sufficient-statistic operation-count validation.
+│   │   │
+│   │   ├── production-solver-vs-independent-oracle/
+│   │   │   # Production solver accuracy against independent oracle.
+│   │   │
+│   │   ├── callback-model-reduction-falsification/
+│   │   │   # Repeated-attempt callback comparator reduction.
+│   │   │
+│   │   ├── generic-information-optimization-reduction/
+│   │   │   # Generic information-optimization reduction comparator.
+│   │   │
+│   │   ├── partition-coherence/
+│   │   │   # Fixed-rho deterministic-coarsening coherence study.
+│   │   │
+│   │   ├── same-endpoint-different-timing/
+│   │   │   # Timing-information ablation at identical endpoint behavior.
+│   │   │
+│   │   ├── strict-timing-gain/
+│   │   │   # Empirical/constructive strict timing-benefit experiment.
+│   │   │
+│   │   ├── compatibility-floor-behavior/
+│   │   │   # Compatible/incompatible behavior around rho=tau.
+│   │   │
+│   │   ├── sharpness-against-generic-oracle/
+│   │   │   # TrajCert sharp bounds against generic feasible optimization.
+│   │   │
+│   │   ├── safety-and-intrinsic-impossibility/
+│   │   │   # Distinguishes sensitivity failure from intrinsic impossibility.
+│   │   │
+│   │   ├── anytime-implementation-hand-cases/
+│   │   │   # Deterministic finite-sample implementation checks.
+│   │   │
+│   │   ├── anytime-coverage-stress/
+│   │   │   # Monte Carlo time-uniform coverage stress suite.
+│   │   │
+│   │   ├── population-sensitivity-utility/
+│   │   │   # Population risk-bound sensitivity over rho.
+│   │   │
+│   │   ├── sequential-sensitivity-utility/
+│   │   │   # Sequential utility relative to endpoint-only information.
+│   │   │
+│   │   ├── failure-boundary-atlas/
+│   │   │   # Nine one-at-a-time failure-boundary axes.
+│   │   │
+│   │   ├── real-trajectory-validation/
+│   │   │   # Reserved registry location; currently zero executable cells.
+│   │   │
+│   │   ├── foreign-information-negative-control/
+│   │   │   # Reserved registry location; currently zero executable cells.
+│   │   │
+│   │   ├── computational-scaling/
+│   │   │   # Runtime/memory/root/node scaling across configured K values.
+│   │   │
+│   │   └── statistical-synthesis/
+│   │       # Cross-experiment aggregation and manuscript source data.
+│   │       # No claims/evidence-manifest/hostile-review subsystem.
 │   │
 │   └── cache/
-│       ├── preprocessing/
-│       ├── evaluation/
-│       └── analysis/
+│       # Disposable accelerators only.
+│       # Never authoritative evidence.
 │
 ├── results/
+│   # Compact manuscript-facing evidence.
+│   # Generated from verified outputs only.
+│   # NEVER consumed as scientific computation input.
+│   │
 │   ├── experiments/
-│   │   └── <descriptive-experiment-name>/
+│   │   │
+│   │   ├── scientific-and-data-inventory/
+│   │   ├── legacy-partition-incoherence-check/
+│   │   ├── path-information-decomposition/
+│   │   ├── information-profile-convexity/
+│   │   ├── minimum-compatibility-identity/
+│   │   ├── sharp-set-constructive-identity/
+│   │   ├── refinement-dominance-identity/
+│   │   ├── strict-timing-gain-identity/
+│   │   ├── safety-boundary-identity/
+│   │   ├── endpoint-special-case-identity/
+│   │   ├── anytime-projection-proof-check/
+│   │   ├── population-complexity-proof-check/
+│   │   ├── production-solver-vs-independent-oracle/
+│   │   ├── callback-model-reduction-falsification/
+│   │   ├── generic-information-optimization-reduction/
+│   │   ├── partition-coherence/
+│   │   ├── same-endpoint-different-timing/
+│   │   ├── strict-timing-gain/
+│   │   ├── compatibility-floor-behavior/
+│   │   ├── sharpness-against-generic-oracle/
+│   │   ├── safety-and-intrinsic-impossibility/
+│   │   ├── anytime-implementation-hand-cases/
+│   │   ├── anytime-coverage-stress/
+│   │   ├── population-sensitivity-utility/
+│   │   ├── sequential-sensitivity-utility/
+│   │   ├── failure-boundary-atlas/
+│   │   ├── real-trajectory-validation/
+│   │   ├── foreign-information-negative-control/
+│   │   ├── computational-scaling/
+│   │   └── statistical-synthesis/
+│   │       # Every experiment directory uses the same structure below:
+│   │
 │   │       ├── figures/
 │   │       │   ├── main/
+│   │       │   │   # Main-manuscript figures owned by the experiment.
 │   │       │   └── supplementary/
+│   │       │       # Supplementary figures.
+│   │       │
 │   │       ├── tables/
 │   │       │   ├── main/
+│   │       │   │   # Main-manuscript tables.
 │   │       │   └── supplementary/
+│   │       │       # Supplementary tables.
+│   │       │
 │   │       ├── metrics/
 │   │       │   ├── primary/
+│   │       │   │   # Primary experiment outcomes.
 │   │       │   ├── secondary/
+│   │       │   │   # Mandatory secondary outcomes.
 │   │       │   └── summary/
+│   │       │       # Compact aggregated metric exports.
+│   │       │
 │   │       └── statistics/
 │   │           ├── tests/
+│   │           │   # Hypothesis/randomization/statistical-test outputs.
 │   │           ├── confidence_intervals/
+│   │           │   # Bootstrap and exact interval outputs.
 │   │           ├── effects/
+│   │           │   # Effect-size outputs.
 │   │           └── multiplicity/
+│   │               # Holm/multiple-comparison adjustments.
 │   │
 │   └── project_summary/
 │       ├── figures/
 │       │   ├── main/
+│       │   │   # Cross-experiment manuscript figures.
 │       │   └── supplementary/
+│       │       # Cross-experiment supplementary figures.
+│       │
 │       ├── tables/
 │       │   ├── main/
+│       │   │   # Cross-experiment manuscript tables.
 │       │   └── supplementary/
+│       │       # Cross-experiment supplementary tables.
+│       │
 │       ├── metrics/
 │       │   ├── primary/
+│       │   │   # Compact top-level scientific metrics.
 │       │   └── summary/
+│       │       # Project-wide metric summaries.
+│       │
 │       ├── statistics/
 │       │   ├── comparisons/
+│       │   │   # Cross-experiment comparisons.
 │       │   ├── confidence_intervals/
+│       │   │   # Project-wide intervals.
 │       │   ├── effects/
+│       │   │   # Project-wide effects.
 │       │   └── multiplicity/
-│       ├── claims/
+│       │       # Project-wide multiplicity corrections.
+│       │
 │       └── reproducibility/
 │           ├── configuration/
+│           │   # Final configuration snapshot / concise config provenance.
 │           ├── datasets/
+│           │   # Synthetic-law / real-data availability summaries.
 │           ├── seeds/
+│           │   # Seed-set and deterministic-generation information.
 │           ├── software/
+│           │   # Commit + dependency/environment identification.
 │           └── execution/
+│               # Concise execution/completion provenance.
 │
-├── docs/
-│   └── Roadmap.md
+├── Makefile
+│   # Thin convenience targets delegating to CLI and quality tools.
 │
-├── src/
-│   └── trajcert/
-│       ├── __init__.py
-│       │
-│       ├── configuration/
-│       │   ├── __init__.py
-│       │   ├── models.py
-│       │   ├── loading.py
-│       │   ├── validation.py
-│       │   └── protocol.py
-│       │
-│       ├── domain/
-│       │   ├── __init__.py
-│       │   ├── enums.py
-│       │   ├── identity.py
-│       │   ├── operational.py
-│       │   ├── manifests.py
-│       │   └── records/
-│       │       ├── __init__.py
-│       │       ├── artifacts.py
-│       │       ├── execution.py
-│       │       ├── results.py
-│       │       └── claims.py
-│       │
-│       ├── data/
-│       │   ├── __init__.py
-│       │   ├── inventory.py
-│       │   ├── integrity.py
-│       │   ├── partitions.py
-│       │   ├── apportionment.py
-│       │   └── synthetic/
-│       │       ├── __init__.py
-│       │       ├── laws.py
-│       │       ├── generator.py
-│       │       ├── ledger.py
-│       │       └── preprocessing.py
-│       │
-│       ├── math/
-│       │   ├── __init__.py
-│       │   ├── entropy.py
-│       │   ├── information_profile.py
-│       │   ├── risk_set.py
-│       │   ├── solver.py
-│       │   ├── refinement.py
-│       │   └── safety.py
-│       │
-│       ├── inference/
-│       │   ├── __init__.py
-│       │   ├── confidence_sequence.py
-│       │   ├── envelope.py
-│       │   ├── projection.py
-│       │   ├── compatibility.py
-│       │   └── states.py
-│       │
-│       ├── baselines/
-│       │   ├── __init__.py
-│       │   ├── references.py
-│       │   ├── legacy_odds.py
-│       │   ├── callbacks.py
-│       │   ├── pattern_mixture.py
-│       │   ├── information_oracle.py
-│       │   └── sequential_references.py
-│       │
-│       ├── experiments/
-│       │   ├── __init__.py
-│       │   ├── registry.py
-│       │   ├── planning.py
-│       │   ├── execution.py
-│       │   ├── lifecycle.py
-│       │   ├── recovery.py
-│       │   └── definitions/
-│       │       ├── __init__.py
-│       │       ├── scientific_inventory.py
-│       │       ├── formal_mathematics.py
-│       │       ├── solver_validation.py
-│       │       ├── comparator_reduction.py
-│       │       ├── partition_timing.py
-│       │       ├── compatibility_sharpness_safety.py
-│       │       ├── anytime_validation.py
-│       │       ├── utility_analysis.py
-│       │       ├── failure_boundaries.py
-│       │       ├── computational_scaling.py
-│       │       └── statistical_synthesis.py
-│       │
-│       ├── evaluation/
-│       │   ├── __init__.py
-│       │   ├── theorem_validation.py
-│       │   ├── oracle_validation.py
-│       │   ├── projection_oracle.py
-│       │   ├── coverage_validation.py
-│       │   └── benchmarking.py
-│       │
-│       ├── analysis/
-│       │   ├── __init__.py
-│       │   ├── metrics.py
-│       │   ├── statistics.py
-│       │   ├── materiality.py
-│       │   ├── claims.py
-│       │   ├── evidence.py
-│       │   └── synthesis.py
-│       │
-│       ├── infrastructure/
-│       │   ├── __init__.py
-│       │   ├── workspace.py
-│       │   ├── storage.py
-│       │   ├── artifacts.py
-│       │   ├── fingerprints.py
-│       │   ├── components.py
-│       │   ├── provenance.py
-│       │   ├── environment.py
-│       │   ├── evidence_manifest.py
-│       │   └── diagnostics.py
-│       │
-│       ├── reporting/
-│       │   ├── __init__.py
-│       │   ├── tables.py
-│       │   ├── figures.py
-│       │   └── export.py
-│       │
-│       └── cli/
-│           ├── __init__.py
-│           ├── main.py
-│           └── commands/
-│               ├── __init__.py
-│               ├── doctor.py
-│               ├── preprocess.py
-│               ├── plan.py
-│               ├── smoke.py
-│               ├── run.py
-│               ├── status.py
-│               └── report.py
+├── noxfile.py
+│   # Reproducible lint/type/test/architecture sessions.
 │
-└── tests/
-    ├── conftest.py
-    │
-    ├── architecture/
-    │   ├── test_dependency_boundaries.py
-    │   │   — Enforces allowed dependency directions between architectural layers and prevents architectural responsibility violations.
-    │   │
-    │   ├── test_public_type_boundaries.py
-    │   │   — Ensures public, domain, and application APIs use explicit meaningful types rather than loosely typed interfaces or inappropriate raw primitives.
-    │   │
-    │   ├── test_no_any_dict_object.py
-    │   │   — Rejects inappropriate use of Any, object, and anonymous dict-based domain/configuration/artifact payloads, except narrowly justified external-library boundaries.
-    │   │
-    │   ├── test_no_primitive_leaks.py
-    │   │   — Detects inappropriate str/int/float/bool/list/dict primitives crossing domain or architectural boundaries, including primitive public inputs and outputs where meaningful domain types should be used.
-    │   │
-    │   ├── test_no_hardcoded_values.py
-    │   │   — Detects hardcoded scientific, experimental, statistical, dataset, seed, threshold, algorithm, protocol, and other governed values outside their authoritative owner.
-    │   │
-    │   ├── test_configuration_ownership.py
-    │   │   — Ensures configuration values have one authoritative owner and are not repeated or copied into constants, implementation code, CLI defaults, tests, or parallel configuration structures.
-    │   │
-    │   ├── test_no_duplicate_constants.py
-    │   │   — Detects duplicate constants and equivalent independently maintained values across the repository.
-    │   │
-    │   ├── test_dead_code.py
-    │   │   — Detects dead, unused, unreachable, obsolete, and superseded production modules, classes, functions, methods, constants, and other symbols.
-    │   │
-    │   ├── test_enum_integrity.py
-    │   │   — Detects unused enums and ensures authoritative enums are actually used rather than being bypassed by equivalent free-form strings or duplicate identities.
-    │   │
-    │   ├── test_no_test_only_production_code.py
-    │   │   — Detects production code that exists or is referenced only for tests and has no legitimate production use.
-    │   │
-    │   ├── test_no_redirects_shims_reexports.py
-    │   │   — Rejects obsolete redirect modules, compatibility shims, legacy aliases, transitional wrappers, and unnecessary re-export-only modules.
-    │   │
-    │   ├── test_naming_policy.py
-    │   │   — Enforces descriptive names for modules, classes, functions, methods, variables, and parameters; rejects vague, generic, strange, misleading, or unjustifiably short names and abbreviations.
-    │   │
-    │   ├── test_canonical_vocabulary.py
-    │   │   — Enforces canonical project, scientific, algorithm, dataset, policy, experiment, artifact, and architectural terminology and rejects stale aliases, obsolete terminology, opaque names, and artificial version naming.
-    │   │
-    │   ├── test_no_comments_or_docstrings.py
-    │   │   — Rejects Python source comments and module/class/function/method docstrings.
-    │   │
-    │   ├── test_no_todos_or_temporary_code.py
-    │   │   — Rejects TODO, FIXME, HACK, XXX, commented-out implementations, temporary markers, unfinished code residue, and similar development leftovers.
-    │   │
-    │   ├── test_static_typing.py
-    │   │   — Runs repository-wide strict Pyright across production and tests so Pyright/Pylance-visible typing violations fail the test suite.
-    │   │
-    │   ├── test_code_quality.py
-    │   │   — Enforces Ruff formatting and linting so unformatted or lint-invalid Python code cannot remain in the repository.
-    │   │
-    │   └── test_dependency_hygiene.py
-    │       — Enforces dependency hygiene and detects unused, missing, or incorrectly declared dependencies.
-    │
-    ├── unit/
-    │   ├── configuration/
-    │   │   ├── test_loading_validation.py
-    │   │   └── test_protocol_snapshot.py
-    │   ├── domain/
-    │   │   ├── test_identity.py
-    │   │   ├── test_operational_records.py
-    │   │   └── test_manifests.py
-    │   ├── data/
-    │   │   ├── test_partitions.py
-    │   │   ├── test_apportionment.py
-    │   │   ├── test_integrity.py
-    │   │   └── synthetic/
-    │   │       ├── test_laws.py
-    │   │       ├── test_generator.py
-    │   │       ├── test_ledger.py
-    │   │       └── test_preprocessing.py
-    │   ├── math/
-    │   │   ├── test_entropy.py
-    │   │   ├── test_information_profile.py
-    │   │   ├── test_risk_set_solver.py
-    │   │   ├── test_refinement.py
-    │   │   └── test_safety.py
-    │   ├── inference/
-    │   │   ├── test_confidence_sequence.py
-    │   │   ├── test_envelope.py
-    │   │   ├── test_projection.py
-    │   │   ├── test_compatibility.py
-    │   │   └── test_states.py
-    │   ├── baselines/
-    │   │   ├── test_reference_bounds.py
-    │   │   ├── test_legacy_odds.py
-    │   │   ├── test_callbacks.py
-    │   │   ├── test_pattern_mixture.py
-    │   │   ├── test_information_oracle.py
-    │   │   └── test_sequential_references.py
-    │   ├── experiments/
-    │   │   ├── test_registry_planning.py
-    │   │   ├── test_execution_lifecycle.py
-    │   │   ├── test_recovery.py
-    │   │   └── test_experiment_definitions.py
-    │   ├── evaluation/
-    │   │   ├── test_theorem_validation.py
-    │   │   ├── test_oracle_validation.py
-    │   │   ├── test_projection_oracle.py
-    │   │   ├── test_coverage_validation.py
-    │   │   └── test_benchmarking.py
-    │   ├── analysis/
-    │   │   ├── test_metrics.py
-    │   │   ├── test_statistics.py
-    │   │   ├── test_materiality.py
-    │   │   ├── test_claims.py
-    │   │   ├── test_evidence.py
-    │   │   └── test_synthesis.py
-    │   ├── infrastructure/
-    │   │   ├── test_workspace.py
-    │   │   ├── test_artifacts_storage.py
-    │   │   ├── test_fingerprints.py
-    │   │   ├── test_component_digests.py
-    │   │   ├── test_provenance.py
-    │   │   ├── test_environment.py
-    │   │   └── test_evidence_manifest.py
-    │   ├── reporting/
-    │   │   ├── test_tables.py
-    │   │   ├── test_figures.py
-    │   │   └── test_export.py
-    │   └── cli/
-    │       └── test_commands.py
-    │
-    ├── scientific/
-    │   ├── test_data_invariants.py
-    │   ├── test_population_identities.py
-    │   ├── test_refinement_and_timing.py
-    │   ├── test_sharpness_against_independent_oracle.py
-    │   ├── test_safety_and_impossibility.py
-    │   ├── test_anytime_validity_contract.py
-    │   ├── test_experiment_contracts.py
-    │   └── test_claim_boundaries.py
-    │
-    ├── integration/
-    │   ├── data/
-    │   │   └── test_synthetic_preprocessing_pipeline.py
-    │   ├── population/
-    │   │   ├── test_population_solver_pipeline.py
-    │   │   └── test_oracle_comparator_pipeline.py
-    │   ├── sequential/
-    │   │   ├── test_stream_confidence_pipeline.py
-    │   │   └── test_projection_state_pipeline.py
-    │   ├── execution/
-    │   │   ├── test_inventory_to_population.py
-    │   │   ├── test_reuse_and_selective_invalidation.py
-    │   │   ├── test_checkpoint_recovery.py
-    │   │   ├── test_atomic_completion.py
-    │   │   └── test_evidence_completion.py
-    │   └── reporting/
-    │       ├── test_outputs_to_results_export.py
-    │       └── test_results_evidence_filter.py
-    │
-    ├── e2e/
-    │   ├── test_preprocess_smoke_plan.py
-    │   ├── test_run_status_report.py
-    │   ├── test_reuse_overwrite_recovery.py
-    │   └── test_full_execution_and_report.py
-    │
-    └── smoke/
-        └── test_smoke.py
+├── pyproject.toml
+│   # Package metadata, dependencies, entry points,
+│   # Ruff/Pyright/Pytest/tool configuration.
+│
+├── requirements.lock
+│   # Exact resolved transitive environment when retained.
+│
+├── README.md
+│   # Concise installation, commands and repository orientation.
+│   # Does not duplicate the roadmap.
+│
+├── LICENSE
+│   # Project license.
+│
+└── .gitignore
+    # outputs/, caches, virtual environments and other generated state.
 ```
 
 Responsibilities:
 
-* `configs/trajcert.yaml`: sole production YAML containing the roadmap-defined configurable scientific and runtime values.
-* `configs/tests.yml` and `configs/smoke.yml`: test-runner and smoke-runner settings only.
-* `configuration`: typed transcription and validation of `configs/trajcert.yaml`, including the generated protocol/configuration snapshot.
-* `domain`: immutable operational identities, enums, schemas, manifests, artifact types, dependency records, execution records, result records, and claim records.
-* `math`: pure population mathematics without filesystem side effects.
-* `inference`: confidence sequences, summary envelope, certified projection, compatibility/intrinsic calculations, and state assignment.
-* `data`: synthetic laws, partitions, preprocessing, integrity validation, event-stream generation, deterministic apportionment, and deterministic coarsening.
-* `baselines`: comparator and reference-method implementations only.
-* `experiments`: registry expansion, semantic-cell lifecycle, dependency resolution, selective invalidation, recovery, idempotency, completion, and experiment-definition contracts.
-* `evaluation`: theorem/oracle validation, finite-sample coverage validation, independent projection checks, and isolated benchmarking.
-* `analysis`: metrics, prespecified statistics, materiality, claim evaluation, verified evidence views, and cross-experiment synthesis.
-* `infrastructure`: fixed workspace/path resolution, dependency/component digests, artifact validation, atomic writes/promotions, provenance/environment capture, evidence-manifest construction, and execution diagnostics.
-* `reporting`: deterministic rendering and export of already verified evidence; it performs no scientific recomputation.
-* `cli`: public `trajcert` command dispatch and command implementations defined in Section 16.
+* `configs/trajcert.yaml` contains production scientific configuration; `configs/smoke.yaml` and `configs/tests.yaml` contain execution-size overrides only.
+* `config.py`, `types.py`, `constants.py`, `paths.py`, `provenance.py`, `storage.py`, `determinism.py`, `exceptions.py`, and `schemas.py` provide the shared configuration, domain, persistence, reproducibility, and filesystem foundations.
+* `data`, `math`, and `inference` contain synthetic-data handling, population mathematics, and sequential certification respectively.
+* `comparators` contains the endpoint baseline and comparator/reference methods.
+* `experiments` owns registry expansion, cell planning, execution, status inspection, validation studies, and synthesis.
+* `analysis` contains metrics, paired inference, aggregation, multiplicity adjustment, and materiality evaluation.
+* `reporting` renders verified data into publication figures, tables, source-data exports, and results.
+* `cli.py` exposes the public `trajcert` command defined in Section 16.
 
-The generic full-law information oracle must remain structurally independent of the production information-profile/population solver.
+The generic information-optimization comparator must remain structurally independent of the production information-profile and solver implementation.
 
 # 11. Execution Workspace Contract
 
-The generated computational workspace is rooted at `artifacts.execution_workspace_root`.
+The generated computational workspace is rooted at ``outputs``.
 
 The layout is:
 
@@ -2889,7 +3051,7 @@ Recoverable checkpoints never constitute completion evidence.
 
 # 12. Manuscript Evidence Contract
 
-The compact manuscript-facing workspace is rooted at `artifacts.results_root`.
+The compact manuscript-facing workspace is rooted at ``results``.
 
 `report` exports only completed, schema-valid, dependency-valid, provenance-valid evidence.
 
@@ -3453,7 +3615,7 @@ final_state_reason
 evidence_artifact_digests
 ```
 
-A semantic cell is complete only when the atomically written `artifacts.completion_marker_file` validates:
+A semantic cell is complete only when the atomically written ``COMPLETED.json`` validates:
 
 ```text
 semantic_cell_key
@@ -3571,28 +3733,28 @@ The following component registrations are authoritative minimum sets. Imports fr
 
 | Producer/artifact class       | Scientific clauses | Implementation components                                                                    | Material runtime dependencies      | Required parents               |
 | ----------------------------- | ------------------ | -------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------ |
-| configuration snapshot        | §4                 | `configuration/models.py`, `loading.py`, `validation.py`, `protocol.py`                      | PyYAML                             | `configs/trajcert.yaml`        |
-| law manifest/full law         | §§5.1–5.4          | `data/synthetic/laws.py`, `generator.py`                                                     | NumPy                              | configuration snapshot         |
+| configuration snapshot        | §4                 | `config.py`                                                                                   | PyYAML                             | `configs/trajcert.yaml`        |
+| law manifest/full law         | §§5.1–5.4          | `data/laws.py`, `synthetic.py`                                                                | NumPy                              | configuration snapshot         |
 | partition manifest/coarsening | §§3, 5.1, 5.8      | `data/partitions.py`                                                                         | NumPy                              | configuration snapshot         |
-| prepared synthetic input      | §§5.5–5.8          | `data/synthetic/preprocessing.py`, `ledger.py`, `data/integrity.py`, `data/apportionment.py` | NumPy, Pandas, PyArrow             | law + partition manifests      |
-| event stream                  | §§5.5–5.6, 9.11    | `data/synthetic/generator.py`, `ledger.py`                                                   | NumPy                              | law manifest, seed manifest    |
-| population summary/profile    | §§3.3–3.7          | `math/entropy.py`, `information_profile.py`                                                  | NumPy, SciPy                       | prepared law/partition         |
-| population risk set           | §§3.6, 3.10        | `math/risk_set.py`, `solver.py`                                                              | NumPy, SciPy                       | population summary             |
-| refinement/safety             | §§3.7–3.8          | `math/refinement.py`, `safety.py`                                                            | NumPy, SciPy                       | population summary/risk set    |
-| legacy comparator             | §7.4               | `baselines/legacy_odds.py`                                                                   | NumPy                              | population summary             |
-| callbacks                     | §§7.5–7.6          | `baselines/callbacks.py`                                                                     | mpmath                             | population summary             |
-| pattern mixture               | §7.7               | `baselines/pattern_mixture.py`                                                               | NumPy, SciPy                       | population summary             |
-| information oracle            | §7.8               | `baselines/information_oracle.py`                                                            | mpmath                             | prepared law/partition         |
-| categorical CS                | §9.2               | `inference/confidence_sequence.py`                                                           | NumPy, SciPy                       | count trajectory               |
+| prepared synthetic input      | §§5.5–5.8          | `data/synthetic.py`, `ledger.py`, `maturity.py`, `summaries.py`                              | NumPy, Pandas, PyArrow             | law + partition manifests      |
+| event stream                  | §§5.5–5.6, 9.11    | `data/synthetic.py`, `ledger.py`                                                             | NumPy                              | law manifest, seed manifest    |
+| population summary/profile    | §§3.3–3.7          | `math/entropy.py`, `information.py`                                                          | NumPy, SciPy                       | prepared law/partition         |
+| population risk set           | §§3.6, 3.10        | `math/bounds.py`, `solver.py`                                                                | NumPy, SciPy                       | population summary             |
+| refinement/safety             | §§3.7–3.8          | `math/information.py`, `safety.py`                                                           | NumPy, SciPy                       | population summary/risk set    |
+| legacy comparator             | §7.4               | `comparators/legacy.py`                                                                      | NumPy                              | population summary             |
+| callbacks                     | §§7.5–7.6          | `comparators/callback.py`                                                                    | mpmath                             | population summary             |
+| pattern mixture               | §7.7               | `comparators/pattern_mixture.py`                                                             | NumPy, SciPy                       | population summary             |
+| information oracle            | §7.8               | `comparators/information_optimization.py`                                                    | mpmath                             | prepared law/partition         |
+| categorical CS                | §9.2               | `inference/confidence.py`                                                                    | NumPy, SciPy                       | count trajectory               |
 | summary envelope              | §9.3               | `inference/envelope.py`                                                                      | NumPy                              | CS artifact                    |
 | outer projection              | §9.4               | `inference/projection.py`                                                                    | python-flint                       | envelope                       |
-| finite-sample compatibility   | §§9.5–9.6          | `inference/compatibility.py`                                                                 | python-flint                       | envelope                       |
-| operational states            | §9.7               | `inference/states.py`                                                                        | none beyond parents                | projection + compatibility     |
+| finite-sample compatibility   | §§9.5–9.6          | `math/compatibility.py`, `inference/certification.py`                                        | python-flint                       | envelope                       |
+| operational states            | §9.7               | `inference/certification.py`                                                                 | none beyond parents                | projection + compatibility     |
 | metrics                       | §8                 | `analysis/metrics.py`                                                                        | NumPy, Pandas                      | result records                 |
-| statistical inference         | §9.9               | `analysis/statistics.py`                                                                     | NumPy, SciPy                       | paired metrics                 |
+| statistical inference         | §9.9               | `analysis/bootstrap.py`, `sign_flip.py`, `multiplicity.py`                                   | NumPy, SciPy                       | paired metrics                 |
 | materiality                   | §§21.8–21.9        | `analysis/materiality.py`                                                                    | NumPy, Pandas                      | metrics/statistics             |
-| claims                        | §21                | `analysis/claims.py`, `synthesis.py`                                                         | Pandas                             | required evidence artifacts    |
-| benchmark                     | §18.12             | `evaluation/benchmarking.py`                                                                 | Python stdlib, target dependencies | prepared target inputs         |
+| statistical synthesis         | §21                | `experiments/synthesis.py`, `reporting/source_data.py`                                       | Pandas                             | required evidence artifacts    |
+| benchmark                     | §18.12             | `experiments/scaling.py`                                                                      | Python stdlib, target dependencies | prepared target inputs         |
 | tables                        | §19                | `reporting/tables.py`                                                                        | Pandas, PyArrow                    | declared aggregate source data |
 | figures                       | §20                | `reporting/figures.py`                                                                       | Matplotlib, Pandas, PyArrow        | declared figure source data    |
 
@@ -3751,7 +3913,7 @@ and must be populated by the launcher from the OCI/Docker image inspection resul
 
 The environment manifest records the value verbatim and validates that it is a nonempty OCI/Docker digest or immutable image identifier.
 
-`runtime_environment.authoritative_execution` fixes authoritative execution to CPU. GPU acceleration may not substitute for that environment.
+`The authoritative execution environment` fixes authoritative execution to CPU. GPU acceleration may not substitute for that environment.
 
 Provenance establishes audit lineage. Reuse compatibility is established by dependency fingerprints.
 
@@ -3867,7 +4029,7 @@ expected fine risk set subset of coarse
 ```text
 law = Timing and terminal: harmful outcomes resolve late
 partition = 2-band partition
-events = smoke.deterministic_cs_event_count
+events = 25
 construction = balanced-prefix
 expected = valid nonempty running CS/simplex at every prefix
 ```
@@ -4004,7 +4166,7 @@ The offset semantics are fixed:
 $$
 \rho=\tau_\Pi+d,
 \qquad
-d\in\texttt{sensitivity.theorem＿rho＿offsets.sharp＿set}.
+d\in\texttt{\{0, 0.005, 0.025, 0.100\}}.
 $$
 
 `Production Solver vs Independent Oracle`:
@@ -4012,7 +4174,7 @@ $$
 $$
 \rho=\tau_\Pi+d,
 \qquad
-d\in\texttt{sensitivity.theorem＿rho＿offsets.oracle＿validation}.
+d\in\texttt{\{0, 0.0025, 0.010, 0.050, 0.150\}}.
 $$
 
 `Partition Coherence`, `Strict Timing-Gain Identity`, and `Strict Timing Gain`:
@@ -4020,16 +4182,16 @@ $$
 $$
 \rho=\tau_{\text{fine}}+d,
 \qquad
-d\in\texttt{sensitivity.theorem＿rho＿offsets.refinement＿above＿fine＿tau}.
+d\in\texttt{\{0.005, 0.025, 0.100\}}.
 $$
 
 No offset is interpreted relative to a coarse $\tau$ unless explicitly stated elsewhere.
 
-`Information Profile Convexity` evaluates exactly `numerics.convexity_profile_grid_points` equally spaced $u$ points in `[0,c]` per law/partition.
+`Information Profile Convexity` evaluates exactly `1,001` equally spaced $u$ points in `[0,c]` per law/partition.
 
 Second derivatives are evaluated only in the interior and checked by symbolic/high-precision direct differentiation, not finite differences.
 
-`Sharp-Set Constructive Identity` uses exact production endpoints, independent oracle endpoints, and exactly `numerics.constructive_profile_grid_points` diagnostic grid points.
+`Sharp-Set Constructive Identity` uses exact production endpoints, independent oracle endpoints, and exactly `2,001` diagnostic grid points.
 
 The grid never defines roots.
 
@@ -4140,7 +4302,7 @@ experiment_name = Same Endpoint, Different Timing
 comparison_pair_name =
   "Same endpoint without timing information|Same endpoint with timing information"
 partition_name = one primary partition
-rho = one same_endpoint_rho_grid value
+rho = one prespecified same-endpoint rho value
 ```
 
 Within one paired cell, compute both laws and report their separate $\tau$, risk intervals, and their difference.
@@ -4173,7 +4335,7 @@ where
 
 $$
 d=
-\texttt{sensitivity.theorem＿rho＿offsets.refinement＿above＿fine＿tau[0]}.
+\texttt{0.005}.
 $$
 
 For endpoint-only partition:
@@ -4190,7 +4352,7 @@ without adding a separate registry cell.
 $$
 \rho=
 \tau+
-\texttt{sensitivity.confirmatory＿sharpness＿oracle＿offset＿above＿tau}.
+\texttt{0.05}.
 $$
 
 `Safety and Intrinsic Impossibility` uses the five deterministic beta regimes.
@@ -4410,7 +4572,7 @@ Every applicable component must pass.
 
 ### Independent projection oracle
 
-`evaluation/projection_oracle.py` is independent of `inference/projection.py`.
+`math/oracle.py` is independent of `inference/projection.py`.
 
 For singleton envelopes, compute the exact population solution using direct high-precision full-table mutual information as in Section 7.8.
 
@@ -4444,7 +4606,7 @@ $$
 All stress cases except near-certification use:
 
 $$
-\beta=\texttt{budgets.primary＿risk}.
+\beta=\texttt{budgets.risk}.
 $$
 
 Near-certification uses:
@@ -4479,7 +4641,7 @@ Every primary TrajCert stress cell must pass Section 9.8.
 ```text
 6 laws
 4 partitions
-14 numeric primary_rho_grid values
+14 numeric prespecified rho values
 + exact log(2)
 = 15 rho values
 ```
@@ -4559,7 +4721,7 @@ mean favorable certified-update-fraction difference
   >= materiality.sequential.certified_fraction_gain
 
 bootstrap lower bound
-  > materiality.sequential.paired_bootstrap_lower_bound_must_exceed
+  > 0
 
 Holm-adjusted p-value
   < confidence.alpha
@@ -4571,7 +4733,7 @@ The other two practical metrics remain mandatory reported secondary evidence but
 
 Use the nine one-at-a-time axes.
 
-The base law is `failure_boundary.base_law`.
+The base law is `Timing and terminal: harmful outcomes resolve late`.
 
 Unless an axis changes them:
 
@@ -4623,9 +4785,9 @@ rho = budgets.information_nats
 Outer projection:
 
 ```text
-n = runtime_benchmark.outer_projection_input.n
+n = 500
 construction = balanced-prefix
-rho = I_true + runtime_benchmark.outer_projection_rho_offset_above_true_information
+rho = I_true + 0.01
 beta = budgets.risk
 ```
 
@@ -4733,7 +4895,7 @@ $$
 
 Display rounding never feeds scientific comparison.
 
-P-values below `display.pvalue_display_below` are rendered as:
+P-values below `0.0001` are rendered as:
 
 ```text
 <0.0001
@@ -5132,7 +5294,7 @@ law = Timing and terminal: harmful outcomes resolve late
 K = method.finest_bands
 beta = budgets.risk
 rho = budgets.information_nats
-grid = numerics.information_profile_figure_grid_points
+grid = 1,001
 ```
 
 Show exact landmarks:
@@ -5454,11 +5616,11 @@ Support requires two machine-readable audits.
 Inspect the registered parent DAG for the bound-producing components:
 
 ```text
-inference/confidence_sequence.py
+inference/categorical.py
+inference/confidence.py
 inference/envelope.py
 inference/projection.py
-inference/compatibility.py
-inference/states.py
+inference/certification.py
 ```
 
 Allowed scientific input classes are only:
@@ -5467,7 +5629,7 @@ Allowed scientific input classes are only:
 target-stream event/count artifacts
 target epoch manifest
 target partition manifest
-configuration/protocol values
+config.py values
 local numerical dependencies
 ```
 
@@ -5712,7 +5874,7 @@ Required property checks, with deterministic Hypothesis settings:
 * generated laws stay on the simplex;
 * $$
   \mathcal S(u)\ge\tau-
-  \texttt{numerics.deterministic＿identity＿tolerance};
+  \texttt{numerics.identity_atol};
 $$
 * convexity for nondegenerate laws;
 * $u^\dagger\in[0,c]$;

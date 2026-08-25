@@ -1,2 +1,0 @@
-smoke_runner: pytest
-smoke_test_path: tests/smoke
