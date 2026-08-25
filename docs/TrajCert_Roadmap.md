@@ -1596,9 +1596,9 @@ For `Relative unresolved-mass gain`, if $c=0$:
 relative_unresolved_gain = null
 ```
 
-Undefined scientific quantities are stored as `null`. `NaN`, positive infinity, and negative infinity are forbidden in claim-bearing numeric fields; any exceptional state is represented by an explicit status field instead.
+Undefined scientific quantities are stored as `null`. `NaN`, positive infinity, and negative infinity are forbidden in scientific-result numeric fields; any exceptional state is represented by an explicit status field instead.
 
-No detector AUC, F1, TPR, FPR, calibration, privacy, communication, or energy metric is claim-bearing.
+No detector AUC, F1, TPR, FPR, calibration, privacy, communication, or energy metric is a supported scientific metric.
 
 # 9. Statistical and Sequential-Inference Protocol
 
@@ -3061,7 +3061,7 @@ Experiment-specific evidence is published under:
 results/experiments/<descriptive-experiment-name>/
 ```
 
-`Statistical Synthesis` owns cross-experiment claim and synthesis artifacts under:
+`Statistical Synthesis` owns cross-experiment summary and synthesis artifacts under:
 
 ```text
 results/project_summary/
@@ -3073,7 +3073,7 @@ Every figure and table is rendered only from authoritative machine-readable evid
 
 Table and figure ordering is deterministic.
 
-Favorable axis-limit selection, seed-subset selection, hiding incompatible points, and undeclared smoothing or fitted trends used as claim evidence are forbidden.
+Favorable axis-limit selection, seed-subset selection, hiding incompatible points, and undeclared smoothing or fitted trends used as scientific evidence are forbidden.
 
 Rendering-only changes may regenerate SVG/PNG/TeX/CSV without invalidating scientific source data, metrics, statistical results, or experiment cells.
 
@@ -3114,7 +3114,7 @@ structured free JSON      canonical RFC-8785 JSON stored as string
 SHA-256 digest            lowercase 64-character hexadecimal string
 ```
 
-No claim-bearing float column may contain `NaN` or infinity.
+No scientific-result float column may contain `NaN` or infinity.
 
 Undefined scientific values are Arrow nulls.
 
@@ -3568,7 +3568,7 @@ failure_reason
 details_json
 ```
 
-## 13.6 Failure, claim, and completion records
+## 13.6 Failure and completion records
 
 Failure:
 
@@ -3591,29 +3591,6 @@ downstream_blocking
 ```
 
 Scientific nulls do not enter failure records.
-
-Claim registry:
-
-```text
-claim_name
-exact_claim
-research_question
-hypotheses_or_theorems
-supporting_experiments
-primary_metric
-secondary_metrics
-statistical_comparison
-effect_size_rule
-minimum_support_condition
-failure_condition
-valid_scope
-forbidden_extrapolation
-supporting_tables
-supporting_figures
-final_state
-final_state_reason
-evidence_artifact_digests
-```
 
 A semantic cell is complete only when the atomically written ``COMPLETED.json`` validates:
 
@@ -3697,7 +3674,7 @@ TrajCert applicability:
 | scoring                  | population solver/oracle/comparator calculations and sequential confidence/envelope/projection calculations                | population summaries, profiles, comparator fits, streams, CS trajectories, envelopes, projections |
 | calibration/thresholding | no learned calibration; $\rho,\beta,\delta$, materiality thresholds, and multiplicity rules are prespecified               | no fitted calibration artifact                                                                    |
 | evaluation               | theorem/oracle checks, state assignment, stream metrics, runtime measurements                                              | validated results, stream metrics, validation records, runtime records                            |
-| analysis                 | paired comparisons, bootstrap CIs, sign-flip tests, Holm adjustment, materiality and claim synthesis                       | statistical artifacts, claim-state artifacts, source-data Parquet                                 |
+| analysis                 | paired comparisons, bootstrap CIs, sign-flip tests, Holm adjustment, materiality, and cross-experiment aggregation          | statistical artifacts and source-data Parquet                                                     |
 | reporting                | deterministic rendering/export only                                                                                        | CSV/TeX/SVG/PNG and report summaries                                                              |
 
 No predictive training, score generation, train/validation/test split, learned threshold selection, or post-hoc calibration may be introduced.
@@ -3887,7 +3864,7 @@ seed-manifest checksums
 execution timestamps
 ```
 
-Authoritative claim-bearing `trajcert run` execution requires a clean source tree:
+Authoritative `trajcert run` execution requires a clean source tree:
 
 ```text
 git status --porcelain=v1 --untracked-files=all
@@ -3901,7 +3878,7 @@ The source commit is obtained by:
 git rev-parse HEAD
 ```
 
-If Git metadata is unavailable, claim-bearing `run` is blocked with `environment_or_prerequisite_block`.
+If Git metadata is unavailable, `run` is blocked with `environment_or_prerequisite_block`.
 
 The container image digest is supplied to the running container as:
 
@@ -3909,7 +3886,7 @@ The container image digest is supplied to the running container as:
 TRAJCERT_CONTAINER_IMAGE_DIGEST
 ```
 
-and must be populated by the launcher from the OCI/Docker image inspection result. Authoritative claim-bearing execution is blocked when this value is absent.
+and must be populated by the launcher from the OCI/Docker image inspection result. Authoritative execution is blocked when this value is absent.
 
 The environment manifest records the value verbatim and validates that it is a nonempty OCI/Docker digest or immutable image identifier.
 
@@ -4132,7 +4109,7 @@ Each deterministic cell requires one schema-valid primary result record unless o
 | Sequential Sensitivity Utility             | shared streams/projections                                             | paired per-stream parquet + per-condition aggregate                                      |
 | Failure Boundary Atlas                     | axis-specific inputs                                                   | boundary result                                                                          |
 | Computational Scaling                      | benchmark inputs                                                       | repetition parquet + summary result                                                      |
-| Statistical Synthesis                      | all required completed evidence                                        | synthesis record + cross-experiment source data + claim registry + hostile-review record |
+| Statistical Synthesis                      | all required completed evidence                                        | synthesis record + cross-experiment source data                     |
 
 Experiment overall state becomes `COMPLETED` only when:
 
@@ -4277,7 +4254,7 @@ numeric status
 exact-equality-to-TrajCert flag where same sensitivity semantics exist
 ```
 
-These experiments are prior-method reduction/falsification diagnostics. They do not create a separate Section 21 claim state.
+These experiments are prior-method reduction/falsification diagnostics. They do not produce a separate Section 21 support outcome.
 
 If an existing comparator is found to reproduce a TrajCert result at a tested setting, that equality is retained and reported; it does not justify a universal equivalence claim.
 
@@ -4658,7 +4635,7 @@ Every cell is retained, including incompatible points.
 
 ### Population materiality
 
-Population claim qualification is evaluated only on the primary 8-band partition.
+Population support qualification is evaluated only on the primary 8-band partition.
 
 For one compatible 8-band cell:
 
@@ -4690,7 +4667,7 @@ materiality.population.compatible_rho_values
 
 prespecified rho values qualify.
 
-The Practical Synthetic Nonvacuity claim is supported iff at least:
+The Practical Synthetic Nonvacuity scientific statement is supported iff at least:
 
 ```text
 materiality.population.qualifying_laws
@@ -4708,7 +4685,7 @@ Exactly 500 streams are used.
 
 All three practical metrics generate paired inference and remain in the 54-test Holm family.
 
-For the **claim-level qualifying-law vote**, the materiality metric is specifically:
+For the **scientific-statement qualifying-law vote**, the materiality metric is specifically:
 
 ```text
 Certified update fraction
@@ -4855,14 +4832,11 @@ It:
 4. computes cross-experiment deterministic aggregates;
 5. verifies the complete 54-test Holm family;
 6. applies materiality;
-7. mechanically assigns claim states;
-8. produces Tables 5, 7, 8, 10, and 13 source data;
-9. produces cross-experiment Figure 1 source data;
-10. performs the local-validity audits in Section 21.11;
-11. performs Section 27 hostile-review checks;
-12. constructs the project evidence manifest in `outputs/experiments/statistical-synthesis/provenance/dependencies/`.
+7. produces Tables 5, 7, 8, and 10 source data;
+8. produces cross-experiment Figure 1 source data;
+9. performs the local-validity audits in Section 21.11.
 
-A scientific falsification or null does not block synthesis when execution is valid; it changes the relevant claim state.
+A scientific falsification or null does not block synthesis when execution is valid; it remains visible in the corresponding experiment results.
 
 Missing, stale, invalid, or technically failed mandatory evidence blocks synthesis.
 
@@ -5188,27 +5162,6 @@ median_outer_nodes
 max_oracle_error
 ```
 
-## Table 13 — Claim registry
-
-```text
-outputs/experiments/statistical-synthesis/evaluations/aggregates/claim_registry.parquet
-```
-
-Columns:
-
-```text
-claim_name
-claim
-required_experiments
-primary_metric
-minimum_support_condition
-final_state
-supporting_table
-supporting_figure
-scope
-forbidden_extrapolation
-```
-
 # 20. Required Figures
 
 SVG and PNG filenames are the source basename with:
@@ -5383,11 +5336,11 @@ Use log2 $K$.
 
 Runtime may use a log scale only if every recorded runtime is strictly positive.
 
-# 21. Claim Registry and Mechanical Support Rules
+# 21. Scientific Support Rules
 
 ## 21.1 Partition Coherence
 
-Claim:
+Scientific statement:
 
 > Under fixed PIS $\rho$ and a common terminal horizon, deterministic refinement cannot widen the sharp population risk set.
 
@@ -5412,7 +5365,7 @@ NOT_SUPPORTED
 
 ## 21.2 Observable Timing Decomposition
 
-Claim:
+Scientific statement:
 
 $$
 I(L;J_\Pi)=\tau_\Pi+I(L;R).
@@ -5427,7 +5380,7 @@ Support requires residual no greater than `numerics.identity_atol`.
 
 ## 21.3 Exact Compatibility Floor
 
-Claim:
+Scientific statement:
 
 $$
 \rho_{\min}=\tau.
@@ -5442,7 +5395,7 @@ All below/at/above regimes must match.
 
 ## 21.4 Sharp Latent-Risk Set
 
-Claim:
+Scientific statement:
 
 > Under the specified binary observation law and PIS budget, the reported population interval is sharp.
 
@@ -5459,11 +5412,11 @@ zero state mismatches
 max endpoint error <= numerics.identity_atol
 ```
 
-No finite-sample optimality claim follows.
+No finite-sample optimality conclusion follows.
 
 ## 21.5 Strict Timing Value
 
-Claim:
+Scientific statement:
 
 > Under compatibility and interior-upper-root conditions, finer timing strictly improves the upper endpoint iff its conditional outcome information is positive.
 
@@ -5475,11 +5428,11 @@ positive-information gain > numerics.identity_atol
 profile-difference residual <= numerics.identity_atol
 ```
 
-No claim that additional bins always strictly help is permitted.
+No conclusion that additional bins always strictly help is permitted.
 
 ## 21.6 Intrinsic Certification Impossibility
 
-Claim:
+Scientific statement:
 
 > The geometry distinguishes sensitivity-dependent uncertainty from cases in which no compatible information budget can certify the requested beta.
 
@@ -5492,7 +5445,7 @@ Support requires all five deterministic beta regimes and all applicable $\rho^\s
 
 ## 21.7 Anytime-Valid Local Certificate
 
-Claim:
+Scientific statement:
 
 > Projecting the simultaneous observable-law confidence sequence through the conservative PIS map yields an anytime-valid local upper-risk certificate under the declared assumptions.
 
@@ -5518,7 +5471,7 @@ NOT_SUPPORTED
 
 ## 21.8 Practical Synthetic Nonvacuity
 
-Claim:
+Scientific statement:
 
 > On the prespecified synthetic benchmark, the method gives materially nonvacuous upper-risk bounds over predeclared sensitivity regimes.
 
@@ -5551,7 +5504,7 @@ synthetic benchmark only
 
 ## 21.9 Trajectory Operational Gain
 
-Claim:
+Scientific statement:
 
 > On the prespecified sequential synthetic benchmark, 8-band partition improves operational certification relative to the endpoint-only partition in prespecified regimes.
 
@@ -5584,7 +5537,7 @@ Null:
 
 ## 21.10 Computational Tractability
 
-Claim:
+Scientific statement:
 
 > Population computation uses O$K$ sufficient-statistic construction plus scalar branch root solving and maintains numerical accuracy over the tested K range.
 
@@ -5605,7 +5558,7 @@ Runtime and memory are descriptive.
 
 ## 21.11 Local Validity Without Federation
 
-Claim:
+Scientific statement:
 
 > Core statistical validity uses no foreign-client information.
 
@@ -5688,19 +5641,21 @@ Allowed manuscript statement:
 
 Real operational validation may not be implied.
 
-# 22. Claim-State Semantics
+# 22. Scientific Support Outcome Semantics
+
+These are interpretive reporting terms defined by this roadmap; they are not a registry, persisted schema, or runtime-generated state.
 
 | State                 | Meaning                                                                                   |
 | --------------------- | ----------------------------------------------------------------------------------------- |
 | `SUPPORTED`           | Every mandatory support condition passes.                                                 |
-| `PARTIALLY_SUPPORTED` | Used only where the claim explicitly defines partial support.                             |
+| `PARTIALLY_SUPPORTED` | Used only where the scientific statement explicitly defines partial support.              |
 | `MECHANISM_ONLY`      | The theorem/mechanism is supported but a required broader empirical layer is unavailable. |
 | `CONDITIONAL`         | Support is confined to enumerated tested regimes.                                         |
 | `NULL_RESULT`         | Execution is valid but a predeclared empirical effect/materiality condition is not met.   |
-| `NOT_SUPPORTED`       | Valid evidence contradicts a mandatory claim criterion.                                   |
+| `NOT_SUPPORTED`       | Valid evidence contradicts a mandatory scientific-statement criterion.                    |
 | `NOT_TESTED`          | The authoritative plan deliberately contains no valid test.                               |
 
-No claim is removed or hidden because its result is unfavorable.
+No scientific statement is removed or hidden because its result is unfavorable.
 
 # 23. Evidence Completion and Reproducibility Closure
 
@@ -5725,7 +5680,7 @@ theorem falsification
 unfavorable materiality results
 ```
 
-Those outcomes change claim states but are not technical failures.
+Those outcomes determine the applicable Section 21 support outcome but are not technical failures.
 
 `Statistical Synthesis` is blocked by:
 
@@ -5739,43 +5694,15 @@ schema failure
 dependency/provenance failure
 missing multiplicity-family member
 anti-conservative numerical failure
-failed mandatory hostile-review check
 ```
 
-On successful synthesis, construct:
-
-```text
-outputs/experiments/statistical-synthesis/provenance/dependencies/evidence_manifest.json
-```
-
-The evidence manifest contains:
-
-```text
-roadmap digest
-configuration digest
-source commit
-dirty-tree flag
-requirements.lock digest
-container image digest
-environment digest
-registry plan digest
-dataset/law/partition manifest digests
-seed-set digests
-producer component digests
-all completed semantic-cell keys
-all completion-marker digests
-cross-experiment aggregate digests
-claim-registry digest
-hostile-review record digest
-```
-
-The evidence manifest is a reproducibility summary, not a cache key.
+Statistical Synthesis records ordinary source-data and reproducibility metadata through `storage.py` and `provenance.py`; it does not create an evidence manifest, claim registry, or claim-state artifact.
 
 If any material dependency later changes, normal Section 14 dependency invalidation applies only to affected artifacts and descendants.
 
-After affected artifacts are recomputed, Statistical Synthesis and the evidence manifest are regenerated.
+After affected artifacts are recomputed, Statistical Synthesis is rerun.
 
-`report` is permitted only when Statistical Synthesis is `COMPLETED` and its current evidence manifest validates against active artifacts.
+`report` is permitted only when Statistical Synthesis is `COMPLETED` and its required source data validate against active artifacts.
 
 # 24. Reproducibility and Manuscript Export
 
@@ -5808,7 +5735,7 @@ results artifact
 -> producer implementation component digest
 -> relevant environment dependency digest
 -> source commit provenance
--> project evidence manifest
+-> compact reproducibility metadata
 ```
 
 Hashes provide integrity and lineage only.
@@ -5828,7 +5755,7 @@ Digest-bearing JSON uses RFC 8785 JCS semantics because that specification expli
 | Technical failure                      | crash, arithmetic exception, corrupt artifact, checksum/serialization failure, unexpected empty CS region, or unresolved prerequisite | `FAILED`; no scientific conclusion; recover from nearest valid dependency/checkpoint |
 | Stale/dependency-incompatible artifact | previously valid artifact no longer matches material dependency identity                                                              | not scientific evidence; remove from active use and recompute affected descendants   |
 | Data/validation failure                | invalid probabilities/partition, duplicate identity, invalid ledger/manifests, unrecoverable seed/dependency mismatch                 | `INVALID`; affected downstream evidence blocked                                      |
-| Scientific falsification               | valid evidence contradicts theorem/mandatory relation under its conditions                                                            | execution remains `COMPLETED`; affected claim `NOT_SUPPORTED`                        |
+| Scientific falsification               | valid evidence contradicts theorem/mandatory relation under its conditions                                                            | execution remains `COMPLETED`; affected support outcome is `NOT_SUPPORTED`          |
 | Scientific null/boundary               | wide interval, no gain, compatible-but-uncertified, predicted intrinsic impossibility, boundary result                                | completed scientific evidence                                                        |
 | Planned nonapplicability               | registry intentionally contains no executable cells                                                                                   | zero-cell experiments remain nonapplicable                                           |
 
@@ -5906,24 +5833,24 @@ Integration/regression coverage verifies:
 * global plan changes elsewhere do not invalidate unchanged cell rows;
 * rendering-only changes do not invalidate scientific source data;
 * completion marker is written last;
-* evidence manifest rejects missing/stale evidence;
+* source-data validation rejects missing or stale evidence;
 * report reads only verified source data;
 * `results/` excludes non-evidence artifacts;
 * every discovered scientific/numerical bug receives an independently justified regression test.
 
-# 27. Hostile Reviewer Verification
+# 27. Reviewer Verification Checklist
 
-Statistical Synthesis must produce machine-readable evidence pointers verifying:
+Before reporting, reviewers verify:
 
 * **Target/scope:** binary estimand justification; common terminal horizon across refinement; no post-outcome partition choice; $\rho$ described as sensitivity assumption; $\beta$ only in its configured benchmark role; absence of real operational validation stated; prohibited novelty/privacy/federation claims absent.
 * **Comparators:** assumptions explicit; generic oracle structurally independent; observation access fair; paired stochastic streams shared; no comparator receives hidden extra information.
-* **Sequential/statistical validity:** deployed sequential construction is time-uniform; independent stream is the Monte Carlo unit; Monte Carlo counts/tests/multiplicity/materiality are prespecified before claim evaluation; incompatible cells remain visible; undefined values are null; failed seeds are retained.
+* **Sequential/statistical validity:** deployed sequential construction is time-uniform; independent stream is the Monte Carlo unit; Monte Carlo counts/tests/multiplicity/materiality are prespecified before scientific-support assessment; incompatible cells remain visible; undefined values are null; failed seeds are retained.
 * **Identity/recovery:** no duplicate active semantic result; each reusable artifact has one producer; partial outputs never become active evidence; checkpoints never cross dependency incompatibility; stale descendants are removed; caches never become evidence.
-* **Evidence lineage:** every table/figure has stable machine-readable source data; every manuscript claim has a registry state; exports use completed verified evidence only; `results/` contains no caches/debug/failures/invalid/stale/partial/checkpoint artifacts.
+* **Evidence lineage:** every table/figure has stable machine-readable source data; exports use completed verified evidence only; `results/` contains no caches/debug/failures/invalid/stale/partial/checkpoint artifacts.
 * **Local validity:** static dependency and runtime lineage audits in Section 21.11 pass.
 * **Execution completeness:** all 1,423 planned registry cells are accounted for as executable-completed, planned-invalid, or zero-cell nonapplicable according to their contracts; no mandatory executable cell is missing.
 
-Any failed mandatory check blocks Statistical Synthesis.
+This checklist guides review; it does not create a runtime artifact or block execution.
 
 # 28. Normal Operator Workflow
 
