@@ -2442,8 +2442,10 @@ name = "trajcert"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "libcst" },
     { name = "numpy" },
     { name = "pydantic" },
+    { name = "pydantic-core" },
     { name = "pyyaml" },
     { name = "scipy" },
 ]
@@ -2456,7 +2458,6 @@ quality = [
     { name = "crosshair-tool" },
     { name = "deptry" },
     { name = "import-linter" },
-    { name = "libcst" },
     { name = "mutmut" },
     { name = "nox" },
     { name = "pip-audit" },
@@ -2479,12 +2480,13 @@ requires-dist = [
     { name = "crosshair-tool", marker = "extra == 'quality'", specifier = "==0.0.104" },
     { name = "deptry", marker = "extra == 'quality'", specifier = "==0.25.1" },
     { name = "import-linter", marker = "extra == 'quality'", specifier = "==2.13" },
-    { name = "libcst", marker = "extra == 'quality'", specifier = "==1.8.6" },
+    { name = "libcst", specifier = "==1.8.6" },
     { name = "mutmut", marker = "extra == 'quality'", specifier = "==3.4.0" },
     { name = "nox", marker = "extra == 'quality'", specifier = "==2026.8.10" },
     { name = "numpy", specifier = "==2.5.2" },
     { name = "pip-audit", marker = "extra == 'quality'", specifier = "==2.10.0" },
     { name = "pydantic", specifier = "==2.13.4" },
+    { name = "pydantic-core", specifier = "==2.46.4" },
     { name = "pytest", marker = "extra == 'quality'", specifier = "==8.3.5" },
     { name = "pytest-archon", marker = "extra == 'quality'", specifier = "==0.0.6" },
     { name = "pytest-cov", marker = "extra == 'quality'", specifier = "==6.2.1" },
