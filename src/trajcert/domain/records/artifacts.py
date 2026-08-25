@@ -73,21 +73,21 @@ class ArtifactEnvelope(BaseModel):
 
     @field_validator("schema_name")
     @classmethod
-    def validate_schema_name(cls, value: str) -> str:
+    def _validate_schema_name(cls, value: str) -> str:
         if not SCHEMA_NAME_PATTERN.fullmatch(value):
             raise ValueError("schema name must be lower snake case")
         return value
 
     @field_validator("rho", "beta", "delta")
     @classmethod
-    def validate_finite_scientific_value(cls, value: float | None) -> float | None:
+    def _validate_finite_scientific_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("claim-bearing scientific values must be finite")
         return value
 
     @field_validator("semantic_coordinates")
     @classmethod
-    def validate_canonical_json_text(cls, value: str | None) -> str | None:
+    def _validate_canonical_json_text(cls, value: str | None) -> str | None:
         if value is not None and (value[0] != "{" or value[-1] != "}"):
             raise ValueError("semantic coordinates must be canonical JSON object text")
         return value

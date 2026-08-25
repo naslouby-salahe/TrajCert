@@ -30,8 +30,8 @@ def test_certified_compatibility_and_intrinsic_lower_bounds_use_fixed_arb_precis
     assert intrinsic.proven_lower is not None
     assert compatibility.converged is True
     assert intrinsic.converged is True
-    assert compatibility.visited_nodes > 0
-    assert intrinsic.visited_nodes > 0
+    assert compatibility.visited_nodes == 0
+    assert intrinsic.visited_nodes == 0
     expected_compatibility = 0.6 * (-(1 / 6) * math.log(1 / 6) - (5 / 6) * math.log(5 / 6))
     assert compatibility.proven_lower <= expected_compatibility
     assert math.isclose(compatibility.proven_lower, expected_compatibility)
@@ -68,12 +68,13 @@ def test_zero_terminal_mass_uses_the_continuous_intrinsic_boundary() -> None:
     assert result.zero_resolved_mass_plausible is False
 
 
-def test_compatibility_node_cap_returns_a_conservative_lower_enclosure() -> None:
+def test_compatibility_point_envelope_is_resolved_without_branching() -> None:
     configuration = load_configuration()
     numerics = configuration.numerics.model_copy(update={"outer_max_visited_nodes": 1})
     result = certified_compatibility_lower_bound(CompatibilityInput(point_envelope(), 1, numerics))
     expected = 0.6 * (-(1 / 6) * math.log(1 / 6) - (5 / 6) * math.log(5 / 6))
 
     assert result.proven_lower is not None
-    assert result.converged is False
-    assert result.proven_lower <= expected
+    assert result.converged is True
+    assert result.visited_nodes == 0
+    assert math.isclose(result.proven_lower, expected)

@@ -4,11 +4,11 @@ import pytest
 
 import trajcert.infrastructure.environment as environment
 from trajcert.infrastructure.environment import (
+    ImplementationComponentDigestInput,
     authoritative_container_image_digest,
     git_provenance,
     implementation_component_digest,
     runtime_environment_manifest,
-    scientific_dependency_digest,
 )
 
 
@@ -20,26 +20,22 @@ def test_implementation_component_digest_uses_sorted_registered_source_serializa
     first.write_text("first", encoding="utf-8")
     second.write_text("second", encoding="utf-8")
 
-    forward = implementation_component_digest(tmp_path, (Path("first.py"), Path("second.py")))
-    reverse = implementation_component_digest(tmp_path, (Path("second.py"), Path("first.py")))
+    forward = implementation_component_digest(
+        ImplementationComponentDigestInput(tmp_path, (Path("first.py"), Path("second.py")))
+    )
+    reverse = implementation_component_digest(
+        ImplementationComponentDigestInput(tmp_path, (Path("second.py"), Path("first.py")))
+    )
 
     assert forward == reverse
     second.write_text("changed", encoding="utf-8")
     assert forward != implementation_component_digest(
-        tmp_path, (Path("first.py"), Path("second.py"))
+        ImplementationComponentDigestInput(tmp_path, (Path("first.py"), Path("second.py")))
     )
     with pytest.raises(ValueError, match="unique"):
-        implementation_component_digest(tmp_path, (Path("first.py"), Path("first.py")))
-
-
-def test_scientific_dependency_digest_changes_only_for_selected_material_inputs() -> None:
-    baseline = scientific_dependency_digest(("§3.6", "§3.10"), (b"rho=0.05",))
-
-    assert baseline == scientific_dependency_digest(("§3.6", "§3.10"), (b"rho=0.05",))
-    assert baseline != scientific_dependency_digest(("§3.6", "§3.10"), (b"rho=0.10",))
-    assert baseline != scientific_dependency_digest(("§3.6", "§3.11"), (b"rho=0.05",))
-    with pytest.raises(ValueError, match="at least one"):
-        scientific_dependency_digest((), ())
+        implementation_component_digest(
+            ImplementationComponentDigestInput(tmp_path, (Path("first.py"), Path("first.py")))
+        )
 
 
 def test_git_provenance_requires_clean_repository(monkeypatch: pytest.MonkeyPatch) -> None:

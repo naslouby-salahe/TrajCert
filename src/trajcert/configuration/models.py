@@ -30,6 +30,36 @@ class MinimumEvidenceConfiguration(FrozenConfiguration):
     resolved_events: int = Field(gt=0)
 
 
+class AnytimeHandCaseConfiguration(FrozenConfiguration):
+    timing_and_terminal_harmful_late_law: str = Field(min_length=1)
+    timing_only_harmful_late_law: str = Field(min_length=1)
+    intrinsic_safety_impossibility_law: str = Field(min_length=1)
+    insufficient_matured_events: int = Field(gt=0)
+    insufficient_resolved_events: int = Field(gt=0)
+    insufficient_unresolved_events: int = Field(gt=0)
+    singleton_information_margin: float = Field(gt=0.0)
+    certified_risk_margin: float = Field(gt=0.0)
+    intrinsic_risk_margin: float = Field(gt=0.0)
+    simplex_terminal_mass: float = Field(gt=0.0, lt=1.0)
+    simplex_harmful_mass: float = Field(gt=0.0, lt=1.0)
+    simplex_correct_mass: float = Field(gt=0.0, lt=1.0)
+    simplex_hidden_harmful_mass: float = Field(gt=0.0, lt=1.0)
+    simplex_risk_budget: float = Field(gt=0.0, lt=1.0)
+    optimizer_sample_size: int = Field(gt=0)
+    optimizer_node_cap: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_simplex_fixture(self) -> AnytimeHandCaseConfiguration:
+        if (
+            self.simplex_terminal_mass + self.simplex_harmful_mass + self.simplex_correct_mass
+            != 1.0
+        ):
+            raise ValueError("simplex hand-case masses must sum to one")
+        if self.simplex_hidden_harmful_mass > self.simplex_terminal_mass:
+            raise ValueError("simplex hidden harmful mass must lie in terminal mass")
+        return self
+
+
 class SyntheticLawConfiguration(FrozenConfiguration):
     name: str
     theta: float = Field(gt=0.0, lt=1.0)
@@ -364,6 +394,7 @@ class TrajCertConfiguration(FrozenConfiguration):
     budgets: BudgetConfiguration
     confidence: ConfidenceConfiguration
     minimum_evidence: MinimumEvidenceConfiguration
+    anytime_hand_cases: AnytimeHandCaseConfiguration
     synthetic_data: SyntheticDataConfiguration
     partitions: PartitionsConfiguration
     sensitivity: SensitivityConfiguration
@@ -394,4 +425,22 @@ class TrajCertConfiguration(FrozenConfiguration):
             raise ValueError("finest partition must match configured finest resolved bands")
         if self.minimum_evidence.resolved_events > self.minimum_evidence.matured_events:
             raise ValueError("resolved evidence cannot exceed matured evidence")
+        hand_cases = self.anytime_hand_cases
+        if hand_cases.insufficient_matured_events >= self.minimum_evidence.matured_events:
+            raise ValueError("insufficient-matured hand case must fail the matured evidence gate")
+        if hand_cases.insufficient_resolved_events >= self.minimum_evidence.resolved_events:
+            raise ValueError("insufficient-resolved hand case must fail the resolved evidence gate")
+        if (
+            self.minimum_evidence.matured_events - hand_cases.insufficient_resolved_events
+            != hand_cases.insufficient_unresolved_events
+        ):
+            raise ValueError("insufficient-resolved hand case counts must sum to matured evidence")
+        configured_laws = {law.name for law in self.synthetic_data.laws}
+        hand_case_laws = {
+            hand_cases.timing_and_terminal_harmful_late_law,
+            hand_cases.timing_only_harmful_late_law,
+            hand_cases.intrinsic_safety_impossibility_law,
+        }
+        if not hand_case_laws.issubset(configured_laws):
+            raise ValueError("anytime hand cases must reference configured synthetic laws")
         return self

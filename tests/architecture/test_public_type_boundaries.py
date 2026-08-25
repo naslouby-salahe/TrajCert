@@ -30,5 +30,6 @@ def test_domain_models_are_immutable() -> None:
             or any(
                 isinstance(base, ast.Name) and base.id == "BaseModel" for base in class_node.bases
             )
+            or any(isinstance(base, ast.Name) and base.id == "StrEnum" for base in class_node.bases)
             for class_node in classes
         )

@@ -86,6 +86,8 @@ def certified_outer_projection(input_value: ProjectionInput) -> CertifiedProject
         initial_box = _intersect_terminal_constraints(unbounded_initial_box, input_value.envelope)
         if initial_box is None:
             return _fallback_result(input_value, 0, 0, None)
+        if _is_singleton_box(initial_box, input_value.envelope):
+            return _singleton_projection_result(initial_box, input_value)
         queue: list[tuple[float, int, _ProjectionBox]] = []
         counter = 0
         heapq.heappush(queue, (-_objective_upper(initial_box), counter, initial_box))
@@ -185,6 +187,89 @@ def _fallback_result(
     )
 
 
+def _is_singleton_box(box: _ProjectionBox, envelope: ConservativeSummaryEnvelope) -> bool:
+    return (
+        box.harmful.width == 0
+        and box.correct.width == 0
+        and envelope.terminal_lower == envelope.terminal_upper
+        and envelope.timing_entropy_lower == envelope.timing_entropy_upper
+    )
+
+
+def _singleton_projection_result(
+    box: _ProjectionBox, input_value: ProjectionInput
+) -> CertifiedProjectionResult:
+    harmful = box.harmful.lower
+    correct = box.correct.lower
+    terminal = input_value.envelope.terminal_upper
+    resolved = harmful + correct
+    lower_hidden = 0 if resolved == 0 else harmful * terminal / resolved
+    upper_hidden = min(box.hidden.upper, terminal)
+    if lower_hidden > upper_hidden or (
+        _point_slack_upper(
+            harmful,
+            correct,
+            input_value.envelope.timing_entropy_upper,
+            lower_hidden,
+        )
+        > input_value.information_budget
+    ):
+        return _fallback_result(input_value, 0, 0, None)
+    if (
+        _point_slack_upper(
+            harmful,
+            correct,
+            input_value.envelope.timing_entropy_upper,
+            upper_hidden,
+        )
+        <= input_value.information_budget
+    ):
+        risk = harmful + upper_hidden
+        return CertifiedProjectionResult(
+            input_value.envelope,
+            input_value.numerics.outer_minimum_arbitrary_precision_bits,
+            1,
+            0,
+            risk,
+            risk,
+            0,
+            ProjectionTermination.CERTIFIED_GAP,
+        )
+    feasible_hidden = lower_hidden
+    infeasible_hidden = upper_hidden
+    iterations = 0
+    while (
+        infeasible_hidden - feasible_hidden
+        > input_value.numerics.population_root_absolute_tolerance
+    ):
+        midpoint = (feasible_hidden + infeasible_hidden) / 2
+        if (
+            _point_slack_upper(
+                harmful,
+                correct,
+                input_value.envelope.timing_entropy_upper,
+                midpoint,
+            )
+            <= input_value.information_budget
+        ):
+            feasible_hidden = midpoint
+        else:
+            infeasible_hidden = midpoint
+        iterations += 1
+    feasible_risk = harmful + feasible_hidden
+    upper_risk = harmful + infeasible_hidden
+    return CertifiedProjectionResult(
+        input_value.envelope,
+        input_value.numerics.outer_minimum_arbitrary_precision_bits,
+        iterations,
+        1,
+        feasible_risk,
+        upper_risk,
+        upper_risk - feasible_risk,
+        ProjectionTermination.CERTIFIED_GAP,
+    )
+
+
 def _intersect_terminal_constraints(
     box: _ProjectionBox, envelope: ConservativeSummaryEnvelope
 ) -> _ProjectionBox | None:
@@ -193,19 +278,37 @@ def _intersect_terminal_constraints(
         terminal.upper < envelope.terminal_lower
         or terminal.lower > envelope.terminal_upper
         or box.hidden.lower > terminal.upper
+        or box.hidden.lower > envelope.terminal_upper
     ):
         return None
     return _ProjectionBox(
         box.harmful,
         box.correct,
-        ClosedInterval(box.hidden.lower, min(box.hidden.upper, terminal.upper)),
+        ClosedInterval(
+            box.hidden.lower,
+            min(box.hidden.upper, terminal.upper, envelope.terminal_upper),
+        ),
     )
 
 
 def _terminal_interval(box: _ProjectionBox) -> ClosedInterval:
+    lower_candidate = 1 - box.harmful.upper - box.correct.upper
+    upper_candidate = 1 - box.harmful.lower - box.correct.lower
+    lower_rounding = (
+        math.ulp(1)
+        + math.ulp(box.harmful.upper)
+        + math.ulp(box.correct.upper)
+        + math.ulp(lower_candidate)
+    )
+    upper_rounding = (
+        math.ulp(1)
+        + math.ulp(box.harmful.lower)
+        + math.ulp(box.correct.lower)
+        + math.ulp(upper_candidate)
+    )
     return ClosedInterval(
-        max(0, 1 - box.harmful.upper - box.correct.upper),
-        min(1, 1 - box.harmful.lower - box.correct.lower),
+        max(0, lower_candidate - lower_rounding),
+        min(1, upper_candidate + upper_rounding),
     )
 
 

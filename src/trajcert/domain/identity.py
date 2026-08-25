@@ -47,7 +47,7 @@ class ScientificCellIdentity(BaseModel):
 
     @field_validator("rho", "beta", "delta", "gamma", "pattern_mixture_c")
     @classmethod
-    def validate_finite_scientific_coordinate(cls, value: float | None) -> float | None:
+    def _validate_finite_scientific_coordinate(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("scientific identity coordinates must be finite")
         return value

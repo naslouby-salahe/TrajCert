@@ -1,4 +1,9 @@
-from trajcert.cli.commands.smoke import SMOKE_FIXTURES
+from trajcert.cli.commands.smoke import (
+    SMOKE_FIXTURES,
+    OverwriteRequested,
+    SmokeCommandInput,
+    execute,
+)
 
 
 def test_exact_deterministic_smoke_fixture_contract() -> None:
@@ -10,3 +15,7 @@ def test_exact_deterministic_smoke_fixture_contract() -> None:
     assert fixtures["low_dimensional_outer_optimizer"].law == (
         "Timing and terminal: harmful outcomes resolve late"
     )
+
+
+def test_smoke_command_exercises_population_validation_path() -> None:
+    assert execute(SmokeCommandInput(OverwriteRequested(False))) == 0

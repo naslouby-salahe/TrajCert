@@ -20,7 +20,9 @@ from trajcert.domain.records.results import (
 from trajcert.domain.seeds import (
     ComparisonNamespaceInput,
     SeedDerivationInput,
+    SeedIndex,
     SeedNamespaceRole,
+    SemanticComparisonKey,
     comparison_namespace,
     derive_seed,
 )
@@ -298,20 +300,22 @@ def paired_practical_inference(input_value: PairedInferenceInput) -> PairedInfer
         SeedDerivationInput(
             comparison_namespace(
                 ComparisonNamespaceInput(
-                    SeedNamespaceRole.BOOTSTRAP, input_value.semantic_comparison_key
+                    SeedNamespaceRole.BOOTSTRAP,
+                    SemanticComparisonKey(input_value.semantic_comparison_key),
                 )
             ),
-            0,
+            SeedIndex(0),
         )
     ).generator_value
     permutation_seed = derive_seed(
         SeedDerivationInput(
             comparison_namespace(
                 ComparisonNamespaceInput(
-                    SeedNamespaceRole.PERMUTATION, input_value.semantic_comparison_key
+                    SeedNamespaceRole.PERMUTATION,
+                    SemanticComparisonKey(input_value.semantic_comparison_key),
                 )
             ),
-            0,
+            SeedIndex(0),
         )
     ).generator_value
     bootstrap_means = _bootstrap_means(

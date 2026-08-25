@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from trajcert.domain.enums import ArtifactValidationStatus
-from trajcert.domain.records.artifacts import Digest
+from trajcert.domain.records.artifacts import DescriptiveKey, Digest
+from trajcert.domain.seeds import SeedIndex, SeedIndexRange
 
 ARTIFACT_HANDLING_SEQUENCE = (
     "validate existing artifacts",
@@ -105,6 +106,14 @@ class ArtifactReuseDecision:
 
 
 @dataclass(frozen=True, slots=True)
+class ArtifactReuseDecisionInput:
+    status: ArtifactValidationStatus
+    current_dependency_fingerprint: Digest
+    candidate_dependency_fingerprint: Digest | None
+    scientific_content_changed: bool
+
+
+@dataclass(frozen=True, slots=True)
 class ActiveArtifact:
     artifact_key: str
     status: ArtifactValidationStatus
@@ -117,6 +126,15 @@ class ActiveCellReuseDecision:
     reusable: bool
     roots_to_recompute: tuple[str, ...]
     stale_descendants_to_remove: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ActiveCellReuseDecisionInput:
+    required_artifacts: tuple[ActiveArtifact, ...]
+    expected_dependency_fingerprints: Mapping[str, Digest]
+    completion_marker: ActiveArtifact | None
+    overwrite_roots: tuple[str, ...]
+    replacement_content_digests: Mapping[str, Digest] | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,33 +172,29 @@ def stochastic_seed_accounting(
     )
 
 
-def artifact_reuse_decision(
-    status: ArtifactValidationStatus,
-    current_dependency_fingerprint: str,
-    candidate_dependency_fingerprint: str | None,
-    scientific_content_changed: bool,
-) -> ArtifactReuseDecision:
+def artifact_reuse_decision(input_value: ArtifactReuseDecisionInput) -> ArtifactReuseDecision:
+    status = input_value.status
     if status is not ArtifactValidationStatus.VALID:
         return ArtifactReuseDecision(status, False, status is ArtifactValidationStatus.STALE)
-    if candidate_dependency_fingerprint != current_dependency_fingerprint:
+    if input_value.candidate_dependency_fingerprint != input_value.current_dependency_fingerprint:
         return ArtifactReuseDecision(ArtifactValidationStatus.INCOMPATIBLE, False, True)
-    return ArtifactReuseDecision(status, True, scientific_content_changed)
+    return ArtifactReuseDecision(status, True, input_value.scientific_content_changed)
 
 
 def active_cell_reuse_decision(
-    required_artifacts: tuple[ActiveArtifact, ...],
-    expected_dependency_fingerprints: Mapping[str, str],
-    completion_marker: ActiveArtifact | None,
-    overwrite_roots: tuple[str, ...] = (),
-    replacement_content_digests: Mapping[str, str] | None = None,
+    input_value: ActiveCellReuseDecisionInput,
 ) -> ActiveCellReuseDecision:
-    replacement_digests: Mapping[str, str] = (
-        {} if replacement_content_digests is None else replacement_content_digests
+    replacement_digests: Mapping[str, Digest] = (
+        {}
+        if input_value.replacement_content_digests is None
+        else input_value.replacement_content_digests
     )
-    roots = set(overwrite_roots)
+    roots = set(input_value.overwrite_roots)
     stale_descendants: set[str] = set()
-    for artifact in required_artifacts:
-        expected_fingerprint = expected_dependency_fingerprints.get(artifact.artifact_key)
+    for artifact in input_value.required_artifacts:
+        expected_fingerprint = input_value.expected_dependency_fingerprints.get(
+            artifact.artifact_key
+        )
         if artifact.status is not ArtifactValidationStatus.VALID or (
             expected_fingerprint != artifact.dependency_fingerprint
         ):
@@ -192,10 +206,12 @@ def active_cell_reuse_decision(
         ):
             stale_descendants.add(artifact.artifact_key)
     complete = (
-        completion_marker is not None
-        and completion_marker.status is ArtifactValidationStatus.VALID
-        and completion_marker.dependency_fingerprint
-        == expected_dependency_fingerprints.get(completion_marker.artifact_key)
+        input_value.completion_marker is not None
+        and input_value.completion_marker.status is ArtifactValidationStatus.VALID
+        and input_value.completion_marker.dependency_fingerprint
+        == input_value.expected_dependency_fingerprints.get(
+            input_value.completion_marker.artifact_key
+        )
     )
     return ActiveCellReuseDecision(
         complete and not roots and not stale_descendants,
@@ -238,15 +254,20 @@ class CheckpointRecoveryRequest(BaseModel):
     input_artifact_digests: tuple[Digest, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class CheckpointSelectionInput:
+    request: CheckpointRecoveryRequest
+    checkpoints: tuple[CheckpointRecord, ...]
+    result_payloads: Mapping[DescriptiveKey, bytes]
+
+
 def nearest_valid_checkpoint(
-    request: CheckpointRecoveryRequest,
-    checkpoints: tuple[CheckpointRecord, ...],
-    result_payloads: Mapping[str, bytes],
+    input_value: CheckpointSelectionInput,
 ) -> CheckpointRecord | None:
     candidates = tuple(
         checkpoint
-        for checkpoint in checkpoints
-        if _checkpoint_is_valid(request, checkpoint, result_payloads)
+        for checkpoint in input_value.checkpoints
+        if _checkpoint_is_valid(input_value.request, checkpoint, input_value.result_payloads)
     )
     if not candidates:
         return None
@@ -270,43 +291,68 @@ def _checkpoint_is_valid(
     )
 
 
-def missing_seed_ranges(
-    seed_index_start: int,
-    seed_index_stop_exclusive: int,
-    completed_seed_indices: tuple[int, ...],
-) -> tuple[tuple[int, int], ...]:
-    if seed_index_start < 0 or seed_index_stop_exclusive < seed_index_start:
-        raise ValueError("declared seed range is invalid")
-    completed = set(completed_seed_indices)
-    if any(index < seed_index_start or index >= seed_index_stop_exclusive for index in completed):
+@dataclass(frozen=True, slots=True)
+class MissingSeedRangesInput:
+    declared_range: SeedIndexRange
+    completed_seed_indices: tuple[SeedIndex, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CheckpointBatchSize:
+    value: int
+
+    def __post_init__(self) -> None:
+        if self.value < 1:
+            raise ValueError("checkpoint batch size must be positive")
+
+
+@dataclass(frozen=True, slots=True)
+class CheckpointBatchCountInput:
+    declared_range: SeedIndexRange
+    batch_size: CheckpointBatchSize
+
+
+@dataclass(frozen=True, slots=True)
+class CheckpointBatchCount:
+    value: int
+
+
+def missing_seed_ranges(input_value: MissingSeedRangesInput) -> tuple[SeedIndexRange, ...]:
+    completed = {index.value for index in input_value.completed_seed_indices}
+    if any(
+        index < input_value.declared_range.start.value
+        or index >= input_value.declared_range.stop_exclusive.value
+        for index in completed
+    ):
         raise ValueError("completed seed index is outside the declared range")
     missing = tuple(
         index
-        for index in range(seed_index_start, seed_index_stop_exclusive)
+        for index in range(
+            input_value.declared_range.start.value,
+            input_value.declared_range.stop_exclusive.value,
+        )
         if index not in completed
     )
     if not missing:
         return ()
-    ranges: list[tuple[int, int]] = []
+    ranges: list[SeedIndexRange] = []
     range_start = missing[0]
     previous = missing[0]
     for index in missing[1:]:
         if index != previous + 1:
-            ranges.append((range_start, previous + 1))
+            ranges.append(SeedIndexRange(SeedIndex(range_start), SeedIndex(previous + 1)))
             range_start = index
         previous = index
-    ranges.append((range_start, previous + 1))
+    ranges.append(SeedIndexRange(SeedIndex(range_start), SeedIndex(previous + 1)))
     return tuple(ranges)
 
 
-def checkpoint_batch_count(
-    seed_index_start: int,
-    seed_index_stop_exclusive: int,
-    checkpoint_batch_size: int,
-) -> int:
-    if seed_index_start < 0 or seed_index_stop_exclusive <= seed_index_start:
+def checkpoint_batch_count(input_value: CheckpointBatchCountInput) -> CheckpointBatchCount:
+    seed_count = (
+        input_value.declared_range.stop_exclusive.value - input_value.declared_range.start.value
+    )
+    if seed_count < 1:
         raise ValueError("declared seed interval is invalid")
-    if checkpoint_batch_size < 1:
-        raise ValueError("checkpoint batch size must be positive")
-    seed_count = seed_index_stop_exclusive - seed_index_start
-    return (seed_count + checkpoint_batch_size - 1) // checkpoint_batch_size
+    return CheckpointBatchCount(
+        (seed_count + input_value.batch_size.value - 1) // input_value.batch_size.value
+    )

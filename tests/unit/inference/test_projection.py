@@ -17,6 +17,12 @@ def valid_envelope() -> ConservativeSummaryEnvelope:
     )
 
 
+def node_budget_envelope() -> ConservativeSummaryEnvelope:
+    return ConservativeSummaryEnvelope(
+        SummaryEnvelopeState.VALID, 0.1, 0.2, 0.5, 0.6, 0.2, 0.4, 0, 1
+    )
+
+
 def test_information_slack_uses_the_roadmap_entropy_identity() -> None:
     input_value = InformationSlackInput(0.1, 0.5, 0, 0.2)
     value = information_slack(input_value)
@@ -70,7 +76,7 @@ def test_node_budget_exhaustion_never_uses_the_feasible_incumbent_as_a_certified
     configuration = load_configuration()
     numerics = configuration.numerics.model_copy(update={"outer_max_visited_nodes": 1})
 
-    result = certified_outer_projection(ProjectionInput(valid_envelope(), 1, numerics))
+    result = certified_outer_projection(ProjectionInput(node_budget_envelope(), 1, numerics))
 
     assert result.termination_reason is ProjectionTermination.NODE_CAP
     assert result.feasible_incumbent is not None
@@ -83,8 +89,17 @@ def test_initial_hidden_coordinate_is_intersected_with_the_terminal_simplex_cons
 
     result = certified_outer_projection(ProjectionInput(valid_envelope(), 1, numerics))
 
-    assert result.termination_reason is ProjectionTermination.NODE_CAP
+    assert result.termination_reason is ProjectionTermination.CERTIFIED_GAP
     assert result.proven_upper == 0.5
+
+
+def test_singleton_projection_uses_population_root_tolerance_for_its_certified_gap() -> None:
+    numerics = load_configuration().numerics
+
+    result = certified_outer_projection(ProjectionInput(valid_envelope(), 0.3, numerics))
+
+    assert result.final_gap is not None
+    assert result.final_gap <= numerics.population_root_absolute_tolerance
 
 
 def test_zero_terminal_mass_uses_the_exact_continuous_entropy_boundary() -> None:

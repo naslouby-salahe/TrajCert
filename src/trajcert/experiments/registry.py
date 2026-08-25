@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import pairwise, product
 
+from trajcert.configuration.models import TrajCertConfiguration
 from trajcert.domain.enums import EvidenceClass, ExperimentName
-from trajcert.domain.serialization import canonical_json_bytes
+from trajcert.domain.serialization import JSONValue, canonical_json_bytes
+from trajcert.experiments.definitions.utility_analysis import population_utility_rho_grid
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,7 +32,6 @@ class RegisteredExperiment:
 
 @dataclass(frozen=True, slots=True)
 class PlannedExperimentCell:
-    registry_index: int
     experiment: RegisteredExperiment
     semantic_coordinates: str
     semantic_cell_key: str
@@ -291,17 +293,17 @@ def validate_experiment_registry(
 
 def expand_experiment_registry(
     experiments: tuple[RegisteredExperiment, ...],
+    configuration: TrajCertConfiguration,
 ) -> tuple[PlannedExperimentCell, ...]:
     validated = validate_experiment_registry(experiments)
     cells = tuple(
         PlannedExperimentCell(
-            registry_index,
             experiment,
-            _semantic_coordinates(registry_index, cell_index),
-            f"{experiment.name}:{_semantic_coordinates(registry_index, cell_index)}",
+            semantic_coordinates,
+            f"{experiment.name}:{semantic_coordinates}",
         )
-        for registry_index, experiment in enumerate(validated)
-        for cell_index in range(experiment.expected_semantic_cell_count)
+        for experiment in validated
+        for semantic_coordinates in _expand_experiment_coordinates(experiment, configuration)
     )
     if len(cells) != 1423:
         raise ValueError("authoritative experiment expansion must contain exactly 1423 cells")
@@ -310,7 +312,209 @@ def expand_experiment_registry(
     return cells
 
 
-def _semantic_coordinates(registry_index: int, cell_index: int) -> str:
-    return canonical_json_bytes({"registry_index": registry_index, "row_index": cell_index}).decode(
-        "utf-8"
+def _expand_experiment_coordinates(
+    experiment: RegisteredExperiment,
+    configuration: TrajCertConfiguration,
+) -> tuple[str, ...]:
+    laws = tuple(law.name for law in configuration.synthetic_data.laws)
+    partitions = tuple(partition.name for partition in configuration.partitions.primary)
+    name = experiment.name
+    if name is ExperimentName("Scientific and Data Inventory"):
+        return _coordinates(("gate", "protocol_inventory"))
+    if name is ExperimentName("Legacy Partition Incoherence Check"):
+        return _coordinate_product(
+            ("gamma", configuration.legacy_partition_incoherence.gamma_values),
+            ("q", configuration.legacy_partition_incoherence.q_values),
+        )
+    if name in {
+        ExperimentName("Path Information Decomposition"),
+        ExperimentName("Information Profile Convexity"),
+        ExperimentName("Minimum Compatibility Identity"),
+    }:
+        return _coordinate_product(("law", laws), ("partition", partitions))
+    if name is ExperimentName("Sharp-Set Constructive Identity"):
+        return _coordinate_product(
+            ("law", laws),
+            ("partition", partitions),
+            ("rho_offset", configuration.sensitivity.theorem_rho_offsets.sharp_set),
+        )
+    if name is ExperimentName("Refinement Dominance Identity"):
+        return _adjacent_partition_coordinates(laws, partitions)
+    if name in {
+        ExperimentName("Strict Timing-Gain Identity"),
+        ExperimentName("Strict Timing Gain"),
+    }:
+        return _strict_timing_coordinates(configuration)
+    if name is ExperimentName("Safety-Boundary Identity"):
+        return _coordinate_product(
+            ("law", laws), ("beta", configuration.sensitivity.primary_beta_grid)
+        )
+    if name is ExperimentName("Endpoint Special-Case Identity"):
+        return _coordinate_product(("law", laws))
+    if name is ExperimentName("Anytime Projection Proof Check"):
+        return _coordinates(("check", "projection_proof"))
+    if name is ExperimentName("Population Complexity Proof Check"):
+        return _coordinates(("check", "operation_count"))
+    if name is ExperimentName("Production Solver vs Independent Oracle"):
+        return _coordinate_product(
+            ("law", laws),
+            ("partition", partitions),
+            ("rho_offset", configuration.sensitivity.theorem_rho_offsets.oracle_validation),
+        )
+    if name in {
+        ExperimentName("Callback-Model Reduction Falsification"),
+        ExperimentName("Generic Information-Optimization Reduction"),
+    }:
+        return _coordinate_product(("law", laws), ("partition", (partitions[0],)))
+    if name is ExperimentName("Partition Coherence"):
+        return _adjacent_partition_coordinates(
+            configuration.synthetic_data.utility_and_coherence_laws,
+            partitions,
+            configuration.sensitivity.theorem_rho_offsets.refinement_above_fine_tau,
+        )
+    if name is ExperimentName("Same Endpoint, Different Timing"):
+        return _coordinate_product(
+            ("partition", partitions),
+            ("rho", configuration.sensitivity.same_endpoint_rho_grid),
+        )
+    if name is ExperimentName("Compatibility Floor Behavior"):
+        return _coordinate_product(("law", laws), ("partition", (partitions[0], partitions[-1])))
+    if name is ExperimentName("Sharpness Against Generic Oracle"):
+        return _coordinate_product(
+            ("law", configuration.synthetic_data.sharpness_oracle_laws),
+            ("partition", partitions),
+        )
+    if name is ExperimentName("Safety and Intrinsic Impossibility"):
+        return _coordinate_product(
+            ("law", configuration.synthetic_data.safety_and_impossibility_laws),
+            ("beta", configuration.sensitivity.primary_beta_grid),
+        )
+    if name is ExperimentName("Anytime Implementation Hand Cases"):
+        return _coordinate_product(
+            ("hand_case", tuple(f"case_{number}" for number in range(1, 11))),
+            ("partition", partitions[:3]),
+        )
+    if name is ExperimentName("Anytime Coverage Stress"):
+        return tuple(
+            canonical_json_bytes(
+                {
+                    "law": case.law,
+                    "resolved_bands": case.resolved_bands,
+                    "stress_case": case.name,
+                    "beta_offset_above_true_upper_bound": case.beta_offset_above_true_upper_bound,
+                    "rho_offset_above_compatibility_floor": (
+                        case.rho_offset_above_compatibility_floor
+                    ),
+                    "rho_offset_above_true_information": case.rho_offset_above_true_information,
+                }
+            ).decode("utf-8")
+            for case in configuration.sequential_stress_cases
+        )
+    if name is ExperimentName("Population Sensitivity Utility"):
+        return _coordinate_product(
+            ("law", configuration.synthetic_data.utility_and_coherence_laws),
+            ("partition", partitions),
+            ("rho", population_utility_rho_grid(configuration).values),
+        )
+    if name is ExperimentName("Sequential Sensitivity Utility"):
+        return _coordinate_product(
+            ("law", configuration.synthetic_data.utility_and_coherence_laws),
+            ("rho", configuration.sequential_inference.sequential_utility.rho_grid),
+        )
+    if name is ExperimentName("Failure Boundary Atlas"):
+        return _failure_boundary_coordinates(configuration)
+    if name is ExperimentName("Computational Scaling"):
+        return _coordinate_product(
+            ("resolved_bands", configuration.partitions.computational_scaling_resolved_bands),
+        )
+    if name is ExperimentName("Statistical Synthesis"):
+        return _coordinates(("stage", "deterministic_synthesis"))
+    if not experiment.executable:
+        return ()
+    raise ValueError(f"no semantic coordinate expansion is defined for {name}")
+
+
+def _coordinates(*values: tuple[str, JSONValue]) -> tuple[str, ...]:
+    return (canonical_json_bytes(dict(values)).decode("utf-8"),)
+
+
+def _coordinate_product(
+    *dimensions: tuple[str, tuple[JSONValue, ...]],
+) -> tuple[str, ...]:
+    return tuple(
+        canonical_json_bytes(
+            dict(zip((name for name, _ in dimensions), values, strict=True))
+        ).decode("utf-8")
+        for values in product(*(values for _, values in dimensions))
     )
+
+
+def _adjacent_partition_coordinates(
+    laws: tuple[str, ...],
+    partitions: tuple[str, ...],
+    rho_offsets: tuple[float, ...] | None = None,
+) -> tuple[str, ...]:
+    if rho_offsets is None:
+        return tuple(
+            canonical_json_bytes(
+                {"law": law, "fine_partition": fine, "coarse_partition": coarse}
+            ).decode("utf-8")
+            for law in laws
+            for fine, coarse in pairwise(partitions)
+        )
+    return tuple(
+        canonical_json_bytes(
+            {
+                "law": law,
+                "fine_partition": fine,
+                "coarse_partition": coarse,
+                "rho_offset": rho_offset,
+            }
+        ).decode("utf-8")
+        for law in laws
+        for fine, coarse in pairwise(partitions)
+        for rho_offset in rho_offsets
+    )
+
+
+def _strict_timing_coordinates(configuration: TrajCertConfiguration) -> tuple[str, ...]:
+    cases = (
+        configuration.strict_timing_cases.zero_information_controls
+        + configuration.strict_timing_cases.positive_information_cases
+    )
+    offsets = configuration.sensitivity.theorem_rho_offsets.refinement_above_fine_tau
+    return tuple(
+        canonical_json_bytes(
+            {
+                "law": case.law,
+                "fine_partition": case.fine_partition,
+                "coarse_partition": case.coarse_partition,
+                "rho_offset": offset,
+            }
+        ).decode("utf-8")
+        for case in cases
+        for offset in offsets
+    )
+
+
+def _failure_boundary_coordinates(configuration: TrajCertConfiguration) -> tuple[str, ...]:
+    coordinates: list[str] = []
+    for axis in configuration.failure_boundary.axes:
+        values = next(
+            value_set
+            for value_set in (
+                axis.q1_equals_q0_values,
+                axis.d_values,
+                axis.theta_values,
+                axis.resolved_band_values,
+                axis.n_values,
+                axis.q1_q0_pairs,
+                axis.node_values,
+            )
+            if value_set is not None
+        )
+        coordinates.extend(
+            canonical_json_bytes({"axis": axis.name, "value": value}).decode("utf-8")
+            for value in values
+        )
+    return tuple(coordinates)

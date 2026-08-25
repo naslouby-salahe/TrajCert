@@ -73,7 +73,7 @@ class InventoryPrerequisites:
 
 
 class InventoryProvenance(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", revalidate_instances="always")
 
     configuration_snapshot_digest: Digest
     law_catalog_digest: Digest
@@ -101,7 +101,7 @@ class ScientificInventoryInput:
 
 
 class ScientificInventoryRecord(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", revalidate_instances="always")
 
     state: InventoryValidationState
     findings: tuple[InventoryFinding, ...]

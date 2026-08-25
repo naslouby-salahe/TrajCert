@@ -1,6 +1,6 @@
 import math
 
-from trajcert.data.partitions import ObservableLaw
+from trajcert.data.partitions import HiddenHarmfulMass, ObservableLaw
 from trajcert.math.information_profile import InformationProfile
 
 
@@ -13,10 +13,13 @@ def test_information_profile_and_compatibility_floor_identities() -> None:
     assert floor.latent_risk is not None
     assert floor.minimum_information_budget is not None
     assert timing_information is not None
-    assert math.isclose(timing_information, profile.value(floor.hidden_harmful_mass))
+    assert math.isclose(
+        timing_information,
+        profile.value(HiddenHarmfulMass(floor.hidden_harmful_mass)),
+    )
     assert math.isclose(floor.latent_risk, 0.5)
     assert math.isclose(floor.minimum_information_budget, timing_information)
-    assert profile.second_derivative(0.2) > 0.0
+    assert profile.second_derivative(HiddenHarmfulMass(0.2)) > 0.0
 
 
 def test_degenerate_compatibility_floor_is_explicit() -> None:

@@ -3,7 +3,13 @@ from pydantic import ValidationError
 
 from trajcert.domain.enums import PublicExecutionState, ScientificState
 from trajcert.domain.identity import LocalCertificateIdentity
-from trajcert.domain.operational import ExecutionOutcome, PendingAction, SemanticExecutionIdentity
+from trajcert.domain.operational import (
+    ExecutionOutcome,
+    PendingAction,
+    ReuseEligibility,
+    ReusePolicy,
+    SemanticExecutionIdentity,
+)
 
 
 def test_pending_action_retains_issuing_epoch_identity() -> None:
@@ -33,6 +39,15 @@ def test_semantic_execution_reuse_requires_matching_material_dependencies() -> N
     identical = SemanticExecutionIdentity("cell-1", "dependency-a")
     changed_dependency = SemanticExecutionIdentity("cell-1", "dependency-b")
 
-    assert completed.reusable_with(identical, overwrite=False)
-    assert not completed.reusable_with(changed_dependency, overwrite=False)
-    assert not completed.reusable_with(identical, overwrite=True)
+    assert (
+        completed.reuse_eligibility(identical, policy=ReusePolicy.REUSE_VALID)
+        is ReuseEligibility.REUSABLE
+    )
+    assert (
+        completed.reuse_eligibility(changed_dependency, policy=ReusePolicy.REUSE_VALID)
+        is ReuseEligibility.NOT_REUSABLE
+    )
+    assert (
+        completed.reuse_eligibility(identical, policy=ReusePolicy.OVERWRITE)
+        is ReuseEligibility.NOT_REUSABLE
+    )

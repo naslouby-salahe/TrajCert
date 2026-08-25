@@ -116,7 +116,7 @@ def legacy_band_evaluations(
 ) -> tuple[LegacyBandEvaluation, ...]:
     observable_law = input_value.observable_law
     hidden_harmful_mass = input_value.hidden_harmful_mass
-    if not observable_law.hidden_harmful_mass_is_valid(hidden_harmful_mass):
+    if not 0.0 <= hidden_harmful_mass <= observable_law.c:
         raise ValueError("hidden terminal harmful mass must lie in [0, c]")
     evaluations: list[LegacyBandEvaluation] = []
     for index, (harmful, correct) in enumerate(

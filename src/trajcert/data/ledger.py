@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from trajcert.data.integrity import LedgerIntegrityError
-from trajcert.data.partitions import AnalysisPartition
+from trajcert.data.partitions import AnalysisPartition, ResolutionAge
 from trajcert.domain.identity import Identifier, LocalCertificateIdentity
 
 
@@ -69,7 +69,7 @@ def mature_action(
     if action.adjudication.timestamp > action.maturity_timestamp:
         raise LedgerIntegrityError("finite adjudication occurs after terminal horizon")
     age = (action.adjudication.timestamp - action.issued_at).days
-    band = partition.band_for_age(age)
+    band = partition.band_for_age(ResolutionAge(age))
     if band is None:
         raise LedgerIntegrityError("finite adjudication has no partition band")
     return MaturedAction(action, MaturedCategory(band, action.adjudication.harmful))

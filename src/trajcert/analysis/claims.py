@@ -65,9 +65,14 @@ PROHIBITED_CLAIM_TERMS = frozenset(
 
 
 @dataclass(frozen=True, slots=True)
+class ClaimText:
+    value: str
+
+
+@dataclass(frozen=True, slots=True)
 class ClaimScopeGuard:
-    def validate(self, claim_text: str) -> None:
-        normalized = claim_text.casefold()
+    def validate(self, claim_text: ClaimText) -> None:
+        normalized = claim_text.value.casefold()
         violations = tuple(term for term in PROHIBITED_CLAIM_TERMS if term in normalized)
         if violations:
             raise ValueError(f"claim exceeds TrajCert scope: {', '.join(sorted(violations))}")

@@ -1,6 +1,12 @@
 from pathlib import Path
 
-from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw, synthetic_scaling_laws
+from trajcert.data.synthetic.laws import (
+    ResolutionSlope,
+    SyntheticLabel,
+    SyntheticScalingLawsInput,
+    SyntheticTrajectoryLaw,
+    synthetic_scaling_laws,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
@@ -13,17 +19,27 @@ def test_synthetic_law_exact_probability_contract_and_timing_direction() -> None
     late = SyntheticTrajectoryLaw("late", 0.2, 0.3, 0.1, 1.0, -1.0, 4, 12.0)
     early = SyntheticTrajectoryLaw("early", 0.2, 0.3, 0.1, -1.0, 1.0, 4, 12.0)
 
-    assert abs(sum(late.resolution_weights(late.lambda1)) - 1.0) < 1e-12
-    assert abs(sum(late.conditional_resolution_masses(True)) + late.q1 - 1.0) < 1e-12
-    assert abs(sum(late.conditional_resolution_masses(False)) + late.q0 - 1.0) < 1e-12
-    assert late.resolution_weights(late.lambda1)[-1] > late.resolution_weights(late.lambda1)[0]
-    assert early.resolution_weights(early.lambda1)[0] > early.resolution_weights(early.lambda1)[-1]
+    assert abs(sum(late.resolution_weights(ResolutionSlope(late.lambda1))) - 1.0) < 1e-12
+    assert (
+        abs(sum(late.conditional_resolution_masses(SyntheticLabel(True))) + late.q1 - 1.0) < 1e-12
+    )
+    assert (
+        abs(sum(late.conditional_resolution_masses(SyntheticLabel(False))) + late.q0 - 1.0) < 1e-12
+    )
+    assert (
+        late.resolution_weights(ResolutionSlope(late.lambda1))[-1]
+        > late.resolution_weights(ResolutionSlope(late.lambda1))[0]
+    )
+    assert (
+        early.resolution_weights(ResolutionSlope(early.lambda1))[0]
+        > early.resolution_weights(ResolutionSlope(early.lambda1))[-1]
+    )
     assert late.band_horizons() == (3.0, 6.0, 9.0, 12.0)
 
 
 def test_k_scaling_changes_only_resolution_and_keeps_terminal_horizon_fixed() -> None:
     law = SyntheticTrajectoryLaw("scaling", 0.2, 0.3, 0.1, 1.0, -1.0, 4, 12.0)
-    scaled = synthetic_scaling_laws(law, (2, 8))
+    scaled = synthetic_scaling_laws(SyntheticScalingLawsInput(law, (2, 8)))
 
     assert tuple(item.resolved_band_count for item in scaled) == (2, 8)
     assert all(item.terminal_horizon == law.terminal_horizon for item in scaled)

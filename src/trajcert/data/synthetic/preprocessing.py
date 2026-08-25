@@ -7,6 +7,17 @@ BALANCED_PREFIX_CONSTRUCTION_IDENTITY = "balanced-prefix-deficit-v1"
 
 
 @dataclass(frozen=True, slots=True)
+class BalancedPrefixInput:
+    probabilities: tuple[float, ...]
+    length: int
+
+
+@dataclass(frozen=True, slots=True)
+class BalancedPrefixCountsInput:
+    counts: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class BalancedPrefixConstruction:
     identity: str
     target_probabilities: tuple[float, ...]
@@ -31,18 +42,20 @@ class BalancedPrefixConstruction:
     @classmethod
     def from_probabilities(
         cls,
-        probabilities: tuple[float, ...],
-        length: int,
+        input_value: BalancedPrefixInput,
     ) -> BalancedPrefixConstruction:
         return cls(
             BALANCED_PREFIX_CONSTRUCTION_IDENTITY,
-            probabilities,
+            input_value.probabilities,
             None,
-            _balanced_prefix_sequence(probabilities, length),
+            _balanced_prefix_sequence(input_value.probabilities, input_value.length),
         )
 
     @classmethod
-    def from_terminal_counts(cls, counts: tuple[int, ...]) -> BalancedPrefixConstruction:
+    def from_terminal_counts(
+        cls, input_value: BalancedPrefixCountsInput
+    ) -> BalancedPrefixConstruction:
+        counts = input_value.counts
         if not counts or any(type(count) is not int or count < 0 for count in counts):
             raise ValueError("balanced-prefix counts must be nonempty nonnegative integers")
         total = sum(counts)
@@ -66,8 +79,8 @@ class BalancedPrefixConstruction:
         return construction
 
 
-def balanced_prefix(probabilities: tuple[float, ...], length: int) -> tuple[int, ...]:
-    return BalancedPrefixConstruction.from_probabilities(probabilities, length).sequence
+def balanced_prefix(input_value: BalancedPrefixInput) -> BalancedPrefixConstruction:
+    return BalancedPrefixConstruction.from_probabilities(input_value)
 
 
 def _balanced_prefix_sequence(probabilities: tuple[float, ...], length: int) -> tuple[int, ...]:
@@ -75,7 +88,13 @@ def _balanced_prefix_sequence(probabilities: tuple[float, ...], length: int) -> 
         raise ValueError("balanced-prefix length must be nonnegative")
     if not probabilities or any(not math.isfinite(value) or value < 0 for value in probabilities):
         raise ValueError("balanced-prefix probabilities must be finite nonnegative values")
-    if math.fsum(probabilities) != 1.0:
+    probability_total = math.fsum(probabilities)
+    if not math.isclose(
+        probability_total,
+        1.0,
+        rel_tol=0.0,
+        abs_tol=math.ulp(1.0) * len(probabilities),
+    ):
         raise ValueError("balanced-prefix probabilities must sum to one")
     counts = [0] * len(probabilities)
     sequence: list[int] = []
@@ -89,5 +108,7 @@ def _balanced_prefix_sequence(probabilities: tuple[float, ...], length: int) -> 
     return tuple(sequence)
 
 
-def balanced_prefix_from_counts(counts: tuple[int, ...]) -> tuple[int, ...]:
-    return BalancedPrefixConstruction.from_terminal_counts(counts).sequence
+def balanced_prefix_from_counts(
+    input_value: BalancedPrefixCountsInput,
+) -> BalancedPrefixConstruction:
+    return BalancedPrefixConstruction.from_terminal_counts(input_value)

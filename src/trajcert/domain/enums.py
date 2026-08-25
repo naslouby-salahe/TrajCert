@@ -212,7 +212,3 @@ class ArtifactValidationStatus(StrEnum):
 
 
 AUTHORITATIVE_EVIDENCE_CLASSES = frozenset(EvidenceClass) - {EvidenceClass.EXPLORATORY}
-
-
-def is_authoritative_evidence_class(evidence_class: EvidenceClass) -> bool:
-    return evidence_class in AUTHORITATIVE_EVIDENCE_CLASSES

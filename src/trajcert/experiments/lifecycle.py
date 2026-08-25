@@ -30,25 +30,30 @@ class FailureAssessment:
     internal_result_code: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class FailureAssessmentInput:
+    data_validation_failure: bool
+    technical_failure: bool
+    scientific_falsification: bool
+    scientific_null_boundary: bool
+    planned_nonapplicability: bool
+    insufficient_evidence: bool
+
+
 def assess_failure_precedence(
-    data_validation_failure: bool,
-    technical_failure: bool,
-    scientific_falsification: bool,
-    scientific_null_boundary: bool,
-    planned_nonapplicability: bool,
-    insufficient_evidence: bool,
+    failure_input: FailureAssessmentInput,
 ) -> FailureAssessment:
-    if data_validation_failure:
+    if failure_input.data_validation_failure:
         return FailureAssessment(failure_consequence(FailureKind.DATA_VALIDATION_FAILURE), None)
-    if technical_failure:
+    if failure_input.technical_failure:
         return FailureAssessment(
             failure_consequence(FailureKind.TECHNICAL_FAILURE), "TECHNICAL_FAIL"
         )
-    if planned_nonapplicability:
+    if failure_input.planned_nonapplicability:
         return FailureAssessment(failure_consequence(FailureKind.PLANNED_NONAPPLICABILITY), None)
-    if scientific_falsification:
+    if failure_input.scientific_falsification:
         return FailureAssessment(failure_consequence(FailureKind.SCIENTIFIC_FALSIFICATION), None)
-    if scientific_null_boundary or insufficient_evidence:
+    if failure_input.scientific_null_boundary or failure_input.insufficient_evidence:
         return FailureAssessment(failure_consequence(FailureKind.SCIENTIFIC_NULL_BOUNDARY), None)
     raise ValueError("failure assessment requires a classified outcome")
 

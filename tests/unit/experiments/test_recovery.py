@@ -4,12 +4,20 @@ import pytest
 from pydantic import ValidationError
 
 from trajcert.domain.enums import ArtifactValidationStatus
+from trajcert.domain.seeds import SeedIndex, SeedIndexRange
 from trajcert.experiments.recovery import (
     ARTIFACT_HANDLING_SEQUENCE,
     INVALIDATION_BOUNDARIES,
     ActiveArtifact,
+    ActiveCellReuseDecisionInput,
+    ArtifactReuseDecisionInput,
+    CheckpointBatchCount,
+    CheckpointBatchCountInput,
+    CheckpointBatchSize,
     CheckpointRecord,
     CheckpointRecoveryRequest,
+    CheckpointSelectionInput,
+    MissingSeedRangesInput,
     StochasticSeedAccountingInput,
     active_cell_reuse_decision,
     artifact_reuse_decision,
@@ -38,7 +46,15 @@ def test_checkpoint_records_preserve_lineage_without_signaling_cell_completion()
     )
 
     assert checkpoint.completed is True
-    assert missing_seed_ranges(0, 6, (0, 2, 3, 5)) == ((1, 2), (4, 5))
+    assert missing_seed_ranges(
+        MissingSeedRangesInput(
+            SeedIndexRange(SeedIndex(0), SeedIndex(6)),
+            (SeedIndex(0), SeedIndex(2), SeedIndex(3), SeedIndex(5)),
+        )
+    ) == (
+        SeedIndexRange(SeedIndex(1), SeedIndex(2)),
+        SeedIndexRange(SeedIndex(4), SeedIndex(5)),
+    )
     with pytest.raises(ValidationError, match="align"):
         CheckpointRecord.model_validate(checkpoint.model_dump() | {"input_artifact_digests": ()})
 
@@ -83,12 +99,16 @@ def test_recovery_selects_the_nearest_checkpoint_with_current_identity_and_check
     )
 
     assert (
-        nearest_valid_checkpoint(request, (valid, stale), {"valid": payload, "stale": payload})
+        nearest_valid_checkpoint(
+            CheckpointSelectionInput(request, (valid, stale), {"valid": payload, "stale": payload})
+        )
         == valid
     )
-    assert artifact_reuse_decision(ArtifactValidationStatus.VALID, digest, digest, False).reusable
     assert artifact_reuse_decision(
-        ArtifactValidationStatus.VALID, digest, digest, True
+        ArtifactReuseDecisionInput(ArtifactValidationStatus.VALID, digest, digest, False)
+    ).reusable
+    assert artifact_reuse_decision(
+        ArtifactReuseDecisionInput(ArtifactValidationStatus.VALID, digest, digest, True)
     ).invalidate_descendants
     assert ARTIFACT_HANDLING_SEQUENCE[-1] == "continue execution"
 
@@ -101,14 +121,22 @@ def test_active_cell_reuse_keeps_shared_artifacts_and_invalidates_only_changed_c
     completion = ActiveArtifact("complete", ArtifactValidationStatus.VALID, digest, digest)
 
     reuse = active_cell_reuse_decision(
-        (shared, root), {"shared": digest, "root": digest, "complete": digest}, completion
+        ActiveCellReuseDecisionInput(
+            (shared, root),
+            {"shared": digest, "root": digest, "complete": digest},
+            completion,
+            (),
+            None,
+        )
     )
     overwrite = active_cell_reuse_decision(
-        (shared, root),
-        {"shared": digest, "root": digest, "complete": digest},
-        completion,
-        overwrite_roots=("root",),
-        replacement_content_digests={"root": replacement},
+        ActiveCellReuseDecisionInput(
+            (shared, root),
+            {"shared": digest, "root": digest, "complete": digest},
+            completion,
+            ("root",),
+            {"root": replacement},
+        )
     )
 
     assert reuse.reusable
@@ -128,8 +156,16 @@ def test_selective_invalidation_boundaries_preserve_exact_recompute_scope() -> N
 
 
 def test_configured_checkpoint_intervals_produce_the_declared_batch_counts() -> None:
-    assert checkpoint_batch_count(0, 5000, 100) == 50
-    assert checkpoint_batch_count(0, 500, 50) == 10
+    assert checkpoint_batch_count(
+        CheckpointBatchCountInput(
+            SeedIndexRange(SeedIndex(0), SeedIndex(5000)), CheckpointBatchSize(100)
+        )
+    ) == CheckpointBatchCount(50)
+    assert checkpoint_batch_count(
+        CheckpointBatchCountInput(
+            SeedIndexRange(SeedIndex(0), SeedIndex(500)), CheckpointBatchSize(50)
+        )
+    ) == CheckpointBatchCount(10)
 
 
 def test_stochastic_seed_accounting_retains_failures_and_forbids_complete_case_substitution() -> (

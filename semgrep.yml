@@ -1,21 +1,43 @@
 rules:
-  - id: no-any-annotation
+  - id: no-typing-any
     languages: [python]
-    message: Public and domain boundaries must not use Any.
-    paths:
-      include:
-        - /src/trajcert/**
+    severity: ERROR
+    message: Public and domain code must use a concrete structured type instead of Any.
     patterns:
       - pattern-either:
-          - pattern: "$NAME: Any"
-          - pattern: "def $FUNCTION(..., $NAME: Any, ...): ..."
+          - pattern: "from typing import Any"
+          - pattern: "from typing_extensions import Any"
+          - pattern: "typing.Any"
+  - id: no-typing-object
+    languages: [python]
     severity: ERROR
+    message: Object is a generic typing escape hatch; model the domain value explicitly.
+    patterns:
+      - pattern-either:
+          - pattern: "from typing import object"
+          - pattern: "$VALUE: object"
+          - pattern: |
+              def $FUNCTION(... ) -> object:
+                ...
+  - id: no-silent-exception
+    languages: [python]
+    severity: ERROR
+    message: Exceptions must be handled explicitly; silent recovery hides invalid evidence.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              try:
+                ...
+              except $EXCEPTION:
+                pass
+          - pattern: |
+              try:
+                ...
+              except $EXCEPTION:
+                ...
+                continue
   - id: no-temporary-markers
     languages: [python]
-    message: Temporary implementation markers are prohibited.
-    paths:
-      include:
-        - /src/trajcert/**
-        - /tests/**
-    pattern-regex: "(?i)\\b(todo|fixme|hack|xxx)\\b"
     severity: ERROR
+    message: Temporary markers are forbidden in repository source and tests.
+    pattern-regex: '(TODO|FIXME|HACK|XXX)'

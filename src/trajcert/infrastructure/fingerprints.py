@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 
+from trajcert.domain.records.artifacts import Digest
 from trajcert.domain.records.execution import DependencyFingerprintInput, ProvenanceFingerprintInput
 from trajcert.infrastructure.provenance import (
     canonical_dependency_payload,
@@ -9,9 +10,9 @@ from trajcert.infrastructure.provenance import (
 )
 
 
-def provenance_fingerprint(value: ProvenanceFingerprintInput) -> str:
+def provenance_fingerprint(value: ProvenanceFingerprintInput) -> Digest:
     return hashlib.sha256(canonical_provenance_payload(value)).hexdigest()
 
 
-def dependency_fingerprint(value: DependencyFingerprintInput) -> str:
+def dependency_fingerprint(value: DependencyFingerprintInput) -> Digest:
     return hashlib.sha256(canonical_dependency_payload(value)).hexdigest()
