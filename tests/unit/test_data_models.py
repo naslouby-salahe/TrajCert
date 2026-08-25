@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from trajcert.data.laws import (
+    FullLawProbabilities,
     LawParameters,
     build_full_law,
     resolved_band_weights,
@@ -101,6 +102,31 @@ def test_partition_model_rejects_inconsistent_mapping() -> None:
 
 
 @pytest.mark.parametrize(
+    "payload",
+    [
+        {"finest_band_count": 4, "band_count": 3},
+        {"boundaries": (8.0,)},
+        {"coarsening_map_from_finest": (1, 1)},
+        {"boundaries": (8.0, 4.0)},
+        {"boundaries": (3.0, 7.0)},
+        {"coarsening_map_from_finest": (1, 1, 3, 3)},
+    ],
+)
+def test_partition_model_rejects_every_structural_invariant(payload: dict[str, object]) -> None:
+    valid: dict[str, object] = {
+        "name": "two bands",
+        "finest_band_count": 4,
+        "band_count": 2,
+        "terminal_horizon": 8.0,
+        "boundaries": (4.0, 8.0),
+        "coarsening_map_from_finest": (1, 1, 2, 2),
+    }
+    valid.update(payload)
+    with pytest.raises(InvalidPartitionError):
+        TrajectoryPartition.model_validate(valid)
+
+
+@pytest.mark.parametrize(
     ("values", "fine_bands", "coarse_bands", "expected"),
     [
         ([0.1, 0.2, 0.3, 0.4], 4, 2, [0.3, 0.7]),
@@ -113,6 +139,40 @@ def test_coarsen_mass_vector(
     fine = build_partition(4, fine_bands, 8.0)
     coarse = build_partition(4, coarse_bands, 8.0)
     assert np.allclose(coarsen_mass_vector(np.array(values), fine, coarse), expected)
+
+
+def test_partition_public_guards_reject_invalid_indices_and_coarsenings() -> None:
+    fine = build_partition(4, 4, 8.0)
+    coarse = build_partition(4, 2, 8.0)
+    unrelated = build_partition(6, 2, 8.0)
+    with pytest.raises(InvalidPartitionError):
+        fine.coarse_band_for_finest(0)
+    with pytest.raises(InvalidPartitionError):
+        partition_name(0)
+    with pytest.raises(InvalidPartitionError):
+        coarsen_mass_vector(np.array([0.1]), fine, coarse)
+    with pytest.raises(InvalidPartitionError):
+        coarsen_mass_vector(np.array([0.1, 0.2, 0.3, 0.4]), fine, unrelated)
+
+
+def test_summary_helpers_reject_mismatched_inputs() -> None:
+    partition = build_partition(2, 2, 1.0)
+    with pytest.raises(InvalidScientificDataError, match="vectors"):
+        summarize_observable_masses(partition, np.array([0.2]), np.array([0.8]), 0.0, 1e-12)
+    law = FullLawProbabilities(
+        harmful_resolved=np.array([0.2]),
+        correct_resolved=np.array([0.8]),
+        terminal_harmful=0.0,
+        terminal_correct=0.0,
+    )
+    with pytest.raises(InvalidScientificDataError, match="resolution"):
+        summarize_full_law(partition, law, 1e-12)
+    with pytest.raises(InvalidScientificDataError, match="count vectors"):
+        summarize_counts(
+            partition,
+            ObservableCounts(harmful_by_band=(1,), correct_by_band=(1,), unresolved=0),
+            1e-12,
+        )
 
 
 @pytest.mark.parametrize("slope", [-2.0, 0.0, 2.0])

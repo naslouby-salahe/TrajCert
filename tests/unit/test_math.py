@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # pytest's comparison helpers are intentionally dynamically typed.
-# pyright: reportUnknownMemberType=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false
+# pyright: reportUnknownMemberType=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportPrivateUsage=false
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +11,7 @@ from trajcert.config import TrajCertConfig
 from trajcert.data.partitions import build_partition
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 from trajcert.exceptions import InvalidProbabilityError, InvalidScientificDataError
+from trajcert.math import solver
 from trajcert.math.bounds import SharpRiskSet, sharp_risk_set, unresolved_as_harm_upper
 from trajcert.math.compatibility import assess_compatibility
 from trajcert.math.entropy import (
@@ -32,7 +33,7 @@ from trajcert.math.information import (
 )
 from trajcert.math.safety import assess_safety_geometry, safety_budget_cases
 from trajcert.math.solver import solve_hidden_mass_interval
-from trajcert.types import CompatibilityRegime, RootStatus, SafetyRegime
+from trajcert.types import CompatibilityRegime, RootBranch, RootStatus, SafetyRegime
 
 
 @pytest.fixture(autouse=True)
@@ -69,6 +70,16 @@ def test_weighted_entropy_allows_undefined_rate_for_zero_mass(mass) -> None:
 def test_weighted_entropy_requires_rate_for_positive_mass() -> None:
     with pytest.raises(InvalidProbabilityError):
         weighted_binary_entropy(0.1, None)
+
+
+def test_information_and_compatibility_guards_reject_invalid_inputs() -> None:
+    observed = summary([0.2], [0.4], 0.4)
+    with pytest.raises(InvalidScientificDataError, match="finite and positive"):
+        timing_gain(observed, observed, 0.0)
+    with pytest.raises(InvalidScientificDataError, match="0 < u < c"):
+        information_profile_derivative(observed, 0.0)
+    with pytest.raises(InvalidScientificDataError, match="finite and nonnegative"):
+        assess_compatibility(observed, -0.1)
 
 
 def test_information_profile_geometry_and_derivatives() -> None:
@@ -158,6 +169,26 @@ def test_solver_handles_all_non_singleton_branches(
         assert result.lower_root.status in (RootStatus.BISECTION, RootStatus.EXACT_BOUNDARY)
 
 
+def test_solver_bisects_interior_roots_and_rejects_invalid_tolerances() -> None:
+    observed = summary([0.2, 0.0], [0.0, 0.4], 0.4)
+    result = solve_hidden_mass_interval(observed, 0.45, 1e-8, 1e-7)
+    assert result.lower_root is not None and result.upper_root is not None
+    assert result.lower_root.status is RootStatus.BISECTION
+    assert result.upper_root.status is RootStatus.BISECTION
+    with pytest.raises(Exception, match="root_atol"):
+        solve_hidden_mass_interval(observed, 0.45, 0.0, 1e-7)
+
+
+@pytest.mark.parametrize(("width", "tolerance", "expected"), [(0.0, 0.1, 0), (0.1, 0.1, 2)])
+def test_solver_boundary_helper_values(width: float, tolerance: float, expected: int) -> None:
+    assert solver._iteration_cap(width, tolerance) == expected
+    solver._validate_final_signs(RootBranch.LOWER, 0.0, -1.0)
+    with pytest.raises(Exception, match="sign-valid"):
+        solver._validate_initial_signs(RootBranch.LOWER, 0.0, -1.0)
+    with pytest.raises(Exception, match="sign-valid"):
+        solver._validate_initial_signs(RootBranch.UPPER, 1.0, 0.0)
+
+
 @pytest.mark.parametrize(
     ("budget", "expected"),
     [
@@ -184,3 +215,5 @@ def test_safety_degenerate_case_and_bounds() -> None:
     sharp = sharp_risk_set(summary([0.2], [0.4], 0.4), 0.0, 1e-8, 1e-7)
     assert isinstance(sharp, SharpRiskSet)
     assert sharp.identified_width == pytest.approx(0.0)
+    incompatible = sharp_risk_set(summary([0.2, 0.0], [0.0, 0.4], 0.4), 0.0, 1e-8, 1e-7)
+    assert incompatible.identified_width is None
