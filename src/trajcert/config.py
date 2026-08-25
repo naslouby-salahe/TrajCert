@@ -4,7 +4,7 @@ from collections.abc import Hashable, Mapping
 from itertools import pairwise
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal, Self, cast
 
 import yaml
 from pydantic import (
@@ -360,6 +360,56 @@ class TrajCertConfig(ConfigModel):
     ) -> tuple[tuple[LawKey, LawConfig], ...]:
         return tuple(self.laws.items())
 
+    @classmethod
+    def from_yaml(cls, path: Path) -> Self:
+        payload = _load_yaml_mapping(
+            path,
+            allow_empty=False,
+        )
+
+        try:
+            return cls.model_validate(payload)
+        except Exception as exc:
+            raise ConfigurationError(f"invalid TrajCert configuration: {path}") from exc
+
+    def with_runner_overrides(
+        self,
+        overrides: RunnerOverrides,
+    ) -> TrajCertConfig:
+        coverage = self.sequential.coverage
+        utility = self.sequential.utility
+        benchmark = self.benchmark
+
+        if overrides.sequential is not None:
+            if overrides.sequential.coverage is not None:
+                coverage = SequentialCoverageConfig.model_validate(
+                    coverage.model_dump()
+                    | overrides.sequential.coverage.model_dump(exclude_none=True)
+                )
+
+            if overrides.sequential.utility is not None:
+                utility = SequentialUtilityConfig.model_validate(
+                    utility.model_dump()
+                    | overrides.sequential.utility.model_dump(exclude_none=True)
+                )
+
+        if overrides.benchmark is not None:
+            benchmark = BenchmarkConfig.model_validate(
+                benchmark.model_dump() | overrides.benchmark.model_dump(exclude_none=True)
+            )
+
+        return self.model_copy(
+            update={
+                "sequential": self.sequential.model_copy(
+                    update={
+                        "coverage": coverage,
+                        "utility": utility,
+                    }
+                ),
+                "benchmark": benchmark,
+            }
+        )
+
 
 class SequentialCoverageOverrides(ConfigModel):
     streams: PositiveInt | None = None
@@ -388,23 +438,11 @@ class RunnerOverrides(ConfigModel):
     benchmark: BenchmarkOverrides | None = None
 
 
-def load_config(path: Path) -> TrajCertConfig:
-    payload = _load_yaml_mapping(
-        path,
-        allow_empty=False,
-    )
-
-    try:
-        return TrajCertConfig.model_validate(payload)
-    except Exception as exc:
-        raise ConfigurationError(f"invalid TrajCert configuration: {path}") from exc
-
-
 def load_config_with_runner_overrides(
     production_path: Path,
     override_path: Path,
 ) -> TrajCertConfig:
-    production = load_config(production_path)
+    production = TrajCertConfig.from_yaml(production_path)
 
     payload = _load_yaml_mapping(
         override_path,
@@ -416,84 +454,9 @@ def load_config_with_runner_overrides(
             RunnerOverrides() if payload is None else RunnerOverrides.model_validate(payload)
         )
 
-        return apply_runner_overrides(
-            production,
-            overrides,
-        )
+        return production.with_runner_overrides(overrides)
     except Exception as exc:
         raise ConfigurationError(f"invalid runner overrides: {override_path}") from exc
-
-
-def apply_runner_overrides(
-    config: TrajCertConfig,
-    overrides: RunnerOverrides,
-) -> TrajCertConfig:
-    coverage_override = overrides.sequential.coverage if overrides.sequential is not None else None
-    utility_override = overrides.sequential.utility if overrides.sequential is not None else None
-    benchmark_override = overrides.benchmark
-
-    coverage = SequentialCoverageConfig(
-        streams=_select(
-            coverage_override.streams if coverage_override else None,
-            config.sequential.coverage.streams,
-        ),
-        max_events=_select(
-            coverage_override.max_events if coverage_override else None,
-            config.sequential.coverage.max_events,
-        ),
-        checkpoint_every=_select(
-            coverage_override.checkpoint_every if coverage_override else None,
-            config.sequential.coverage.checkpoint_every,
-        ),
-        acceptance_upper_limit=(config.sequential.coverage.acceptance_upper_limit),
-    )
-
-    utility = SequentialUtilityConfig(
-        streams=_select(
-            utility_override.streams if utility_override else None,
-            config.sequential.utility.streams,
-        ),
-        max_events=_select(
-            utility_override.max_events if utility_override else None,
-            config.sequential.utility.max_events,
-        ),
-        checkpoint_every=_select(
-            utility_override.checkpoint_every if utility_override else None,
-            config.sequential.utility.checkpoint_every,
-        ),
-        rho=config.sequential.utility.rho,
-    )
-
-    benchmark = BenchmarkConfig(
-        warmup_repetitions=_select(
-            benchmark_override.warmup_repetitions if benchmark_override else None,
-            config.benchmark.warmup_repetitions,
-        ),
-        measured_repetitions=_select(
-            benchmark_override.measured_repetitions if benchmark_override else None,
-            config.benchmark.measured_repetitions,
-        ),
-    )
-
-    return TrajCertConfig(
-        schema_version=config.schema_version,
-        method=config.method,
-        budgets=config.budgets,
-        confidence=config.confidence,
-        minimum_evidence=config.minimum_evidence,
-        laws=config.laws,
-        grids=config.grids,
-        numerics=config.numerics,
-        comparators=config.comparators,
-        sequential=SequentialConfig(
-            coverage=coverage,
-            utility=utility,
-        ),
-        statistics=config.statistics,
-        materiality=config.materiality,
-        benchmark=benchmark,
-        failure_boundary=config.failure_boundary,
-    )
 
 
 def _load_yaml_mapping(
@@ -522,13 +485,6 @@ def _load_yaml_mapping(
         raise ConfigurationError(f"configuration root must be a mapping: {path}")
 
     return cast(Mapping[str, YamlValue], payload)
-
-
-def _select[T](
-    override: T | None,
-    base: T,
-) -> T:
-    return base if override is None else override
 
 
 def _require_unique[HashableValue: Hashable](

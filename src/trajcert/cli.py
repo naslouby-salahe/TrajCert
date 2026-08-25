@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from argparse import ArgumentParser
 
-from trajcert.config import load_config
+from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import build_full_law, configured_laws
 from trajcert.data.partitions import configured_partitions
@@ -23,7 +23,7 @@ def main() -> None:
 
 
 def _doctor() -> None:
-    configuration = load_config(PRODUCTION_CONFIG_PATH)
+    configuration = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     partitions = configured_partitions(configuration)
     laws = configured_laws(configuration)
 
