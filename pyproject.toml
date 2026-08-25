@@ -8,13 +8,9 @@ version = "0.1.0"
 description = "Trajectory-aware partial-identification and sensitivity-certification framework"
 requires-python = ">=3.12"
 dependencies = [
-    "mpmath==1.3.0",
     "numpy==2.5.2",
     "pydantic==2.13.4",
-    "pyarrow==25.0.1",
-    "python-flint==0.9.0",
     "PyYAML==6.0.3",
-    "scipy==1.18.0",
 ]
 
 [project.optional-dependencies]
@@ -31,7 +27,7 @@ quality = [
 ]
 
 [project.scripts]
-trajcert = "trajcert.cli.main:main"
+trajcert = "trajcert.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/trajcert"]
@@ -62,17 +58,15 @@ optional_dependencies_dev_groups = ["quality"]
 [[tool.importlinter.contracts]]
 name = "domain-independent-of-upper-layers"
 type = "forbidden"
-source_modules = ["trajcert.domain"]
+source_modules = ["trajcert.math"]
 forbidden_modules = [
     "trajcert.analysis",
     "trajcert.baselines",
     "trajcert.cli",
-    "trajcert.data",
     "trajcert.evaluation",
     "trajcert.experiments",
     "trajcert.infrastructure",
     "trajcert.inference",
-    "trajcert.math",
     "trajcert.reporting",
 ]
 

@@ -55,17 +55,10 @@ def solve_hidden_mass_interval(
         sensitivity_budget,
     )
 
-    rho = float(
-        sensitivity_budget
-    )
-    unresolved = float(
-        summary.unresolved_mass
-    )
+    rho = float(sensitivity_budget)
+    unresolved = float(summary.unresolved_mass)
 
-    if (
-        compatibility.regime
-        is CompatibilityRegime.MODEL_INCOMPATIBLE
-    ):
+    if compatibility.regime is CompatibilityRegime.MODEL_INCOMPATIBLE:
         return HiddenMassSolveResult(
             compatibility=compatibility,
             interval=None,
@@ -73,10 +66,7 @@ def solve_hidden_mass_interval(
             upper_root=None,
         )
 
-    if (
-        compatibility.regime
-        is CompatibilityRegime.NO_RESOLVED_MASS
-    ):
+    if compatibility.regime is CompatibilityRegime.NO_RESOLVED_MASS:
         return HiddenMassSolveResult(
             compatibility=compatibility,
             interval=HiddenMassInterval(
@@ -87,24 +77,16 @@ def solve_hidden_mass_interval(
             upper_root=None,
         )
 
-    minimum = (
-        compatibility.minimum_information_point
-    )
+    minimum = compatibility.minimum_information_point
 
     if minimum is None:
         raise InvariantViolationError(
-            "compatible nondegenerate case is "
-            "missing its information minimum"
+            "compatible nondegenerate case is missing its information minimum"
         )
 
-    u_dagger = float(
-        minimum.hidden_terminal_harmful_mass
-    )
+    u_dagger = float(minimum.hidden_terminal_harmful_mass)
 
-    if (
-        compatibility.regime
-        is CompatibilityRegime.NO_UNRESOLVED_MASS
-    ):
+    if compatibility.regime is CompatibilityRegime.NO_UNRESOLVED_MASS:
         lower = _exact_root(
             RootBranch.LOWER,
             0.0,
@@ -130,10 +112,7 @@ def solve_hidden_mass_interval(
             upper_root=upper,
         )
 
-    if (
-        compatibility.regime
-        is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
-    ):
+    if compatibility.regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON:
         lower = _exact_root(
             RootBranch.LOWER,
             u_dagger,
@@ -224,10 +203,7 @@ def _solve_lower_branch(
     )
 
     if minimum_value >= 0.0:
-        raise RootSolveError(
-            "lower branch does not contain "
-            "a strict sign-changing root"
-        )
+        raise RootSolveError("lower branch does not contain a strict sign-changing root")
 
     return _bisect(
         summary=summary,
@@ -272,10 +248,7 @@ def _solve_upper_branch(
     )
 
     if minimum_value >= 0.0:
-        raise RootSolveError(
-            "upper branch does not contain "
-            "a strict sign-changing root"
-        )
+        raise RootSolveError("upper branch does not contain a strict sign-changing root")
 
     return _bisect(
         summary=summary,
@@ -308,9 +281,7 @@ def _bisect(
         upper_residual,
     )
 
-    initial_width = (
-        upper - lower
-    )
+    initial_width = upper - lower
 
     iteration_cap = _iteration_cap(
         initial_width,
@@ -319,18 +290,11 @@ def _bisect(
 
     iterations = 0
 
-    while (
-        upper - lower
-        > root_atol
-    ):
+    while upper - lower > root_atol:
         if iterations >= iteration_cap:
-            raise RootSolveError(
-                "derived bisection iteration cap exhausted"
-            )
+            raise RootSolveError("derived bisection iteration cap exhausted")
 
-        midpoint = (
-            lower + upper
-        ) / 2.0
+        midpoint = (lower + upper) / 2.0
 
         residual = _profile_residual(
             summary,
@@ -366,9 +330,7 @@ def _bisect(
         upper_residual,
     )
 
-    root = (
-        lower + upper
-    ) / 2.0
+    root = (lower + upper) / 2.0
 
     residual = abs(
         _profile_residual(
@@ -383,20 +345,14 @@ def _bisect(
         status=RootStatus.BISECTION,
         lower=Mass(lower),
         upper=Mass(upper),
-        width=Mass(
-            upper - lower
-        ),
+        width=Mass(upper - lower),
         root=Mass(root),
         residual=InformationNats(residual),
-        iterations=IterationCount(
-            iterations
-        ),
+        iterations=IterationCount(iterations),
     )
 
     if float(result.width) > root_atol:
-        raise RootSolveError(
-            "root bracket exceeds root_atol"
-        )
+        raise RootSolveError("root bracket exceeds root_atol")
 
     _require_residual(
         result,
@@ -453,13 +409,8 @@ def _require_residual(
     root: RootBracket,
     identity_atol: float,
 ) -> None:
-    if (
-        float(root.residual)
-        > identity_atol
-    ):
-        raise RootSolveError(
-            "returned root residual exceeds identity_atol"
-        )
+    if float(root.residual) > identity_atol:
+        raise RootSolveError("returned root residual exceeds identity_atol")
 
 
 def _iteration_cap(
@@ -472,15 +423,7 @@ def _iteration_cap(
     if initial_width <= root_atol:
         return 2
 
-    return (
-        ceil(
-            log2(
-                initial_width
-                / root_atol
-            )
-        )
-        + 2
-    )
+    return ceil(log2(initial_width / root_atol)) + 2
 
 
 def _validate_initial_signs(
@@ -489,22 +432,10 @@ def _validate_initial_signs(
     upper: float,
 ) -> None:
     if branch is RootBranch.LOWER:
-        if (
-            lower <= 0.0
-            or upper >= 0.0
-        ):
-            raise RootSolveError(
-                "lower branch initial bracket "
-                "is not sign-valid"
-            )
-    elif (
-        lower >= 0.0
-        or upper <= 0.0
-    ):
-        raise RootSolveError(
-            "upper branch initial bracket "
-            "is not sign-valid"
-        )
+        if lower <= 0.0 or upper >= 0.0:
+            raise RootSolveError("lower branch initial bracket is not sign-valid")
+    elif lower >= 0.0 or upper <= 0.0:
+        raise RootSolveError("upper branch initial bracket is not sign-valid")
 
 
 def _validate_final_signs(
@@ -512,10 +443,7 @@ def _validate_final_signs(
     lower: float,
     upper: float,
 ) -> None:
-    if (
-        lower == 0.0
-        or upper == 0.0
-    ):
+    if lower == 0.0 or upper == 0.0:
         return
 
     _validate_initial_signs(
@@ -531,12 +459,7 @@ def _positive_tolerance(
 ) -> float:
     numeric = float(value)
 
-    if (
-        not isfinite(numeric)
-        or numeric <= 0.0
-    ):
-        raise RootSolveError(
-            f"{name} must be finite and positive"
-        )
+    if not isfinite(numeric) or numeric <= 0.0:
+        raise RootSolveError(f"{name} must be finite and positive")
 
     return numeric

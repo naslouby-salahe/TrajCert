@@ -117,6 +117,10 @@ class SeedNamespaceRole(StrEnum):
     RUNTIME = "Runtime"
 
 
+class CliCommand(StrEnum):
+    DOCTOR = "doctor"
+
+
 class OutcomeLabel(IntEnum):
     CORRECT = 0
     HARMFUL = 1

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Hashable, Mapping
+from itertools import pairwise
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
 import yaml
 from pydantic import (
@@ -19,6 +20,11 @@ from pydantic import (
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.exceptions import ConfigurationError
 from trajcert.types import LawKey
+
+type YamlValue = (
+    None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
+)
+
 
 UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0)]
 PositiveFloat = Annotated[StrictFloat, Field(gt=0.0)]
@@ -48,9 +54,7 @@ class BudgetsConfig(ConfigModel):
     @model_validator(mode="after")
     def validate_information_budget(self) -> BudgetsConfig:
         if self.information_nats > float(BINARY_MAX_INFORMATION_NATS):
-            raise ValueError(
-                "information_nats cannot exceed log(2) for binary latent outcomes"
-            )
+            raise ValueError("information_nats cannot exceed log(2) for binary latent outcomes")
         return self
 
 
@@ -117,13 +121,8 @@ class GridsConfig(ConfigModel):
             "grids.beta",
         )
 
-        if any(
-            value > float(BINARY_MAX_INFORMATION_NATS)
-            for value in self.rho
-        ):
-            raise ValueError(
-                "grids.rho cannot exceed log(2) for binary latent outcomes"
-            )
+        if any(value > float(BINARY_MAX_INFORMATION_NATS) for value in self.rho):
+            raise ValueError("grids.rho cannot exceed log(2) for binary latent outcomes")
 
         return self
 
@@ -155,9 +154,7 @@ class PatternMixtureConfig(ConfigModel):
 
         lower, upper = self.coefficient_bounds
         if lower >= upper:
-            raise ValueError(
-                "pattern-mixture coefficient bounds must be strictly ordered"
-            )
+            raise ValueError("pattern-mixture coefficient bounds must be strictly ordered")
 
         return self
 
@@ -191,9 +188,7 @@ class SequentialCoverageConfig(ConfigModel):
     @model_validator(mode="after")
     def validate_checkpoint(self) -> SequentialCoverageConfig:
         if self.checkpoint_every > self.max_events:
-            raise ValueError(
-                "coverage checkpoint_every cannot exceed max_events"
-            )
+            raise ValueError("coverage checkpoint_every cannot exceed max_events")
         return self
 
 
@@ -206,9 +201,7 @@ class SequentialUtilityConfig(ConfigModel):
     @model_validator(mode="after")
     def validate_utility(self) -> SequentialUtilityConfig:
         if self.checkpoint_every > self.max_events:
-            raise ValueError(
-                "utility checkpoint_every cannot exceed max_events"
-            )
+            raise ValueError("utility checkpoint_every cannot exceed max_events")
 
         _require_unique(
             self.rho,
@@ -219,13 +212,8 @@ class SequentialUtilityConfig(ConfigModel):
             "sequential.utility.rho",
         )
 
-        if any(
-            value > float(BINARY_MAX_INFORMATION_NATS)
-            for value in self.rho
-        ):
-            raise ValueError(
-                "sequential.utility.rho cannot exceed log(2)"
-            )
+        if any(value > float(BINARY_MAX_INFORMATION_NATS) for value in self.rho):
+            raise ValueError("sequential.utility.rho cannot exceed log(2)")
 
         return self
 
@@ -331,9 +319,8 @@ class TrajCertConfig(ConfigModel):
     failure_boundary: FailureBoundaryConfig
 
     @field_validator("laws")
-    @classmethod
+    @staticmethod
     def freeze_law_mapping(
-        cls,
         value: Mapping[LawKey, LawConfig],
     ) -> Mapping[LawKey, LawConfig]:
         return MappingProxyType(value)
@@ -343,49 +330,27 @@ class TrajCertConfig(ConfigModel):
         self,
     ) -> TrajCertConfig:
         if not self.laws:
-            raise ValueError(
-                "at least one synthetic law is required"
-            )
+            raise ValueError("at least one synthetic law is required")
 
         finest_bands = self.method.finest_bands
 
         if self.grids.partitions[0] != finest_bands:
-            raise ValueError(
-                "the first configured partition must equal "
-                "method.finest_bands"
-            )
+            raise ValueError("the first configured partition must equal method.finest_bands")
 
         if self.grids.partitions[-1] != 1:
-            raise ValueError(
-                "the configured partitions must end with "
-                "the endpoint-only partition"
-            )
+            raise ValueError("the configured partitions must end with the endpoint-only partition")
 
-        if any(
-            finest_bands % band_count != 0
-            for band_count in self.grids.partitions
-        ):
+        if any(finest_bands % band_count != 0 for band_count in self.grids.partitions):
             raise ValueError(
                 "every configured analysis partition must "
                 "deterministically coarsen the finest partition"
             )
 
-        if any(
-            band_count > finest_bands
-            for band_count in self.grids.partitions
-        ):
-            raise ValueError(
-                "an analysis partition cannot be finer than "
-                "method.finest_bands"
-            )
+        if any(band_count > finest_bands for band_count in self.grids.partitions):
+            raise ValueError("an analysis partition cannot be finer than method.finest_bands")
 
-        if any(
-            rho not in self.grids.rho
-            for rho in self.sequential.utility.rho
-        ):
-            raise ValueError(
-                "sequential.utility.rho must be a subset of grids.rho"
-            )
+        if any(rho not in self.grids.rho for rho in self.sequential.utility.rho):
+            raise ValueError("sequential.utility.rho must be a subset of grids.rho")
 
         return self
 
@@ -432,9 +397,7 @@ def load_config(path: Path) -> TrajCertConfig:
     try:
         return TrajCertConfig.model_validate(payload)
     except Exception as exc:
-        raise ConfigurationError(
-            f"invalid TrajCert configuration: {path}"
-        ) from exc
+        raise ConfigurationError(f"invalid TrajCert configuration: {path}") from exc
 
 
 def load_config_with_runner_overrides(
@@ -450,9 +413,7 @@ def load_config_with_runner_overrides(
 
     try:
         overrides = (
-            RunnerOverrides()
-            if payload is None
-            else RunnerOverrides.model_validate(payload)
+            RunnerOverrides() if payload is None else RunnerOverrides.model_validate(payload)
         )
 
         return apply_runner_overrides(
@@ -460,68 +421,44 @@ def load_config_with_runner_overrides(
             overrides,
         )
     except Exception as exc:
-        raise ConfigurationError(
-            f"invalid runner overrides: {override_path}"
-        ) from exc
+        raise ConfigurationError(f"invalid runner overrides: {override_path}") from exc
 
 
 def apply_runner_overrides(
     config: TrajCertConfig,
     overrides: RunnerOverrides,
 ) -> TrajCertConfig:
-    coverage_override = (
-        overrides.sequential.coverage
-        if overrides.sequential is not None
-        else None
-    )
-    utility_override = (
-        overrides.sequential.utility
-        if overrides.sequential is not None
-        else None
-    )
+    coverage_override = overrides.sequential.coverage if overrides.sequential is not None else None
+    utility_override = overrides.sequential.utility if overrides.sequential is not None else None
     benchmark_override = overrides.benchmark
 
     coverage = SequentialCoverageConfig(
         streams=_select(
-            coverage_override.streams
-            if coverage_override
-            else None,
+            coverage_override.streams if coverage_override else None,
             config.sequential.coverage.streams,
         ),
         max_events=_select(
-            coverage_override.max_events
-            if coverage_override
-            else None,
+            coverage_override.max_events if coverage_override else None,
             config.sequential.coverage.max_events,
         ),
         checkpoint_every=_select(
-            coverage_override.checkpoint_every
-            if coverage_override
-            else None,
+            coverage_override.checkpoint_every if coverage_override else None,
             config.sequential.coverage.checkpoint_every,
         ),
-        acceptance_upper_limit=(
-            config.sequential.coverage.acceptance_upper_limit
-        ),
+        acceptance_upper_limit=(config.sequential.coverage.acceptance_upper_limit),
     )
 
     utility = SequentialUtilityConfig(
         streams=_select(
-            utility_override.streams
-            if utility_override
-            else None,
+            utility_override.streams if utility_override else None,
             config.sequential.utility.streams,
         ),
         max_events=_select(
-            utility_override.max_events
-            if utility_override
-            else None,
+            utility_override.max_events if utility_override else None,
             config.sequential.utility.max_events,
         ),
         checkpoint_every=_select(
-            utility_override.checkpoint_every
-            if utility_override
-            else None,
+            utility_override.checkpoint_every if utility_override else None,
             config.sequential.utility.checkpoint_every,
         ),
         rho=config.sequential.utility.rho,
@@ -529,15 +466,11 @@ def apply_runner_overrides(
 
     benchmark = BenchmarkConfig(
         warmup_repetitions=_select(
-            benchmark_override.warmup_repetitions
-            if benchmark_override
-            else None,
+            benchmark_override.warmup_repetitions if benchmark_override else None,
             config.benchmark.warmup_repetitions,
         ),
         measured_repetitions=_select(
-            benchmark_override.measured_repetitions
-            if benchmark_override
-            else None,
+            benchmark_override.measured_repetitions if benchmark_override else None,
             config.benchmark.measured_repetitions,
         ),
     )
@@ -567,7 +500,7 @@ def _load_yaml_mapping(
     path: Path,
     *,
     allow_empty: bool,
-) -> Mapping[object, object] | None:
+) -> Mapping[str, YamlValue] | None:
     try:
         with path.open(
             "r",
@@ -575,28 +508,20 @@ def _load_yaml_mapping(
         ) as stream:
             payload = yaml.safe_load(stream)
     except OSError as exc:
-        raise ConfigurationError(
-            f"cannot read configuration file: {path}"
-        ) from exc
+        raise ConfigurationError(f"cannot read configuration file: {path}") from exc
     except yaml.YAMLError as exc:
-        raise ConfigurationError(
-            f"invalid YAML: {path}"
-        ) from exc
+        raise ConfigurationError(f"invalid YAML: {path}") from exc
 
     if payload is None:
         if allow_empty:
             return None
 
-        raise ConfigurationError(
-            f"configuration file is empty: {path}"
-        )
+        raise ConfigurationError(f"configuration file is empty: {path}")
 
     if not isinstance(payload, Mapping):
-        raise ConfigurationError(
-            f"configuration root must be a mapping: {path}"
-        )
+        raise ConfigurationError(f"configuration root must be a mapping: {path}")
 
-    return payload
+    return cast(Mapping[str, YamlValue], payload)
 
 
 def _select[T](
@@ -606,45 +531,25 @@ def _select[T](
     return base if override is None else override
 
 
-def _require_unique(
-    values: tuple[object, ...],
+def _require_unique[HashableValue: Hashable](
+    values: tuple[HashableValue, ...],
     field_name: str,
 ) -> None:
     if len(values) != len(set(values)):
-        raise ValueError(
-            f"{field_name} contains duplicate values"
-        )
+        raise ValueError(f"{field_name} contains duplicate values")
 
 
 def _require_strictly_increasing(
-    values: tuple[object, ...],
+    values: tuple[int, ...] | tuple[float, ...],
     field_name: str,
 ) -> None:
-    if any(
-        left >= right
-        for left, right in zip(
-            values,
-            values[1:],
-            strict=False,
-        )
-    ):
-        raise ValueError(
-            f"{field_name} must be strictly increasing"
-        )
+    if any(left >= right for left, right in pairwise(values)):
+        raise ValueError(f"{field_name} must be strictly increasing")
 
 
 def _require_strictly_decreasing(
-    values: tuple[object, ...],
+    values: tuple[int, ...] | tuple[float, ...],
     field_name: str,
 ) -> None:
-    if any(
-        left <= right
-        for left, right in zip(
-            values,
-            values[1:],
-            strict=False,
-        )
-    ):
-        raise ValueError(
-            f"{field_name} must be strictly decreasing"
-        )
+    if any(left <= right for left, right in pairwise(values)):
+        raise ValueError(f"{field_name} must be strictly decreasing")

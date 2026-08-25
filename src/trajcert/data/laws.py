@@ -41,23 +41,11 @@ class LawParameters:
         ):
             numeric = float(value)
 
-            if (
-                not isfinite(numeric)
-                or numeric < 0.0
-                or numeric > 1.0
-            ):
-                raise InvalidProbabilityError(
-                    f"{field_name} must be "
-                    "a finite probability"
-                )
+            if not isfinite(numeric) or numeric < 0.0 or numeric > 1.0:
+                raise InvalidProbabilityError(f"{field_name} must be a finite probability")
 
-        if (
-            not isfinite(float(self.lambda1))
-            or not isfinite(float(self.lambda0))
-        ):
-            raise InvalidScientificDataError(
-                "law timing slopes must be finite"
-            )
+        if not isfinite(float(self.lambda1)) or not isfinite(float(self.lambda0)):
+            raise InvalidScientificDataError("law timing slopes must be finite")
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,22 +58,13 @@ class FullLawProbabilities:
 
     @property
     def unresolved(self) -> Mass:
-        return Mass(
-            float(self.terminal_harmful)
-            + float(self.terminal_correct)
-        )
+        return Mass(float(self.terminal_harmful) + float(self.terminal_correct))
 
     @property
     def total(self) -> Mass:
         return Mass(
-            sum(
-                float(value)
-                for value in self.harmful_resolved
-            )
-            + sum(
-                float(value)
-                for value in self.correct_resolved
-            )
+            sum(float(value) for value in self.harmful_resolved)
+            + sum(float(value) for value in self.correct_resolved)
             + float(self.terminal_harmful)
             + float(self.terminal_correct)
         )
@@ -110,18 +89,12 @@ def resolved_band_weights(
     bands = int(band_count)
 
     if bands <= 0:
-        raise InvalidScientificDataError(
-            "band count must be positive"
-        )
+        raise InvalidScientificDataError("band count must be positive")
 
     center = (bands + 1) / 2.0
 
     logits = tuple(
-        float(slope)
-        * (
-            band_index
-            - center
-        )
+        float(slope) * (band_index - center)
         for band_index in range(
             1,
             bands + 1,
@@ -130,27 +103,14 @@ def resolved_band_weights(
 
     maximum = max(logits)
 
-    unnormalized = tuple(
-        exp(value - maximum)
-        for value in logits
-    )
+    unnormalized = tuple(exp(value - maximum) for value in logits)
 
     normalizer = sum(unnormalized)
 
-    if (
-        not isfinite(normalizer)
-        or normalizer <= 0.0
-    ):
-        raise InvalidScientificDataError(
-            "law band weights could not be normalized"
-        )
+    if not isfinite(normalizer) or normalizer <= 0.0:
+        raise InvalidScientificDataError("law band weights could not be normalized")
 
-    return tuple(
-        Probability(
-            value / normalizer
-        )
-        for value in unnormalized
-    )
+    return tuple(Probability(value / normalizer) for value in unnormalized)
 
 
 def build_full_law(
@@ -170,36 +130,18 @@ def build_full_law(
     q1 = float(parameters.q1)
     q0 = float(parameters.q0)
 
-    harmful_resolved_mass = (
-        theta
-        * (1.0 - q1)
-    )
-    correct_resolved_mass = (
-        (1.0 - theta)
-        * (1.0 - q0)
-    )
+    harmful_resolved_mass = theta * (1.0 - q1)
+    correct_resolved_mass = (1.0 - theta) * (1.0 - q0)
 
     return FullLawProbabilities(
         harmful_resolved=tuple(
-            Mass(
-                harmful_resolved_mass
-                * float(weight)
-            )
-            for weight in harmful_weights
+            Mass(harmful_resolved_mass * float(weight)) for weight in harmful_weights
         ),
         correct_resolved=tuple(
-            Mass(
-                correct_resolved_mass
-                * float(weight)
-            )
-            for weight in correct_weights
+            Mass(correct_resolved_mass * float(weight)) for weight in correct_weights
         ),
-        terminal_harmful=Mass(
-            theta * q1
-        ),
-        terminal_correct=Mass(
-            (1.0 - theta) * q0
-        ),
+        terminal_harmful=Mass(theta * q1),
+        terminal_correct=Mass((1.0 - theta) * q0),
     )
 
 
@@ -208,66 +150,40 @@ def law_display_name(
 ) -> LawName:
     match key:
         case LawKey.NO_PATH_DEPENDENCE:
-            return LawName(
-                "No outcome-path dependence"
-            )
+            return LawName("No outcome-path dependence")
 
         case LawKey.TIMING_HARMFUL_LATE:
-            return LawName(
-                "Timing only: harmful outcomes resolve late"
-            )
+            return LawName("Timing only: harmful outcomes resolve late")
 
         case LawKey.TERMINAL_HARMFUL_UNRESOLVED:
-            return LawName(
-                "Terminal only: harmful outcomes remain unresolved"
-            )
+            return LawName("Terminal only: harmful outcomes remain unresolved")
 
         case LawKey.TIMING_TERMINAL_HARMFUL_LATE:
-            return LawName(
-                "Timing and terminal: "
-                "harmful outcomes resolve late"
-            )
+            return LawName("Timing and terminal: harmful outcomes resolve late")
 
         case LawKey.TIMING_TERMINAL_HARMFUL_EARLY:
-            return LawName(
-                "Timing and terminal: "
-                "harmful outcomes resolve early"
-            )
+            return LawName("Timing and terminal: harmful outcomes resolve early")
 
         case LawKey.HIGH_UNRESOLVEDNESS:
-            return LawName(
-                "High terminal unresolvedness"
-            )
+            return LawName("High terminal unresolvedness")
 
         case LawKey.LOW_PREVALENCE:
-            return LawName(
-                "Low error prevalence"
-            )
+            return LawName("Low error prevalence")
 
         case LawKey.HIGH_PREVALENCE:
-            return LawName(
-                "High error prevalence"
-            )
+            return LawName("High error prevalence")
 
         case LawKey.INTRINSIC_IMPOSSIBILITY:
-            return LawName(
-                "Intrinsic safety impossibility"
-            )
+            return LawName("Intrinsic safety impossibility")
 
         case LawKey.NEAR_DEGENERACY:
-            return LawName(
-                "Near numerical degeneracy"
-            )
+            return LawName("Near numerical degeneracy")
 
         case LawKey.SAME_ENDPOINT_NO_TIMING:
-            return LawName(
-                "Same endpoint without timing information"
-            )
+            return LawName("Same endpoint without timing information")
 
         case LawKey.SAME_ENDPOINT_WITH_TIMING:
-            return LawName(
-                "Same endpoint with timing information"
-            )
+            return LawName("Same endpoint with timing information")
 
 
 def _law_from_config(

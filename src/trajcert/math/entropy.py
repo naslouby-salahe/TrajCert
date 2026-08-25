@@ -18,9 +18,7 @@ def xlogx(
     if numeric == 0.0:
         return EntropyValue(0.0)
 
-    return EntropyValue(
-        numeric * log(numeric)
-    )
+    return EntropyValue(numeric * log(numeric))
 
 
 def binary_entropy(
@@ -31,11 +29,7 @@ def binary_entropy(
     if p == 0.0 or p == 1.0:
         return EntropyValue(0.0)
 
-    return EntropyValue(
-        -p * log(p)
-        - (1.0 - p)
-        * log(1.0 - p)
-    )
+    return EntropyValue(-p * log(p) - (1.0 - p) * log(1.0 - p))
 
 
 def binary_entropy_from_masses(
@@ -50,21 +44,10 @@ def binary_entropy_from_masses(
     if total == 0.0:
         return EntropyValue(0.0)
 
-    harmful_term = (
-        0.0
-        if a == 0.0
-        else -a * log(a / total)
-    )
-    correct_term = (
-        0.0
-        if b == 0.0
-        else -b * log(b / total)
-    )
+    harmful_term = 0.0 if a == 0.0 else -a * log(a / total)
+    correct_term = 0.0 if b == 0.0 else -b * log(b / total)
 
-    return EntropyValue(
-        harmful_term
-        + correct_term
-    )
+    return EntropyValue(harmful_term + correct_term)
 
 
 def weighted_binary_entropy(
@@ -80,17 +63,9 @@ def weighted_binary_entropy(
         return EntropyValue(0.0)
 
     if harmful_rate is None:
-        raise InvalidProbabilityError(
-            "a positive mass requires "
-            "a defined harmful rate"
-        )
+        raise InvalidProbabilityError("a positive mass requires a defined harmful rate")
 
-    return EntropyValue(
-        total
-        * float(
-            binary_entropy(harmful_rate)
-        )
-    )
+    return EntropyValue(total * float(binary_entropy(harmful_rate)))
 
 
 def _probability(
@@ -98,15 +73,8 @@ def _probability(
 ) -> float:
     numeric = float(value)
 
-    if (
-        not isfinite(numeric)
-        or numeric < 0.0
-        or numeric > 1.0
-    ):
-        raise InvalidProbabilityError(
-            "probability must be finite "
-            "and lie in [0, 1]"
-        )
+    if not isfinite(numeric) or numeric < 0.0 or numeric > 1.0:
+        raise InvalidProbabilityError("probability must be finite and lie in [0, 1]")
 
     return numeric
 
@@ -116,14 +84,7 @@ def _mass(
 ) -> float:
     numeric = float(value)
 
-    if (
-        not isfinite(numeric)
-        or numeric < 0.0
-        or numeric > 1.0
-    ):
-        raise InvalidProbabilityError(
-            "probability mass must be finite "
-            "and lie in [0, 1]"
-        )
+    if not isfinite(numeric) or numeric < 0.0 or numeric > 1.0:
+        raise InvalidProbabilityError("probability mass must be finite and lie in [0, 1]")
 
     return numeric
