@@ -1,21 +1,28 @@
 from __future__ import annotations
 
 # Parametrized Pydantic model factories and pytest helpers are dynamically typed.
-# pyright: reportUnknownMemberType=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false
+# pyright: reportUnknownMemberType=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportUnknownLambdaType=false
 from pathlib import Path
 from typing import Any, cast
 
 import numpy as np
 import pytest
-from pydantic import ValidationError
+import yaml
+from pydantic import BaseModel, ValidationError
 
 from trajcert import cli
 from trajcert.config import (
     BudgetsConfig,
+    ComparatorsConfig,
     ConfidenceConfig,
+    FailureBoundaryConfig,
     GridsConfig,
     MinimumEvidenceConfig,
+    PatternMixtureConfig,
+    SequentialCoverageConfig,
+    SequentialUtilityConfig,
     TrajCertConfig,
+    load_config_with_runner_overrides,
 )
 from trajcert.determinism import (
     bootstrap_namespace,
@@ -63,6 +70,83 @@ def test_config_models_enforce_cross_field_contracts(
         model.model_validate(payload)
 
 
+@pytest.mark.parametrize(
+    ("model", "payload", "message"),
+    [
+        (
+            PatternMixtureConfig,
+            {
+                "c": (0,),
+                "coefficient_bounds": (1.0, 1.0),
+                "ftol": 0.1,
+                "gtol": 0.1,
+                "max_iterations": 1,
+            },
+            "strictly ordered",
+        ),
+        (
+            ComparatorsConfig,
+            {
+                "legacy_gamma": (2.0, 1.0),
+                "pattern_mixture": {
+                    "c": (0,),
+                    "coefficient_bounds": (-1.0, 1.0),
+                    "ftol": 0.1,
+                    "gtol": 0.1,
+                    "max_iterations": 1,
+                },
+            },
+            "strictly increasing",
+        ),
+        (
+            SequentialCoverageConfig,
+            {"streams": 1, "max_events": 1, "checkpoint_every": 2, "acceptance_upper_limit": 0.5},
+            "cannot exceed",
+        ),
+        (
+            SequentialUtilityConfig,
+            {"streams": 1, "max_events": 1, "checkpoint_every": 1, "rho": (0.8,)},
+            "cannot exceed",
+        ),
+        (
+            FailureBoundaryConfig,
+            {
+                "unresolvedness": (0.2, 0.1),
+                "timing_contrast": (0.1,),
+                "prevalence": (0.1,),
+                "bands": (1,),
+                "information_margin": (0.1,),
+                "risk_offset": (0.0,),
+                "sample_size": (1,),
+            },
+            "strictly increasing",
+        ),
+    ],
+)
+def test_remaining_config_model_contracts(
+    model: type[BaseModel], payload: dict[str, object], message: str
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        model.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (lambda payload: payload.update(laws={}), "at least one"),
+        (lambda payload: payload["grids"].update(partitions=[2, 1]), "first configured"),
+        (lambda payload: payload["grids"].update(partitions=[8, 4]), "must end"),
+        (lambda payload: payload["grids"].update(partitions=[8, 3, 1]), "coarsen"),
+        (lambda payload: payload["sequential"]["utility"].update(rho=[0.35]), "subset"),
+    ],
+)
+def test_config_cross_field_contracts(mutate, message: str) -> None:
+    payload = yaml.safe_load(Path("configs/trajcert.yaml").read_text(encoding="utf-8"))
+    mutate(payload)
+    with pytest.raises(ValidationError, match=message):
+        TrajCertConfig.model_validate(payload)
+
+
 def test_config_loads_freezes_laws_and_reports_bad_files(tmp_path: Path) -> None:
     configuration = TrajCertConfig.from_yaml(Path("configs/trajcert.yaml"))
     with pytest.raises(AttributeError):
@@ -71,6 +155,26 @@ def test_config_loads_freezes_laws_and_reports_bad_files(tmp_path: Path) -> None
     invalid.write_text("- not-a-mapping\n", encoding="utf-8")
     with pytest.raises(ConfigurationError, match="configuration root"):
         TrajCertConfig.from_yaml(invalid)
+
+
+def test_config_file_error_paths_and_empty_overrides(tmp_path: Path) -> None:
+    production = tmp_path / "production.yaml"
+    production.write_text(
+        Path("configs/trajcert.yaml").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    empty_overrides = tmp_path / "overrides.yaml"
+    empty_overrides.write_text("", encoding="utf-8")
+    assert load_config_with_runner_overrides(production, empty_overrides).schema_version == 1
+    invalid_yaml = tmp_path / "invalid.yaml"
+    invalid_yaml.write_text("invalid: [", encoding="utf-8")
+    with pytest.raises(ConfigurationError, match="invalid YAML"):
+        TrajCertConfig.from_yaml(invalid_yaml)
+    with pytest.raises(ConfigurationError, match="cannot read"):
+        TrajCertConfig.from_yaml(tmp_path / "missing.yaml")
+    invalid_overrides = tmp_path / "invalid-overrides.yaml"
+    invalid_overrides.write_text("benchmark: {measured_repetitions: 0}", encoding="utf-8")
+    with pytest.raises(ConfigurationError, match="invalid runner overrides"):
+        load_config_with_runner_overrides(production, invalid_overrides)
 
 
 def test_vector_annotation_normalizes_and_serializes() -> None:
