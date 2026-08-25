@@ -5,7 +5,7 @@ from math import isfinite
 
 import numpy as np
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import active_config
 from trajcert.constants import ENDPOINT_PARTITION_NAME
 from trajcert.exceptions import InvalidPartitionError
 from trajcert.types import BandCount, BandIndex, DomainModel, PartitionName, TerminalHorizon, Vector
@@ -64,7 +64,8 @@ def build_partition(finest_band_count: BandCount, band_count: BandCount, termina
     mapping = tuple(value for value in _coarsening_map_values(finest, bands))
     return TrajectoryPartition(name=partition_name(bands), finest_band_count=finest, band_count=bands, terminal_horizon=horizon, boundaries=boundaries, coarsening_map_from_finest=mapping)
 
-def configured_partitions(config: TrajCertConfig) -> tuple[TrajectoryPartition, ...]:
+def configured_partitions() -> tuple[TrajectoryPartition, ...]:
+    config = active_config.get()
     finest = config.method.finest_bands
     horizon = config.method.terminal_horizon
     return tuple(build_partition(finest, band_count, horizon) for band_count in config.grids.partitions)

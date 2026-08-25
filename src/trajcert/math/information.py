@@ -4,6 +4,7 @@ from math import isfinite, log, ulp
 
 import numpy as np
 
+from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.math.entropy import binary_entropy, binary_entropy_from_masses
@@ -17,8 +18,6 @@ from trajcert.types import (
     RiskValue,
     ToleranceValue,
 )
-
-_FLOAT_ROUNDOFF_ULPS = 32.0
 
 def resolved_timing_entropy(summary: ObservableSummary) -> EntropyValue:
     entropy_vector = binary_entropy_from_masses(summary.harmful_by_band, summary.correct_by_band)
@@ -115,6 +114,7 @@ def _strictly_interior_hidden_mass(summary: ObservableSummary, value: Mass) -> f
 def _nonnegative_roundoff_guard(value: float) -> float:
     if value >= 0.0:
         return value
-    if value >= -_FLOAT_ROUNDOFF_ULPS * ulp(1.0):
+    ulps = active_config.get().numerics.float_roundoff_ulps
+    if value >= -ulps * ulp(1.0):
         return 0.0
     raise InvalidScientificDataError('information quantity is negative')
