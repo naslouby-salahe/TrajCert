@@ -8,7 +8,7 @@
 
 **Theoretical principle:** **Path-Information Sensitivity (PIS)** — $I(L;J^*)\le\rho$
 
-**Primary finest trajectory resolution:** **`method.primary_finest_resolved_bands` (resolved value: 8 bands, $K=8$)**
+**Primary finest trajectory resolution:** **`method.finest_bands` (resolved value: 8 bands, $K=8$)**
 
 **Scientific authority:** **this roadmap**
 
@@ -493,7 +493,7 @@ For each branch:
 
 1. initialize the branch bracket using $[0,u^\dagger]$ for the lower root and $[u^\dagger,c]$ for the upper root;
 2. retain an exact sign-valid bracket for $\mathcal S_\Pi(u)-\rho$;
-3. bisect until bracket width is no greater than `numerics.population_root_absolute_tolerance`;
+3. bisect until bracket width is no greater than `numerics.root_atol`;
 4. return the bracket midpoint;
 5. store the final bracket endpoints, width, returned root, residual, and iteration count.
 
@@ -511,8 +511,8 @@ where $w_0$ is the initial branch width. It is derived, not independently config
 The population solver validation requirement is:
 
 ```text
-final root bracket width <= numerics.population_root_absolute_tolerance
-returned-root absolute information residual <= numerics.deterministic_identity_tolerance
+final root bracket width <= numerics.root_atol
+returned-root absolute information residual <= numerics.identity_atol
 ```
 
 This distinguishes the root-location tolerance from the theorem-identity residual tolerance.
@@ -533,477 +533,177 @@ One production scientific/runtime configuration file is sufficient for the curre
 schema_version: 1
 
 method:
-  primary_finest_resolved_bands: 8
-  synthetic_terminal_horizon_age_units: 8
+  finest_bands: 8
+  terminal_horizon: 8
 
 budgets:
-  primary_risk: 0.05
-  primary_information_nats: 0.05
+  risk: 0.05
+  information_nats: 0.05
 
 confidence:
   anytime_delta: 0.05
-  non_anytime_level: 0.95
-  confirmatory_alpha: 0.05
+  level: 0.95
+  alpha: 0.05
 
 minimum_evidence:
   matured_events: 200
   resolved_events: 50
 
-synthetic_data:
-  laws:
-    - name: "No outcome-path dependence"
-      theta: 0.05
-      q1: 0.10
-      q0: 0.10
-      lambda1: 0.00
-      lambda0: 0.00
-    - name: "Timing only: harmful outcomes resolve late"
-      theta: 0.05
-      q1: 0.10
-      q0: 0.10
-      lambda1: 0.45
-      lambda0: -0.15
-    - name: "Terminal only: harmful outcomes remain unresolved"
-      theta: 0.05
-      q1: 0.30
-      q0: 0.05
-      lambda1: 0.00
-      lambda0: 0.00
-    - name: "Timing and terminal: harmful outcomes resolve late"
-      theta: 0.05
-      q1: 0.30
-      q0: 0.05
-      lambda1: 0.45
-      lambda0: -0.15
-    - name: "Timing and terminal: harmful outcomes resolve early"
-      theta: 0.05
-      q1: 0.05
-      q0: 0.30
-      lambda1: -0.45
-      lambda0: 0.15
-    - name: "High terminal unresolvedness"
-      theta: 0.05
-      q1: 0.70
-      q0: 0.40
-      lambda1: 0.35
-      lambda0: -0.10
-    - name: "Low error prevalence"
-      theta: 0.01
-      q1: 0.30
-      q0: 0.05
-      lambda1: 0.45
-      lambda0: -0.15
-    - name: "High error prevalence"
-      theta: 0.20
-      q1: 0.30
-      q0: 0.05
-      lambda1: 0.45
-      lambda0: -0.15
-    - name: "Intrinsic safety impossibility"
-      theta: 0.15
-      q1: 0.10
-      q0: 0.10
-      lambda1: 0.00
-      lambda0: 0.00
-    - name: "Near numerical degeneracy"
-      theta: 0.01
-      q1: 0.90
-      q0: 0.01
-      lambda1: 0.80
-      lambda0: -0.80
-    - name: "Same endpoint without timing information"
-      theta: 0.05
-      q1: 0.20
-      q0: 0.10
-      lambda1: 0.00
-      lambda0: 0.00
-    - name: "Same endpoint with timing information"
-      theta: 0.05
-      q1: 0.20
-      q0: 0.10
-      lambda1: 0.60
-      lambda0: -0.20
+laws:
+  no_path_dependence:
+    theta: 0.05
+    q1: 0.10
+    q0: 0.10
+    lambda1: 0.00
+    lambda0: 0.00
 
-  utility_and_coherence_laws:
-    - "No outcome-path dependence"
-    - "Timing only: harmful outcomes resolve late"
-    - "Terminal only: harmful outcomes remain unresolved"
-    - "Timing and terminal: harmful outcomes resolve late"
-    - "High terminal unresolvedness"
-    - "Low error prevalence"
+  timing_harmful_late:
+    theta: 0.05
+    q1: 0.10
+    q0: 0.10
+    lambda1: 0.45
+    lambda0: -0.15
 
-  sharpness_oracle_laws:
-    - "No outcome-path dependence"
-    - "Timing only: harmful outcomes resolve late"
-    - "Terminal only: harmful outcomes remain unresolved"
-    - "Timing and terminal: harmful outcomes resolve late"
-    - "Timing and terminal: harmful outcomes resolve early"
-    - "High terminal unresolvedness"
-    - "Low error prevalence"
-    - "High error prevalence"
-    - "Intrinsic safety impossibility"
-    - "Near numerical degeneracy"
+  terminal_harmful_unresolved:
+    theta: 0.05
+    q1: 0.30
+    q0: 0.05
+    lambda1: 0.00
+    lambda0: 0.00
 
-  safety_and_impossibility_laws:
-    - "No outcome-path dependence"
-    - "Timing only: harmful outcomes resolve late"
-    - "Terminal only: harmful outcomes remain unresolved"
-    - "Timing and terminal: harmful outcomes resolve late"
-    - "Timing and terminal: harmful outcomes resolve early"
-    - "High terminal unresolvedness"
-    - "Low error prevalence"
-    - "Intrinsic safety impossibility"
+  timing_terminal_harmful_late:
+    theta: 0.05
+    q1: 0.30
+    q0: 0.05
+    lambda1: 0.45
+    lambda0: -0.15
 
-partitions:
-  primary:
-    - name: "8-band partition"
-      groups: [[1], [2], [3], [4], [5], [6], [7], [8]]
-    - name: "4-band partition"
-      groups: [[1, 2], [3, 4], [5, 6], [7, 8]]
-    - name: "2-band partition"
-      groups: [[1, 2, 3, 4], [5, 6, 7, 8]]
-    - name: "Endpoint-only partition"
-      groups: [[1, 2, 3, 4, 5, 6, 7, 8]]
+  timing_terminal_harmful_early:
+    theta: 0.05
+    q1: 0.05
+    q0: 0.30
+    lambda1: -0.45
+    lambda0: 0.15
 
-  computational_scaling_resolved_bands: [1, 2, 4, 8, 16, 32, 64, 128]
+  high_unresolvedness:
+    theta: 0.05
+    q1: 0.70
+    q0: 0.40
+    lambda1: 0.35
+    lambda0: -0.10
 
-sensitivity:
-  primary_rho_grid:
-    - 0
-    - 0.0025
-    - 0.005
-    - 0.01
-    - 0.02
-    - 0.03
-    - 0.05
-    - 0.075
-    - 0.10
-    - 0.15
-    - 0.20
-    - 0.30
-    - 0.40
-    - 0.50
+  low_prevalence:
+    theta: 0.01
+    q1: 0.30
+    q0: 0.05
+    lambda1: 0.45
+    lambda0: -0.15
 
-  primary_beta_grid: [0.01, 0.025, 0.05, 0.10, 0.20]
+  high_prevalence:
+    theta: 0.20
+    q1: 0.30
+    q0: 0.05
+    lambda1: 0.45
+    lambda0: -0.15
 
-  same_endpoint_rho_grid: [0.01, 0.05, 0.10, 0.20, 0.40]
+  intrinsic_impossibility:
+    theta: 0.15
+    q1: 0.10
+    q0: 0.10
+    lambda1: 0.00
+    lambda0: 0.00
 
-  theorem_rho_offsets:
-    sharp_set: [0, 0.005, 0.025, 0.100]
-    oracle_validation: [0, 0.0025, 0.010, 0.050, 0.150]
-    refinement_above_fine_tau: [0.005, 0.025, 0.100]
+  near_degeneracy:
+    theta: 0.01
+    q1: 0.90
+    q0: 0.01
+    lambda1: 0.80
+    lambda0: -0.80
 
-  confirmatory_sharpness_oracle_offset_above_tau: 0.05
+  same_endpoint_no_timing:
+    theta: 0.05
+    q1: 0.20
+    q0: 0.10
+    lambda1: 0.00
+    lambda0: 0.00
+
+  same_endpoint_with_timing:
+    theta: 0.05
+    q1: 0.20
+    q0: 0.10
+    lambda1: 0.60
+    lambda0: -0.20
+
+grids:
+  partitions: [8, 4, 2, 1]
+  scaling_bands: [1, 2, 4, 8, 16, 32, 64, 128]
+
+  rho:
+    [0, 0.0025, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075,
+     0.10, 0.15, 0.20, 0.30, 0.40, 0.50]
+
+  beta: [0.01, 0.025, 0.05, 0.10, 0.20]
 
 numerics:
-  population_root_absolute_tolerance: 1.0e-12
-  deterministic_identity_tolerance: 1.0e-10
-  scientific_comparison_guard: 1.0e-12
-  oracle_boundary_bracket_width: 1.0e-14
-  oracle_decimal_digits: 100
-  callback_equality_tolerance: 1.0e-10
-  callback_root_dedup_tolerance: 1.0e-12
-  callback_grid_points: 10001
-  callback_golden_section_width: 1.0e-30
-  callback_q_acceptance: 1.0e-20
-  pattern_mixture_initial_probability_clip: 1.0e-8
-  pattern_mixture_bound_touch_tolerance: 1.0e-8
-  pattern_mixture_gradient_infinity_limit: 1.0e-8
-  anytime_category_root_tolerance: 1.0e-12
-  outer_certified_gap: 1.0e-6
-  outer_max_visited_nodes: 2000000
-  outer_minimum_arbitrary_precision_bits: 128
-  outer_split_tie_tolerance: 1.0e-30
-  constructive_profile_grid_points: 2001
-  convexity_profile_grid_points: 1001
-  information_profile_figure_grid_points: 1001
-
-strict_timing_cases:
-  zero_information_controls:
-    - law: "No outcome-path dependence"
-      fine_partition: "8-band partition"
-      coarse_partition: "4-band partition"
-    - law: "Terminal only: harmful outcomes remain unresolved"
-      fine_partition: "8-band partition"
-      coarse_partition: "4-band partition"
-    - law: "Same endpoint without timing information"
-      fine_partition: "8-band partition"
-      coarse_partition: "2-band partition"
-
-  positive_information_cases:
-    - law: "Timing only: harmful outcomes resolve late"
-      fine_partition: "8-band partition"
-      coarse_partition: "4-band partition"
-    - law: "Timing and terminal: harmful outcomes resolve late"
-      fine_partition: "8-band partition"
-      coarse_partition: "4-band partition"
-    - law: "Same endpoint with timing information"
-      fine_partition: "8-band partition"
-      coarse_partition: "2-band partition"
-
-legacy_partition_incoherence:
-  gamma_values: [1.5, 2, 4]
-  q_values: [0.1, 0.3]
-  latent_outcome_probabilities: [0.5, 0.5]
+  root_atol: 1.0e-12
+  identity_atol: 1.0e-10
+  comparison_guard: 1.0e-12
+  oracle_digits: 100
+  anytime_root_atol: 1.0e-12
+  outer_gap: 1.0e-6
+  outer_max_nodes: 2000000
+  arbitrary_precision_bits: 128
 
 comparators:
-  legacy_bandwise_odds_ratio_sensitivity:
-    gamma_grid: [1, 1.25, 1.5, 2, 4, 8]
+  legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
 
-  repeated_attempt_pattern_mixture:
-    c_grid: [0, 1, 2, 3]
+  pattern_mixture:
+    c: [0, 1, 2, 3]
     coefficient_bounds: [-20, 20]
     ftol: 1.0e-15
     gtol: 1.0e-12
     max_iterations: 10000
-    initial_zeta1: 0
 
-sequential_inference:
-  coverage_validation:
-    n_max: 500
-    seed_indices: {start: 0, stop_exclusive: 5000}
-    checkpoint_batch_size: 100
-    clopper_pearson_confidence: 0.95
+sequential:
+  coverage:
+    streams: 5000
+    max_events: 500
+    checkpoint_every: 100
     acceptance_upper_limit: 0.06
 
-  sequential_utility:
-    n_max: 2000
-    seed_indices: {start: 0, stop_exclusive: 500}
-    checkpoint_batch_size: 50
-    rho_grid: [0.05, 0.10, 0.20]
+  utility:
+    streams: 500
+    max_events: 2000
+    checkpoint_every: 50
+    rho: [0.05, 0.10, 0.20]
 
 statistics:
-  bootstrap:
-    resamples: 10000
-  sign_flip:
-    randomizations: 20000
-  practical_metrics:
-    - "Time to first certification"
-    - "Certified update fraction"
-    - "Final risk upper bound"
+  bootstrap_resamples: 10000
+  sign_flip_randomizations: 20000
 
 materiality:
   population:
-    minimum_absolute_tightening: 0.005
-    minimum_relative_unresolved_gain: 0.20
-    minimum_qualifying_laws: 3
-    minimum_compatible_rho_values_per_qualifying_law: 2
+    absolute_tightening: 0.005
+    relative_unresolved_gain: 0.20
+    qualifying_laws: 3
+    compatible_rho_values: 2
 
   sequential:
-    minimum_certified_update_fraction_gain: 0.05
-    minimum_qualifying_laws: 3
-    paired_bootstrap_lower_bound_must_exceed: 0
+    certified_fraction_gain: 0.05
+    qualifying_laws: 3
 
-display:
-  decimals:
-    risk_probability: 4
-    information_nats: 5
-    p_value: 4
-    runtime_milliseconds: 2
-  pvalue_display_below: 0.0001
-
-failure_boundary:
-  base_law: "Timing and terminal: harmful outcomes resolve late"
-  axes:
-    - name: "Terminal unresolved severity"
-      q1_equals_q0_values: [0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
-    - name: "Timing contrast"
-      d_values: [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
-    - name: "Harmful prevalence"
-      theta_values: [0.001, 0.005, 0.01, 0.025, 0.05, 0.10, 0.20]
-    - name: "Path resolution"
-      resolved_band_values: [1, 2, 4, 8, 16, 32, 64]
-    - name: "Sensitivity margin above compatibility"
-      d_values: [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05]
-    - name: "Risk-budget offset from intrinsic boundary"
-      d_values: [-0.05, -0.02, -0.005, 0, 0.005, 0.02, 0.05]
-    - name: "Matured sample size"
-      n_values: [25, 50, 100, 200, 500, 1000, 2000]
-    - name: "Terminal-selection asymmetry"
-      q1_q0_pairs:
-        - [0.01, 0.50]
-        - [0.02, 0.40]
-        - [0.05, 0.30]
-        - [0.10, 0.10]
-        - [0.30, 0.05]
-        - [0.40, 0.02]
-        - [0.50, 0.01]
-    - name: "Optimizer-node budget"
-      node_values: [1000, 5000, 20000, 100000, 500000, 1000000, 2000000]
-      deterministic_matured_sample_size: 500
-
-sequential_stress_cases:
-  - name: "Independent resolution control"
-    law: "No outcome-path dependence"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "Timing-only harmful-late stress"
-    law: "Timing only: harmful outcomes resolve late"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "Terminal-selection harmful-unresolved stress"
-    law: "Terminal only: harmful outcomes remain unresolved"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "Timing-and-terminal harmful-late stress"
-    law: "Timing and terminal: harmful outcomes resolve late"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "Timing-and-terminal harmful-early stress"
-    law: "Timing and terminal: harmful outcomes resolve early"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "High unresolvedness stress"
-    law: "High terminal unresolvedness"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "Low error-prevalence stress"
-    law: "Low error prevalence"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "Near-degeneracy stress"
-    law: "Near numerical degeneracy"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-  - name: "Sixteen-band resolution stress"
-    law: "Timing and terminal: harmful outcomes resolve late"
-    resolved_bands: 16
-    rho_offset_above_true_information: 0.01
-  - name: "Thirty-two-band resolution stress"
-    law: "Timing and terminal: harmful outcomes resolve late"
-    resolved_bands: 32
-    rho_offset_above_true_information: 0.01
-  - name: "Minimum-information completion stress"
-    law: "Minimum-information completion of Timing and terminal: harmful outcomes resolve late"
-    resolved_bands: 8
-    rho_offset_above_compatibility_floor: 0.002
-  - name: "Near-certification risk-budget stress"
-    law: "Timing and terminal: harmful outcomes resolve late"
-    resolved_bands: 8
-    rho_offset_above_true_information: 0.01
-    beta_offset_above_true_upper_bound: 0.002
-
-sequential_stress_methods:
-  - TrajCert
-  - "Time-uniform observable-law projection"
-  - "Repeated-static-monitoring negative control"
-  - "Ignorable-delay anytime reference"
-
-runtime_benchmark:
+benchmark:
   warmup_repetitions: 5
   measured_repetitions: 30
-  law: "Timing and terminal: harmful outcomes resolve late"
-  outer_projection_input:
-    n: 500
-  outer_projection_rho_offset_above_true_information: 0.01
 
-runtime_environment:
-  architecture: Linux x86_64
-  container_base_family: Debian 12 / bookworm
-  python_image: python:3.13.15-slim-bookworm
-  python_implementation: CPython
-  python_version: 3.13.15
-  locale: C.UTF-8
-  timezone: UTC
-
-  environment_variables:
-    PYTHONHASHSEED: "0"
-    OMP_NUM_THREADS: "1"
-    OPENBLAS_NUM_THREADS: "1"
-    MKL_NUM_THREADS: "1"
-    NUMEXPR_NUM_THREADS: "1"
-
-  authoritative_execution: CPU
-
-  direct_dependencies:
-    numpy: 2.5.2
-    scipy: 1.18.0
-    pandas: 2.3.3
-    pyarrow: 25.0.1
-    python-flint: 0.9.0
-    sympy: 1.13.3
-    mpmath: 1.3.0
-    matplotlib: 3.10.0
-    pyyaml: 6.0.3
-    pytest: 8.3.5
-    hypothesis: 6.125.3
-
-  reproducibility_tools:
-    pip-tools: 7.6.0
-
-  transitive_lock_file: requirements.lock
-
-artifacts:
-  execution_workspace_root: outputs
-
-  execution_workspace_directories:
-    - preprocessing
-    - artifacts
-    - experiments
-    - cache
-
-  reusable_artifact_directories:
-    - fitted
-    - baselines
-    - derived/plans
-    - derived/streams
-    - derived/population
-    - derived/sequential
-
-  results_root: results
-  results_experiments_directory: experiments
-  results_project_summary_directory: project_summary
-
-  result_experiment_directories:
-    - figures/main
-    - figures/supplementary
-    - tables/main
-    - tables/supplementary
-    - metrics/primary
-    - metrics/secondary
-    - metrics/summary
-    - statistics/tests
-    - statistics/confidence_intervals
-    - statistics/effects
-    - statistics/multiplicity
-
-  project_summary_directories:
-    - figures/main
-    - figures/supplementary
-    - tables/main
-    - tables/supplementary
-    - metrics/primary
-    - metrics/summary
-    - statistics/comparisons
-    - statistics/confidence_intervals
-    - statistics/effects
-    - statistics/multiplicity
-    - claims
-    - reproducibility/configuration
-    - reproducibility/datasets
-    - reproducibility/seeds
-    - reproducibility/software
-    - reproducibility/execution
-
-  plan_json_filename: experiment_plan.json
-  plan_parquet_filename: experiment_plan.parquet
-  completion_marker_file: COMPLETED.json
-
-smoke:
-  compatible_population_cases: 1
-  incompatible_population_cases: 1
-  endpoint_only_partition_cases: 1
-  refinement_cases: 1
-  deterministic_cs_event_count: 25
-  low_dimensional_interval_optimizer_hand_cases: 1
-
-cli:
-  exit_codes:
-    success_or_scientific_noop: 0
-    usage_or_unknown_name: 2
-    environment_or_prerequisite_block: 10
-    technical_execution_failure: 20
-    completion_or_evidence_failure: 30
+failure_boundary:
+  unresolvedness: [0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
+  timing_contrast: [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
+  prevalence: [0.001, 0.005, 0.01, 0.025, 0.05, 0.10, 0.20]
+  bands: [1, 2, 4, 8, 16, 32, 64]
+  information_margin: [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05]
+  risk_offset: [-0.05, -0.02, -0.005, 0, 0.005, 0.02, 0.05]
+  sample_size: [25, 50, 100, 200, 500, 1000, 2000]
 ```
 
 `PyYAML 6.0.3` is explicitly included because the authoritative configuration is YAML and that release supports CPython 3.13.
@@ -1015,11 +715,11 @@ The YAML stores configuration data only. Mathematical constants, derivations, al
 The following configuration-adjacent rules are mandatory:
 
 1. No generic scientific epsilon exists. Entropy, mutual-information, latent-risk, and sensitivity formulas use their exact continuous extensions and declared numerical algorithms rather than an undocumented epsilon.
-2. `numerics.scientific_comparison_guard` may prevent a false strong classification caused only by binary representation error, but it may never relax certification. `CERTIFIED` still requires the proven upper risk to be no greater than the applicable risk budget.
+2. `numerics.comparison_guard` may prevent a false strong classification caused only by binary representation error, but it may never relax certification. `CERTIFIED` still requires the proven upper risk to be no greater than the applicable risk budget.
 3. The exact binary maximum-information endpoint is the mathematical constant $\log 2$. It is required where Sections 7.12 and 18.9 specify it and is not stored as an approximate configurable constant.
-4. The file order of `synthetic_data.laws` is authoritative where deterministic law ordering is required.
+4. The file order of `laws` is authoritative where deterministic law ordering is required.
 5. Experiment ordering is authoritative in Section 17.
-6. `sensitivity.primary_beta_grid` is a prespecified descriptive reference grid included in Table 1 and configuration provenance. No current registry experiment sweeps that grid independently; beta values used by executable experiments are defined by their experiment-specific contracts.
+6. `grids.beta` is a prespecified descriptive reference grid included in Table 1 and configuration provenance. No current registry experiment sweeps that grid independently; beta values used by executable experiments are defined by their experiment-specific contracts.
 7. Descriptive categorical values in YAML are semantic names only where they genuinely select configured laws, partitions, methods, or runtime identifiers.
 8. Scientific/statistical grid membership is prespecified. A scientific parameter change creates a different dependency identity for only the artifacts that actually consume it.
 
@@ -1095,7 +795,7 @@ Positive $\lambda$ shifts resolved mass later; negative $\lambda$ shifts it earl
 
 The observed law hides $L$ for $J=\infty$.
 
-The synthetic terminal horizon is `method.synthetic_terminal_horizon_age_units`. For any resolved-band count $K$, the synthetic resolved boundaries are equally spaced over that fixed horizon:
+The synthetic terminal horizon is `method.terminal_horizon`. For any resolved-band count $K$, the synthetic resolved boundaries are equally spaced over that fixed horizon:
 
 $$
 H_k=\frac{k}{K}H_K,\qquad k=1,\ldots,K.
@@ -1142,7 +842,7 @@ These laws are used only in declared compatibility-boundary stress tests.
 
 ## 5.4 K-scaling laws
 
-For each $K$ in `partitions.computational_scaling_resolved_bands`, regenerate the same conditional-law functional form with unchanged:
+For each $K$ in `grids.scaling_bands`, regenerate the same conditional-law functional form with unchanged:
 
 ```text
 theta
@@ -1220,7 +920,7 @@ Synthetic preprocessing performs only:
 
 It performs no normalization, imputation, feature scaling, train/validation/test split, duplicate collapsing, label remapping, or learned preprocessing.
 
-A probability sum must equal one within `numerics.scientific_comparison_guard`.
+A probability sum must equal one within `numerics.comparison_guard`.
 
 Any `NaN`, infinity, duplicate ID, impossible category, invalid label, or probability outside `[0,1]` invalidates preprocessing.
 
@@ -1500,7 +1200,7 @@ The counterexample passes when:
 ```text
 true hidden mass is feasible under the two-band legacy model
 two-band and endpoint-only legacy feasible risk sets are not identical
-set-endpoint difference exceeds numerics.deterministic_identity_tolerance
+set-endpoint difference exceeds numerics.identity_atol
 ```
 
 The exact direction and magnitude of the set difference are reported; only non-invariance is required.
@@ -1531,7 +1231,7 @@ $$
 
 Algorithm:
 
-1. use `numerics.oracle_decimal_digits` decimal digits;
+1. use `numerics.oracle_digits` decimal digits;
 2. evaluate exactly `numerics.callback_grid_points` equally spaced $u$ points including `0` and `c`;
 3. every point no greater than available immediate neighbors defines a local minimization bracket;
 4. endpoints are brackets when locally minimal;
@@ -1600,7 +1300,7 @@ using weighted Bernoulli cross-entropy with weight $m_k$.
 
 The optimizer is fixed to `L-BFGS-B`.
 
-Coefficient bounds, convergence tolerances, iteration limit, and initial slope are the numerical values under `comparators.repeated_attempt_pattern_mixture`.
+Coefficient bounds, convergence tolerances, iteration limit, and initial slope are the numerical values under `comparators.pattern_mixture`.
 
 Initialization:
 
@@ -1672,11 +1372,11 @@ The oracle may use the mathematical fact that the feasible set is an interval, b
 Oracle precision:
 
 ```text
-decimal digits = numerics.oracle_decimal_digits
+decimal digits = numerics.oracle_digits
 boundary bracket width <= numerics.oracle_boundary_bracket_width
 ```
 
-The oracle uses `mpmath` at exactly `numerics.oracle_decimal_digits` decimal digits.
+The oracle uses `mpmath` at exactly `numerics.oracle_digits` decimal digits.
 
 Its independent algorithm is:
 
@@ -1697,7 +1397,7 @@ $$
 
 This procedure detects the $\rho=\tau$ tangent/singleton case explicitly and therefore does not depend on arbitrary subdivision discovering a zero-width feasible component.
 
-Production endpoints must agree with oracle endpoints within `numerics.deterministic_identity_tolerance`.
+Production endpoints must agree with oracle endpoints within `numerics.identity_atol`.
 
 ## 7.9 Time-uniform observable-law projection
 
@@ -1984,7 +1684,7 @@ $$
 \log M_{j,n}(p)-\log(d/\delta)=0.
 $$
 
-Stop only when bracket width is no greater than `numerics.anytime_category_root_tolerance`.
+Stop only when bracket width is no greater than `numerics.anytime_root_atol`.
 
 To preserve outward coverage:
 
@@ -2140,7 +1840,7 @@ $$
 Deterministic interval branch-and-bound:
 
 1. use Arb interval/ball arithmetic through `python-flint`;
-2. use exactly `numerics.outer_minimum_arbitrary_precision_bits` bits for the authoritative computation;
+2. use exactly `numerics.arbitrary_precision_bits` bits for the authoritative computation;
 3. any operation that remains indeterminate at that precision invokes the conservative fallback rather than silently increasing precision;
 4. initial coordinates are:
 
@@ -2168,7 +1868,7 @@ $$
 $$
 10. generate feasible incumbents from box midpoints;
 11. for midpoint $(A,G)$, compute the maximal feasible $u$ with $C=C_U$ by deterministic upper-branch bisection using the same mathematical profile $S(A,G,C_U,u)$;
-12. the scalar incumbent bisection stops at `numerics.population_root_absolute_tolerance`;
+12. the scalar incumbent bisection stops at `numerics.root_atol`;
 13. an incumbent is accepted only when direct Arb evaluation gives an upper bound on $S$ no greater than $\rho$;
 14. normalized coordinate width is physical box width divided by that coordinate's width in the initial box;
 15. if an initial coordinate width is zero, its normalized width is zero;
@@ -2186,7 +1886,7 @@ A, then G, then u
     \le
     \texttt{numerics.outer＿certified＿gap};
 $$
-20. stop at `numerics.outer_max_visited_nodes` if not already converged.
+20. stop at `numerics.outer_max_nodes` if not already converged.
 
 On node cap, arithmetic failure, or unresolved interval ambiguity:
 
@@ -2299,7 +1999,7 @@ $$
    ```text
    A, then G, then u
    ```
-8. use `numerics.outer_certified_gap`, the Section 9.4 precision, and `numerics.outer_max_visited_nodes`;
+8. use `numerics.outer_gap`, the Section 9.4 precision, and `numerics.outer_max_nodes`;
 9. on node cap or ambiguity, return the current conservative lower bound.
 
 `INTRINSICALLY_UNCERTIFIABLE` requires:
@@ -2452,7 +2152,7 @@ For one comparison:
    ```
 2. use seed index `0`;
 3. instantiate the required `PCG64` generator;
-4. for each of exactly `statistics.bootstrap.resamples` resamples, sample $n$ pair indices independently with replacement from `0..n-1`;
+4. for each of exactly `statistics.bootstrap_resamples` resamples, sample $n$ pair indices independently with replacement from `0..n-1`;
 5. compute the resampled mean paired difference;
 6. sort all bootstrap means;
 7. for confidence level $1-\alpha$, use quantiles $\alpha/2$ and $1-\alpha/2$;
@@ -2552,7 +2252,7 @@ $$
 
 Map adjusted p-values back to their original semantic records.
 
-Adjusted p-values are compared with `confidence.confirmatory_alpha`.
+Adjusted p-values are compared with `confidence.alpha`.
 
 ## 9.10 Failed stochastic executions
 
@@ -4148,7 +3848,7 @@ expected = MODEL_INCOMPATIBLE
 ```text
 law = Timing and terminal: harmful outcomes resolve late
 partition = Endpoint-only partition
-rho = budgets.primary_information_nats
+rho = budgets.information_nats
 expected tau = 0
 ```
 
@@ -4191,7 +3891,7 @@ C_L=C_U=C
 rho=tau+0.01
 ```
 
-The certified outer projection must agree with the population upper endpoint within `numerics.deterministic_identity_tolerance`.
+The certified outer projection must agree with the population upper endpoint within `numerics.identity_atol`.
 
 # 17. Authoritative Experiment Registry
 
@@ -4339,9 +4039,9 @@ Across all cells:
 
 ```text
 state mismatches = 0
-endpoint absolute error <= numerics.deterministic_identity_tolerance
-root bracket width <= numerics.population_root_absolute_tolerance
-returned-root residual <= numerics.deterministic_identity_tolerance
+endpoint absolute error <= numerics.identity_atol
+root bracket width <= numerics.root_atol
+returned-root residual <= numerics.identity_atol
 ```
 
 Static architecture validation must verify oracle independence.
@@ -4349,7 +4049,7 @@ Static architecture validation must verify oracle independence.
 For Table 6 `rho_star` validation, use:
 
 ```text
-beta = budgets.primary_risk
+beta = budgets.risk
 ```
 
 For each law/partition, compute $\rho^\star$ only when the Section 3.8 interior safety-frontier regime applies.
@@ -4396,9 +4096,9 @@ Generic MI-constrained oracle
 Internal grids:
 
 ```text
-legacy Gamma = comparators.legacy_bandwise_odds_ratio_sensitivity.gamma_grid
-pattern-mixture C = comparators.repeated_attempt_pattern_mixture.c_grid
-generic MI rho = sensitivity.primary_rho_grid plus exact log(2)
+legacy Gamma = comparators.legacy_gamma
+pattern-mixture C = comparators.pattern_mixture.c
+generic MI rho = grids.rho plus exact log(2)
 ```
 
 No $\Gamma\leftrightarrow\rho$ or $C\leftrightarrow\rho$ calibration is inferred.
@@ -4456,8 +4156,8 @@ Required:
 ```text
 fine sharp set subset of coarse
 profile difference = Delta tau
-zero-information gain <= numerics.deterministic_identity_tolerance
-positive-information gain > numerics.deterministic_identity_tolerance
+zero-information gain <= numerics.identity_atol
+positive-information gain > numerics.identity_atol
   when theorem conditions hold
 ```
 
@@ -4570,7 +4270,7 @@ MODEL_INCOMPATIBLE
 law = Intrinsic safety impossibility
 confidence envelope = exact singleton
 rho = tau + 0.01
-beta = budgets.primary_risk
+beta = budgets.risk
 expected = INTRINSICALLY_UNCERTIFIABLE
 ```
 
@@ -4637,7 +4337,7 @@ Use exact singleton:
 ```text
 c = 0
 beta = A
-rho = budgets.primary_information_nats
+rho = budgets.information_nats
 expected = CERTIFIED
 risk upper = A
 ```
@@ -4697,7 +4397,7 @@ Required:
 ```text
 return proven conservative upper or 1.0
 never return feasible incumbent as certified upper
-anti-conservatism <= numerics.deterministic_identity_tolerance
+anti-conservatism <= numerics.identity_atol
 ```
 
 ### Hand-case applicability
@@ -4723,7 +4423,7 @@ For non-singleton hand fixtures, the oracle is a deterministic feasible-point lo
 5. locally refine the best 20 grid points using deterministic bounded optimization;
 6. accept only directly verified feasible points.
 
-Because this oracle produces verified feasible lower bounds, a production certified upper smaller than its best feasible value by more than `numerics.deterministic_identity_tolerance` is an anti-conservative implementation failure.
+Because this oracle produces verified feasible lower bounds, a production certified upper smaller than its best feasible value by more than `numerics.identity_atol` is an anti-conservative implementation failure.
 
 ## 18.8 Anytime coverage validation — Anytime Coverage Stress
 
@@ -4815,15 +4515,15 @@ $$
 A compatible rho value is materially nonvacuous iff:
 
 ```text
-absolute tightening >= materiality.population.minimum_absolute_tightening
+absolute tightening >= materiality.population.absolute_tightening
 AND
-relative unresolved gain >= materiality.population.minimum_relative_unresolved_gain
+relative unresolved gain >= materiality.population.relative_unresolved_gain
 ```
 
 A law qualifies iff at least:
 
 ```text
-materiality.population.minimum_compatible_rho_values_per_qualifying_law
+materiality.population.compatible_rho_values
 ```
 
 prespecified rho values qualify.
@@ -4831,7 +4531,7 @@ prespecified rho values qualify.
 The Practical Synthetic Nonvacuity claim is supported iff at least:
 
 ```text
-materiality.population.minimum_qualifying_laws
+materiality.population.qualifying_laws
 ```
 
 laws qualify.
@@ -4856,13 +4556,13 @@ A law qualifies iff at least one of its three prespecified rho conditions satisf
 
 ```text
 mean favorable certified-update-fraction difference
-  >= materiality.sequential.minimum_certified_update_fraction_gain
+  >= materiality.sequential.certified_fraction_gain
 
 bootstrap lower bound
   > materiality.sequential.paired_bootstrap_lower_bound_must_exceed
 
 Holm-adjusted p-value
-  < confidence.confirmatory_alpha
+  < confidence.alpha
 ```
 
 The other two practical metrics remain mandatory reported secondary evidence but do not independently create a law-level materiality vote because no separate materiality threshold is configured for them.
@@ -4876,9 +4576,9 @@ The base law is `failure_boundary.base_law`.
 Unless an axis changes them:
 
 ```text
-K = method.primary_finest_resolved_bands
-rho = budgets.primary_information_nats
-beta = budgets.primary_risk
+K = method.finest_bands
+rho = budgets.information_nats
+beta = budgets.risk
 ```
 
 Axis derivations:
@@ -4917,7 +4617,7 @@ Use all configured $K$ values.
 Population solver:
 
 ```text
-rho = budgets.primary_information_nats
+rho = budgets.information_nats
 ```
 
 Outer projection:
@@ -4926,7 +4626,7 @@ Outer projection:
 n = runtime_benchmark.outer_projection_input.n
 construction = balanced-prefix
 rho = I_true + runtime_benchmark.outer_projection_rho_offset_above_true_information
-beta = budgets.primary_risk
+beta = budgets.risk
 ```
 
 Population and outer-projection targets are timed separately.
@@ -5429,9 +5129,9 @@ outputs/experiments/safety-and-intrinsic-impossibility/evaluations/aggregates/fi
 
 ```text
 law = Timing and terminal: harmful outcomes resolve late
-K = method.primary_finest_resolved_bands
-beta = budgets.primary_risk
-rho = budgets.primary_information_nats
+K = method.finest_bands
+beta = budgets.risk
+rho = budgets.information_nats
 grid = numerics.information_profile_figure_grid_points
 ```
 
@@ -5457,7 +5157,7 @@ seed indices = [0,1,2,3]
 law = Timing and terminal: harmful outcomes resolve late
 K = 8
 rho = I_true + 0.01
-beta = budgets.primary_risk
+beta = budgets.risk
 x = matured event count
 y = U_n(rho)
 ```
@@ -5474,7 +5174,7 @@ Show one-sided exact upper confidence limits and references:
 
 ```text
 confidence.anytime_delta
-sequential_inference.coverage_validation.acceptance_upper_limit
+sequential.coverage.acceptance_upper_limit
 ```
 
 ## Figure 6 — Full rho sensitivity
@@ -5538,7 +5238,7 @@ Required:
 Support:
 
 ```text
-zero PIS nesting violations beyond numerics.deterministic_identity_tolerance
+zero PIS nesting violations beyond numerics.identity_atol
 all six legacy counterexamples demonstrate non-invariance of the legacy feasible set
 ```
 
@@ -5561,7 +5261,7 @@ Required:
 * all decomposition identities;
 * same-endpoint timing ablation.
 
-Support requires residual no greater than `numerics.deterministic_identity_tolerance`.
+Support requires residual no greater than `numerics.identity_atol`.
 
 ## 21.3 Exact Compatibility Floor
 
@@ -5594,7 +5294,7 @@ Support:
 
 ```text
 zero state mismatches
-max endpoint error <= numerics.deterministic_identity_tolerance
+max endpoint error <= numerics.identity_atol
 ```
 
 No finite-sample optimality claim follows.
@@ -5608,9 +5308,9 @@ Claim:
 Support:
 
 ```text
-zero-information absolute gain <= numerics.deterministic_identity_tolerance
-positive-information gain > numerics.deterministic_identity_tolerance
-profile-difference residual <= numerics.deterministic_identity_tolerance
+zero-information absolute gain <= numerics.identity_atol
+positive-information gain > numerics.identity_atol
+profile-difference residual <= numerics.identity_atol
 ```
 
 No claim that additional bins always strictly help is permitted.
@@ -5672,7 +5372,7 @@ Support:
 
 ```text
 number of qualifying laws
->= materiality.population.minimum_qualifying_laws
+>= materiality.population.qualifying_laws
 ```
 
 Failure:
@@ -5705,7 +5405,7 @@ A law qualifies only by the certified-update-fraction rule in Section 18.9.
 Support:
 
 ```text
-qualifying laws >= materiality.sequential.minimum_qualifying_laws
+qualifying laws >= materiality.sequential.qualifying_laws
 ```
 
 Partial support:
@@ -5735,7 +5435,7 @@ Required:
 Support:
 
 ```text
-all population oracle errors <= numerics.deterministic_identity_tolerance
+all population oracle errors <= numerics.identity_atol
 all K cells complete
 ```
 
