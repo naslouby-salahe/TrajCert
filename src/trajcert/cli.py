@@ -10,17 +10,20 @@ from trajcert.types import CliCommand
 
 
 def main() -> None:
-    parser = ArgumentParser(prog='trajcert')
-    parser.add_argument('command', choices=tuple(command.value for command in CliCommand))
+    parser = ArgumentParser(prog="trajcert")
+    parser.add_argument(
+        "command", choices=tuple(command.value for command in CliCommand)
+    )
     arguments = parser.parse_args()
     command = CliCommand(arguments.command)
     if command is CliCommand.DOCTOR:
         _doctor()
 
+
 def _doctor() -> None:
     configuration = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    partitions = configured_partitions(configuration)
-    laws = configured_laws(configuration)
+    partitions = configured_partitions()
+    laws = configured_laws()
     for law in laws:
         build_full_law(law, partitions[0].band_count)
-    print('TrajCert doctor: configuration and core scientific inputs are valid')
+    print("TrajCert doctor: configuration and core scientific inputs are valid")
