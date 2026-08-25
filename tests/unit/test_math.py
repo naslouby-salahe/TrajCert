@@ -86,7 +86,7 @@ def test_information_profile_geometry_and_derivatives() -> None:
     observed = summary([0.2, 0.0], [0.0, 0.4], 0.4)
     minimum = minimum_information_point(observed)
     assert minimum is not None
-    assert resolved_timing_entropy(observed) == pytest.approx(0.0)
+    assert resolved_timing_entropy(observed) == pytest.approx(0.0)  # NOSONAR: actual is left-hand
     timing_information = observed_timing_information(observed)
     assert timing_information is not None
     assert timing_information > 0.0
