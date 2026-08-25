@@ -35,7 +35,7 @@ def solve_hidden_mass_interval(
     root_tolerance = _positive_tolerance(root_atol, "root_atol")
     identity_tolerance = _positive_tolerance(identity_atol, "identity_atol")
     compatibility = assess_compatibility(summary, sensitivity_budget)
-    rho = float(sensitivity_budget)
+    rho = sensitivity_budget
     unresolved = float(summary.unresolved_mass)
     if compatibility.regime is CompatibilityRegime.MODEL_INCOMPATIBLE:
         return HiddenMassSolveResult(
@@ -98,7 +98,11 @@ def solve_hidden_mass_interval(
 
 
 def _solve_lower_branch(
-    summary: ObservableSummary, rho: float, u_dagger: float, root_atol: float, identity_atol: float
+    summary: ObservableSummary,
+    rho: SensitivityBudget,
+    u_dagger: float,
+    root_atol: float,
+    identity_atol: float,
 ) -> RootBracket:
     boundary_value = _profile_residual(summary, 0.0, rho)
     if boundary_value <= 0.0:
@@ -121,7 +125,7 @@ def _solve_lower_branch(
 
 def _solve_upper_branch(
     summary: ObservableSummary,
-    rho: float,
+    rho: SensitivityBudget,
     u_dagger: float,
     unresolved: float,
     root_atol: float,
@@ -149,7 +153,7 @@ def _solve_upper_branch(
 def _bisect(
     *,
     summary: ObservableSummary,
-    rho: float,
+    rho: SensitivityBudget,
     branch: RootBranch,
     lower: float,
     upper: float,
@@ -204,7 +208,9 @@ def _bisect(
     return result
 
 
-def _profile_residual(summary: ObservableSummary, hidden_mass: float, rho: float) -> float:
+def _profile_residual(
+    summary: ObservableSummary, hidden_mass: float, rho: SensitivityBudget
+) -> float:
     return float(information_profile(summary, hidden_mass)) - rho
 
 
@@ -212,7 +218,7 @@ def _exact_root(
     branch: RootBranch,
     hidden_mass: float,
     summary: ObservableSummary,
-    rho: float,
+    rho: SensitivityBudget,
     status: RootStatus,
 ) -> RootBracket:
     residual = abs(_profile_residual(summary, hidden_mass, rho))

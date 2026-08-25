@@ -1,0 +1,8 @@
+rules:
+  - id: TC-SUPPRESS-001
+    languages: [generic]
+    severity: ERROR
+    message: Quality suppressions are forbidden in application code.
+    paths:
+      include: ["/src/trajcert/**/*.py"]
+    pattern-regex: "(?i)(noqa|type:\\s*ignore|pyright:\\s*ignore|basedpyright:\\s*ignore|semgrep:ignore|pragma:\\s*no\\s*(cover|mutate)|nosec)"
