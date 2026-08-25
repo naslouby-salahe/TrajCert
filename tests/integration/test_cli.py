@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import sys
 
-from pytest import CaptureFixture, MonkeyPatch
+import pytest
 
 from trajcert.cli import main
 
 
 def test_doctor_validates_the_authoritative_core_inputs(
-    monkeypatch: MonkeyPatch,
-    capsys: CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(sys, "argv", ["trajcert", "doctor"])
 

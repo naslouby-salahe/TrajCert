@@ -104,8 +104,9 @@ def test_information_profile_geometry_and_derivatives() -> None:
 
 @pytest.mark.parametrize("hidden", [-0.1, 0.5])
 def test_information_profile_rejects_hidden_mass_outside_unresolved_domain(hidden: float) -> None:
+    observed = summary([0.2], [0.4], 0.4)
     with pytest.raises(InvalidScientificDataError):
-        information_profile(summary([0.2], [0.4], 0.4), hidden)
+        information_profile(observed, hidden)
 
 
 def test_information_handles_degenerate_and_coarsened_summaries() -> None:
@@ -165,14 +166,16 @@ def test_solver_handles_all_non_singleton_branches(
         assert result.interval is None
     else:
         assert result.interval is not None
-        assert result.lower_root is not None and result.upper_root is not None
+        assert result.lower_root is not None
+        assert result.upper_root is not None
         assert result.lower_root.status in (RootStatus.BISECTION, RootStatus.EXACT_BOUNDARY)
 
 
 def test_solver_bisects_interior_roots_and_rejects_invalid_tolerances() -> None:
     observed = summary([0.2, 0.0], [0.0, 0.4], 0.4)
     result = solve_hidden_mass_interval(observed, 0.45, 1e-8, 1e-7)
-    assert result.lower_root is not None and result.upper_root is not None
+    assert result.lower_root is not None
+    assert result.upper_root is not None
     assert result.lower_root.status is RootStatus.BISECTION
     assert result.upper_root.status is RootStatus.BISECTION
     with pytest.raises(Exception, match="root_atol"):
