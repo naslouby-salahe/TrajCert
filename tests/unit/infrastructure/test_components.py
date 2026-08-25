@@ -3,6 +3,9 @@ import pytest
 from trajcert.infrastructure.components import (
     EXECUTION_DEPENDENCY_CHAIN,
     REUSABLE_ARTIFACT_LAYERS,
+    StreamExtensionRequest,
+    StreamProvisionDecision,
+    StreamProvisionRequest,
     ValidatedStreamPrefix,
 )
 
@@ -31,8 +34,14 @@ def test_validated_stream_prefix_reuse_and_extension_require_same_semantic_strea
     same_stream = ValidatedStreamPrefix("generator-v1", "seed-set-a", 200)
     other_seed = ValidatedStreamPrefix("generator-v1", "seed-set-b", 200)
 
-    assert prefix.can_serve(25)
-    assert prefix.can_extend_to(200, same_stream)
-    assert not prefix.can_extend_to(200, other_seed)
+    assert prefix.can_serve(StreamProvisionRequest(25)) is StreamProvisionDecision.SERVABLE
+    assert (
+        prefix.can_extend_to(StreamExtensionRequest(200, same_stream))
+        is StreamProvisionDecision.SERVABLE
+    )
+    assert (
+        prefix.can_extend_to(StreamExtensionRequest(200, other_seed))
+        is StreamProvisionDecision.NOT_SERVABLE
+    )
     with pytest.raises(ValueError, match="nonnegative"):
-        prefix.can_serve(-1)
+        prefix.can_serve(StreamProvisionRequest(-1))

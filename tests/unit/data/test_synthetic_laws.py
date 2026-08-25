@@ -6,12 +6,21 @@ from pathlib import Path
 import pytest
 
 from trajcert.configuration.loading import load_configuration
-from trajcert.data.synthetic.generator import SyntheticEvent, generate_synthetic_stream
+from trajcert.data.partitions import HiddenHarmfulMass
+from trajcert.data.synthetic.generator import (
+    SyntheticEvent,
+    SyntheticStreamGenerationInput,
+    generate_synthetic_stream,
+)
 from trajcert.data.synthetic.laws import (
     SYNTHETIC_LAW_CATALOG_MANIFEST_RELATIVE_PATH,
     SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
     SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH,
     SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
+    ResolvedBandCount,
+    SyntheticLabel,
+    SyntheticScalingCatalogWriteInput,
+    SyntheticScalingLawsInput,
     SyntheticTrajectoryLaw,
     canonical_synthetic_law_catalog,
     synthetic_law_catalog,
@@ -22,6 +31,9 @@ from trajcert.data.synthetic.laws import (
 )
 from trajcert.data.synthetic.ledger import (
     SYNTHETIC_LEDGER_ROOT_RELATIVE_PATH,
+    PreparedSyntheticLedgerWriteInput,
+    SyntheticLedgerPreparationInput,
+    SyntheticLedgerRecordsInput,
     prepare_synthetic_ledger,
     prepared_synthetic_ledger_relative_path,
     synthetic_ledger_records,
@@ -33,15 +45,17 @@ from trajcert.math.information_profile import InformationProfile
 def test_synthetic_trajectory_law_preserves_conditional_probability_and_horizon_contract() -> None:
     law = SyntheticTrajectoryLaw("timing", 0.05, 0.3, 0.1, 0.5, -0.5, 4, 8.0)
 
-    harmful = law.conditional_resolution_masses(True)
-    correct = law.conditional_resolution_masses(False)
+    harmful = law.conditional_resolution_masses(SyntheticLabel(True))
+    correct = law.conditional_resolution_masses(SyntheticLabel(False))
 
-    assert math.isclose(sum(harmful) + law.conditional_terminal_mass(True), 1.0)
-    assert math.isclose(sum(correct) + law.conditional_terminal_mass(False), 1.0)
+    assert math.isclose(sum(harmful) + law.conditional_terminal_mass(SyntheticLabel(True)), 1.0)
+    assert math.isclose(sum(correct) + law.conditional_terminal_mass(SyntheticLabel(False)), 1.0)
     assert harmful[-1] > harmful[0]
     assert correct[-1] < correct[0]
     assert law.band_horizons() == (2.0, 4.0, 6.0, 8.0)
-    assert law.with_resolved_band_count(8).terminal_horizon == law.terminal_horizon
+    assert (
+        law.with_resolved_band_count(ResolvedBandCount(8)).terminal_horizon == law.terminal_horizon
+    )
     assert math.isclose(
         law.observable_law().harmful_total
         + law.observable_law().correct_total
@@ -112,9 +126,9 @@ def test_primary_synthetic_law_roles_have_declared_parameter_patterns() -> None:
 
 def test_synthetic_streams_are_seed_deterministic_and_hide_terminal_labels() -> None:
     law = SyntheticTrajectoryLaw("terminal", 0.5, 1.0, 1.0, 0.0, 0.0, 2, 8.0)
-    stream = generate_synthetic_stream(law, 7, 3)
+    stream = generate_synthetic_stream(SyntheticStreamGenerationInput(law, 7, 3)).events
 
-    assert stream == generate_synthetic_stream(law, 7, 3)
+    assert stream == generate_synthetic_stream(SyntheticStreamGenerationInput(law, 7, 3)).events
     assert all(event.admitted for event in stream)
     assert all(event.resolution_band is None and event.observed_label is None for event in stream)
 
@@ -137,7 +151,9 @@ def test_synthetic_ledger_records_have_canonical_identity_and_terminal_semantics
         SyntheticEvent(1, False, None, True),
     )
 
-    records = synthetic_ledger_records(law, 3, events, datetime(2026, 1, 1, tzinfo=UTC))
+    records = synthetic_ledger_records(
+        SyntheticLedgerRecordsInput(law, 3, events, datetime(2026, 1, 1, tzinfo=UTC))
+    )
 
     assert records[0].identity.client_id == "synthetic-client"
     assert records[0].identity.action_channel_id == "automatic-action"
@@ -155,10 +171,12 @@ def test_synthetic_ledger_rejects_band_outside_law_resolution() -> None:
 
     with pytest.raises(ValueError, match="exceeds"):
         synthetic_ledger_records(
-            law,
-            0,
-            (SyntheticEvent(0, True, 3, True),),
-            datetime(2026, 1, 1, tzinfo=UTC),
+            SyntheticLedgerRecordsInput(
+                law,
+                0,
+                (SyntheticEvent(0, True, 3, True),),
+                datetime(2026, 1, 1, tzinfo=UTC),
+            )
         )
 
 
@@ -167,11 +185,7 @@ def test_synthetic_preparation_returns_canonical_checksum_and_manifest(tmp_path:
     events = (SyntheticEvent(0, True, 1, True), SyntheticEvent(1, False, None, True))
 
     prepared = prepare_synthetic_ledger(
-        law,
-        3,
-        events,
-        datetime(2026, 1, 1, tzinfo=UTC),
-        1e-12,
+        SyntheticLedgerPreparationInput(law, 3, events, datetime(2026, 1, 1, tzinfo=UTC), 1e-12)
     )
 
     assert prepared.ledger_checksum == prepared.dataset_manifest.preprocessing_digest
@@ -181,7 +195,10 @@ def test_synthetic_preparation_returns_canonical_checksum_and_manifest(tmp_path:
         "test-law::S000003::E000000",
         "test-law::S000003::E000001",
     )
-    assert write_prepared_synthetic_ledger(tmp_path, prepared) == prepared.ledger_checksum
+    assert (
+        write_prepared_synthetic_ledger(PreparedSyntheticLedgerWriteInput(tmp_path, prepared))
+        == prepared.ledger_checksum
+    )
     assert prepared_synthetic_ledger_relative_path(prepared) == (
         SYNTHETIC_LEDGER_ROOT_RELATIVE_PATH / "law=test-law" / "stream=000003.json"
     )
@@ -215,7 +232,9 @@ def test_minimum_information_completion_preserves_observable_law_and_hits_floor(
     assert math.isclose(derived.observable_law().c, law.observable_law().c, abs_tol=1e-12)
     assert floor is not None
     assert math.isclose(
-        InformationProfile(derived.observable_law()).value(derived.theta * derived.q1),
+        InformationProfile(derived.observable_law()).value(
+            HiddenHarmfulMass(derived.theta * derived.q1)
+        ),
         floor,
         abs_tol=1e-12,
     )
@@ -224,7 +243,7 @@ def test_minimum_information_completion_preserves_observable_law_and_hits_floor(
 def test_synthetic_scaling_laws_change_only_resolution() -> None:
     law = SyntheticTrajectoryLaw("timing", 0.05, 0.3, 0.05, 0.45, -0.15, 8, 8.0)
 
-    scaled = synthetic_scaling_laws(law, (1, 2, 4, 8, 16))
+    scaled = synthetic_scaling_laws(SyntheticScalingLawsInput(law, (1, 2, 4, 8, 16)))
 
     assert tuple(candidate.resolved_band_count for candidate in scaled) == (1, 2, 4, 8, 16)
     assert all(
@@ -264,9 +283,13 @@ def test_synthetic_law_catalog_is_canonical_and_atomically_materialized(tmp_path
 def test_synthetic_scaling_catalog_is_canonical_and_materialized(tmp_path: Path) -> None:
     law = SyntheticTrajectoryLaw("timing", 0.05, 0.3, 0.05, 0.45, -0.15, 8, 8.0)
 
-    digest = write_synthetic_scaling_catalog(tmp_path, law, (2, 8, 16))
+    digest = write_synthetic_scaling_catalog(
+        SyntheticScalingCatalogWriteInput(tmp_path, law, (2, 8, 16))
+    )
     payload = (tmp_path / SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH).read_bytes()
 
     assert digest == hashlib.sha256(payload).hexdigest()
-    assert payload == canonical_synthetic_law_catalog(synthetic_scaling_laws(law, (2, 8, 16)))
+    assert payload == canonical_synthetic_law_catalog(
+        synthetic_scaling_laws(SyntheticScalingLawsInput(law, (2, 8, 16)))
+    )
     assert (tmp_path / SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH).is_file()

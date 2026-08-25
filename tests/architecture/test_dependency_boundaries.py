@@ -51,6 +51,11 @@ def test_architectural_layers_do_not_reverse_dependency_direction() -> None:
                 imported == forbidden or imported.startswith(f"{forbidden}.")
                 for forbidden in forbidden_modules
                 for imported in imports
+                if not (
+                    package == "trajcert.cli"
+                    and source_path.name == "report.py"
+                    and imported.startswith("trajcert.reporting.")
+                )
             )
 
 

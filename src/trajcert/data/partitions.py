@@ -2,9 +2,18 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import NewType
 
 from trajcert.configuration.loading import load_configuration
 from trajcert.math.entropy import binary_entropy
+
+ResolutionAge = NewType("ResolutionAge", int)
+PartitionBandIndex = NewType("PartitionBandIndex", int)
+HiddenHarmfulMass = NewType("HiddenHarmfulMass", float)
+LatentRisk = NewType("LatentRisk", float)
+ResolvedMass = NewType("ResolvedMass", float)
+ResolvedHarmfulRate = NewType("ResolvedHarmfulRate", float)
+CoarseningGroups = NewType("CoarseningGroups", tuple[tuple[int, ...], ...])
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,12 +30,12 @@ class AnalysisPartition:
     def terminal_horizon(self) -> int:
         return self.boundaries[-1]
 
-    def band_for_age(self, age: int) -> int | None:
+    def band_for_age(self, age: ResolutionAge) -> PartitionBandIndex | None:
         if age < 0:
             raise ValueError("resolution age cannot be negative")
         for index, boundary in enumerate(self.boundaries, start=1):
             if age <= boundary:
-                return index
+                return PartitionBandIndex(index)
         return None
 
 
@@ -58,20 +67,20 @@ class ObservableLaw:
     def c(self) -> float:
         return self.unresolved_mass
 
-    def hidden_harmful_mass_is_valid(self, value: float) -> bool:
+    def _hidden_harmful_mass_is_valid(self, value: float) -> bool:
         return 0.0 <= value <= self.c
 
-    def latent_risk(self, hidden_harmful_mass: float) -> float:
-        if not self.hidden_harmful_mass_is_valid(hidden_harmful_mass):
+    def latent_risk(self, hidden_harmful_mass: HiddenHarmfulMass) -> LatentRisk:
+        if not self._hidden_harmful_mass_is_valid(hidden_harmful_mass):
             raise ValueError("hidden terminal harmful mass must lie in [0, c]")
-        return self.harmful_total + hidden_harmful_mass
+        return LatentRisk(self.harmful_total + hidden_harmful_mass)
 
-    def resolved_mass(self, band: int) -> float:
-        return self.harmful_masses[band - 1] + self.correct_masses[band - 1]
+    def resolved_mass(self, band: PartitionBandIndex) -> ResolvedMass:
+        return ResolvedMass(self.harmful_masses[band - 1] + self.correct_masses[band - 1])
 
-    def resolved_harmful_rate(self, band: int) -> float | None:
+    def resolved_harmful_rate(self, band: PartitionBandIndex) -> ResolvedHarmfulRate | None:
         mass = self.resolved_mass(band)
-        return None if mass == 0.0 else self.harmful_masses[band - 1] / mass
+        return None if mass == 0.0 else ResolvedHarmfulRate(self.harmful_masses[band - 1] / mass)
 
     def resolved_entropy_sum(self) -> float:
         return sum(
@@ -80,7 +89,7 @@ class ObservableLaw:
             if (mass := harmful + correct) > 0.0
         )
 
-    def coarsened(self, groups: tuple[tuple[int, ...], ...]) -> ObservableLaw:
+    def coarsened(self, groups: CoarseningGroups) -> ObservableLaw:
         finest_band_count = len(self.harmful_masses)
         flattened = tuple(member for group in groups for member in group)
         if flattened != tuple(range(1, finest_band_count + 1)):

@@ -1,21 +1,39 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
+from typing import NewType
 
 from trajcert.configuration.models import NumericsConfiguration
+from trajcert.data.partitions import HiddenHarmfulMass
 from trajcert.math.information_profile import InformationProfile
 from trajcert.math.risk_set import PopulationRiskSet, PopulationRiskSetState, RootDiagnostics
 
+ConditionalTimingGain = NewType("ConditionalTimingGain", float)
+InformationBudget = NewType("InformationBudget", float)
+
+
+@dataclass(frozen=True, slots=True)
+class PopulationRiskSetSolveInput:
+    profile: InformationProfile
+    rho: InformationBudget
+    numerics: NumericsConfiguration
+
 
 def conditional_timing_gain(
-    fine_profile: InformationProfile, coarse_profile: InformationProfile, hidden_harmful_mass: float
-) -> float:
-    return fine_profile.value(hidden_harmful_mass) - coarse_profile.value(hidden_harmful_mass)
+    fine_profile: InformationProfile,
+    coarse_profile: InformationProfile,
+    hidden_harmful_mass: HiddenHarmfulMass,
+) -> ConditionalTimingGain:
+    return ConditionalTimingGain(
+        fine_profile.value(hidden_harmful_mass) - coarse_profile.value(hidden_harmful_mass)
+    )
 
 
-def solve_population_risk_set(
-    profile: InformationProfile, rho: float, numerics: NumericsConfiguration
-) -> PopulationRiskSet:
+def solve_population_risk_set(input_value: PopulationRiskSetSolveInput) -> PopulationRiskSet:
+    profile = input_value.profile
+    rho = input_value.rho
+    numerics = input_value.numerics
     if rho < 0.0:
         raise ValueError("PIS budget must be nonnegative")
     floor = profile.compatibility_floor()
@@ -41,8 +59,8 @@ def solve_population_risk_set(
         raise ValueError("interval roots require a defined minimum-information completion")
     lower = (
         None
-        if profile.value(0.0) <= rho + tolerance
-        else bisect_branch(
+        if profile.value(HiddenHarmfulMass(0.0)) <= rho + tolerance
+        else _bisect_branch(
             profile,
             rho,
             0.0,
@@ -52,8 +70,8 @@ def solve_population_risk_set(
     )
     upper = (
         None
-        if profile.value(profile.unresolved_mass) <= rho + tolerance
-        else bisect_branch(
+        if profile.value(HiddenHarmfulMass(profile.unresolved_mass)) <= rho + tolerance
+        else _bisect_branch(
             profile,
             rho,
             floor.hidden_harmful_mass,
@@ -74,7 +92,7 @@ def solve_population_risk_set(
     )
 
 
-def bisect_branch(
+def _bisect_branch(
     profile: InformationProfile,
     rho: float,
     left: float,
@@ -83,8 +101,8 @@ def bisect_branch(
 ) -> RootDiagnostics:
     if left >= right:
         raise ValueError("root bracket must have positive width")
-    left_value = profile.value(left) - rho
-    right_value = profile.value(right) - rho
+    left_value = profile.value(HiddenHarmfulMass(left)) - rho
+    right_value = profile.value(HiddenHarmfulMass(right)) - rho
     if left_value * right_value > 0.0:
         raise ValueError("root bracket is not sign-valid")
     width = right - left
@@ -95,7 +113,7 @@ def bisect_branch(
     for _ in range(iterations):
         completed_iterations += 1
         midpoint = (lower + upper) / 2.0
-        midpoint_value = profile.value(midpoint) - rho
+        midpoint_value = profile.value(HiddenHarmfulMass(midpoint)) - rho
         if midpoint_value == 0.0:
             lower = midpoint
             upper = midpoint
@@ -108,4 +126,10 @@ def bisect_branch(
         if upper - lower <= numerics.population_root_absolute_tolerance:
             break
     root = (lower + upper) / 2.0
-    return RootDiagnostics(lower, upper, root, abs(profile.value(root) - rho), completed_iterations)
+    return RootDiagnostics(
+        lower,
+        upper,
+        root,
+        abs(profile.value(HiddenHarmfulMass(root)) - rho),
+        completed_iterations,
+    )

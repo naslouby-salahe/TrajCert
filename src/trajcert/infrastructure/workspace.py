@@ -1,10 +1,19 @@
 from __future__ import annotations
 
+import math
+import re
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 
 from trajcert.configuration.models import ArtifactsConfiguration
-from trajcert.infrastructure.storage import canonical_number_token, semantic_coordinate_segment
+from trajcert.domain.identity import Identifier
+from trajcert.infrastructure.storage import (
+    SemanticCoordinateSegment,
+    SemanticCoordinateSegmentInput,
+    canonical_number_token,
+    semantic_coordinate_segment,
+)
 
 OUTPUT_DIRECTORIES = (
     "preprocessing/inventories",
@@ -20,6 +29,9 @@ OUTPUT_DIRECTORIES = (
     "cache/preprocessing",
     "cache/evaluation",
     "cache/analysis",
+)
+CANONICAL_NUMBER_PATTERN = re.compile(
+    r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:e[+-]?(?:0|[1-9][0-9]*))?"
 )
 RESULT_DIRECTORIES = (
     "project_summary/figures/main",
@@ -83,6 +95,36 @@ AUTHORITATIVE_OUTPUT_ROOTS = frozenset({"preprocessing", "artifacts", "experimen
 
 
 @dataclass(frozen=True, slots=True)
+class ExperimentWorkspaceRequest:
+    experiment_name: Identifier
+
+    def __post_init__(self) -> None:
+        if not self.experiment_name or Path(self.experiment_name).name != self.experiment_name:
+            raise ValueError("experiment name must be one nonempty path component")
+
+
+@dataclass(frozen=True, slots=True)
+class EvaluationRecordPathRequest:
+    experiment: ExperimentWorkspaceRequest
+    law: SemanticCoordinateSegment
+    partition: SemanticCoordinateSegment
+    method: SemanticCoordinateSegment
+    rho: SemanticCoordinateSegment
+
+
+@dataclass(frozen=True, slots=True)
+class WorkspacePathRequest:
+    candidate_path: Path
+
+
+class WorkspacePathClassification(StrEnum):
+    AUTHORITATIVE_OUTPUT = "AUTHORITATIVE_OUTPUT"
+    NON_AUTHORITATIVE_OUTPUT = "NON_AUTHORITATIVE_OUTPUT"
+    COMPUTATIONAL_INPUT = "COMPUTATIONAL_INPUT"
+    RESULTS_DERIVED = "RESULTS_DERIVED"
+
+
+@dataclass(frozen=True, slots=True)
 class Workspace:
     execution_root: Path
     results_root: Path
@@ -112,82 +154,91 @@ class Workspace:
         for relative_path in RESULT_DIRECTORIES:
             (self.results_root / relative_path).mkdir(parents=True, exist_ok=True)
 
-    def experiment_root(self, experiment_name: str) -> Path:
-        self.validate_experiment_name(experiment_name)
-        return self.execution_root / "experiments" / experiment_name
+    def experiment_root(self, request: ExperimentWorkspaceRequest) -> Path:
+        return self.execution_root / "experiments" / request.experiment_name
 
-    def materialize_experiment(self, experiment_name: str) -> Path:
-        experiment_root = self.experiment_root(experiment_name)
+    def materialize_experiment(self, request: ExperimentWorkspaceRequest) -> Path:
+        experiment_root = self.experiment_root(request)
         for relative_path in EXPERIMENT_DIRECTORIES:
             (experiment_root / relative_path).mkdir(parents=True, exist_ok=True)
         return experiment_root
 
-    def result_experiment_root(self, experiment_name: str) -> Path:
-        self.validate_experiment_name(experiment_name)
-        return self.results_root / "experiments" / experiment_name
+    def result_experiment_root(self, request: ExperimentWorkspaceRequest) -> Path:
+        return self.results_root / "experiments" / request.experiment_name
 
-    def materialize_result_experiment(self, experiment_name: str) -> Path:
-        experiment_root = self.result_experiment_root(experiment_name)
+    def materialize_result_experiment(self, request: ExperimentWorkspaceRequest) -> Path:
+        experiment_root = self.result_experiment_root(request)
         for relative_path in RESULT_EXPERIMENT_DIRECTORIES:
             (experiment_root / relative_path).mkdir(parents=True, exist_ok=True)
         return experiment_root
 
-    def is_authoritative_output_path(self, candidate_path: Path) -> bool:
+    def classify_output_path(self, request: WorkspacePathRequest) -> WorkspacePathClassification:
         try:
-            relative_path = candidate_path.resolve().relative_to(self.execution_root)
+            relative_path = request.candidate_path.resolve().relative_to(self.execution_root)
         except ValueError:
-            return False
-        return (
+            return WorkspacePathClassification.NON_AUTHORITATIVE_OUTPUT
+        is_authoritative = (
             bool(relative_path.parts)
             and relative_path.parts[0] in AUTHORITATIVE_OUTPUT_ROOTS
             and not any(part in NON_AUTHORITATIVE_OUTPUT_SEGMENTS for part in relative_path.parts)
         )
-
-    def is_computational_input_path(self, candidate_path: Path) -> bool:
-        try:
-            candidate_path.resolve().relative_to(self.results_root)
-        except ValueError:
-            return True
-        return False
-
-    def evaluation_record_path(
-        self,
-        experiment_name: str,
-        law_name: str,
-        partition_name: str,
-        method_name: str,
-        rho_name: str,
-    ) -> Path:
-        named_descriptive_coordinates = (
-            ("law", law_name),
-            ("partition", partition_name),
-            ("method", method_name),
-        )
-        if any(
-            not coordinate
-            or Path(coordinate).name != coordinate
-            or semantic_coordinate_segment(coordinate_name, coordinate)
-            != f"{coordinate_name}={coordinate}"
-            for coordinate_name, coordinate in named_descriptive_coordinates
-        ):
-            raise ValueError("semantic path coordinates must be canonical nonempty path components")
-        if rho_name != "log2":
-            try:
-                is_canonical_rho = canonical_number_token(float(rho_name)) == rho_name
-            except ValueError:
-                is_canonical_rho = False
-            if not is_canonical_rho:
-                raise ValueError("rho coordinate must be a canonical number token or log2")
         return (
-            self.experiment_root(experiment_name)
+            WorkspacePathClassification.AUTHORITATIVE_OUTPUT
+            if is_authoritative
+            else WorkspacePathClassification.NON_AUTHORITATIVE_OUTPUT
+        )
+
+    def classify_computational_input_path(
+        self, request: WorkspacePathRequest
+    ) -> WorkspacePathClassification:
+        try:
+            request.candidate_path.resolve().relative_to(self.results_root)
+        except ValueError:
+            return WorkspacePathClassification.COMPUTATIONAL_INPUT
+        return WorkspacePathClassification.RESULTS_DERIVED
+
+    def evaluation_record_path(self, request: EvaluationRecordPathRequest) -> Path:
+        self._validate_coordinate_segment("law", request.law)
+        self._validate_coordinate_segment("partition", request.partition)
+        self._validate_coordinate_segment("method", request.method)
+        self._validate_coordinate_segment("rho", request.rho)
+        return (
+            self.experiment_root(request.experiment)
             / "evaluations/records"
-            / f"law={law_name}"
-            / f"partition={partition_name}"
-            / f"method={method_name}"
-            / f"rho={rho_name}"
+            / request.law.value
+            / request.partition.value
+            / request.method.value
+            / request.rho.value
         )
 
     @staticmethod
-    def validate_experiment_name(experiment_name: str) -> None:
-        if not experiment_name or Path(experiment_name).name != experiment_name:
-            raise ValueError("experiment name must be one nonempty path component")
+    def _validate_coordinate_segment(
+        coordinate_name: str,
+        segment: SemanticCoordinateSegment,
+    ) -> None:
+        prefix = f"{coordinate_name}="
+        if (
+            not segment.value.startswith(prefix)
+            or Path(segment.value).name != segment.value
+            or len(segment.value) == len(prefix)
+        ):
+            raise ValueError("semantic path coordinates must be canonical nonempty path components")
+        coordinate_value = segment.value.removeprefix(prefix)
+        if coordinate_name == "rho":
+            if coordinate_value == "log2":
+                return
+            if CANONICAL_NUMBER_PATTERN.fullmatch(coordinate_value) is not None:
+                numeric_value = float(coordinate_value)
+                if (
+                    math.isfinite(numeric_value)
+                    and canonical_number_token(numeric_value) == coordinate_value
+                ):
+                    return
+            raise ValueError("rho coordinate must be a canonical number token or log2")
+        if (
+            semantic_coordinate_segment(
+                SemanticCoordinateSegmentInput(coordinate_name, coordinate_value)
+            )
+            != segment
+        ):
+            raise ValueError("semantic path coordinates must be canonical nonempty path components")

@@ -50,7 +50,7 @@ class PopulationMetricsRecord(BaseModel):
         "oracle_abs_error",
     )
     @classmethod
-    def validate_finite_scientific_value(cls, value: float | None) -> float | None:
+    def _validate_finite_scientific_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("scientific result values must be finite")
         return value
@@ -88,14 +88,14 @@ class SequentialUpdateRecord(BaseModel):
         "true_theta",
     )
     @classmethod
-    def validate_finite_sequential_value(cls, value: float | None) -> float | None:
+    def _validate_finite_sequential_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("sequential result values must be finite")
         return value
 
     @field_validator("n_unresolved")
     @classmethod
-    def validate_count_decomposition(cls, value: int, info: ValidationInfo) -> int:
+    def _validate_count_decomposition(cls, value: int, info: ValidationInfo) -> int:
         matured = info.data.get("n_matured")
         resolved = info.data.get("n_resolved")
         if isinstance(matured, int) and isinstance(resolved, int) and resolved + value != matured:
@@ -148,7 +148,7 @@ class PairedComparisonRecord(BaseModel):
         "rho", "method_value", "baseline_value", "paired_difference_favorable_direction"
     )
     @classmethod
-    def validate_finite_comparison_value(cls, value: float) -> float:
+    def _validate_finite_comparison_value(cls, value: float) -> float:
         if not math.isfinite(value):
             raise ValueError("paired comparison values must be finite")
         return value
@@ -174,7 +174,7 @@ class StatisticalTestRecord(BaseModel):
 
     @field_validator("raw_p_value", "holm_adjusted_p_value", "decision_alpha")
     @classmethod
-    def validate_finite_statistical_value(cls, value: float | None) -> float | None:
+    def _validate_finite_statistical_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("statistical values must be finite")
         return value
@@ -194,7 +194,7 @@ class EffectSizeRecord(BaseModel):
 
     @field_validator("mean_paired_difference", "sd_paired_difference", "standardized_paired_effect")
     @classmethod
-    def validate_finite_effect_value(cls, value: float | None) -> float | None:
+    def _validate_finite_effect_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("effect-size values must be finite")
         return value

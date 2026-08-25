@@ -7,7 +7,11 @@ from trajcert.configuration.models import NumericsConfiguration
 from trajcert.data.partitions import ObservableLaw
 from trajcert.math.information_profile import InformationProfile
 from trajcert.math.risk_set import PopulationRiskSet
-from trajcert.math.solver import solve_population_risk_set
+from trajcert.math.solver import (
+    InformationBudget,
+    PopulationRiskSetSolveInput,
+    solve_population_risk_set,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,9 +55,11 @@ def endpoint_only_observable_law(observable_law: ObservableLaw) -> ObservableLaw
 
 def endpoint_only_pis_risk_set(input_value: EndpointOnlyPISInput) -> PopulationRiskSet:
     return solve_population_risk_set(
-        InformationProfile(endpoint_only_observable_law(input_value.observable_law)),
-        input_value.information_budget,
-        input_value.numerics,
+        PopulationRiskSetSolveInput(
+            InformationProfile(endpoint_only_observable_law(input_value.observable_law)),
+            InformationBudget(input_value.information_budget),
+            input_value.numerics,
+        )
     )
 
 

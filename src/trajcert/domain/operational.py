@@ -1,11 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from trajcert.domain.enums import PublicExecutionState, ScientificState
 from trajcert.domain.identity import Identifier, LocalCertificateIdentity
+
+
+class ReusePolicy(StrEnum):
+    REUSE_VALID = "reuse_valid"
+    OVERWRITE = "overwrite"
+
+
+class ReuseEligibility(StrEnum):
+    REUSABLE = "reusable"
+    NOT_REUSABLE = "not_reusable"
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,5 +49,12 @@ class SemanticExecutionIdentity:
     semantic_cell_key: Identifier
     material_dependency_identity: Identifier
 
-    def reusable_with(self, candidate: SemanticExecutionIdentity, *, overwrite: bool) -> bool:
-        return not overwrite and self == candidate
+    def reuse_eligibility(
+        self,
+        candidate: SemanticExecutionIdentity,
+        *,
+        policy: ReusePolicy,
+    ) -> ReuseEligibility:
+        if policy is ReusePolicy.OVERWRITE or self != candidate:
+            return ReuseEligibility.NOT_REUSABLE
+        return ReuseEligibility.REUSABLE

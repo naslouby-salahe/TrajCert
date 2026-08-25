@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, cast
 
@@ -9,111 +11,162 @@ import pyarrow as pyarrow
 
 from trajcert.domain.records.artifacts import ArtifactEnvelope
 from trajcert.domain.serialization import JSONValue, canonical_json_bytes
-from trajcert.infrastructure.storage import semantic_coordinate_segment
+from trajcert.infrastructure.storage import (
+    SemanticCoordinateSegmentInput,
+    semantic_coordinate_segment,
+)
 
 
-class ArrowDataType(Protocol):
+class _ArrowDataType(Protocol):
     bit_width: int
 
     def __str__(self) -> str: ...
 
 
-class ArrowField(Protocol):
+class _ArrowField(Protocol):
     nullable: bool
-    type: ArrowDataType
+    type: _ArrowDataType
 
 
-class ArrowSchema(Protocol):
+class _ArrowSchema(Protocol):
     names: list[str]
 
-    def field(self, name: str) -> ArrowField: ...
+    def field(self, name: str) -> _ArrowField: ...
 
 
-class ArrowTable(Protocol):
-    schema: ArrowSchema
+class _ArrowTable(Protocol):
+    schema: _ArrowSchema
 
 
-class ArrowTableFactory(Protocol):
+class _ArrowTableFactory(Protocol):
     def from_pylist(
         self,
         rows: tuple[Mapping[str, ArtifactValue], ...],
-        schema: ArrowSchema,
-    ) -> ArrowTable: ...
+        schema: _ArrowSchema,
+    ) -> _ArrowTable: ...
 
 
-class ArrowModule(Protocol):
-    Table: ArrowTableFactory
+class _ArrowModule(Protocol):
+    Table: _ArrowTableFactory
 
-    def bool_(self) -> ArrowDataType: ...
+    def bool_(self) -> _ArrowDataType: ...
 
-    def field(self, name: str, field_type: ArrowDataType, nullable: bool = True) -> ArrowField:
+    def field(self, name: str, field_type: _ArrowDataType, nullable: bool = True) -> _ArrowField:
         raise NotImplementedError((name, field_type, nullable))
 
-    def float64(self) -> ArrowDataType: ...
+    def float64(self) -> _ArrowDataType: ...
 
-    def int64(self) -> ArrowDataType: ...
+    def int64(self) -> _ArrowDataType: ...
 
-    def list_(self, value_type: ArrowDataType) -> ArrowDataType:
+    def list_(self, value_type: _ArrowDataType) -> _ArrowDataType:
         raise NotImplementedError(value_type)
 
-    def schema(self, fields: tuple[ArrowField, ...]) -> ArrowSchema:
+    def schema(self, fields: tuple[_ArrowField, ...]) -> _ArrowSchema:
         raise NotImplementedError(fields)
 
-    def string(self) -> ArrowDataType: ...
+    def string(self) -> _ArrowDataType: ...
 
-    def timestamp(self, unit: str, tz: str) -> ArrowDataType:
+    def timestamp(self, unit: str, tz: str) -> _ArrowDataType:
         raise NotImplementedError((unit, tz))
 
-    def uint64(self) -> ArrowDataType: ...
+    def uint64(self) -> _ArrowDataType: ...
 
 
 type ArtifactValue = str | float | int | list[str] | None
-ARROW = cast(ArrowModule, pyarrow)
+ARROW = cast(_ArrowModule, pyarrow)
 
 
-def semantic_cell_key(experiment_name: str, coordinates: Mapping[str, JSONValue]) -> str:
-    if not experiment_name.strip():
+@dataclass(frozen=True, slots=True)
+class SemanticCellKeyInput:
+    experiment_name: str
+    coordinates: Mapping[str, JSONValue]
+
+
+@dataclass(frozen=True, slots=True)
+class SemanticCellKey:
+    value: str
+
+
+@dataclass(frozen=True, slots=True)
+class CanonicalActivePathInput:
+    workspace_root: Path
+    semantic_cell_key: SemanticCellKey
+
+
+@dataclass(frozen=True, slots=True)
+class CanonicalActivePath:
+    value: Path
+
+
+@dataclass(frozen=True, slots=True)
+class DescriptiveArtifactKeyInput:
+    artifact_type: str
+    coordinates: Mapping[str, float | str]
+
+
+@dataclass(frozen=True, slots=True)
+class DescriptiveArtifactKey:
+    value: str
+
+
+def semantic_cell_key(request: SemanticCellKeyInput) -> SemanticCellKey:
+    if not request.experiment_name.strip():
         raise ValueError("experiment name must not be empty")
-    return f"{experiment_name}:{canonical_json_bytes(coordinates).decode('utf-8')}"
+    return SemanticCellKey(
+        f"{request.experiment_name}:{canonical_json_bytes(request.coordinates).decode('utf-8')}"
+    )
 
 
-def canonical_active_path(workspace_root: Path, semantic_cell_key: str) -> Path:
-    if not semantic_cell_key.strip():
+def canonical_active_path(request: CanonicalActivePathInput) -> CanonicalActivePath:
+    if not request.semantic_cell_key.value.strip():
         raise ValueError("semantic cell key must not be empty")
-    cell_digest = hashlib.sha256(semantic_cell_key.encode("utf-8")).hexdigest()
-    return workspace_root / "artifacts" / "active" / cell_digest
+    cell_digest = hashlib.sha256(request.semantic_cell_key.value.encode("utf-8")).hexdigest()
+    return CanonicalActivePath(request.workspace_root / "artifacts" / "active" / cell_digest)
 
 
-def descriptive_artifact_key(
-    artifact_type: str,
-    coordinates: Mapping[str, float | str],
-) -> str:
-    if not artifact_type.strip():
+def descriptive_artifact_key(request: DescriptiveArtifactKeyInput) -> DescriptiveArtifactKey:
+    if not request.artifact_type.strip():
         raise ValueError("artifact type must not be empty")
-    segments = [artifact_type]
-    for name in sorted(coordinates):
-        segments.append(semantic_coordinate_segment(name, coordinates[name]))
-    return "-".join(segments)
+    segments = [request.artifact_type]
+    for name in sorted(request.coordinates):
+        segments.append(
+            semantic_coordinate_segment(
+                SemanticCoordinateSegmentInput(name, request.coordinates[name])
+            ).value
+        )
+    return DescriptiveArtifactKey("-".join(segments))
 
 
-def canonical_physical_types() -> Mapping[str, ArrowDataType]:
+class ArtifactPhysicalType(StrEnum):
+    STRING = "string"
+    BOOLEAN = "boolean"
+    INTEGER = "integer"
+    LARGE_IDENTIFIER = "large_identifier"
+    SCIENTIFIC_REAL = "scientific_real"
+    TIMESTAMP = "timestamp"
+    STRING_LIST = "string_list"
+    CANONICAL_JSON = "canonical_json"
+    SHA256_DIGEST = "sha256_digest"
+
+
+def canonical_physical_types() -> Mapping[ArtifactPhysicalType, _ArrowDataType]:
     return {
-        "string": ARROW.string(),
-        "boolean": ARROW.bool_(),
-        "integer": ARROW.int64(),
-        "large_identifier": ARROW.uint64(),
-        "scientific_real": ARROW.float64(),
-        "timestamp": ARROW.timestamp("us", tz="UTC"),
-        "string_list": ARROW.list_(ARROW.string()),
-        "canonical_json": ARROW.string(),
-        "sha256_digest": ARROW.string(),
+        ArtifactPhysicalType.STRING: ARROW.string(),
+        ArtifactPhysicalType.BOOLEAN: ARROW.bool_(),
+        ArtifactPhysicalType.INTEGER: ARROW.int64(),
+        ArtifactPhysicalType.LARGE_IDENTIFIER: ARROW.uint64(),
+        ArtifactPhysicalType.SCIENTIFIC_REAL: ARROW.float64(),
+        ArtifactPhysicalType.TIMESTAMP: ARROW.timestamp("us", tz="UTC"),
+        ArtifactPhysicalType.STRING_LIST: ARROW.list_(ARROW.string()),
+        ArtifactPhysicalType.CANONICAL_JSON: ARROW.string(),
+        ArtifactPhysicalType.SHA256_DIGEST: ARROW.string(),
     }
 
 
-def artifact_envelope_arrow_schema() -> ArrowSchema:
+def artifact_envelope_arrow_schema() -> _ArrowSchema:
     physical_types = canonical_physical_types()
-    string = physical_types["string"]
-    digest = physical_types["sha256_digest"]
+    string = physical_types[ArtifactPhysicalType.STRING]
+    digest = physical_types[ArtifactPhysicalType.SHA256_DIGEST]
     return ARROW.schema(
         (
             ARROW.field("artifact_key", string, nullable=False),
@@ -121,7 +174,9 @@ def artifact_envelope_arrow_schema() -> ArrowSchema:
             ARROW.field("artifact_owner", string, nullable=False),
             ARROW.field("producer_component", string, nullable=False),
             ARROW.field("semantic_cell_key", string),
-            ARROW.field("semantic_coordinates", physical_types["canonical_json"]),
+            ARROW.field(
+                "semantic_coordinates", physical_types[ArtifactPhysicalType.CANONICAL_JSON]
+            ),
             ARROW.field("experiment_name", string),
             ARROW.field("classification", string),
             ARROW.field("execution_group", string),
@@ -140,23 +195,37 @@ def artifact_envelope_arrow_schema() -> ArrowSchema:
             ARROW.field("dataset_checksum", digest),
             ARROW.field("synthetic_law_name", string),
             ARROW.field("partition_name", string),
-            ARROW.field("rho", physical_types["scientific_real"]),
-            ARROW.field("beta", physical_types["scientific_real"]),
-            ARROW.field("delta", physical_types["scientific_real"]),
+            ARROW.field("rho", physical_types[ArtifactPhysicalType.SCIENTIFIC_REAL]),
+            ARROW.field("beta", physical_types[ArtifactPhysicalType.SCIENTIFIC_REAL]),
+            ARROW.field("delta", physical_types[ArtifactPhysicalType.SCIENTIFIC_REAL]),
             ARROW.field("environment_lock_digest", digest),
             ARROW.field("code_commit", digest),
-            ARROW.field("seed_set_keys", physical_types["string_list"], nullable=False),
-            ARROW.field("parent_artifact_keys", physical_types["string_list"], nullable=False),
-            ARROW.field("parent_artifact_digests", physical_types["string_list"], nullable=False),
-            ARROW.field("input_paths", physical_types["string_list"], nullable=False),
+            ARROW.field(
+                "seed_set_keys", physical_types[ArtifactPhysicalType.STRING_LIST], nullable=False
+            ),
+            ARROW.field(
+                "parent_artifact_keys",
+                physical_types[ArtifactPhysicalType.STRING_LIST],
+                nullable=False,
+            ),
+            ARROW.field(
+                "parent_artifact_digests",
+                physical_types[ArtifactPhysicalType.STRING_LIST],
+                nullable=False,
+            ),
+            ARROW.field(
+                "input_paths", physical_types[ArtifactPhysicalType.STRING_LIST], nullable=False
+            ),
             ARROW.field("canonical_active_path", string),
             ARROW.field("schema_name", string, nullable=False),
-            ARROW.field("schema_version", physical_types["integer"], nullable=False),
+            ARROW.field(
+                "schema_version", physical_types[ArtifactPhysicalType.INTEGER], nullable=False
+            ),
         )
     )
 
 
-def artifact_envelope_table(envelope: ArtifactEnvelope) -> ArrowTable:
+def artifact_envelope_table(envelope: ArtifactEnvelope) -> _ArrowTable:
     return ARROW.Table.from_pylist(
         (
             {

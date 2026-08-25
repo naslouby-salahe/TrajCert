@@ -8,17 +8,28 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import NewType
+
+from trajcert.domain.records.artifacts import Digest, GitCommit
+
+ContainerImageDigest = NewType("ContainerImageDigest", str)
 
 
-def implementation_component_digest(project_root: Path, relative_paths: tuple[Path, ...]) -> str:
-    normalized_paths = tuple(sorted(relative_paths, key=lambda path: path.as_posix()))
+@dataclass(frozen=True, slots=True)
+class ImplementationComponentDigestInput:
+    project_root: Path
+    relative_paths: tuple[Path, ...]
+
+
+def implementation_component_digest(input_value: ImplementationComponentDigestInput) -> Digest:
+    normalized_paths = tuple(sorted(input_value.relative_paths, key=lambda path: path.as_posix()))
     if len(set(normalized_paths)) != len(normalized_paths):
         raise ValueError("registered implementation paths must be unique")
     digest = hashlib.sha256()
     for relative_path in normalized_paths:
-        absolute_path = (project_root / relative_path).resolve()
+        absolute_path = (input_value.project_root / relative_path).resolve()
         try:
-            normalized_relative_path = absolute_path.relative_to(project_root.resolve())
+            normalized_relative_path = absolute_path.relative_to(input_value.project_root.resolve())
         except ValueError as error:
             raise ValueError("registered implementation path escapes the project root") from error
         if normalized_relative_path != relative_path or not absolute_path.is_file():
@@ -31,27 +42,9 @@ def implementation_component_digest(project_root: Path, relative_paths: tuple[Pa
     return digest.hexdigest()
 
 
-def scientific_dependency_digest(
-    clause_text: tuple[str, ...],
-    configuration_fragments: tuple[bytes, ...],
-) -> str:
-    if not clause_text:
-        raise ValueError("scientific dependency digest requires at least one clause")
-    digest = hashlib.sha256()
-    for clause in clause_text:
-        if not clause:
-            raise ValueError("scientific dependency clauses must be nonempty")
-        digest.update(clause.encode("utf-8"))
-        digest.update(b"\x00")
-    for fragment in configuration_fragments:
-        digest.update(fragment)
-        digest.update(b"\x00")
-    return digest.hexdigest()
-
-
 @dataclass(frozen=True, slots=True)
 class GitProvenance:
-    commit: str
+    commit: GitCommit
     dirty_tree: bool
 
 
@@ -62,7 +55,7 @@ class RuntimeEnvironmentManifest:
     cpu_model: str
     package_versions: tuple[str, ...]
     arithmetic_threading_environment: tuple[str, ...]
-    container_image_digest: str
+    container_image_digest: ContainerImageDigest
 
 
 def runtime_environment_manifest() -> RuntimeEnvironmentManifest:
@@ -101,13 +94,13 @@ def git_provenance(project_root: Path) -> GitProvenance:
     return GitProvenance(commit=commit, dirty_tree=False)
 
 
-def authoritative_container_image_digest() -> str:
+def authoritative_container_image_digest() -> ContainerImageDigest:
     value = os.environ.get("TRAJCERT_CONTAINER_IMAGE_DIGEST", "")
     if not CONTAINER_IMAGE_DIGEST_PATTERN.fullmatch(value):
         raise ValueError(
             "environment_or_prerequisite_block: missing immutable container image digest"
         )
-    return value
+    return ContainerImageDigest(value)
 
 
 def _git_output(project_root: Path, arguments: tuple[str, ...]) -> str:

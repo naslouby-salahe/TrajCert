@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import NewType
 
+from trajcert.data.partitions import HiddenHarmfulMass
 from trajcert.math.information_profile import InformationProfile
+
+SafetyRiskBudget = NewType("SafetyRiskBudget", float)
 
 
 class SafetyState(StrEnum):
@@ -18,7 +22,7 @@ class SafetyResult:
     frontier_information_budget: float | None
 
 
-def safety_result(profile: InformationProfile, beta: float) -> SafetyResult:
+def safety_result(profile: InformationProfile, beta: SafetyRiskBudget) -> SafetyResult:
     if not 0.0 <= beta <= 1.0:
         raise ValueError("risk budget must lie in [0, 1]")
     if beta < profile.harmful_total:
@@ -30,4 +34,7 @@ def safety_result(profile: InformationProfile, beta: float) -> SafetyResult:
         return SafetyResult(SafetyState.INTRINSICALLY_UNCERTIFIABLE, None)
     if beta >= profile.harmful_total + profile.unresolved_mass:
         return SafetyResult(SafetyState.ASSUMPTION_FREE_SAFE, None)
-    return SafetyResult(SafetyState.FRONTIER, profile.value(beta - profile.harmful_total))
+    return SafetyResult(
+        SafetyState.FRONTIER,
+        profile.value(HiddenHarmfulMass(beta - profile.harmful_total)),
+    )

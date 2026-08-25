@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -17,6 +18,11 @@ from trajcert.domain.serialization import JSONValue
 
 UNSIGNED_DECIMAL_PATTERN = re.compile(r"^(0|[1-9][0-9]*)$")
 DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+
+
+class EpochMaterialChange(StrEnum):
+    UNCHANGED = "unchanged"
+    CHANGED = "changed"
 
 
 class DatasetManifest(BaseModel):
@@ -52,7 +58,7 @@ class DatasetManifest(BaseModel):
 
     @field_validator("known_theta", "known_terminal_harmful_mass", "known_information")
     @classmethod
-    def validate_finite_known_value(cls, value: float | None) -> float | None:
+    def _validate_finite_known_value(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
             raise ValueError("known scientific values must be finite")
         return value
@@ -154,7 +160,7 @@ class ReusableArtifactManifest(BaseModel):
 
     @field_validator("created_timestamp", "validated_timestamp")
     @classmethod
-    def validate_utc_timestamp(cls, value: datetime | None) -> datetime | None:
+    def _validate_utc_timestamp(cls, value: datetime | None) -> datetime | None:
         if value is not None:
             offset = value.utcoffset()
             if offset is None or offset.total_seconds() != 0:
@@ -192,13 +198,13 @@ class EpochManifest(BaseModel):
     terminal_horizon_age_units: int = Field(gt=0)
     finest_trajectory_representation: Identifier
 
-    def materially_differs_from(self, other: EpochManifest) -> bool:
-        return self != other
+    def material_change_against(self, other: EpochManifest) -> EpochMaterialChange:
+        return EpochMaterialChange.CHANGED if self != other else EpochMaterialChange.UNCHANGED
 
     def close_for_material_change(self, replacement: EpochManifest) -> ClosedEpoch:
         if self.identity != replacement.identity:
             raise ValueError("epoch replacement must preserve local certificate identity")
-        if not self.materially_differs_from(replacement):
+        if self.material_change_against(replacement) is EpochMaterialChange.UNCHANGED:
             raise ValueError("an epoch closes only for a material change")
         return ClosedEpoch(closed_manifest=self, replacement_manifest=replacement)
 

@@ -35,7 +35,7 @@ class FailureRecord(BaseModel):
 
     @field_validator("failure_class")
     @classmethod
-    def reject_scientific_outcomes(cls, value: str) -> str:
+    def _reject_scientific_outcomes(cls, value: str) -> str:
         if value in {state.value for state in ScientificState}:
             raise ValueError("scientific outcomes must not enter failure records")
         return value

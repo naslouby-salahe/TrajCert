@@ -8,7 +8,7 @@ from enum import StrEnum
 from scipy.optimize import minimize
 
 from trajcert.configuration.models import NumericsConfiguration, PatternMixtureConfiguration
-from trajcert.data.partitions import ObservableLaw
+from trajcert.data.partitions import ObservableLaw, PartitionBandIndex
 
 
 class PatternMixtureState(StrEnum):
@@ -46,7 +46,7 @@ def repeated_attempt_pattern_mixture(input_value: PatternMixtureInput) -> Patter
     bands = tuple(
         (index, observable_law.harmful_masses[index - 1], observable_law.correct_masses[index - 1])
         for index in range(1, len(observable_law.harmful_masses) + 1)
-        if observable_law.resolved_mass(index) > 0
+        if observable_law.resolved_mass(PartitionBandIndex(index)) > 0
     )
     if len(bands) < 2:
         return PatternMixtureResult(

@@ -605,7 +605,9 @@ def test_plan_artifacts_are_canonical_and_atomically_materialized(tmp_path: Path
         }
     )
 
-    json_digest, parquet_digest = write_plan_artifacts(tmp_path, (plan,))
+    write_result = write_plan_artifacts(tmp_path, (plan,))
+    json_digest = write_result.json_digest
+    parquet_digest = write_result.parquet_digest
 
     json_path = tmp_path / PLAN_JSON_RELATIVE_PATH
     parquet_path = tmp_path / PLAN_PARQUET_RELATIVE_PATH

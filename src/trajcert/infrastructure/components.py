@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
+
+from trajcert.domain.records.artifacts import Digest
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,19 +27,45 @@ class ValidatedStreamPrefix:
         if self.validated_length < 0:
             raise ValueError("validated stream length must be nonnegative")
 
-    def can_serve(self, requested_length: int) -> bool:
-        if requested_length < 0:
-            raise ValueError("requested stream length must be nonnegative")
-        return requested_length <= self.validated_length
+    def can_serve(self, request: StreamProvisionRequest) -> StreamProvisionDecision:
+        if request.requested_length <= self.validated_length:
+            return StreamProvisionDecision.SERVABLE
+        return StreamProvisionDecision.NOT_SERVABLE
 
-    def can_extend_to(self, requested_length: int, candidate: ValidatedStreamPrefix) -> bool:
-        if requested_length < self.validated_length:
-            return False
+    def can_extend_to(self, request: StreamExtensionRequest) -> StreamProvisionDecision:
+        if request.requested_length < self.validated_length:
+            return StreamProvisionDecision.NOT_SERVABLE
         return (
-            candidate.generator_identity == self.generator_identity
-            and candidate.seed_identity == self.seed_identity
-            and candidate.validated_length >= requested_length
+            StreamProvisionDecision.SERVABLE
+            if request.candidate.generator_identity == self.generator_identity
+            and request.candidate.seed_identity == self.seed_identity
+            and request.candidate.validated_length >= request.requested_length
+            else StreamProvisionDecision.NOT_SERVABLE
         )
+
+
+class StreamProvisionDecision(StrEnum):
+    SERVABLE = "servable"
+    NOT_SERVABLE = "not_servable"
+
+
+@dataclass(frozen=True, slots=True)
+class StreamProvisionRequest:
+    requested_length: int
+
+    def __post_init__(self) -> None:
+        if self.requested_length < 0:
+            raise ValueError("requested stream length must be nonnegative")
+
+
+@dataclass(frozen=True, slots=True)
+class StreamExtensionRequest:
+    requested_length: int
+    candidate: ValidatedStreamPrefix
+
+    def __post_init__(self) -> None:
+        if self.requested_length < 0:
+            raise ValueError("requested stream length must be nonnegative")
 
 
 EXECUTION_DEPENDENCY_CHAIN = (
@@ -124,37 +153,47 @@ class ProducerContract:
     required_parents: tuple[str, ...]
 
 
-def producer_component_digest(
-    project_root: Path,
-    contract: ProducerContract,
-    imported_contracts: tuple[ProducerContract, ...] = (),
-) -> str:
-    source_paths = set(contract.implementation_components)
-    for imported_contract in imported_contracts:
+@dataclass(frozen=True, slots=True)
+class ProducerComponentDigestInput:
+    project_root: Path
+    contract: ProducerContract
+    imported_contracts: tuple[ProducerContract, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ScientificDependencyDigestInput:
+    contract: ProducerContract
+    named_subsection_text: str
+    configuration_fragments: tuple[bytes, ...]
+
+    def __post_init__(self) -> None:
+        if not self.named_subsection_text:
+            raise ValueError("named roadmap subsection text must be nonempty")
+
+
+def producer_component_digest(input_value: ProducerComponentDigestInput) -> Digest:
+    source_paths = set(input_value.contract.implementation_components)
+    for imported_contract in input_value.imported_contracts:
         source_paths.update(imported_contract.implementation_components)
     serialized = b"".join(
         relative_path.encode("utf-8")
         + b"\0"
-        + hashlib.sha256((project_root / relative_path).read_bytes()).hexdigest().encode("ascii")
+        + hashlib.sha256((input_value.project_root / relative_path).read_bytes())
+        .hexdigest()
+        .encode("ascii")
         + b"\n"
         for relative_path in sorted(source_paths)
     )
     return hashlib.sha256(serialized).hexdigest()
 
 
-def scientific_dependency_digest(
-    contract: ProducerContract,
-    named_subsection_text: str,
-    configuration_fragments: tuple[bytes, ...],
-) -> str:
-    if not named_subsection_text:
-        raise ValueError("named roadmap subsection text must be nonempty")
+def scientific_dependency_digest(input_value: ScientificDependencyDigestInput) -> Digest:
     payload = (
-        contract.scientific_clauses.encode("utf-8")
+        input_value.contract.scientific_clauses.encode("utf-8")
         + b"\0"
-        + named_subsection_text.encode("utf-8")
+        + input_value.named_subsection_text.encode("utf-8")
         + b"\0"
-        + b"\0".join(configuration_fragments)
+        + b"\0".join(input_value.configuration_fragments)
     )
     return hashlib.sha256(payload).hexdigest()
 

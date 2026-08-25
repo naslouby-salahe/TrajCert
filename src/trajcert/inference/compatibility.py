@@ -74,6 +74,16 @@ def certified_compatibility_lower_bound(input_value: CompatibilityInput) -> Comp
         )
         if not _mass_box_feasible(initial, input_value.envelope):
             return CompatibilityLowerBound(None, ctx.prec, True, 0, False)
+        if initial.harmful.width == 0 and initial.correct.width == 0:
+            lower = _compatibility_lower(initial, input_value.envelope)
+            upper = _compatibility_point_upper(initial, input_value.envelope)
+            return CompatibilityLowerBound(
+                lower,
+                ctx.prec,
+                _zero_resolved_plausible(initial, input_value.envelope),
+                0,
+                math.isfinite(upper) and upper - lower <= input_value.numerics.outer_certified_gap,
+            )
         queue: list[tuple[float, int, _MassBox]] = []
         counter = 0
         heapq.heappush(
@@ -126,6 +136,8 @@ def certified_intrinsic_risk_lower_bound(
     prior_precision = ctx.prec
     ctx.prec = _precision(input_value)
     try:
+        if _singleton_intrinsic_envelope(input_value.envelope):
+            return _singleton_intrinsic_risk_lower_bound_from_envelope(input_value)
         unbounded_initial = _IntrinsicBox(
             ClosedInterval(input_value.envelope.harmful_lower, input_value.envelope.harmful_upper),
             ClosedInterval(input_value.envelope.correct_lower, input_value.envelope.correct_upper),
@@ -205,25 +217,30 @@ def _intersect_intrinsic_terminal_constraints(
         terminal.upper < envelope.terminal_lower
         or terminal.lower > envelope.terminal_upper
         or box.hidden.lower > terminal.upper
+        or box.hidden.lower > envelope.terminal_upper
     ):
         return None
     return _IntrinsicBox(
         box.harmful,
         box.correct,
-        ClosedInterval(box.hidden.lower, min(box.hidden.upper, terminal.upper)),
+        ClosedInterval(
+            box.hidden.lower,
+            min(box.hidden.upper, terminal.upper, envelope.terminal_upper),
+        ),
     )
 
 
 def _sum_interval(box: _MassBox) -> ClosedInterval:
     return ClosedInterval(
-        box.harmful.lower + box.correct.lower, box.harmful.upper + box.correct.upper
+        math.nextafter(box.harmful.lower + box.correct.lower, -math.inf),
+        math.nextafter(box.harmful.upper + box.correct.upper, math.inf),
     )
 
 
 def _terminal_interval(harmful: ClosedInterval, correct: ClosedInterval) -> ClosedInterval:
     return ClosedInterval(
-        max(0, 1 - harmful.upper - correct.upper),
-        min(1, 1 - harmful.lower - correct.lower),
+        max(0, math.nextafter(1 - harmful.upper - correct.upper, -math.inf)),
+        min(1, math.nextafter(1 - harmful.lower - correct.lower, math.inf)),
     )
 
 
@@ -267,8 +284,8 @@ def _compatibility_point_upper(box: _MassBox, envelope: ConservativeSummaryEnvel
 def _mass_vertices(
     box: _MassBox, envelope: ConservativeSummaryEnvelope
 ) -> tuple[tuple[float, float], ...]:
-    lower_sum = 1 - envelope.terminal_upper
-    upper_sum = 1 - envelope.terminal_lower
+    lower_sum = math.nextafter(1 - envelope.terminal_upper, -math.inf)
+    upper_sum = math.nextafter(1 - envelope.terminal_lower, math.inf)
     candidates = {
         (harmful, correct)
         for harmful in (box.harmful.lower, box.harmful.upper)
@@ -348,6 +365,41 @@ def _intrinsic_lower(box: _IntrinsicBox) -> float:
     if denominator == 0:
         return 0
     return math.nextafter(box.harmful.lower / denominator, -math.inf)
+
+
+def _singleton_intrinsic_envelope(envelope: ConservativeSummaryEnvelope) -> bool:
+    return (
+        envelope.harmful_lower == envelope.harmful_upper
+        and envelope.correct_lower == envelope.correct_upper
+        and envelope.terminal_lower == envelope.terminal_upper
+    )
+
+
+def _singleton_intrinsic_risk_lower_bound_from_envelope(
+    input_value: CompatibilityInput,
+) -> IntrinsicRiskLowerBound:
+    envelope = input_value.envelope
+    resolved_mass = envelope.harmful_lower + envelope.correct_lower
+    if resolved_mass == 0:
+        return IntrinsicRiskLowerBound(None, _precision(input_value), True, 0, True)
+    minimum_hidden = envelope.harmful_lower * envelope.terminal_lower / resolved_mass
+    slack = information_slack(
+        InformationSlackInput(
+            envelope.harmful_lower,
+            envelope.correct_lower,
+            envelope.timing_entropy_upper,
+            minimum_hidden,
+        )
+    ).upper
+    if slack > input_value.information_budget:
+        return IntrinsicRiskLowerBound(None, _precision(input_value), False, 0, False)
+    return IntrinsicRiskLowerBound(
+        math.nextafter(envelope.harmful_lower / resolved_mass, -math.inf),
+        _precision(input_value),
+        False,
+        0,
+        True,
+    )
 
 
 def _intrinsic_point_upper(

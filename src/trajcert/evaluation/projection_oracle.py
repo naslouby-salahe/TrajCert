@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import heapq
+import math
 from dataclasses import dataclass
 from decimal import Decimal, localcontext
 
@@ -22,24 +24,74 @@ class ProjectionOracleResult:
     evaluated_points: int
     retained_points: int
     refined_points: int
+    decimal_precision: int
+    best_witness: ProjectionOracleWitness | None
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectionOracleBracket:
+    lower: float
+    upper: float
+
+    def __post_init__(self) -> None:
+        if self.lower > self.upper:
+            raise ValueError("oracle bracket lower endpoint must not exceed upper endpoint")
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectionOracleWitness:
+    harmful_mass: float
+    correct_mass: float
+    hidden_harmful_mass: float
+    hidden_harmful_bracket: ProjectionOracleBracket
+    information_value: float
+
+    @property
+    def latent_risk(self) -> float:
+        return self.harmful_mass + self.hidden_harmful_mass
+
+
+@dataclass(frozen=True, slots=True)
+class _HiddenMassSearch:
+    hidden_harmful_mass: float
+    bracket: ProjectionOracleBracket
 
 
 def independent_projection_oracle(input_value: ProjectionOracleInput) -> ProjectionOracleResult:
     if input_value.envelope.state is not SummaryEnvelopeState.VALID:
-        return ProjectionOracleResult(None, 0, 0, 0)
+        return ProjectionOracleResult(
+            None, 0, 0, 0, input_value.numerics.oracle_decimal_digits, None
+        )
     if input_value.information_budget < 0:
         raise ValueError("information budget must be nonnegative")
     if _is_singleton(input_value.envelope):
         if input_value.observable_law is None:
             raise ValueError("singleton projection oracle requires the observable law")
-        candidate = _maximal_law_hidden(
+        hidden = _maximal_law_hidden(
             input_value.observable_law, input_value.information_budget, input_value.numerics
         )
+        witness = (
+            None
+            if hidden is None
+            else ProjectionOracleWitness(
+                input_value.observable_law.harmful_total,
+                input_value.observable_law.correct_total,
+                hidden.hidden_harmful_mass,
+                hidden.bracket,
+                _direct_full_law_information(
+                    input_value.observable_law,
+                    hidden.hidden_harmful_mass,
+                    input_value.numerics,
+                ),
+            )
+        )
         return ProjectionOracleResult(
-            None if candidate is None else input_value.envelope.harmful_lower + candidate,
+            None if witness is None else witness.latent_risk,
             1,
             1,
             1,
+            input_value.numerics.oracle_decimal_digits,
+            witness,
         )
     return _grid_oracle(input_value)
 
@@ -56,10 +108,9 @@ def _is_singleton(envelope: ConservativeSummaryEnvelope) -> bool:
 def _grid_oracle(input_value: ProjectionOracleInput) -> ProjectionOracleResult:
     envelope = input_value.envelope
     grid_size = input_value.numerics.projection_oracle_grid_points
-    best_value: float | None = None
-    candidates: list[tuple[float, float, float]] = []
+    candidate_heap: list[tuple[float, float, float]] = []
     evaluated_points = 0
-    retained_points = 0
+    feasible_grid_points = 0
     for harmful_index in range(grid_size):
         harmful = _grid_coordinate(
             envelope.harmful_lower, envelope.harmful_upper, harmful_index, grid_size
@@ -71,40 +122,111 @@ def _grid_oracle(input_value: ProjectionOracleInput) -> ProjectionOracleResult:
             evaluated_points += 1
             if not _point_is_feasible(harmful, correct, envelope):
                 continue
-            hidden = _maximal_feasible_hidden(
+            approximate_hidden = _approximate_maximal_feasible_hidden(
                 harmful,
                 correct,
                 envelope.timing_entropy_upper,
                 input_value.information_budget,
                 input_value.numerics,
             )
-            if hidden is None:
+            if approximate_hidden is None:
                 continue
-            retained_points += 1
-            value = harmful + hidden
-            candidates.append((value, harmful, correct))
-            if best_value is None or value > best_value:
-                best_value = value
-    best_candidates = tuple(
-        sorted(candidates, reverse=True)[
-            : input_value.numerics.projection_oracle_retained_candidates
-        ]
-    )
-    refined_values = tuple(
-        _refine_candidate(candidate_harmful, candidate_correct, input_value)
+            feasible_grid_points += 1
+            candidate = (harmful + approximate_hidden, harmful, correct)
+            if len(candidate_heap) < input_value.numerics.projection_oracle_retained_candidates:
+                heapq.heappush(candidate_heap, candidate)
+            elif candidate[0] > candidate_heap[0][0]:
+                heapq.heapreplace(candidate_heap, candidate)
+    best_candidates = tuple(sorted(candidate_heap, reverse=True))
+    direct_witnesses = tuple(
+        _candidate_witness(candidate_harmful, candidate_correct, input_value)
         for _, candidate_harmful, candidate_correct in best_candidates
     )
-    feasible_refinements = tuple(value for value in refined_values if value is not None)
-    if feasible_refinements:
-        refined_best = max(feasible_refinements)
-        best_value = refined_best if best_value is None else max(best_value, refined_best)
-    return ProjectionOracleResult(
-        best_value, evaluated_points, retained_points, len(best_candidates)
+    feasible_direct_witnesses = tuple(value for value in direct_witnesses if value is not None)
+    best_witness = (
+        None
+        if not feasible_direct_witnesses
+        else max(feasible_direct_witnesses, key=lambda witness: witness.latent_risk)
     )
+    refined_witnesses = tuple(
+        _directly_verify_refined_candidate(candidate_harmful, candidate_correct, input_value)
+        for _, candidate_harmful, candidate_correct in best_candidates
+    )
+    feasible_refinements = tuple(value for value in refined_witnesses if value is not None)
+    if feasible_refinements:
+        refined_best = max(feasible_refinements, key=lambda witness: witness.latent_risk)
+        if best_witness is None or refined_best.latent_risk > best_witness.latent_risk:
+            best_witness = refined_best
+    return ProjectionOracleResult(
+        None if best_witness is None else best_witness.latent_risk,
+        evaluated_points,
+        feasible_grid_points,
+        len(best_candidates),
+        input_value.numerics.oracle_decimal_digits,
+        best_witness,
+    )
+
+
+def _directly_verify_refined_candidate(
+    harmful: float,
+    correct: float,
+    input_value: ProjectionOracleInput,
+) -> ProjectionOracleWitness | None:
+    refined_harmful, refined_correct = _refine_candidate(harmful, correct, input_value)
+    return _candidate_witness(refined_harmful, refined_correct, input_value)
 
 
 def _grid_coordinate(lower: float, upper: float, index: int, grid_size: int) -> float:
     return lower + (upper - lower) * index / (grid_size - 1)
+
+
+def _approximate_maximal_feasible_hidden(
+    harmful: float,
+    correct: float,
+    timing_entropy: float,
+    information_budget: float,
+    numerics: NumericsConfiguration,
+) -> float | None:
+    terminal = 1 - harmful - correct
+    if terminal < 0:
+        return None
+    hidden = _information_minimizer(harmful, correct, terminal)
+    if (
+        _approximate_slack(harmful, correct, timing_entropy, hidden)
+        > information_budget + numerics.deterministic_identity_tolerance
+    ):
+        return None
+    if _approximate_slack(harmful, correct, timing_entropy, terminal) <= information_budget:
+        return terminal
+    lower = hidden
+    upper = terminal
+    for _ in range(numerics.projection_oracle_refinement_passes):
+        midpoint = (lower + upper) / 2
+        if _approximate_slack(harmful, correct, timing_entropy, midpoint) <= information_budget:
+            lower = midpoint
+        else:
+            upper = midpoint
+    return lower
+
+
+def _approximate_slack(
+    harmful: float, correct: float, timing_entropy: float, hidden: float
+) -> float:
+    terminal = 1 - harmful - correct
+    latent_harmful = harmful + hidden
+    if terminal < 0 or hidden < 0 or hidden > terminal or latent_harmful < 0 or latent_harmful > 1:
+        return math.inf
+    return (
+        _binary_entropy(latent_harmful)
+        - timing_entropy
+        - (0 if terminal == 0 else terminal * _binary_entropy(hidden / terminal))
+    )
+
+
+def _binary_entropy(probability: float) -> float:
+    if probability == 0 or probability == 1:
+        return 0
+    return -probability * math.log(probability) - (1 - probability) * math.log1p(-probability)
 
 
 def _point_is_feasible(
@@ -116,7 +238,7 @@ def _point_is_feasible(
 
 def _refine_candidate(
     harmful: float, correct: float, input_value: ProjectionOracleInput
-) -> float | None:
+) -> tuple[float, float]:
     envelope = input_value.envelope
     grid_intervals = input_value.numerics.projection_oracle_grid_points - 1
     harmful_span = (envelope.harmful_upper - envelope.harmful_lower) / grid_intervals
@@ -126,7 +248,7 @@ def _refine_candidate(
     correct_lower = max(envelope.correct_lower, correct - correct_span)
     correct_upper = min(envelope.correct_upper, correct + correct_span)
     best_harmful, best_correct = harmful, correct
-    best_value = _candidate_value(best_harmful, best_correct, input_value)
+    best_value = _approximate_candidate_value(best_harmful, best_correct, input_value)
     for _ in range(input_value.numerics.projection_oracle_refinement_passes):
         best_harmful, best_value = _bounded_coordinate_step(
             harmful_lower,
@@ -152,7 +274,7 @@ def _refine_candidate(
         harmful_upper = min(envelope.harmful_upper, best_harmful + harmful_span)
         correct_lower = max(envelope.correct_lower, best_correct - correct_span)
         correct_upper = min(envelope.correct_upper, best_correct + correct_span)
-    return best_value
+    return best_harmful, best_correct
 
 
 def _bounded_coordinate_step(
@@ -170,16 +292,34 @@ def _bounded_coordinate_step(
     best_value = incumbent_value
     for coordinate in candidates:
         harmful, correct = (coordinate, fixed) if varies_harmful else (fixed, coordinate)
-        value = _candidate_value(harmful, correct, input_value)
+        value = _approximate_candidate_value(harmful, correct, input_value)
         if value is not None and (best_value is None or value > best_value):
             best_coordinate = coordinate
             best_value = value
     return best_coordinate, best_value
 
 
-def _candidate_value(
-    harmful: float, correct: float, input_value: ProjectionOracleInput
+def _approximate_candidate_value(
+    harmful: float,
+    correct: float,
+    input_value: ProjectionOracleInput,
 ) -> float | None:
+    envelope = input_value.envelope
+    if not _point_is_feasible(harmful, correct, envelope):
+        return None
+    hidden = _approximate_maximal_feasible_hidden(
+        harmful,
+        correct,
+        envelope.timing_entropy_upper,
+        input_value.information_budget,
+        input_value.numerics,
+    )
+    return None if hidden is None else harmful + hidden
+
+
+def _candidate_witness(
+    harmful: float, correct: float, input_value: ProjectionOracleInput
+) -> ProjectionOracleWitness | None:
     envelope = input_value.envelope
     if not _point_is_feasible(harmful, correct, envelope):
         return None
@@ -190,7 +330,33 @@ def _candidate_value(
         input_value.information_budget,
         input_value.numerics,
     )
-    return None if hidden is None else harmful + hidden
+    return (
+        None
+        if hidden is None
+        else _summary_witness(harmful, correct, hidden, envelope, input_value.numerics)
+    )
+
+
+def _summary_witness(
+    harmful: float,
+    correct: float,
+    hidden: _HiddenMassSearch,
+    envelope: ConservativeSummaryEnvelope,
+    numerics: NumericsConfiguration,
+) -> ProjectionOracleWitness:
+    return ProjectionOracleWitness(
+        harmful,
+        correct,
+        hidden.hidden_harmful_mass,
+        hidden.bracket,
+        _direct_slack(
+            harmful,
+            correct,
+            envelope.timing_entropy_upper,
+            hidden.hidden_harmful_mass,
+            numerics,
+        ),
+    )
 
 
 def _maximal_feasible_hidden(
@@ -199,7 +365,7 @@ def _maximal_feasible_hidden(
     timing_entropy: float,
     information_budget: float,
     numerics: NumericsConfiguration,
-) -> float | None:
+) -> _HiddenMassSearch | None:
     terminal = 1 - harmful - correct
     if terminal < 0:
         return None
@@ -207,7 +373,7 @@ def _maximal_feasible_hidden(
     if _direct_slack(harmful, correct, timing_entropy, minimum, numerics) > information_budget:
         return None
     if _direct_slack(harmful, correct, timing_entropy, terminal, numerics) <= information_budget:
-        return terminal
+        return _HiddenMassSearch(terminal, ProjectionOracleBracket(terminal, terminal))
     lower = minimum
     upper = terminal
     while upper - lower > numerics.oracle_boundary_bracket_width:
@@ -219,14 +385,16 @@ def _maximal_feasible_hidden(
             lower = midpoint
         else:
             upper = midpoint
-    return lower
+    if _direct_slack(harmful, correct, timing_entropy, lower, numerics) > information_budget:
+        raise ArithmeticError("oracle bisection returned an unverified feasible lower endpoint")
+    return _HiddenMassSearch(lower, ProjectionOracleBracket(lower, upper))
 
 
 def _maximal_law_hidden(
     observable_law: ObservableLaw,
     information_budget: float,
     numerics: NumericsConfiguration,
-) -> float | None:
+) -> _HiddenMassSearch | None:
     minimum = _information_minimizer(
         observable_law.harmful_total,
         observable_law.correct_total,
@@ -238,7 +406,10 @@ def _maximal_law_hidden(
         _direct_full_law_information(observable_law, observable_law.c, numerics)
         <= information_budget
     ):
-        return observable_law.c
+        return _HiddenMassSearch(
+            observable_law.c,
+            ProjectionOracleBracket(observable_law.c, observable_law.c),
+        )
     lower = minimum
     upper = observable_law.c
     while upper - lower > numerics.oracle_boundary_bracket_width:
@@ -247,7 +418,9 @@ def _maximal_law_hidden(
             lower = midpoint
         else:
             upper = midpoint
-    return lower
+    if _direct_full_law_information(observable_law, lower, numerics) > information_budget:
+        raise ArithmeticError("oracle bisection returned an unverified feasible lower endpoint")
+    return _HiddenMassSearch(lower, ProjectionOracleBracket(lower, upper))
 
 
 def _information_minimizer(harmful: float, correct: float, terminal: float) -> float:
@@ -260,7 +433,7 @@ def _direct_full_law_information(
     hidden_harmful_mass: float,
     numerics: NumericsConfiguration,
 ) -> float:
-    if not observable_law.hidden_harmful_mass_is_valid(hidden_harmful_mass):
+    if not 0.0 <= hidden_harmful_mass <= observable_law.c:
         raise ValueError("hidden terminal harmful mass must lie in [0, c]")
     with localcontext() as context:
         context.prec = numerics.oracle_decimal_digits
@@ -298,7 +471,16 @@ def _direct_slack(
         harmful_value = _decimal(harmful)
         terminal_value = _decimal(terminal)
         hidden_value = _decimal(hidden)
-        latent_entropy = _entropy(harmful_value + hidden_value)
+        latent_harmful_value = harmful_value + hidden_value
+        if (
+            terminal_value < 0
+            or hidden_value < 0
+            or hidden_value > terminal_value
+            or latent_harmful_value < 0
+            or latent_harmful_value > 1
+        ):
+            return float("inf")
+        latent_entropy = _entropy(latent_harmful_value)
         terminal_entropy = (
             _decimal(0)
             if terminal_value == 0

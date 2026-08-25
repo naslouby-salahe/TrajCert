@@ -1,5 +1,6 @@
 from trajcert.domain.enums import PublicExecutionState, ScientificState
 from trajcert.experiments.lifecycle import (
+    FailureAssessmentInput,
     FailureKind,
     assess_failure_precedence,
     failure_consequence,
@@ -22,9 +23,15 @@ def test_failure_consequences_keep_technical_and_scientific_outcomes_distinct() 
 def test_failure_precedence_prevents_technical_or_invalid_outcomes_being_scientific_evidence() -> (
     None
 ):
-    invalid = assess_failure_precedence(True, True, True, False, False, False)
-    technical = assess_failure_precedence(False, True, True, False, False, False)
-    insufficient = assess_failure_precedence(False, False, False, False, False, True)
+    invalid = assess_failure_precedence(
+        FailureAssessmentInput(True, True, True, False, False, False)
+    )
+    technical = assess_failure_precedence(
+        FailureAssessmentInput(False, True, True, False, False, False)
+    )
+    insufficient = assess_failure_precedence(
+        FailureAssessmentInput(False, False, False, False, False, True)
+    )
 
     assert invalid.consequence.execution_state is PublicExecutionState.INVALID
     assert invalid.consequence.scientific_state is None

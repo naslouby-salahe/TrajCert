@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import Decimal, localcontext
+from decimal import Decimal, getcontext, localcontext
 from enum import StrEnum
+from functools import cache
 
 from trajcert.configuration.models import NumericsConfiguration
 from trajcert.data.partitions import ObservableLaw
@@ -23,6 +24,12 @@ class CallbackComparatorResult:
     upper_risk: float | None
     minimum_residual: float | None
     decimal_digits: int
+
+
+@dataclass(frozen=True, slots=True)
+class _CallbackStatistics:
+    terminal_mass: Decimal
+    bands: tuple[tuple[Decimal, Decimal, Decimal, Decimal], ...]
 
 
 def alho_common_slope_callback(
@@ -150,27 +157,32 @@ def _stable_resistance_residual(
 def _informative_log_odds(
     observable_law: ObservableLaw, hidden_mass: Decimal
 ) -> tuple[Decimal, ...] | None:
-    terminal_mass = Decimal(str(observable_law.c))
+    statistics = _callback_statistics(observable_law, getcontext().prec)
     values: list[Decimal] = []
-    for index, (harmful, correct) in enumerate(
-        zip(observable_law.harmful_masses, observable_law.correct_masses, strict=True)
-    ):
-        if harmful <= 0 or correct <= 0:
-            continue
-        later_harmful = sum(
-            (Decimal(str(value)) for value in observable_law.harmful_masses[index + 1 :]),
-            Decimal(0),
-        )
-        later_correct = sum(
-            (Decimal(str(value)) for value in observable_law.correct_masses[index + 1 :]),
-            Decimal(0),
-        )
-        numerator = Decimal(str(harmful)) * (later_correct + terminal_mass - hidden_mass)
-        denominator = Decimal(str(correct)) * (later_harmful + hidden_mass)
+    for harmful, correct, later_harmful, later_correct in statistics.bands:
+        numerator = harmful * (later_correct + statistics.terminal_mass - hidden_mass)
+        denominator = correct * (later_harmful + hidden_mass)
         if numerator <= 0 or denominator <= 0:
             continue
         values.append((numerator / denominator).ln())
     return tuple(values)
+
+
+@cache
+def _callback_statistics(observable_law: ObservableLaw, precision: int) -> _CallbackStatistics:
+    with localcontext() as context:
+        context.prec = precision
+        harmful = tuple(Decimal(str(value)) for value in observable_law.harmful_masses)
+        correct = tuple(Decimal(str(value)) for value in observable_law.correct_masses)
+        later_harmful = Decimal(0)
+        later_correct = Decimal(0)
+        reverse_bands: list[tuple[Decimal, Decimal, Decimal, Decimal]] = []
+        for harmful_mass, correct_mass in zip(reversed(harmful), reversed(correct), strict=True):
+            if harmful_mass > 0 and correct_mass > 0:
+                reverse_bands.append((harmful_mass, correct_mass, later_harmful, later_correct))
+            later_harmful += harmful_mass
+            later_correct += correct_mass
+        return _CallbackStatistics(Decimal(str(observable_law.c)), tuple(reversed(reverse_bands)))
 
 
 def _local_minimum_brackets(

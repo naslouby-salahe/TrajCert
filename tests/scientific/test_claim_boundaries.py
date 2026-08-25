@@ -9,6 +9,7 @@ from trajcert.analysis.claims import (
     THEORETICAL_PRINCIPLE,
     VERIFICATION_SETTING,
     ClaimScopeGuard,
+    ClaimText,
 )
 from trajcert.domain.enums import EvidenceClass
 
@@ -29,10 +30,10 @@ def test_authoritative_scope_vocabulary_is_traceable() -> None:
 
 def test_scope_guard_rejects_prohibited_claims() -> None:
     with pytest.raises(ValueError, match="privacy protection"):
-        ClaimScopeGuard().validate("TrajCert provides privacy protection")
+        ClaimScopeGuard().validate(ClaimText(value="TrajCert provides privacy protection"))
 
     with pytest.raises(ValueError, match="mutual information"):
-        ClaimScopeGuard().validate("TrajCert invents mutual information")
+        ClaimScopeGuard().validate(ClaimText(value="TrajCert invents mutual information"))
 
 
 def test_exploratory_evidence_cannot_be_promoted_to_confirmatory_evidence() -> None:

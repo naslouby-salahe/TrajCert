@@ -24,9 +24,15 @@ from trajcert.configuration.models import CoverageValidationConfiguration, SeedI
 from trajcert.domain.seeds import (
     ComparisonNamespaceInput,
     EventStreamNamespaceInput,
+    ResolvedBandCount,
     SeedDerivationInput,
+    SeedIndex,
+    SeedIndexRange,
     SeedManifestInput,
     SeedNamespaceRole,
+    SeedSetKey,
+    SemanticComparisonKey,
+    SyntheticLawName,
     comparison_namespace,
     derive_seed,
     derived_seed_manifest,
@@ -46,25 +52,37 @@ def small_coverage_configuration() -> CoverageValidationConfiguration:
 
 
 def test_seed_derivation_matches_the_prescribed_sha256_material_and_namespaces() -> None:
-    namespace = event_stream_namespace(EventStreamNamespaceInput("Timing law", 8))
-    derived = derive_seed(SeedDerivationInput(namespace, 7))
+    namespace = event_stream_namespace(
+        EventStreamNamespaceInput(SyntheticLawName("Timing law"), ResolvedBandCount(8))
+    )
+    derived = derive_seed(SeedDerivationInput(namespace, SeedIndex(7)))
     expected_unsigned = int.from_bytes(
         hashlib.sha256(b"TrajCert|Event stream|law=Timing law|K=8|7").digest()[:8], "big"
     )
 
-    assert namespace == "Event stream|law=Timing law|K=8"
+    assert namespace.value == "Event stream|law=Timing law|K=8"
     assert derived.unsigned_value == expected_unsigned
     assert derived.generator_value == expected_unsigned % (2**63)
     assert (
         comparison_namespace(
-            ComparisonNamespaceInput(SeedNamespaceRole.BOOTSTRAP, "utility:law:rho")
-        )
+            ComparisonNamespaceInput(
+                SeedNamespaceRole.BOOTSTRAP,
+                SemanticComparisonKey("utility:law:rho"),
+            )
+        ).value
         == "Bootstrap|utility:law:rho"
     )
-    manifest = derived_seed_manifest(SeedManifestInput("streams", namespace, 0, 2))
+    manifest = derived_seed_manifest(
+        SeedManifestInput(
+            SeedSetKey("streams"),
+            namespace,
+            SeedIndexRange(SeedIndex(0), SeedIndex(2)),
+        )
+    )
     assert manifest.seed_count == 2
     assert manifest.seeds == tuple(
-        str(derive_seed(SeedDerivationInput(namespace, index)).unsigned_value) for index in range(2)
+        str(derive_seed(SeedDerivationInput(namespace, SeedIndex(index))).unsigned_value)
+        for index in range(2)
     )
 
 

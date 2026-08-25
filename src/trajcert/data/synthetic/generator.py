@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from trajcert.data.synthetic.laws import SyntheticTrajectoryLaw
+from trajcert.data.synthetic.laws import SyntheticLabel, SyntheticTrajectoryLaw
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,38 +42,59 @@ class ValidatedEventStream:
             raise ValueError("validated streams must have consecutive action indices")
 
 
+@dataclass(frozen=True, slots=True)
+class SyntheticStreamGenerationInput:
+    law: SyntheticTrajectoryLaw
+    seed: int
+    event_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class GeneratedSyntheticStream:
+    events: tuple[SyntheticEvent, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ValidatedStreamReuseInput:
+    existing: ValidatedEventStream | None
+    law: SyntheticTrajectoryLaw
+    generator_identity: str
+    seed: int
+    event_count: int
+
+
 def generate_synthetic_stream(
-    law: SyntheticTrajectoryLaw,
-    seed: int,
-    event_count: int,
-) -> tuple[SyntheticEvent, ...]:
-    if event_count < 0:
+    input_value: SyntheticStreamGenerationInput,
+) -> GeneratedSyntheticStream:
+    if input_value.event_count < 0:
         raise ValueError("synthetic event count must be nonnegative")
-    generator = np.random.Generator(np.random.PCG64(seed))
-    return tuple(
-        _generate_event(law, generator, action_index) for action_index in range(event_count)
+    generator = np.random.Generator(np.random.PCG64(input_value.seed))
+    return GeneratedSyntheticStream(
+        tuple(
+            _generate_event(input_value.law, generator, action_index)
+            for action_index in range(input_value.event_count)
+        )
     )
 
 
 def reuse_or_extend_validated_stream(
-    existing: ValidatedEventStream | None,
-    law: SyntheticTrajectoryLaw,
-    generator_identity: str,
-    seed: int,
-    event_count: int,
+    input_value: ValidatedStreamReuseInput,
 ) -> ValidatedEventStream:
-    if event_count < 0:
+    if input_value.event_count < 0:
         raise ValueError("synthetic event count must be nonnegative")
-    if existing is not None and (
-        existing.generator_identity != generator_identity or existing.seed != seed
+    if input_value.existing is not None and (
+        input_value.existing.generator_identity != input_value.generator_identity
+        or input_value.existing.seed != input_value.seed
     ):
         raise ValueError("stream reuse requires the same generator and seed identity")
-    generated = generate_synthetic_stream(law, seed, event_count)
-    if existing is not None:
-        comparable_count = min(len(existing.events), event_count)
-        if existing.events[:comparable_count] != generated[:comparable_count]:
+    generated = generate_synthetic_stream(
+        SyntheticStreamGenerationInput(input_value.law, input_value.seed, input_value.event_count)
+    ).events
+    if input_value.existing is not None:
+        comparable_count = min(len(input_value.existing.events), input_value.event_count)
+        if input_value.existing.events[:comparable_count] != generated[:comparable_count]:
             raise ValueError("existing stream is not a validated prefix of the semantic stream")
-    return ValidatedEventStream(generator_identity, seed, generated)
+    return ValidatedEventStream(input_value.generator_identity, input_value.seed, generated)
 
 
 def _generate_event(
@@ -82,12 +103,12 @@ def _generate_event(
     action_index: int,
 ) -> SyntheticEvent:
     label = generator.random() < law.theta
-    terminal_probability = law.conditional_terminal_mass(label)
+    terminal_probability = law.conditional_terminal_mass(SyntheticLabel(label))
     if generator.random() < terminal_probability:
         return SyntheticEvent(action_index, label, None, True)
     draw = generator.random()
     cumulative = 0.0
-    for band, mass in enumerate(law.conditional_resolution_masses(label), start=1):
+    for band, mass in enumerate(law.conditional_resolution_masses(SyntheticLabel(label)), start=1):
         cumulative += mass / (1 - terminal_probability)
         if draw < cumulative:
             return SyntheticEvent(action_index, label, band, True)

@@ -10,6 +10,10 @@ from trajcert.domain.serialization import (
     canonical_number_token,
 )
 from trajcert.infrastructure.artifacts import (
+    ArtifactPhysicalType,
+    CanonicalActivePathInput,
+    DescriptiveArtifactKeyInput,
+    SemanticCellKeyInput,
     artifact_envelope_arrow_schema,
     canonical_active_path,
     canonical_physical_types,
@@ -17,10 +21,12 @@ from trajcert.infrastructure.artifacts import (
     semantic_cell_key,
 )
 from trajcert.infrastructure.storage import (
+    AtomicWriteInput,
+    FilesystemSafeNameInput,
+    SemanticCoordinateSegmentInput,
     atomic_write_bytes,
     filesystem_safe_name,
     semantic_coordinate_segment,
-    temporary_sibling_path,
 )
 
 
@@ -63,20 +69,27 @@ def test_canonical_json_text_rejects_duplicate_keys_and_noncanonical_rendering()
 
 
 def test_semantic_name_is_filesystem_safe() -> None:
-    assert filesystem_safe_name("Timing & Terminal Outcomes") == "timing-terminal-outcomes"
-    assert semantic_coordinate_segment("rho", 0.05) == "rho=0.05"
-    assert semantic_coordinate_segment("rho", "log(2)") == "rho=log2"
-    assert temporary_sibling_path(Path("result.json")).name == "result.json.partial"
+    assert filesystem_safe_name(FilesystemSafeNameInput("Timing & Terminal Outcomes")).value == (
+        "timing-terminal-outcomes"
+    )
+    assert (
+        semantic_coordinate_segment(SemanticCoordinateSegmentInput("rho", 0.05)).value == "rho=0.05"
+    )
+    assert semantic_coordinate_segment(SemanticCoordinateSegmentInput("rho", "log(2)")).value == (
+        "rho=log2"
+    )
 
 
 def test_semantic_names_reject_non_ascii_input() -> None:
     with pytest.raises(ValueError, match="ASCII"):
-        filesystem_safe_name("résolution")
+        filesystem_safe_name(FilesystemSafeNameInput("résolution"))
 
 
 def test_atomic_write_validates_before_promotion(tmp_path: Path) -> None:
     destination = tmp_path / "artifact.json"
-    digest = atomic_write_bytes(destination, b"{}", lambda value: assert_valid_payload(value))
+    digest = atomic_write_bytes(
+        AtomicWriteInput(destination, b"{}", lambda value: assert_valid_payload(value))
+    ).sha256_digest
     assert destination.read_bytes() == b"{}"
     assert digest == "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
 
@@ -84,9 +97,9 @@ def test_atomic_write_validates_before_promotion(tmp_path: Path) -> None:
 def test_atomic_write_rejects_payload_before_creating_a_partial_file(tmp_path: Path) -> None:
     destination = tmp_path / "artifact.json"
     with pytest.raises(ValueError, match="unexpected payload"):
-        atomic_write_bytes(destination, b"invalid", assert_valid_payload)
+        atomic_write_bytes(AtomicWriteInput(destination, b"invalid", assert_valid_payload))
     assert not destination.exists()
-    assert not temporary_sibling_path(destination).exists()
+    assert not destination.with_name(f"{destination.name}.partial").exists()
 
 
 def test_atomic_write_preserves_existing_artifact_when_validation_rejects_payload(
@@ -95,9 +108,9 @@ def test_atomic_write_preserves_existing_artifact_when_validation_rejects_payloa
     destination = tmp_path / "artifact.json"
     destination.write_bytes(b"previous")
     with pytest.raises(ValueError, match="unexpected payload"):
-        atomic_write_bytes(destination, b"invalid", assert_valid_payload)
+        atomic_write_bytes(AtomicWriteInput(destination, b"invalid", assert_valid_payload))
     assert destination.read_bytes() == b"previous"
-    assert not temporary_sibling_path(destination).exists()
+    assert not destination.with_name(f"{destination.name}.partial").exists()
 
 
 def assert_valid_payload(value: bytes) -> None:
@@ -107,13 +120,13 @@ def assert_valid_payload(value: bytes) -> None:
 
 def test_canonical_physical_types_match_the_arrow_contract() -> None:
     physical_types = canonical_physical_types()
-    assert str(physical_types["string"]) == "string"
-    assert str(physical_types["boolean"]) == "bool"
-    assert str(physical_types["integer"]) == "int64"
-    assert str(physical_types["large_identifier"]) == "uint64"
-    assert str(physical_types["scientific_real"]) == "double"
-    assert str(physical_types["timestamp"]) == "timestamp[us, tz=UTC]"
-    assert str(physical_types["string_list"]) == "list<item: string>"
+    assert str(physical_types[ArtifactPhysicalType.STRING]) == "string"
+    assert str(physical_types[ArtifactPhysicalType.BOOLEAN]) == "bool"
+    assert str(physical_types[ArtifactPhysicalType.INTEGER]) == "int64"
+    assert str(physical_types[ArtifactPhysicalType.LARGE_IDENTIFIER]) == "uint64"
+    assert str(physical_types[ArtifactPhysicalType.SCIENTIFIC_REAL]) == "double"
+    assert str(physical_types[ArtifactPhysicalType.TIMESTAMP]) == "timestamp[us, tz=UTC]"
+    assert str(physical_types[ArtifactPhysicalType.STRING_LIST]) == "list<item: string>"
 
 
 def test_artifact_envelope_arrow_schema_preserves_nullable_scientific_fields() -> None:
@@ -127,22 +140,31 @@ def test_artifact_envelope_arrow_schema_preserves_nullable_scientific_fields() -
 
 def test_semantic_identity_constructors_are_deterministic_and_not_hashes() -> None:
     key = semantic_cell_key(
-        "Population Sensitivity Utility",
-        {"rho": 0.05, "law": "Timing and terminal"},
+        SemanticCellKeyInput(
+            "Population Sensitivity Utility",
+            {"rho": 0.05, "law": "Timing and terminal"},
+        )
     )
     artifact_key = descriptive_artifact_key(
-        "population_result",
-        {"rho": 0.05, "law": "Timing and terminal"},
+        DescriptiveArtifactKeyInput(
+            "population_result",
+            {"rho": 0.05, "law": "Timing and terminal"},
+        )
     )
 
-    assert key == 'Population Sensitivity Utility:{"law":"Timing and terminal","rho":0.05}'
-    assert artifact_key == "population_result-law=timing-and-terminal-rho=0.05"
-    assert len(key) != 64
+    assert key.value == 'Population Sensitivity Utility:{"law":"Timing and terminal","rho":0.05}'
+    assert artifact_key.value == "population_result-law=timing-and-terminal-rho=0.05"
+    assert len(key.value) != 64
 
 
 def test_each_semantic_cell_has_one_deterministic_active_location(tmp_path: Path) -> None:
-    key = semantic_cell_key("population", {"rho": 0.05})
-    assert canonical_active_path(tmp_path, key) == canonical_active_path(tmp_path, key)
-    assert canonical_active_path(tmp_path, key) != canonical_active_path(
-        tmp_path, semantic_cell_key("population", {"rho": 0.1})
+    key = semantic_cell_key(SemanticCellKeyInput("population", {"rho": 0.05}))
+    assert canonical_active_path(CanonicalActivePathInput(tmp_path, key)) == canonical_active_path(
+        CanonicalActivePathInput(tmp_path, key)
+    )
+    assert canonical_active_path(CanonicalActivePathInput(tmp_path, key)) != canonical_active_path(
+        CanonicalActivePathInput(
+            tmp_path,
+            semantic_cell_key(SemanticCellKeyInput("population", {"rho": 0.1})),
+        )
     )

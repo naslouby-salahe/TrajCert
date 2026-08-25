@@ -1,11 +1,16 @@
+from pathlib import Path
+
 import pytest
 
+from trajcert.configuration.loading import load_configuration
 from trajcert.domain.enums import EvidenceClass
 from trajcert.experiments.registry import (
     CURRENT_EXPERIMENT_REGISTRY,
     expand_experiment_registry,
     validate_experiment_registry,
 )
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_registry_is_complete_ordered_and_exactly_sized() -> None:
@@ -32,11 +37,49 @@ def test_registry_rejects_missing_extra_or_reordered_entries() -> None:
 
 
 def test_registry_expansion_has_ordered_unique_semantic_cells() -> None:
-    cells = expand_experiment_registry(CURRENT_EXPERIMENT_REGISTRY)
+    configuration = load_configuration(PROJECT_ROOT / "configs/trajcert.yaml")
+    cells = expand_experiment_registry(CURRENT_EXPERIMENT_REGISTRY, configuration)
 
     assert len(cells) == 1423
     assert len({cell.semantic_cell_key for cell in cells}) == len(cells)
     assert cells[0].semantic_cell_key == (
-        'Scientific and Data Inventory:{"registry_index":0,"row_index":0}'
+        'Scientific and Data Inventory:{"gate":"protocol_inventory"}'
     )
+    assert all("registry_index" not in cell.semantic_coordinates for cell in cells)
+    assert all("row_index" not in cell.semantic_coordinates for cell in cells)
+    utility_coordinates = tuple(
+        cell.semantic_coordinates
+        for cell in cells
+        if cell.experiment.name == "Population Sensitivity Utility"
+    )
+    assert len(utility_coordinates) == 360
+    assert any('"rho":0.6931471805599453' in coordinate for coordinate in utility_coordinates)
     assert cells[-1].experiment.name == "Statistical Synthesis"
+
+
+def test_compatibility_floor_behavior_uses_fine_and_endpoint_partitions() -> None:
+    configuration = load_configuration(PROJECT_ROOT / "configs/trajcert.yaml")
+    cells = expand_experiment_registry(CURRENT_EXPERIMENT_REGISTRY, configuration)
+
+    partitions = tuple(
+        cell.semantic_coordinates
+        for cell in cells
+        if cell.experiment.name == "Compatibility Floor Behavior"
+    )
+
+    expected_partition_names = tuple(
+        partition.name
+        for _law in configuration.synthetic_data.laws
+        for partition in (configuration.partitions.primary[0], configuration.partitions.primary[-1])
+    )
+    assert (
+        tuple(
+            next(
+                partition.name
+                for partition in configuration.partitions.primary
+                if f'"partition":"{partition.name}"' in coordinate
+            )
+            for coordinate in partitions
+        )
+        == expected_partition_names
+    )

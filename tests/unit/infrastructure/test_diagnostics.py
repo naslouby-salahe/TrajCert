@@ -3,6 +3,7 @@ from pathlib import Path
 
 from trajcert.infrastructure.diagnostics import (
     StructuredExecutionEvent,
+    StructuredExecutionEventPersistenceInput,
     persist_structured_execution_event,
 )
 
@@ -37,5 +38,7 @@ def test_structured_execution_event_persists_as_validated_canonical_data(tmp_pat
     )
     path = tmp_path / "execution.json"
 
-    assert persist_structured_execution_event(path, event)
+    assert persist_structured_execution_event(
+        StructuredExecutionEventPersistenceInput(path, event)
+    ).sha256_digest
     assert path.read_bytes().endswith(b"\n")

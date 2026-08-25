@@ -17,6 +17,24 @@ minimum_evidence:
   matured_events: 200
   resolved_events: 50
 
+anytime_hand_cases:
+  timing_and_terminal_harmful_late_law: "Timing and terminal: harmful outcomes resolve late"
+  timing_only_harmful_late_law: "Timing only: harmful outcomes resolve late"
+  intrinsic_safety_impossibility_law: "Intrinsic safety impossibility"
+  insufficient_matured_events: 199
+  insufficient_resolved_events: 49
+  insufficient_unresolved_events: 151
+  singleton_information_margin: 0.01
+  certified_risk_margin: 0.005
+  intrinsic_risk_margin: 0.01
+  simplex_terminal_mass: 0.20
+  simplex_harmful_mass: 0.10
+  simplex_correct_mass: 0.70
+  simplex_hidden_harmful_mass: 0.05
+  simplex_risk_budget: 0.50
+  optimizer_sample_size: 500
+  optimizer_node_cap: 1
+
 synthetic_data:
   laws:
     - {name: "No outcome-path dependence", theta: 0.05, q1: 0.10, q0: 0.10, lambda1: 0.00, lambda0: 0.00}

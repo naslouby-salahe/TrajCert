@@ -5,11 +5,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
+from typing import NewType
 
 from trajcert.configuration.models import MethodConfiguration, SyntheticDataConfiguration
 from trajcert.data.partitions import ObservableLaw
+from trajcert.domain.records.artifacts import Digest
 from trajcert.domain.serialization import JSONValue, canonical_json_bytes
-from trajcert.infrastructure.storage import atomic_write_bytes
+from trajcert.infrastructure.storage import AtomicWriteInput, atomic_write_bytes
 from trajcert.math.information_profile import InformationProfile
 
 SYNTHETIC_LAW_CATALOG_RELATIVE_PATH = Path(
@@ -24,6 +26,14 @@ SYNTHETIC_LAW_CATALOG_MANIFEST_RELATIVE_PATH = Path(
 SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH = Path(
     "outputs/preprocessing/metadata/synthetic_scaling_law_catalog.manifest.json"
 )
+
+ResolutionSlope = NewType("ResolutionSlope", float)
+ResolutionWeights = NewType("ResolutionWeights", tuple[float, ...])
+SyntheticLabel = NewType("SyntheticLabel", bool)
+ConditionalResolutionMasses = NewType("ConditionalResolutionMasses", tuple[float, ...])
+TerminalMass = NewType("TerminalMass", float)
+BandHorizons = NewType("BandHorizons", tuple[float, ...])
+ResolvedBandCount = NewType("ResolvedBandCount", int)
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,7 +71,7 @@ class SyntheticTrajectoryLaw:
         if any(not math.isfinite(value) for value in (self.lambda1, self.lambda0)):
             raise ValueError("synthetic timing slopes must be finite")
 
-    def resolution_weights(self, slope: float) -> tuple[float, ...]:
+    def resolution_weights(self, slope: ResolutionSlope) -> ResolutionWeights:
         centered = tuple(
             slope * (index - (self.resolved_band_count + 1) / 2)
             for index in range(1, self.resolved_band_count + 1)
@@ -69,37 +79,45 @@ class SyntheticTrajectoryLaw:
         offset = max(centered)
         unnormalized = tuple(math.exp(value - offset) for value in centered)
         normalizer = sum(unnormalized)
-        return tuple(value / normalizer for value in unnormalized)
+        return ResolutionWeights(tuple(value / normalizer for value in unnormalized))
 
-    def conditional_resolution_masses(self, label: bool) -> tuple[float, ...]:
+    def conditional_resolution_masses(self, label: SyntheticLabel) -> ConditionalResolutionMasses:
         terminal_probability = self.q1 if label else self.q0
         slope = self.lambda1 if label else self.lambda0
-        return tuple(
-            (1 - terminal_probability) * weight for weight in self.resolution_weights(slope)
+        return ConditionalResolutionMasses(
+            tuple(
+                (1 - terminal_probability) * weight
+                for weight in self.resolution_weights(ResolutionSlope(slope))
+            )
         )
 
-    def conditional_terminal_mass(self, label: bool) -> float:
-        return self.q1 if label else self.q0
+    def conditional_terminal_mass(self, label: SyntheticLabel) -> TerminalMass:
+        return TerminalMass(self.q1 if label else self.q0)
 
     def observable_law(self) -> ObservableLaw:
         harmful_masses = tuple(
-            self.theta * mass for mass in self.conditional_resolution_masses(True)
+            self.theta * mass for mass in self.conditional_resolution_masses(SyntheticLabel(True))
         )
         correct_masses = tuple(
-            (1 - self.theta) * mass for mass in self.conditional_resolution_masses(False)
+            (1 - self.theta) * mass
+            for mass in self.conditional_resolution_masses(SyntheticLabel(False))
         )
-        unresolved_mass = self.theta * self.conditional_terminal_mass(True) + (
+        unresolved_mass = self.theta * self.conditional_terminal_mass(SyntheticLabel(True)) + (
             1 - self.theta
-        ) * self.conditional_terminal_mass(False)
+        ) * self.conditional_terminal_mass(SyntheticLabel(False))
         return ObservableLaw(harmful_masses, correct_masses, unresolved_mass)
 
-    def band_horizons(self) -> tuple[float, ...]:
-        return tuple(
-            index * self.terminal_horizon / self.resolved_band_count
-            for index in range(1, self.resolved_band_count + 1)
+    def band_horizons(self) -> BandHorizons:
+        return BandHorizons(
+            tuple(
+                index * self.terminal_horizon / self.resolved_band_count
+                for index in range(1, self.resolved_band_count + 1)
+            )
         )
 
-    def with_resolved_band_count(self, resolved_band_count: int) -> SyntheticTrajectoryLaw:
+    def with_resolved_band_count(
+        self, resolved_band_count: ResolvedBandCount
+    ) -> SyntheticTrajectoryLaw:
         return SyntheticTrajectoryLaw(
             self.name,
             self.theta,
@@ -131,6 +149,26 @@ class SyntheticTrajectoryLaw:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class SyntheticScalingLawsInput:
+    law: SyntheticTrajectoryLaw
+    resolved_band_counts: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticLawCatalogManifestInput:
+    catalog_type: str
+    payload_relative_path: Path
+    laws: tuple[SyntheticTrajectoryLaw, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticScalingCatalogWriteInput:
+    project_root: Path
+    law: SyntheticTrajectoryLaw
+    resolved_band_counts: tuple[int, ...]
+
+
 def synthetic_law_catalog(
     synthetic_data: SyntheticDataConfiguration,
     method: MethodConfiguration,
@@ -155,14 +193,13 @@ def synthetic_law_catalog(
 
 
 def synthetic_scaling_laws(
-    law: SyntheticTrajectoryLaw,
-    resolved_band_counts: tuple[int, ...],
+    input_value: SyntheticScalingLawsInput,
 ) -> tuple[SyntheticTrajectoryLaw, ...]:
-    if not resolved_band_counts:
+    if not input_value.resolved_band_counts:
         raise ValueError("synthetic scaling requires at least one resolved-band count")
     return tuple(
-        law.with_resolved_band_count(resolved_band_count)
-        for resolved_band_count in resolved_band_counts
+        input_value.law.with_resolved_band_count(ResolvedBandCount(resolved_band_count))
+        for resolved_band_count in input_value.resolved_band_counts
     )
 
 
@@ -177,13 +214,15 @@ def canonical_synthetic_law_catalog(
 def write_synthetic_law_catalog(
     project_root: Path,
     laws: tuple[SyntheticTrajectoryLaw, ...],
-) -> str:
+) -> Digest:
     payload = canonical_synthetic_law_catalog(laws)
     digest = atomic_write_bytes(
-        project_root / SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
-        payload,
-        lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
-    )
+        AtomicWriteInput(
+            project_root / SYNTHETIC_LAW_CATALOG_RELATIVE_PATH,
+            payload,
+            lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
+        )
+    ).sha256_digest
     _write_synthetic_law_catalog_manifest(
         project_root,
         "synthetic-law-catalog",
@@ -194,14 +233,12 @@ def write_synthetic_law_catalog(
 
 
 def synthetic_law_catalog_manifest(
-    catalog_type: str,
-    payload_relative_path: Path,
-    laws: tuple[SyntheticTrajectoryLaw, ...],
+    input_value: SyntheticLawCatalogManifestInput,
 ) -> SyntheticLawCatalogManifest:
-    payload = canonical_synthetic_law_catalog(laws)
-    source_names = tuple(sorted(law.name for law in laws))
+    payload = canonical_synthetic_law_catalog(input_value.laws)
+    source_names = tuple(sorted(law.name for law in input_value.laws))
     semantic_identity = canonical_json_bytes(
-        {"catalog_type": catalog_type, "law_names": source_names}
+        {"catalog_type": input_value.catalog_type, "law_names": source_names}
     ).decode("utf-8")
     dependency_identity = sha256(
         canonical_json_bytes(
@@ -214,33 +251,35 @@ def synthetic_law_catalog_manifest(
                     "q1": law.q1,
                     "theta": law.theta,
                 }
-                for law in sorted(laws, key=lambda law: law.name)
+                for law in sorted(input_value.laws, key=lambda law: law.name)
             )
         )
     ).hexdigest()
     return SyntheticLawCatalogManifest(
-        catalog_type,
+        input_value.catalog_type,
         semantic_identity,
         dependency_identity,
         sha256(payload).hexdigest(),
-        payload_relative_path.as_posix(),
+        input_value.payload_relative_path.as_posix(),
     )
 
 
 def write_synthetic_scaling_catalog(
-    project_root: Path,
-    law: SyntheticTrajectoryLaw,
-    resolved_band_counts: tuple[int, ...],
-) -> str:
-    laws = synthetic_scaling_laws(law, resolved_band_counts)
+    input_value: SyntheticScalingCatalogWriteInput,
+) -> Digest:
+    laws = synthetic_scaling_laws(
+        SyntheticScalingLawsInput(input_value.law, input_value.resolved_band_counts)
+    )
     payload = canonical_synthetic_law_catalog(laws)
     digest = atomic_write_bytes(
-        project_root / SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
-        payload,
-        lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
-    )
+        AtomicWriteInput(
+            input_value.project_root / SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
+            payload,
+            lambda candidate: _validate_synthetic_law_catalog(candidate, laws),
+        )
+    ).sha256_digest
     _write_synthetic_law_catalog_manifest(
-        project_root,
+        input_value.project_root,
         "synthetic-scaling-law-catalog",
         SYNTHETIC_SCALING_CATALOG_RELATIVE_PATH,
         laws,
@@ -259,7 +298,9 @@ def _write_synthetic_law_catalog_manifest(
         if catalog_type == "synthetic-law-catalog"
         else SYNTHETIC_SCALING_CATALOG_MANIFEST_RELATIVE_PATH
     )
-    manifest = synthetic_law_catalog_manifest(catalog_type, payload_relative_path, laws)
+    manifest = synthetic_law_catalog_manifest(
+        SyntheticLawCatalogManifestInput(catalog_type, payload_relative_path, laws)
+    )
     payload = canonical_json_bytes(
         {
             "catalog_type": manifest.catalog_type,
@@ -271,17 +312,19 @@ def _write_synthetic_law_catalog_manifest(
         }
     )
     return atomic_write_bytes(
-        project_root / manifest_path,
-        payload,
-        lambda candidate: _validate_synthetic_law_catalog_manifest(candidate, manifest),
-    )
+        AtomicWriteInput(
+            project_root / manifest_path,
+            payload,
+            lambda candidate: _validate_synthetic_law_catalog_manifest(candidate, manifest),
+        )
+    ).sha256_digest
 
 
 def _synthetic_law_table_row(law: SyntheticTrajectoryLaw) -> Mapping[str, JSONValue]:
     observable_law = law.observable_law()
     return {
-        "conditional_terminal_mass_label_0": law.conditional_terminal_mass(False),
-        "conditional_terminal_mass_label_1": law.conditional_terminal_mass(True),
+        "conditional_terminal_mass_label_0": law.conditional_terminal_mass(SyntheticLabel(False)),
+        "conditional_terminal_mass_label_1": law.conditional_terminal_mass(SyntheticLabel(True)),
         "correct_masses": observable_law.correct_masses,
         "harmful_masses": observable_law.harmful_masses,
         "lambda0": law.lambda0,

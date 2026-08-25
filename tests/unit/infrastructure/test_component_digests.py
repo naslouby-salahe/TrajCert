@@ -2,6 +2,8 @@ from pathlib import Path
 
 from trajcert.infrastructure.components import (
     AUTHORITATIVE_PRODUCERS,
+    ProducerComponentDigestInput,
+    ScientificDependencyDigestInput,
     producer_component_digest,
     scientific_dependency_digest,
 )
@@ -20,9 +22,11 @@ def test_authoritative_producer_registry_and_digests_are_material_and_stable() -
     assert configuration.scientific_clauses == "§4"
     assert configuration.material_runtime_dependencies == ("PyYAML",)
     assert configuration.required_parents == ("configs/trajcert.yaml",)
-    assert producer_component_digest(PROJECT_ROOT, configuration) == producer_component_digest(
-        PROJECT_ROOT, configuration
-    )
+    assert producer_component_digest(
+        ProducerComponentDigestInput(PROJECT_ROOT, configuration)
+    ) == producer_component_digest(ProducerComponentDigestInput(PROJECT_ROOT, configuration))
     assert scientific_dependency_digest(
-        configuration, "section four", (b"a",)
-    ) != scientific_dependency_digest(configuration, "section four", (b"b",))
+        ScientificDependencyDigestInput(configuration, "section four", (b"a",))
+    ) != scientific_dependency_digest(
+        ScientificDependencyDigestInput(configuration, "section four", (b"b",))
+    )

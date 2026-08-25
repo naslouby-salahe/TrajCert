@@ -62,7 +62,7 @@ class ActiveSemanticCellManifest(ArtifactEnvelope):
 
     @field_validator("execution_start_timestamp", "execution_end_timestamp")
     @classmethod
-    def validate_utc_execution_timestamp(cls, value: datetime | None) -> datetime | None:
+    def _validate_utc_execution_timestamp(cls, value: datetime | None) -> datetime | None:
         return _validate_utc_timestamp(value)
 
     @model_validator(mode="after")
@@ -98,7 +98,7 @@ class ExecutionStateRecord(BaseModel):
 
     @field_validator("last_transition_timestamp")
     @classmethod
-    def validate_utc_transition_timestamp(cls, value: datetime) -> datetime:
+    def _validate_utc_transition_timestamp(cls, value: datetime) -> datetime:
         validated = _validate_utc_timestamp(value)
         assert validated is not None
         return validated

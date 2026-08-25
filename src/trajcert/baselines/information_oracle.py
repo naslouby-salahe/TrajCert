@@ -67,7 +67,7 @@ def direct_full_law_information(
     observable_law = input_value.observable_law
     hidden_harmful_mass = input_value.hidden_harmful_mass
     digits = input_value.decimal_digits
-    if not observable_law.hidden_harmful_mass_is_valid(hidden_harmful_mass):
+    if not 0.0 <= hidden_harmful_mass <= observable_law.c:
         raise ValueError("hidden terminal harmful mass must lie in [0, c]")
     if digits < 1:
         raise ValueError("oracle decimal digits must be positive")
@@ -128,12 +128,10 @@ def direct_information_oracle(
             DirectFullLawInformationInput(observable_law, value, numerics.oracle_decimal_digits)
         ).information
 
-    minimum_bracket = _golden_section_minimum(
-        objective, 0.0, observable_law.c, numerics.oracle_boundary_bracket_width
-    )
-    minimum = (minimum_bracket.lower + minimum_bracket.upper) / 2
+    minimum = _direct_table_minimum_hidden_harmful_mass(observable_law)
+    minimum_bracket = OracleBracket(minimum, minimum)
     minimum_information = objective(minimum)
-    equality_tolerance = 10.0 ** -(numerics.oracle_decimal_digits // 2)
+    equality_tolerance = numerics.deterministic_identity_tolerance
     if rho < minimum_information - equality_tolerance:
         return DirectInformationOracleResult(
             DirectOracleState.MODEL_INCOMPATIBLE,
@@ -189,24 +187,11 @@ def direct_information_oracle(
     )
 
 
-def _golden_section_minimum(
-    objective: Callable[[float], float], lower: float, upper: float, width: float
-) -> OracleBracket:
-    left = lower
-    right = upper
-    golden = (5.0**0.5 - 1.0) / 2.0
-    first = right - golden * (right - left)
-    second = left + golden * (right - left)
-    while right - left > width:
-        if objective(first) <= objective(second):
-            right = second
-            second = first
-            first = right - golden * (right - left)
-        else:
-            left = first
-            first = second
-            second = left + golden * (right - left)
-    return OracleBracket(left, right)
+def _direct_table_minimum_hidden_harmful_mass(observable_law: ObservableLaw) -> float:
+    resolved_mass = observable_law.harmful_total + observable_law.correct_total
+    if resolved_mass == 0.0:
+        raise ValueError("direct table minimum requires a resolved observable mass")
+    return observable_law.c * observable_law.harmful_total / resolved_mass
 
 
 def _bisect_oracle_boundary(
