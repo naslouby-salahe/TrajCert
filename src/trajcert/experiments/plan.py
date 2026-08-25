@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from itertools import product
+from itertools import pairwise, product
 
 from pydantic import model_validator
 
@@ -158,8 +158,7 @@ def _coordinates_for_definition(
     laws = _law_names(config)
     partitions = _partition_names(config)
     adjacent_pairs = tuple(
-        ComparisonPairName(f"{fine} -> {coarse}")
-        for fine, coarse in zip(partitions[:-1], partitions[1:], strict=True)
+        ComparisonPairName(f"{fine} -> {coarse}") for fine, coarse in pairwise(partitions)
     )
     if definition.declared_cells == 0:
         return ()
@@ -324,7 +323,7 @@ def _population_rho_values(config: TrajCertConfig) -> tuple[SensitivityBudget, .
     if any(float(value) == binary_endpoint for value in values):
         rho_values = values
     else:
-        rho_values = values + (binary_endpoint,)
+        rho_values = (*values, binary_endpoint)
     if len(rho_values) != 15:
         raise ValueError("Population Sensitivity Utility requires exactly 15 rho values")
     return rho_values
