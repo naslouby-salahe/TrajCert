@@ -167,7 +167,7 @@ def _bisect(
             raise RootSolveError("derived bisection iteration cap exhausted")
         midpoint = (lower + upper) / 2.0
         residual = _profile_residual(summary, midpoint, rho)
-        if residual == 0.0:
+        if abs(residual) <= identity_atol:
             lower = midpoint
             upper = midpoint
             break
@@ -250,7 +250,7 @@ def _validate_initial_signs(branch: RootBranch, lower: float, upper: float) -> N
 
 
 def _validate_final_signs(branch: RootBranch, lower: float, upper: float) -> None:
-    if lower == 0.0 or upper == 0.0:
+    if not lower or not upper:
         return
     _validate_initial_signs(branch, lower, upper)
 

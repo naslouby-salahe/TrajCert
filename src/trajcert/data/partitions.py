@@ -72,7 +72,7 @@ def build_partition(
     if not isfinite(horizon) or horizon <= 0.0:
         raise InvalidPartitionError("terminal horizon must be finite and positive")
     boundaries = tuple(horizon * band_index / bands for band_index in range(1, bands + 1))
-    mapping = tuple(value for value in _coarsening_map_values(finest, bands))
+    mapping = _coarsening_map_values(finest, bands)
     return TrajectoryPartition(
         name=partition_name(bands),
         finest_band_count=finest,

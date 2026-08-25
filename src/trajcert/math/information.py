@@ -27,7 +27,7 @@ def resolved_timing_entropy(summary: ObservableSummary) -> EntropyValue:
 
 def observed_timing_information(summary: ObservableSummary) -> InformationNats | None:
     resolved_mass = summary.resolved_mass
-    if resolved_mass == 0.0:
+    if resolved_mass <= 0.0:
         return None
     marginal_entropy = binary_entropy_from_masses(
         summary.resolved_harmful_mass, summary.resolved_correct_mass
@@ -39,7 +39,7 @@ def observed_timing_information(summary: ObservableSummary) -> InformationNats |
 
 def minimum_information_point(summary: ObservableSummary) -> MinimumInformationPoint | None:
     resolved_mass = summary.resolved_mass
-    if resolved_mass == 0.0:
+    if resolved_mass <= 0.0:
         return None
     harmful = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
