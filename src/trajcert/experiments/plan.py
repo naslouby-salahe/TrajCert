@@ -90,9 +90,7 @@ class ExperimentPlan(DomainModel):
 def build_plan(config: TrajCertConfig) -> ExperimentPlan:
     registry = authoritative_registry()
     cells = tuple(
-        cell
-        for definition in registry
-        for cell in _expand_definition(definition, registry, config)
+        cell for definition in registry for cell in _expand_definition(definition, registry, config)
     )
     nonapplicable = tuple(
         definition.experiment_name for definition in registry if definition.declared_cells == 0
@@ -403,8 +401,4 @@ def _required_experiments(
     inventory = registry[0].experiment_name
     if str(definition.experiment_name) != "Statistical Synthesis":
         return (inventory,)
-    return tuple(
-        item.experiment_name
-        for item in registry[:-1]
-        if item.declared_cells > 0
-    )
+    return tuple(item.experiment_name for item in registry[:-1] if item.declared_cells > 0)
