@@ -105,7 +105,7 @@ def atomic_write_model(path: Path, model: BaseModel) -> DigestHex:
     return digest
 
 
-def read_model(path: Path, model_type: type[ModelT]) -> ModelT:
+def read_model[ModelT: BaseModel](path: Path, model_type: type[ModelT]) -> ModelT:
     try:
         payload = path.read_bytes()
     except OSError as exc:

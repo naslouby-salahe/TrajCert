@@ -176,8 +176,8 @@ def _mutual_information(
 ) -> Decimal:
     if hidden_terminal_harmful < 0 or hidden_terminal_harmful > unresolved:
         raise NumericalError("oracle hidden terminal mass lies outside [0, c]")
-    harmful_row = harmful + (hidden_terminal_harmful,)
-    correct_row = correct + (unresolved - hidden_terminal_harmful,)
+    harmful_row = (*harmful, hidden_terminal_harmful)
+    correct_row = (*correct, unresolved - hidden_terminal_harmful)
     harmful_total = sum(harmful_row, Decimal(0))
     correct_total = sum(correct_row, Decimal(0))
     column_totals = tuple(

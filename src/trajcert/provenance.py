@@ -24,10 +24,10 @@ from trajcert.storage import (
 )
 from trajcert.types import (
     DomainModel,
-    LawName,
-    PartitionName,
     FiniteFloat,
+    LawName,
     NonNegativeInt,
+    PartitionName,
     PositiveInt,
     RiskBudget,
     SeedIndex,
