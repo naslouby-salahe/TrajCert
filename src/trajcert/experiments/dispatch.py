@@ -18,12 +18,12 @@ from trajcert.experiments.legacy_incoherence import evaluate_legacy_partition_in
 from trajcert.experiments.mathematics import (
     anytime_projection_proof_check,
     endpoint_special_case_identity,
+    evaluate_safety_boundary_case,
     information_profile_convexity,
     minimum_compatibility_identity,
     path_information_decomposition,
     population_complexity_proof_check,
     refinement_dominance_identity,
-    safety_boundary_identity,
     sharp_set_constructive_identity,
     strict_timing_gain_identity,
 )
@@ -59,7 +59,7 @@ class PhaseOneDispatchError(ValueError):
 def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
     if not cell.executable:
         raise PhaseOneDispatchError("planned-invalid cell cannot be scientifically executed")
-    active_config.set(config)
+    _ = active_config.set(config)
     name = str(cell.identity.experiment_name)
     if name == "Scientific and Data Inventory":
         return validate_scientific_inventory(config)
@@ -256,11 +256,9 @@ def _execute_summary_cell(
         )
     if name == "Safety-Boundary Identity":
         case = _safety_case(summary, cell.identity.coordinates.variant_name)
-        if case.risk_budget is None:
-            return case
-        return safety_boundary_identity(
+        return evaluate_safety_boundary_case(
             summary,
-            case.risk_budget,
+            case,
             config.numerics.oracle_digits,
             config.numerics.identity_atol,
         )
