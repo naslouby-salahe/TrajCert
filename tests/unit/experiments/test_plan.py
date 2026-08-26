@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from trajcert.config import GridsConfig, TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
+from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.plan import (
     ExperimentPlan,
     PlannedCell,
@@ -110,7 +111,9 @@ def test_build_plan_rejects_scaling_band_mismatch() -> None:
         same_endpoint_rho=config.grids.same_endpoint_rho,
         beta=config.grids.beta,
     )
-    with pytest.raises(ValueError, match="registry expansion mismatch for Computational Scaling"):
+    with pytest.raises(
+        InvalidScientificDataError, match="registry expansion mismatch for Computational Scaling"
+    ):
         _ = build_plan(config.model_copy(update={"grids": grids}))
 
 

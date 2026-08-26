@@ -9,6 +9,7 @@ from trajcert.config import TrajCertConfig
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
+from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.registry import ExperimentDefinition, authoritative_registry
 from trajcert.provenance import (
     ComparisonPairName,
@@ -43,8 +44,6 @@ _SAFETY_CASES = (
     "interior-safety-frontier",
     "assumption-free-boundary",
 )
-_MISSING_LEGACY_GRID = ReasonCode("MISSING_LEGACY_Q_GRID_AND_THREE_GAMMA_SELECTION")
-_MISSING_FAILURE_AXIS = ReasonCode("MISSING_FAILURE_BOUNDARY_AXIS_CONFIGURATION")
 
 
 class PlannedCell(DomainModel):
@@ -111,7 +110,9 @@ def build_plan(config: TrajCertConfig) -> ExperimentPlan:
     )
     expected_total = sum(definition.declared_cells for definition in registry)
     if plan.registry_total != expected_total:
-        raise ValueError("expanded plan does not reproduce the authoritative registry total")
+        raise InvalidScientificDataError(
+            "expanded plan does not reproduce the authoritative registry total"
+        )
     return plan
 
 
@@ -130,7 +131,9 @@ def _expand_definition(
     coordinates = _coordinates_for_definition(definition, config)
     if len(coordinates) != definition.declared_cells:
         counts = f"expected {definition.declared_cells}, got {len(coordinates)}"
-        raise ValueError(f"registry expansion mismatch for {definition.experiment_name}: {counts}")
+        raise InvalidScientificDataError(
+            f"registry expansion mismatch for {definition.experiment_name}: {counts}"
+        )
     gap_start = definition.declared_cells - definition.configuration_gap_cells + 1
     cells: list[PlannedCell] = []
     for ordinal, coordinate in enumerate(coordinates, start=1):
@@ -160,7 +163,9 @@ def _coordinates_for_definition(
     name = str(definition.experiment_name)
     handler = _COORDINATE_DISPATCH.get(name)
     if handler is None:
-        raise ValueError(f"no plan expansion implementation for registry experiment: {name}")
+        raise InvalidScientificDataError(
+            f"no plan expansion implementation for registry experiment: {name}"
+        )
     return handler(config)
 
 
@@ -432,7 +437,9 @@ def _population_rho_values(config: TrajCertConfig) -> tuple[SensitivityBudget, .
     else:
         rho_values = (*values, binary_endpoint)
     if len(rho_values) != _POPULATION_RHO_VALUE_COUNT:
-        raise ValueError("Population Sensitivity Utility requires exactly 15 rho values")
+        raise InvalidScientificDataError(
+            "Population Sensitivity Utility requires exactly 15 rho values"
+        )
     return rho_values
 
 
@@ -450,7 +457,9 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
     coordinates: list[SemanticCoordinates] = []
     for axis_name, levels in configured_axes:
         if len(levels) != _FAILURE_BOUNDARY_LEVELS_PER_AXIS:
-            raise ValueError(f"failure-boundary axis {axis_name} must contain exactly seven levels")
+            raise InvalidScientificDataError(
+                f"failure-boundary axis {axis_name} must contain exactly seven levels"
+            )
         coordinates.extend(
             SemanticCoordinates(
                 failure_boundary_axis_and_level=FailureBoundaryCoordinate(
