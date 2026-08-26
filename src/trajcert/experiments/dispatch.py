@@ -8,6 +8,7 @@ from trajcert.experiments.anytime import run_anytime_hand_case
 from trajcert.experiments.comparator_reduction import evaluate_comparator_reduction
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis, evaluate_failure_boundary
 from trajcert.experiments.inventory import validate_scientific_inventory
+from trajcert.experiments.legacy_incoherence import evaluate_legacy_partition_incoherence
 from trajcert.experiments.mathematics import (
     anytime_projection_proof_check,
     endpoint_special_case_identity,
@@ -41,6 +42,16 @@ def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainM
     name = str(cell.identity.experiment_name)
     if name == "Scientific and Data Inventory":
         return validate_scientific_inventory(config)
+    if name == "Legacy Partition Incoherence Check":
+        gamma = cell.identity.coordinates.gamma
+        variant = cell.identity.coordinates.variant_name
+        if gamma is None or variant is None or not str(variant).startswith("q="):
+            raise PhaseOneDispatchError("legacy incoherence cell is missing Gamma or q")
+        return evaluate_legacy_partition_incoherence(
+            gamma=float(gamma),
+            q=float(str(variant).removeprefix("q=")),
+            config=config,
+        )
     if name == "Refinement Dominance Identity":
         fine, coarse = _refinement_inputs(cell, config)
         return refinement_dominance_identity(
