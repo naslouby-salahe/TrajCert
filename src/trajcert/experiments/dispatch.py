@@ -22,7 +22,12 @@ from trajcert.experiments.mathematics import (
     strict_timing_gain_identity,
 )
 from trajcert.experiments.plan import PlannedCell
-from trajcert.experiments.safety import compatibility_floor_behavior
+from trajcert.experiments.safety import (
+    SafetyCaseEvaluation,
+    compatibility_floor_behavior,
+    safety_and_intrinsic_impossibility,
+    sharpness_against_generic_oracle,
+)
 from trajcert.experiments.scaling import benchmark_scaling_cell
 from trajcert.experiments.solver_validation import compare_production_solver_to_oracle
 from trajcert.experiments.timing import (
@@ -125,6 +130,15 @@ def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainM
     if name == "Safety-Boundary Identity":
         summary = _law_level_finest_summary(cell, config)
         return _execute_summary_cell(name, cell, summary, config)
+    if name == "Sharpness Against Generic Oracle":
+        return sharpness_against_generic_oracle(
+            summary=_summary_from_coordinates(cell, config),
+            root_atol=config.numerics.root_atol,
+            identity_atol=config.numerics.identity_atol,
+            oracle_digits=config.numerics.oracle_digits,
+        )
+    if name == "Safety and Intrinsic Impossibility":
+        return _safety_intrinsic_case(cell, config)
     if name == "Anytime Projection Proof Check":
         return anytime_projection_proof_check()
     if name == "Population Complexity Proof Check":
@@ -340,6 +354,22 @@ def _safety_case(summary: ObservableSummary, variant: VariantName | None) -> Saf
         if str(semantic_slug(str(case.name))) == str(variant):
             return case
     raise PhaseOneDispatchError(f"unknown safety case: {variant}")
+
+
+def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyCaseEvaluation:
+    summary = _law_level_finest_summary(cell, config)
+    result = safety_and_intrinsic_impossibility(
+        summary=summary,
+        oracle_digits=config.numerics.oracle_digits,
+        identity_atol=config.numerics.identity_atol,
+    )
+    variant = cell.identity.coordinates.variant_name
+    if variant is None:
+        raise PhaseOneDispatchError("safety/impossibility cell is missing its case variant")
+    for evaluation in result.cases:
+        if str(semantic_slug(str(evaluation.case.name))) == str(variant):
+            return evaluation
+    raise PhaseOneDispatchError(f"unknown safety/impossibility case: {variant}")
 
 
 def _failure_coordinate(
