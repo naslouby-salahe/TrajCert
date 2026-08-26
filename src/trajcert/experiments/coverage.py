@@ -5,6 +5,7 @@ from trajcert.config import (
     CoverageStressSensitivityReference,
     TrajCertConfig,
 )
+from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
@@ -118,8 +119,10 @@ def _sensitivity_budget(
             )
         )
     rho = reference + float(case.rho_offset)
-    if rho > 1.0:
-        raise InvalidScientificDataError("coverage-stress sensitivity budget exceeds one nat")
+    if rho > BINARY_MAX_INFORMATION_NATS:
+        raise InvalidScientificDataError(
+            "coverage-stress sensitivity budget exceeds binary-information maximum"
+        )
     return rho
 
 
