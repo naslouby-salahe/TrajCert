@@ -117,3 +117,11 @@ def test_doctor_prints_compact_pass(
     monkeypatch.setattr(sys, "argv", ["trajcert", "doctor"])
     cli.main()
     assert capsys.readouterr().out == "TrajCert doctor: PASS\n"
+
+
+def test_cli_doctor_validates_inputs_and_reports_success(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("sys.argv", ["trajcert", "doctor"])
+    cli.main()
+    assert capsys.readouterr().out == "TrajCert doctor: PASS\n"
