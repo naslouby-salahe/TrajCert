@@ -5,6 +5,7 @@ import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from math import isfinite
 from pathlib import Path
 from typing import NewType, Protocol, cast
 
@@ -324,10 +325,8 @@ def _validate_scientific_values(table: pa.Table, source_path: Path) -> None:
     for field in table.schema:
         if not pa.types.is_floating(field.type):
             continue
-        column = table.column(field.name)
-        for chunk in column.chunks:
-            invalid = pc.or_(pc.is_nan(chunk), pc.is_infinite(chunk))
-            if bool(pc.any(invalid).as_py()):
+        for value in table.column(field.name).to_pylist():
+            if value is not None and not isfinite(float(value)):
                 raise InvalidScientificDataError(
                     f"source-data float column contains NaN or infinity: {source_path}:{field.name}"
                 )
@@ -352,15 +351,12 @@ def _verify_registered_lineage(
     descriptor: PublicationSourceDescriptor,
     source_path: Path,
 ) -> VerifiedSourceLineage:
-    owner_root = workspace_root / "outputs" / "experiments" / descriptor.owner_experiment
-    checkpoint_root = owner_root / "checkpoints" / "execution"
-    if not checkpoint_root.is_dir():
-        raise InvalidScientificDataError(
-            f"source-data owner has no execution checkpoints: {descriptor.owner_experiment}"
-        )
+    checkpoints_root = workspace_root / "outputs" / "experiments"
+    if not checkpoints_root.is_dir():
+        raise InvalidScientificDataError("publication sources require completed experiment evidence")
     relative_source = descriptor.source_path
     matches: list[tuple[Path, CellArtifactIndex, ArtifactKey]] = []
-    for index_path in checkpoint_root.rglob("artifact_index.json"):
+    for index_path in checkpoints_root.glob("*/checkpoints/execution/**/artifact_index.json"):
         index = read_model(index_path, CellArtifactIndex)
         for entry in index.artifacts:
             if entry.relative_path == relative_source:
