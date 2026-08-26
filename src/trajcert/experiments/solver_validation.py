@@ -13,6 +13,7 @@ from trajcert.types import (
     InformationNats,
     RiskBudget,
     RiskValue,
+    RootStatus,
     SafetyRegime,
     SensitivityBudget,
     ToleranceValue,
@@ -86,8 +87,12 @@ def compare_production_solver_to_oracle(
         passed = passed and endpoint_error <= identity_atol
     if max_width is not None:
         passed = passed and max_width <= root_atol
-    if max_residual is not None:
-        passed = passed and max_residual <= identity_atol
+    if any(
+        float(bracket.residual) > identity_atol
+        for bracket in brackets
+        if bracket.status is not RootStatus.EXACT_BOUNDARY
+    ):
+        passed = False
     risk_lower: RiskValue | None = None
     risk_upper: RiskValue | None = None
     if production.interval is not None:
