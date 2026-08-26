@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import floor
+from math import ceil, floor, inf, isfinite, ldexp, log as float_log, log2, nextafter
 from typing import Self
 
-import numpy as np
+from flint import arb, ctx
 from mpmath import log, mp, mpf, sqrt
 from pydantic import model_validator
 
 from trajcert.data.partitions import TrajectoryPartition
-from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
+from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.types import (
     CompatibilityRegime,
@@ -134,10 +134,10 @@ def feasible_projection_lower_oracle(
     digits = int(oracle_digits)
     if digits <= 0:
         raise InvalidScientificDataError("oracle precision must be positive")
-    previous_digits = mp.dps
-    mp.dps = digits
+    previous_precision = ctx.prec
+    ctx.prec = max(previous_precision, ceil(digits * log2(10.0)))
     try:
-        rho = mpf(repr(float(sensitivity_budget)))
+        sensitivity = _arb_exact_float(float(sensitivity_budget))
         harmful_lower = sum(float(interval.lower) for interval in oracle_input.harmful_by_band)
         harmful_upper = sum(float(interval.upper) for interval in oracle_input.harmful_by_band)
         correct_lower = sum(float(interval.lower) for interval in oracle_input.correct_by_band)
@@ -155,8 +155,7 @@ def feasible_projection_lower_oracle(
                     oracle_input,
                     harmful,
                     correct,
-                    rho,
-                    digits,
+                    sensitivity,
                     comparison_guard,
                 )
                 if candidate is None:
@@ -168,8 +167,7 @@ def feasible_projection_lower_oracle(
             _refine_projection_candidate(
                 oracle_input,
                 candidate,
-                rho,
-                digits,
+                sensitivity,
                 comparison_guard,
                 harmful_upper - harmful_lower,
                 correct_upper - correct_lower,
@@ -189,7 +187,7 @@ def feasible_projection_lower_oracle(
             locally_refined_candidates=len(refined),
         )
     finally:
-        mp.dps = previous_digits
+        ctx.prec = previous_precision
 
 
 def direct_mutual_information(
@@ -271,8 +269,7 @@ def _projection_candidate(
     oracle_input: ProjectionOracleInput,
     harmful_total: float,
     correct_total: float,
-    rho: mpf,
-    digits: int,
+    sensitivity: arb,
     comparison_guard: ToleranceValue,
 ) -> _ProjectionCandidate | None:
     unresolved = 1.0 - harmful_total - correct_total
@@ -284,37 +281,8 @@ def _projection_candidate(
     correct = _allocate_total(oracle_input.correct_by_band, correct_total, comparison_guard)
     if harmful is None or correct is None:
         return None
-    try:
-        summary = summarize_observable_masses(
-            partition=oracle_input.partition,
-            harmful_by_band=np.asarray(harmful, dtype=np.float64),
-            correct_by_band=np.asarray(correct, dtype=np.float64),
-            unresolved_mass=unresolved,
-            comparison_guard=comparison_guard,
-        )
-    except InvalidScientificDataError:
-        return None
-    harmful_mp = tuple(mpf(repr(value)) for value in harmful)
-    correct_mp = tuple(mpf(repr(value)) for value in correct)
-    unresolved_mp = mpf(repr(unresolved))
-    oracle = _solve_information_oracle_data(
-        summary,
-        harmful_mp,
-        correct_mp,
-        unresolved_mp,
-        rho,
-        digits,
-    )
-    if oracle.upper_boundary is None:
-        return None
-    hidden = float(oracle.upper_boundary.lower)
-    information = _mutual_information(
-        harmful_mp,
-        correct_mp,
-        unresolved_mp,
-        mpf(repr(hidden)),
-    )
-    if information > rho:
+    hidden = _max_verified_projection_hidden(harmful, correct, unresolved, sensitivity)
+    if hidden is None:
         return None
     return _ProjectionCandidate(
         risk=min(1.0, harmful_total + hidden),
@@ -327,8 +295,7 @@ def _projection_candidate(
 def _refine_projection_candidate(
     oracle_input: ProjectionOracleInput,
     initial: _ProjectionCandidate,
-    rho: mpf,
-    digits: int,
+    sensitivity: arb,
     comparison_guard: ToleranceValue,
     harmful_span: float,
     correct_span: float,
@@ -346,8 +313,7 @@ def _refine_projection_candidate(
                     oracle_input,
                     best.harmful + harmful_direction * harmful_step,
                     best.correct + correct_direction * correct_step,
-                    rho,
-                    digits,
+                    sensitivity,
                     comparison_guard,
                 )
                 if candidate is not None:
@@ -356,6 +322,283 @@ def _refine_projection_candidate(
         harmful_step /= 2.0
         correct_step /= 2.0
     return best
+
+
+def _max_verified_projection_hidden(
+    harmful: tuple[float, ...],
+    correct: tuple[float, ...],
+    unresolved: float,
+    sensitivity: arb,
+) -> float | None:
+    harmful_arb = tuple(_arb_exact_float(value) for value in harmful)
+    correct_arb = tuple(_arb_exact_float(value) for value in correct)
+    unresolved_arb = _arb_exact_float(unresolved)
+    harmful_total = sum(harmful_arb, arb(0))
+    correct_total = sum(correct_arb, arb(0))
+    resolved_total = harmful_total + correct_total
+    sensitivity_floor = _arb_lower_float(sensitivity)
+    if unresolved == 0.0:
+        information = _projection_direct_information_arb(
+            harmful_arb, correct_arb, unresolved_arb, arb(0)
+        )
+        return 0.0 if _arb_upper_float(information) <= sensitivity_floor else None
+    if resolved_total.is_zero():
+        information = _projection_direct_information_arb(
+            harmful_arb, correct_arb, unresolved_arb, unresolved_arb
+        )
+        return unresolved if _arb_upper_float(information) <= sensitivity_floor else None
+    minimum_hidden = harmful_total * unresolved_arb / resolved_total
+    resolved_entropy = sum(
+        (_mass_entropy_arb(left, right) for left, right in zip(harmful_arb, correct_arb, strict=True)),
+        arb(0),
+    )
+    minimum_information = _projection_information_arb(
+        harmful_total,
+        unresolved_arb,
+        resolved_entropy,
+        minimum_hidden,
+    )
+    if _arb_upper_float(minimum_information) > sensitivity_floor:
+        return None
+    endpoint_information = _projection_information_arb(
+        harmful_total,
+        unresolved_arb,
+        resolved_entropy,
+        unresolved_arb,
+    )
+    if _arb_upper_float(endpoint_information) <= sensitivity_floor:
+        hidden = unresolved
+    else:
+        left, right = _projection_root_bracket_float(
+            harmful,
+            correct,
+            unresolved,
+            sensitivity_floor,
+        )
+        hidden = _select_verified_hidden_float(
+            harmful_arb,
+            correct_arb,
+            unresolved_arb,
+            sensitivity_floor,
+            left,
+            right,
+        )
+        if hidden is None:
+            return None
+    direct_information = _projection_direct_information_arb(
+        harmful_arb,
+        correct_arb,
+        unresolved_arb,
+        _arb_exact_float(hidden),
+    )
+    if _arb_upper_float(direct_information) > sensitivity_floor:
+        return None
+    return hidden
+
+
+def _projection_root_bracket_float(
+    harmful: tuple[float, ...],
+    correct: tuple[float, ...],
+    unresolved: float,
+    sensitivity: float,
+) -> tuple[float, float]:
+    harmful_total = sum(harmful)
+    correct_total = sum(correct)
+    resolved_total = harmful_total + correct_total
+    minimum_hidden = harmful_total * unresolved / resolved_total
+    resolved_entropy = sum(
+        _mass_entropy_float(left, right)
+        for left, right in zip(harmful, correct, strict=True)
+    )
+    left = minimum_hidden
+    right = unresolved
+    current = (left + right) / 2.0
+    while nextafter(left, inf) < right:
+        value = (
+            _projection_information_float(
+                harmful_total,
+                unresolved,
+                resolved_entropy,
+                current,
+            )
+            - sensitivity
+        )
+        if value <= 0.0:
+            left = current
+        else:
+            right = current
+        derivative = _projection_information_derivative_float(
+            harmful_total,
+            unresolved,
+            current,
+        )
+        candidate = current
+        if derivative > 0.0 and isfinite(derivative):
+            candidate = current - value / derivative
+        if not left < candidate < right:
+            candidate = (left + right) / 2.0
+        if candidate == current:
+            midpoint = (left + right) / 2.0
+            if midpoint == left or midpoint == right:
+                break
+            candidate = midpoint
+        current = candidate
+    return left, right
+
+
+def _select_verified_hidden_float(
+    harmful: tuple[arb, ...],
+    correct: tuple[arb, ...],
+    unresolved: arb,
+    sensitivity: float,
+    left: float,
+    right: float,
+) -> float | None:
+    minimum_hidden = _arb_lower_float(
+        sum(harmful, arb(0)) * unresolved / (sum(harmful, arb(0)) + sum(correct, arb(0)))
+    )
+    candidate = right
+    right_information = _projection_direct_information_arb(
+        harmful,
+        correct,
+        unresolved,
+        _arb_exact_float(candidate),
+    )
+    if _arb_upper_float(right_information) <= sensitivity:
+        return candidate
+    candidate = left
+    while candidate >= minimum_hidden:
+        information = _projection_direct_information_arb(
+            harmful,
+            correct,
+            unresolved,
+            _arb_exact_float(candidate),
+        )
+        if _arb_upper_float(information) <= sensitivity:
+            return candidate
+        next_candidate = nextafter(candidate, -inf)
+        if next_candidate == candidate:
+            break
+        candidate = next_candidate
+    return None
+
+
+def _projection_information_float(
+    harmful_total: float,
+    unresolved: float,
+    resolved_entropy: float,
+    hidden: float,
+) -> float:
+    return (
+        _binary_entropy_float(harmful_total + hidden)
+        - resolved_entropy
+        - _mass_entropy_float(hidden, max(0.0, unresolved - hidden))
+    )
+
+
+def _projection_information_derivative_float(
+    harmful_total: float,
+    unresolved: float,
+    hidden: float,
+) -> float:
+    if hidden <= 0.0 or hidden >= unresolved:
+        return inf
+    harmful_marginal = harmful_total + hidden
+    correct_marginal = 1.0 - harmful_marginal
+    terminal_correct = unresolved - hidden
+    if harmful_marginal <= 0.0 or correct_marginal <= 0.0 or terminal_correct <= 0.0:
+        return inf
+    return float_log(
+        hidden * correct_marginal / (harmful_marginal * terminal_correct)
+    )
+
+
+def _binary_entropy_float(value: float) -> float:
+    if value <= 0.0 or value >= 1.0:
+        return 0.0
+    return -value * float_log(value) - (1.0 - value) * float_log(1.0 - value)
+
+
+def _mass_entropy_float(left: float, right: float) -> float:
+    total = left + right
+    if total <= 0.0:
+        return 0.0
+    value = 0.0
+    if left > 0.0:
+        value -= left * float_log(left / total)
+    if right > 0.0:
+        value -= right * float_log(right / total)
+    return value
+
+
+def _projection_information_arb(
+    harmful_total: arb,
+    unresolved: arb,
+    resolved_entropy: arb,
+    hidden: arb,
+) -> arb:
+    return (
+        _binary_entropy_arb(harmful_total + hidden)
+        - resolved_entropy
+        - _mass_entropy_arb(hidden, unresolved - hidden)
+    )
+
+
+def _projection_direct_information_arb(
+    harmful: tuple[arb, ...],
+    correct: tuple[arb, ...],
+    unresolved: arb,
+    hidden: arb,
+) -> arb:
+    harmful_row = (*harmful, hidden)
+    correct_row = (*correct, unresolved - hidden)
+    harmful_total = sum(harmful_row, arb(0))
+    correct_total = sum(correct_row, arb(0))
+    columns = tuple(
+        left + right for left, right in zip(harmful_row, correct_row, strict=True)
+    )
+    value = arb(0)
+    for row, row_total in ((harmful_row, harmful_total), (correct_row, correct_total)):
+        for cell, column_total in zip(row, columns, strict=True):
+            if cell.is_zero():
+                continue
+            value += cell * (cell / (row_total * column_total)).log()
+    return value
+
+
+def _binary_entropy_arb(value: arb) -> arb:
+    if value.is_zero() or (arb(1) - value).is_zero():
+        return arb(0)
+    return -value * value.log() - (arb(1) - value) * (arb(1) - value).log()
+
+
+def _mass_entropy_arb(left: arb, right: arb) -> arb:
+    total = left + right
+    if total.is_zero():
+        return arb(0)
+    value = arb(0)
+    if not left.is_zero():
+        value -= left * (left / total).log()
+    if not right.is_zero():
+        value -= right * (right / total).log()
+    return value
+
+
+def _arb_exact_float(value: float) -> arb:
+    numerator, denominator = value.as_integer_ratio()
+    return arb(f"{numerator}/{denominator}")
+
+
+def _arb_lower_float(value: arb) -> float:
+    mantissa, exponent = value.lower().man_exp()
+    numeric = ldexp(float(int(mantissa)), int(exponent))
+    return nextafter(numeric, -inf)
+
+
+def _arb_upper_float(value: arb) -> float:
+    mantissa, exponent = value.upper().man_exp()
+    numeric = ldexp(float(int(mantissa)), int(exponent))
+    return nextafter(numeric, inf)
 
 
 def _allocate_total(
