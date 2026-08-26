@@ -1,0 +1,28 @@
+name: Refresh Phase 2 Lock
+
+on:
+  push:
+    branches:
+      - feat/trajcert-scientific-execution-spine
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+      - run: uv lock
+      - run: |
+          if git diff --quiet uv.lock; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git commit -m "build: refresh phase2 dependency lock"
+          git push origin HEAD:feat/trajcert-scientific-execution-spine
