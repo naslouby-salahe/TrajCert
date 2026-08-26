@@ -10,7 +10,12 @@ from trajcert.experiments.solver_validation import (
     compare_safety_frontier_to_oracle,
 )
 from trajcert.math.information import observed_timing_information
-from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase, assess_safety_geometry, safety_budget_cases
+from trajcert.math.safety import (
+    SafetyAssessment,
+    SafetyBudgetCase,
+    assess_safety_geometry,
+    safety_budget_cases,
+)
 from trajcert.types import (
     DomainModel,
     InformationNats,
@@ -25,9 +30,7 @@ _SHARPNESS_OFFSET = 0.05
 
 class CompatibilityPhaseStatus(StrEnum):
     APPLICABLE = "APPLICABLE"
-    NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET = (
-        "NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET"
-    )
+    NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET = "NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET"
 
 
 class CompatibilityPhasePoint(DomainModel):
