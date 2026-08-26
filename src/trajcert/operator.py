@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 from trajcert.analysis.locality import (
+    LocalValidityTarget,
     RuntimeLineageArtifact,
     ScientificInputClass,
     StaticComponentDependency,
@@ -73,7 +74,6 @@ from trajcert.types import (
     ClientId,
     DomainModel,
     EpochId,
-    LawKey,
     NonNegativeInt,
     PublicExecutionState,
     ReasonCode,
@@ -83,6 +83,10 @@ _LOCK_PATH = Path("uv.lock")
 _PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
 _REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
+_LOCAL_BOUND_EXPERIMENTS = (
+    ExperimentNameValue("Anytime Coverage Stress"),
+    ExperimentNameValue("Sequential Sensitivity Utility"),
+)
 
 
 class RunExperimentResult(DomainModel):
@@ -425,54 +429,104 @@ def _dirty_tree(workspace_root: Path) -> bool:
 
 
 def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:
-    principal_name = LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE]
-    sequential_cells = cells_for_experiment(
-        plan, ExperimentNameValue("Sequential Sensitivity Utility")
+    client_id = ClientId("synthetic-client")
+    static_dependencies = _local_static_dependencies(client_id)
+    bound_cells = tuple(
+        cell
+        for experiment_name in _LOCAL_BOUND_EXPERIMENTS
+        for cell in cells_for_experiment(plan, experiment_name)
+        if cell.executable
     )
-    root_cell = next(
+    expected_roots = sum(
+        definition.declared_cells
+        for definition in authoritative_registry()
+        if definition.experiment_name in _LOCAL_BOUND_EXPERIMENTS
+    )
+    if len(bound_cells) != expected_roots:
+        raise InvalidScientificDataError(
+            "local-validity audit does not cover every declared coverage/utility bound root"
+        )
+    targets = tuple(_local_validity_target(cell, client_id) for cell in bound_cells)
+    return SynthesisLocalValidityInput(
+        static_dependencies=static_dependencies,
+        targets=targets,
+    )
+
+
+def _local_static_dependencies(
+    client_id: ClientId,
+) -> tuple[StaticComponentDependency, ...]:
+    contracts = (
         (
-            cell
-            for cell in sequential_cells
-            if cell.identity.coordinates.synthetic_law_name == principal_name
+            "inference/categorical.py",
+            (
+                ScientificInputClass.TARGET_STREAM_EVENT_COUNT,
+                ScientificInputClass.TARGET_EPOCH_MANIFEST,
+                ScientificInputClass.TARGET_PARTITION_MANIFEST,
+            ),
         ),
-        None,
+        (
+            "inference/confidence.py",
+            (
+                ScientificInputClass.TARGET_STREAM_EVENT_COUNT,
+                ScientificInputClass.CONFIG_VALUES,
+                ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
+            ),
+        ),
+        (
+            "inference/envelope.py",
+            (ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,),
+        ),
+        (
+            "inference/projection.py",
+            (
+                ScientificInputClass.CONFIG_VALUES,
+                ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
+            ),
+        ),
+        (
+            "inference/certification.py",
+            (
+                ScientificInputClass.CONFIG_VALUES,
+                ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
+            ),
+        ),
     )
-    if root_cell is None:
-        raise InvalidScientificDataError("local-validity audit lacks a principal sequential cell")
-    identity = LedgerIdentity(
-        client_id=ClientId("synthetic-client"),
-        action_channel_id=ActionChannelId("automatic-action"),
-        epoch_id=EpochId(f"{semantic_slug(str(principal_name))}::static-epoch"),
-    )
-    components = (
-        "inference/categorical.py",
-        "inference/confidence.py",
-        "inference/envelope.py",
-        "inference/projection.py",
-        "inference/certification.py",
-    )
-    dependencies = tuple(
+    return tuple(
         StaticComponentDependency(
             producer_component=ProducerComponentName(component),
-            scientific_input_classes=(ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,),
-            scientific_client_ids=(identity.client_id,),
+            scientific_input_classes=input_classes,
+            scientific_client_ids=(client_id,),
         )
-        for component in components
+        for component, input_classes in contracts
     )
-    root_key = scientific_result_artifact_key(root_cell)
-    lineage = (
-        RuntimeLineageArtifact(
-            artifact_key=root_key,
-            client_id=identity.client_id,
-            action_channel_id=identity.action_channel_id,
-            epoch_id=identity.epoch_id,
-        ),
+
+
+def _local_validity_target(
+    cell: PlannedCell,
+    client_id: ClientId,
+) -> LocalValidityTarget:
+    law_name = cell.identity.coordinates.synthetic_law_name
+    if law_name is None:
+        raise InvalidScientificDataError(
+            f"local bound cell lacks a synthetic law identity: {cell.identity.semantic_cell_key}"
+        )
+    identity = LedgerIdentity(
+        client_id=client_id,
+        action_channel_id=ActionChannelId("automatic-action"),
+        epoch_id=EpochId(f"{semantic_slug(str(law_name))}::static-epoch"),
     )
-    return SynthesisLocalValidityInput(
+    root_key = scientific_result_artifact_key(cell)
+    root = RuntimeLineageArtifact(
+        artifact_key=root_key,
+        client_id=identity.client_id,
+        action_channel_id=identity.action_channel_id,
+        epoch_id=identity.epoch_id,
+    )
+    return LocalValidityTarget(
         target_identity=identity,
-        static_dependencies=dependencies,
         root_artifact_key=root_key,
-        lineage_artifacts=lineage,
+        lineage_artifacts=(root,),
     )
 
 
