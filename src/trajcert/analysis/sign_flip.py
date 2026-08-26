@@ -33,8 +33,11 @@ def one_sided_sign_flip(
     rng = generator_for(permutation_namespace(semantic_comparison_key), 0)
     favorable_or_more_extreme = 0
     for _ in range(int(randomization_count)):
-        signs: NDArray[np.int8] = rng.integers(0, 2, size=values.size, dtype=np.int8)
-        signed: NDArray[np.float64] = np.where(signs == 0, -values, values)
+        bits: NDArray[np.int8] = rng.integers(0, 2, size=values.size, dtype=np.int8)
+        multipliers: NDArray[np.float64] = bits.astype(np.float64)
+        multipliers *= 2.0
+        multipliers -= 1.0
+        signed: NDArray[np.float64] = values * multipliers
         statistic = float(np.mean(signed, dtype=np.float64))
         favorable_or_more_extreme += int(statistic >= observed)
     p_value = (1.0 + favorable_or_more_extreme) / (1.0 + int(randomization_count))
