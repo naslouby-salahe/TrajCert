@@ -43,9 +43,16 @@ class RuntimeLineageArtifact(DomainModel):
     cross_client_aggregate: bool = False
 
 
+class LocalValidityTarget(DomainModel):
+    target_identity: LedgerIdentity
+    root_artifact_key: ArtifactKey
+    lineage_artifacts: tuple[RuntimeLineageArtifact, ...]
+
+
 class LocalValidityAuditResult(DomainModel):
     static_dependency_pass: bool
     runtime_lineage_pass: bool
+    audited_root_count: NonNegativeInt
     foreign_scientific_parent_count: NonNegativeInt
     violating_artifact_keys: tuple[ArtifactKey, ...]
     passed: bool = Field(serialization_alias="pass")
@@ -57,15 +64,40 @@ def audit_local_validity(
     root_artifact_key: ArtifactKey,
     lineage_artifacts: tuple[RuntimeLineageArtifact, ...],
 ) -> LocalValidityAuditResult:
-    static_pass = static_dependency_audit(target_identity, static_dependencies)
-    runtime_pass, violating = runtime_lineage_audit(
-        target_identity, root_artifact_key, lineage_artifacts
+    target = LocalValidityTarget(
+        target_identity=target_identity,
+        root_artifact_key=root_artifact_key,
+        lineage_artifacts=lineage_artifacts,
     )
+    return audit_local_validity_targets(static_dependencies, (target,))
+
+
+def audit_local_validity_targets(
+    static_dependencies: tuple[StaticComponentDependency, ...],
+    targets: tuple[LocalValidityTarget, ...],
+) -> LocalValidityAuditResult:
+    if not targets:
+        raise InvalidScientificDataError("local-validity audit requires at least one bound root")
+    static_pass = all(
+        static_dependency_audit(target.target_identity, static_dependencies) for target in targets
+    )
+    runtime_pass = True
+    violating: set[ArtifactKey] = set()
+    for target in targets:
+        target_pass, target_violations = runtime_lineage_audit(
+            target.target_identity,
+            target.root_artifact_key,
+            target.lineage_artifacts,
+        )
+        runtime_pass = runtime_pass and target_pass
+        violating.update(target_violations)
+    ordered = tuple(sorted(violating, key=str))
     return LocalValidityAuditResult(
         static_dependency_pass=static_pass,
         runtime_lineage_pass=runtime_pass,
-        foreign_scientific_parent_count=len(violating),
-        violating_artifact_keys=violating,
+        audited_root_count=len(targets),
+        foreign_scientific_parent_count=len(ordered),
+        violating_artifact_keys=ordered,
         passed=static_pass and runtime_pass,
     )
 
@@ -85,6 +117,8 @@ def static_dependency_audit(
     if len(supplied_components) != len(set(supplied_components)):
         return False
     if set(supplied_components) != expected_components:
+        return False
+    if any(not dependency.scientific_input_classes for dependency in dependencies):
         return False
     return all(
         client_id == target_identity.client_id
