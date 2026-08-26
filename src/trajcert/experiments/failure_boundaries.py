@@ -4,8 +4,8 @@ from enum import StrEnum
 from time import perf_counter_ns
 from typing import cast
 
-from numpy.typing import NDArray
 import numpy as np
+from numpy.typing import NDArray
 
 from trajcert.config import TrajCertConfig
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
@@ -45,6 +45,7 @@ class FailureBoundaryResult(DomainModel):
     band_count: int
     sensitivity_budget: SensitivityBudget
     risk_budget: RiskBudget
+    tau: float | None
     operational_state: ScientificState
     risk_upper: float
     compatibility_lower: float | None
@@ -68,9 +69,9 @@ def evaluate_failure_boundary(
         raise ValueError(f"{axis.value} requires its dedicated evaluator")
     parameters, partition, rho, beta = _population_coordinate(axis, level, config)
     summary = _summary(parameters, partition, config)
+    tau = _tau(summary)
     if axis is FailureBoundaryAxis.INFORMATION_MARGIN:
-        tau = float(observed_timing_information(summary) or 0.0)
-        rho = tau + float(level)
+        rho = float(tau or 0.0) + float(level)
     if axis is FailureBoundaryAxis.RISK_OFFSET:
         minimum = minimum_information_point(summary)
         if minimum is None:
@@ -90,6 +91,7 @@ def evaluate_failure_boundary(
         band_count=partition.band_count,
         sensitivity_budget=rho,
         risk_budget=beta,
+        tau=tau,
         operational_state=state,
         risk_upper=upper,
         compatibility_lower=compatibility,
@@ -118,6 +120,7 @@ def evaluate_terminal_selection_asymmetry(
         band_count=partition.band_count,
         sensitivity_budget=rho,
         risk_budget=beta,
+        tau=_tau(summary),
         operational_state=state,
         risk_upper=upper,
         compatibility_lower=compatibility,
@@ -168,6 +171,7 @@ def evaluate_optimizer_node_budget(
         band_count=partition.band_count,
         sensitivity_budget=rho,
         risk_budget=float(config.budgets.risk),
+        tau=_tau(truth),
         operational_state=state,
         risk_upper=float(projection.proven_upper),
         compatibility_lower=float(projection.compatibility_lower_bound),
@@ -193,6 +197,7 @@ def _finite_sample_size(sample_size: int, config: TrajCertConfig) -> FailureBoun
         stream_index=0,
         event_count=sample_size,
     )
+    truth = _summary(parameters, partition, config)
     start = perf_counter_ns()
     trace = run_sequential_trace(
         events=mature_ledger(ledger, partition),
@@ -212,6 +217,7 @@ def _finite_sample_size(sample_size: int, config: TrajCertConfig) -> FailureBoun
         band_count=partition.band_count,
         sensitivity_budget=float(config.budgets.information_nats),
         risk_budget=float(config.budgets.risk),
+        tau=_tau(truth),
         operational_state=state,
         risk_upper=float(checkpoint.projection.proven_upper),
         compatibility_lower=float(checkpoint.projection.compatibility_lower_bound),
@@ -325,6 +331,11 @@ def _true_information(
             config.numerics.oracle_digits,
         )
     )
+
+
+def _tau(summary: ObservableSummary) -> float | None:
+    value = observed_timing_information(summary)
+    return None if value is None else float(value)
 
 
 def _float_tuple(values: NDArray[np.float64]) -> tuple[float, ...]:
