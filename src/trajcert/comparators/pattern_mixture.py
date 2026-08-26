@@ -116,8 +116,7 @@ def fit_pattern_mixture(
             latent_risk=min(
                 1.0,
                 harmful_mass
-                + unresolved
-                * float(expit(intercept + slope * (band_count + int(sensitivity_c)))),
+                + unresolved * float(expit(intercept + slope * (band_count + int(sensitivity_c)))),
             ),
         )
         for sensitivity_c in config.c
