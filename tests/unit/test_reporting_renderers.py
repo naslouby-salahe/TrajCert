@@ -4,12 +4,21 @@ from pathlib import Path
 
 import pyarrow as pa
 
-from trajcert.provenance import EnvironmentDigest
 from trajcert.reporting.figures import render_figure
-from trajcert.reporting.source_data import VerifiedSourceData, figure_source_descriptors, table_source_descriptors
+from trajcert.reporting.source_data import (
+    VerifiedSourceData,
+    figure_source_descriptors,
+    table_source_descriptors,
+)
 from trajcert.reporting.tables import render_table
 from trajcert.schemas import VerifiedSourceLineage
-from trajcert.storage import ArtifactKey, DependencyFingerprint, DigestHex, ProvenanceFingerprint, SpecificationDigest
+from trajcert.storage import (
+    ArtifactKey,
+    DependencyFingerprint,
+    DigestHex,
+    ProvenanceFingerprint,
+    SpecificationDigest,
+)
 
 _DIGEST = "0" * 64
 
@@ -28,7 +37,11 @@ def test_computational_scaling_renderer_emits_svg_and_png(tmp_path: Path) -> Non
             "median_outer_nodes": [10.0, 20.0, 40.0],
         }
     )
-    source = VerifiedSourceData(descriptor=descriptor, table=table, lineage=_lineage(descriptor.source_path))
+    source = VerifiedSourceData(
+        descriptor=descriptor,
+        table=table,
+        lineage=_lineage(descriptor.source_path),
+    )
     rendered = render_figure(source, tmp_path)
     assert rendered.svg.destination_path.read_text(encoding="utf-8").startswith("<?xml")
     assert rendered.png.destination_path.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
@@ -44,7 +57,11 @@ def test_table_renderer_preserves_nulls_and_p_value_display_rule(tmp_path: Path)
             "metric_value": [0.2, None],
         }
     )
-    source = VerifiedSourceData(descriptor=descriptor, table=table, lineage=_lineage(descriptor.source_path))
+    source = VerifiedSourceData(
+        descriptor=descriptor,
+        table=table,
+        lineage=_lineage(descriptor.source_path),
+    )
     rendered = render_table(source, tmp_path)
     csv_text = rendered.csv.destination_path.read_text(encoding="utf-8")
     tex_text = rendered.tex.destination_path.read_text(encoding="utf-8")
