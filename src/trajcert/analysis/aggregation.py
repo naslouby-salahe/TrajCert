@@ -7,6 +7,8 @@ import numpy as np
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import DomainModel, FiniteFloat, PositiveInt, Vector
 
+_MINIMUM_PAIRED_VALUES = 2
+
 
 class StandardizedEffectStatus(StrEnum):
     FINITE = "FINITE"
@@ -24,7 +26,7 @@ class PairedEffectSummary(DomainModel):
 
 def summarize_paired_differences(differences: Vector) -> PairedEffectSummary:
     values = np.asarray(differences, dtype=np.float64)
-    if values.ndim != 1 or values.size < 2:
+    if values.ndim != 1 or values.size < _MINIMUM_PAIRED_VALUES:
         raise InvalidScientificDataError(
             "paired effect summary requires at least two paired values"
         )
