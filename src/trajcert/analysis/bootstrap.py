@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from trajcert.determinism import bootstrap_namespace, generator_for
 from trajcert.exceptions import InvalidScientificDataError
@@ -9,7 +10,6 @@ from trajcert.types import (
     FiniteFloat,
     PositiveInt,
     Probability,
-    SeedIndex,
     SemanticComparisonKey,
     Vector,
 )
@@ -31,11 +31,11 @@ def paired_percentile_bootstrap(
 ) -> PercentileBootstrapInterval:
     values = _validated_vector(differences)
     namespace = bootstrap_namespace(semantic_comparison_key)
-    rng = generator_for(namespace, SeedIndex(0))
+    rng = generator_for(namespace, 0)
     pair_count = values.size
     bootstrap_means = np.empty(int(resample_count), dtype=np.float64)
     for index in range(int(resample_count)):
-        sampled = rng.integers(0, pair_count, size=pair_count)
+        sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)
         bootstrap_means[index] = float(np.mean(values[sampled], dtype=np.float64))
     bootstrap_means.sort()
     alpha = 1.0 - float(confidence_level)
@@ -61,7 +61,7 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> FiniteFl
     return float(values[lower_index] + weight * (values[upper_index] - values[lower_index]))
 
 
-def _validated_vector(values: Vector) -> np.ndarray:
+def _validated_vector(values: Vector) -> NDArray[np.float64]:
     array = np.asarray(values, dtype=np.float64)
     if array.ndim != 1 or array.size == 0:
         raise InvalidScientificDataError(
