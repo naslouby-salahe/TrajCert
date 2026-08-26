@@ -96,13 +96,17 @@ def file_digest(path: Path) -> DigestHex:
     return DigestHex(digest.hexdigest())
 
 
-def atomic_write_model(path: Path, model: BaseModel) -> DigestHex:
-    payload = canonical_model_bytes(model)
+def atomic_write_bytes(path: Path, payload: bytes) -> DigestHex:
     _atomic_write_bytes(path, payload)
     digest = DigestHex(sha256(payload).hexdigest())
     if file_digest(path) != digest:
         raise SerializationError(f"artifact checksum verification failed after write: {path}")
     return digest
+
+
+def atomic_write_model(path: Path, model: BaseModel) -> DigestHex:
+    payload = canonical_model_bytes(model)
+    return atomic_write_bytes(path, payload)
 
 
 def read_model[ModelT: BaseModel](path: Path, model_type: type[ModelT]) -> ModelT:
