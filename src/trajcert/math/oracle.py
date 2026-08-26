@@ -149,7 +149,9 @@ def feasible_projection_lower_oracle(
         for harmful_index in range(_PROJECTION_GRID_POINTS):
             harmful = harmful_lower + (harmful_upper - harmful_lower) * harmful_index / denominator
             for correct_index in range(_PROJECTION_GRID_POINTS):
-                correct = correct_lower + (correct_upper - correct_lower) * correct_index / denominator
+                correct = (
+                    correct_lower + (correct_upper - correct_lower) * correct_index / denominator
+                )
                 checked += 1
                 candidate = _projection_candidate(
                     oracle_input,
@@ -349,7 +351,10 @@ def _max_verified_projection_hidden(
         return unresolved if _arb_upper_float(information) <= sensitivity_floor else None
     minimum_hidden = harmful_total * unresolved_arb / resolved_total
     resolved_entropy = sum(
-        (_mass_entropy_arb(left, right) for left, right in zip(harmful_arb, correct_arb, strict=True)),
+        (
+            _mass_entropy_arb(left, right)
+            for left, right in zip(harmful_arb, correct_arb, strict=True)
+        ),
         arb(0),
     )
     minimum_information = _projection_information_arb(
@@ -407,8 +412,7 @@ def _projection_root_bracket_float(
     resolved_total = harmful_total + correct_total
     minimum_hidden = harmful_total * unresolved / resolved_total
     resolved_entropy = sum(
-        _mass_entropy_float(left, right)
-        for left, right in zip(harmful, correct, strict=True)
+        _mass_entropy_float(left, right) for left, right in zip(harmful, correct, strict=True)
     )
     left = minimum_hidden
     right = unresolved
@@ -508,9 +512,7 @@ def _projection_information_derivative_float(
     terminal_correct = unresolved - hidden
     if harmful_marginal <= 0.0 or correct_marginal <= 0.0 or terminal_correct <= 0.0:
         return inf
-    return float_log(
-        hidden * correct_marginal / (harmful_marginal * terminal_correct)
-    )
+    return float_log(hidden * correct_marginal / (harmful_marginal * terminal_correct))
 
 
 def _binary_entropy_float(value: float) -> float:
@@ -554,9 +556,7 @@ def _projection_direct_information_arb(
     correct_row = (*correct, unresolved - hidden)
     harmful_total = sum(harmful_row, arb(0))
     correct_total = sum(correct_row, arb(0))
-    columns = tuple(
-        left + right for left, right in zip(harmful_row, correct_row, strict=True)
-    )
+    columns = tuple(left + right for left, right in zip(harmful_row, correct_row, strict=True))
     value = arb(0)
     for row, row_total in ((harmful_row, harmful_total), (correct_row, correct_total)):
         for cell, column_total in zip(row, columns, strict=True):
@@ -713,9 +713,7 @@ def _mutual_information(
     correct_row = (*correct, unresolved - hidden_terminal_harmful)
     harmful_total = sum(harmful_row, mpf(0))
     correct_total = sum(correct_row, mpf(0))
-    column_totals = tuple(
-        left + right for left, right in zip(harmful_row, correct_row, strict=True)
-    )
+    column_totals = tuple(left + right for left, right in zip(harmful_row, correct_row, strict=True))
     value = mpf(0)
     for row, row_total in ((harmful_row, harmful_total), (correct_row, correct_total)):
         for cell, column_total in zip(row, column_totals, strict=True):
