@@ -7,6 +7,7 @@ from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.math.information import information_profile, minimum_information_point
 from trajcert.types import (
+    DomainModel,
     InformationNats,
     ReasonCode,
     RiskBudget,
@@ -28,8 +29,7 @@ class SafetyAssessment:
     safety_frontier: InformationNats | None
 
 
-@dataclass(frozen=True, slots=True)
-class SafetyBudgetCase:
+class SafetyBudgetCase(DomainModel):
     name: SafetyCaseName
     risk_budget: RiskBudget | None
     valid: bool
