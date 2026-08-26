@@ -28,3 +28,18 @@ def test_raw_identifier_fixture_is_rejected_with_primitive_rule() -> None:
 def test_untyped_boundary_fixture_is_rejected_with_untyped_rule() -> None:
     rule_ids = {finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "any_boundary.py")}
     assert RULE_UNTYPED in rule_ids
+
+
+def test_raw_float_domain_value_fixture_is_rejected_with_primitive_rule() -> None:
+    rule_ids = {
+        finding.rule_id
+        for finding in audit_path(FIXTURES / "invalid" / "raw_float_domain_value.py")
+    }
+    assert RULE_PRIMITIVE in rule_ids
+
+
+def test_raw_dict_boundary_fixture_is_rejected_with_untyped_rule() -> None:
+    rule_ids = {
+        finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "raw_dict_boundary.py")
+    }
+    assert RULE_UNTYPED in rule_ids
