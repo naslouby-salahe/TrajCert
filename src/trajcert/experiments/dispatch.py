@@ -29,6 +29,10 @@ from trajcert.experiments.safety import (
     sharpness_against_generic_oracle,
 )
 from trajcert.experiments.scaling import benchmark_scaling_cell
+from trajcert.experiments.sensitivity import (
+    population_sensitivity_utility,
+    sequential_sensitivity_utility,
+)
 from trajcert.experiments.solver_validation import compare_production_solver_to_oracle
 from trajcert.experiments.timing import (
     evaluate_partition_coherence,
@@ -139,6 +143,25 @@ def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainM
         )
     if name == "Safety and Intrinsic Impossibility":
         return _safety_intrinsic_case(cell, config)
+    if name == "Population Sensitivity Utility":
+        return population_sensitivity_utility(
+            summary=_summary_from_coordinates(cell, config),
+            sensitivity_budget=_direct_rho(cell),
+            config=config,
+        )
+    if name == "Sequential Sensitivity Utility":
+        law = _law_from_name(cell.identity.coordinates.synthetic_law_name, config)
+        finest = build_partition(
+            config.method.finest_bands,
+            config.method.finest_bands,
+            config.method.terminal_horizon,
+        )
+        return sequential_sensitivity_utility(
+            parameters=law,
+            fine_partition=finest,
+            config=config,
+            sensitivity_budget=_direct_rho(cell),
+        )
     if name == "Anytime Projection Proof Check":
         return anytime_projection_proof_check()
     if name == "Population Complexity Proof Check":
