@@ -36,6 +36,8 @@ class SequentialStreamUtility(DomainModel):
     certified_update_fraction_gain: float
     fine_time_to_first_certification: int | None
     endpoint_time_to_first_certification: int | None
+    fine_mean_anytime_upper_risk: float
+    endpoint_mean_anytime_upper_risk: float
     mean_bound_gain: float
 
 
@@ -165,24 +167,22 @@ def _sequential_stream_utility(
         for pair in pairs
         if _eligible(pair[0], config) and _eligible(pair[1], config)
     )
-    fine_fraction = _certified_fraction(tuple(pair[0] for pair in eligible_pairs))
-    endpoint_fraction = _certified_fraction(tuple(pair[1] for pair in eligible_pairs))
-    bound_gains = tuple(
-        float(endpoint.projection.proven_upper) - float(fine.projection.proven_upper)
-        for fine, endpoint in eligible_pairs
-    )
+    fine_checkpoints = tuple(pair[0] for pair in eligible_pairs)
+    endpoint_checkpoints = tuple(pair[1] for pair in eligible_pairs)
+    fine_fraction = _certified_fraction(fine_checkpoints)
+    endpoint_fraction = _certified_fraction(endpoint_checkpoints)
+    fine_risk = _mean_anytime_upper_risk(fine_checkpoints)
+    endpoint_risk = _mean_anytime_upper_risk(endpoint_checkpoints)
     return SequentialStreamUtility(
         stream_index=stream_index,
         fine_certified_update_fraction=fine_fraction,
         endpoint_certified_update_fraction=endpoint_fraction,
         certified_update_fraction_gain=fine_fraction - endpoint_fraction,
-        fine_time_to_first_certification=_time_to_first_certification(
-            tuple(pair[0] for pair in eligible_pairs)
-        ),
-        endpoint_time_to_first_certification=_time_to_first_certification(
-            tuple(pair[1] for pair in eligible_pairs)
-        ),
-        mean_bound_gain=mean(bound_gains) if bound_gains else 0.0,
+        fine_time_to_first_certification=_time_to_first_certification(fine_checkpoints),
+        endpoint_time_to_first_certification=_time_to_first_certification(endpoint_checkpoints),
+        fine_mean_anytime_upper_risk=fine_risk,
+        endpoint_mean_anytime_upper_risk=endpoint_risk,
+        mean_bound_gain=endpoint_risk - fine_risk,
     )
 
 
@@ -201,6 +201,12 @@ def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]) -> float:
         for checkpoint in checkpoints
     )
     return certified / len(checkpoints)
+
+
+def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]) -> float:
+    if not checkpoints:
+        return 1.0
+    return mean(float(checkpoint.projection.proven_upper) for checkpoint in checkpoints)
 
 
 def _time_to_first_certification(
