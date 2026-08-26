@@ -41,12 +41,12 @@ from trajcert.experiments.status import (
     aggregate_experiment_status,
     inspect_cell_status,
 )
-from trajcert.experiments.synthesis_execution import (
+from trajcert.experiments.synthesis import (
     SynthesisLocalValidityInput,
     make_statistical_synthesis_executor,
     synthesis_artifact_keys,
+    synthesis_dependency_fingerprint,
 )
-from trajcert.experiments.synthesis_inputs import synthesis_dependency_fingerprint
 from trajcert.paths import RESULTS_ROOT, semantic_slug
 from trajcert.provenance import (
     CodeCommit,

@@ -155,7 +155,7 @@ _PRODUCER_ROOTS = {
     "Sequential Sensitivity Utility": Path("src/trajcert/experiments/sensitivity.py"),
     "Failure Boundary Atlas": Path("src/trajcert/experiments/failure_boundaries.py"),
     "Computational Scaling": Path("src/trajcert/experiments/scaling.py"),
-    "Statistical Synthesis": Path("src/trajcert/experiments/synthesis_execution.py"),
+    "Statistical Synthesis": Path("src/trajcert/experiments/synthesis.py"),
 }
 
 _SUMMARY_COORDINATE_EXPERIMENTS = frozenset(

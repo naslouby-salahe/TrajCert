@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
+from pathlib import Path
 
 from pydantic import Field
 
@@ -25,7 +26,7 @@ from trajcert.experiments.safety import SafetyCaseEvaluation
 from trajcert.experiments.scaling import ComputationalScalingResult
 from trajcert.experiments.sensitivity import PopulationUtilityResult
 from trajcert.experiments.solver_validation import SolverOracleComparison
-from trajcert.experiments.synthesis_inputs import read_verified_scientific_result
+from trajcert.experiments.synthesis import read_verified_scientific_result
 from trajcert.experiments.timing import PartitionCoherenceResult
 from trajcert.math.information import (
     information_profile,
@@ -183,7 +184,7 @@ class PublicationSourceRows(DomainModel):
 
 def build_publication_source_rows(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
     config: TrajCertConfig,
 ) -> PublicationSourceRows:
     inventory = _single_result(

@@ -21,12 +21,12 @@ from trajcert.experiments.runner import (
     scientific_result_artifact_key,
     scientific_specification_digest,
 )
-from trajcert.experiments.synthesis_execution import (
+from trajcert.experiments.synthesis import (
     StatisticalSynthesisRecord,
     synthesis_artifact_keys,
     synthesis_artifact_paths,
+    synthesis_dependency_fingerprint,
 )
-from trajcert.experiments.synthesis_inputs import synthesis_dependency_fingerprint
 from trajcert.paths import (
     PROJECT_SUMMARY_ROOT,
     RESULTS_EXPERIMENTS_ROOT,
