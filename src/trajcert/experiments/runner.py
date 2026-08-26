@@ -1361,8 +1361,8 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
         1,
         config.method.terminal_horizon,
     )
-    principal_fine = _summary(principal, fine, config)
-    timing_fine = _summary(timing, fine, config)
+    principal_fine = _population_summary(principal, fine, config)
+    timing_fine = _population_summary(timing, fine, config)
 
     principal_tau = float(observed_timing_information(principal_fine) or 0.0)
     compatible = sharp_risk_set(
@@ -1382,7 +1382,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     )
     incompatible_pass = timing_tau > 0.0 and incompatible.latent_risk is None
 
-    endpoint_summary = _summary(principal, endpoint, config)
+    endpoint_summary = _population_summary(principal, endpoint, config)
     endpoint_tau = float(observed_timing_information(endpoint_summary) or 0.0)
     endpoint_pass = abs(endpoint_tau) <= config.numerics.identity_atol
 
@@ -1449,7 +1449,7 @@ def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
         _SMOKE_CS_BANDS,
         config.method.terminal_horizon,
     )
-    summary = _summary(parameters, partition, config)
+    summary = _population_summary(parameters, partition, config)
     tau = float(observed_timing_information(summary) or 0.0)
     rho = tau + _SMOKE_COMPATIBLE_OFFSET
     population = sharp_risk_set(
@@ -1484,16 +1484,4 @@ def _parameters(config: TrajCertConfig, key: LawKey) -> LawParameters:
         q0=law.q0,
         lambda1=law.lambda1,
         lambda0=law.lambda0,
-    )
-
-
-def _summary(
-    parameters: LawParameters,
-    partition: TrajectoryPartition,
-    config: TrajCertConfig,
-) -> ObservableSummary:
-    return summarize_full_law(
-        partition,
-        build_full_law(parameters, partition.band_count),
-        config.numerics.comparison_guard,
     )
