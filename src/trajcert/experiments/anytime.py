@@ -12,7 +12,11 @@ from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.maturity import MaturedCategory, MaturedCategoryKind, MaturedEvent, mature_ledger
 from trajcert.data.partitions import TrajectoryPartition
-from trajcert.data.summaries import ObservableCounts, summarize_full_law, summarize_observable_masses
+from trajcert.data.summaries import (
+    ObservableCounts,
+    summarize_full_law,
+    summarize_observable_masses,
+)
 from trajcert.data.synthetic import (
     ObservableCategoryProbability,
     balanced_prefix,
@@ -257,7 +261,11 @@ def run_coverage_stress(
             )
             if static.proven_upper < true_risk:
                 failed[SequentialMethod.REPEATED_STATIC] = True
-            if assumption_valid and ignorable.interval is not None and ignorable.interval.upper < true_risk:
+            if (
+                assumption_valid
+                and ignorable.interval is not None
+                and ignorable.interval.upper < true_risk
+            ):
                 failed[SequentialMethod.IGNORABLE_DELAY] = True
         for method, did_fail in failed.items():
             if did_fail:
@@ -381,9 +389,7 @@ def _hand_case_model_incompatible(
     )
 
 
-def _hand_case_intrinsic(
-    partition: TrajectoryPartition, config: TrajCertConfig
-) -> HandCaseResult:
+def _hand_case_intrinsic(partition: TrajectoryPartition, config: TrajCertConfig) -> HandCaseResult:
     summary = _population_summary(config, LawKey.INTRINSIC_IMPOSSIBILITY, partition)
     tau = float(observed_timing_information(summary) or 0.0)
     rho = tau + 0.01
@@ -398,9 +404,7 @@ def _hand_case_intrinsic(
     )
 
 
-def _hand_case_certified(
-    partition: TrajectoryPartition, config: TrajCertConfig
-) -> HandCaseResult:
+def _hand_case_certified(partition: TrajectoryPartition, config: TrajCertConfig) -> HandCaseResult:
     summary = _population_summary(config, _PRINCIPAL_LAW, partition)
     tau = float(observed_timing_information(summary) or 0.0)
     rho = tau + 0.01
@@ -573,9 +577,7 @@ def _hand_case_simplex_boundary(
         None if oracle.latent_risk_interval is None else float(oracle.latent_risk_interval.upper)
     )
     error = (
-        None
-        if oracle_upper is None
-        else max(0.0, oracle_upper - float(projection.proven_upper))
+        None if oracle_upper is None else max(0.0, oracle_upper - float(projection.proven_upper))
     )
     return HandCaseResult(
         case_index=9,
