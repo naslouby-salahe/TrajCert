@@ -99,7 +99,7 @@ class _AuditVisitor(cst.CSTVisitor):
                     self._add(RULE_CLAIM, node, "runtime claim machinery is forbidden")
 
     def visit_SimpleString(self, node: cst.SimpleString) -> None:
-        if "roadmap" in node.evaluated_value.casefold():
+        if _contains_roadmap(node):
             self._add(RULE_ROADMAP, node, "runtime roadmap access is forbidden")
 
     def visit_Call(self, node: cst.Call) -> None:
@@ -112,10 +112,7 @@ class _AuditVisitor(cst.CSTVisitor):
             )
         if call in {"open", "Path.read_text", "Path.read_bytes"}:
             for argument in node.args:
-                if (
-                    isinstance(argument.value, cst.SimpleString)
-                    and "roadmap" in argument.value.evaluated_value.casefold()
-                ):
+                if isinstance(argument.value, cst.SimpleString) and _contains_roadmap(argument.value):
                     self._add(RULE_ROADMAP, node, "runtime roadmap access is forbidden")
         if (
             isinstance(node.func, cst.Name)
@@ -170,6 +167,11 @@ def audit_tree(root: Path) -> tuple[Finding, ...]:
     for path in sorted(root.rglob("*.py")):
         findings.extend(audit_path(path, production=True))
     return tuple(findings)
+
+
+def _contains_roadmap(node: cst.SimpleString) -> bool:
+    value = node.evaluated_value
+    return isinstance(value, str) and "roadmap" in value.casefold()
 
 
 def _qualified_name(expression: cst.BaseExpression) -> str:
