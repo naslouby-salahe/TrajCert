@@ -72,19 +72,28 @@ def export_report(
         if experiment_name is None:
             staged_target = temporary_root / "project_summary"
             final_target = workspace_root / PROJECT_SUMMARY_ROOT
-            rendered = _render_project_summary(sources, staged_target, final_target)
+            rendered = _render_publication_tree(
+                workspace_root,
+                sources,
+                staged_target,
+                final_target,
+            )
             _write_reproducibility(
                 workspace_root,
                 staged_target / "reproducibility" / "report_reproducibility.json",
                 sources,
                 rendered,
-                final_target,
             )
         else:
             slug = str(semantic_slug(experiment_name))
             staged_target = temporary_root / slug
             final_target = workspace_root / RESULTS_EXPERIMENTS_ROOT / slug
-            rendered = _render_experiment(sources, staged_target, final_target)
+            rendered = _render_publication_tree(
+                workspace_root,
+                sources,
+                staged_target,
+                final_target,
+            )
         reused = _replace_tree(staged_target, final_target, overwrite=overwrite)
     _validate_results_layout(workspace_root / RESULTS_ROOT)
     return ReportExportResult(
@@ -114,7 +123,8 @@ def _selected_descriptors(
     return selected
 
 
-def _render_project_summary(
+def _render_publication_tree(
+    workspace_root: Path,
     sources: tuple[VerifiedSourceData, ...],
     staged_target: Path,
     final_target: Path,
@@ -123,23 +133,24 @@ def _render_project_summary(
     figures = tuple(item for item in sources if item.descriptor.source_role is PublicationSourceRole.FIGURE)
     table_results = render_tables(tables, staged_target / "tables")
     figure_results = render_figures(figures, staged_target / "figures")
-    _copy_sources(sources, staged_target / "source_data")
+    _copy_sources(workspace_root, sources, staged_target / "source_data")
     return _finalized_render_paths(table_results, figure_results, staged_target, final_target)
 
 
-def _render_experiment(
+def _copy_sources(
+    workspace_root: Path,
     sources: tuple[VerifiedSourceData, ...],
-    staged_target: Path,
-    final_target: Path,
-) -> tuple[RenderedPublicationArtifact, ...]:
-    return _render_project_summary(sources, staged_target, final_target)
-
-
-def _copy_sources(sources: tuple[VerifiedSourceData, ...], destination: Path) -> None:
+    destination: Path,
+) -> None:
     for source in sources:
-        source_path = source.lineage.source_path
-        payload = (Path.cwd() / source_path).read_bytes() if not source_path.is_absolute() else source_path.read_bytes()
-        atomic_write_bytes(destination / source_path.name, payload)
+        source_path = workspace_root / source.lineage.source_path
+        try:
+            payload = source_path.read_bytes()
+        except OSError as exc:
+            raise SerializationError(f"cannot copy verified publication source: {source_path}") from exc
+        copied_digest = atomic_write_bytes(destination / source_path.name, payload)
+        if copied_digest != source.lineage.source_sha256:
+            raise SerializationError(f"copied publication source checksum changed: {source_path}")
 
 
 def _finalized_render_paths(
@@ -157,13 +168,15 @@ def _finalized_render_paths(
         for result in figures
         for artifact in (result.svg, result.png)
     )
-    finalized: list[RenderedPublicationArtifact] = []
-    for artifact in staged:
-        relative = artifact.destination_path.relative_to(staged_target)
-        finalized.append(
-            artifact.model_copy(update={"destination_path": final_target / relative})
+    return tuple(
+        artifact.model_copy(
+            update={
+                "destination_path": final_target
+                / artifact.destination_path.relative_to(staged_target)
+            }
         )
-    return tuple(finalized)
+        for artifact in staged
+    )
 
 
 def _write_reproducibility(
@@ -171,7 +184,6 @@ def _write_reproducibility(
     staged_path: Path,
     sources: tuple[VerifiedSourceData, ...],
     rendered: tuple[RenderedPublicationArtifact, ...],
-    final_target: Path,
 ) -> None:
     config_path = workspace_root / PRODUCTION_CONFIG_PATH
     roadmap_path = workspace_root / _ROADMAP_PATH
@@ -194,9 +206,6 @@ def _write_reproducibility(
         sources=tuple(source.lineage for source in sources),
         rendered_artifacts=rendered,
     )
-    relative = staged_path.relative_to(staged_path.parents[1])
-    final_path = final_target / relative.relative_to(final_target.name) if final_target.name in relative.parts else staged_path
-    _ = final_path
     atomic_write_model(staged_path, record)
 
 
@@ -205,8 +214,7 @@ def _require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) 
     cells = cells_for_experiment(plan, _SYNTHESIS_NAME)
     if len(cells) != 1:
         raise InvalidScientificDataError("Statistical Synthesis must contain exactly one cell")
-    completion_path = cell_completion_path(cells[0], workspace_root)
-    completion = read_model(completion_path, CompletionRecord)
+    completion = read_model(cell_completion_path(cells[0], workspace_root), CompletionRecord)
     required = synthesis_artifact_keys()
     if completion.produced_artifact_keys != required:
         raise InvalidScientificDataError(
@@ -276,8 +284,7 @@ def _tree_digest(path: Path) -> DigestHex:
         relative = file_path.relative_to(path).as_posix().encode("utf-8")
         digest.update(len(relative).to_bytes(8, "big"))
         digest.update(relative)
-        payload_digest = bytes.fromhex(str(file_digest(file_path)))
-        digest.update(payload_digest)
+        digest.update(bytes.fromhex(str(file_digest(file_path))))
     return DigestHex(digest.hexdigest())
 
 
@@ -297,14 +304,20 @@ def _validate_results_layout(results_root: Path) -> None:
         for experiment in experiments.iterdir():
             if not experiment.is_dir():
                 raise InvalidScientificDataError("results/experiments contains a non-directory entry")
-            invalid = {item.name for item in experiment.iterdir() if item.name not in _ALLOWED_EXPERIMENT_CHILDREN}
+            invalid = {
+                item.name
+                for item in experiment.iterdir()
+                if item.name not in _ALLOWED_EXPERIMENT_CHILDREN
+            }
             if invalid:
                 raise InvalidScientificDataError(
                     f"experiment results contain invalid artifact classes: {sorted(invalid)}"
                 )
     summary = results_root / "project_summary"
     if summary.is_dir():
-        invalid = {item.name for item in summary.iterdir() if item.name not in _ALLOWED_PROJECT_CHILDREN}
+        invalid = {
+            item.name for item in summary.iterdir() if item.name not in _ALLOWED_PROJECT_CHILDREN
+        }
         if invalid:
             raise InvalidScientificDataError(
                 f"project_summary contains invalid artifact classes: {sorted(invalid)}"
