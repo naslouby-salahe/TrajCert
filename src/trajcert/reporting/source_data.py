@@ -38,7 +38,7 @@ RegimeName = NewType("RegimeName", str)
 
 
 class _ReadParquet(Protocol):
-    def __call__(self, source: Path) -> pa.Table: ...
+    def __call__(self, _source: Path) -> pa.Table: ...
 
 
 class _WriteParquet(Protocol):
