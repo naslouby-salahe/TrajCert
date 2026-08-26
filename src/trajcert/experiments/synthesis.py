@@ -81,9 +81,7 @@ def synthesize_from_sequential_utility(
     config: TrajCertConfig,
 ) -> TrajectoryOperationalGainSynthesis:
     expected = _expected_utility_keys(config)
-    supplied = tuple(
-        (item.law_name, float(item.result.sensitivity_budget)) for item in evidence
-    )
+    supplied = tuple((item.law_name, float(item.result.sensitivity_budget)) for item in evidence)
     if len(supplied) != len(set(supplied)):
         raise InvalidScientificDataError("sequential utility synthesis input contains duplicates")
     if set(supplied) != set(expected):
@@ -94,9 +92,7 @@ def synthesize_from_sequential_utility(
             f"missing={len(missing)}, extra={len(extra)}"
         )
         raise InvalidScientificDataError(message)
-    by_key = {
-        (item.law_name, float(item.result.sensitivity_budget)): item for item in evidence
-    }
+    by_key = {(item.law_name, float(item.result.sensitivity_budget)): item for item in evidence}
     series = tuple(
         paired
         for key in expected
