@@ -111,7 +111,10 @@ def main() -> None:
 def _dispatch(parser: ArgumentParser, arguments: Namespace, command: CliCommand) -> None:
     if command is CliCommand.DOCTOR:
         result = doctor()
-        print(f"TrajCert doctor: {'PASS' if result.passed else 'FAIL'}")
+        if result.passed:
+            print("TrajCert doctor: PASS")
+        else:
+            print("TrajCert doctor: FAIL")
     elif command is CliCommand.PREPROCESS:
         print(preprocess())
     elif command is CliCommand.PLAN:

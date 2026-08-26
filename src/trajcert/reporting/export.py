@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 import tempfile
@@ -54,7 +53,6 @@ from trajcert.storage import (
     CompletionRecord,
     DigestHex,
     PlanDigest,
-    atomic_write_bytes,
     atomic_write_model,
     file_digest,
     model_digest,
@@ -65,10 +63,11 @@ _ROADMAP_PATH = Path("docs/TrajCert_Roadmap.md")
 _LOCK_PATH = Path("uv.lock")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
 _SYNTHESIS_OWNER = "statistical-synthesis"
-_ALLOWED_EXPERIMENT_CHILDREN = frozenset(
-    {"figures", "tables", "metrics", "statistics", "source_data"}
+_GIT_SHA1_HEX_LENGTH = 40
+_ALLOWED_EXPERIMENT_CHILDREN = frozenset({"figures", "tables", "metrics", "statistics"})
+_ALLOWED_PROJECT_CHILDREN = frozenset(
+    {"figures", "tables", "metrics", "statistics", "reproducibility"}
 )
-_ALLOWED_PROJECT_CHILDREN = frozenset({"figures", "tables", "source_data", "reproducibility"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,7 +94,6 @@ def export_report(
             staged_target = temporary_root / "results"
             final_target = workspace_root / RESULTS_ROOT
             rendered = _render_complete_results_tree(
-                workspace_root,
                 sources,
                 staged_target,
                 final_target,
@@ -118,7 +116,6 @@ def export_report(
                 staged_target = temporary_root / owner
                 final_target = workspace_root / RESULTS_EXPERIMENTS_ROOT / owner
             rendered = _render_publication_tree(
-                workspace_root,
                 sources,
                 staged_target,
                 final_target,
@@ -153,7 +150,6 @@ def _selected_descriptors(
 
 
 def _render_complete_results_tree(
-    workspace_root: Path,
     sources: tuple[VerifiedSourceData, ...],
     staged_results_root: Path,
     final_results_root: Path,
@@ -170,7 +166,6 @@ def _render_complete_results_tree(
             final_target = final_results_root / "experiments" / owner
         rendered.extend(
             _render_publication_tree(
-                workspace_root,
                 owned,
                 staged_target,
                 final_target,
@@ -180,7 +175,6 @@ def _render_complete_results_tree(
 
 
 def _render_publication_tree(
-    workspace_root: Path,
     sources: tuple[VerifiedSourceData, ...],
     staged_target: Path,
     final_target: Path,
@@ -193,26 +187,7 @@ def _render_publication_tree(
     )
     table_results = render_tables(tables, staged_target / "tables")
     figure_results = render_figures(figures, staged_target / "figures")
-    _copy_sources(workspace_root, sources, staged_target / "source_data")
     return _finalized_render_paths(table_results, figure_results, staged_target, final_target)
-
-
-def _copy_sources(
-    workspace_root: Path,
-    sources: tuple[VerifiedSourceData, ...],
-    destination: Path,
-) -> None:
-    for source in sources:
-        source_path = workspace_root / source.lineage.source_path
-        try:
-            payload = source_path.read_bytes()
-        except OSError as exc:
-            raise SerializationError(
-                f"cannot copy verified publication source: {source_path}"
-            ) from exc
-        copied_digest = atomic_write_bytes(destination / source_path.name, payload)
-        if copied_digest != source.lineage.source_sha256:
-            raise SerializationError(f"copied publication source checksum changed: {source_path}")
 
 
 def _finalized_render_paths(
@@ -398,7 +373,7 @@ def _source_commit(workspace_root: Path) -> str:
             "cannot resolve source commit for reproducibility"
         ) from exc
     commit = result.stdout.strip()
-    if len(commit) != 40:
+    if len(commit) != _GIT_SHA1_HEX_LENGTH:
         raise InvalidScientificDataError("resolved source commit is not a full Git SHA-1")
     return commit
 
@@ -416,11 +391,11 @@ def _replace_tree(staged: Path, target: Path, *, overwrite: bool) -> bool:
         shutil.rmtree(backup)
     try:
         if target.exists():
-            os.replace(target, backup)
-        os.replace(staged, target)
+            _ = target.replace(backup)
+        _ = staged.replace(target)
     except OSError as exc:
         if backup.exists() and not target.exists():
-            os.replace(backup, target)
+            _ = backup.replace(target)
         raise SerializationError(f"atomic report tree replacement failed: {target}") from exc
     if backup.exists():
         shutil.rmtree(backup)
