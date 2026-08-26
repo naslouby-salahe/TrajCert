@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from argparse import ArgumentParser, Namespace
 
+from trajcert.experiments.smoke import SmokeResult
 from trajcert.operator import (
     RunExperimentResult,
     doctor,
@@ -31,7 +32,7 @@ def main() -> None:
             f"({plan.executable_cells} executable, {plan.invalid_cells} invalid)"
         )
     elif command is CliCommand.SMOKE:
-        _print_run(smoke())
+        _print_smoke(smoke())
     elif command is CliCommand.RUN:
         _print_run(
             run_experiment(
@@ -83,3 +84,8 @@ def _print_run(result: RunExperimentResult) -> None:
         f"({result.completed_cells} completed, {result.reused_cells} reused, "
         f"{result.failed_cells} failed, {result.blocked_cells} blocked)"
     )
+
+
+def _print_smoke(result: SmokeResult) -> None:
+    state = "PASS" if result.passed else "FAIL"
+    print(f"TrajCert smoke: {state} ({result.passed_fixture_count}/6 fixtures passed)")
