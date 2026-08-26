@@ -31,6 +31,7 @@ from trajcert.experiments.runner import (
     cell_running_path,
     run_cell,
 )
+from trajcert.experiments.smoke import SmokeResult, run_smoke_fixtures
 from trajcert.experiments.synthesis_execution import (
     SynthesisLocalValidityInput,
     make_statistical_synthesis_executor,
@@ -168,8 +169,8 @@ def plan_view(workspace_root: Path = Path(".")) -> ExperimentPlan:
     return build_plan(_load_config(workspace_root))
 
 
-def smoke(workspace_root: Path = Path(".")) -> RunExperimentResult:
-    return run_experiment("Scientific and Data Inventory", workspace_root=workspace_root)
+def smoke(workspace_root: Path = Path(".")) -> SmokeResult:
+    return run_smoke_fixtures(_load_config(workspace_root))
 
 
 def run_experiment(
