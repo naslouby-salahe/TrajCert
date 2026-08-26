@@ -71,8 +71,8 @@ class PartitionTimingRow(DomainModel):
 class CompatibilitySafetyRow(DomainModel):
     law_name: LawName
     partition_name: PartitionName
-    rho: SensitivityBudget
-    beta: RiskBudget
+    rho: SensitivityBudget | None
+    beta: RiskBudget | None
     tau: InformationNats | None
     theta_dagger: RiskValue | None
     risk_lower: RiskValue | None
