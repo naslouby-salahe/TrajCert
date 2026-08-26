@@ -6,7 +6,7 @@ on:
       - feat/trajcert-scientific-execution-spine
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
@@ -20,47 +20,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --extra quality --locked --no-build
-      - name: Format Phase 2 scope
-        run: |
-          uv run --no-sync --no-build ruff format \
-            src/trajcert/analysis \
-            src/trajcert/config.py \
-            src/trajcert/experiments/coverage.py \
-            src/trajcert/experiments/dispatch.py \
-            src/trajcert/experiments/failure_boundaries.py \
-            src/trajcert/experiments/legacy_incoherence.py \
-            src/trajcert/experiments/plan.py \
-            src/trajcert/experiments/registry.py \
-            src/trajcert/experiments/sensitivity.py \
-            src/trajcert/experiments/synthesis.py \
-            src/trajcert/reporting/source_data.py \
-            tests/unit/test_statistics.py \
-            tests/unit/test_phase2_execution.py \
-            tests/architecture/test_locality.py
-      - name: Commit formatter output
-        run: |
-          if git diff --quiet; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            src/trajcert/analysis \
-            src/trajcert/config.py \
-            src/trajcert/experiments/coverage.py \
-            src/trajcert/experiments/dispatch.py \
-            src/trajcert/experiments/failure_boundaries.py \
-            src/trajcert/experiments/legacy_incoherence.py \
-            src/trajcert/experiments/plan.py \
-            src/trajcert/experiments/registry.py \
-            src/trajcert/experiments/sensitivity.py \
-            src/trajcert/experiments/synthesis.py \
-            src/trajcert/reporting/source_data.py \
-            tests/unit/test_statistics.py \
-            tests/unit/test_phase2_execution.py \
-            tests/architecture/test_locality.py
-          git commit -m "style: format phase2 execution scope"
-          git push origin HEAD:feat/trajcert-scientific-execution-spine
       - run: |
           uv run --no-sync --no-build ruff format --check \
             src/trajcert/analysis \
