@@ -12,11 +12,11 @@ from trajcert.config import TrajCertConfig
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.oracle import InformationOracleResult
-from trajcert.types import DomainModel
+from trajcert.types import DomainModel, SensitivityBudget
 
 
 class GenericInformationPoint(DomainModel):
-    rho: float
+    rho: SensitivityBudget
     oracle: InformationOracleResult
 
 

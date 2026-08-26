@@ -172,7 +172,7 @@ def finite_sample_intrinsic_risk_lower_bound(
 
 def _singleton_projection(
     envelope: ObservableSummaryEnvelope,
-    rho: float,
+    rho: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     comparison_guard: ToleranceValue,
@@ -206,7 +206,7 @@ def _singleton_projection(
 
 def _projection_search(
     envelope: ObservableSummaryEnvelope,
-    rho: float,
+    rho: SensitivityBudget,
     gap: float,
     node_cap: int,
     root_atol: ToleranceValue,
@@ -340,7 +340,7 @@ def _compatibility_search(
 
 def _intrinsic_search(
     envelope: ObservableSummaryEnvelope,
-    rho: float,
+    rho: SensitivityBudget,
     gap: float,
     node_cap: int,
     comparison_guard: float | ToleranceValue,
@@ -526,7 +526,7 @@ def _verified_compatibility_point(
 def _verified_incumbent(
     box: _Box,
     envelope: ObservableSummaryEnvelope,
-    rho: float,
+    rho: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     comparison_guard: ToleranceValue,
@@ -610,7 +610,7 @@ def _allocate_total(
 def _verified_information_feasible(
     summary: ObservableSummary,
     hidden: float,
-    rho: float,
+    rho: SensitivityBudget,
 ) -> bool:
     information = _information_point_arb(summary, hidden)
     return _arb_upper(information) <= rho

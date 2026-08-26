@@ -12,7 +12,15 @@ from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.experiments.anytime import run_sequential_trace
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.information import minimum_information_point, observed_timing_information
-from trajcert.types import DomainModel, LawKey, ScientificState, SeedIndex
+from trajcert.types import (
+    DomainModel,
+    LawKey,
+    RiskBudget,
+    RiskValue,
+    ScientificState,
+    SeedIndex,
+    SensitivityBudget,
+)
 
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 
@@ -33,8 +41,8 @@ class FailureBoundaryResult(DomainModel):
     axis: FailureBoundaryAxis
     level: str
     band_count: int
-    sensitivity_budget: float
-    risk_budget: float
+    sensitivity_budget: SensitivityBudget
+    risk_budget: RiskBudget
     operational_state: ScientificState
     risk_upper: float
     compatibility_lower: float | None
@@ -273,7 +281,9 @@ def _summary(
     )
 
 
-def _population_state(summary: ObservableSummary, solved, rho: float, beta: float):
+def _population_state(
+    summary: ObservableSummary, solved, rho: SensitivityBudget, beta: RiskBudget
+):
     compatibility = solved.solve_result.compatibility
     minimum = compatibility.minimum_information_point
     compatibility_floor = None if minimum is None else float(minimum.information_floor)

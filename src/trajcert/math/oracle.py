@@ -18,6 +18,7 @@ from trajcert.types import (
     InformationNats,
     PositiveInt,
     RiskInterval,
+    RiskValue,
     SensitivityBudget,
     ToleranceValue,
     UnitFloat,
@@ -98,7 +99,7 @@ class ProjectionFeasibleOracleResult(DomainModel):
 
 @dataclass(frozen=True, slots=True)
 class _ProjectionCandidate:
-    risk: float
+    risk: RiskValue
     harmful: float
     correct: float
     hidden: float
