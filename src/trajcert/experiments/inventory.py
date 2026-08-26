@@ -547,7 +547,7 @@ def _experiment_matrix_rows() -> tuple[ExperimentMatrixRow, ...]:
     )
 
 
-def _display_value(value: object) -> str:
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+def _display_value(value: int | float | tuple[int | float, ...]) -> str:
+    if isinstance(value, Sequence):
         return "[" + ",".join(str(item) for item in value) + "]"
     return str(value)

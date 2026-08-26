@@ -15,6 +15,7 @@ from trajcert.schemas import (
     RenderedPublicationArtifact,
 )
 from trajcert.storage import atomic_write_bytes
+from trajcert.types import TabularCellValue
 
 _P_VALUE_THRESHOLD = 0.0001
 _P_VALUE_COLUMNS = frozenset(
@@ -86,19 +87,19 @@ def _tex_payload(table: pa.Table) -> bytes:
     return "\n".join(lines).encode("utf-8")
 
 
-def _format_csv_value(column: str, value: object) -> str:
+def _format_csv_value(column: str, value: TabularCellValue) -> str:
     if value is None:
         return ""
     return _format_scalar(column, value)
 
 
-def _format_tex_value(column: str, value: object) -> str:
+def _format_tex_value(column: str, value: TabularCellValue) -> str:
     if value is None:
         return r"\text{null}"
     return _escape_tex(_format_scalar(column, value))
 
 
-def _format_scalar(column: str, value: object) -> str:
+def _format_scalar(column: str, value: TabularCellValue) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, float):

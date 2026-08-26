@@ -155,7 +155,7 @@ class CoverageEvidenceResult(DomainModel):
     band_count: int
     true_theta: float
     true_mutual_information: float
-    rho: float
+    rho: SensitivityBudget
     beta: float
     delta: float
     acceptance_upper_limit: float

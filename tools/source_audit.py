@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,6 +45,8 @@ SUPPRESSIONS = frozenset(
         "nosec",
     }
 )
+
+_UNTYPED_BOUNDARY_PATTERN = re.compile(r"\b(?:Any|object)\b")
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,7 +131,7 @@ class _AuditVisitor(cst.CSTVisitor):
         self, name: str, annotation: cst.BaseExpression, node: cst.CSTNode
     ) -> None:
         annotation_text = _expression_text(annotation)
-        if "Any" in annotation_text or "object" in annotation_text:
+        if _UNTYPED_BOUNDARY_PATTERN.search(annotation_text):
             self._add(RULE_UNTYPED, node, f"untyped boundary {annotation_text!r} is forbidden")
         is_raw_primitive = annotation_text in PRIMITIVE_NAMES
         contains_raw_primitive = any(

@@ -43,6 +43,8 @@ SlopeValue = FiniteFloat
 TerminalHorizon = PositiveFloat
 ToleranceValue = PositiveFloat
 
+type TabularCellValue = None | bool | int | float | str
+
 
 class NDArrayFloat64Annotation:
     @classmethod

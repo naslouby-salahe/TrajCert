@@ -236,7 +236,7 @@ class AnytimeCoverageRow(DomainModel):
     K: int
     true_theta: float
     true_mutual_information: float
-    rho: float
+    rho: SensitivityBudget
     beta: float
     delta: float
     independent_streams: int
@@ -252,7 +252,7 @@ class FailureBoundaryRow(DomainModel):
     axis: str
     level: str
     controlled_value_json: str
-    rho: float
+    rho: SensitivityBudget
     beta: float
     tau: float | None
     risk_upper: float
@@ -288,7 +288,7 @@ class InformationProfileFigureRow(DomainModel):
     information_profile: float
     u_dagger: float | None
     tau: float | None
-    rho: float
+    rho: SensitivityBudget
     u_beta: float | None
     rho_star: float | None
     feasible_lower: float | None
@@ -319,7 +319,7 @@ class AnytimeCoverageFigureRow(DomainModel):
 class RhoSensitivityFigureRow(DomainModel):
     law_name: str
     partition_name: str
-    rho: float
+    rho: SensitivityBudget
     risk_upper: float | None
     compatibility_state: RegimeName
     rho_is_log2: bool

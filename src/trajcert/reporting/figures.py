@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import struct
 import zlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from html import escape
 from itertools import pairwise
@@ -18,6 +19,7 @@ from trajcert.schemas import (
     RenderedPublicationArtifact,
 )
 from trajcert.storage import atomic_write_bytes
+from trajcert.types import TabularCellValue
 
 _WIDTH = 1400
 _HEIGHT = 900
@@ -513,11 +515,13 @@ def _unique_numbers(table: pa.Table, column: str) -> tuple[float, ...]:
     return tuple(dict.fromkeys(values))
 
 
-def _matching_rows(table: pa.Table, column: str, value: str) -> tuple[dict[str, object], ...]:
+def _matching_rows(
+    table: pa.Table, column: str, value: str
+) -> tuple[dict[str, TabularCellValue], ...]:
     return tuple(row for row in table.to_pylist() if str(row[column]) == value)
 
 
-def _required_float(row: dict[str, object], column: str) -> float:
+def _required_float(row: Mapping[str, TabularCellValue], column: str) -> float:
     value = row[column]
     if not isinstance(value, int | float):
         raise InvalidScientificDataError(f"figure requires non-null numeric {column}")
@@ -527,7 +531,7 @@ def _required_float(row: dict[str, object], column: str) -> float:
     return numeric
 
 
-def _optional_float(row: dict[str, object], column: str) -> float | None:
+def _optional_float(row: Mapping[str, TabularCellValue], column: str) -> float | None:
     value = row[column]
     if value is None:
         return None

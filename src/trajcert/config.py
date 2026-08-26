@@ -28,6 +28,8 @@ from trajcert.types import (
 type YamlValue = (
     None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
 )
+type RawYamlScalar = None | bool | int | float | str
+type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "RawYamlValue"]
 
 _UTILITY_AND_COHERENCE_LAW_COUNT = 6
 _SHARPNESS_ORACLE_LAW_COUNT = 10
@@ -435,7 +437,7 @@ class TrajCertConfig(ConfigModel):
     @classmethod
     def from_yaml(cls, path: Path) -> TrajCertConfig:
         try:
-            loaded = cast(object, yaml.safe_load(path.read_text(encoding="utf-8")))
+            loaded = cast(RawYamlValue, yaml.safe_load(path.read_text(encoding="utf-8")))
         except OSError as exc:
             raise ConfigurationError(f"cannot read configuration file: {path}") from exc
         except yaml.YAMLError as exc:
@@ -472,18 +474,14 @@ def _require_strictly_decreasing(values: tuple[float | int, ...], label: str) ->
         raise ValueError(f"{label} must be strictly decreasing")
 
 
-def _coerce_yaml_value(value: object) -> YamlValue:
+def _coerce_yaml_value(value: RawYamlValue) -> YamlValue:
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     if isinstance(value, list):
-        items = cast(list[object], value)
-        return tuple(_coerce_yaml_value(item) for item in items)
-    if isinstance(value, Mapping):
-        mapping = cast(Mapping[object, object], value)
-        result: dict[str, YamlValue] = {}
-        for key, item in mapping.items():
-            if not isinstance(key, str):
-                raise ConfigurationError("configuration mapping keys must be strings")
-            result[key] = _coerce_yaml_value(item)
-        return MappingProxyType(result)
-    raise ConfigurationError(f"unsupported configuration value type: {type(value).__name__}")
+        return tuple(_coerce_yaml_value(item) for item in value)
+    result: dict[str, YamlValue] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise ConfigurationError("configuration mapping keys must be strings")
+        result[key] = _coerce_yaml_value(item)
+    return MappingProxyType(result)
