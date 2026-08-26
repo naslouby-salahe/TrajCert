@@ -126,10 +126,8 @@ def _expand_definition(
     dependencies = _required_experiments(definition, registry)
     coordinates = _coordinates_for_definition(definition, config)
     if len(coordinates) != definition.declared_cells:
-        raise ValueError(
-            f"registry expansion mismatch for {definition.experiment_name}: "
-            f"expected {definition.declared_cells}, got {len(coordinates)}"
-        )
+        counts = f"expected {definition.declared_cells}, got {len(coordinates)}"
+        raise ValueError(f"registry expansion mismatch for {definition.experiment_name}: {counts}")
     gap_start = definition.declared_cells - definition.configuration_gap_cells + 1
     cells: list[PlannedCell] = []
     for ordinal, coordinate in enumerate(coordinates, start=1):
