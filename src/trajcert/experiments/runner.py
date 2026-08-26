@@ -126,16 +126,16 @@ def run_cell(
         plan_digest=context.plan_digest,
         dependency_fingerprint=context.dependency_fingerprint,
     )
-    atomic_write_model(running_path, running_record)
+    _ = atomic_write_model(running_path, running_record)
     try:
         result = executor(cell, context)
         _validate_execution_result(result, context)
         _verify_artifacts(result.artifact_index, context.workspace_root)
-        atomic_write_model(
+        _ = atomic_write_model(
             cell_artifact_index_path(cell, context.workspace_root), result.artifact_index
         )
         completion = _completion_record(cell, context, result)
-        write_completion_last(completion_path.parent, completion)
+        _ = write_completion_last(completion_path.parent, completion)
         failure_path.unlink(missing_ok=True)
         return CellRunOutcome(
             state=PublicExecutionState.COMPLETED,
@@ -152,7 +152,7 @@ def run_cell(
             failure_type=FailureType(type(exc).__name__),
             message=FailureMessage(str(exc)),
         )
-        atomic_write_model(failure_path, failure)
+        _ = atomic_write_model(failure_path, failure)
         completion_path.unlink(missing_ok=True)
         return CellRunOutcome(
             state=PublicExecutionState.FAILED,
