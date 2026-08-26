@@ -49,6 +49,9 @@ def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainM
             identity_atol=config.numerics.identity_atol,
             comparison_guard=config.numerics.comparison_guard,
         )
+    if name == "Safety-Boundary Identity":
+        summary = _law_level_finest_summary(cell, config)
+        return _execute_summary_cell(name, cell, summary, config)
     if name == "Anytime Projection Proof Check":
         return anytime_projection_proof_check()
     if name == "Population Complexity Proof Check":
@@ -83,7 +86,6 @@ _SUMMARY_EXPERIMENTS = frozenset(
         "Endpoint Special-Case Identity",
         "Production Solver vs Independent Oracle",
         "Compatibility Floor Behavior",
-        "Safety-Boundary Identity",
         "Callback-Model Reduction Falsification",
         "Generic Information-Optimization Reduction",
     }
@@ -158,6 +160,16 @@ def _execute_summary_cell(
 def _summary_from_coordinates(cell: PlannedCell, config: TrajCertConfig) -> ObservableSummary:
     law = _law_from_name(cell.identity.coordinates.synthetic_law_name, config)
     partition = _partition_from_coordinates(cell, config)
+    return _population_summary(law, partition, config)
+
+
+def _law_level_finest_summary(cell: PlannedCell, config: TrajCertConfig) -> ObservableSummary:
+    law = _law_from_name(cell.identity.coordinates.synthetic_law_name, config)
+    partition = build_partition(
+        config.method.finest_bands,
+        config.method.finest_bands,
+        config.method.terminal_horizon,
+    )
     return _population_summary(law, partition, config)
 
 
