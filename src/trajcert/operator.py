@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import os
 import subprocess
 from hashlib import sha256
 from pathlib import Path
@@ -36,7 +37,7 @@ from trajcert.experiments.synthesis_execution import (
     synthesis_artifact_keys,
 )
 from trajcert.experiments.synthesis_inputs import synthesis_dependency_fingerprint
-from trajcert.paths import ARTIFACTS_ROOT, RESULTS_ROOT
+from trajcert.paths import RESULTS_ROOT
 from trajcert.provenance import (
     CodeCommit,
     EnvironmentDigest,
@@ -67,7 +68,6 @@ from trajcert.types import (
 )
 
 _LOCK_PATH = Path("uv.lock")
-_PLAN_PATH = ARTIFACTS_ROOT / "derived/plans/plan.json"
 _PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
 _REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
@@ -102,6 +102,7 @@ class DoctorResult(DomainModel):
     plan_valid: bool
     dependency_lock_valid: bool
     imports_valid: bool
+    source_control_valid: bool
     workspace_writable: bool
     publication_contract_valid: bool
     results_layout_valid: bool
@@ -136,6 +137,7 @@ def doctor(workspace_root: Path = Path(".")) -> DoctorResult:
         raise InvalidScientificDataError("uv.lock is missing or empty")
     for module_name in _REQUIRED_IMPORTS:
         _ = importlib.import_module(module_name)
+    _ = _source_commit(workspace_root)
     _assert_workspace_writable(workspace_root)
     descriptors = (*table_source_descriptors(), *figure_source_descriptors())
     if len(descriptors) != 20 or len({item.source_path for item in descriptors}) != 20:
@@ -146,6 +148,7 @@ def doctor(workspace_root: Path = Path(".")) -> DoctorResult:
         plan_valid=True,
         dependency_lock_valid=True,
         imports_valid=True,
+        source_control_valid=True,
         workspace_writable=True,
         publication_contract_valid=True,
         results_layout_valid=True,
@@ -161,10 +164,8 @@ def preprocess(workspace_root: Path = Path(".")) -> Path:
     return target
 
 
-def persist_plan(workspace_root: Path = Path(".")) -> Path:
-    target = workspace_root / _PLAN_PATH
-    _ = atomic_write_model(target, build_plan(_load_config(workspace_root)))
-    return target
+def plan_view(workspace_root: Path = Path(".")) -> ExperimentPlan:
+    return build_plan(_load_config(workspace_root))
 
 
 def smoke(workspace_root: Path = Path(".")) -> RunExperimentResult:
@@ -177,6 +178,8 @@ def run_experiment(
     workspace_root: Path = Path("."),
     overwrite: bool = False,
 ) -> RunExperimentResult:
+    if _dirty_tree(workspace_root):
+        raise InvalidScientificDataError("authoritative run requires a clean Git working tree")
     config = _load_config(workspace_root)
     plan = build_plan(config)
     name = _known_experiment_name(experiment_name)
@@ -375,7 +378,7 @@ def _provenance(
     material = ProvenanceMaterial(
         scientific_specification_digest=SpecificationDigest(str(model_digest(config))),
         code_commit=CodeCommit(_source_commit(workspace_root)),
-        dirty_tree_flag=_dirty_tree(workspace_root),
+        dirty_tree_flag=False,
         environment_lock_digest=EnvironmentDigest(str(file_digest(lock))),
         container_image_digest=None,
         dataset_preprocessing_digests=(),
@@ -421,7 +424,7 @@ def _source_commit(workspace_root: Path) -> str:
 def _dirty_tree(workspace_root: Path) -> bool:
     try:
         result = subprocess.run(
-            ("git", "status", "--porcelain", "--untracked-files=no"),
+            ("git", "status", "--porcelain=v1", "--untracked-files=all"),
             cwd=workspace_root,
             check=True,
             capture_output=True,
@@ -471,16 +474,12 @@ def _locality_input() -> SynthesisLocalValidityInput:
 
 
 def _assert_workspace_writable(workspace_root: Path) -> None:
+    if not workspace_root.is_dir() or not os.access(workspace_root, os.W_OK):
+        raise InvalidScientificDataError(f"workspace is not writable: {workspace_root}")
     for relative in (Path("outputs"), RESULTS_ROOT):
         directory = workspace_root / relative
-        directory.mkdir(parents=True, exist_ok=True)
-        probe = directory / ".trajcert-write-probe"
-        try:
-            probe.write_bytes(b"")
-        except OSError as exc:
-            raise InvalidScientificDataError(f"workspace is not writable: {directory}") from exc
-        finally:
-            probe.unlink(missing_ok=True)
+        if directory.exists() and (not directory.is_dir() or not os.access(directory, os.W_OK)):
+            raise InvalidScientificDataError(f"workspace path is not writable: {directory}")
 
 
 def _run_state(total: int, completed: int, failed: int, blocked: int) -> PublicExecutionState:
