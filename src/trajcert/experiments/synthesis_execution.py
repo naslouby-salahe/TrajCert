@@ -138,26 +138,62 @@ def execute_statistical_synthesis(
     root = context.workspace_root
     digests = {
         _SYNTHESIS_RECORD_KEY: atomic_write_model(root / paths[_SYNTHESIS_RECORD_KEY], record),
-        _PROTOCOL_CONSTANTS_KEY: write_source_data(root / paths[_PROTOCOL_CONSTANTS_KEY], publication.protocol_constants),
-        _SYNTHETIC_LAWS_KEY: write_source_data(root / paths[_SYNTHETIC_LAWS_KEY], publication.synthetic_laws),
+        _PROTOCOL_CONSTANTS_KEY: write_source_data(
+            root / paths[_PROTOCOL_CONSTANTS_KEY], publication.protocol_constants
+        ),
+        _SYNTHETIC_LAWS_KEY: write_source_data(
+            root / paths[_SYNTHETIC_LAWS_KEY], publication.synthetic_laws
+        ),
         _BASELINES_KEY: write_source_data(root / paths[_BASELINES_KEY], publication.baselines),
-        _EXPERIMENT_MATRIX_KEY: write_source_data(root / paths[_EXPERIMENT_MATRIX_KEY], publication.experiment_matrix),
-        _THEOREM_TABLE_KEY: write_source_data(root / paths[_THEOREM_TABLE_KEY], evidence.theorem_validation),
-        _SOLVER_ORACLE_KEY: write_source_data(root / paths[_SOLVER_ORACLE_KEY], publication.solver_oracle_validation),
-        _PARTITION_TABLE_KEY: write_source_data(root / paths[_PARTITION_TABLE_KEY], evidence.partition_timing),
-        _COMPATIBILITY_TABLE_KEY: write_source_data(root / paths[_COMPATIBILITY_TABLE_KEY], evidence.compatibility_safety),
-        _ANYTIME_COVERAGE_KEY: write_source_data(root / paths[_ANYTIME_COVERAGE_KEY], publication.anytime_coverage),
+        _EXPERIMENT_MATRIX_KEY: write_source_data(
+            root / paths[_EXPERIMENT_MATRIX_KEY], publication.experiment_matrix
+        ),
+        _THEOREM_TABLE_KEY: write_source_data(
+            root / paths[_THEOREM_TABLE_KEY], evidence.theorem_validation
+        ),
+        _SOLVER_ORACLE_KEY: write_source_data(
+            root / paths[_SOLVER_ORACLE_KEY], publication.solver_oracle_validation
+        ),
+        _PARTITION_TABLE_KEY: write_source_data(
+            root / paths[_PARTITION_TABLE_KEY], evidence.partition_timing
+        ),
+        _COMPATIBILITY_TABLE_KEY: write_source_data(
+            root / paths[_COMPATIBILITY_TABLE_KEY], evidence.compatibility_safety
+        ),
+        _ANYTIME_COVERAGE_KEY: write_source_data(
+            root / paths[_ANYTIME_COVERAGE_KEY], publication.anytime_coverage
+        ),
         _RHO_UTILITY_KEY: write_source_data(root / paths[_RHO_UTILITY_KEY], evidence.rho_utility),
-        _FAILURE_BOUNDARIES_KEY: write_source_data(root / paths[_FAILURE_BOUNDARIES_KEY], publication.failure_boundaries),
-        _COMPUTATIONAL_SCALING_KEY: write_source_data(root / paths[_COMPUTATIONAL_SCALING_KEY], publication.computational_scaling),
-        _FIGURE_PARTITION_KEY: write_source_data(root / paths[_FIGURE_PARTITION_KEY], evidence.partition_coherence_figure),
-        _FIGURE_TIMING_KEY: write_source_data(root / paths[_FIGURE_TIMING_KEY], publication.figure_timing_value),
-        _FIGURE_PROFILE_KEY: write_source_data(root / paths[_FIGURE_PROFILE_KEY], publication.figure_information_profile),
-        _FIGURE_PATHS_KEY: write_source_data(root / paths[_FIGURE_PATHS_KEY], publication.figure_anytime_paths),
-        _FIGURE_COVERAGE_KEY: write_source_data(root / paths[_FIGURE_COVERAGE_KEY], publication.figure_anytime_coverage),
-        _FIGURE_RHO_KEY: write_source_data(root / paths[_FIGURE_RHO_KEY], publication.figure_rho_sensitivity),
-        _FIGURE_FAILURE_KEY: write_source_data(root / paths[_FIGURE_FAILURE_KEY], publication.figure_failure_boundaries),
-        _FIGURE_SCALING_KEY: write_source_data(root / paths[_FIGURE_SCALING_KEY], publication.figure_computational_scaling),
+        _FAILURE_BOUNDARIES_KEY: write_source_data(
+            root / paths[_FAILURE_BOUNDARIES_KEY], publication.failure_boundaries
+        ),
+        _COMPUTATIONAL_SCALING_KEY: write_source_data(
+            root / paths[_COMPUTATIONAL_SCALING_KEY], publication.computational_scaling
+        ),
+        _FIGURE_PARTITION_KEY: write_source_data(
+            root / paths[_FIGURE_PARTITION_KEY], evidence.partition_coherence_figure
+        ),
+        _FIGURE_TIMING_KEY: write_source_data(
+            root / paths[_FIGURE_TIMING_KEY], publication.figure_timing_value
+        ),
+        _FIGURE_PROFILE_KEY: write_source_data(
+            root / paths[_FIGURE_PROFILE_KEY], publication.figure_information_profile
+        ),
+        _FIGURE_PATHS_KEY: write_source_data(
+            root / paths[_FIGURE_PATHS_KEY], publication.figure_anytime_paths
+        ),
+        _FIGURE_COVERAGE_KEY: write_source_data(
+            root / paths[_FIGURE_COVERAGE_KEY], publication.figure_anytime_coverage
+        ),
+        _FIGURE_RHO_KEY: write_source_data(
+            root / paths[_FIGURE_RHO_KEY], publication.figure_rho_sensitivity
+        ),
+        _FIGURE_FAILURE_KEY: write_source_data(
+            root / paths[_FIGURE_FAILURE_KEY], publication.figure_failure_boundaries
+        ),
+        _FIGURE_SCALING_KEY: write_source_data(
+            root / paths[_FIGURE_SCALING_KEY], publication.figure_computational_scaling
+        ),
         _LOCAL_VALIDITY_KEY: atomic_write_model(root / paths[_LOCAL_VALIDITY_KEY], local_validity),
     }
     entries = tuple(
@@ -193,26 +229,50 @@ def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
     )
     return {
         _SYNTHESIS_RECORD_KEY: synthesis / "synthesis_record.json",
-        _PROTOCOL_CONSTANTS_KEY: _aggregate("scientific-and-data-inventory", "protocol_constants.parquet"),
-        _SYNTHETIC_LAWS_KEY: _aggregate("scientific-and-data-inventory", "synthetic_laws.parquet"),
+        _PROTOCOL_CONSTANTS_KEY: _aggregate(
+            "scientific-and-data-inventory", "protocol_constants.parquet"
+        ),
+        _SYNTHETIC_LAWS_KEY: _aggregate(
+            "scientific-and-data-inventory", "synthetic_laws.parquet"
+        ),
         _BASELINES_KEY: _aggregate("scientific-and-data-inventory", "baselines.parquet"),
-        _EXPERIMENT_MATRIX_KEY: _aggregate("scientific-and-data-inventory", "experiment_matrix.parquet"),
+        _EXPERIMENT_MATRIX_KEY: _aggregate(
+            "scientific-and-data-inventory", "experiment_matrix.parquet"
+        ),
         _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet",
-        _SOLVER_ORACLE_KEY: _aggregate("production-solver-vs-independent-oracle", "solver_oracle_validation.parquet"),
+        _SOLVER_ORACLE_KEY: _aggregate(
+            "production-solver-vs-independent-oracle", "solver_oracle_validation.parquet"
+        ),
         _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",
         _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",
         _ANYTIME_COVERAGE_KEY: _aggregate("anytime-coverage-stress", "anytime_coverage.parquet"),
         _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",
-        _FAILURE_BOUNDARIES_KEY: _aggregate("failure-boundary-atlas", "failure_boundaries.parquet"),
-        _COMPUTATIONAL_SCALING_KEY: _aggregate("computational-scaling", "computational_scaling.parquet"),
+        _FAILURE_BOUNDARIES_KEY: _aggregate(
+            "failure-boundary-atlas", "failure_boundaries.parquet"
+        ),
+        _COMPUTATIONAL_SCALING_KEY: _aggregate(
+            "computational-scaling", "computational_scaling.parquet"
+        ),
         _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",
         _FIGURE_TIMING_KEY: _aggregate("strict-timing-gain", "figure_timing_value.parquet"),
-        _FIGURE_PROFILE_KEY: _aggregate("safety-and-intrinsic-impossibility", "figure_information_profile.parquet"),
-        _FIGURE_PATHS_KEY: _aggregate("anytime-coverage-stress", "figure_anytime_paths.parquet"),
-        _FIGURE_COVERAGE_KEY: _aggregate("anytime-coverage-stress", "figure_anytime_coverage.parquet"),
-        _FIGURE_RHO_KEY: _aggregate("population-sensitivity-utility", "figure_rho_sensitivity.parquet"),
-        _FIGURE_FAILURE_KEY: _aggregate("failure-boundary-atlas", "figure_failure_boundaries.parquet"),
-        _FIGURE_SCALING_KEY: _aggregate("computational-scaling", "figure_computational_scaling.parquet"),
+        _FIGURE_PROFILE_KEY: _aggregate(
+            "safety-and-intrinsic-impossibility", "figure_information_profile.parquet"
+        ),
+        _FIGURE_PATHS_KEY: _aggregate(
+            "anytime-coverage-stress", "figure_anytime_paths.parquet"
+        ),
+        _FIGURE_COVERAGE_KEY: _aggregate(
+            "anytime-coverage-stress", "figure_anytime_coverage.parquet"
+        ),
+        _FIGURE_RHO_KEY: _aggregate(
+            "population-sensitivity-utility", "figure_rho_sensitivity.parquet"
+        ),
+        _FIGURE_FAILURE_KEY: _aggregate(
+            "failure-boundary-atlas", "figure_failure_boundaries.parquet"
+        ),
+        _FIGURE_SCALING_KEY: _aggregate(
+            "computational-scaling", "figure_computational_scaling.parquet"
+        ),
         _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",
     }
 
@@ -227,13 +287,17 @@ def _validate_synthesis_cell(
     plan: ExperimentPlan,
 ) -> None:
     if str(cell.identity.experiment_name) != _SYNTHESIS_EXPERIMENT_NAME:
-        raise InvalidScientificDataError("dedicated synthesis executor received a non-synthesis cell")
+        raise InvalidScientificDataError(
+            "dedicated synthesis executor received a non-synthesis cell"
+        )
     if not cell.executable:
         raise InvalidScientificDataError("Statistical Synthesis cell is planned invalid")
     if plan.plan_digest != context.plan_digest:
         raise InvalidScientificDataError("Statistical Synthesis plan digest is stale")
     if context.expected_seed_count != 0:
-        raise InvalidScientificDataError("Statistical Synthesis is deterministic and uses zero seeds")
+        raise InvalidScientificDataError(
+            "Statistical Synthesis is deterministic and uses zero seeds"
+        )
     if context.required_artifact_keys != synthesis_artifact_keys():
         raise InvalidScientificDataError(
             "Statistical Synthesis required artifact contract is incomplete or reordered"
