@@ -6,7 +6,12 @@ from trajcert.data.partitions import TrajectoryPartition, build_partition, parti
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
 from trajcert.experiments.anytime import run_anytime_hand_case
 from trajcert.experiments.comparator_reduction import evaluate_comparator_reduction
-from trajcert.experiments.failure_boundaries import FailureBoundaryAxis, evaluate_failure_boundary
+from trajcert.experiments.failure_boundaries import (
+    FailureBoundaryAxis,
+    evaluate_failure_boundary,
+    evaluate_optimizer_node_budget,
+    evaluate_terminal_selection_asymmetry,
+)
 from trajcert.experiments.inventory import validate_scientific_inventory
 from trajcert.experiments.legacy_incoherence import evaluate_legacy_partition_incoherence
 from trajcert.experiments.mathematics import (
@@ -171,10 +176,7 @@ def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainM
         case_index = _variant_index(cell.identity.coordinates.variant_name, "hand-case-")
         return run_anytime_hand_case(case_index, partition, config)
     if name == "Failure Boundary Atlas":
-        axis, level = _failure_coordinate(
-            cell.identity.coordinates.failure_boundary_axis_and_level
-        )
-        return evaluate_failure_boundary(axis, level, config)
+        return _execute_failure_boundary(cell, config)
     if name == "Computational Scaling":
         bands = cell.identity.coordinates.scaling_band_count
         if bands is None:
@@ -395,11 +397,32 @@ def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyC
     raise PhaseOneDispatchError(f"unknown safety/impossibility case: {variant}")
 
 
-def _failure_coordinate(
-    coordinate: FailureBoundaryCoordinate | None,
-) -> tuple[FailureBoundaryAxis, float | int]:
+def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+    coordinate = cell.identity.coordinates.failure_boundary_axis_and_level
     if coordinate is None:
         raise PhaseOneDispatchError("failure-boundary cell is missing axis/level")
+    axis_text, separator, value_text = str(coordinate).partition("=")
+    if not separator:
+        raise PhaseOneDispatchError("invalid failure-boundary coordinate")
+    axis = FailureBoundaryAxis(axis_text)
+    if axis is FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY:
+        q1_text, separator, q0_text = value_text.partition(",q0:")
+        if not separator or not q1_text.startswith("q1:"):
+            raise PhaseOneDispatchError("invalid terminal-selection-asymmetry coordinate")
+        return evaluate_terminal_selection_asymmetry(
+            q1=float(q1_text.removeprefix("q1:")),
+            q0=float(q0_text),
+            config=config,
+        )
+    if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
+        return evaluate_optimizer_node_budget(int(value_text), config)
+    parsed_axis, level = _failure_coordinate(coordinate)
+    return evaluate_failure_boundary(parsed_axis, level, config)
+
+
+def _failure_coordinate(
+    coordinate: FailureBoundaryCoordinate,
+) -> tuple[FailureBoundaryAxis, float | int]:
     axis_text, separator, value_text = str(coordinate).partition("=")
     if not separator:
         raise PhaseOneDispatchError("invalid failure-boundary coordinate")
