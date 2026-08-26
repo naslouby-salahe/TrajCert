@@ -7,7 +7,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.special import expit
 
-from trajcert.config import PatternMixtureConfig
+from trajcert.config import LegacyPatternMixtureConfig
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import DomainModel, RiskValue
 
@@ -39,7 +39,7 @@ class PatternMixtureResult(DomainModel):
 
 def fit_pattern_mixture(
     summary: ObservableSummary,
-    config: PatternMixtureConfig,
+    config: LegacyPatternMixtureConfig,
 ) -> PatternMixtureResult:
     harmful = np.asarray(summary.harmful_by_band, dtype=np.float64)
     correct = np.asarray(summary.correct_by_band, dtype=np.float64)
