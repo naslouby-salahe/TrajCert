@@ -48,7 +48,7 @@ class LocalValidityAuditResult(DomainModel):
     runtime_lineage_pass: bool
     foreign_scientific_parent_count: NonNegativeInt
     violating_artifact_keys: tuple[ArtifactKey, ...]
-    passed: bool = Field(alias="pass")
+    passed: bool = Field(serialization_alias="pass")
 
 
 def audit_local_validity(
