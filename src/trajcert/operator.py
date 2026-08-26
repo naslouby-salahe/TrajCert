@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib
 import subprocess
-from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
 
@@ -22,6 +21,7 @@ from trajcert.experiments.inventory import validate_scientific_inventory
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.registry import authoritative_registry
 from trajcert.experiments.runner import (
+    CellExecutionResult,
     CellExecutor,
     DependencyReadiness,
     ExecutionContext,
@@ -62,6 +62,7 @@ from trajcert.types import (
     ClientId,
     DomainModel,
     EpochId,
+    NonNegativeInt,
     PublicExecutionState,
 )
 
@@ -80,20 +81,20 @@ class OperatorCellStatus(DomainModel):
 class OperatorExperimentStatus(DomainModel):
     experiment_name: ExperimentNameValue
     state: PublicExecutionState
-    total_cells: int
-    completed_cells: int
-    failed_cells: int
-    running_cells: int
-    ready_cells: int
+    total_cells: NonNegativeInt
+    completed_cells: NonNegativeInt
+    failed_cells: NonNegativeInt
+    running_cells: NonNegativeInt
+    ready_cells: NonNegativeInt
 
 
 class RunExperimentResult(DomainModel):
     experiment_name: ExperimentNameValue
     state: PublicExecutionState
-    completed_cells: int
-    reused_cells: int
-    failed_cells: int
-    blocked_cells: int
+    completed_cells: NonNegativeInt
+    reused_cells: NonNegativeInt
+    failed_cells: NonNegativeInt
+    blocked_cells: NonNegativeInt
 
 
 class DoctorResult(DomainModel):
@@ -306,7 +307,7 @@ def _executor(
     if name == _SYNTHESIS_NAME:
         return make_statistical_synthesis_executor(plan, config, _locality_input())
 
-    def execute(cell: PlannedCell, context: ExecutionContext):
+    def execute(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
         return execute_dispatched_cell(cell, context, config)
 
     return execute
