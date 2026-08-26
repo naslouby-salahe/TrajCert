@@ -1,27 +1,86 @@
 from __future__ import annotations
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from pathlib import Path
 
-from trajcert.config import TrajCertConfig
-from trajcert.constants import PRODUCTION_CONFIG_PATH
-from trajcert.data.laws import build_full_law, configured_laws
-from trajcert.data.partitions import configured_partitions
+from trajcert.operator import (
+    doctor,
+    experiment_status,
+    persist_plan,
+    preprocess,
+    report,
+    run_experiment,
+    smoke,
+)
 from trajcert.types import CliCommand
 
 
 def main() -> None:
-    parser = ArgumentParser(prog="trajcert")
-    parser.add_argument("command", choices=tuple(command.value for command in CliCommand))
+    parser = _parser()
     arguments = parser.parse_args()
     command = CliCommand(arguments.command)
     if command is CliCommand.DOCTOR:
-        _doctor()
+        result = doctor()
+        print(f"TrajCert doctor: {'PASS' if result.passed else 'FAIL'}")
+    elif command is CliCommand.PREPROCESS:
+        print(preprocess())
+    elif command is CliCommand.PLAN:
+        print(persist_plan())
+    elif command is CliCommand.SMOKE:
+        _print_run(smoke())
+    elif command is CliCommand.RUN:
+        _print_run(
+            run_experiment(
+                _experiment_name(arguments),
+                overwrite=bool(arguments.overwrite),
+            )
+        )
+    elif command is CliCommand.STATUS:
+        status = experiment_status(_experiment_name(arguments))
+        print(
+            f"{status.experiment_name}: {status.state.value} "
+            f"({status.completed_cells}/{status.total_cells} completed, "
+            f"{status.failed_cells} failed, {status.running_cells} running)"
+        )
+    elif command is CliCommand.REPORT:
+        exported = report(overwrite=bool(arguments.overwrite))
+        action = "reused" if exported.reused else "rendered"
+        print(
+            f"TrajCert report: {action} {exported.rendered_artifact_count} artifacts "
+            f"from {exported.source_artifact_count} verified sources at {exported.target}"
+        )
 
 
-def _doctor() -> None:
-    TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    partitions = configured_partitions()
-    laws = configured_laws()
-    for law in laws:
-        build_full_law(law, partitions[0].band_count)
-    print("TrajCert doctor: configuration and core scientific inputs are valid")
+def _parser() -> ArgumentParser:
+    parser = ArgumentParser(prog="trajcert")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    for command in (CliCommand.DOCTOR, CliCommand.PREPROCESS, CliCommand.PLAN, CliCommand.SMOKE):
+        _ = subparsers.add_parser(command.value)
+    run_parser = subparsers.add_parser(CliCommand.RUN.value)
+    run_parser.add_argument("experiment_name")
+    run_parser.add_argument("--overwrite", action="store_true")
+    status_parser = subparsers.add_parser(CliCommand.STATUS.value)
+    status_parser.add_argument("experiment_name")
+    report_parser = subparsers.add_parser(CliCommand.REPORT.value)
+    report_parser.add_argument("--overwrite", action="store_true")
+    return parser
+
+
+def _experiment_name(arguments: Namespace) -> str:
+    value = getattr(arguments, "experiment_name", None)
+    if not isinstance(value, str) or not value:
+        raise ValueError("experiment name is required")
+    return value
+
+
+def _print_run(result: object) -> None:
+    state = getattr(result, "state")
+    name = getattr(result, "experiment_name")
+    completed = getattr(result, "completed_cells")
+    reused = getattr(result, "reused_cells")
+    failed = getattr(result, "failed_cells")
+    blocked = getattr(result, "blocked_cells")
+    print(
+        f"{name}: {state.value} ({completed} completed, {reused} reused, "
+        f"{failed} failed, {blocked} blocked)"
+    )
