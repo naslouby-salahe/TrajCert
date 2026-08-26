@@ -57,10 +57,10 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> FiniteFl
     position = (values.size - 1) * float(probability)
     lower_index = int(np.floor(position))
     upper_index = int(np.ceil(position))
-    lower_value = float(cast(np.float64, values[lower_index]))
+    lower_value = cast(FiniteFloat, values.item(lower_index))
     if lower_index == upper_index:
         return lower_value
-    upper_value = float(cast(np.float64, values[upper_index]))
+    upper_value = cast(FiniteFloat, values.item(upper_index))
     weight = position - lower_index
     return lower_value + weight * (upper_value - lower_value)
 
