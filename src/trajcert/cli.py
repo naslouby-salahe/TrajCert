@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
 
 from trajcert.operator import (
+    RunExperimentResult,
     doctor,
     experiment_status,
     persist_plan,
@@ -73,14 +73,9 @@ def _experiment_name(arguments: Namespace) -> str:
     return value
 
 
-def _print_run(result: object) -> None:
-    state = getattr(result, "state")
-    name = getattr(result, "experiment_name")
-    completed = getattr(result, "completed_cells")
-    reused = getattr(result, "reused_cells")
-    failed = getattr(result, "failed_cells")
-    blocked = getattr(result, "blocked_cells")
+def _print_run(result: RunExperimentResult) -> None:
     print(
-        f"{name}: {state.value} ({completed} completed, {reused} reused, "
-        f"{failed} failed, {blocked} blocked)"
+        f"{result.experiment_name}: {result.state.value} "
+        f"({result.completed_cells} completed, {result.reused_cells} reused, "
+        f"{result.failed_cells} failed, {result.blocked_cells} blocked)"
     )
