@@ -25,7 +25,9 @@ class PairedEffectSummary(DomainModel):
 def summarize_paired_differences(differences: Vector) -> PairedEffectSummary:
     values = np.asarray(differences, dtype=np.float64)
     if values.ndim != 1 or values.size < 2:
-        raise InvalidScientificDataError("paired effect summary requires at least two paired values")
+        raise InvalidScientificDataError(
+            "paired effect summary requires at least two paired values"
+        )
     if not np.all(np.isfinite(values)):
         raise InvalidScientificDataError("paired effect summary forbids NaN and infinity")
     estimate = float(np.mean(values, dtype=np.float64))

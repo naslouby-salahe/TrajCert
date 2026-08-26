@@ -70,8 +70,7 @@ def evaluate_population_materiality(
             compatible
             and observation.absolute_tightening is not None
             and observation.relative_unresolved_gain is not None
-            and observation.absolute_tightening
-            >= config.materiality.population.absolute_tightening
+            and observation.absolute_tightening >= config.materiality.population.absolute_tightening
             and observation.relative_unresolved_gain
             >= config.materiality.population.relative_unresolved_gain
         ):
@@ -104,7 +103,8 @@ def evaluate_sequential_materiality(
         if observation.metric_name is not PracticalMetric.CERTIFIED_UPDATE_FRACTION:
             continue
         if (
-            observation.mean_paired_difference >= config.materiality.sequential.certified_fraction_gain
+            observation.mean_paired_difference
+            >= config.materiality.sequential.certified_fraction_gain
             and observation.bootstrap_lower > 0.0
             and observation.holm_adjusted_p_value < config.confidence.alpha
         ):

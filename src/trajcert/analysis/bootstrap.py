@@ -64,7 +64,9 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> FiniteFl
 def _validated_vector(values: Vector) -> np.ndarray:
     array = np.asarray(values, dtype=np.float64)
     if array.ndim != 1 or array.size == 0:
-        raise InvalidScientificDataError("paired statistics require a nonempty one-dimensional vector")
+        raise InvalidScientificDataError(
+            "paired statistics require a nonempty one-dimensional vector"
+        )
     if not np.all(np.isfinite(array)):
         raise InvalidScientificDataError("paired statistics forbid NaN and infinity")
     return array
