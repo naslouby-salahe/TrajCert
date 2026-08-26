@@ -14,7 +14,11 @@ from trajcert.math.information import (
     timing_gain,
 )
 from trajcert.math.oracle import direct_mutual_information, solve_information_oracle
-from trajcert.math.safety import SafetyAssessment, assess_safety_geometry
+from trajcert.math.safety import (
+    SafetyAssessment,
+    SafetyBudgetCase,
+    assess_safety_geometry,
+)
 from trajcert.types import DomainModel, RiskBudget, SensitivityBudget, ToleranceValue
 
 _PROFILE_GRID_POINTS = 1_001
@@ -55,6 +59,12 @@ class SafetyBoundaryIdentityResult(DomainModel):
     assessment: SafetyAssessment
     frontier_direct_information: float | None
     frontier_error: float | None
+
+
+class SafetyBoundaryCaseEvaluation(DomainModel):
+    case: SafetyBudgetCase
+    identity: SafetyBoundaryIdentityResult | None
+    passed: bool
 
 
 def path_information_decomposition(
@@ -266,6 +276,27 @@ def safety_boundary_identity(
         assessment=assessment,
         frontier_direct_information=float(direct),
         frontier_error=error,
+    )
+
+
+def evaluate_safety_boundary_case(
+    summary: ObservableSummary,
+    case: SafetyBudgetCase,
+    oracle_digits: int,
+    identity_atol: ToleranceValue,
+) -> SafetyBoundaryCaseEvaluation:
+    if not case.valid or case.risk_budget is None:
+        return SafetyBoundaryCaseEvaluation(case=case, identity=None, passed=True)
+    identity = safety_boundary_identity(
+        summary=summary,
+        risk_budget=case.risk_budget,
+        oracle_digits=oracle_digits,
+        identity_atol=identity_atol,
+    )
+    return SafetyBoundaryCaseEvaluation(
+        case=case,
+        identity=identity,
+        passed=identity.passed,
     )
 
 
