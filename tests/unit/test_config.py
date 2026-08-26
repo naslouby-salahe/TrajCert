@@ -235,6 +235,17 @@ def test_config_file_error_paths(tmp_path: Path) -> None:
         _ = TrajCertConfig.from_yaml(tmp_path / "missing.yaml")
 
 
+def test_config_json_serialization_round_trip() -> None:
+    configuration = TrajCertConfig.from_yaml(CONFIG_PATH)
+    dumped: dict[str, object] = configuration.model_dump(mode="json")
+    laws_dump = dumped["laws"]
+    assert isinstance(laws_dump, dict)
+    assert len(configuration.laws) == _PRODUCTION_LAW_COUNT
+    restored = TrajCertConfig.model_validate(dumped)
+    assert restored.model_dump(mode="json") == dumped
+    assert not hasattr(configuration.laws, "clear")
+
+
 def test_vector_annotation_normalizes_and_serializes() -> None:
     model = VectorModel(values=np.array([1.0, 2.0]))
     assert model.values.dtype == np.float64

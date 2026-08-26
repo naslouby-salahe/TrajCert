@@ -10,7 +10,7 @@ from types import MappingProxyType
 from typing import Annotated, Literal, cast
 
 import yaml
-from pydantic import Field, StrictFloat, field_validator, model_validator
+from pydantic import Field, StrictFloat, field_serializer, field_validator, model_validator
 
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.exceptions import ConfigurationError
@@ -403,6 +403,10 @@ class TrajCertConfig(ConfigModel):
         if missing or extra:
             raise ValueError(f"laws must match LawKey exactly; missing={missing}, extra={extra}")
         return MappingProxyType(dict(laws))
+
+    @field_serializer("laws")
+    def serialize_laws(self, laws: Mapping[LawKey, LawConfig]) -> dict[LawKey, LawConfig]:
+        return dict(laws)
 
     @model_validator(mode="after")
     def validate_cross_section_contracts(self) -> TrajCertConfig:
