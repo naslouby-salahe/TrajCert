@@ -62,12 +62,10 @@ class ObservableSummaryEnvelope(DomainModel):
         if not self.is_singleton:
             raise NumericalError("non-singleton envelope has no exact observable summary")
         harmful = np.asarray(
-            tuple(interval.lower for interval in self.harmful_by_band),
-            dtype=np.float64,
+            tuple(interval.lower for interval in self.harmful_by_band), dtype=np.float64
         )
         correct = np.asarray(
-            tuple(interval.lower for interval in self.correct_by_band),
-            dtype=np.float64,
+            tuple(interval.lower for interval in self.correct_by_band), dtype=np.float64
         )
         return summarize_observable_masses(
             partition=self.partition,
@@ -92,7 +90,7 @@ def summary_envelope_from_confidence(
     correct_indices = tuple(range(1, expected_categories - 1, 2))
     resolved_harmful = _subset_interval(confidence.intervals, harmful_indices)
     resolved_correct = _subset_interval(confidence.intervals, correct_indices)
-    resolved_entropy = _resolved_entropy_envelope(harmful, correct, unresolved)
+    resolved_entropy = _resolved_entropy_envelope(harmful, correct)
     return ObservableSummaryEnvelope(
         partition=partition,
         harmful_by_band=tuple(_scalar(interval) for interval in harmful),
@@ -154,17 +152,16 @@ def _subset_interval(
 def _resolved_entropy_envelope(
     harmful: tuple[ClosedProbabilityInterval, ...],
     correct: tuple[ClosedProbabilityInterval, ...],
-    unresolved: ClosedProbabilityInterval,
 ) -> ScalarEnvelope:
-    singleton = all(interval.lower == interval.upper for interval in harmful + correct)
-    if singleton:
-        value = _resolved_entropy_exact(
-            tuple(interval.lower for interval in harmful),
-            tuple(interval.lower for interval in correct),
-        )
-        return ScalarEnvelope(lower=value, upper=value)
-    maximum = min(log(2.0) * (1.0 - unresolved.lower), log(2.0))
-    return ScalarEnvelope(lower=0.0, upper=maximum)
+    lower = sum(
+        _binary_entropy_from_masses(left.lower, right.lower)
+        for left, right in zip(harmful, correct, strict=True)
+    )
+    upper = sum(
+        _binary_entropy_from_masses(left.upper, right.upper)
+        for left, right in zip(harmful, correct, strict=True)
+    )
+    return ScalarEnvelope(lower=lower, upper=upper)
 
 
 def _resolved_entropy_exact(harmful: tuple[float, ...], correct: tuple[float, ...]) -> float:
