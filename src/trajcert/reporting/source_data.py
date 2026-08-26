@@ -61,7 +61,7 @@ class PartitionTimingRow(DomainModel):
     bound_gain: FiniteFloat
     fine_subset_coarse: bool
     theorem_condition: bool
-    passed: bool = Field(alias="pass")
+    passed: bool = Field(serialization_alias="pass")
 
 
 class CompatibilitySafetyRow(DomainModel):
@@ -77,7 +77,7 @@ class CompatibilitySafetyRow(DomainModel):
     expected_regime: RegimeName
     observed_regime: RegimeName
     oracle_error: FiniteFloat | None
-    passed: bool = Field(alias="pass")
+    passed: bool = Field(serialization_alias="pass")
 
 
 class RhoUtilityRow(DomainModel):
