@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import importlib
 import os
 import subprocess
@@ -64,6 +65,7 @@ from trajcert.types import (
     ClientId,
     DomainModel,
     EpochId,
+    LawKey,
     NonNegativeInt,
     PublicExecutionState,
 )
@@ -72,6 +74,47 @@ _LOCK_PATH = Path("uv.lock")
 _PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
 _REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
+_NON_SCIENTIFIC_MODULE_PREFIXES = (
+    "trajcert.cli",
+    "trajcert.operator",
+    "trajcert.reporting.export",
+    "trajcert.reporting.figures",
+    "trajcert.reporting.tables",
+)
+_PRODUCER_ROOTS = {
+    "Scientific and Data Inventory": Path("src/trajcert/experiments/inventory.py"),
+    "Legacy Partition Incoherence Check": Path("src/trajcert/experiments/legacy_incoherence.py"),
+    "Path Information Decomposition": Path("src/trajcert/experiments/mathematics.py"),
+    "Information Profile Convexity": Path("src/trajcert/experiments/mathematics.py"),
+    "Minimum Compatibility Identity": Path("src/trajcert/experiments/mathematics.py"),
+    "Sharp-Set Constructive Identity": Path("src/trajcert/experiments/mathematics.py"),
+    "Refinement Dominance Identity": Path("src/trajcert/experiments/mathematics.py"),
+    "Strict Timing-Gain Identity": Path("src/trajcert/experiments/mathematics.py"),
+    "Safety-Boundary Identity": Path("src/trajcert/experiments/mathematics.py"),
+    "Endpoint Special-Case Identity": Path("src/trajcert/experiments/mathematics.py"),
+    "Anytime Projection Proof Check": Path("src/trajcert/experiments/mathematics.py"),
+    "Population Complexity Proof Check": Path("src/trajcert/experiments/mathematics.py"),
+    "Production Solver vs Independent Oracle": Path("src/trajcert/experiments/solver_validation.py"),
+    "Callback-Model Reduction Falsification": Path(
+        "src/trajcert/experiments/comparator_reduction.py"
+    ),
+    "Generic Information-Optimization Reduction": Path(
+        "src/trajcert/experiments/comparator_reduction.py"
+    ),
+    "Partition Coherence": Path("src/trajcert/experiments/timing.py"),
+    "Same Endpoint, Different Timing": Path("src/trajcert/experiments/timing.py"),
+    "Strict Timing Gain": Path("src/trajcert/experiments/timing.py"),
+    "Compatibility Floor Behavior": Path("src/trajcert/experiments/safety.py"),
+    "Sharpness Against Generic Oracle": Path("src/trajcert/experiments/safety.py"),
+    "Safety and Intrinsic Impossibility": Path("src/trajcert/experiments/safety.py"),
+    "Anytime Implementation Hand Cases": Path("src/trajcert/experiments/anytime.py"),
+    "Anytime Coverage Stress": Path("src/trajcert/experiments/coverage.py"),
+    "Population Sensitivity Utility": Path("src/trajcert/experiments/sensitivity.py"),
+    "Sequential Sensitivity Utility": Path("src/trajcert/experiments/sensitivity.py"),
+    "Failure Boundary Atlas": Path("src/trajcert/experiments/failure_boundaries.py"),
+    "Computational Scaling": Path("src/trajcert/experiments/scaling.py"),
+    "Statistical Synthesis": Path("src/trajcert/experiments/synthesis_execution.py"),
+}
 
 
 class OperatorCellStatus(DomainModel):
@@ -309,7 +352,7 @@ def _executor(
     config: TrajCertConfig,
 ) -> CellExecutor:
     if name == _SYNTHESIS_NAME:
-        return make_statistical_synthesis_executor(plan, config, _locality_input())
+        return make_statistical_synthesis_executor(plan, config, _locality_input(plan, config))
 
     def execute(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
         return execute_dispatched_cell(cell, context, config)
@@ -324,8 +367,11 @@ def _execution_context(
     workspace_root: Path,
 ) -> ExecutionContext:
     specification = SpecificationDigest(str(model_digest(config)))
+    component_digest = _producer_component_digest(workspace_root, cell)
     dependency_specification = SpecificationDigest(
-        _digest_text(f"{specification}|{cell.identity.semantic_cell_key}")
+        _digest_text(
+            f"{specification}|{cell.identity.semantic_cell_key}|{component_digest}"
+        )
     )
     if cell.identity.experiment_name == _SYNTHESIS_NAME:
         upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
@@ -343,7 +389,6 @@ def _execution_context(
                     (
                         str(cell.identity.semantic_cell_key),
                         str(dependency_specification),
-                        _scientific_code_digest(workspace_root),
                         *parent_digests,
                     )
                 )
@@ -359,13 +404,95 @@ def _execution_context(
         dependency_fingerprint=dependency,
         manifest_digest=DigestHex(str(model_digest(cell))),
         required_artifact_keys=required,
-        expected_seed_count=0,
+        expected_seed_count=_expected_seed_count(cell, config),
     )
+
+
+def _expected_seed_count(cell: PlannedCell, config: TrajCertConfig) -> NonNegativeInt:
+    name = str(cell.identity.experiment_name)
+    if name == "Anytime Coverage Stress":
+        return config.sequential.coverage.streams
+    if name == "Sequential Sensitivity Utility":
+        return config.sequential.utility.streams
+    return 0
 
 
 def _parent_cells(plan: ExperimentPlan, cell: PlannedCell) -> tuple[PlannedCell, ...]:
     required = set(cell.required_experiments)
     return tuple(item for item in plan.cells if item.identity.experiment_name in required)
+
+
+def _producer_component_digest(workspace_root: Path, cell: PlannedCell) -> DigestHex:
+    root = _PRODUCER_ROOTS.get(str(cell.identity.experiment_name))
+    if root is None:
+        raise InvalidScientificDataError(
+            f"missing producer-component registration: {cell.identity.experiment_name}"
+        )
+    files = _first_party_import_closure(workspace_root, root)
+    digest = sha256()
+    for relative in files:
+        full_path = workspace_root / relative
+        encoded = relative.as_posix().encode("utf-8")
+        digest.update(len(encoded).to_bytes(8, "big"))
+        digest.update(encoded)
+        digest.update(bytes.fromhex(str(file_digest(full_path))))
+    return DigestHex(digest.hexdigest())
+
+
+def _first_party_import_closure(workspace_root: Path, root: Path) -> tuple[Path, ...]:
+    pending = [root]
+    visited: set[Path] = set()
+    while pending:
+        relative = pending.pop()
+        if relative in visited:
+            continue
+        full_path = workspace_root / relative
+        if not full_path.is_file():
+            raise InvalidScientificDataError(f"registered producer source is missing: {relative}")
+        visited.add(relative)
+        try:
+            tree = ast.parse(full_path.read_text(encoding="utf-8"), filename=str(relative))
+        except (OSError, SyntaxError, UnicodeError) as exc:
+            raise InvalidScientificDataError(f"cannot inspect producer source: {relative}") from exc
+        for module_name in _first_party_imports(tree):
+            dependency = _module_path(workspace_root, module_name)
+            if dependency is not None and dependency not in visited:
+                pending.append(dependency)
+    return tuple(sorted(visited, key=lambda path: path.as_posix()))
+
+
+def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module is not None:
+            if node.module.startswith("trajcert") and not _non_scientific_module(node.module):
+                modules.add(node.module)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith("trajcert") and not _non_scientific_module(alias.name):
+                    modules.add(alias.name)
+    return tuple(sorted(modules))
+
+
+def _non_scientific_module(module_name: str) -> bool:
+    return any(
+        module_name == prefix or module_name.startswith(f"{prefix}.")
+        for prefix in _NON_SCIENTIFIC_MODULE_PREFIXES
+    )
+
+
+def _module_path(workspace_root: Path, module_name: str) -> Path | None:
+    parts = module_name.split(".")
+    if not parts or parts[0] != "trajcert":
+        return None
+    module_path = Path("src") / Path(*parts)
+    file_candidate = module_path.with_suffix(".py")
+    package_candidate = module_path / "__init__.py"
+    if (workspace_root / file_candidate).is_file():
+        return file_candidate
+    if (workspace_root / package_candidate).is_file():
+        return package_candidate
+    return None
 
 
 def _provenance(
@@ -390,21 +517,6 @@ def _provenance(
     return provenance_fingerprint(material)
 
 
-def _scientific_code_digest(workspace_root: Path) -> str:
-    root = workspace_root / "src/trajcert"
-    digest = sha256()
-    paths = tuple(
-        path
-        for path in root.rglob("*.py")
-        if "reporting" not in path.parts and path.name not in {"cli.py", "operator.py"}
-    )
-    for path in sorted(paths):
-        relative = path.relative_to(workspace_root).as_posix().encode("utf-8")
-        digest.update(relative)
-        digest.update(bytes.fromhex(str(file_digest(path))))
-    return digest.hexdigest()
-
-
 def _source_commit(workspace_root: Path) -> str:
     try:
         result = subprocess.run(
@@ -425,7 +537,7 @@ def _source_commit(workspace_root: Path) -> str:
 def _dirty_tree(workspace_root: Path) -> bool:
     try:
         result = subprocess.run(
-            ("git", "status", "--porcelain=v1", "--untracked-files=all"),
+            ("git", "status", "--porcelain=v1", "--untracked-files=no"),
             cwd=workspace_root,
             check=True,
             capture_output=True,
@@ -436,11 +548,25 @@ def _dirty_tree(workspace_root: Path) -> bool:
     return bool(result.stdout.strip())
 
 
-def _locality_input() -> SynthesisLocalValidityInput:
+def _locality_input(plan: ExperimentPlan, config: TrajCertConfig) -> SynthesisLocalValidityInput:
+    principal_name = LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE]
+    sequential_cells = cells_for_experiment(
+        plan, ExperimentNameValue("Sequential Sensitivity Utility")
+    )
+    root_cell = next(
+        (
+            cell
+            for cell in sequential_cells
+            if cell.identity.coordinates.synthetic_law_name == principal_name
+        ),
+        None,
+    )
+    if root_cell is None:
+        raise InvalidScientificDataError("local-validity audit lacks a principal sequential cell")
     identity = LedgerIdentity(
-        client_id=ClientId("target-client"),
-        action_channel_id=ActionChannelId("target-action-channel"),
-        epoch_id=EpochId("target-epoch"),
+        client_id=ClientId("synthetic-client"),
+        action_channel_id=ActionChannelId("automatic-action"),
+        epoch_id=EpochId(f"{_semantic_slug(principal_name)}::static-epoch"),
     )
     components = (
         "inference/categorical.py",
@@ -453,11 +579,11 @@ def _locality_input() -> SynthesisLocalValidityInput:
         StaticComponentDependency(
             producer_component=ProducerComponentName(component),
             scientific_input_classes=(ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,),
-            scientific_client_ids=(),
+            scientific_client_ids=(identity.client_id,),
         )
         for component in components
     )
-    root_key = ArtifactKey("local-bound-root")
+    root_key = scientific_result_artifact_key(root_cell)
     lineage = (
         RuntimeLineageArtifact(
             artifact_key=root_key,
@@ -472,6 +598,15 @@ def _locality_input() -> SynthesisLocalValidityInput:
         root_artifact_key=root_key,
         lineage_artifacts=lineage,
     )
+
+
+def _semantic_slug(value: str) -> str:
+    characters = tuple(character.lower() if character.isalnum() else "-" for character in value)
+    collapsed: list[str] = []
+    for character in characters:
+        if character != "-" or not collapsed or collapsed[-1] != "-":
+            collapsed.append(character)
+    return "".join(collapsed).strip("-")
 
 
 def _assert_workspace_writable(workspace_root: Path) -> None:
