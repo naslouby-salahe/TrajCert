@@ -233,7 +233,6 @@ def _completion_identity_matches(
         completion.cell_plan_digest == _cell_plan_digest(cell),
         completion.scientific_specification_digest == context.scientific_specification_digest,
         completion.scientific_dependency_digest == context.scientific_dependency_digest,
-        completion.provenance_fingerprint == context.provenance_fingerprint,
         completion.dependency_fingerprint == context.dependency_fingerprint,
         completion.manifest_digest == context.manifest_digest,
         completion.required_artifact_keys == context.required_artifact_keys,
