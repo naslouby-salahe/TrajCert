@@ -52,33 +52,31 @@ from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.paths import ExperimentLeaf, ExperimentSlug, experiment_leaf
 from trajcert.provenance import BaselineName, ExperimentNameValue, MethodName
-from trajcert.reporting.publication_sources import build_publication_source_rows
 from trajcert.reporting.source_data import (
     AnalysisType,
+    CompatibilityFloorSourceEvidence,
     CompatibilitySafetyRow,
     PartitionCoherenceFigureRow,
+    PartitionTimingEvidence,
     PartitionTimingRow,
+    PopulationFigureEvidence,
     PopulationUtilitySourceEvidence,
     RhoUtilityRow,
-    ScientificConsequence,
-    TheoremName,
-    TheoremValidationSummaryRow,
-    population_rho_utility_rows,
-    write_source_data,
-)
-from trajcert.reporting.synthesis_rows import (
-    CompatibilityFloorSourceEvidence,
-    PartitionTimingEvidence,
-    PopulationFigureEvidence,
     SafetySourceEvidence,
     SameEndpointFigureEvidence,
+    ScientificConsequence,
     SharpnessSourceEvidence,
+    TheoremName,
     TheoremValidationObservation,
+    TheoremValidationSummaryRow,
+    build_publication_source_rows,
     compatibility_safety_evidence,
     compatibility_safety_rows,
     partition_coherence_figure_rows,
     partition_timing_rows,
+    population_rho_utility_rows,
     theorem_validation_summary_rows,
+    write_source_data,
 )
 from trajcert.storage import (
     ArtifactIndexEntry,
