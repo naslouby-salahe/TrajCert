@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from trajcert.analysis.locality import (
+from trajcert.data.ledger import LedgerIdentity
+from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.runner import (
     LocalValidityTarget,
     RuntimeLineageArtifact,
     ScientificInputClass,
@@ -10,8 +12,6 @@ from trajcert.analysis.locality import (
     audit_local_validity,
     audit_local_validity_targets,
 )
-from trajcert.data.ledger import LedgerIdentity
-from trajcert.exceptions import InvalidScientificDataError
 from trajcert.provenance import ProducerComponentName
 from trajcert.storage import ArtifactKey
 from trajcert.types import ActionChannelId, ClientId, EpochId

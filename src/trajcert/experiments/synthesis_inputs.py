@@ -5,12 +5,13 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.execution import (
+from trajcert.experiments.plan import PlannedCell
+from trajcert.experiments.runner import (
+    cell_artifact_index_path,
+    cell_completion_path,
     scientific_result_artifact_key,
     scientific_result_path,
 )
-from trajcert.experiments.plan import PlannedCell
-from trajcert.experiments.runner import cell_artifact_index_path, cell_completion_path
 from trajcert.storage import (
     ArtifactChecksum,
     CellArtifactIndex,

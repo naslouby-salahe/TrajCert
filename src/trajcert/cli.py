@@ -6,7 +6,7 @@ from enum import IntEnum
 
 from trajcert.exceptions import InvalidScientificDataError, TrajCertError
 from trajcert.experiments.registry import authoritative_registry
-from trajcert.experiments.smoke import SmokeResult
+from trajcert.experiments.runner import SmokeResult
 from trajcert.experiments.status import ExperimentStatus
 from trajcert.operator import (
     RunExperimentResult,

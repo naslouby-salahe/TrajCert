@@ -501,7 +501,7 @@ def _rho_from_persisted_tau(
 def _family_primary_artifact(cells: tuple[PlannedCell, ...]) -> ArtifactKey:
     if not cells:
         raise InvalidScientificDataError("theorem validation experiment has no cells")
-    from trajcert.experiments.execution import scientific_result_artifact_key
+    from trajcert.experiments.runner import scientific_result_artifact_key
 
     return scientific_result_artifact_key(cells[0])
 

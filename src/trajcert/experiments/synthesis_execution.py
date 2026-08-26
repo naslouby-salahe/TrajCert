@@ -2,16 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from trajcert.analysis.locality import (
+from trajcert.config import TrajCertConfig
+from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.plan import ExperimentPlan, PlannedCell
+from trajcert.experiments.runner import (
+    CellExecutionResult,
+    CellExecutor,
+    ExecutionContext,
     LocalValidityAuditResult,
     LocalValidityTarget,
     StaticComponentDependency,
     audit_local_validity_targets,
 )
-from trajcert.config import TrajCertConfig
-from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.plan import ExperimentPlan, PlannedCell
-from trajcert.experiments.runner import CellExecutionResult, CellExecutor, ExecutionContext
 from trajcert.experiments.synthesis import (
     PopulationUtilitySynthesis,
     TrajectoryOperationalGainSynthesis,
