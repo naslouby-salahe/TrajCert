@@ -64,7 +64,8 @@ def synthesize_trajectory_operational_gain(
     paired_series: tuple[PairedSeries, ...],
     config: TrajCertConfig,
 ) -> TrajectoryOperationalGainSynthesis:
-    expected_keys = _expected_family_keys(config)
+    expected_order = _expected_family_keys(config)
+    expected_keys = set(expected_order)
     supplied_keys = tuple(
         (series.law_name, float(series.sensitivity_budget), series.metric_name)
         for series in paired_series
@@ -77,7 +78,11 @@ def synthesize_trajectory_operational_gain(
         raise InvalidScientificDataError(
             f"trajectory operational gain family mismatch: missing={len(missing)}, extra={len(extra)}"
         )
-    raw_results = tuple(_infer_series(series, config) for series in paired_series)
+    series_by_key = {
+        (series.law_name, float(series.sensitivity_budget), series.metric_name): series
+        for series in paired_series
+    }
+    raw_results = tuple(_infer_series(series_by_key[key], config) for key in expected_order)
     adjusted = holm_adjust(
         MultiplicityTest(
             semantic_comparison_key=result.semantic_comparison_key,
@@ -168,7 +173,7 @@ def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferen
 
 def _expected_family_keys(
     config: TrajCertConfig,
-) -> set[tuple[LawName, float, PracticalMetric]]:
+) -> tuple[tuple[LawName, float, PracticalMetric], ...]:
     definition = next(
         item
         for item in authoritative_registry()
@@ -181,4 +186,4 @@ def _expected_family_keys(
     law_names = tuple(LAW_DISPLAY_NAMES[key] for key, _ in config.ordered_laws[:law_count])
     if len(law_names) != law_count:
         raise InvalidScientificDataError("configured law set cannot satisfy sequential utility registry")
-    return set(product(law_names, rho_values, tuple(PracticalMetric)))
+    return tuple(product(law_names, rho_values, tuple(PracticalMetric)))
