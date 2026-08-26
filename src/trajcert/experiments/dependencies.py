@@ -4,9 +4,19 @@ import ast
 from hashlib import sha256
 from pathlib import Path
 
+from trajcert.config import TrajCertConfig
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.plan import ExperimentPlan, PlannedCell
+from trajcert.experiments.runner import cell_completion_path
 from trajcert.provenance import ExperimentNameValue
-from trajcert.storage import DigestHex, SpecificationDigest, file_digest
+from trajcert.storage import (
+    DependencyFingerprint,
+    DigestHex,
+    SpecificationDigest,
+    file_digest,
+    model_digest,
+)
+from trajcert.types import NonNegativeInt
 
 _NON_SCIENTIFIC_MODULE_PREFIXES = (
     "trajcert.cli",
@@ -52,6 +62,10 @@ _PRODUCER_ROOTS = {
 }
 
 
+def scientific_specification_digest(config: TrajCertConfig) -> SpecificationDigest:
+    return SpecificationDigest(str(model_digest(config)))
+
+
 def producer_component_digest(
     workspace_root: Path,
     experiment_name: ExperimentNameValue,
@@ -72,14 +86,51 @@ def producer_component_digest(
 
 
 def scientific_dependency_digest(
-    scientific_specification_digest: SpecificationDigest,
+    scientific_specification: SpecificationDigest,
     semantic_cell_key: str,
     component_digest: DigestHex,
 ) -> SpecificationDigest:
-    payload = (
-        f"{scientific_specification_digest}|{semantic_cell_key}|{component_digest}"
-    ).encode("utf-8")
+    payload = f"{scientific_specification}|{semantic_cell_key}|{component_digest}".encode(
+        "utf-8"
+    )
     return SpecificationDigest(sha256(payload).hexdigest())
+
+
+def cell_dependency_fingerprint(
+    workspace_root: Path,
+    plan: ExperimentPlan,
+    cell: PlannedCell,
+    scientific_dependency: SpecificationDigest,
+) -> DependencyFingerprint:
+    required = set(cell.required_experiments)
+    parents = tuple(
+        item for item in plan.cells if item.identity.experiment_name in required
+    )
+    parent_digests = tuple(
+        str(file_digest(cell_completion_path(parent, workspace_root)))
+        for parent in parents
+        if cell_completion_path(parent, workspace_root).is_file()
+    )
+    payload = "|".join(
+        (
+            str(cell.identity.semantic_cell_key),
+            str(scientific_dependency),
+            *parent_digests,
+        )
+    )
+    return DependencyFingerprint(sha256(payload.encode("utf-8")).hexdigest())
+
+
+def expected_seed_count(
+    experiment_name: ExperimentNameValue,
+    config: TrajCertConfig,
+) -> NonNegativeInt:
+    name = str(experiment_name)
+    if name == "Anytime Coverage Stress":
+        return config.sequential.coverage.streams
+    if name == "Sequential Sensitivity Utility":
+        return config.sequential.utility.streams
+    return 0
 
 
 def _first_party_import_closure(workspace_root: Path, root: Path) -> tuple[Path, ...]:
