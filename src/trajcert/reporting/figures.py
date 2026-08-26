@@ -4,6 +4,7 @@ import struct
 import zlib
 from dataclasses import dataclass
 from html import escape
+from itertools import pairwise
 from math import isfinite, log2
 from pathlib import Path
 
@@ -499,16 +500,10 @@ def _polyline(
     *,
     dashed: bool = False,
 ) -> list[DrawCommand]:
-    commands: list[DrawCommand] = []
-    for left, right in zip(zip(xs, ys), zip(xs[1:], ys[1:]), strict=True):
-        commands.append(
-            Line(
-                Point(scale.map_x(left[0]), scale.map_y(left[1])),
-                Point(scale.map_x(right[0]), scale.map_y(right[1])),
-                dashed=dashed,
-            )
-        )
-    return commands
+    if len(xs) != len(ys):
+        raise InvalidScientificDataError("polyline x/y coordinates must have identical length")
+    points = tuple(Point(scale.map_x(x), scale.map_y(y)) for x, y in zip(xs, ys, strict=True))
+    return [Line(left, right, dashed=dashed) for left, right in pairwise(points)]
 
 
 def _unique_strings(table: pa.Table, column: str) -> tuple[str, ...]:
