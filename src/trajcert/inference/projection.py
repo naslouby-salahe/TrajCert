@@ -273,7 +273,9 @@ def _projection_search(
             termination_reason=ProjectionTerminationReason.ARITHMETIC_FALLBACK,
         )
     proven = _queue_upper(queue, incumbent, active)
-    reason = ProjectionTerminationReason.CONVERGED if not queue else ProjectionTerminationReason.NODE_CAP
+    reason = (
+        ProjectionTerminationReason.CONVERGED if not queue else ProjectionTerminationReason.NODE_CAP
+    )
     final_gap = None if incumbent is None else max(0.0, proven - incumbent)
     return _ProjectionSearch(
         proven_upper=proven,
@@ -365,7 +367,9 @@ def _intrinsic_search(
             point = _aggregate_midpoint(active, envelope)
             if point is not None:
                 harmful, correct, unresolved = point
-                summary = _summary_at_aggregates(envelope, harmful, correct, unresolved, comparison_guard)
+                summary = _summary_at_aggregates(
+                    envelope, harmful, correct, unresolved, comparison_guard
+                )
                 if summary is not None:
                     minimum = _minimum_profile_point(summary)
                     if minimum is not None and minimum[1] <= rho:
@@ -504,9 +508,7 @@ def _aggregate_midpoint(
     return harmful, correct, unresolved
 
 
-def _verified_compatibility_point(
-    box: _Box, envelope: ObservableSummaryEnvelope
-) -> float | None:
+def _verified_compatibility_point(box: _Box, envelope: ObservableSummaryEnvelope) -> float | None:
     point = _aggregate_midpoint(box, envelope)
     if point is None:
         return None
@@ -517,8 +519,7 @@ def _verified_compatibility_point(
         return None
     marginal_entropy = _mass_entropy_point(harmful_total, correct_total)
     resolved_entropy = sum(
-        _mass_entropy_point(left, right)
-        for left, right in zip(harmful, correct, strict=True)
+        _mass_entropy_point(left, right) for left, right in zip(harmful, correct, strict=True)
     )
     return max(0.0, marginal_entropy - resolved_entropy)
 
@@ -731,19 +732,61 @@ def _split_box(box: _Box, initial: _Box) -> tuple[_Box, _Box]:
     if dimension == 0:
         midpoint = (box.harmful_lower + box.harmful_upper) / 2.0
         return (
-            _Box(midpoint, box.harmful_upper, box.correct_lower, box.correct_upper, box.hidden_lower, box.hidden_upper),
-            _Box(box.harmful_lower, midpoint, box.correct_lower, box.correct_upper, box.hidden_lower, box.hidden_upper),
+            _Box(
+                midpoint,
+                box.harmful_upper,
+                box.correct_lower,
+                box.correct_upper,
+                box.hidden_lower,
+                box.hidden_upper,
+            ),
+            _Box(
+                box.harmful_lower,
+                midpoint,
+                box.correct_lower,
+                box.correct_upper,
+                box.hidden_lower,
+                box.hidden_upper,
+            ),
         )
     if dimension == 1:
         midpoint = (box.correct_lower + box.correct_upper) / 2.0
         return (
-            _Box(box.harmful_lower, box.harmful_upper, midpoint, box.correct_upper, box.hidden_lower, box.hidden_upper),
-            _Box(box.harmful_lower, box.harmful_upper, box.correct_lower, midpoint, box.hidden_lower, box.hidden_upper),
+            _Box(
+                box.harmful_lower,
+                box.harmful_upper,
+                midpoint,
+                box.correct_upper,
+                box.hidden_lower,
+                box.hidden_upper,
+            ),
+            _Box(
+                box.harmful_lower,
+                box.harmful_upper,
+                box.correct_lower,
+                midpoint,
+                box.hidden_lower,
+                box.hidden_upper,
+            ),
         )
     midpoint = (box.hidden_lower + box.hidden_upper) / 2.0
     return (
-        _Box(box.harmful_lower, box.harmful_upper, box.correct_lower, box.correct_upper, midpoint, box.hidden_upper),
-        _Box(box.harmful_lower, box.harmful_upper, box.correct_lower, box.correct_upper, box.hidden_lower, midpoint),
+        _Box(
+            box.harmful_lower,
+            box.harmful_upper,
+            box.correct_lower,
+            box.correct_upper,
+            midpoint,
+            box.hidden_upper,
+        ),
+        _Box(
+            box.harmful_lower,
+            box.harmful_upper,
+            box.correct_lower,
+            box.correct_upper,
+            box.hidden_lower,
+            midpoint,
+        ),
     )
 
 
