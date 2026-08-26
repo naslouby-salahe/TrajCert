@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from enum import StrEnum
 from time import perf_counter_ns
+from typing import cast
+
+from numpy.typing import NDArray
+import numpy as np
 
 from trajcert.config import TrajCertConfig
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
@@ -10,15 +14,13 @@ from trajcert.data.partitions import TrajectoryPartition, build_partition
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
 from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.experiments.anytime import run_sequential_trace
-from trajcert.math.bounds import sharp_risk_set
+from trajcert.math.bounds import SharpRiskSet, sharp_risk_set
 from trajcert.math.information import minimum_information_point, observed_timing_information
 from trajcert.types import (
     DomainModel,
     LawKey,
     RiskBudget,
-    RiskValue,
     ScientificState,
-    SeedIndex,
     SensitivityBudget,
 )
 
@@ -81,7 +83,7 @@ def evaluate_failure_boundary(
         root_atol=config.numerics.root_atol,
         identity_atol=config.numerics.identity_atol,
     )
-    state, upper, compatibility, intrinsic = _population_state(summary, solved, rho, beta)
+    state, upper, compatibility, intrinsic = _population_state(solved, rho, beta)
     return FailureBoundaryResult(
         axis=axis,
         level=str(level),
@@ -109,7 +111,7 @@ def evaluate_terminal_selection_asymmetry(
     rho = float(config.budgets.information_nats)
     beta = float(config.budgets.risk)
     solved = sharp_risk_set(summary, rho, config.numerics.root_atol, config.numerics.identity_atol)
-    state, upper, compatibility, intrinsic = _population_state(summary, solved, rho, beta)
+    state, upper, compatibility, intrinsic = _population_state(solved, rho, beta)
     return FailureBoundaryResult(
         axis=FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
         level=f"q1={q1},q0={q0}",
@@ -138,7 +140,7 @@ def evaluate_optimizer_node_budget(
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=SeedIndex(0),
+        stream_index=0,
         event_count=sample_size,
     )
     full_law = build_full_law(parameters, partition.band_count)
@@ -188,7 +190,7 @@ def _finite_sample_size(sample_size: int, config: TrajCertConfig) -> FailureBoun
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=SeedIndex(0),
+        stream_index=0,
         event_count=sample_size,
     )
     start = perf_counter_ns()
@@ -282,7 +284,11 @@ def _summary(
     )
 
 
-def _population_state(summary: ObservableSummary, solved, rho: SensitivityBudget, beta: RiskBudget):
+def _population_state(
+    solved: SharpRiskSet,
+    rho: SensitivityBudget,
+    beta: RiskBudget,
+) -> tuple[ScientificState, float, float | None, float | None]:
     compatibility = solved.solve_result.compatibility
     minimum = compatibility.minimum_information_point
     compatibility_floor = None if minimum is None else float(minimum.information_floor)
@@ -308,12 +314,18 @@ def _true_information(
 ) -> float:
     from trajcert.math.oracle import direct_mutual_information
 
+    harmful = _float_tuple(summary.harmful_by_band)
+    correct = _float_tuple(summary.correct_by_band)
     return float(
         direct_mutual_information(
-            tuple(float(value) for value in summary.harmful_by_band),
-            tuple(float(value) for value in summary.correct_by_band),
+            harmful,
+            correct,
             float(summary.unresolved_mass),
             hidden_terminal_harmful,
             config.numerics.oracle_digits,
         )
     )
+
+
+def _float_tuple(values: NDArray[np.float64]) -> tuple[float, ...]:
+    return tuple(cast(list[float], values.tolist()))
