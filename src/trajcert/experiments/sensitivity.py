@@ -10,9 +10,13 @@ from trajcert.data.summaries import ObservableSummary
 from trajcert.data.synthetic import generate_stochastic_ledger
 from trajcert.experiments.anytime import SequentialCheckpoint, run_sequential_trace
 from trajcert.math.bounds import sharp_risk_set, unresolved_as_harm_upper
+from trajcert.math.information import observed_timing_information
 from trajcert.types import (
     CompatibilityRegime,
     DomainModel,
+    FiniteFloat,
+    InformationNats,
+    RiskValue,
     ScientificState,
     SeedIndex,
     SensitivityBudget,
@@ -22,10 +26,13 @@ from trajcert.types import (
 class PopulationUtilityResult(DomainModel):
     sensitivity_budget: SensitivityBudget
     compatibility_regime: CompatibilityRegime
-    risk_upper: float | None
-    unresolved_as_harm_upper: float
-    absolute_tightening: float | None
-    relative_unresolved_gain: float | None
+    tau: InformationNats | None
+    risk_lower: RiskValue | None
+    risk_upper: RiskValue | None
+    identified_width: FiniteFloat | None
+    unresolved_as_harm_upper: RiskValue
+    absolute_tightening: FiniteFloat | None
+    relative_unresolved_gain: FiniteFloat | None
     materially_nonvacuous: bool
 
 
@@ -59,18 +66,25 @@ def population_sensitivity_utility(
         root_atol=config.numerics.root_atol,
         identity_atol=config.numerics.identity_atol,
     )
+    tau_value = observed_timing_information(summary)
+    tau = None if tau_value is None else float(tau_value)
     worst = float(unresolved_as_harm_upper(summary))
     if solved.latent_risk is None:
         return PopulationUtilityResult(
             sensitivity_budget=sensitivity_budget,
             compatibility_regime=solved.solve_result.compatibility.regime,
+            tau=tau,
+            risk_lower=None,
             risk_upper=None,
+            identified_width=None,
             unresolved_as_harm_upper=worst,
             absolute_tightening=None,
             relative_unresolved_gain=None,
             materially_nonvacuous=False,
         )
+    lower = float(solved.latent_risk.lower)
     upper = float(solved.latent_risk.upper)
+    width = float(solved.latent_risk.width)
     tightening = worst - upper
     unresolved = float(summary.unresolved_mass)
     relative = None if unresolved == 0.0 else tightening / unresolved
@@ -83,7 +97,10 @@ def population_sensitivity_utility(
     return PopulationUtilityResult(
         sensitivity_budget=sensitivity_budget,
         compatibility_regime=solved.solve_result.compatibility.regime,
+        tau=tau,
+        risk_lower=lower,
         risk_upper=upper,
+        identified_width=width,
         unresolved_as_harm_upper=worst,
         absolute_tightening=tightening,
         relative_unresolved_gain=relative,
