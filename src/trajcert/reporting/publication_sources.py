@@ -22,11 +22,11 @@ from trajcert.experiments.inventory import (
     SyntheticLawRow,
 )
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
+from trajcert.experiments.runner import read_verified_scientific_result
 from trajcert.experiments.safety import SafetyCaseEvaluation
 from trajcert.experiments.scaling import ComputationalScalingResult
 from trajcert.experiments.sensitivity import PopulationUtilityResult
 from trajcert.experiments.solver_validation import SolverOracleComparison
-from trajcert.experiments.synthesis import read_verified_scientific_result
 from trajcert.experiments.timing import PartitionCoherenceResult
 from trajcert.math.information import (
     information_profile,
