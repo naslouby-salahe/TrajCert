@@ -444,7 +444,7 @@ def _projection_root_bracket_float(
             candidate = (left + right) / 2.0
         if candidate == current:
             midpoint = (left + right) / 2.0
-            if midpoint == left or midpoint == right:
+            if midpoint in (left, right):
                 break
             candidate = midpoint
         current = candidate

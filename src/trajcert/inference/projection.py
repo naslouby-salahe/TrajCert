@@ -22,6 +22,8 @@ from trajcert.types import (
     ToleranceValue,
 )
 
+_ENTROPY_MAXIMIZING_PROBABILITY = 0.5
+
 
 class ProjectionTerminationReason(StrEnum):
     EXACT_SINGLETON = "EXACT_SINGLETON"
@@ -243,14 +245,7 @@ def _projection_search(
                 heappush(queue, (-active.objective_upper, counter, active))
                 active = None
                 break
-            left, right = _split_box(active, initial)
-            for child in (left, right):
-                if not _box_possible(child, envelope):
-                    continue
-                if _sensitivity_lower(child, envelope) > rho:
-                    continue
-                counter += 1
-                heappush(queue, (-child.objective_upper, counter, child))
+            counter = _enqueue_projection_children(queue, counter, active, initial, envelope, rho)
             active = None
             proven_upper = _queue_upper(queue, incumbent)
             if incumbent is not None and proven_upper - incumbent <= gap:
@@ -287,6 +282,25 @@ def _projection_search(
     )
 
 
+def _enqueue_projection_children(
+    queue: list[tuple[float, int, _Box]],
+    counter: int,
+    box: _Box,
+    initial: _Box,
+    envelope: ObservableSummaryEnvelope,
+    rho: SensitivityBudget,
+) -> int:
+    left, right = _split_box(box, initial)
+    for child in (left, right):
+        if not _box_possible(child, envelope):
+            continue
+        if _sensitivity_lower(child, envelope) > rho:
+            continue
+        counter += 1
+        heappush(queue, (-child.objective_upper, counter, child))
+    return counter
+
+
 def _compatibility_search(
     envelope: ObservableSummaryEnvelope,
     gap: float,
@@ -319,15 +333,9 @@ def _compatibility_search(
                 heappush(queue, (lower, counter, active))
                 active = None
                 break
-            left, right = _split_box(active, initial)
-            for child in (left, right):
-                if not _box_possible(child, envelope):
-                    continue
-                child_lower = _compatibility_box_lower(child, envelope)
-                if child_lower >= best_upper:
-                    continue
-                counter += 1
-                heappush(queue, (child_lower, counter, child))
+            counter = _enqueue_compatibility_children(
+                queue, counter, active, initial, envelope, best_upper
+            )
             active = None
     except (ArithmeticError, ValueError, OverflowError, NumericalError):
         pass
@@ -338,6 +346,26 @@ def _compatibility_search(
     if proven == inf:
         proven = 0.0
     return _MinimumSearch(max(0.0, proven), _zero_resolved_plausible(envelope))
+
+
+def _enqueue_compatibility_children(
+    queue: list[tuple[float, int, _Box]],
+    counter: int,
+    box: _Box,
+    initial: _Box,
+    envelope: ObservableSummaryEnvelope,
+    best_upper: float,
+) -> int:
+    left, right = _split_box(box, initial)
+    for child in (left, right):
+        if not _box_possible(child, envelope):
+            continue
+        child_lower = _compatibility_box_lower(child, envelope)
+        if child_lower >= best_upper:
+            continue
+        counter += 1
+        heappush(queue, (child_lower, counter, child))
+    return counter
 
 
 def _intrinsic_search(
@@ -364,16 +392,9 @@ def _intrinsic_search(
             if lower >= best_upper or _sensitivity_lower(active, envelope) > rho:
                 active = None
                 continue
-            point = _aggregate_midpoint(active, envelope)
-            if point is not None:
-                harmful, correct, unresolved = point
-                summary = _summary_at_aggregates(
-                    envelope, harmful, correct, unresolved, comparison_guard
-                )
-                if summary is not None:
-                    minimum = _minimum_profile_point(summary)
-                    if minimum is not None and minimum[1] <= rho:
-                        best_upper = min(best_upper, minimum[0])
+            best_upper = _update_intrinsic_best_upper(
+                active, envelope, rho, comparison_guard, best_upper
+            )
             global_lower = min(lower, queue[0][0] if queue else lower)
             if best_upper < inf and best_upper - global_lower <= gap:
                 return _MinimumSearch(_unit(global_lower), False)
@@ -382,17 +403,9 @@ def _intrinsic_search(
                 heappush(queue, (lower, counter, active))
                 active = None
                 break
-            left, right = _split_box(active, initial)
-            for child in (left, right):
-                if not _box_possible(child, envelope):
-                    continue
-                if _sensitivity_lower(child, envelope) > rho:
-                    continue
-                child_lower = _intrinsic_box_lower(child)
-                if child_lower >= best_upper:
-                    continue
-                counter += 1
-                heappush(queue, (child_lower, counter, child))
+            counter = _enqueue_intrinsic_children(
+                queue, counter, active, initial, envelope, rho, best_upper
+            )
             active = None
     except (ArithmeticError, ValueError, OverflowError, NumericalError):
         pass
@@ -403,6 +416,49 @@ def _intrinsic_search(
     if proven == inf:
         proven = 0.0
     return _MinimumSearch(_unit(proven), False)
+
+
+def _update_intrinsic_best_upper(
+    box: _Box,
+    envelope: ObservableSummaryEnvelope,
+    rho: SensitivityBudget,
+    comparison_guard: float | ToleranceValue,
+    best_upper: float,
+) -> float:
+    point = _aggregate_midpoint(box, envelope)
+    if point is None:
+        return best_upper
+    harmful, correct, unresolved = point
+    summary = _summary_at_aggregates(envelope, harmful, correct, unresolved, comparison_guard)
+    if summary is None:
+        return best_upper
+    minimum = _minimum_profile_point(summary)
+    if minimum is not None and minimum[1] <= rho:
+        return min(best_upper, minimum[0])
+    return best_upper
+
+
+def _enqueue_intrinsic_children(
+    queue: list[tuple[float, int, _Box]],
+    counter: int,
+    box: _Box,
+    initial: _Box,
+    envelope: ObservableSummaryEnvelope,
+    rho: SensitivityBudget,
+    best_upper: float,
+) -> int:
+    left, right = _split_box(box, initial)
+    for child in (left, right):
+        if not _box_possible(child, envelope):
+            continue
+        if _sensitivity_lower(child, envelope) > rho:
+            continue
+        child_lower = _intrinsic_box_lower(child)
+        if child_lower >= best_upper:
+            continue
+        counter += 1
+        heappush(queue, (child_lower, counter, child))
+    return counter
 
 
 def _initial_box(envelope: ObservableSummaryEnvelope) -> _Box:
@@ -548,24 +604,35 @@ def _verified_incumbent(
         return None
     hidden = hidden_upper
     if not _verified_information_feasible(summary, hidden, rho):
-        minimum = _minimum_profile_point(summary)
-        if minimum is None:
-            return None
-        minimum_hidden, minimum_information = minimum
-        if minimum_information > rho or minimum_hidden > hidden_upper:
-            return None
-        lower = max(hidden_lower, minimum_hidden)
-        upper = hidden_upper
-        for _ in range(80):
-            candidate = (lower + upper) / 2.0
-            if _verified_information_feasible(summary, candidate, rho):
-                lower = candidate
-            else:
-                upper = candidate
-        hidden = lower
-        if not _verified_information_feasible(summary, hidden, rho):
+        hidden = _bisected_hidden_mass(summary, hidden_lower, hidden_upper, rho)
+        if hidden is None:
             return None
     return _unit(harmful + hidden)
+
+
+def _bisected_hidden_mass(
+    summary: ObservableSummary,
+    hidden_lower: float,
+    hidden_upper: float,
+    rho: SensitivityBudget,
+) -> float | None:
+    minimum = _minimum_profile_point(summary)
+    if minimum is None:
+        return None
+    minimum_hidden, minimum_information = minimum
+    if minimum_information > rho or minimum_hidden > hidden_upper:
+        return None
+    lower = max(hidden_lower, minimum_hidden)
+    upper = hidden_upper
+    for _ in range(80):
+        candidate = (lower + upper) / 2.0
+        if _verified_information_feasible(summary, candidate, rho):
+            lower = candidate
+        else:
+            upper = candidate
+    if not _verified_information_feasible(summary, lower, rho):
+        return None
+    return lower
 
 
 def _summary_at_aggregates(
@@ -619,7 +686,6 @@ def _verified_information_feasible(
 
 def _information_point_arb(summary: ObservableSummary, hidden: float) -> arb:
     harmful = float(summary.resolved_harmful_mass)
-    correct = float(summary.resolved_correct_mass)
     unresolved = float(summary.unresolved_mass)
     theta_entropy = _binary_entropy_arb(_arb_exact(harmful + hidden))
     resolved_entropy = arb(0)
@@ -663,7 +729,7 @@ def _binary_entropy_bounds(lower: float, upper: float) -> tuple[float, float]:
     right = _binary_entropy_point_arb(upper)
     minimum = min(_arb_lower(left), _arb_lower(right))
     maximum = max(_arb_upper(left), _arb_upper(right))
-    if lower <= 0.5 <= upper:
+    if lower <= _ENTROPY_MAXIMIZING_PROBABILITY <= upper:
         maximum = max(maximum, _arb_upper(arb(2).log()))
     return max(0.0, minimum), max(0.0, maximum)
 

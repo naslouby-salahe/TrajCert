@@ -23,6 +23,7 @@ from trajcert.types import DomainModel, LawKey
 
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 _OUTER_SAMPLE_SIZE = 500
+_MINIMUM_SAMPLES_FOR_STANDARD_DEVIATION = 2
 
 
 class ScalingTarget(StrEnum):
@@ -112,7 +113,9 @@ def _benchmark_target(
         iqr_runtime_seconds=float(quartiles[1] - quartiles[0]),
         mean_runtime_seconds=float(mean(runtimes)),
         sample_sd_runtime_seconds=(
-            0.0 if len(runtimes) < 2 else float(stdev(float(value) for value in runtimes))
+            0.0
+            if len(runtimes) < _MINIMUM_SAMPLES_FOR_STANDARD_DEVIATION
+            else float(stdev(float(value) for value in runtimes))
         ),
         peak_rss_mib=max(measurement.peak_rss_mib for measurement in measurements),
         median_root_iterations=(None if not root_iterations else float(median(root_iterations))),

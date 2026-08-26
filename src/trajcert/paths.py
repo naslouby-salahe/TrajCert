@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from math import isnan
 from pathlib import Path
 from typing import NewType
 
@@ -63,8 +64,12 @@ def semantic_slug(value: str) -> CoordinateToken:
     return CoordinateToken(rendered)
 
 
+_MAX_FIXED_NOTATION_EXPONENT = 21
+_MIN_FIXED_NOTATION_EXPONENT = -6
+
+
 def canonical_number_token(value: float) -> CoordinateToken:
-    if value != value or value in (float("inf"), float("-inf")):
+    if isnan(value) or value in (float("inf"), float("-inf")):
         raise SerializationError("semantic numeric path coordinate must be finite")
     if value == 0.0:
         return CoordinateToken("0")
@@ -91,11 +96,11 @@ def canonical_number_token(value: float) -> CoordinateToken:
     n = decimal_position + exponent
     digits = digits.rstrip("0") or "0"
     k = len(digits)
-    if k <= n <= 21:
+    if k <= n <= _MAX_FIXED_NOTATION_EXPONENT:
         token = digits + "0" * (n - k)
-    elif 0 < n <= 21:
+    elif 0 < n <= _MAX_FIXED_NOTATION_EXPONENT:
         token = digits[:n] + "." + digits[n:]
-    elif -6 < n <= 0:
+    elif _MIN_FIXED_NOTATION_EXPONENT < n <= 0:
         token = "0." + "0" * (-n) + digits
     else:
         mantissa = digits[0] if k == 1 else f"{digits[0]}.{digits[1:]}"

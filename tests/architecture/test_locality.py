@@ -16,6 +16,8 @@ from trajcert.provenance import ProducerComponentName
 from trajcert.storage import ArtifactKey
 from trajcert.types import ActionChannelId, ClientId, EpochId
 
+_EXPECTED_MULTI_ROOT_AUDITED_ROOT_COUNT = 2
+
 
 def test_local_bound_lineage_accepts_only_target_identity() -> None:
     identity = _identity()
@@ -98,7 +100,7 @@ def test_multi_root_audit_aggregates_all_bound_roots_and_violations() -> None:
         _static_dependencies(identity.client_id),
         targets,
     )
-    assert result.audited_root_count == 2
+    assert result.audited_root_count == _EXPECTED_MULTI_ROOT_AUDITED_ROOT_COUNT
     assert not result.runtime_lineage_pass
     assert result.foreign_scientific_parent_count == 1
     assert result.violating_artifact_keys == (foreign_parent.artifact_key,)

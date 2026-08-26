@@ -28,6 +28,7 @@ from trajcert.data.summaries import (
     summarize_observable_masses,
 )
 from trajcert.data.synthetic import (
+    CategoryIndex,
     ObservableCategoryProbability,
     balanced_prefix,
     generate_balanced_prefix_ledger,
@@ -1067,7 +1068,7 @@ def _population_summary(
     config: TrajCertConfig,
     law_key: LawKey,
     partition: TrajectoryPartition,
-):
+) -> ObservableSummary:
     parameters = _law(config, law_key)
     return summarize_full_law(
         partition,
@@ -1100,7 +1101,7 @@ def _hand_identity(case_index: int) -> LedgerIdentity:
 def _matured_sequence(
     identity: LedgerIdentity,
     categories: tuple[ObservableCategoryProbability, ...],
-    sequence,
+    sequence: tuple[CategoryIndex, ...],
 ) -> tuple[MaturedEvent, ...]:
     events: list[MaturedEvent] = []
     for index, category_index in enumerate(sequence):

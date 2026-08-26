@@ -16,6 +16,7 @@ from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.experiments.anytime import run_sequential_trace
 from trajcert.math.bounds import SharpRiskSet, sharp_risk_set
 from trajcert.math.information import minimum_information_point, observed_timing_information
+from trajcert.math.oracle import direct_mutual_information
 from trajcert.types import (
     DomainModel,
     LawKey,
@@ -318,8 +319,6 @@ def _true_information(
     hidden_terminal_harmful: float,
     config: TrajCertConfig,
 ) -> float:
-    from trajcert.math.oracle import direct_mutual_information
-
     harmful = _float_tuple(summary.harmful_by_band)
     correct = _float_tuple(summary.correct_by_band)
     return float(

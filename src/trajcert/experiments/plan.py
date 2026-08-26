@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from itertools import pairwise, product
 
 from pydantic import model_validator
@@ -33,6 +34,8 @@ from trajcert.types import (
 _SHARP_SET_OFFSETS = (0.0, 0.005, 0.025, 0.1)
 _ORACLE_OFFSETS = (0.0, 0.0025, 0.01, 0.05, 0.15)
 _TIMING_OFFSETS = (0.005, 0.025, 0.1)
+_POPULATION_RHO_VALUE_COUNT = 15
+_FAILURE_BOUNDARY_LEVELS_PER_AXIS = 7
 _SAFETY_CASES = (
     "below-resolved-harmful-mass",
     "between-resolved-mass-and-intrinsic-boundary",
@@ -152,184 +155,265 @@ def _expand_definition(
 def _coordinates_for_definition(
     definition: ExperimentDefinition, config: TrajCertConfig
 ) -> tuple[SemanticCoordinates, ...]:
-    name = str(definition.experiment_name)
-    laws = _law_names(config)
-    partitions = _partition_names(config)
-    adjacent_pairs = tuple(
-        ComparisonPairName(f"{fine} -> {coarse}") for fine, coarse in pairwise(partitions)
-    )
-    utility_laws = tuple(
-        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
-    )
     if definition.declared_cells == 0:
         return ()
-    if name == "Scientific and Data Inventory":
-        return (_variant("protocol-inventory-gate"),)
-    if name == "Legacy Partition Incoherence Check":
-        legacy = config.study_design.legacy_partition_incoherence
-        return tuple(
-            SemanticCoordinates(
-                gamma=gamma,
-                variant_name=VariantName(f"q={q}"),
-            )
-            for gamma, q in product(legacy.gamma, legacy.q)
+    name = str(definition.experiment_name)
+    handler = _COORDINATE_DISPATCH.get(name)
+    if handler is None:
+        raise ValueError(f"no plan expansion implementation for registry experiment: {name}")
+    return handler(config)
+
+
+def _adjacent_partition_pairs(config: TrajCertConfig) -> tuple[ComparisonPairName, ...]:
+    return tuple(
+        ComparisonPairName(f"{fine} -> {coarse}")
+        for fine, coarse in pairwise(_partition_names(config))
+    )
+
+
+def _utility_and_coherence_laws(config: TrajCertConfig) -> tuple[LawName, ...]:
+    return tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
+
+
+def _coordinates_scientific_and_data_inventory(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    del config
+    return (_variant("protocol-inventory-gate"),)
+
+
+def _coordinates_legacy_partition_incoherence_check(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    legacy = config.study_design.legacy_partition_incoherence
+    return tuple(
+        SemanticCoordinates(gamma=gamma, variant_name=VariantName(f"q={q}"))
+        for gamma, q in product(legacy.gamma, legacy.q)
+    )
+
+
+def _coordinates_law_and_partition_product(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
+        for law, partition in product(_law_names(config), _partition_names(config))
+    )
+
+
+def _coordinates_sharp_set_constructive_identity(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(
+            synthetic_law_name=law,
+            partition_name=partition,
+            sensitivity_coordinate=_offset_coordinate(offset),
         )
-    if name in {
-        "Path Information Decomposition",
-        "Information Profile Convexity",
-        "Minimum Compatibility Identity",
-    }:
-        return tuple(
-            SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
-            for law, partition in product(laws, partitions)
+        for law, partition, offset in product(
+            _law_names(config), _partition_names(config), _SHARP_SET_OFFSETS
         )
-    if name == "Sharp-Set Constructive Identity":
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=law,
-                partition_name=partition,
-                sensitivity_coordinate=_offset_coordinate(offset),
-            )
-            for law, partition, offset in product(laws, partitions, _SHARP_SET_OFFSETS)
+    )
+
+
+def _coordinates_refinement_dominance_identity(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, comparison_pair_name=pair)
+        for law, pair in product(_law_names(config), _adjacent_partition_pairs(config))
+    )
+
+
+def _coordinates_strict_timing_gain(config: TrajCertConfig) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(
+            synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
+            comparison_pair_name=ComparisonPairName(
+                f"{partition_name(case.fine_bands)} -> {partition_name(case.coarse_bands)}"
+            ),
+            sensitivity_coordinate=_offset_coordinate(offset),
         )
-    if name == "Refinement Dominance Identity":
-        return tuple(
-            SemanticCoordinates(synthetic_law_name=law, comparison_pair_name=pair)
-            for law, pair in product(laws, adjacent_pairs)
+        for case, offset in product(config.study_design.strict_timing_cases, _TIMING_OFFSETS)
+    )
+
+
+def _coordinates_safety_boundary_identity(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, variant_name=VariantName(safety_case))
+        for law, safety_case in product(_law_names(config), _SAFETY_CASES)
+    )
+
+
+def _coordinates_endpoint_special_case_identity(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    endpoint = _partition_names(config)[-1]
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, partition_name=endpoint)
+        for law in _law_names(config)
+    )
+
+
+def _coordinates_anytime_projection_proof_check(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    del config
+    return (_variant("projection-proof-record"),)
+
+
+def _coordinates_population_complexity_proof_check(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    del config
+    return (_variant("population-operation-count-record"),)
+
+
+def _coordinates_production_solver_vs_independent_oracle(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(
+            synthetic_law_name=law,
+            partition_name=partition,
+            sensitivity_coordinate=_offset_coordinate(offset),
         )
-    if name in {"Strict Timing-Gain Identity", "Strict Timing Gain"}:
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
-                comparison_pair_name=ComparisonPairName(
-                    f"{partition_name(case.fine_bands)} -> {partition_name(case.coarse_bands)}"
-                ),
-                sensitivity_coordinate=_offset_coordinate(offset),
-            )
-            for case, offset in product(config.study_design.strict_timing_cases, _TIMING_OFFSETS)
+        for law, partition, offset in product(
+            _law_names(config), _partition_names(config), _ORACLE_OFFSETS
         )
-    if name == "Safety-Boundary Identity":
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=law,
-                variant_name=VariantName(safety_case),
-            )
-            for law, safety_case in product(laws, _SAFETY_CASES)
+    )
+
+
+def _coordinates_comparator_reduction(config: TrajCertConfig) -> tuple[SemanticCoordinates, ...]:
+    finest = _partition_names(config)[0]
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, partition_name=finest)
+        for law in _law_names(config)
+    )
+
+
+def _coordinates_partition_coherence(config: TrajCertConfig) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(
+            synthetic_law_name=law,
+            comparison_pair_name=pair,
+            sensitivity_coordinate=_offset_coordinate(offset),
         )
-    if name == "Endpoint Special-Case Identity":
-        endpoint = partitions[-1]
-        return tuple(
-            SemanticCoordinates(synthetic_law_name=law, partition_name=endpoint) for law in laws
+        for law, pair, offset in product(
+            _utility_and_coherence_laws(config), _adjacent_partition_pairs(config), _TIMING_OFFSETS
         )
-    if name == "Anytime Projection Proof Check":
-        return (_variant("projection-proof-record"),)
-    if name == "Population Complexity Proof Check":
-        return (_variant("population-operation-count-record"),)
-    if name == "Production Solver vs Independent Oracle":
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=law,
-                partition_name=partition,
-                sensitivity_coordinate=_offset_coordinate(offset),
-            )
-            for law, partition, offset in product(laws, partitions, _ORACLE_OFFSETS)
+    )
+
+
+def _coordinates_same_endpoint_different_timing(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    comparison = ComparisonPairName(
+        "Same endpoint without timing information|Same endpoint with timing information"
+    )
+    return tuple(
+        SemanticCoordinates(comparison_pair_name=comparison, partition_name=partition, rho=rho)
+        for partition, rho in product(_partition_names(config), config.grids.same_endpoint_rho)
+    )
+
+
+def _coordinates_compatibility_floor_behavior(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    partitions = _partition_names(config)
+    selected_partitions = (partitions[0], partitions[-1])
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
+        for law, partition in product(_law_names(config), selected_partitions)
+    )
+
+
+def _coordinates_sharpness_against_generic_oracle(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    selected_laws = tuple(
+        LAW_DISPLAY_NAMES[key] for key in config.study_design.sharpness_oracle_laws
+    )
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
+        for law, partition in product(selected_laws, _partition_names(config))
+    )
+
+
+def _coordinates_safety_and_intrinsic_impossibility(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    selected_laws = tuple(
+        LAW_DISPLAY_NAMES[key] for key in config.study_design.safety_and_impossibility_laws
+    )
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, variant_name=VariantName(safety_case))
+        for law, safety_case in product(selected_laws, _SAFETY_CASES)
+    )
+
+
+def _coordinates_anytime_implementation_hand_cases(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(
+            variant_name=VariantName(f"hand-case-{case_index:02d}"),
+            partition_name=partition,
         )
-    if name in {
-        "Callback-Model Reduction Falsification",
-        "Generic Information-Optimization Reduction",
-    }:
-        finest = partitions[0]
-        return tuple(
-            SemanticCoordinates(synthetic_law_name=law, partition_name=finest) for law in laws
+        for case_index, partition in product(range(1, 11), _partition_names(config)[:3])
+    )
+
+
+def _coordinates_anytime_coverage_stress(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(
+            synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
+            partition_name=partition_name(case.band_count),
+            variant_name=VariantName(case.name),
         )
-    if name == "Partition Coherence":
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=law,
-                comparison_pair_name=pair,
-                sensitivity_coordinate=_offset_coordinate(offset),
-            )
-            for law, pair, offset in product(utility_laws, adjacent_pairs, _TIMING_OFFSETS)
+        for case in config.study_design.coverage_stress_cases
+    )
+
+
+def _coordinates_population_sensitivity_utility(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    rho_values = _population_rho_values(config)
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, partition_name=partition, rho=rho)
+        for law, partition, rho in product(
+            _utility_and_coherence_laws(config), _partition_names(config), rho_values
         )
-    if name == "Same Endpoint, Different Timing":
-        comparison = ComparisonPairName(
-            "Same endpoint without timing information|Same endpoint with timing information"
-        )
-        return tuple(
-            SemanticCoordinates(
-                comparison_pair_name=comparison,
-                partition_name=partition,
-                rho=rho,
-            )
-            for partition, rho in product(partitions, config.grids.same_endpoint_rho)
-        )
-    if name == "Compatibility Floor Behavior":
-        selected_partitions = (partitions[0], partitions[-1])
-        return tuple(
-            SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
-            for law, partition in product(laws, selected_partitions)
-        )
-    if name == "Sharpness Against Generic Oracle":
-        selected_laws = tuple(
-            LAW_DISPLAY_NAMES[key] for key in config.study_design.sharpness_oracle_laws
-        )
-        return tuple(
-            SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
-            for law, partition in product(selected_laws, partitions)
-        )
-    if name == "Safety and Intrinsic Impossibility":
-        selected_laws = tuple(
-            LAW_DISPLAY_NAMES[key] for key in config.study_design.safety_and_impossibility_laws
-        )
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=law,
-                variant_name=VariantName(safety_case),
-            )
-            for law, safety_case in product(selected_laws, _SAFETY_CASES)
-        )
-    if name == "Anytime Implementation Hand Cases":
-        return tuple(
-            SemanticCoordinates(
-                variant_name=VariantName(f"hand-case-{case_index:02d}"),
-                partition_name=partition,
-            )
-            for case_index, partition in product(range(1, 11), partitions[:3])
-        )
-    if name == "Anytime Coverage Stress":
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
-                partition_name=partition_name(case.band_count),
-                variant_name=VariantName(case.name),
-            )
-            for case in config.study_design.coverage_stress_cases
-        )
-    if name == "Population Sensitivity Utility":
-        rho_values = _population_rho_values(config)
-        return tuple(
-            SemanticCoordinates(
-                synthetic_law_name=law,
-                partition_name=partition,
-                rho=rho,
-            )
-            for law, partition, rho in product(utility_laws, partitions, rho_values)
-        )
-    if name == "Sequential Sensitivity Utility":
-        return tuple(
-            SemanticCoordinates(synthetic_law_name=law, rho=rho)
-            for law, rho in product(utility_laws, config.sequential.utility.rho)
-        )
-    if name == "Failure Boundary Atlas":
-        return _failure_boundary_coordinates(config)
-    if name == "Computational Scaling":
-        return tuple(
-            SemanticCoordinates(scaling_band_count=band_count)
-            for band_count in config.grids.scaling_bands
-        )
-    if name == "Statistical Synthesis":
-        return (_variant("deterministic-synthesis"),)
-    raise ValueError(f"no plan expansion implementation for registry experiment: {name}")
+    )
+
+
+def _coordinates_sequential_sensitivity_utility(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(synthetic_law_name=law, rho=rho)
+        for law, rho in product(_utility_and_coherence_laws(config), config.sequential.utility.rho)
+    )
+
+
+def _coordinates_computational_scaling(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    return tuple(
+        SemanticCoordinates(scaling_band_count=band_count)
+        for band_count in config.grids.scaling_bands
+    )
+
+
+def _coordinates_statistical_synthesis(
+    config: TrajCertConfig,
+) -> tuple[SemanticCoordinates, ...]:
+    del config
+    return (_variant("deterministic-synthesis"),)
 
 
 def _law_names(config: TrajCertConfig) -> tuple[LawName, ...]:
@@ -347,7 +431,7 @@ def _population_rho_values(config: TrajCertConfig) -> tuple[SensitivityBudget, .
         rho_values = values
     else:
         rho_values = (*values, binary_endpoint)
-    if len(rho_values) != 15:
+    if len(rho_values) != _POPULATION_RHO_VALUE_COUNT:
         raise ValueError("Population Sensitivity Utility requires exactly 15 rho values")
     return rho_values
 
@@ -365,16 +449,16 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
     )
     coordinates: list[SemanticCoordinates] = []
     for axis_name, levels in configured_axes:
-        if len(levels) != 7:
+        if len(levels) != _FAILURE_BOUNDARY_LEVELS_PER_AXIS:
             raise ValueError(f"failure-boundary axis {axis_name} must contain exactly seven levels")
-        for level in levels:
-            coordinates.append(
-                SemanticCoordinates(
-                    failure_boundary_axis_and_level=FailureBoundaryCoordinate(
-                        f"{axis_name}={_signed_level(axis_name, level)}"
-                    )
+        coordinates.extend(
+            SemanticCoordinates(
+                failure_boundary_axis_and_level=FailureBoundaryCoordinate(
+                    f"{axis_name}={_signed_level(axis_name, level)}"
                 )
             )
+            for level in levels
+        )
     for q1, q0 in config.failure_boundary.terminal_selection_asymmetry:
         coordinates.append(
             SemanticCoordinates(
@@ -384,6 +468,38 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
             )
         )
     return tuple(coordinates)
+
+
+_COORDINATE_DISPATCH: dict[str, Callable[[TrajCertConfig], tuple[SemanticCoordinates, ...]]] = {
+    "Scientific and Data Inventory": _coordinates_scientific_and_data_inventory,
+    "Legacy Partition Incoherence Check": _coordinates_legacy_partition_incoherence_check,
+    "Path Information Decomposition": _coordinates_law_and_partition_product,
+    "Information Profile Convexity": _coordinates_law_and_partition_product,
+    "Minimum Compatibility Identity": _coordinates_law_and_partition_product,
+    "Sharp-Set Constructive Identity": _coordinates_sharp_set_constructive_identity,
+    "Refinement Dominance Identity": _coordinates_refinement_dominance_identity,
+    "Strict Timing-Gain Identity": _coordinates_strict_timing_gain,
+    "Strict Timing Gain": _coordinates_strict_timing_gain,
+    "Safety-Boundary Identity": _coordinates_safety_boundary_identity,
+    "Endpoint Special-Case Identity": _coordinates_endpoint_special_case_identity,
+    "Anytime Projection Proof Check": _coordinates_anytime_projection_proof_check,
+    "Population Complexity Proof Check": _coordinates_population_complexity_proof_check,
+    "Production Solver vs Independent Oracle": _coordinates_production_solver_vs_independent_oracle,
+    "Callback-Model Reduction Falsification": _coordinates_comparator_reduction,
+    "Generic Information-Optimization Reduction": _coordinates_comparator_reduction,
+    "Partition Coherence": _coordinates_partition_coherence,
+    "Same Endpoint, Different Timing": _coordinates_same_endpoint_different_timing,
+    "Compatibility Floor Behavior": _coordinates_compatibility_floor_behavior,
+    "Sharpness Against Generic Oracle": _coordinates_sharpness_against_generic_oracle,
+    "Safety and Intrinsic Impossibility": _coordinates_safety_and_intrinsic_impossibility,
+    "Anytime Implementation Hand Cases": _coordinates_anytime_implementation_hand_cases,
+    "Anytime Coverage Stress": _coordinates_anytime_coverage_stress,
+    "Population Sensitivity Utility": _coordinates_population_sensitivity_utility,
+    "Sequential Sensitivity Utility": _coordinates_sequential_sensitivity_utility,
+    "Failure Boundary Atlas": _failure_boundary_coordinates,
+    "Computational Scaling": _coordinates_computational_scaling,
+    "Statistical Synthesis": _coordinates_statistical_synthesis,
+}
 
 
 def _signed_level(axis_name: str, level: float | int) -> str:

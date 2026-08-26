@@ -67,17 +67,7 @@ def inspect_cell_status(
         )
     completion_path = cell_completion_path(cell, context.workspace_root)
     if completion_path.is_file():
-        if completion_is_compatible(cell, context, completion_path):
-            return CellStatus(
-                semantic_cell_key=key,
-                state=PublicExecutionState.COMPLETED,
-                reason=None,
-            )
-        return CellStatus(
-            semantic_cell_key=key,
-            state=PublicExecutionState.BLOCKED,
-            reason=ReasonCode("STALE_OR_INCOMPATIBLE_COMPLETION"),
-        )
+        return _completion_status(key, cell, context, completion_path)
     if cell_running_path(cell, context.workspace_root).is_file():
         return CellStatus(
             semantic_cell_key=key,
@@ -93,6 +83,25 @@ def inspect_cell_status(
         semantic_cell_key=key,
         state=PublicExecutionState.READY,
         reason=None,
+    )
+
+
+def _completion_status(
+    key: str,
+    cell: PlannedCell,
+    context: ExecutionContext,
+    completion_path: Path,
+) -> CellStatus:
+    if completion_is_compatible(cell, context, completion_path):
+        return CellStatus(
+            semantic_cell_key=key,
+            state=PublicExecutionState.COMPLETED,
+            reason=None,
+        )
+    return CellStatus(
+        semantic_cell_key=key,
+        state=PublicExecutionState.BLOCKED,
+        reason=ReasonCode("STALE_OR_INCOMPATIBLE_COMPLETION"),
     )
 
 
@@ -155,9 +164,9 @@ def _aggregate_state(counts: StateCounts, declared_cells: NonNegativeInt) -> Pub
         return PublicExecutionState.BLOCKED
     if counts.completed_cells + counts.invalid_cells == declared_cells:
         return PublicExecutionState.COMPLETED
-    if counts.ready_cells > 0:
-        return PublicExecutionState.READY
-    return PublicExecutionState.NOT_STARTED
+    return (
+        PublicExecutionState.READY if counts.ready_cells > 0 else PublicExecutionState.NOT_STARTED
+    )
 
 
 def _state_counts(statuses: tuple[CellStatus, ...]) -> StateCounts:

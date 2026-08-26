@@ -136,7 +136,7 @@ def _atomic_write_bytes(path: Path, payload: bytes) -> None:
             stream.flush()
             os.fsync(stream.fileno())
             temporary_path = Path(stream.name)
-        os.replace(temporary_path, path)
+        _ = temporary_path.replace(path)
         directory_descriptor = os.open(path.parent, os.O_RDONLY)
         try:
             os.fsync(directory_descriptor)
@@ -153,21 +153,33 @@ def _canonical_json(value: JsonValue) -> str:
         return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
-    if isinstance(value, int):
-        return str(value)
-    if isinstance(value, float):
-        if not isfinite(value):
-            raise SerializationError("canonical JSON forbids NaN and infinities")
-        return str(canonical_number_token(value))
+    if isinstance(value, int | float):
+        return _canonical_json_number(value)
     if isinstance(value, str):
         return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
     if isinstance(value, Mapping):
-        entries: list[str] = []
-        for key in sorted(value):
-            if not isinstance(key, str):
-                raise SerializationError("canonical JSON object keys must be strings")
-            entries.append(f"{_canonical_json(key)}:{_canonical_json(value[key])}")
-        return "{" + ",".join(entries) + "}"
+        return _canonical_json_object(value)
     if isinstance(value, Sequence):
-        return "[" + ",".join(_canonical_json(item) for item in value) + "]"
+        return _canonical_json_array(value)
     raise SerializationError("unsupported canonical JSON value")
+
+
+def _canonical_json_number(value: int | float) -> str:
+    if isinstance(value, int):
+        return str(value)
+    if not isfinite(value):
+        raise SerializationError("canonical JSON forbids NaN and infinities")
+    return str(canonical_number_token(value))
+
+
+def _canonical_json_object(value: Mapping[str, JsonValue]) -> str:
+    entries: list[str] = []
+    for key in sorted(value):
+        if not isinstance(key, str):
+            raise SerializationError("canonical JSON object keys must be strings")
+        entries.append(f"{_canonical_json(key)}:{_canonical_json(value[key])}")
+    return "{" + ",".join(entries) + "}"
+
+
+def _canonical_json_array(value: Sequence[JsonValue]) -> str:
+    return "[" + ",".join(_canonical_json(item) for item in value) + "]"
