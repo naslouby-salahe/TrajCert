@@ -4,8 +4,8 @@ from pathlib import Path
 
 from trajcert.analysis.metrics import MetricName
 from trajcert.config import (
+    CoverageConfig,
     SequentialConfig,
-    SequentialCoverageConfig,
     SequentialUtilityConfig,
     TrajCertConfig,
 )
@@ -89,7 +89,7 @@ def test_source_data_parquet_roundtrip_preserves_aliases(tmp_path: Path) -> None
 
 
 def _small_runtime_config(config: TrajCertConfig) -> TrajCertConfig:
-    coverage = SequentialCoverageConfig(
+    coverage = CoverageConfig(
         streams=_RUNTIME_STREAMS,
         max_events=_RUNTIME_EVENTS,
         checkpoint_every=_RUNTIME_CHECKPOINT,
