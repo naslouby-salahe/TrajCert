@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from trajcert.analysis.metrics import MetricName
 from trajcert.config import (
     CoverageConfig,
@@ -12,11 +14,13 @@ from trajcert.config import (
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
+from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.dispatch import execute_phase_one_cell
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.provenance import ExperimentNameValue
 from trajcert.reporting.source_data import (
     AnalysisType,
+    PartitionTimingRow,
     RhoUtilityRow,
     read_source_data,
     write_source_data,
@@ -49,12 +53,23 @@ def test_recovered_scientific_families_dispatch() -> None:
         "Sharpness Against Generic Oracle",
         "Safety and Intrinsic Impossibility",
         "Population Sensitivity Utility",
-        "Sequential Sensitivity Utility",
     )
     for name in names:
         cell = cells_for_experiment(plan, ExperimentNameValue(name))[0]
         result = execute_phase_one_cell(cell, runtime)
         assert result is not None
+
+
+def test_sequential_utility_family_is_fully_planned() -> None:
+    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    plan = build_plan(config)
+    cells = cells_for_experiment(plan, ExperimentNameValue("Sequential Sensitivity Utility"))
+    expected_count = len(config.study_design.utility_and_coherence_laws) * len(
+        config.sequential.utility.rho
+    )
+    assert len(cells) == expected_count
+    assert all(cell.executable for cell in cells)
+    assert {cell.identity.coordinates.rho for cell in cells} == set(config.sequential.utility.rho)
 
 
 def test_coverage_stress_cells_match_authoritative_configuration() -> None:
@@ -82,7 +97,7 @@ def test_terminal_selection_failure_boundary_dispatches() -> None:
     assert result is not None
 
 
-def test_source_data_parquet_roundtrip_preserves_aliases(tmp_path: Path) -> None:
+def test_source_data_parquet_roundtrip_preserves_columns(tmp_path: Path) -> None:
     path = tmp_path / "rho-utility.parquet"
     row = RhoUtilityRow(
         analysis_type=AnalysisType.POPULATION,
@@ -98,6 +113,58 @@ def test_source_data_parquet_roundtrip_preserves_aliases(tmp_path: Path) -> None
     assert len(str(digest)) == 64
     assert table.num_rows == 1
     assert "materiality_pass" in table.column_names
+
+
+def test_source_data_parquet_uses_pass_serialization_alias(tmp_path: Path) -> None:
+    path = tmp_path / "partition-timing.parquet"
+    row = PartitionTimingRow(
+        law_name=LawName("law"),
+        coarse_partition="4-band partition",
+        fine_partition="8-band partition",
+        rho=0.05,
+        tau_coarse=0.01,
+        tau_fine=0.02,
+        delta_tau=0.01,
+        coarse_risk_upper=0.3,
+        fine_risk_upper=0.2,
+        bound_gain=0.1,
+        fine_subset_coarse=True,
+        theorem_condition=True,
+        passed=True,
+    )
+    _ = write_source_data(path, (row,))
+    table = read_source_data(path)
+    assert "pass" in table.column_names
+    assert "passed" not in table.column_names
+
+
+def test_source_data_rejects_mixed_row_schemas(tmp_path: Path) -> None:
+    rho_row = RhoUtilityRow(
+        analysis_type=AnalysisType.POPULATION,
+        law_name=LawName("law"),
+        rho=0.05,
+        partition_name="8-band partition",
+        metric_name=MetricName("risk upper"),
+        metric_value=0.1,
+        materiality_pass=True,
+    )
+    timing_row = PartitionTimingRow(
+        law_name=LawName("law"),
+        coarse_partition="4-band partition",
+        fine_partition="8-band partition",
+        rho=0.05,
+        tau_coarse=0.01,
+        tau_fine=0.02,
+        delta_tau=0.01,
+        coarse_risk_upper=0.3,
+        fine_risk_upper=0.2,
+        bound_gain=0.1,
+        fine_subset_coarse=True,
+        theorem_condition=True,
+        passed=True,
+    )
+    with pytest.raises(InvalidScientificDataError, match="one row schema"):
+        write_source_data(tmp_path / "mixed.parquet", (rho_row, timing_row))
 
 
 def _small_runtime_config(config: TrajCertConfig) -> TrajCertConfig:
