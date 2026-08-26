@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import resource
 from enum import StrEnum
 from multiprocessing import get_context
@@ -9,6 +8,7 @@ from statistics import mean, median, stdev
 from time import perf_counter_ns
 
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
@@ -23,13 +23,6 @@ from trajcert.types import DomainModel, LawKey, SeedIndex
 
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 _OUTER_SAMPLE_SIZE = 500
-_SINGLE_THREAD_ENVIRONMENT = (
-    "OMP_NUM_THREADS",
-    "OPENBLAS_NUM_THREADS",
-    "MKL_NUM_THREADS",
-    "NUMEXPR_NUM_THREADS",
-)
-
 
 class ScalingTarget(StrEnum):
     POPULATION_SOLVER = "population-solver"
@@ -133,22 +126,12 @@ def _isolated_measurement(
 ) -> ScalingMeasurement:
     context = get_context("spawn")
     parent_connection, child_connection = context.Pipe(duplex=False)
-    saved = {name: os.environ.get(name) for name in _SINGLE_THREAD_ENVIRONMENT}
-    try:
-        for name in _SINGLE_THREAD_ENVIRONMENT:
-            os.environ[name] = "1"
-        process = context.Process(
-            target=_worker,
-            args=(child_connection, target, band_count, _worker_config_json(config)),
-        )
-        process.start()
-    finally:
-        child_connection.close()
-        for name, value in saved.items():
-            if value is None:
-                os.environ.pop(name, None)
-            else:
-                os.environ[name] = value
+    process = context.Process(
+        target=_worker,
+        args=(child_connection, target, band_count, _worker_config_json(config)),
+    )
+    process.start()
+    child_connection.close()
     process.join()
     if not parent_connection.poll():
         raise RuntimeError(f"isolated scaling worker exited without a result: {process.exitcode}")
@@ -173,10 +156,11 @@ def _worker(
     try:
         config = TrajCertConfig.model_validate_json(config_json)
         active_config.set(config)
-        start = perf_counter_ns()
-        root_iterations, outer_nodes = _execute_target(target, band_count, config)
-        runtime_ns = perf_counter_ns() - start
-        peak_rss_mib = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+        with threadpool_limits(limits=1):
+            start = perf_counter_ns()
+            root_iterations, outer_nodes = _execute_target(target, band_count, config)
+            runtime_ns = perf_counter_ns() - start
+            peak_rss_mib = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
         envelope = ScalingWorkerEnvelope(
             measurement=ScalingMeasurement(
                 target=target,
