@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from decimal import Decimal, localcontext
 from math import floor
+
+from mpmath import log, mp, mpf, sqrt
 
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
@@ -16,7 +17,7 @@ from trajcert.types import (
     UnitFloat,
 )
 
-_ORACLE_BRACKET_WIDTH = Decimal("1e-14")
+_ORACLE_BRACKET_WIDTH = mpf("1e-14")
 
 
 class OracleBracket(DomainModel):
@@ -46,16 +47,17 @@ def solve_information_oracle(
     digits = int(oracle_digits)
     if digits <= 0:
         raise InvalidScientificDataError("oracle precision must be positive")
-    rho = Decimal(str(float(sensitivity_budget)))
-    with localcontext() as context:
-        context.prec = digits
-        harmful = tuple(Decimal(str(float(value))) for value in summary.harmful_by_band)
-        correct = tuple(Decimal(str(float(value))) for value in summary.correct_by_band)
-        unresolved = Decimal(str(float(summary.unresolved_mass)))
+    previous_digits = mp.dps
+    mp.dps = digits
+    try:
+        harmful = tuple(mpf(repr(float(value))) for value in summary.harmful_by_band)
+        correct = tuple(mpf(repr(float(value))) for value in summary.correct_by_band)
+        unresolved = mpf(repr(float(summary.unresolved_mass)))
+        rho = mpf(repr(float(sensitivity_budget)))
         minimum_bracket = _golden_minimum(harmful, correct, unresolved)
-        minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / Decimal(2)
+        minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
         minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
-        equality_tolerance = Decimal(10) ** Decimal(-floor(digits / 2))
+        equality_tolerance = mpf(10) ** (-floor(digits / 2))
         if rho < minimum_information - equality_tolerance:
             return _result(
                 summary,
@@ -83,7 +85,7 @@ def solve_information_oracle(
         upper_boundary = _right_boundary(harmful, correct, unresolved, rho, minimum_hidden)
         regime = (
             CompatibilityRegime.NO_UNRESOLVED_MASS
-            if unresolved == 0
+            if unresolved == mpf(0)
             else CompatibilityRegime.COMPATIBLE_INTERVAL
         )
         return _result(
@@ -96,18 +98,20 @@ def solve_information_oracle(
             lower_boundary,
             upper_boundary,
         )
+    finally:
+        mp.dps = previous_digits
 
 
 def _golden_minimum(
-    harmful: tuple[Decimal, ...],
-    correct: tuple[Decimal, ...],
-    unresolved: Decimal,
-) -> tuple[Decimal, Decimal]:
-    if unresolved == 0:
-        return Decimal(0), Decimal(0)
-    left = Decimal(0)
+    harmful: tuple[mpf, ...],
+    correct: tuple[mpf, ...],
+    unresolved: mpf,
+) -> tuple[mpf, mpf]:
+    if unresolved == mpf(0):
+        return mpf(0), mpf(0)
+    left = mpf(0)
     right = unresolved
-    ratio = (Decimal(5).sqrt() - Decimal(1)) / Decimal(2)
+    ratio = (sqrt(mpf(5)) - mpf(1)) / mpf(2)
     x_left = right - ratio * (right - left)
     x_right = left + ratio * (right - left)
     f_left = _mutual_information(harmful, correct, unresolved, x_left)
@@ -129,18 +133,18 @@ def _golden_minimum(
 
 
 def _left_boundary(
-    harmful: tuple[Decimal, ...],
-    correct: tuple[Decimal, ...],
-    unresolved: Decimal,
-    rho: Decimal,
-    minimum_hidden: Decimal,
-) -> tuple[Decimal, Decimal]:
-    if _mutual_information(harmful, correct, unresolved, Decimal(0)) <= rho:
-        return Decimal(0), Decimal(0)
-    left = Decimal(0)
+    harmful: tuple[mpf, ...],
+    correct: tuple[mpf, ...],
+    unresolved: mpf,
+    rho: mpf,
+    minimum_hidden: mpf,
+) -> tuple[mpf, mpf]:
+    if _mutual_information(harmful, correct, unresolved, mpf(0)) <= rho:
+        return mpf(0), mpf(0)
+    left = mpf(0)
     right = minimum_hidden
     while right - left > _ORACLE_BRACKET_WIDTH:
-        midpoint = (left + right) / Decimal(2)
+        midpoint = (left + right) / mpf(2)
         if _mutual_information(harmful, correct, unresolved, midpoint) <= rho:
             right = midpoint
         else:
@@ -149,18 +153,18 @@ def _left_boundary(
 
 
 def _right_boundary(
-    harmful: tuple[Decimal, ...],
-    correct: tuple[Decimal, ...],
-    unresolved: Decimal,
-    rho: Decimal,
-    minimum_hidden: Decimal,
-) -> tuple[Decimal, Decimal]:
+    harmful: tuple[mpf, ...],
+    correct: tuple[mpf, ...],
+    unresolved: mpf,
+    rho: mpf,
+    minimum_hidden: mpf,
+) -> tuple[mpf, mpf]:
     if _mutual_information(harmful, correct, unresolved, unresolved) <= rho:
         return unresolved, unresolved
     left = minimum_hidden
     right = unresolved
     while right - left > _ORACLE_BRACKET_WIDTH:
-        midpoint = (left + right) / Decimal(2)
+        midpoint = (left + right) / mpf(2)
         if _mutual_information(harmful, correct, unresolved, midpoint) <= rho:
             left = midpoint
         else:
@@ -168,41 +172,62 @@ def _right_boundary(
     return left, right
 
 
+def direct_mutual_information(
+    harmful: tuple[float, ...],
+    correct: tuple[float, ...],
+    unresolved: float,
+    hidden_terminal_harmful: float,
+    oracle_digits: PositiveInt,
+) -> InformationNats:
+    previous_digits = mp.dps
+    mp.dps = int(oracle_digits)
+    try:
+        value = _mutual_information(
+            tuple(mpf(repr(item)) for item in harmful),
+            tuple(mpf(repr(item)) for item in correct),
+            mpf(repr(unresolved)),
+            mpf(repr(hidden_terminal_harmful)),
+        )
+        return max(0.0, float(value))
+    finally:
+        mp.dps = previous_digits
+
+
 def _mutual_information(
-    harmful: tuple[Decimal, ...],
-    correct: tuple[Decimal, ...],
-    unresolved: Decimal,
-    hidden_terminal_harmful: Decimal,
-) -> Decimal:
-    if hidden_terminal_harmful < 0 or hidden_terminal_harmful > unresolved:
+    harmful: tuple[mpf, ...],
+    correct: tuple[mpf, ...],
+    unresolved: mpf,
+    hidden_terminal_harmful: mpf,
+) -> mpf:
+    if hidden_terminal_harmful < mpf(0) or hidden_terminal_harmful > unresolved:
         raise NumericalError("oracle hidden terminal mass lies outside [0, c]")
     harmful_row = (*harmful, hidden_terminal_harmful)
     correct_row = (*correct, unresolved - hidden_terminal_harmful)
-    harmful_total = sum(harmful_row, Decimal(0))
-    correct_total = sum(correct_row, Decimal(0))
+    harmful_total = sum(harmful_row, mpf(0))
+    correct_total = sum(correct_row, mpf(0))
     column_totals = tuple(
         left + right for left, right in zip(harmful_row, correct_row, strict=True)
     )
-    value = Decimal(0)
+    value = mpf(0)
     for row, row_total in ((harmful_row, harmful_total), (correct_row, correct_total)):
         for cell, column_total in zip(row, column_totals, strict=True):
-            if cell == 0:
+            if cell == mpf(0):
                 continue
-            if row_total == 0 or column_total == 0:
+            if row_total == mpf(0) or column_total == mpf(0):
                 raise NumericalError("positive oracle cell has a zero marginal")
-            value += cell * (cell / (row_total * column_total)).ln()
+            value += cell * log(cell / (row_total * column_total))
     return value
 
 
 def _result(
     summary: ObservableSummary,
-    rho: Decimal,
-    minimum_hidden: Decimal,
-    minimum_information: Decimal,
-    minimum_bracket: tuple[Decimal, Decimal],
+    rho: mpf,
+    minimum_hidden: mpf,
+    minimum_information: mpf,
+    minimum_bracket: tuple[mpf, mpf],
     regime: CompatibilityRegime,
-    lower_boundary: tuple[Decimal, Decimal] | None,
-    upper_boundary: tuple[Decimal, Decimal] | None,
+    lower_boundary: tuple[mpf, mpf] | None,
+    upper_boundary: tuple[mpf, mpf] | None,
 ) -> InformationOracleResult:
     lower = None if lower_boundary is None else _bracket(lower_boundary)
     upper = None if upper_boundary is None else _bracket(upper_boundary)
@@ -228,9 +253,9 @@ def _result(
     )
 
 
-def _bracket(values: tuple[Decimal, Decimal]) -> OracleBracket:
+def _bracket(values: tuple[mpf, mpf]) -> OracleBracket:
     lower, upper = values
-    midpoint = (lower + upper) / Decimal(2)
+    midpoint = (lower + upper) / mpf(2)
     return OracleBracket(
         lower=float(lower),
         upper=float(upper),
