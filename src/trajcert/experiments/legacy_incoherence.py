@@ -9,7 +9,7 @@ from trajcert.config import TrajCertConfig
 from trajcert.data.partitions import build_partition
 from trajcert.data.summaries import coarsen_summary, summarize_observable_masses
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.types import DomainModel, FiniteFloat, HiddenMassInterval, RiskInterval, Vector
+from trajcert.types import DomainModel, FiniteFloat, HiddenMassInterval, RiskInterval
 
 
 class EndpointDifferenceDirection(StrEnum):
@@ -55,8 +55,8 @@ def evaluate_legacy_partition_incoherence(
     )
     fine = summarize_observable_masses(
         partition=fine_partition,
-        harmful_by_band=Vector(np.asarray(harmful_by_band, dtype=np.float64)),
-        correct_by_band=Vector(np.asarray(correct_by_band, dtype=np.float64)),
+        harmful_by_band=np.asarray(harmful_by_band, dtype=np.float64),
+        correct_by_band=np.asarray(correct_by_band, dtype=np.float64),
         unresolved_mass=unresolved,
         comparison_guard=config.numerics.comparison_guard,
     )
