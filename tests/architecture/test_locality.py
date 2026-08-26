@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from trajcert.analysis.locality import (
     RuntimeLineageArtifact,
     ScientificInputClass,
@@ -7,6 +9,7 @@ from trajcert.analysis.locality import (
     audit_local_validity,
 )
 from trajcert.data.ledger import LedgerIdentity
+from trajcert.exceptions import InvalidScientificDataError
 from trajcert.provenance import ProducerComponentName
 from trajcert.storage import ArtifactKey
 from trajcert.types import ActionChannelId, ClientId, EpochId
@@ -65,6 +68,76 @@ def test_static_dependency_audit_rejects_foreign_client_input() -> None:
     result = audit_local_validity(identity, tuple(dependencies), root.artifact_key, (root,))
     assert not result.static_dependency_pass
     assert not result.passed
+
+
+def test_runtime_lineage_marks_missing_parent_as_violation() -> None:
+    identity = _identity()
+    missing = ArtifactKey("missing-parent")
+    root = RuntimeLineageArtifact(
+        artifact_key=ArtifactKey("local-bound"),
+        parent_artifact_keys=(missing,),
+        client_id=identity.client_id,
+        action_channel_id=identity.action_channel_id,
+        epoch_id=identity.epoch_id,
+    )
+    result = audit_local_validity(
+        identity,
+        _static_dependencies(identity.client_id),
+        root.artifact_key,
+        (root,),
+    )
+    assert not result.runtime_lineage_pass
+    assert result.violating_artifact_keys == (missing,)
+
+
+def test_runtime_lineage_rejects_cycle() -> None:
+    identity = _identity()
+    first = RuntimeLineageArtifact(
+        artifact_key=ArtifactKey("first"),
+        parent_artifact_keys=(ArtifactKey("second"),),
+    )
+    second = RuntimeLineageArtifact(
+        artifact_key=ArtifactKey("second"),
+        parent_artifact_keys=(first.artifact_key,),
+    )
+    with pytest.raises(InvalidScientificDataError, match="cycle"):
+        audit_local_validity(
+            identity,
+            _static_dependencies(identity.client_id),
+            first.artifact_key,
+            (first, second),
+        )
+
+
+def test_runtime_lineage_rejects_duplicate_artifact_key() -> None:
+    identity = _identity()
+    root = RuntimeLineageArtifact(artifact_key=ArtifactKey("duplicate"))
+    duplicate = root.model_copy()
+    with pytest.raises(InvalidScientificDataError, match="duplicate artifact keys"):
+        audit_local_validity(
+            identity,
+            _static_dependencies(identity.client_id),
+            root.artifact_key,
+            (root, duplicate),
+        )
+
+
+def test_runtime_lineage_rejects_channel_and_epoch_mismatch() -> None:
+    identity = _identity()
+    mismatched = RuntimeLineageArtifact(
+        artifact_key=ArtifactKey("mismatched"),
+        client_id=identity.client_id,
+        action_channel_id=ActionChannelId("other-action"),
+        epoch_id=EpochId("other-epoch"),
+    )
+    result = audit_local_validity(
+        identity,
+        _static_dependencies(identity.client_id),
+        mismatched.artifact_key,
+        (mismatched,),
+    )
+    assert not result.runtime_lineage_pass
+    assert result.violating_artifact_keys == (mismatched.artifact_key,)
 
 
 def _identity() -> LedgerIdentity:
