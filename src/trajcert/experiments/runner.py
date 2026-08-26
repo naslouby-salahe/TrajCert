@@ -1309,7 +1309,7 @@ def read_verified_scientific_result[ModelT: BaseModel](
     workspace_root: Path,
     model_type: type[ModelT],
 ) -> ModelT:
-    completion, index = verified_completion_and_index(cell, workspace_root)
+    completion, index = verified_upstream_completion_and_index(cell, workspace_root)
     entry = index.artifacts[0]
     expected_path = scientific_result_path(cell)
     if entry.relative_path != expected_path:
@@ -1330,7 +1330,7 @@ def read_verified_scientific_result[ModelT: BaseModel](
     return read_model(result_path, model_type)
 
 
-def verified_completion_and_index(
+def verified_upstream_completion_and_index(
     cell: PlannedCell,
     workspace_root: Path,
 ) -> tuple[CompletionRecord, CellArtifactIndex]:

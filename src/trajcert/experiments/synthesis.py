@@ -44,7 +44,7 @@ from trajcert.experiments.runner import (
     audit_local_validity_targets,
     read_verified_scientific_result,
     scientific_result_artifact_key,
-    verified_completion_and_index,
+    verified_upstream_completion_and_index,
 )
 from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
 from trajcert.experiments.sensitivity import PopulationUtilityResult, SequentialUtilityResult
@@ -582,7 +582,7 @@ def _dependency_reference(
     cell: PlannedCell,
     workspace_root: Path,
 ) -> SynthesisDependencyReference:
-    completion, index = verified_completion_and_index(cell, workspace_root)
+    completion, index = verified_upstream_completion_and_index(cell, workspace_root)
     return SynthesisDependencyReference(
         semantic_cell_key=str(cell.identity.semantic_cell_key),
         completion_digest=model_digest(completion),
