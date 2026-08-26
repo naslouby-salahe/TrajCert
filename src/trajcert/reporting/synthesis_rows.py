@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Hashable
 from itertools import product
 
 from trajcert.config import TrajCertConfig
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.safety import (
+    CompatibilityFloorBehaviorResult,
+    SafetyCaseEvaluation,
+)
 from trajcert.experiments.sensitivity import PopulationUtilityResult
+from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.reporting.source_data import (
     CompatibilitySafetyRow,
@@ -55,8 +61,8 @@ class PartitionTimingEvidence(DomainModel):
 class CompatibilitySafetyEvidence(DomainModel):
     law_name: LawName
     partition_name: PartitionName
-    rho: SensitivityBudget
-    beta: RiskBudget
+    rho: SensitivityBudget | None
+    beta: RiskBudget | None
     tau: InformationNats | None
     theta_dagger: RiskValue | None
     risk_lower: RiskValue | None
@@ -66,6 +72,24 @@ class CompatibilitySafetyEvidence(DomainModel):
     observed_regime: RegimeName
     oracle_error: FiniteFloat | None
     passed: bool
+
+
+class CompatibilityFloorSourceEvidence(DomainModel):
+    law_name: LawName
+    partition_name: PartitionName
+    result: CompatibilityFloorBehaviorResult
+
+
+class SharpnessSourceEvidence(DomainModel):
+    law_name: LawName
+    partition_name: PartitionName
+    result: SolverOracleComparison
+
+
+class SafetySourceEvidence(DomainModel):
+    law_name: LawName
+    partition_name: PartitionName
+    result: SafetyCaseEvaluation
 
 
 class PopulationFigureEvidence(DomainModel):
@@ -223,6 +247,56 @@ def partition_coherence_figure_rows(
     return tuple(rows)
 
 
+def compatibility_safety_evidence(
+    compatibility: tuple[CompatibilityFloorSourceEvidence, ...],
+    sharpness: tuple[SharpnessSourceEvidence, ...],
+    safety: tuple[SafetySourceEvidence, ...],
+) -> tuple[CompatibilitySafetyEvidence, ...]:
+    rows: list[CompatibilitySafetyEvidence] = []
+    for item in compatibility:
+        for point in item.result.points:
+            comparison = point.comparison
+            if comparison is None:
+                continue
+            rows.append(_solver_comparison_evidence(item.law_name, item.partition_name, comparison))
+    rows.extend(
+        _solver_comparison_evidence(item.law_name, item.partition_name, item.result)
+        for item in sharpness
+    )
+    for item in safety:
+        result = item.result
+        if (
+            not result.case.valid
+            or result.case.risk_budget is None
+            or result.assessment is None
+            or result.expected_regime is None
+        ):
+            continue
+        oracle_error = (
+            None if result.frontier_oracle is None else result.frontier_oracle.absolute_error
+        )
+        rows.append(
+            CompatibilitySafetyEvidence(
+                law_name=item.law_name,
+                partition_name=item.partition_name,
+                rho=None,
+                beta=result.case.risk_budget,
+                tau=result.tau,
+                theta_dagger=result.assessment.minimum_information_risk,
+                risk_lower=None,
+                risk_upper=None,
+                rho_star=result.assessment.safety_frontier,
+                expected_regime=RegimeName(result.expected_regime.value),
+                observed_regime=RegimeName(result.assessment.regime.value),
+                oracle_error=oracle_error,
+                passed=result.passed,
+            )
+        )
+    if not rows:
+        raise InvalidScientificDataError("Table 8 requires compatibility, sharpness, or safety evidence")
+    return tuple(rows)
+
+
 def compatibility_safety_rows(
     evidence: tuple[CompatibilitySafetyEvidence, ...],
 ) -> tuple[CompatibilitySafetyRow, ...]:
@@ -243,6 +317,28 @@ def compatibility_safety_rows(
             passed=item.passed,
         )
         for item in evidence
+    )
+
+
+def _solver_comparison_evidence(
+    law_name: LawName,
+    partition_name_value: PartitionName,
+    comparison: SolverOracleComparison,
+) -> CompatibilitySafetyEvidence:
+    return CompatibilitySafetyEvidence(
+        law_name=law_name,
+        partition_name=partition_name_value,
+        rho=comparison.sensitivity_budget,
+        beta=None,
+        tau=comparison.tau,
+        theta_dagger=comparison.theta_dagger,
+        risk_lower=comparison.risk_lower,
+        risk_upper=comparison.risk_upper,
+        rho_star=None,
+        expected_regime=RegimeName(comparison.oracle_regime.value),
+        observed_regime=RegimeName(comparison.compatibility_regime.value),
+        oracle_error=comparison.max_endpoint_error,
+        passed=comparison.passed,
     )
 
 
@@ -281,7 +377,7 @@ def _partition_timing_row(
     )
 
 
-def _require_exact_family[KeyT](
+def _require_exact_family[KeyT: Hashable](
     label: str,
     supplied: tuple[KeyT, ...],
     expected: tuple[KeyT, ...],
