@@ -11,6 +11,7 @@ from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import raw_confidence_region
 from trajcert.inference.envelope import (
     ObservableSummaryEnvelope,
+    ScalarEnvelope,
     singleton_summary_envelope,
     summary_envelope_from_confidence,
 )
@@ -94,13 +95,35 @@ def test_project_upper_risk_non_singleton_terminates_at_node_cap() -> None:
     assert result.sensitivity_budget == pytest.approx(0.05)
 
 
-def test_finite_sample_bounds_are_unit_scaled() -> None:
+def test_finite_sample_compatibility_lower_bound_is_unit_scaled() -> None:
     partition = build_partition(2, 2, 8.0)
     state = _state((3, 0, 0, 2, 1), 2)
     confidence = raw_confidence_region(state, 0.05, 1e-6)
     envelope = summary_envelope_from_confidence(partition, confidence)
-
     compatibility = finite_sample_compatibility_lower_bound(envelope)
-    assert compatibility >= 0.0
-    intrinsic = finite_sample_intrinsic_risk_lower_bound(envelope)
-    assert intrinsic is None or 0.0 <= intrinsic <= 1.0
+    assert 0.0 <= compatibility <= 1.0
+
+
+def test_finite_sample_intrinsic_risk_lower_bound_on_singleton() -> None:
+    summary = summarize_observable_masses(
+        build_partition(1, 1, 8.0),
+        np.array([0.5]),
+        np.array([0.0]),
+        0.5,
+        1e-12,
+    )
+    intrinsic = finite_sample_intrinsic_risk_lower_bound(singleton_summary_envelope(summary))
+    assert intrinsic == pytest.approx(1.0)
+
+
+def test_finite_sample_intrinsic_risk_lower_bound_zero_resolved_plausible() -> None:
+    envelope = ObservableSummaryEnvelope(
+        partition=build_partition(1, 1, 8.0),
+        harmful_by_band=(ScalarEnvelope(lower=0.0, upper=0.0),),
+        correct_by_band=(ScalarEnvelope(lower=0.0, upper=0.0),),
+        unresolved=ScalarEnvelope(lower=1.0, upper=1.0),
+        resolved_harmful=ScalarEnvelope(lower=0.0, upper=0.0),
+        resolved_correct=ScalarEnvelope(lower=0.0, upper=0.0),
+        resolved_entropy=ScalarEnvelope(lower=0.0, upper=0.0),
+    )
+    assert finite_sample_intrinsic_risk_lower_bound(envelope) is None

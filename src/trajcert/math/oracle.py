@@ -570,10 +570,32 @@ def _projection_direct_information_arb(
 def _binary_entropy_arb(value: arb) -> arb:
     if value.is_zero() or (arb(1) - value).is_zero():
         return arb(0)
+    lower = value.lower().max(arb(0))
+    upper = value.upper().min(arb(1))
+    if lower > upper:
+        return arb(0)
+    result = _binary_entropy_point_arb(lower).union(_binary_entropy_point_arb(upper))
+    if lower <= arb(0.5) <= upper:
+        result = result.union(arb(2).log())
+    return result
+
+
+def _binary_entropy_point_arb(value: arb) -> arb:
+    if value.is_zero() or (arb(1) - value).is_zero():
+        return arb(0)
+    if value > arb(0.5):
+        value = arb(1) - value
+        if value.is_zero() or (arb(1) - value).is_zero():
+            return arb(0)
+        if value.lower() <= arb(0):
+            upper = value.upper()
+            if upper.is_zero():
+                return arb(0)
+            return arb(0).union(_binary_entropy_point_arb(upper))
     return -value * value.log() - (arb(1) - value) * (arb(1) - value).log()
 
 
-def _mass_entropy_arb(left: arb, right: arb) -> arb:
+def _mass_entropy_point_arb(left: arb, right: arb) -> arb:
     total = left + right
     if total.is_zero():
         return arb(0)
@@ -583,6 +605,25 @@ def _mass_entropy_arb(left: arb, right: arb) -> arb:
     if not right.is_zero():
         value -= right * (right / total).log()
     return value
+
+
+def _mass_entropy_arb(left: arb, right: arb) -> arb:
+    left_lower = left.lower().max(arb(0))
+    left_upper = left.upper().max(arb(0))
+    right_lower = right.lower().max(arb(0))
+    right_upper = right.upper().max(arb(0))
+    corners = (
+        _mass_entropy_point_arb(left_lower, right_lower),
+        _mass_entropy_point_arb(left_lower, right_upper),
+        _mass_entropy_point_arb(left_upper, right_lower),
+        _mass_entropy_point_arb(left_upper, right_upper),
+    )
+    lower = corners[0]
+    upper = corners[0]
+    for corner in corners[1:]:
+        lower = lower.min(corner)
+        upper = upper.max(corner)
+    return lower.union(upper)
 
 
 def _arb_exact_float(value: float) -> arb:
