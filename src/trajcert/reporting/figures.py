@@ -182,9 +182,7 @@ def _timing_value(table: pa.Table) -> PlotDocument:
         scale = _panel_scale(panel, (*xs, 0.0), ys)
         commands.extend(_panel_frame(panel, f"rho offset {facet}"))
         zero_x = scale.map_x(0.0)
-        commands.append(
-            Line(Point(zero_x, panel.top), Point(zero_x, panel.bottom), dashed=True)
-        )
+        commands.append(Line(Point(zero_x, panel.top), Point(zero_x, panel.bottom), dashed=True))
         for row in selected:
             point = Point(
                 scale.map_x(_required_float(row, "delta_tau")),
@@ -204,13 +202,20 @@ def _information_profile(table: pa.Table) -> PlotDocument:
     commands.extend(_panel_frame(panel, "Information profile"))
     commands.extend(_polyline(scale, xs, ys))
     first = rows[0]
-    for column, label in (("u_dagger", "u_dagger"), ("u_beta", "u_beta")):
+    for column, label in (
+        ("u_dagger", "u_dagger"),
+        ("u_beta", "u_beta"),
+    ):
         value = _optional_float(first, column)
         if value is not None:
             x = scale.map_x(value)
             commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
             commands.append(Text(Point(x + 4.0, panel.top + 16.0), label, size=11))
-    for column, label in (("tau", "tau"), ("rho", "rho"), ("rho_star", "rho_star")):
+    for column, label in (
+        ("tau", "tau"),
+        ("rho", "rho"),
+        ("rho_star", "rho_star"),
+    ):
         value = _optional_float(first, column)
         if value is not None:
             y = scale.map_y(value)
@@ -241,7 +246,9 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
     commands = _base_commands("Representative anytime certificates")
     commands.extend(_panel_frame(panel, "Seeds 0-3"))
     for seed in seeds:
-        selected = tuple(row for row in rows if int(_required_float(row, "stream_seed_index")) == seed)
+        selected = tuple(
+            row for row in rows if int(_required_float(row, "stream_seed_index")) == seed
+        )
         seed_xs = tuple(_required_float(row, "n_matured") for row in selected)
         seed_ys = tuple(_required_float(row, "risk_upper_anytime") for row in selected)
         commands.extend(_polyline(scale, seed_xs, seed_ys))
@@ -252,7 +259,10 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
             )
             commands.append(Circle(point, radius=2.5, hollow=not bool(row["evidence_gate_pass"])))
     first = rows[0]
-    for column, label in (("true_theta", "true theta"), ("beta", "beta")):
+    for column, label in (
+        ("true_theta", "true theta"),
+        ("beta", "beta"),
+    ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
         commands.append(Text(Point(panel.right - 4.0, y - 6.0), label, size=11, anchor="end"))
@@ -276,13 +286,19 @@ def _anytime_coverage(table: pa.Table) -> PlotDocument:
     commands = _base_commands("Anytime stress validity")
     commands.extend(_panel_frame(panel, "Exact one-sided upper limits"))
     for index, row in enumerate(rows):
-        point = Point(scale.map_x(float(index)), scale.map_y(_required_float(row, "clopper_pearson_upper_95")))
+        point = Point(
+            scale.map_x(float(index)),
+            scale.map_y(_required_float(row, "clopper_pearson_upper_95")),
+        )
         if bool(row["criterion_pass"]):
             commands.append(Circle(point, radius=4.0))
         else:
             commands.append(Cross(point, radius=5.0))
     first = rows[0]
-    for column, label in (("delta", "anytime delta"), ("acceptance_upper_limit", "acceptance limit")):
+    for column, label in (
+        ("delta", "anytime delta"),
+        ("acceptance_upper_limit", "acceptance limit"),
+    ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
         commands.append(Text(Point(panel.left + 4.0, y - 5.0), label, size=11))
@@ -297,15 +313,15 @@ def _rho_sensitivity(table: pa.Table) -> PlotDocument:
         rows = _matching_rows(table, "law_name", law)
         xs = tuple(_required_float(row, "rho") for row in rows)
         finite_ys = tuple(
-            value
-            for row in rows
-            if (value := _optional_float(row, "risk_upper")) is not None
+            value for row in rows if (value := _optional_float(row, "risk_upper")) is not None
         )
         scale = _panel_scale(panel, xs, finite_ys or (0.0, 1.0))
         commands.extend(_panel_frame(panel, law))
         for partition in sorted({str(row["partition_name"]) for row in rows}):
             selected = tuple(row for row in rows if str(row["partition_name"]) == partition)
-            compatible = tuple(row for row in selected if _optional_float(row, "risk_upper") is not None)
+            compatible = tuple(
+                row for row in selected if _optional_float(row, "risk_upper") is not None
+            )
             commands.extend(
                 _polyline(
                     scale,
@@ -337,7 +353,9 @@ def _failure_boundaries(table: pa.Table) -> PlotDocument:
         commands.extend(_panel_frame(panel, axis))
         commands.extend(_polyline(scale, xs, ys))
         for index, row in enumerate(rows):
-            point = Point(scale.map_x(float(index)), scale.map_y(_required_float(row, "risk_upper")))
+            point = Point(
+                scale.map_x(float(index)), scale.map_y(_required_float(row, "risk_upper"))
+            )
             commands.append(Circle(point, radius=3.5))
     return PlotDocument(title="Failure-boundary atlas", commands=tuple(commands))
 
@@ -461,7 +479,12 @@ def _expanded_bounds(lower: float, upper: float) -> tuple[float, float]:
 def _panel_frame(panel: Panel, title: str) -> list[DrawCommand]:
     return [
         Rectangle(panel.left, panel.top, panel.width, panel.height),
-        Text(Point(panel.left + panel.width / 2.0, panel.top - 18.0), title, size=13, anchor="middle"),
+        Text(
+            Point(panel.left + panel.width / 2.0, panel.top - 18.0),
+            title,
+            size=13,
+            anchor="middle",
+        ),
     ]
 
 
@@ -551,8 +574,8 @@ def _svg_command(command: DrawCommand) -> str:
     if isinstance(command, Cross):
         x, y, r = command.center.x, command.center.y, command.radius
         return (
-            f'<path d="M {x-r:.3f} {y-r:.3f} L {x+r:.3f} {y+r:.3f} '
-            f'M {x-r:.3f} {y+r:.3f} L {x+r:.3f} {y-r:.3f}" '
+            f'<path d="M {x - r:.3f} {y - r:.3f} L {x + r:.3f} {y + r:.3f} '
+            f'M {x - r:.3f} {y + r:.3f} L {x + r:.3f} {y - r:.3f}" '
             f'stroke="{_STROKE}" stroke-width="1.5" fill="none"/>'
         )
     if isinstance(command, Rectangle):
@@ -598,7 +621,12 @@ def _png_bytes(document: PlotDocument) -> bytes:
         raw.extend(pixels[start : start + stride])
     signature = b"\x89PNG\r\n\x1a\n"
     ihdr = struct.pack(">IIBBBBB", _WIDTH, _HEIGHT, 8, 2, 0, 0, 0)
-    return signature + _png_chunk(b"IHDR", ihdr) + _png_chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + _png_chunk(b"IEND", b"")
+    return (
+        signature
+        + _png_chunk(b"IHDR", ihdr)
+        + _png_chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + _png_chunk(b"IEND", b"")
+    )
 
 
 def _png_chunk(kind: bytes, payload: bytes) -> bytes:
