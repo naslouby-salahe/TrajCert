@@ -355,9 +355,7 @@ def _never_certified_fractions(
     if metric_name is not PracticalMetric.TIME_TO_FIRST_CERTIFICATION:
         return None, None
     sentinel = float(config.sequential.utility.max_events + 1)
-    method_count = sum(
-        method_values.item(index) == sentinel for index in range(method_values.size)
-    )
+    method_count = sum(method_values.item(index) == sentinel for index in range(method_values.size))
     baseline_count = sum(
         baseline_values.item(index) == sentinel for index in range(baseline_values.size)
     )
@@ -401,9 +399,7 @@ def _validate_sequential_utility_family(
 def _expected_population_utility_keys(
     config: TrajCertConfig,
 ) -> tuple[tuple[LawName, PartitionName, float], ...]:
-    laws = tuple(
-        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
-    )
+    laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
     partitions = tuple(partition_name(bands) for bands in config.grids.partitions)
     rho_values = tuple(float(value) for value in config.grids.rho)
     binary_endpoint = float(BINARY_MAX_INFORMATION_NATS)
@@ -425,9 +421,7 @@ def _expected_population_utility_keys(
 def _expected_sequential_utility_keys(
     config: TrajCertConfig,
 ) -> tuple[tuple[LawName, float], ...]:
-    laws = tuple(
-        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
-    )
+    laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
     rho_values = tuple(float(value) for value in config.sequential.utility.rho)
     definition = next(
         item
