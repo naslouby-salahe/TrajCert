@@ -134,11 +134,12 @@ def evaluate_optimizer_node_budget(
         raise ValueError("optimizer node budget must be positive")
     parameters = _base_parameters(config)
     partition = _partition(config.method.finest_bands, config)
+    sample_size = int(config.failure_boundary.optimizer_sample_size)
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
         stream_index=SeedIndex(0),
-        event_count=500,
+        event_count=sample_size,
     )
     full_law = build_full_law(parameters, partition.band_count)
     truth = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
@@ -152,7 +153,7 @@ def evaluate_optimizer_node_budget(
         config=config,
         sensitivity_budget=rho,
         risk_budget=config.budgets.risk,
-        checkpoint_every=500,
+        checkpoint_every=sample_size,
         outer_max_nodes=node_budget,
     )
     elapsed_ms = (perf_counter_ns() - start) / 1_000_000.0
