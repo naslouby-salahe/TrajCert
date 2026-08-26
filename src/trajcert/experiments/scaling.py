@@ -139,7 +139,7 @@ def _isolated_measurement(
             os.environ[name] = "1"
         process = context.Process(
             target=_worker,
-            args=(child_connection, target, band_count, config.model_dump_json()),
+            args=(child_connection, target, band_count, _worker_config_json(config)),
         )
         process.start()
     finally:
@@ -157,6 +157,11 @@ def _isolated_measurement(
     if process.exitcode != 0 or envelope.measurement is None:
         raise RuntimeError(envelope.failure or f"isolated scaling worker failed: {process.exitcode}")
     return envelope.measurement
+
+
+def _worker_config_json(config: TrajCertConfig) -> str:
+    serializable = config.model_copy(update={"laws": dict(config.laws)})
+    return serializable.model_dump_json()
 
 
 def _worker(
