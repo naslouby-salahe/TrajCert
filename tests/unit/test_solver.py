@@ -1,28 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
-
-import numpy as np
 import pytest
 
-from trajcert.config import TrajCertConfig
-from trajcert.data.partitions import build_partition
-from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
+from tests.unit.conftest import summary
+from trajcert.data.summaries import ObservableSummary
 from trajcert.math import solver
 from trajcert.math.solver import solve_hidden_mass_interval
 from trajcert.types import CompatibilityRegime, RootBranch, RootStatus
-
-
-@pytest.fixture(autouse=True)
-def active_test_config() -> None:
-    TrajCertConfig.from_yaml(Path("configs/trajcert.yaml"))
-
-
-def summary(harmful: list[float], correct: list[float], unresolved: float) -> ObservableSummary:
-    partition = build_partition(len(harmful), len(harmful), 1.0)
-    return summarize_observable_masses(
-        partition, np.array(harmful), np.array(correct), unresolved, 1e-12
-    )
 
 
 @pytest.mark.parametrize(
@@ -67,9 +51,9 @@ def test_solver_bisects_interior_roots_and_rejects_invalid_tolerances() -> None:
 
 @pytest.mark.parametrize(("width", "tolerance", "expected"), [(0.0, 0.1, 0), (0.1, 0.1, 2)])
 def test_solver_boundary_helper_values(width: float, tolerance: float, expected: int) -> None:
-    assert solver._iteration_cap(width, tolerance) == expected
-    solver._validate_final_signs(RootBranch.LOWER, 0.0, -1.0)
+    assert solver.compute_iteration_cap(width, tolerance) == expected
+    solver.validate_final_signs(RootBranch.LOWER, 0.0, -1.0)
     with pytest.raises(Exception, match="sign-valid"):
-        solver._validate_initial_signs(RootBranch.LOWER, 0.0, -1.0)
+        solver.validate_initial_signs(RootBranch.LOWER, 0.0, -1.0)
     with pytest.raises(Exception, match="sign-valid"):
-        solver._validate_initial_signs(RootBranch.UPPER, 1.0, 0.0)
+        solver.validate_initial_signs(RootBranch.UPPER, 1.0, 0.0)

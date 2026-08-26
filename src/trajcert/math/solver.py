@@ -162,9 +162,9 @@ def _bisect(
     root_atol: float,
     identity_atol: float,
 ) -> RootBracket:
-    _validate_initial_signs(branch, lower_residual, upper_residual)
+    validate_initial_signs(branch, lower_residual, upper_residual)
     initial_width = upper - lower
-    iteration_cap = _iteration_cap(initial_width, root_atol)
+    iteration_cap = compute_iteration_cap(initial_width, root_atol)
     iterations = 0
     while upper - lower > root_atol:
         if iterations >= iteration_cap:
@@ -189,7 +189,7 @@ def _bisect(
             upper = midpoint
             upper_residual = residual
         iterations += 1
-    _validate_final_signs(branch, lower_residual, upper_residual)
+    validate_final_signs(branch, lower_residual, upper_residual)
     root = (lower + upper) / 2.0
     residual = abs(_profile_residual(summary, root, rho))
     result = RootBracket(
@@ -239,7 +239,7 @@ def _require_residual(root: RootBracket, identity_atol: float) -> None:
         raise RootSolveError("returned root residual exceeds identity_atol")
 
 
-def _iteration_cap(initial_width: float, root_atol: float) -> int:
+def compute_iteration_cap(initial_width: float, root_atol: float) -> int:
     if initial_width <= 0.0:
         return 0
     if initial_width <= root_atol:
@@ -247,7 +247,7 @@ def _iteration_cap(initial_width: float, root_atol: float) -> int:
     return ceil(log2(initial_width / root_atol)) + 2
 
 
-def _validate_initial_signs(branch: RootBranch, lower: float, upper: float) -> None:
+def validate_initial_signs(branch: RootBranch, lower: float, upper: float) -> None:
     if branch is RootBranch.LOWER:
         if lower <= 0.0 or upper >= 0.0:
             raise RootSolveError("lower branch initial bracket is not sign-valid")
@@ -255,10 +255,10 @@ def _validate_initial_signs(branch: RootBranch, lower: float, upper: float) -> N
         raise RootSolveError("upper branch initial bracket is not sign-valid")
 
 
-def _validate_final_signs(branch: RootBranch, lower: float, upper: float) -> None:
+def validate_final_signs(branch: RootBranch, lower: float, upper: float) -> None:
     if not lower or not upper:
         return
-    _validate_initial_signs(branch, lower, upper)
+    validate_initial_signs(branch, lower, upper)
 
 
 def _positive_tolerance(value: ToleranceValue, name: str) -> float:
