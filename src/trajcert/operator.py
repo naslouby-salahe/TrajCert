@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import importlib
-import os
 import subprocess
+from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
 
@@ -14,14 +14,15 @@ from trajcert.analysis.locality import (
 from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.ledger import LedgerIdentity
-from trajcert.data.laws import build_full_law, configured_laws
-from trajcert.data.partitions import configured_partitions
+from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
+from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.execution import execute_dispatched_cell, scientific_result_artifact_key
 from trajcert.experiments.inventory import validate_scientific_inventory
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.registry import authoritative_registry
 from trajcert.experiments.runner import (
+    CellExecutor,
     DependencyReadiness,
     ExecutionContext,
     cell_completion_path,
@@ -38,7 +39,6 @@ from trajcert.experiments.synthesis_inputs import synthesis_dependency_fingerpri
 from trajcert.paths import ARTIFACTS_ROOT, RESULTS_ROOT
 from trajcert.provenance import (
     CodeCommit,
-    ContainerImageDigest,
     EnvironmentDigest,
     ExperimentNameValue,
     ProducerComponentName,
@@ -111,13 +111,25 @@ class DoctorResult(DomainModel):
 
 
 def doctor(workspace_root: Path = Path(".")) -> DoctorResult:
-    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
+    config = _load_config(workspace_root)
     plan = build_plan(config)
-    if plan.registry_total != sum(item.declared_cells for item in authoritative_registry()):
+    expected_cells = sum(item.declared_cells for item in authoritative_registry())
+    if plan.registry_total != expected_cells:
         raise InvalidScientificDataError("expanded plan does not match the authoritative registry")
-    partitions = configured_partitions(config)
-    for law in configured_laws(config):
-        _ = build_full_law(law, partitions[0].band_count)
+    finest = config.method.finest_bands
+    for key, law in config.ordered_laws:
+        parameters = LawParameters(
+            key=key,
+            name=LAW_DISPLAY_NAMES[key],
+            theta=law.theta,
+            q1=law.q1,
+            q0=law.q0,
+            lambda1=law.lambda1,
+            lambda0=law.lambda0,
+        )
+        _ = build_full_law(parameters, finest)
+    for bands in config.grids.partitions:
+        _ = build_partition(finest, bands, config.method.terminal_horizon)
     lock_path = workspace_root / _LOCK_PATH
     if not lock_path.is_file() or lock_path.stat().st_size == 0:
         raise InvalidScientificDataError("uv.lock is missing or empty")
@@ -140,8 +152,7 @@ def doctor(workspace_root: Path = Path(".")) -> DoctorResult:
 
 
 def preprocess(workspace_root: Path = Path(".")) -> Path:
-    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
-    result = validate_scientific_inventory(config)
+    result = validate_scientific_inventory(_load_config(workspace_root))
     if not result.valid:
         raise InvalidScientificDataError("scientific preprocessing/inventory validation failed")
     target = workspace_root / _PREPROCESS_PATH
@@ -150,10 +161,8 @@ def preprocess(workspace_root: Path = Path(".")) -> Path:
 
 
 def persist_plan(workspace_root: Path = Path(".")) -> Path:
-    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
-    plan = build_plan(config)
     target = workspace_root / _PLAN_PATH
-    _ = atomic_write_model(target, plan)
+    _ = atomic_write_model(target, build_plan(_load_config(workspace_root)))
     return target
 
 
@@ -167,7 +176,7 @@ def run_experiment(
     workspace_root: Path = Path("."),
     overwrite: bool = False,
 ) -> RunExperimentResult:
-    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
+    config = _load_config(workspace_root)
     plan = build_plan(config)
     name = _known_experiment_name(experiment_name)
     cells = cells_for_experiment(plan, name)
@@ -181,19 +190,10 @@ def run_experiment(
             blocked_cells=0,
         )
     dependencies = _dependency_readiness(plan, workspace_root, cells[0])
+    executor = _executor(name, plan, config)
     completed = reused = failed = blocked = 0
     for cell in cells:
         context = _execution_context(cell, plan, config, workspace_root)
-        if name == _SYNTHESIS_NAME:
-            executor = make_statistical_synthesis_executor(
-                plan,
-                config,
-                _locality_input(),
-            )
-        else:
-            executor = lambda selected, selected_context: execute_dispatched_cell(
-                selected, selected_context, config
-            )
         outcome = run_cell(cell, context, dependencies, executor, overwrite)
         if outcome.state is PublicExecutionState.COMPLETED:
             completed += 1
@@ -202,10 +202,9 @@ def run_experiment(
             failed += 1
         elif outcome.state is PublicExecutionState.BLOCKED:
             blocked += 1
-    state = _run_state(len(cells), completed, failed, blocked)
     return RunExperimentResult(
         experiment_name=name,
-        state=state,
+        state=_run_state(len(cells), completed, failed, blocked),
         completed_cells=completed,
         reused_cells=reused,
         failed_cells=failed,
@@ -218,8 +217,7 @@ def experiment_status(
     *,
     workspace_root: Path = Path("."),
 ) -> OperatorExperimentStatus:
-    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
-    plan = build_plan(config)
+    plan = build_plan(_load_config(workspace_root))
     name = _known_experiment_name(experiment_name)
     cells = cells_for_experiment(plan, name)
     statuses = tuple(_persisted_cell_status(cell, workspace_root) for cell in cells)
@@ -256,11 +254,11 @@ def report(
 ) -> ReportExportResult:
     if experiment_name is not None:
         _ = _known_experiment_name(experiment_name)
-    return export_report(
-        workspace_root,
-        experiment_name=experiment_name,
-        overwrite=overwrite,
-    )
+    return export_report(workspace_root, experiment_name=experiment_name, overwrite=overwrite)
+
+
+def _load_config(workspace_root: Path) -> TrajCertConfig:
+    return TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
 
 
 def _known_experiment_name(value: str) -> ExperimentNameValue:
@@ -274,14 +272,16 @@ def _known_experiment_name(value: str) -> ExperimentNameValue:
 def _persisted_cell_status(cell: PlannedCell, workspace_root: Path) -> OperatorCellStatus:
     key = str(cell.identity.semantic_cell_key)
     if not cell.executable:
-        return OperatorCellStatus(semantic_cell_key=key, state=PublicExecutionState.INVALID)
-    if cell_running_path(cell, workspace_root).is_file():
-        return OperatorCellStatus(semantic_cell_key=key, state=PublicExecutionState.RUNNING)
-    if cell_failure_path(cell, workspace_root).is_file():
-        return OperatorCellStatus(semantic_cell_key=key, state=PublicExecutionState.FAILED)
-    if cell_completion_path(cell, workspace_root).is_file():
-        return OperatorCellStatus(semantic_cell_key=key, state=PublicExecutionState.COMPLETED)
-    return OperatorCellStatus(semantic_cell_key=key, state=PublicExecutionState.READY)
+        state = PublicExecutionState.INVALID
+    elif cell_running_path(cell, workspace_root).is_file():
+        state = PublicExecutionState.RUNNING
+    elif cell_failure_path(cell, workspace_root).is_file():
+        state = PublicExecutionState.FAILED
+    elif cell_completion_path(cell, workspace_root).is_file():
+        state = PublicExecutionState.COMPLETED
+    else:
+        state = PublicExecutionState.READY
+    return OperatorCellStatus(semantic_cell_key=key, state=state)
 
 
 def _dependency_readiness(
@@ -298,15 +298,29 @@ def _dependency_readiness(
     )
 
 
+def _executor(
+    name: ExperimentNameValue,
+    plan: ExperimentPlan,
+    config: TrajCertConfig,
+) -> CellExecutor:
+    if name == _SYNTHESIS_NAME:
+        return make_statistical_synthesis_executor(plan, config, _locality_input())
+
+    def execute(cell: PlannedCell, context: ExecutionContext):
+        return execute_dispatched_cell(cell, context, config)
+
+    return execute
+
+
 def _execution_context(
     cell: PlannedCell,
     plan: ExperimentPlan,
     config: TrajCertConfig,
     workspace_root: Path,
 ) -> ExecutionContext:
-    configuration_digest = SpecificationDigest(str(model_digest(config)))
-    scientific_dependency_digest = SpecificationDigest(
-        _digest_text(f"{configuration_digest}|{cell.identity.semantic_cell_key}")
+    specification = SpecificationDigest(str(model_digest(config)))
+    dependency_specification = SpecificationDigest(
+        _digest_text(f"{specification}|{cell.identity.semantic_cell_key}")
     )
     if cell.identity.experiment_name == _SYNTHESIS_NAME:
         upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
@@ -323,7 +337,7 @@ def _execution_context(
                 "|".join(
                     (
                         str(cell.identity.semantic_cell_key),
-                        str(scientific_dependency_digest),
+                        str(dependency_specification),
                         _scientific_code_digest(workspace_root),
                         *parent_digests,
                     )
@@ -331,13 +345,12 @@ def _execution_context(
             )
         )
         required = (scientific_result_artifact_key(cell),)
-    provenance = _provenance(plan, config, workspace_root)
     return ExecutionContext(
         workspace_root=workspace_root,
         plan_digest=plan.plan_digest,
-        scientific_specification_digest=configuration_digest,
-        scientific_dependency_digest=scientific_dependency_digest,
-        provenance_fingerprint=provenance,
+        scientific_specification_digest=specification,
+        scientific_dependency_digest=dependency_specification,
+        provenance_fingerprint=_provenance(plan, config, workspace_root),
         dependency_fingerprint=dependency,
         manifest_digest=DigestHex(str(model_digest(cell))),
         required_artifact_keys=required,
@@ -375,12 +388,12 @@ def _provenance(
 def _scientific_code_digest(workspace_root: Path) -> str:
     root = workspace_root / "src/trajcert"
     digest = sha256()
-    files = tuple(
+    paths = tuple(
         path
         for path in root.rglob("*.py")
         if "reporting" not in path.parts and path.name not in {"cli.py", "operator.py"}
     )
-    for path in sorted(files):
+    for path in sorted(paths):
         relative = path.relative_to(workspace_root).as_posix().encode("utf-8")
         digest.update(relative)
         digest.update(bytes.fromhex(str(file_digest(path))))
@@ -388,13 +401,16 @@ def _scientific_code_digest(workspace_root: Path) -> str:
 
 
 def _source_commit(workspace_root: Path) -> str:
-    result = subprocess.run(
-        ("git", "rev-parse", "HEAD"),
-        cwd=workspace_root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            ("git", "rev-parse", "HEAD"),
+            cwd=workspace_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise InvalidScientificDataError("cannot resolve source commit") from exc
     commit = result.stdout.strip()
     if len(commit) != 40:
         raise InvalidScientificDataError("source commit must be a full Git SHA-1")
@@ -402,13 +418,16 @@ def _source_commit(workspace_root: Path) -> str:
 
 
 def _dirty_tree(workspace_root: Path) -> bool:
-    result = subprocess.run(
-        ("git", "status", "--porcelain", "--untracked-files=no"),
-        cwd=workspace_root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            ("git", "status", "--porcelain", "--untracked-files=no"),
+            cwd=workspace_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise InvalidScientificDataError("cannot inspect source working tree") from exc
     return bool(result.stdout.strip())
 
 
