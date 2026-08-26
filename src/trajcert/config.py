@@ -7,7 +7,7 @@ from itertools import pairwise
 from math import isclose
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, Literal, Self, cast
+from typing import Annotated, Literal, cast
 
 import yaml
 from pydantic import Field, StrictFloat, field_validator, model_validator
@@ -411,7 +411,10 @@ class TrajCertConfig(ConfigModel):
         if self.sequential.utility.max_events % self.sequential.utility.checkpoint_every != 0:
             raise ValueError("utility max_events must be divisible by checkpoint_every")
         _validate_nested_partitions(self.grids.partitions)
-        if any(case.fine_bands > self.method.finest_bands for case in self.study_design.strict_timing_cases):
+        if any(
+            case.fine_bands > self.method.finest_bands
+            for case in self.study_design.strict_timing_cases
+        ):
             raise ValueError("strict timing case exceeds method.finest_bands")
         return self
 
@@ -422,7 +425,7 @@ class TrajCertConfig(ConfigModel):
     @classmethod
     def from_yaml(cls, path: Path) -> TrajCertConfig:
         try:
-            loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+            loaded = cast(object, yaml.safe_load(path.read_text(encoding="utf-8")))
         except OSError as exc:
             raise ConfigurationError(f"cannot read configuration file: {path}") from exc
         except yaml.YAMLError as exc:
@@ -461,10 +464,12 @@ def _coerce_yaml_value(value: object) -> YamlValue:
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     if isinstance(value, list):
-        return tuple(_coerce_yaml_value(item) for item in value)
+        items = cast(list[object], value)
+        return tuple(_coerce_yaml_value(item) for item in items)
     if isinstance(value, Mapping):
+        mapping = cast(Mapping[object, object], value)
         result: dict[str, YamlValue] = {}
-        for key, item in value.items():
+        for key, item in mapping.items():
             if not isinstance(key, str):
                 raise ConfigurationError("configuration mapping keys must be strings")
             result[key] = _coerce_yaml_value(item)
