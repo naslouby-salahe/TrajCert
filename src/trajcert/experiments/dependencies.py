@@ -55,7 +55,7 @@ _PRODUCER_ROOTS = {
     "Sharpness Against Generic Oracle": Path("src/trajcert/experiments/safety.py"),
     "Safety and Intrinsic Impossibility": Path("src/trajcert/experiments/safety.py"),
     "Anytime Implementation Hand Cases": Path("src/trajcert/experiments/anytime.py"),
-    "Anytime Coverage Stress": Path("src/trajcert/experiments/coverage.py"),
+    "Anytime Coverage Stress": Path("src/trajcert/experiments/anytime.py"),
     "Population Sensitivity Utility": Path("src/trajcert/experiments/sensitivity.py"),
     "Sequential Sensitivity Utility": Path("src/trajcert/experiments/sensitivity.py"),
     "Failure Boundary Atlas": Path("src/trajcert/experiments/failure_boundaries.py"),

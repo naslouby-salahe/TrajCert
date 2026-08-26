@@ -7,9 +7,8 @@ from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import TrajectoryPartition, build_partition, partition_name
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
-from trajcert.experiments.anytime import run_anytime_hand_case
+from trajcert.experiments.anytime import evaluate_configured_coverage_stress, run_anytime_hand_case
 from trajcert.experiments.comparator_reduction import evaluate_comparator_reduction
-from trajcert.experiments.coverage import evaluate_configured_coverage_stress
 from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
     evaluate_failure_boundary,

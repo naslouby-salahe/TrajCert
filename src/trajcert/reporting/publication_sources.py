@@ -11,7 +11,7 @@ from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition, partition_name
 from trajcert.data.summaries import summarize_full_law
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.coverage import CoverageEvidenceResult
+from trajcert.experiments.anytime import CoverageEvidenceResult
 from trajcert.experiments.failure_boundaries import FailureBoundaryResult
 from trajcert.experiments.inventory import (
     BaselineAssumptionRow,
