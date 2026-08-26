@@ -280,6 +280,12 @@ class CoverageConfig(ConfigModel):
     checkpoint_every: PositiveInt
     acceptance_upper_limit: UnitFloat
 
+    @model_validator(mode="after")
+    def validate_checkpoint_interval(self) -> CoverageConfig:
+        if self.checkpoint_every > self.max_events:
+            raise ValueError("coverage checkpoint_every cannot exceed max_events")
+        return self
+
 
 class SequentialUtilityConfig(ConfigModel):
     streams: PositiveInt
@@ -412,6 +418,8 @@ class TrajCertConfig(ConfigModel):
             raise ValueError("coverage max_events must be divisible by checkpoint_every")
         if self.sequential.utility.max_events % self.sequential.utility.checkpoint_every != 0:
             raise ValueError("utility max_events must be divisible by checkpoint_every")
+        if not set(self.sequential.utility.rho) <= set(self.grids.rho):
+            raise ValueError("sequential.utility.rho must be a subset of grids.rho")
         _validate_nested_partitions(self.grids.partitions)
         if any(
             case.fine_bands > self.method.finest_bands
