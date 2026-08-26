@@ -62,9 +62,15 @@ def _bernoulli_interval(
         return ClosedProbabilityInterval(lower=0.0, upper=1.0)
     threshold = log(1.0 / delta)
     maximum_likelihood = successes / total
-    lower = 0.0 if successes == 0 else _root(successes, total, 0.0, maximum_likelihood, threshold, root_tolerance, True)
-    upper = 1.0 if successes == total else _root(
-        successes, total, maximum_likelihood, 1.0, threshold, root_tolerance, False
+    lower = (
+        0.0
+        if successes == 0
+        else _root(successes, total, 0.0, maximum_likelihood, threshold, root_tolerance, True)
+    )
+    upper = (
+        1.0
+        if successes == total
+        else _root(successes, total, maximum_likelihood, 1.0, threshold, root_tolerance, False)
     )
     return ClosedProbabilityInterval(lower=lower, upper=upper)
 
