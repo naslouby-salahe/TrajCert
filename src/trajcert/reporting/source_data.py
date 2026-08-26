@@ -14,12 +14,9 @@ from pydantic import Field
 from trajcert.analysis.metrics import MetricName, PracticalMetric
 from trajcert.config import TrajCertConfig
 from trajcert.data.partitions import partition_name
-from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.sensitivity import PopulationUtilityResult
 from trajcert.experiments.synthesis import TrajectoryOperationalGainSynthesis
-from trajcert.math.bounds import sharp_risk_set
-from trajcert.math.information import observed_timing_information
 from trajcert.storage import ArtifactKey, DigestHex, file_digest
 from trajcert.types import (
     CompatibilityRegime,
@@ -126,54 +123,31 @@ class PartitionCoherenceFigureRow(DomainModel):
 class PopulationUtilitySourceEvidence(DomainModel):
     law_name: LawName
     partition_name: PartitionName
-    summary: ObservableSummary
     result: PopulationUtilityResult
 
 
 def population_rho_utility_rows(
     evidence: tuple[PopulationUtilitySourceEvidence, ...],
-    config: TrajCertConfig,
 ) -> tuple[RhoUtilityRow, ...]:
-    rows: list[RhoUtilityRow] = []
-    for item in evidence:
-        rho = item.result.sensitivity_budget
-        solved = sharp_risk_set(
-            summary=item.summary,
-            sensitivity_budget=rho,
-            root_atol=config.numerics.root_atol,
-            identity_atol=config.numerics.identity_atol,
+    return tuple(
+        RhoUtilityRow(
+            analysis_type=AnalysisType.POPULATION,
+            law_name=item.law_name,
+            rho=item.result.sensitivity_budget,
+            partition_name=item.partition_name,
+            metric_name=MetricName("Population latent-risk upper bound"),
+            metric_value=item.result.risk_upper,
+            compatibility_state=item.result.compatibility_regime,
+            tau=item.result.tau,
+            risk_upper=item.result.risk_upper,
+            identified_width=item.result.identified_width,
+            worst_case_upper=item.result.unresolved_as_harm_upper,
+            absolute_tightening=item.result.absolute_tightening,
+            relative_unresolved_gain=item.result.relative_unresolved_gain,
+            materiality_pass=item.result.materially_nonvacuous,
         )
-        interval = solved.latent_risk
-        risk_upper = None if interval is None else float(interval.upper)
-        if item.result.risk_upper is None:
-            if risk_upper is not None:
-                raise InvalidScientificDataError(
-                    "population utility result disagrees with reconstructed risk interval"
-                )
-        elif risk_upper is None or abs(risk_upper - item.result.risk_upper) > config.numerics.comparison_guard:
-            raise InvalidScientificDataError(
-                "population utility result disagrees with reconstructed risk upper bound"
-            )
-        tau_value = observed_timing_information(item.summary)
-        rows.append(
-            RhoUtilityRow(
-                analysis_type=AnalysisType.POPULATION,
-                law_name=item.law_name,
-                rho=rho,
-                partition_name=item.partition_name,
-                metric_name=MetricName("Population latent-risk upper bound"),
-                metric_value=item.result.risk_upper,
-                compatibility_state=item.result.compatibility_regime,
-                tau=None if tau_value is None else float(tau_value),
-                risk_upper=item.result.risk_upper,
-                identified_width=None if interval is None else float(interval.width),
-                worst_case_upper=item.result.unresolved_as_harm_upper,
-                absolute_tightening=item.result.absolute_tightening,
-                relative_unresolved_gain=item.result.relative_unresolved_gain,
-                materiality_pass=item.result.materially_nonvacuous,
-            )
-        )
-    return tuple(rows)
+        for item in evidence
+    )
 
 
 def sequential_rho_utility_rows(
