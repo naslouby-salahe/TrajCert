@@ -11,7 +11,13 @@ from trajcert.experiments.solver_validation import (
 )
 from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase, assess_safety_geometry, safety_budget_cases
-from trajcert.types import DomainModel, ToleranceValue
+from trajcert.types import (
+    DomainModel,
+    InformationNats,
+    SafetyCaseName,
+    SafetyRegime,
+    ToleranceValue,
+)
 
 _COMPATIBILITY_OFFSET = 0.005
 _SHARPNESS_OFFSET = 0.05
@@ -39,6 +45,8 @@ class CompatibilityFloorBehaviorResult(DomainModel):
 
 class SafetyCaseEvaluation(DomainModel):
     case: SafetyBudgetCase
+    tau: InformationNats | None
+    expected_regime: SafetyRegime | None
     assessment: SafetyAssessment | None
     frontier_oracle: SafetyFrontierOracleComparison | None
     passed: bool
@@ -115,12 +123,17 @@ def safety_and_intrinsic_impossibility(
     oracle_digits: int,
     identity_atol: ToleranceValue,
 ) -> SafetyIntrinsicResult:
+    tau_value = observed_timing_information(summary)
+    tau = None if tau_value is None else float(tau_value)
     evaluations: list[SafetyCaseEvaluation] = []
     for case in safety_budget_cases(summary):
+        expected_regime = _expected_safety_regime(case)
         if not case.valid or case.risk_budget is None:
             evaluations.append(
                 SafetyCaseEvaluation(
                     case=case,
+                    tau=tau,
+                    expected_regime=expected_regime,
                     assessment=None,
                     frontier_oracle=None,
                     passed=True,
@@ -137,12 +150,29 @@ def safety_and_intrinsic_impossibility(
         evaluations.append(
             SafetyCaseEvaluation(
                 case=case,
+                tau=tau,
+                expected_regime=expected_regime,
                 assessment=assessment,
                 frontier_oracle=frontier,
-                passed=frontier.passed,
+                passed=frontier.passed and assessment.regime is expected_regime,
             )
         )
     return SafetyIntrinsicResult(
         cases=tuple(evaluations),
         passed=all(item.passed for item in evaluations),
     )
+
+
+def _expected_safety_regime(case: SafetyBudgetCase) -> SafetyRegime | None:
+    if not case.valid:
+        return None
+    by_name = {
+        SafetyCaseName("Below resolved harmful mass"): SafetyRegime.RESOLVED_HARM_EXCEEDS_BUDGET,
+        SafetyCaseName(
+            "Between resolved mass and intrinsic boundary"
+        ): SafetyRegime.INTRINSICALLY_UNCERTIFIABLE,
+        SafetyCaseName("At intrinsic boundary"): SafetyRegime.INTERIOR_SAFETY_FRONTIER,
+        SafetyCaseName("Interior safety frontier"): SafetyRegime.INTERIOR_SAFETY_FRONTIER,
+        SafetyCaseName("Assumption-free boundary"): SafetyRegime.ASSUMPTION_FREE_SAFE,
+    }
+    return by_name[case.name]
