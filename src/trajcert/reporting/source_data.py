@@ -11,8 +11,11 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import Field
 
-from trajcert.analysis.metrics import MetricName
+from trajcert.analysis.metrics import MetricName, PracticalMetric
+from trajcert.config import TrajCertConfig
+from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
+from trajcert.experiments.synthesis import TrajectoryOperationalGainSynthesis
 from trajcert.storage import ArtifactKey, DigestHex, file_digest
 from trajcert.types import (
     CompatibilityRegime,
@@ -114,6 +117,42 @@ class PartitionCoherenceFigureRow(DomainModel):
     tau: InformationNats
     risk_lower: RiskValue
     risk_upper: RiskValue
+
+
+def sequential_rho_utility_rows(
+    synthesis: TrajectoryOperationalGainSynthesis,
+    config: TrajCertConfig,
+) -> tuple[RhoUtilityRow, ...]:
+    fine_partition = partition_name(config.method.finest_bands)
+    endpoint_partition = partition_name(1)
+    return tuple(
+        RhoUtilityRow(
+            analysis_type=AnalysisType.SEQUENTIAL,
+            law_name=result.law_name,
+            rho=result.sensitivity_budget,
+            partition_name=fine_partition,
+            baseline_partition_name=endpoint_partition,
+            metric_name=MetricName(result.metric_name.value),
+            method_mean=result.method_mean,
+            baseline_mean=result.baseline_mean,
+            mean_paired_difference=result.effect.mean_paired_difference,
+            bootstrap_lower_95=result.bootstrap.lower,
+            bootstrap_upper_95=result.bootstrap.upper,
+            holm_adjusted_p=result.holm_adjusted_p_value,
+            materiality_pass=result.materiality_pass,
+            never_certified_fraction_method=(
+                result.never_certified_fraction_method
+                if result.metric_name is PracticalMetric.TIME_TO_FIRST_CERTIFICATION
+                else None
+            ),
+            never_certified_fraction_baseline=(
+                result.never_certified_fraction_baseline
+                if result.metric_name is PracticalMetric.TIME_TO_FIRST_CERTIFICATION
+                else None
+            ),
+        )
+        for result in synthesis.tests
+    )
 
 
 def write_source_data(path: Path, rows: Sequence[DomainModel]) -> DigestHex:
