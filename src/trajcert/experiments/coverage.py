@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from typing import cast
+
+import numpy as np
+from numpy.typing import NDArray
+
 from trajcert.config import (
     CoverageStressCaseConfig,
     CoverageStressSensitivityReference,
@@ -111,8 +116,8 @@ def _sensitivity_budget(
         full_law = build_full_law(parameters, summary.partition.band_count)
         reference = float(
             direct_mutual_information(
-                tuple(float(value) for value in summary.harmful_by_band),
-                tuple(float(value) for value in summary.correct_by_band),
+                _float_tuple(summary.harmful_by_band),
+                _float_tuple(summary.correct_by_band),
                 float(summary.unresolved_mass),
                 float(full_law.terminal_harmful),
                 config.numerics.oracle_digits,
@@ -145,3 +150,7 @@ def _risk_budget(
             "near-certification coverage stress requires a compatible true-law bound"
         )
     return min(1.0, float(solved.latent_risk.upper) + float(case.beta_offset))
+
+
+def _float_tuple(values: NDArray[np.float64]) -> tuple[float, ...]:
+    return tuple(cast(list[float], values.tolist()))
