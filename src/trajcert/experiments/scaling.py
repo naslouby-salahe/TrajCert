@@ -24,6 +24,7 @@ from trajcert.types import DomainModel, LawKey, SeedIndex
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 _OUTER_SAMPLE_SIZE = 500
 
+
 class ScalingTarget(StrEnum):
     POPULATION_SOLVER = "population-solver"
     OUTER_PROJECTION = "outer-projection"
@@ -101,7 +102,9 @@ def _benchmark_target(
         if measurement.root_iterations is not None
     )
     outer_nodes = tuple(
-        measurement.outer_nodes for measurement in measurements if measurement.outer_nodes is not None
+        measurement.outer_nodes
+        for measurement in measurements
+        if measurement.outer_nodes is not None
     )
     return ScalingTargetSummary(
         target=target,
@@ -112,9 +115,7 @@ def _benchmark_target(
             0.0 if len(runtimes) < 2 else float(stdev(float(value) for value in runtimes))
         ),
         peak_rss_mib=max(measurement.peak_rss_mib for measurement in measurements),
-        median_root_iterations=(
-            None if not root_iterations else float(median(root_iterations))
-        ),
+        median_root_iterations=(None if not root_iterations else float(median(root_iterations))),
         median_outer_nodes=None if not outer_nodes else float(median(outer_nodes)),
     )
 
@@ -138,7 +139,9 @@ def _isolated_measurement(
     envelope = ScalingWorkerEnvelope.model_validate_json(parent_connection.recv())
     parent_connection.close()
     if process.exitcode != 0 or envelope.measurement is None:
-        raise RuntimeError(envelope.failure or f"isolated scaling worker failed: {process.exitcode}")
+        raise RuntimeError(
+            envelope.failure or f"isolated scaling worker failed: {process.exitcode}"
+        )
     return envelope.measurement
 
 
