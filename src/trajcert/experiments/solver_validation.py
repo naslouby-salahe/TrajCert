@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from typing import cast
+
+import numpy as np
+
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.information import observed_timing_information
 from trajcert.math.oracle import direct_mutual_information, solve_information_oracle
@@ -14,6 +18,7 @@ from trajcert.types import (
     SafetyRegime,
     SensitivityBudget,
     ToleranceValue,
+    Vector,
 )
 
 
@@ -124,18 +129,24 @@ def compare_safety_frontier_to_oracle(
         )
     hidden = float(risk_budget) - float(summary.resolved_harmful_mass)
     oracle_value = direct_mutual_information(
-        harmful=tuple(float(value) for value in summary.harmful_by_band),
-        correct=tuple(float(value) for value in summary.correct_by_band),
+        harmful=_float_tuple(summary.harmful_by_band),
+        correct=_float_tuple(summary.correct_by_band),
         unresolved=float(summary.unresolved_mass),
         hidden_terminal_harmful=hidden,
         oracle_digits=oracle_digits,
     )
     production_value = float(safety.safety_frontier)
-    error = abs(production_value - float(oracle_value))
+    oracle_rho_star = float(oracle_value)
+    error = abs(production_value - oracle_rho_star)
     return SafetyFrontierOracleComparison(
         applicable=True,
         production_rho_star=production_value,
-        oracle_rho_star=float(oracle_value),
+        oracle_rho_star=oracle_rho_star,
         absolute_error=error,
         passed=error <= identity_atol,
     )
+
+
+def _float_tuple(values: Vector) -> tuple[float, ...]:
+    array = np.asarray(values, dtype=np.float64)
+    return tuple(cast(float, array.item(index)) for index in range(array.size))
