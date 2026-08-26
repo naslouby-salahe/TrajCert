@@ -53,6 +53,7 @@ from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTi
 from trajcert.paths import ExperimentLeaf, ExperimentSlug, experiment_leaf
 from trajcert.provenance import BaselineName, ExperimentNameValue, MethodName
 from trajcert.reporting.source_data import (
+    PARTITION_COHERENCE_POPULATION_LAWS,
     AnalysisType,
     CompatibilityFloorSourceEvidence,
     CompatibilitySafetyRow,
@@ -799,10 +800,12 @@ def _population_figure_evidence(
 ) -> tuple[PopulationFigureEvidence, ...]:
     target_rho = float(config.study_design.partition_coherence_figure_rho)
     band_counts = {partition_name(value): value for value in config.grids.partitions}
+    figure_laws = {LAW_DISPLAY_NAMES[key] for key in PARTITION_COHERENCE_POPULATION_LAWS}
     selected = tuple(
         item
         for item in evidence
-        if abs(float(item.result.sensitivity_budget) - target_rho)
+        if item.law_name in figure_laws
+        and abs(float(item.result.sensitivity_budget) - target_rho)
         <= float(config.numerics.comparison_guard)
     )
     return tuple(

@@ -502,6 +502,13 @@ def partition_timing_rows(
     return tuple(_partition_timing_row(item, config) for item in evidence)
 
 
+PARTITION_COHERENCE_POPULATION_LAWS: tuple[LawKey, ...] = (
+    LawKey.TIMING_HARMFUL_LATE,
+    LawKey.TERMINAL_HARMFUL_UNRESOLVED,
+    LawKey.TIMING_TERMINAL_HARMFUL_LATE,
+)
+
+
 def partition_coherence_figure_rows(
     population_evidence: tuple[PopulationFigureEvidence, ...],
     same_endpoint_evidence: tuple[SameEndpointFigureEvidence, ...],
@@ -511,11 +518,7 @@ def partition_coherence_figure_rows(
     partition_pairs = tuple(
         (partition_name(band_count), band_count) for band_count in config.grids.partitions
     )
-    population_laws = (
-        LAW_DISPLAY_NAMES[LawKey.TIMING_HARMFUL_LATE],
-        LAW_DISPLAY_NAMES[LawKey.TERMINAL_HARMFUL_UNRESOLVED],
-        LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE],
-    )
+    population_laws = tuple(LAW_DISPLAY_NAMES[key] for key in PARTITION_COHERENCE_POPULATION_LAWS)
     expected_population = tuple(
         product(population_laws, tuple(name for name, _ in partition_pairs))
     )
