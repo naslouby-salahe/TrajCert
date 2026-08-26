@@ -15,8 +15,8 @@ from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.dispatch import execute_scientific_cell
 from trajcert.experiments.plan import build_plan, cells_for_experiment
+from trajcert.experiments.runner import execute_scientific_cell
 from trajcert.provenance import ExperimentNameValue
 from trajcert.reporting.source_data import (
     AnalysisType,

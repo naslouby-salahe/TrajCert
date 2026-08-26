@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import product
+from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
@@ -23,12 +24,75 @@ from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.mathematics import (
+    ConvexityResult,
+    IdentityResult,
+    LegacyPartitionIncoherenceResult,
+    RefinementIdentityResult,
+    SafetyBoundaryCaseEvaluation,
+    SharpSetIdentityResult,
+)
+from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
 from trajcert.experiments.registry import authoritative_registry
+from trajcert.experiments.runner import (
+    CellExecutionResult,
+    CellExecutor,
+    ExecutionContext,
+    LocalValidityAuditResult,
+    LocalValidityTarget,
+    StaticComponentDependency,
+    audit_local_validity_targets,
+    read_verified_scientific_result,
+    scientific_result_artifact_key,
+    verified_upstream_completion_and_index,
+)
+from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
 from trajcert.experiments.sensitivity import PopulationUtilityResult, SequentialUtilityResult
-from trajcert.provenance import BaselineName, MethodName
+from trajcert.experiments.solver_validation import SolverOracleComparison
+from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
+from trajcert.paths import ExperimentLeaf, ExperimentSlug, experiment_leaf
+from trajcert.provenance import BaselineName, ExperimentNameValue, MethodName
+from trajcert.reporting.source_data import (
+    AnalysisType,
+    CompatibilityFloorSourceEvidence,
+    CompatibilitySafetyRow,
+    PartitionCoherenceFigureRow,
+    PartitionTimingEvidence,
+    PartitionTimingRow,
+    PopulationFigureEvidence,
+    PopulationUtilitySourceEvidence,
+    RhoUtilityRow,
+    SafetySourceEvidence,
+    SameEndpointFigureEvidence,
+    ScientificConsequence,
+    SharpnessSourceEvidence,
+    TheoremName,
+    TheoremValidationObservation,
+    TheoremValidationSummaryRow,
+    build_publication_source_rows,
+    compatibility_safety_evidence,
+    compatibility_safety_rows,
+    partition_coherence_figure_rows,
+    partition_timing_rows,
+    population_rho_utility_rows,
+    theorem_validation_summary_rows,
+    write_source_data,
+)
+from trajcert.storage import (
+    ArtifactIndexEntry,
+    ArtifactKey,
+    CellArtifactIndex,
+    DependencyFingerprint,
+    DigestHex,
+    atomic_write_model,
+    file_digest,
+    model_digest,
+    models_digest,
+)
 from trajcert.types import (
     DomainModel,
     FiniteFloat,
+    LawKey,
     LawName,
     PartitionName,
     PositiveInt,
@@ -40,6 +104,29 @@ from trajcert.types import (
 
 _METHOD_NAME = MethodName("TrajCert finest trajectory partition")
 _BASELINE_NAME = BaselineName("Endpoint-only partition")
+_SYNTHESIS_EXPERIMENT_NAME = "Statistical Synthesis"
+_SYNTHESIS_RECORD_KEY = ArtifactKey("statistical-synthesis|synthesis-record")
+_PROTOCOL_CONSTANTS_KEY = ArtifactKey("publication-source|protocol-constants")
+_SYNTHETIC_LAWS_KEY = ArtifactKey("publication-source|synthetic-laws")
+_BASELINES_KEY = ArtifactKey("publication-source|baselines")
+_EXPERIMENT_MATRIX_KEY = ArtifactKey("publication-source|experiment-matrix")
+_THEOREM_TABLE_KEY = ArtifactKey("publication-source|theorem-validation-summary")
+_SOLVER_ORACLE_KEY = ArtifactKey("publication-source|solver-oracle-validation")
+_PARTITION_TABLE_KEY = ArtifactKey("publication-source|partition-timing-results")
+_COMPATIBILITY_TABLE_KEY = ArtifactKey("publication-source|compatibility-safety")
+_ANYTIME_COVERAGE_KEY = ArtifactKey("publication-source|anytime-coverage")
+_RHO_UTILITY_KEY = ArtifactKey("publication-source|rho-utility")
+_FAILURE_BOUNDARIES_KEY = ArtifactKey("publication-source|failure-boundaries")
+_COMPUTATIONAL_SCALING_KEY = ArtifactKey("publication-source|computational-scaling")
+_FIGURE_PARTITION_KEY = ArtifactKey("publication-source|figure-partition-coherence")
+_FIGURE_TIMING_KEY = ArtifactKey("publication-source|figure-timing-value")
+_FIGURE_PROFILE_KEY = ArtifactKey("publication-source|figure-information-profile")
+_FIGURE_PATHS_KEY = ArtifactKey("publication-source|figure-anytime-paths")
+_FIGURE_COVERAGE_KEY = ArtifactKey("publication-source|figure-anytime-coverage")
+_FIGURE_RHO_KEY = ArtifactKey("publication-source|figure-rho-sensitivity")
+_FIGURE_FAILURE_KEY = ArtifactKey("publication-source|figure-failure-boundaries")
+_FIGURE_SCALING_KEY = ArtifactKey("publication-source|figure-computational-scaling")
+_LOCAL_VALIDITY_KEY = ArtifactKey("statistical-synthesis|local-validity-audit")
 
 
 class PopulationUtilityEvidence(DomainModel):
@@ -452,5 +539,826 @@ def _comparison_key(
     metric: PracticalMetric,
 ) -> SemanticComparisonKey:
     return SemanticComparisonKey(
-        f"Sequential Sensitivity Utility|{law_name}|rho={float(sensitivity_budget):.17g}|{metric.value}"
+        f"Sequential Sensitivity Utility|{law_name}|"
+        + f"rho={float(sensitivity_budget):.17g}|{metric.value}"
     )
+
+
+class SynthesisDependencyReference(DomainModel):
+    semantic_cell_key: str
+    completion_digest: DigestHex
+    scientific_result_digest: DigestHex
+
+
+def synthesis_dependency_fingerprint(
+    upstream_cells: tuple[PlannedCell, ...],
+    workspace_root: Path,
+) -> DependencyFingerprint:
+    if not upstream_cells:
+        raise InvalidScientificDataError("Statistical Synthesis requires upstream cells")
+    references = tuple(
+        _dependency_reference(cell, workspace_root)
+        for cell in sorted(upstream_cells, key=_cell_order)
+    )
+    return DependencyFingerprint(str(models_digest(references)))
+
+
+def verify_synthesis_dependency_fingerprint(
+    upstream_cells: tuple[PlannedCell, ...],
+    workspace_root: Path,
+    expected: DependencyFingerprint,
+) -> None:
+    observed = synthesis_dependency_fingerprint(upstream_cells, workspace_root)
+    if observed != expected:
+        raise InvalidScientificDataError(
+            "Statistical Synthesis dependency fingerprint does not match persisted upstream "
+            + "evidence"
+        )
+
+
+def _dependency_reference(
+    cell: PlannedCell,
+    workspace_root: Path,
+) -> SynthesisDependencyReference:
+    completion, index = verified_upstream_completion_and_index(cell, workspace_root)
+    return SynthesisDependencyReference(
+        semantic_cell_key=str(cell.identity.semantic_cell_key),
+        completion_digest=model_digest(completion),
+        scientific_result_digest=index.artifacts[0].sha256,
+    )
+
+
+def _cell_order(cell: PlannedCell) -> tuple[int, int, str]:
+    return (
+        int(cell.experiment_order),
+        int(cell.cell_ordinal),
+        str(cell.identity.semantic_cell_key),
+    )
+
+
+def sequential_rho_utility_rows(
+    synthesis: TrajectoryOperationalGainSynthesis,
+    config: TrajCertConfig,
+) -> tuple[RhoUtilityRow, ...]:
+    fine_partition = partition_name(config.method.finest_bands)
+    endpoint_partition = partition_name(1)
+    return tuple(
+        RhoUtilityRow(
+            analysis_type=AnalysisType.SEQUENTIAL,
+            law_name=result.law_name,
+            rho=result.sensitivity_budget,
+            partition_name=fine_partition,
+            baseline_partition_name=endpoint_partition,
+            metric_name=MetricName(result.metric_name.value),
+            method_mean=result.method_mean,
+            baseline_mean=result.baseline_mean,
+            mean_paired_difference=result.effect.mean_paired_difference,
+            bootstrap_lower_95=result.bootstrap.lower,
+            bootstrap_upper_95=result.bootstrap.upper,
+            holm_adjusted_p=result.holm_adjusted_p_value,
+            materiality_pass=result.materiality_pass,
+            never_certified_fraction_method=(
+                result.never_certified_fraction_method
+                if result.metric_name is PracticalMetric.TIME_TO_FIRST_CERTIFICATION
+                else None
+            ),
+            never_certified_fraction_baseline=(
+                result.never_certified_fraction_baseline
+                if result.metric_name is PracticalMetric.TIME_TO_FIRST_CERTIFICATION
+                else None
+            ),
+        )
+        for result in synthesis.tests
+    )
+
+
+class SynthesisEvidenceBundle(DomainModel):
+    population_synthesis: PopulationUtilitySynthesis
+    sequential_synthesis: TrajectoryOperationalGainSynthesis
+    theorem_validation: tuple[TheoremValidationSummaryRow, ...]
+    partition_timing: tuple[PartitionTimingRow, ...]
+    compatibility_safety: tuple[CompatibilitySafetyRow, ...]
+    rho_utility: tuple[RhoUtilityRow, ...]
+    partition_coherence_figure: tuple[PartitionCoherenceFigureRow, ...]
+
+
+def build_synthesis_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    config: TrajCertConfig,
+) -> SynthesisEvidenceBundle:
+    population_source = _population_utility_evidence(plan, workspace_root)
+    sequential_source = _sequential_utility_evidence(plan, workspace_root)
+    population_synthesis = synthesize_population_utility(
+        tuple(
+            PopulationUtilityEvidence(
+                law_name=item.law_name,
+                partition_name=item.partition_name,
+                result=item.result,
+            )
+            for item in population_source
+        ),
+        config,
+    )
+    sequential_synthesis = synthesize_from_sequential_utility(sequential_source, config)
+    population_rows = population_rho_utility_rows(population_source)
+    sequential_rows = sequential_rho_utility_rows(sequential_synthesis, config)
+    return SynthesisEvidenceBundle(
+        population_synthesis=population_synthesis,
+        sequential_synthesis=sequential_synthesis,
+        theorem_validation=theorem_validation_summary_rows(
+            _theorem_validation_observations(plan, workspace_root)
+        ),
+        partition_timing=partition_timing_rows(
+            _partition_timing_evidence(plan, workspace_root, config),
+            config,
+        ),
+        compatibility_safety=compatibility_safety_rows(
+            compatibility_safety_evidence(
+                _compatibility_floor_evidence(plan, workspace_root),
+                _sharpness_evidence(plan, workspace_root),
+                _safety_evidence(plan, workspace_root, config),
+            )
+        ),
+        rho_utility=(*population_rows, *sequential_rows),
+        partition_coherence_figure=partition_coherence_figure_rows(
+            _population_figure_evidence(population_source, config),
+            _same_endpoint_figure_evidence(plan, workspace_root, config),
+            config,
+        ),
+    )
+
+
+def _population_utility_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[PopulationUtilitySourceEvidence, ...]:
+    return tuple(
+        PopulationUtilitySourceEvidence(
+            law_name=_required_law(cell),
+            partition_name=_required_partition(cell),
+            result=read_verified_scientific_result(cell, workspace_root, PopulationUtilityResult),
+        )
+        for cell in _cells(plan, "Population Sensitivity Utility")
+    )
+
+
+def _sequential_utility_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[SequentialUtilityEvidence, ...]:
+    return tuple(
+        SequentialUtilityEvidence(
+            law_name=_required_law(cell),
+            result=read_verified_scientific_result(cell, workspace_root, SequentialUtilityResult),
+        )
+        for cell in _cells(plan, "Sequential Sensitivity Utility")
+    )
+
+
+def _partition_timing_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    config: TrajCertConfig,
+) -> tuple[PartitionTimingEvidence, ...]:
+    band_counts = {partition_name(value): value for value in config.grids.partitions}
+    evidence: list[PartitionTimingEvidence] = []
+    for cell in _cells(plan, "Partition Coherence"):
+        comparison = cell.identity.coordinates.comparison_pair_name
+        if comparison is None:
+            raise InvalidScientificDataError("partition-coherence cell lacks its comparison pair")
+        fine_text, separator, coarse_text = str(comparison).partition(" -> ")
+        if not separator:
+            raise InvalidScientificDataError("partition-coherence comparison pair is malformed")
+        fine = PartitionName(fine_text)
+        coarse = PartitionName(coarse_text)
+        result = read_verified_scientific_result(cell, workspace_root, PartitionCoherenceResult)
+        evidence.append(
+            PartitionTimingEvidence(
+                law_name=_required_law(cell),
+                coarse_partition=coarse,
+                fine_partition=fine,
+                coarse_band_count=_band_count(coarse, band_counts),
+                fine_band_count=_band_count(fine, band_counts),
+                rho=_rho_from_persisted_tau(result, cell),
+                result=result,
+            )
+        )
+    return tuple(evidence)
+
+
+def _compatibility_floor_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[CompatibilityFloorSourceEvidence, ...]:
+    return tuple(
+        CompatibilityFloorSourceEvidence(
+            law_name=_required_law(cell),
+            partition_name=_required_partition(cell),
+            result=read_verified_scientific_result(
+                cell, workspace_root, CompatibilityFloorBehaviorResult
+            ),
+        )
+        for cell in _cells(plan, "Compatibility Floor Behavior")
+    )
+
+
+def _sharpness_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[SharpnessSourceEvidence, ...]:
+    return tuple(
+        SharpnessSourceEvidence(
+            law_name=_required_law(cell),
+            partition_name=_required_partition(cell),
+            result=read_verified_scientific_result(cell, workspace_root, SolverOracleComparison),
+        )
+        for cell in _cells(plan, "Sharpness Against Generic Oracle")
+    )
+
+
+def _safety_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    config: TrajCertConfig,
+) -> tuple[SafetySourceEvidence, ...]:
+    finest = partition_name(config.method.finest_bands)
+    return tuple(
+        SafetySourceEvidence(
+            law_name=_required_law(cell),
+            partition_name=finest,
+            result=read_verified_scientific_result(cell, workspace_root, SafetyCaseEvaluation),
+        )
+        for cell in _cells(plan, "Safety and Intrinsic Impossibility")
+    )
+
+
+def _population_figure_evidence(
+    evidence: tuple[PopulationUtilitySourceEvidence, ...],
+    config: TrajCertConfig,
+) -> tuple[PopulationFigureEvidence, ...]:
+    target_rho = float(config.study_design.partition_coherence_figure_rho)
+    band_counts = {partition_name(value): value for value in config.grids.partitions}
+    selected = tuple(
+        item
+        for item in evidence
+        if abs(float(item.result.sensitivity_budget) - target_rho)
+        <= float(config.numerics.comparison_guard)
+    )
+    return tuple(
+        PopulationFigureEvidence(
+            law_name=item.law_name,
+            partition_name=item.partition_name,
+            partition_band_count=_band_count(item.partition_name, band_counts),
+            result=item.result,
+        )
+        for item in selected
+    )
+
+
+def _same_endpoint_figure_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    config: TrajCertConfig,
+) -> tuple[SameEndpointFigureEvidence, ...]:
+    target = float(config.study_design.partition_coherence_figure_rho)
+    band_counts = {partition_name(value): value for value in config.grids.partitions}
+    evidence: list[SameEndpointFigureEvidence] = []
+    for cell in _cells(plan, "Same Endpoint, Different Timing"):
+        rho = cell.identity.coordinates.rho
+        if rho is None or abs(float(rho) - target) > float(config.numerics.comparison_guard):
+            continue
+        partition = _required_partition(cell)
+        evidence.append(
+            SameEndpointFigureEvidence(
+                law_name=_same_endpoint_timed_law(config),
+                partition_name=partition,
+                partition_band_count=_band_count(partition, band_counts),
+                rho=rho,
+                result=read_verified_scientific_result(
+                    cell, workspace_root, SameEndpointTimingResult
+                ),
+            )
+        )
+    return tuple(evidence)
+
+
+def _theorem_validation_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[TheoremValidationObservation, ...]:
+    observations: list[TheoremValidationObservation] = []
+    observations.extend(_legacy_observations(plan, workspace_root))
+    observations.extend(
+        _identity_observations(plan, workspace_root, "Path Information Decomposition")
+    )
+    observations.extend(_convexity_observations(plan, workspace_root))
+    observations.extend(
+        _identity_observations(plan, workspace_root, "Minimum Compatibility Identity")
+    )
+    observations.extend(_sharp_set_observations(plan, workspace_root))
+    observations.extend(_refinement_observations(plan, workspace_root))
+    observations.extend(_identity_observations(plan, workspace_root, "Strict Timing-Gain Identity"))
+    observations.extend(_safety_boundary_observations(plan, workspace_root))
+    observations.extend(
+        _identity_observations(plan, workspace_root, "Endpoint Special-Case Identity")
+    )
+    observations.extend(
+        _identity_observations(plan, workspace_root, "Anytime Projection Proof Check")
+    )
+    observations.extend(
+        _identity_observations(plan, workspace_root, "Population Complexity Proof Check")
+    )
+    return tuple(observations)
+
+
+def _legacy_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[TheoremValidationObservation, ...]:
+    name = "Legacy Partition Incoherence Check"
+    cells = _cells(plan, name)
+    primary = _family_primary_artifact(cells)
+    observations: list[TheoremValidationObservation] = []
+    for cell in cells:
+        result = read_verified_scientific_result(
+            cell, workspace_root, LegacyPartitionIncoherenceResult
+        )
+        observations.append(
+            _theorem_observation(
+                name,
+                primary,
+                result.passed,
+                None,
+                result.endpoint_difference_magnitude,
+                "Legacy bandwise odds-ratio sensitivity changes under trajectory coarsening.",
+            )
+        )
+    return tuple(observations)
+
+
+def _identity_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    name: str,
+) -> tuple[TheoremValidationObservation, ...]:
+    cells = _cells(plan, name)
+    primary = _family_primary_artifact(cells)
+    consequence = _identity_consequence(name)
+    observations: list[TheoremValidationObservation] = []
+    for cell in cells:
+        result = read_verified_scientific_result(cell, workspace_root, IdentityResult)
+        observations.append(
+            _theorem_observation(
+                name,
+                primary,
+                result.passed,
+                result.max_absolute_error,
+                None,
+                consequence,
+            )
+        )
+    return tuple(observations)
+
+
+def _convexity_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[TheoremValidationObservation, ...]:
+    name = "Information Profile Convexity"
+    cells = _cells(plan, name)
+    primary = _family_primary_artifact(cells)
+    return tuple(_convexity_observation(cell, workspace_root, name, primary) for cell in cells)
+
+
+def _convexity_observation(
+    cell: PlannedCell,
+    workspace_root: Path,
+    name: str,
+    primary: ArtifactKey,
+) -> TheoremValidationObservation:
+    result = read_verified_scientific_result(cell, workspace_root, ConvexityResult)
+    return _theorem_observation(
+        name,
+        primary,
+        result.passed,
+        result.max_direct_second_derivative_error,
+        result.minimum_second_derivative,
+        "The hidden-mass information profile is convex on its nondegenerate interior.",
+    )
+
+
+def _sharp_set_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[TheoremValidationObservation, ...]:
+    name = "Sharp-Set Constructive Identity"
+    cells = _cells(plan, name)
+    primary = _family_primary_artifact(cells)
+    observations: list[TheoremValidationObservation] = []
+    for cell in cells:
+        result = read_verified_scientific_result(cell, workspace_root, SharpSetIdentityResult)
+        observations.append(
+            _theorem_observation(
+                name,
+                primary,
+                result.passed,
+                result.max_endpoint_error,
+                None,
+                "The production sharp latent-risk set matches the independent information oracle.",
+            )
+        )
+    return tuple(observations)
+
+
+def _refinement_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[TheoremValidationObservation, ...]:
+    name = "Refinement Dominance Identity"
+    cells = _cells(plan, name)
+    primary = _family_primary_artifact(cells)
+    observations: list[TheoremValidationObservation] = []
+    for cell in cells:
+        result = read_verified_scientific_result(cell, workspace_root, RefinementIdentityResult)
+        error = max(result.max_profile_order_violation, result.max_profile_difference_error)
+        observations.append(
+            _theorem_observation(
+                name,
+                primary,
+                result.passed,
+                error,
+                result.timing_gain,
+                "Deterministic trajectory refinement preserves the PIS budget and nests sharp "
+                + "risk sets.",
+            )
+        )
+    return tuple(observations)
+
+
+def _safety_boundary_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[TheoremValidationObservation, ...]:
+    name = "Safety-Boundary Identity"
+    cells = _cells(plan, name)
+    primary = _family_primary_artifact(cells)
+    observations: list[TheoremValidationObservation] = []
+    for cell in cells:
+        result = read_verified_scientific_result(cell, workspace_root, SafetyBoundaryCaseEvaluation)
+        frontier_error = None if result.identity is None else result.identity.frontier_error
+        observations.append(
+            _theorem_observation(
+                name,
+                primary,
+                result.passed,
+                frontier_error,
+                None,
+                "The interior safety frontier equals direct path information at the "
+                + "risk-budget boundary.",
+            )
+        )
+    return tuple(observations)
+
+
+def _theorem_observation(
+    name: str,
+    primary: ArtifactKey,
+    passed: bool,
+    error: FiniteFloat | None,
+    margin: FiniteFloat | None,
+    consequence: str,
+) -> TheoremValidationObservation:
+    return TheoremValidationObservation(
+        theorem_name=TheoremName(name),
+        passed=passed,
+        absolute_error=error,
+        inequality_margin=margin,
+        primary_artifact=primary,
+        scientific_consequence=ScientificConsequence(consequence),
+    )
+
+
+def _identity_consequence(name: str) -> str:
+    consequences = {
+        "Path Information Decomposition": (
+            "The minimum full path information equals identifiable resolved-timing information."
+        ),
+        "Minimum Compatibility Identity": (
+            "The compatibility floor equals observable resolved-timing information."
+        ),
+        "Strict Timing-Gain Identity": (
+            "Under the theorem conditions, positive timing information yields a strict "
+            + "upper-bound gain."
+        ),
+        "Endpoint Special-Case Identity": (
+            "The endpoint-only partition has zero resolved-timing information."
+        ),
+        "Anytime Projection Proof Check": (
+            "The declared time-uniform projection proof contract is represented by the "
+            + "implementation."
+        ),
+        "Population Complexity Proof Check": (
+            "The population computation satisfies its declared operation-count contract."
+        ),
+    }
+    return consequences[name]
+
+
+def _rho_from_persisted_tau(
+    result: PartitionCoherenceResult,
+    cell: PlannedCell,
+) -> SensitivityBudget:
+    coordinate = cell.identity.coordinates.sensitivity_coordinate
+    prefix = "rho-offset="
+    if coordinate is None or not str(coordinate).startswith(prefix):
+        raise InvalidScientificDataError("partition-coherence cell lacks its rho-offset coordinate")
+    return float(result.fine_tau) + float(str(coordinate).removeprefix(prefix))
+
+
+def _family_primary_artifact(cells: tuple[PlannedCell, ...]) -> ArtifactKey:
+    if not cells:
+        raise InvalidScientificDataError("theorem validation experiment has no cells")
+    return scientific_result_artifact_key(cells[0])
+
+
+def _cells(plan: ExperimentPlan, name: str) -> tuple[PlannedCell, ...]:
+    cells = cells_for_experiment(plan, ExperimentNameValue(name))
+    if not cells:
+        raise InvalidScientificDataError(f"required synthesis experiment has no cells: {name}")
+    return cells
+
+
+def _required_law(cell: PlannedCell) -> LawName:
+    value = cell.identity.coordinates.synthetic_law_name
+    if value is None:
+        raise InvalidScientificDataError("persisted synthesis source cell lacks its law coordinate")
+    return value
+
+
+def _required_partition(cell: PlannedCell) -> PartitionName:
+    value = cell.identity.coordinates.partition_name
+    if value is None:
+        raise InvalidScientificDataError(
+            "persisted synthesis source cell lacks its partition coordinate"
+        )
+    return value
+
+
+def _band_count(
+    name: PartitionName,
+    configured: dict[PartitionName, int],
+) -> int:
+    try:
+        return configured[name]
+    except KeyError as exc:
+        raise InvalidScientificDataError(
+            f"unknown configured partition in synthesis: {name}"
+        ) from exc
+
+
+def _same_endpoint_timed_law(config: TrajCertConfig) -> LawName:
+    if LawKey.SAME_ENDPOINT_WITH_TIMING not in config.laws:
+        raise InvalidScientificDataError("same-endpoint timed law is missing from configuration")
+    return LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING]
+
+
+class SynthesisLocalValidityInput(DomainModel):
+    static_dependencies: tuple[StaticComponentDependency, ...]
+    targets: tuple[LocalValidityTarget, ...]
+
+
+class StatisticalSynthesisRecord(DomainModel):
+    population: PopulationUtilitySynthesis
+    sequential: TrajectoryOperationalGainSynthesis
+    local_validity: LocalValidityAuditResult
+
+
+def synthesis_artifact_keys() -> tuple[ArtifactKey, ...]:
+    return (
+        _SYNTHESIS_RECORD_KEY,
+        _PROTOCOL_CONSTANTS_KEY,
+        _SYNTHETIC_LAWS_KEY,
+        _BASELINES_KEY,
+        _EXPERIMENT_MATRIX_KEY,
+        _THEOREM_TABLE_KEY,
+        _SOLVER_ORACLE_KEY,
+        _PARTITION_TABLE_KEY,
+        _COMPATIBILITY_TABLE_KEY,
+        _ANYTIME_COVERAGE_KEY,
+        _RHO_UTILITY_KEY,
+        _FAILURE_BOUNDARIES_KEY,
+        _COMPUTATIONAL_SCALING_KEY,
+        _FIGURE_PARTITION_KEY,
+        _FIGURE_TIMING_KEY,
+        _FIGURE_PROFILE_KEY,
+        _FIGURE_PATHS_KEY,
+        _FIGURE_COVERAGE_KEY,
+        _FIGURE_RHO_KEY,
+        _FIGURE_FAILURE_KEY,
+        _FIGURE_SCALING_KEY,
+        _LOCAL_VALIDITY_KEY,
+    )
+
+
+def make_statistical_synthesis_executor(
+    plan: ExperimentPlan,
+    config: TrajCertConfig,
+    locality: SynthesisLocalValidityInput,
+) -> CellExecutor:
+    def executor(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
+        return execute_statistical_synthesis(cell, context, plan, config, locality)
+
+    return executor
+
+
+def execute_statistical_synthesis(
+    cell: PlannedCell,
+    context: ExecutionContext,
+    plan: ExperimentPlan,
+    config: TrajCertConfig,
+    locality: SynthesisLocalValidityInput,
+) -> CellExecutionResult:
+    _validate_synthesis_cell(cell, context, plan)
+    upstream_cells = tuple(item for item in plan.cells if item.identity != cell.identity)
+    verify_synthesis_dependency_fingerprint(
+        upstream_cells,
+        context.workspace_root,
+        context.dependency_fingerprint,
+    )
+    evidence = build_synthesis_evidence(plan, context.workspace_root, config)
+    publication = build_publication_source_rows(plan, context.workspace_root, config)
+    local_validity = audit_local_validity_targets(
+        locality.static_dependencies,
+        locality.targets,
+    )
+    record = StatisticalSynthesisRecord(
+        population=evidence.population_synthesis,
+        sequential=evidence.sequential_synthesis,
+        local_validity=local_validity,
+    )
+    paths = synthesis_artifact_paths(cell)
+    root = context.workspace_root
+    digests = {
+        _SYNTHESIS_RECORD_KEY: atomic_write_model(root / paths[_SYNTHESIS_RECORD_KEY], record),
+        _PROTOCOL_CONSTANTS_KEY: write_source_data(
+            root / paths[_PROTOCOL_CONSTANTS_KEY], publication.protocol_constants
+        ),
+        _SYNTHETIC_LAWS_KEY: write_source_data(
+            root / paths[_SYNTHETIC_LAWS_KEY], publication.synthetic_laws
+        ),
+        _BASELINES_KEY: write_source_data(root / paths[_BASELINES_KEY], publication.baselines),
+        _EXPERIMENT_MATRIX_KEY: write_source_data(
+            root / paths[_EXPERIMENT_MATRIX_KEY], publication.experiment_matrix
+        ),
+        _THEOREM_TABLE_KEY: write_source_data(
+            root / paths[_THEOREM_TABLE_KEY], evidence.theorem_validation
+        ),
+        _SOLVER_ORACLE_KEY: write_source_data(
+            root / paths[_SOLVER_ORACLE_KEY], publication.solver_oracle_validation
+        ),
+        _PARTITION_TABLE_KEY: write_source_data(
+            root / paths[_PARTITION_TABLE_KEY], evidence.partition_timing
+        ),
+        _COMPATIBILITY_TABLE_KEY: write_source_data(
+            root / paths[_COMPATIBILITY_TABLE_KEY], evidence.compatibility_safety
+        ),
+        _ANYTIME_COVERAGE_KEY: write_source_data(
+            root / paths[_ANYTIME_COVERAGE_KEY], publication.anytime_coverage
+        ),
+        _RHO_UTILITY_KEY: write_source_data(root / paths[_RHO_UTILITY_KEY], evidence.rho_utility),
+        _FAILURE_BOUNDARIES_KEY: write_source_data(
+            root / paths[_FAILURE_BOUNDARIES_KEY], publication.failure_boundaries
+        ),
+        _COMPUTATIONAL_SCALING_KEY: write_source_data(
+            root / paths[_COMPUTATIONAL_SCALING_KEY], publication.computational_scaling
+        ),
+        _FIGURE_PARTITION_KEY: write_source_data(
+            root / paths[_FIGURE_PARTITION_KEY], evidence.partition_coherence_figure
+        ),
+        _FIGURE_TIMING_KEY: write_source_data(
+            root / paths[_FIGURE_TIMING_KEY], publication.figure_timing_value
+        ),
+        _FIGURE_PROFILE_KEY: write_source_data(
+            root / paths[_FIGURE_PROFILE_KEY], publication.figure_information_profile
+        ),
+        _FIGURE_PATHS_KEY: write_source_data(
+            root / paths[_FIGURE_PATHS_KEY], publication.figure_anytime_paths
+        ),
+        _FIGURE_COVERAGE_KEY: write_source_data(
+            root / paths[_FIGURE_COVERAGE_KEY], publication.figure_anytime_coverage
+        ),
+        _FIGURE_RHO_KEY: write_source_data(
+            root / paths[_FIGURE_RHO_KEY], publication.figure_rho_sensitivity
+        ),
+        _FIGURE_FAILURE_KEY: write_source_data(
+            root / paths[_FIGURE_FAILURE_KEY], publication.figure_failure_boundaries
+        ),
+        _FIGURE_SCALING_KEY: write_source_data(
+            root / paths[_FIGURE_SCALING_KEY], publication.figure_computational_scaling
+        ),
+        _LOCAL_VALIDITY_KEY: atomic_write_model(root / paths[_LOCAL_VALIDITY_KEY], local_validity),
+    }
+    entries = tuple(
+        ArtifactIndexEntry(
+            artifact_key=key,
+            relative_path=paths[key],
+            sha256=digests[key],
+        )
+        for key in synthesis_artifact_keys()
+    )
+    for entry in entries:
+        if file_digest(root / entry.relative_path) != entry.sha256:
+            raise InvalidScientificDataError(
+                f"Statistical Synthesis artifact checksum mismatch: {entry.artifact_key}"
+            )
+    return CellExecutionResult(
+        artifact_index=CellArtifactIndex(artifacts=entries),
+        completed_seed_count=0,
+        metrics_complete=True,
+        statistics_complete=True,
+        invariant_validation_pass=True,
+        dependency_validation_pass=True,
+        provenance_record_complete=True,
+    )
+
+
+def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
+    if str(cell.identity.experiment_name) != _SYNTHESIS_EXPERIMENT_NAME:
+        raise InvalidScientificDataError("synthesis artifact paths require the synthesis cell")
+    synthesis = experiment_leaf(
+        cell.identity.experiment_slug,
+        ExperimentLeaf.EVALUATION_AGGREGATES,
+    )
+    return {
+        _SYNTHESIS_RECORD_KEY: synthesis / "synthesis_record.json",
+        _PROTOCOL_CONSTANTS_KEY: _aggregate(
+            "scientific-and-data-inventory", "protocol_constants.parquet"
+        ),
+        _SYNTHETIC_LAWS_KEY: _aggregate("scientific-and-data-inventory", "synthetic_laws.parquet"),
+        _BASELINES_KEY: _aggregate("scientific-and-data-inventory", "baselines.parquet"),
+        _EXPERIMENT_MATRIX_KEY: _aggregate(
+            "scientific-and-data-inventory", "experiment_matrix.parquet"
+        ),
+        _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet",
+        _SOLVER_ORACLE_KEY: _aggregate(
+            "production-solver-vs-independent-oracle", "solver_oracle_validation.parquet"
+        ),
+        _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",
+        _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",
+        _ANYTIME_COVERAGE_KEY: _aggregate("anytime-coverage-stress", "anytime_coverage.parquet"),
+        _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",
+        _FAILURE_BOUNDARIES_KEY: _aggregate("failure-boundary-atlas", "failure_boundaries.parquet"),
+        _COMPUTATIONAL_SCALING_KEY: _aggregate(
+            "computational-scaling", "computational_scaling.parquet"
+        ),
+        _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",
+        _FIGURE_TIMING_KEY: _aggregate("strict-timing-gain", "figure_timing_value.parquet"),
+        _FIGURE_PROFILE_KEY: _aggregate(
+            "safety-and-intrinsic-impossibility", "figure_information_profile.parquet"
+        ),
+        _FIGURE_PATHS_KEY: _aggregate("anytime-coverage-stress", "figure_anytime_paths.parquet"),
+        _FIGURE_COVERAGE_KEY: _aggregate(
+            "anytime-coverage-stress", "figure_anytime_coverage.parquet"
+        ),
+        _FIGURE_RHO_KEY: _aggregate(
+            "population-sensitivity-utility", "figure_rho_sensitivity.parquet"
+        ),
+        _FIGURE_FAILURE_KEY: _aggregate(
+            "failure-boundary-atlas", "figure_failure_boundaries.parquet"
+        ),
+        _FIGURE_SCALING_KEY: _aggregate(
+            "computational-scaling", "figure_computational_scaling.parquet"
+        ),
+        _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",
+    }
+
+
+def _aggregate(experiment_slug: str, filename: str) -> Path:
+    return (
+        experiment_leaf(ExperimentSlug(experiment_slug), ExperimentLeaf.EVALUATION_AGGREGATES)
+        / filename
+    )
+
+
+def _validate_synthesis_cell(
+    cell: PlannedCell,
+    context: ExecutionContext,
+    plan: ExperimentPlan,
+) -> None:
+    if str(cell.identity.experiment_name) != _SYNTHESIS_EXPERIMENT_NAME:
+        raise InvalidScientificDataError(
+            "dedicated synthesis executor received a non-synthesis cell"
+        )
+    if not cell.executable:
+        raise InvalidScientificDataError("Statistical Synthesis cell is planned invalid")
+    if plan.plan_digest != context.plan_digest:
+        raise InvalidScientificDataError("Statistical Synthesis plan digest is stale")
+    if context.expected_seed_count != 0:
+        raise InvalidScientificDataError(
+            "Statistical Synthesis is deterministic and uses zero seeds"
+        )
+    if context.required_artifact_keys != synthesis_artifact_keys():
+        raise InvalidScientificDataError(
+            "Statistical Synthesis required artifact contract is incomplete or reordered"
+        )

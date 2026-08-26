@@ -5,26 +5,12 @@ import os
 import subprocess
 from pathlib import Path
 
-from trajcert.analysis.locality import (
-    LocalValidityTarget,
-    RuntimeLineageArtifact,
-    ScientificInputClass,
-    StaticComponentDependency,
-)
 from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.dependencies import (
-    cell_dependency_fingerprint,
-    expected_seed_count,
-    producer_component_digest,
-    scientific_dependency_digest,
-    scientific_specification_digest,
-)
-from trajcert.experiments.execution import execute_dispatched_cell, scientific_result_artifact_key
 from trajcert.experiments.inventory import validate_scientific_inventory
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.registry import authoritative_registry
@@ -33,22 +19,34 @@ from trajcert.experiments.runner import (
     CellExecutor,
     DependencyReadiness,
     ExecutionContext,
+    LocalValidityTarget,
+    RuntimeLineageArtifact,
+    ScientificInputClass,
+    SmokeResult,
+    StaticComponentDependency,
+    cell_dependency_fingerprint,
     dependency_block_reason,
+    execute_dispatched_cell,
+    expected_seed_count,
+    producer_component_digest,
     run_cell,
+    run_smoke_fixtures,
+    scientific_dependency_digest,
+    scientific_result_artifact_key,
+    scientific_specification_digest,
 )
-from trajcert.experiments.smoke import SmokeResult, run_smoke_fixtures
 from trajcert.experiments.status import (
     CellStatus,
     ExperimentStatus,
     aggregate_experiment_status,
     inspect_cell_status,
 )
-from trajcert.experiments.synthesis_execution import (
+from trajcert.experiments.synthesis import (
     SynthesisLocalValidityInput,
     make_statistical_synthesis_executor,
     synthesis_artifact_keys,
+    synthesis_dependency_fingerprint,
 )
-from trajcert.experiments.synthesis_inputs import synthesis_dependency_fingerprint
 from trajcert.paths import RESULTS_ROOT, semantic_slug
 from trajcert.provenance import (
     CodeCommit,
