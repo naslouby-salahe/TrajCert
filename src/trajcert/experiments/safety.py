@@ -28,21 +28,21 @@ _COMPATIBILITY_OFFSET = 0.005
 _SHARPNESS_OFFSET = 0.05
 
 
-class CompatibilityPhaseStatus(StrEnum):
+class CompatibilitySweepStatus(StrEnum):
     APPLICABLE = "APPLICABLE"
     NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET = "NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET"
 
 
-class CompatibilityPhasePoint(DomainModel):
+class CompatibilitySweepPoint(DomainModel):
     label: str
     rho: float | None
-    status: CompatibilityPhaseStatus
+    status: CompatibilitySweepStatus
     comparison: SolverOracleComparison | None
 
 
 class CompatibilityFloorBehaviorResult(DomainModel):
     tau: float
-    points: tuple[CompatibilityPhasePoint, ...]
+    points: tuple[CompatibilitySweepPoint, ...]
     passed: bool
 
 
@@ -73,14 +73,14 @@ def compatibility_floor_behavior(
         ("at", tau),
         ("above", tau + _COMPATIBILITY_OFFSET),
     )
-    points: list[CompatibilityPhasePoint] = []
+    points: list[CompatibilitySweepPoint] = []
     for label, rho in definitions:
         if rho < 0.0:
             points.append(
-                CompatibilityPhasePoint(
+                CompatibilitySweepPoint(
                     label=label,
                     rho=None,
-                    status=CompatibilityPhaseStatus.NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET,
+                    status=CompatibilitySweepStatus.NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET,
                     comparison=None,
                 )
             )
@@ -93,10 +93,10 @@ def compatibility_floor_behavior(
             oracle_digits=oracle_digits,
         )
         points.append(
-            CompatibilityPhasePoint(
+            CompatibilitySweepPoint(
                 label=label,
                 rho=rho,
-                status=CompatibilityPhaseStatus.APPLICABLE,
+                status=CompatibilitySweepStatus.APPLICABLE,
                 comparison=comparison,
             )
         )
