@@ -28,18 +28,23 @@ from trajcert.experiments.runner import (
     DependencyReadiness,
     ExecutionContext,
     cell_completion_path,
-    cell_failure_path,
-    cell_running_path,
+    dependency_block_reason,
     run_cell,
 )
 from trajcert.experiments.smoke import SmokeResult, run_smoke_fixtures
+from trajcert.experiments.status import (
+    CellStatus,
+    ExperimentStatus,
+    aggregate_experiment_status,
+    inspect_cell_status,
+)
 from trajcert.experiments.synthesis_execution import (
     SynthesisLocalValidityInput,
     make_statistical_synthesis_executor,
     synthesis_artifact_keys,
 )
 from trajcert.experiments.synthesis_inputs import synthesis_dependency_fingerprint
-from trajcert.paths import RESULTS_ROOT
+from trajcert.paths import RESULTS_ROOT, semantic_slug
 from trajcert.provenance import (
     CodeCommit,
     EnvironmentDigest,
@@ -68,6 +73,7 @@ from trajcert.types import (
     LawKey,
     NonNegativeInt,
     PublicExecutionState,
+    ReasonCode,
 )
 
 _LOCK_PATH = Path("uv.lock")
@@ -115,21 +121,6 @@ _PRODUCER_ROOTS = {
     "Computational Scaling": Path("src/trajcert/experiments/scaling.py"),
     "Statistical Synthesis": Path("src/trajcert/experiments/synthesis_execution.py"),
 }
-
-
-class OperatorCellStatus(DomainModel):
-    semantic_cell_key: str
-    state: PublicExecutionState
-
-
-class OperatorExperimentStatus(DomainModel):
-    experiment_name: ExperimentNameValue
-    state: PublicExecutionState
-    total_cells: NonNegativeInt
-    completed_cells: NonNegativeInt
-    failed_cells: NonNegativeInt
-    running_cells: NonNegativeInt
-    ready_cells: NonNegativeInt
 
 
 class RunExperimentResult(DomainModel):
@@ -237,7 +228,8 @@ def run_experiment(
             failed_cells=0,
             blocked_cells=0,
         )
-    dependencies = _dependency_readiness(plan, workspace_root, cells[0])
+    status_cache: dict[ExperimentNameValue, ExperimentStatus] = {}
+    dependencies = _dependency_readiness(plan, config, workspace_root, cells[0], status_cache)
     executor = _executor(name, plan, config)
     completed = reused = failed = blocked = 0
     for cell in cells:
@@ -264,34 +256,11 @@ def experiment_status(
     experiment_name: str,
     *,
     workspace_root: Path = Path("."),
-) -> OperatorExperimentStatus:
-    plan = build_plan(_load_config(workspace_root))
+) -> ExperimentStatus:
+    config = _load_config(workspace_root)
+    plan = build_plan(config)
     name = _known_experiment_name(experiment_name)
-    cells = cells_for_experiment(plan, name)
-    statuses = tuple(_persisted_cell_status(cell, workspace_root) for cell in cells)
-    completed = sum(item.state is PublicExecutionState.COMPLETED for item in statuses)
-    failed = sum(item.state is PublicExecutionState.FAILED for item in statuses)
-    running = sum(item.state is PublicExecutionState.RUNNING for item in statuses)
-    ready = sum(item.state is PublicExecutionState.READY for item in statuses)
-    if not cells:
-        state = PublicExecutionState.INVALID
-    elif failed:
-        state = PublicExecutionState.FAILED
-    elif running:
-        state = PublicExecutionState.RUNNING
-    elif completed == len(cells):
-        state = PublicExecutionState.COMPLETED
-    else:
-        state = PublicExecutionState.READY
-    return OperatorExperimentStatus(
-        experiment_name=name,
-        state=state,
-        total_cells=len(cells),
-        completed_cells=completed,
-        failed_cells=failed,
-        running_cells=running,
-        ready_cells=ready,
-    )
+    return _experiment_status(name, plan, config, workspace_root, {})
 
 
 def report(
@@ -317,30 +286,72 @@ def _known_experiment_name(value: str) -> ExperimentNameValue:
     return requested
 
 
-def _persisted_cell_status(cell: PlannedCell, workspace_root: Path) -> OperatorCellStatus:
+def _experiment_status(
+    name: ExperimentNameValue,
+    plan: ExperimentPlan,
+    config: TrajCertConfig,
+    workspace_root: Path,
+    cache: dict[ExperimentNameValue, ExperimentStatus],
+) -> ExperimentStatus:
+    cached = cache.get(name)
+    if cached is not None:
+        return cached
+    cells = cells_for_experiment(plan, name)
+    statuses = tuple(
+        _current_cell_status(cell, plan, config, workspace_root, cache) for cell in cells
+    )
+    declared_cells = next(
+        item.declared_cells for item in authoritative_registry() if item.experiment_name == name
+    )
+    result = aggregate_experiment_status(name, statuses, declared_cells)
+    cache[name] = result
+    return result
+
+
+def _current_cell_status(
+    cell: PlannedCell,
+    plan: ExperimentPlan,
+    config: TrajCertConfig,
+    workspace_root: Path,
+    cache: dict[ExperimentNameValue, ExperimentStatus],
+) -> CellStatus:
     key = str(cell.identity.semantic_cell_key)
     if not cell.executable:
-        state = PublicExecutionState.INVALID
-    elif cell_running_path(cell, workspace_root).is_file():
-        state = PublicExecutionState.RUNNING
-    elif cell_failure_path(cell, workspace_root).is_file():
-        state = PublicExecutionState.FAILED
-    elif cell_completion_path(cell, workspace_root).is_file():
-        state = PublicExecutionState.COMPLETED
-    else:
-        state = PublicExecutionState.READY
-    return OperatorCellStatus(semantic_cell_key=key, state=state)
+        return CellStatus(
+            semantic_cell_key=key,
+            state=PublicExecutionState.INVALID,
+            reason=cell.invalid_reason,
+        )
+    dependencies = _dependency_readiness(plan, config, workspace_root, cell, cache)
+    reason = dependency_block_reason(cell, dependencies)
+    if reason is not None:
+        return CellStatus(
+            semantic_cell_key=key,
+            state=PublicExecutionState.BLOCKED,
+            reason=reason,
+        )
+    try:
+        context = _execution_context(cell, plan, config, workspace_root)
+    except InvalidScientificDataError:
+        return CellStatus(
+            semantic_cell_key=key,
+            state=PublicExecutionState.BLOCKED,
+            reason=ReasonCode("CURRENT_EXECUTION_CONTEXT_UNAVAILABLE"),
+        )
+    return inspect_cell_status(cell, context, dependencies)
 
 
 def _dependency_readiness(
     plan: ExperimentPlan,
+    config: TrajCertConfig,
     workspace_root: Path,
     cell: PlannedCell,
+    cache: dict[ExperimentNameValue, ExperimentStatus],
 ) -> tuple[DependencyReadiness, ...]:
     return tuple(
         DependencyReadiness(
             experiment_name=name,
-            state=experiment_status(str(name), workspace_root=workspace_root).state,
+            state=_experiment_status(name, plan, config, workspace_root, cache).state,
         )
         for name in cell.required_experiments
     )
@@ -352,7 +363,7 @@ def _executor(
     config: TrajCertConfig,
 ) -> CellExecutor:
     if name == _SYNTHESIS_NAME:
-        return make_statistical_synthesis_executor(plan, config, _locality_input(plan, config))
+        return make_statistical_synthesis_executor(plan, config, _locality_input(plan))
 
     def execute(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
         return execute_dispatched_cell(cell, context, config)
@@ -537,7 +548,7 @@ def _source_commit(workspace_root: Path) -> str:
 def _dirty_tree(workspace_root: Path) -> bool:
     try:
         result = subprocess.run(
-            ("git", "status", "--porcelain=v1", "--untracked-files=no"),
+            ("git", "status", "--porcelain=v1", "--untracked-files=all"),
             cwd=workspace_root,
             check=True,
             capture_output=True,
@@ -548,7 +559,7 @@ def _dirty_tree(workspace_root: Path) -> bool:
     return bool(result.stdout.strip())
 
 
-def _locality_input(plan: ExperimentPlan, config: TrajCertConfig) -> SynthesisLocalValidityInput:
+def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:
     principal_name = LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE]
     sequential_cells = cells_for_experiment(
         plan, ExperimentNameValue("Sequential Sensitivity Utility")
@@ -566,7 +577,7 @@ def _locality_input(plan: ExperimentPlan, config: TrajCertConfig) -> SynthesisLo
     identity = LedgerIdentity(
         client_id=ClientId("synthetic-client"),
         action_channel_id=ActionChannelId("automatic-action"),
-        epoch_id=EpochId(f"{_semantic_slug(principal_name)}::static-epoch"),
+        epoch_id=EpochId(f"{semantic_slug(str(principal_name))}::static-epoch"),
     )
     components = (
         "inference/categorical.py",
@@ -598,15 +609,6 @@ def _locality_input(plan: ExperimentPlan, config: TrajCertConfig) -> SynthesisLo
         root_artifact_key=root_key,
         lineage_artifacts=lineage,
     )
-
-
-def _semantic_slug(value: str) -> str:
-    characters = tuple(character.lower() if character.isalnum() else "-" for character in value)
-    collapsed: list[str] = []
-    for character in characters:
-        if character != "-" or not collapsed or collapsed[-1] != "-":
-            collapsed.append(character)
-    return "".join(collapsed).strip("-")
 
 
 def _assert_workspace_writable(workspace_root: Path) -> None:
