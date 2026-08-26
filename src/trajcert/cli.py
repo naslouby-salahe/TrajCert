@@ -6,7 +6,7 @@ from trajcert.operator import (
     RunExperimentResult,
     doctor,
     experiment_status,
-    persist_plan,
+    plan_view,
     preprocess,
     report,
     run_experiment,
@@ -25,7 +25,11 @@ def main() -> None:
     elif command is CliCommand.PREPROCESS:
         print(preprocess())
     elif command is CliCommand.PLAN:
-        print(persist_plan())
+        plan = plan_view()
+        print(
+            f"TrajCert plan: {plan.registry_total} cells "
+            f"({plan.executable_cells} executable, {plan.invalid_cells} invalid)"
+        )
     elif command is CliCommand.SMOKE:
         _print_run(smoke())
     elif command is CliCommand.RUN:
