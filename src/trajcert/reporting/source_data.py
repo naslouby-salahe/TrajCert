@@ -5,7 +5,7 @@ import tempfile
 from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import NewType
+from typing import NewType, Protocol, cast
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -35,6 +35,26 @@ from trajcert.types import (
 TheoremName = NewType("TheoremName", str)
 ScientificConsequence = NewType("ScientificConsequence", str)
 RegimeName = NewType("RegimeName", str)
+
+
+class _ReadParquet(Protocol):
+    def __call__(self, source: Path) -> pa.Table: ...
+
+
+class _WriteParquet(Protocol):
+    def __call__(
+        self,
+        table: pa.Table,
+        where: Path,
+        *,
+        compression: str,
+        use_dictionary: bool,
+        write_statistics: bool,
+    ) -> None: ...
+
+
+_READ_PARQUET = cast(_ReadParquet, pq.read_table)
+_WRITE_PARQUET = cast(_WriteParquet, pq.write_table)
 
 
 class AnalysisType(StrEnum):
@@ -201,7 +221,7 @@ def write_source_data(path: Path, rows: Sequence[DomainModel]) -> DigestHex:
 
 def read_source_data(path: Path) -> pa.Table:
     try:
-        table = pq.read_table(path)
+        table = _READ_PARQUET(path)
     except (OSError, pa.ArrowException) as exc:
         raise SerializationError(f"cannot read source-data Parquet: {path}") from exc
     if table.num_rows == 0:
@@ -220,7 +240,7 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
             delete=False,
         ) as stream:
             temporary_path = Path(stream.name)
-        pq.write_table(
+        _WRITE_PARQUET(
             table,
             temporary_path,
             compression="zstd",
@@ -229,7 +249,7 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
         )
         with temporary_path.open("rb") as stream:
             os.fsync(stream.fileno())
-        temporary_path.replace(path)
+        _ = temporary_path.replace(path)
         directory_descriptor = os.open(path.parent, os.O_RDONLY)
         try:
             os.fsync(directory_descriptor)
