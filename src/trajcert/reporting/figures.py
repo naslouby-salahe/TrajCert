@@ -470,6 +470,8 @@ def _horizontal_panels(count: int) -> tuple[Panel, ...]:
 
 
 def _grid_panels(count: int, columns: int) -> tuple[Panel, ...]:
+    if count <= 0:
+        raise InvalidScientificDataError("figure requires at least one panel")
     rows = (count + columns - 1) // columns
     gap_x = 24.0
     gap_y = 34.0
