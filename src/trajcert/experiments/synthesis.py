@@ -355,10 +355,14 @@ def _never_certified_fractions(
     if metric_name is not PracticalMetric.TIME_TO_FIRST_CERTIFICATION:
         return None, None
     sentinel = float(config.sequential.utility.max_events + 1)
-    method_count = np.count_nonzero(method_values == sentinel)
-    baseline_count = np.count_nonzero(baseline_values == sentinel)
-    method_fraction = int(method_count) / method_values.size
-    baseline_fraction = int(baseline_count) / baseline_values.size
+    method_count = sum(
+        method_values.item(index) == sentinel for index in range(method_values.size)
+    )
+    baseline_count = sum(
+        baseline_values.item(index) == sentinel for index in range(baseline_values.size)
+    )
+    method_fraction = method_count / method_values.size
+    baseline_fraction = baseline_count / baseline_values.size
     return method_fraction, baseline_fraction
 
 
