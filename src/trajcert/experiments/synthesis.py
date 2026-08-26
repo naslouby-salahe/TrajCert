@@ -107,6 +107,7 @@ def synthesize_population_utility(
         (item.law_name, item.partition_name, float(item.result.sensitivity_budget)): item
         for item in evidence
     }
+    primary_partition = partition_name(config.method.finest_bands)
     materiality = evaluate_population_materiality(
         (
             PopulationMaterialityObservation(
@@ -117,6 +118,7 @@ def synthesize_population_utility(
                 relative_unresolved_gain=by_key[key].result.relative_unresolved_gain,
             )
             for key in expected
+            if key[1] == primary_partition
         ),
         config,
     )
