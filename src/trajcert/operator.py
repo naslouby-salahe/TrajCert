@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib
 import os
 import subprocess
-from hashlib import sha256
 from pathlib import Path
 
 from trajcert.analysis.locality import (
@@ -18,8 +17,11 @@ from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.dependencies import (
+    cell_dependency_fingerprint,
+    expected_seed_count,
     producer_component_digest,
     scientific_dependency_digest,
+    scientific_specification_digest,
 )
 from trajcert.experiments.execution import execute_dispatched_cell, scientific_result_artifact_key
 from trajcert.experiments.inventory import validate_scientific_inventory
@@ -30,7 +32,6 @@ from trajcert.experiments.runner import (
     CellExecutor,
     DependencyReadiness,
     ExecutionContext,
-    cell_completion_path,
     dependency_block_reason,
     run_cell,
 )
@@ -60,7 +61,6 @@ from trajcert.reporting.export import ReportExportResult, export_report, validat
 from trajcert.reporting.source_data import figure_source_descriptors, table_source_descriptors
 from trajcert.storage import (
     ArtifactKey,
-    DependencyFingerprint,
     DigestHex,
     ProvenanceFingerprint,
     SpecificationDigest,
@@ -339,7 +339,7 @@ def _execution_context(
     config: TrajCertConfig,
     workspace_root: Path,
 ) -> ExecutionContext:
-    specification = SpecificationDigest(str(model_digest(config)))
+    specification = scientific_specification_digest(config)
     component_digest = producer_component_digest(workspace_root, cell.identity.experiment_name)
     dependency_specification = scientific_dependency_digest(
         specification,
@@ -351,21 +351,11 @@ def _execution_context(
         dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
         required = synthesis_artifact_keys()
     else:
-        parent_digests = tuple(
-            str(file_digest(cell_completion_path(parent, workspace_root)))
-            for parent in _parent_cells(plan, cell)
-            if cell_completion_path(parent, workspace_root).is_file()
-        )
-        dependency = DependencyFingerprint(
-            _digest_text(
-                "|".join(
-                    (
-                        str(cell.identity.semantic_cell_key),
-                        str(dependency_specification),
-                        *parent_digests,
-                    )
-                )
-            )
+        dependency = cell_dependency_fingerprint(
+            workspace_root,
+            plan,
+            cell,
+            dependency_specification,
         )
         required = (scientific_result_artifact_key(cell),)
     return ExecutionContext(
@@ -377,22 +367,8 @@ def _execution_context(
         dependency_fingerprint=dependency,
         manifest_digest=DigestHex(str(model_digest(cell))),
         required_artifact_keys=required,
-        expected_seed_count=_expected_seed_count(cell, config),
+        expected_seed_count=expected_seed_count(cell.identity.experiment_name, config),
     )
-
-
-def _expected_seed_count(cell: PlannedCell, config: TrajCertConfig) -> NonNegativeInt:
-    name = str(cell.identity.experiment_name)
-    if name == "Anytime Coverage Stress":
-        return config.sequential.coverage.streams
-    if name == "Sequential Sensitivity Utility":
-        return config.sequential.utility.streams
-    return 0
-
-
-def _parent_cells(plan: ExperimentPlan, cell: PlannedCell) -> tuple[PlannedCell, ...]:
-    required = set(cell.required_experiments)
-    return tuple(item for item in plan.cells if item.identity.experiment_name in required)
 
 
 def _provenance(
@@ -517,7 +493,3 @@ def _run_state(total: int, completed: int, failed: int, blocked: int) -> PublicE
     if completed == total:
         return PublicExecutionState.COMPLETED
     return PublicExecutionState.READY
-
-
-def _digest_text(value: str) -> str:
-    return sha256(value.encode("utf-8")).hexdigest()
