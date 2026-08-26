@@ -28,7 +28,11 @@ from trajcert.experiments.sensitivity import PopulationUtilityResult
 from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.synthesis_inputs import read_verified_scientific_result
 from trajcert.experiments.timing import PartitionCoherenceResult
-from trajcert.math.information import information_profile, minimum_information_point, observed_timing_information
+from trajcert.math.information import (
+    information_profile,
+    minimum_information_point,
+    observed_timing_information,
+)
 from trajcert.math.safety import assess_safety_geometry
 from trajcert.provenance import ExperimentNameValue
 from trajcert.reporting.source_data import RegimeName
@@ -183,7 +187,12 @@ def build_publication_source_rows(
     workspace_root,
     config: TrajCertConfig,
 ) -> PublicationSourceRows:
-    inventory = _single_result(plan, workspace_root, "Scientific and Data Inventory", InventoryValidationResult)
+    inventory = _single_result(
+        plan,
+        workspace_root,
+        "Scientific and Data Inventory",
+        InventoryValidationResult,
+    )
     solver_rows = _solver_rows(plan, workspace_root, config)
     coverage_results = _coverage_results(plan, workspace_root)
     failure_results = _failure_results(plan, workspace_root)
@@ -240,11 +249,16 @@ def _solver_rows(
                 cell_count=len(results),
                 max_abs_u_lower_error=_max_optional(item.abs_u_lower_error for item in results),
                 max_abs_u_upper_error=_max_optional(item.abs_u_upper_error for item in results),
-                max_abs_risk_upper_error=_max_optional(item.abs_risk_upper_error for item in results),
-                max_abs_rho_star_error=(max(frontier_errors) if attach_frontier and frontier_errors else None),
+                max_abs_risk_upper_error=_max_optional(
+                    item.abs_risk_upper_error for item in results
+                ),
+                max_abs_rho_star_error=(
+                    max(frontier_errors) if attach_frontier and frontier_errors else None
+                ),
                 rho_star_applicable_cell_count=(len(frontier_errors) if attach_frontier else 0),
                 state_mismatch_count=sum(not item.state_match for item in results),
-                passed=all(item.passed for item in results) and (frontier_pass if attach_frontier else True),
+                passed=all(item.passed for item in results)
+                and (frontier_pass if attach_frontier else True),
             )
         )
     return tuple(rows)
@@ -260,7 +274,7 @@ def _coverage_results(
 
 
 def _coverage_rows(
-    evidence: tuple[tuple[PlannedCell, CoverageEvidenceResult], ...]
+    evidence: tuple[tuple[PlannedCell, CoverageEvidenceResult], ...],
 ) -> tuple[AnytimeCoverageRow, ...]:
     rows: list[AnytimeCoverageRow] = []
     for cell, result in evidence:
@@ -302,7 +316,10 @@ def _anytime_path_rows(
             continue
         if result.band_count != config.method.finest_bands:
             continue
-        if abs(result.rho - (result.true_mutual_information + 0.01)) > config.numerics.comparison_guard:
+        if (
+            abs(result.rho - (result.true_mutual_information + 0.01))
+            > config.numerics.comparison_guard
+        ):
             continue
         if abs(result.beta - float(config.budgets.risk)) > config.numerics.comparison_guard:
             continue
@@ -326,7 +343,7 @@ def _anytime_path_rows(
 
 
 def _anytime_coverage_figure_rows(
-    evidence: tuple[tuple[PlannedCell, CoverageEvidenceResult], ...]
+    evidence: tuple[tuple[PlannedCell, CoverageEvidenceResult], ...],
 ) -> tuple[AnytimeCoverageFigureRow, ...]:
     rows: list[AnytimeCoverageFigureRow] = []
     for cell, result in evidence:
@@ -357,7 +374,7 @@ def _failure_results(
 
 
 def _failure_rows(
-    evidence: tuple[tuple[PlannedCell, FailureBoundaryResult], ...]
+    evidence: tuple[tuple[PlannedCell, FailureBoundaryResult], ...],
 ) -> tuple[FailureBoundaryRow, ...]:
     return tuple(
         FailureBoundaryRow(
@@ -378,7 +395,7 @@ def _failure_rows(
 
 
 def _failure_figure_rows(
-    evidence: tuple[tuple[PlannedCell, FailureBoundaryResult], ...]
+    evidence: tuple[tuple[PlannedCell, FailureBoundaryResult], ...],
 ) -> tuple[FailureBoundaryFigureRow, ...]:
     return tuple(
         FailureBoundaryFigureRow(
@@ -411,7 +428,9 @@ def _state_interpretation(state: ScientificState) -> str:
         ScientificState.CERTIFIED: "risk upper is within the configured budget",
         ScientificState.UNCERTIFIED: "valid evidence does not certify the configured budget",
         ScientificState.MODEL_INCOMPATIBLE: "the sensitivity model is incompatible with the evidence",
-        ScientificState.INTRINSICALLY_UNCERTIFIABLE: "the configured risk budget lies below the intrinsic boundary",
+        ScientificState.INTRINSICALLY_UNCERTIFIABLE: (
+            "the configured risk budget lies below the intrinsic boundary"
+        ),
         ScientificState.INSUFFICIENT_EVIDENCE: "evidence-count gates are not satisfied",
     }
     return interpretations[state]
@@ -450,7 +469,7 @@ def _scaling_rows(
 
 
 def _scaling_figure_rows(
-    results: tuple[ComputationalScalingResult, ...]
+    results: tuple[ComputationalScalingResult, ...],
 ) -> tuple[ComputationalScalingFigureRow, ...]:
     return tuple(
         ComputationalScalingFigureRow(
@@ -485,7 +504,9 @@ def _timing_figure_rows(
     for cell in _cells(plan, "Strict Timing Gain"):
         result = read_verified_scientific_result(cell, workspace_root, PartitionCoherenceResult)
         if result.coarse_upper is None or result.fine_upper is None:
-            raise InvalidScientificDataError("Figure 2 requires compatible strict-timing risk bounds")
+            raise InvalidScientificDataError(
+                "Figure 2 requires compatible strict-timing risk bounds"
+            )
         pair = str(cell.identity.coordinates.comparison_pair_name or "")
         law = str(cell.identity.coordinates.synthetic_law_name or "")
         offset = _rho_offset(cell)
@@ -512,7 +533,7 @@ def _population_results(
 
 
 def _rho_sensitivity_rows(
-    evidence: tuple[tuple[PlannedCell, PopulationUtilityResult], ...]
+    evidence: tuple[tuple[PlannedCell, PopulationUtilityResult], ...],
 ) -> tuple[RhoSensitivityFigureRow, ...]:
     log2_value = float(BINARY_MAX_INFORMATION_NATS)
     return tuple(
@@ -542,7 +563,8 @@ def _information_profile_rows(
         for cell, result in population
         if cell.identity.coordinates.synthetic_law_name == target_law
         and _required_partition(cell) == target_partition
-        and abs(float(result.sensitivity_budget) - target_rho) <= config.numerics.comparison_guard
+        and abs(float(result.sensitivity_budget) - target_rho)
+        <= config.numerics.comparison_guard
     )
     if len(matches) != 1:
         raise InvalidScientificDataError("Figure 3 requires one target population sensitivity cell")
