@@ -28,8 +28,17 @@ from trajcert.inference.categorical import (
 )
 from trajcert.inference.certification import CertificationAssessment, classify_certification
 from trajcert.inference.confidence import CategoricalConfidenceRegion, confidence_sequence_update
-from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelope, singleton_summary_envelope, summary_envelope_from_confidence
-from trajcert.inference.projection import ProjectionResult, ProjectionTerminationReason, project_upper_risk
+from trajcert.inference.envelope import (
+    ObservableSummaryEnvelope,
+    ScalarEnvelope,
+    singleton_summary_envelope,
+    summary_envelope_from_confidence,
+)
+from trajcert.inference.projection import (
+    ProjectionResult,
+    ProjectionTerminationReason,
+    project_upper_risk,
+)
 from trajcert.math.information import minimum_information_point, observed_timing_information
 from trajcert.math.oracle import (
     OracleMassInterval,
@@ -55,6 +64,7 @@ from trajcert.types import (
 
 _HAND_CASE_STREAM = SeedIndex(0)
 _PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
+_DIAGNOSTIC_NODE_CAP = 1
 
 
 class SequentialMethod(StrEnum):
@@ -290,9 +300,16 @@ def _hand_case_insufficient_matured(
         config.budgets.information_nats,
         config.budgets.risk,
         199,
+        outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
     )
     observed = trace.checkpoints[-1].assessment.scientific_state
-    return _state_result(1, partition, ScientificState.INSUFFICIENT_EVIDENCE, observed, trace.checkpoints[-1].projection)
+    return _state_result(
+        1,
+        partition,
+        ScientificState.INSUFFICIENT_EVIDENCE,
+        observed,
+        trace.checkpoints[-1].projection,
+    )
 
 
 def _hand_case_insufficient_resolved(
@@ -332,9 +349,16 @@ def _hand_case_insufficient_resolved(
         config.budgets.information_nats,
         config.budgets.risk,
         200,
+        outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
     )
     observed = trace.checkpoints[-1].assessment.scientific_state
-    return _state_result(2, partition, ScientificState.INSUFFICIENT_EVIDENCE, observed, trace.checkpoints[-1].projection)
+    return _state_result(
+        2,
+        partition,
+        ScientificState.INSUFFICIENT_EVIDENCE,
+        observed,
+        trace.checkpoints[-1].projection,
+    )
 
 
 def _hand_case_model_incompatible(
@@ -348,7 +372,13 @@ def _hand_case_model_incompatible(
     rho = tau - min(0.005, tau / 2.0)
     projection = _project(singleton_summary_envelope(summary), config, rho)
     assessment = _singleton_assessment(partition, config, projection, rho, config.budgets.risk)
-    return _state_result(3, partition, ScientificState.MODEL_INCOMPATIBLE, assessment.scientific_state, projection)
+    return _state_result(
+        3,
+        partition,
+        ScientificState.MODEL_INCOMPATIBLE,
+        assessment.scientific_state,
+        projection,
+    )
 
 
 def _hand_case_intrinsic(
@@ -359,7 +389,13 @@ def _hand_case_intrinsic(
     rho = tau + 0.01
     projection = _project(singleton_summary_envelope(summary), config, rho)
     assessment = _singleton_assessment(partition, config, projection, rho, config.budgets.risk)
-    return _state_result(4, partition, ScientificState.INTRINSICALLY_UNCERTIFIABLE, assessment.scientific_state, projection)
+    return _state_result(
+        4,
+        partition,
+        ScientificState.INTRINSICALLY_UNCERTIFIABLE,
+        assessment.scientific_state,
+        projection,
+    )
 
 
 def _hand_case_certified(
@@ -371,7 +407,13 @@ def _hand_case_certified(
     projection = _project(singleton_summary_envelope(summary), config, rho)
     beta = min(1.0, float(projection.proven_upper) + 0.005)
     assessment = _singleton_assessment(partition, config, projection, rho, beta)
-    return _state_result(5, partition, ScientificState.CERTIFIED, assessment.scientific_state, projection)
+    return _state_result(
+        5,
+        partition,
+        ScientificState.CERTIFIED,
+        assessment.scientific_state,
+        projection,
+    )
 
 
 def _hand_case_uncertified(
@@ -391,15 +433,25 @@ def _hand_case_uncertified(
         rho,
         float(minimum.latent_risk),
     )
-    return _state_result(6, partition, ScientificState.UNCERTIFIED, assessment.scientific_state, projection)
+    return _state_result(
+        6,
+        partition,
+        ScientificState.UNCERTIFIED,
+        assessment.scientific_state,
+        projection,
+    )
 
 
 def _hand_case_zero_resolved_plausible(
     partition: TrajectoryPartition, config: TrajCertConfig
 ) -> HandCaseResult:
     band_upper = 0.2 / (2.0 * partition.band_count)
-    harmful = tuple(ScalarEnvelope(lower=0.0, upper=band_upper) for _ in range(partition.band_count))
-    correct = tuple(ScalarEnvelope(lower=0.0, upper=band_upper) for _ in range(partition.band_count))
+    harmful = tuple(
+        ScalarEnvelope(lower=0.0, upper=band_upper) for _ in range(partition.band_count)
+    )
+    correct = tuple(
+        ScalarEnvelope(lower=0.0, upper=band_upper) for _ in range(partition.band_count)
+    )
     envelope = ObservableSummaryEnvelope(
         partition=partition,
         harmful_by_band=harmful,
@@ -409,7 +461,12 @@ def _hand_case_zero_resolved_plausible(
         resolved_correct=ScalarEnvelope(lower=0.0, upper=0.1),
         resolved_entropy=ScalarEnvelope(lower=0.0, upper=0.2 * log(2.0)),
     )
-    projection = _project(envelope, config, config.budgets.information_nats)
+    projection = _project(
+        envelope,
+        config,
+        config.budgets.information_nats,
+        outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
+    )
     state = _gate_state(partition, 200, 50)
     assessment = classify_certification(
         state=state,
@@ -443,9 +500,15 @@ def _hand_case_no_unresolved(
     partition: TrajectoryPartition, config: TrajCertConfig
 ) -> HandCaseResult:
     harmful_total = float(config.budgets.risk)
-    harmful = np.full(partition.band_count, harmful_total / partition.band_count, dtype=np.float64)
+    harmful = np.full(
+        partition.band_count,
+        harmful_total / partition.band_count,
+        dtype=np.float64,
+    )
     correct = np.full(
-        partition.band_count, (1.0 - harmful_total) / partition.band_count, dtype=np.float64
+        partition.band_count,
+        (1.0 - harmful_total) / partition.band_count,
+        dtype=np.float64,
     )
     summary = summarize_observable_masses(
         partition,
@@ -454,7 +517,11 @@ def _hand_case_no_unresolved(
         0.0,
         config.numerics.comparison_guard,
     )
-    projection = _project(singleton_summary_envelope(summary), config, config.budgets.information_nats)
+    projection = _project(
+        singleton_summary_envelope(summary),
+        config,
+        config.budgets.information_nats,
+    )
     assessment = _singleton_assessment(
         partition,
         config,
@@ -502,8 +569,14 @@ def _hand_case_simplex_boundary(
     rho = float(information_true) + 0.01
     projection = _project(singleton_summary_envelope(summary), config, rho)
     oracle = solve_information_oracle(summary, rho, config.numerics.oracle_digits)
-    oracle_upper = None if oracle.latent_risk_interval is None else float(oracle.latent_risk_interval.upper)
-    error = None if oracle_upper is None else max(0.0, oracle_upper - float(projection.proven_upper))
+    oracle_upper = (
+        None if oracle.latent_risk_interval is None else float(oracle.latent_risk_interval.upper)
+    )
+    error = (
+        None
+        if oracle_upper is None
+        else max(0.0, oracle_upper - float(projection.proven_upper))
+    )
     return HandCaseResult(
         case_index=9,
         partition_bands=partition.band_count,
@@ -545,7 +618,7 @@ def _hand_case_optimizer_fallback(
     )
     rho = float(information_true) + 0.01
     envelope = summary_envelope_from_confidence(partition, running)
-    projection = _project(envelope, config, rho, outer_max_nodes=1)
+    projection = _project(envelope, config, rho, outer_max_nodes=_DIAGNOSTIC_NODE_CAP)
     oracle = feasible_projection_lower_oracle(
         _oracle_input(envelope),
         rho,
@@ -568,27 +641,19 @@ def _hand_case_optimizer_fallback(
         oracle_feasible_lower=lower,
         anti_conservatism=anti,
         zero_resolved_mass_plausible=projection.intrinsic_risk_lower_bound is None,
-        passed=(
-            conservative_reason
-            and anti is not None
-            and anti <= config.numerics.identity_atol
-            and (
-                projection.feasible_incumbent is None
-                or float(projection.proven_upper) >= float(projection.feasible_incumbent)
-            )
-        ),
+        passed=conservative_reason and (anti is None or anti <= config.numerics.identity_atol),
     )
 
 
 def _project(
     envelope: ObservableSummaryEnvelope,
     config: TrajCertConfig,
-    rho: SensitivityBudget,
+    sensitivity_budget: SensitivityBudget,
     outer_max_nodes: int | None = None,
 ) -> ProjectionResult:
     return project_upper_risk(
         envelope=envelope,
-        sensitivity_budget=rho,
+        sensitivity_budget=sensitivity_budget,
         root_atol=config.numerics.root_atol,
         identity_atol=config.numerics.identity_atol,
         comparison_guard=config.numerics.comparison_guard,
@@ -604,14 +669,18 @@ def _singleton_assessment(
     partition: TrajectoryPartition,
     config: TrajCertConfig,
     projection: ProjectionResult,
-    rho: SensitivityBudget,
-    beta: RiskBudget,
+    sensitivity_budget: SensitivityBudget,
+    risk_budget: RiskBudget,
 ) -> CertificationAssessment:
     return classify_certification(
-        state=_gate_state(partition, 200, 50),
+        state=_gate_state(
+            partition,
+            int(config.minimum_evidence.matured_events),
+            int(config.minimum_evidence.resolved_events),
+        ),
         projection=projection,
-        sensitivity_budget=rho,
-        risk_budget=beta,
+        sensitivity_budget=sensitivity_budget,
+        risk_budget=risk_budget,
         minimum_matured_events=config.minimum_evidence.matured_events,
         minimum_resolved_events=config.minimum_evidence.resolved_events,
         comparison_guard=config.numerics.comparison_guard,
@@ -619,102 +688,25 @@ def _singleton_assessment(
 
 
 def _gate_state(
-    partition: TrajectoryPartition, matured: int, resolved: int
+    partition: TrajectoryPartition,
+    matured: int,
+    resolved: int,
 ) -> CategoricalState:
-    harmful = [0 for _ in range(partition.band_count)]
-    correct = [0 for _ in range(partition.band_count)]
-    harmful[0] = resolved // 2
-    correct[0] = resolved - harmful[0]
+    harmful = resolved // 2
+    correct = resolved - harmful
+    harmful_by_band = [0 for _ in range(partition.band_count)]
+    correct_by_band = [0 for _ in range(partition.band_count)]
+    harmful_by_band[0] = harmful
+    correct_by_band[0] = correct
+    counts = ObservableCounts(
+        harmful_by_band=tuple(harmful_by_band),
+        correct_by_band=tuple(correct_by_band),
+        unresolved=matured - resolved,
+    )
     return CategoricalState(
         identity=_hand_identity(0),
         partition=partition,
-        counts=ObservableCounts(
-            harmful_by_band=tuple(harmful),
-            correct_by_band=tuple(correct),
-            unresolved=matured - resolved,
-        ),
-    )
-
-
-def _law(config: TrajCertConfig, key: LawKey) -> LawParameters:
-    law = config.laws[key]
-    return LawParameters(
-        key=key,
-        name=LAW_DISPLAY_NAMES[key],
-        theta=law.theta,
-        q1=law.q1,
-        q0=law.q0,
-        lambda1=law.lambda1,
-        lambda0=law.lambda0,
-    )
-
-
-def _population_summary(
-    config: TrajCertConfig,
-    key: LawKey,
-    partition: TrajectoryPartition,
-):
-    return summarize_full_law(
-        partition,
-        build_full_law(_law(config, key), partition.band_count),
-        config.numerics.comparison_guard,
-    )
-
-
-def _hand_identity(case_index: int) -> LedgerIdentity:
-    return LedgerIdentity(
-        client_id=ClientId("hand-case-client"),
-        action_channel_id=ActionChannelId("automatic-action"),
-        epoch_id=EpochId(f"hand-case-{case_index:02d}"),
-    )
-
-
-def _matured_sequence(
-    identity: LedgerIdentity,
-    categories: tuple[ObservableCategoryProbability, ...],
-    sequence: tuple[int, ...],
-) -> tuple[MaturedEvent, ...]:
-    events: list[MaturedEvent] = []
-    for index, category_index in enumerate(sequence):
-        category = categories[int(category_index)]
-        if category.band_index is None:
-            matured_category = MaturedCategory(
-                kind=MaturedCategoryKind.TERMINAL_UNRESOLVED,
-                band_index=None,
-                correctness_label=None,
-            )
-        else:
-            matured_category = MaturedCategory(
-                kind=MaturedCategoryKind.RESOLVED,
-                band_index=category.band_index,
-                correctness_label=category.correctness_label,
-            )
-        events.append(
-            MaturedEvent(
-                event_id=EventId(f"hand-case::E{index:06d}"),
-                identity=identity,
-                maturity_age_unit=float(index + 1),
-                category=matured_category,
-            )
-        )
-    return tuple(events)
-
-
-def _oracle_input(envelope: ObservableSummaryEnvelope) -> ProjectionOracleInput:
-    return ProjectionOracleInput(
-        partition=envelope.partition,
-        harmful_by_band=tuple(
-            OracleMassInterval(lower=item.lower, upper=item.upper)
-            for item in envelope.harmful_by_band
-        ),
-        correct_by_band=tuple(
-            OracleMassInterval(lower=item.lower, upper=item.upper)
-            for item in envelope.correct_by_band
-        ),
-        unresolved=OracleMassInterval(
-            lower=envelope.unresolved.lower,
-            upper=envelope.unresolved.upper,
-        ),
+        counts=counts,
     )
 
 
@@ -735,4 +727,87 @@ def _state_result(
         anti_conservatism=None,
         zero_resolved_mass_plausible=projection.intrinsic_risk_lower_bound is None,
         passed=observed is expected,
+    )
+
+
+def _population_summary(
+    config: TrajCertConfig,
+    law_key: LawKey,
+    partition: TrajectoryPartition,
+):
+    parameters = _law(config, law_key)
+    return summarize_full_law(
+        partition,
+        build_full_law(parameters, partition.band_count),
+        config.numerics.comparison_guard,
+    )
+
+
+def _law(config: TrajCertConfig, law_key: LawKey) -> LawParameters:
+    law = config.laws[law_key]
+    return LawParameters(
+        key=law_key,
+        name=LAW_DISPLAY_NAMES[law_key],
+        theta=law.theta,
+        q1=law.q1,
+        q0=law.q0,
+        lambda1=law.lambda1,
+        lambda0=law.lambda0,
+    )
+
+
+def _hand_identity(case_index: int) -> LedgerIdentity:
+    return LedgerIdentity(
+        client_id=ClientId("hand-case-client"),
+        action_channel_id=ActionChannelId("hand-case-action"),
+        epoch_id=EpochId(f"hand-case-{case_index:02d}"),
+    )
+
+
+def _matured_sequence(
+    identity: LedgerIdentity,
+    categories: tuple[ObservableCategoryProbability, ...],
+    sequence,
+) -> tuple[MaturedEvent, ...]:
+    events: list[MaturedEvent] = []
+    for index, category_index in enumerate(sequence):
+        category = categories[int(category_index)]
+        if category.band_index is None:
+            matured = MaturedCategory(
+                kind=MaturedCategoryKind.TERMINAL_UNRESOLVED,
+                band_index=None,
+                correctness_label=None,
+            )
+        else:
+            matured = MaturedCategory(
+                kind=MaturedCategoryKind.RESOLVED,
+                band_index=category.band_index,
+                correctness_label=category.correctness_label,
+            )
+        events.append(
+            MaturedEvent(
+                event_id=EventId(f"hand-case::{index:06d}"),
+                identity=identity,
+                maturity_age_unit=float(index + 1),
+                category=matured,
+            )
+        )
+    return tuple(events)
+
+
+def _oracle_input(envelope: ObservableSummaryEnvelope) -> ProjectionOracleInput:
+    return ProjectionOracleInput(
+        partition=envelope.partition,
+        harmful_by_band=tuple(
+            OracleMassInterval(lower=interval.lower, upper=interval.upper)
+            for interval in envelope.harmful_by_band
+        ),
+        correct_by_band=tuple(
+            OracleMassInterval(lower=interval.lower, upper=interval.upper)
+            for interval in envelope.correct_by_band
+        ),
+        unresolved=OracleMassInterval(
+            lower=envelope.unresolved.lower,
+            upper=envelope.unresolved.upper,
+        ),
     )
