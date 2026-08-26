@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import cast
-
 import numpy as np
 
 from trajcert.data.summaries import ObservableSummary
@@ -149,4 +147,4 @@ def compare_safety_frontier_to_oracle(
 
 def _float_tuple(values: Vector) -> tuple[float, ...]:
     array = np.asarray(values, dtype=np.float64)
-    return tuple(cast(float, array.item(index)) for index in range(array.size))
+    return tuple(array.item(index) for index in range(array.size))
