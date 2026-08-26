@@ -21,6 +21,7 @@ from trajcert.storage import (
     SpecificationDigest,
     atomic_write_model,
     file_digest,
+    model_digest,
     read_model,
     write_completion_last,
 )
@@ -218,6 +219,10 @@ def cell_failure_path(cell: PlannedCell, workspace_root: Path) -> Path:
     return workspace_root / directory / "failure.json"
 
 
+def _cell_plan_digest(cell: PlannedCell) -> PlanDigest:
+    return PlanDigest(str(model_digest(cell)))
+
+
 def _completion_identity_matches(
     cell: PlannedCell,
     context: ExecutionContext,
@@ -225,7 +230,7 @@ def _completion_identity_matches(
 ) -> bool:
     checks = (
         completion.semantic_cell_key == cell.identity.semantic_cell_key,
-        completion.cell_plan_digest == context.plan_digest,
+        completion.cell_plan_digest == _cell_plan_digest(cell),
         completion.scientific_specification_digest == context.scientific_specification_digest,
         completion.scientific_dependency_digest == context.scientific_dependency_digest,
         completion.provenance_fingerprint == context.provenance_fingerprint,
@@ -303,7 +308,7 @@ def _completion_record(
     )
     return CompletionRecord(
         semantic_cell_key=cell.identity.semantic_cell_key,
-        cell_plan_digest=context.plan_digest,
+        cell_plan_digest=_cell_plan_digest(cell),
         scientific_specification_digest=context.scientific_specification_digest,
         scientific_dependency_digest=context.scientific_dependency_digest,
         provenance_fingerprint=context.provenance_fingerprint,
