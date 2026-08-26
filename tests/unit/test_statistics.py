@@ -29,6 +29,9 @@ from trajcert.experiments.synthesis import PairedSeries, synthesize_trajectory_o
 from trajcert.provenance import BaselineName, MethodName
 from trajcert.types import LawName, SemanticComparisonKey
 
+_TEST_STREAM_COUNT = 2
+_NEVER_CERTIFIED_HORIZON = 2_000
+
 
 def test_favorable_direction_and_never_certified_sentinel() -> None:
     assert favorable_difference(PracticalMetric.ANYTIME_UPPER_RISK, 0.2, 0.3) == pytest.approx(0.1)
@@ -38,7 +41,9 @@ def test_favorable_direction_and_never_certified_sentinel() -> None:
     assert favorable_difference(
         PracticalMetric.CERTIFIED_UPDATE_FRACTION, 0.7, 0.5
     ) == pytest.approx(0.2)
-    assert numeric_first_certification(None, 2000) == 2001
+    assert numeric_first_certification(None, _NEVER_CERTIFIED_HORIZON) == (
+        _NEVER_CERTIFIED_HORIZON + 1
+    )
 
 
 def test_linear_quantile_uses_declared_interpolation() -> None:
@@ -119,7 +124,9 @@ def test_sequential_materiality_uses_only_certified_fraction_vote() -> None:
 
 def test_full_synthesis_requires_and_retains_complete_family() -> None:
     config = _small_synthesis_config()
-    laws = tuple(LAW_DISPLAY_NAMES[key] for key, _ in config.ordered_laws[:6])
+    laws = tuple(
+        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
+    )
     series = tuple(
         PairedSeries(
             semantic_comparison_key=SemanticComparisonKey(
@@ -138,14 +145,19 @@ def test_full_synthesis_requires_and_retains_complete_family() -> None:
         for metric in PracticalMetric
     )
     result = synthesize_trajectory_operational_gain(series, config)
-    assert result.family_size == 54
-    assert all(test.effect.n_pairs == 2 for test in result.tests)
+    expected_family_size = (
+        len(config.study_design.utility_and_coherence_laws)
+        * len(config.sequential.utility.rho)
+        * len(tuple(PracticalMetric))
+    )
+    assert result.family_size == expected_family_size
+    assert all(test.effect.n_pairs == _TEST_STREAM_COUNT for test in result.tests)
 
 
 def _small_synthesis_config() -> TrajCertConfig:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     utility = SequentialUtilityConfig(
-        streams=2,
+        streams=_TEST_STREAM_COUNT,
         max_events=config.sequential.utility.max_events,
         checkpoint_every=config.sequential.utility.checkpoint_every,
         rho=config.sequential.utility.rho,
