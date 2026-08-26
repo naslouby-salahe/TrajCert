@@ -1,0 +1,57 @@
+name: Phase 2 Coordinate Recovery
+
+on:
+  push:
+    branches:
+      - feat/trajcert-scientific-execution-spine
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phase2-coordinate-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra quality --locked --no-build
+      - run: uv run --no-sync --no-build python tools/phase2_coordinate_recovery.py
+      - run: uv run --no-sync --no-build ruff format tools/phase2_coordinate_recovery.py src/trajcert/config.py src/trajcert/experiments/plan.py src/trajcert/experiments/registry.py
+      - run: uv run --no-sync --no-build ruff check tools/phase2_coordinate_recovery.py src/trajcert/config.py src/trajcert/experiments/plan.py src/trajcert/experiments/registry.py
+      - run: uv run --no-sync --no-build python -m compileall -q src/trajcert tools/phase2_coordinate_recovery.py
+      - run: |
+          PYTHONPATH=src uv run --no-sync --no-build python - <<'PY'
+          from pathlib import Path
+          from trajcert.config import TrajCertConfig
+          from trajcert.experiments.plan import build_plan
+          from trajcert.experiments.registry import authoritative_registry
+
+          config = TrajCertConfig.from_yaml(Path("configs/trajcert.yaml"))
+          registry = authoritative_registry()
+          plan = build_plan(config)
+          assert len(registry) == 30
+          assert plan.registry_total == 1423
+          assert plan.executable_cells == 1423
+          assert plan.invalid_cells == 0
+          assert all(item.configuration_gap_cells == 0 for item in registry)
+          PY
+      - run: uv run --no-sync --no-build pytest -q tests/unit/test_config.py
+      - name: Commit recovered coordinates
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add configs/trajcert.yaml src/trajcert/config.py src/trajcert/experiments/plan.py src/trajcert/experiments/registry.py tools/phase2_coordinate_recovery.py
+          git commit -m "feat: restore authoritative experiment coordinates"
+          git push origin HEAD:feat/trajcert-scientific-execution-spine
