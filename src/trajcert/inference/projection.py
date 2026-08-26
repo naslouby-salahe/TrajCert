@@ -306,13 +306,9 @@ def _compatibility_search(
             if lower >= best_upper:
                 active = None
                 continue
-            point = _aggregate_midpoint(active, envelope)
-            if point is not None:
-                harmful, correct, _ = point
-                best_upper = min(
-                    best_upper,
-                    _mass_entropy_point(harmful, correct) - envelope.resolved_entropy.upper,
-                )
+            point_upper = _verified_compatibility_point(active, envelope)
+            if point_upper is not None:
+                best_upper = min(best_upper, point_upper)
             global_lower = min(lower, queue[0][0] if queue else lower)
             if best_upper < inf and best_upper - global_lower <= gap:
                 return _MinimumSearch(max(0.0, global_lower), _zero_resolved_plausible(envelope))
@@ -506,6 +502,25 @@ def _aggregate_midpoint(
     if not float(envelope.unresolved.lower) <= unresolved <= float(envelope.unresolved.upper):
         return None
     return harmful, correct, unresolved
+
+
+def _verified_compatibility_point(
+    box: _Box, envelope: ObservableSummaryEnvelope
+) -> float | None:
+    point = _aggregate_midpoint(box, envelope)
+    if point is None:
+        return None
+    harmful_total, correct_total, _ = point
+    harmful = _allocate_total(envelope.harmful_by_band, harmful_total)
+    correct = _allocate_total(envelope.correct_by_band, correct_total)
+    if harmful is None or correct is None:
+        return None
+    marginal_entropy = _mass_entropy_point(harmful_total, correct_total)
+    resolved_entropy = sum(
+        _mass_entropy_point(left, right)
+        for left, right in zip(harmful, correct, strict=True)
+    )
+    return max(0.0, marginal_entropy - resolved_entropy)
 
 
 def _verified_incumbent(
