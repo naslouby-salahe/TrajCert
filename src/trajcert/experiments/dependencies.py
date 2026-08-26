@@ -28,7 +28,7 @@ _NON_SCIENTIFIC_MODULE_PREFIXES = (
 
 _PRODUCER_ROOTS = {
     "Scientific and Data Inventory": Path("src/trajcert/experiments/inventory.py"),
-    "Legacy Partition Incoherence Check": Path("src/trajcert/experiments/legacy_incoherence.py"),
+    "Legacy Partition Incoherence Check": Path("src/trajcert/experiments/mathematics.py"),
     "Path Information Decomposition": Path("src/trajcert/experiments/mathematics.py"),
     "Information Profile Convexity": Path("src/trajcert/experiments/mathematics.py"),
     "Minimum Compatibility Identity": Path("src/trajcert/experiments/mathematics.py"),

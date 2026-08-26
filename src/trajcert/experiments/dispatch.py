@@ -17,10 +17,10 @@ from trajcert.experiments.failure_boundaries import (
     evaluate_terminal_selection_asymmetry,
 )
 from trajcert.experiments.inventory import validate_scientific_inventory
-from trajcert.experiments.legacy_incoherence import evaluate_legacy_partition_incoherence
 from trajcert.experiments.mathematics import (
     anytime_projection_proof_check,
     endpoint_special_case_identity,
+    evaluate_legacy_partition_incoherence,
     evaluate_safety_boundary_case,
     information_profile_convexity,
     minimum_compatibility_identity,

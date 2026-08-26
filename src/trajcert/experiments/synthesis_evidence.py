@@ -5,10 +5,10 @@ from pathlib import Path
 from trajcert.config import TrajCertConfig
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.legacy_incoherence import LegacyPartitionIncoherenceResult
 from trajcert.experiments.mathematics import (
     ConvexityResult,
     IdentityResult,
+    LegacyPartitionIncoherenceResult,
     RefinementIdentityResult,
     SafetyBoundaryCaseEvaluation,
     SharpSetIdentityResult,
