@@ -6,7 +6,7 @@ on:
       - feat/trajcert-scientific-execution-spine
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -20,19 +20,79 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --extra quality --locked --no-build
+      - name: Apply safe Ruff fixes and formatting
+        run: |
+          uv run --no-sync --no-build ruff check --fix \
+            src/trajcert/analysis \
+            src/trajcert/config.py \
+            src/trajcert/experiments/coverage.py \
+            src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/execution.py \
+            src/trajcert/experiments/failure_boundaries.py \
+            src/trajcert/experiments/legacy_incoherence.py \
+            src/trajcert/experiments/plan.py \
+            src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/runner.py \
+            src/trajcert/experiments/safety.py \
+            src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/solver_validation.py \
+            src/trajcert/experiments/synthesis.py \
+            src/trajcert/experiments/synthesis_execution.py \
+            src/trajcert/reporting/source_data.py \
+            src/trajcert/reporting/synthesis_rows.py \
+            tests/unit/test_statistics.py \
+            tests/unit/test_phase2_execution.py \
+            tests/architecture/test_locality.py
+          uv run --no-sync --no-build ruff format \
+            src/trajcert/analysis \
+            src/trajcert/config.py \
+            src/trajcert/experiments/coverage.py \
+            src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/execution.py \
+            src/trajcert/experiments/failure_boundaries.py \
+            src/trajcert/experiments/legacy_incoherence.py \
+            src/trajcert/experiments/plan.py \
+            src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/runner.py \
+            src/trajcert/experiments/safety.py \
+            src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/solver_validation.py \
+            src/trajcert/experiments/synthesis.py \
+            src/trajcert/experiments/synthesis_execution.py \
+            src/trajcert/reporting/source_data.py \
+            src/trajcert/reporting/synthesis_rows.py \
+            tests/unit/test_statistics.py \
+            tests/unit/test_phase2_execution.py \
+            tests/architecture/test_locality.py
+      - name: Commit mechanical Phase 2 cleanup
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/trajcert tests/unit/test_statistics.py tests/unit/test_phase2_execution.py tests/architecture/test_locality.py
+          git commit -m "style: apply phase2 ruff cleanup"
+          git push origin HEAD:feat/trajcert-scientific-execution-spine
       - run: |
           uv run --no-sync --no-build ruff format --check \
             src/trajcert/analysis \
             src/trajcert/config.py \
             src/trajcert/experiments/coverage.py \
             src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/execution.py \
             src/trajcert/experiments/failure_boundaries.py \
             src/trajcert/experiments/legacy_incoherence.py \
             src/trajcert/experiments/plan.py \
             src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/runner.py \
+            src/trajcert/experiments/safety.py \
             src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/solver_validation.py \
             src/trajcert/experiments/synthesis.py \
+            src/trajcert/experiments/synthesis_execution.py \
             src/trajcert/reporting/source_data.py \
+            src/trajcert/reporting/synthesis_rows.py \
             tests/unit/test_statistics.py \
             tests/unit/test_phase2_execution.py \
             tests/architecture/test_locality.py
@@ -42,13 +102,19 @@ jobs:
             src/trajcert/config.py \
             src/trajcert/experiments/coverage.py \
             src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/execution.py \
             src/trajcert/experiments/failure_boundaries.py \
             src/trajcert/experiments/legacy_incoherence.py \
             src/trajcert/experiments/plan.py \
             src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/runner.py \
+            src/trajcert/experiments/safety.py \
             src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/solver_validation.py \
             src/trajcert/experiments/synthesis.py \
+            src/trajcert/experiments/synthesis_execution.py \
             src/trajcert/reporting/source_data.py \
+            src/trajcert/reporting/synthesis_rows.py \
             tests/unit/test_statistics.py \
             tests/unit/test_phase2_execution.py \
             tests/architecture/test_locality.py
@@ -58,13 +124,19 @@ jobs:
             src/trajcert/config.py \
             src/trajcert/experiments/coverage.py \
             src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/execution.py \
             src/trajcert/experiments/failure_boundaries.py \
             src/trajcert/experiments/legacy_incoherence.py \
             src/trajcert/experiments/plan.py \
             src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/runner.py \
+            src/trajcert/experiments/safety.py \
             src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/solver_validation.py \
             src/trajcert/experiments/synthesis.py \
-            src/trajcert/reporting/source_data.py
+            src/trajcert/experiments/synthesis_execution.py \
+            src/trajcert/reporting/source_data.py \
+            src/trajcert/reporting/synthesis_rows.py
       - run: python -m compileall -q src/trajcert
       - run: |
           PYTHONPATH=src uv run --no-sync --no-build python - <<'PY'
@@ -88,5 +160,7 @@ jobs:
             tests/unit/test_statistics.py \
             tests/unit/test_phase2_execution.py \
             tests/architecture/test_locality.py
+      - run: PYTHONPATH=src uv run --no-sync --no-build lint-imports
       - run: uv run --no-sync --no-build semgrep --config semgrep src/trajcert
+      - run: uv run --no-sync --no-build vulture src/trajcert --min-confidence 100 --ignore-names table,where,compression,use_dictionary,write_statistics,field_type,nullable,value_type,fields,tz,unit
       - run: uv run --no-sync --no-build deptry .
