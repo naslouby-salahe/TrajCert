@@ -116,13 +116,13 @@ def runtime_lineage_audit(
             return
         visiting.add(artifact_key)
         identity_fields = (artifact.client_id, artifact.action_channel_id, artifact.epoch_id)
-        if any(value is not None for value in identity_fields):
-            if identity_fields != (
-                target_identity.client_id,
-                target_identity.action_channel_id,
-                target_identity.epoch_id,
-            ):
-                violating.add(artifact.artifact_key)
+        target_fields = (
+            target_identity.client_id,
+            target_identity.action_channel_id,
+            target_identity.epoch_id,
+        )
+        if any(value is not None for value in identity_fields) and identity_fields != target_fields:
+            violating.add(artifact.artifact_key)
         if (
             artifact.foreign_client_ids
             or artifact.foreign_client_statistics
