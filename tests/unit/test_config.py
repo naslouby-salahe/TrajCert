@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 from trajcert.config import TrajCertConfig
+from trajcert.exceptions import ConfigurationError
 
 CONFIG_PATH = Path("configs/trajcert.yaml")
 
@@ -25,7 +26,7 @@ def test_yaml_loading_rejects_unknown_top_level_key(tmp_path: Path) -> None:
     path = tmp_path / "invalid.yaml"
     path.write_text(yaml.safe_dump(payload), encoding="utf-8")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ConfigurationError):
         TrajCertConfig.from_yaml(path)
 
 
@@ -35,5 +36,5 @@ def test_cross_section_validation_rejects_non_nested_partitions(tmp_path: Path) 
     path = tmp_path / "invalid-partitions.yaml"
     path.write_text(yaml.safe_dump(payload), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="nested"):
+    with pytest.raises(ConfigurationError, match="nested"):
         TrajCertConfig.from_yaml(path)
