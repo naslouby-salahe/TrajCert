@@ -31,7 +31,9 @@ jobs:
             src/trajcert/experiments/registry.py src/trajcert/experiments/runner.py \
             src/trajcert/experiments/safety.py src/trajcert/experiments/sensitivity.py \
             src/trajcert/experiments/solver_validation.py src/trajcert/experiments/synthesis.py \
+            src/trajcert/experiments/synthesis_evidence.py \
             src/trajcert/experiments/synthesis_execution.py \
+            src/trajcert/experiments/synthesis_inputs.py \
             src/trajcert/reporting/source_data.py src/trajcert/reporting/synthesis_rows.py \
             tests/unit/test_statistics.py tests/unit/test_phase2_execution.py \
             tests/architecture/test_locality.py \
@@ -45,7 +47,9 @@ jobs:
             src/trajcert/experiments/registry.py src/trajcert/experiments/runner.py \
             src/trajcert/experiments/safety.py src/trajcert/experiments/sensitivity.py \
             src/trajcert/experiments/solver_validation.py src/trajcert/experiments/synthesis.py \
+            src/trajcert/experiments/synthesis_evidence.py \
             src/trajcert/experiments/synthesis_execution.py \
+            src/trajcert/experiments/synthesis_inputs.py \
             src/trajcert/reporting/source_data.py src/trajcert/reporting/synthesis_rows.py \
             tests/unit/test_statistics.py tests/unit/test_phase2_execution.py \
             tests/architecture/test_locality.py \
@@ -64,7 +68,9 @@ jobs:
             src/trajcert/experiments/registry.py src/trajcert/experiments/runner.py \
             src/trajcert/experiments/safety.py src/trajcert/experiments/sensitivity.py \
             src/trajcert/experiments/solver_validation.py src/trajcert/experiments/synthesis.py \
+            src/trajcert/experiments/synthesis_evidence.py \
             src/trajcert/experiments/synthesis_execution.py \
+            src/trajcert/experiments/synthesis_inputs.py \
             src/trajcert/reporting/source_data.py src/trajcert/reporting/synthesis_rows.py \
             > phase2-basedpyright.txt 2>&1
       - name: Compile and plan invariants
