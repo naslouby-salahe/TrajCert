@@ -160,7 +160,7 @@ class ProvenanceMaterial(DomainModel):
     code_commit: CodeCommit
     dirty_tree_flag: bool
     environment_lock_digest: EnvironmentDigest
-    container_image_digest: ContainerImageDigest
+    container_image_digest: ContainerImageDigest | None = None
     dataset_preprocessing_digests: tuple[DigestHex, ...]
     partition_digest: DigestHex | None
     seed_manifest_digests: tuple[SeedManifestDigest, ...]
