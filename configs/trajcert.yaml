@@ -74,6 +74,7 @@ study_design:
     - {name: "Thirty-two-band resolution stress", law: timing_terminal_harmful_late, band_count: 32, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
     - {name: "Minimum-information completion stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.002, sensitivity_reference: COMPATIBILITY_FLOOR, minimum_information_completion: true}
     - {name: "Near-certification risk-budget stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION, beta_offset: 0.002}
+  partition_coherence_figure_rho: 0.10
 numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, float_roundoff_ulps: 32.0}
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
