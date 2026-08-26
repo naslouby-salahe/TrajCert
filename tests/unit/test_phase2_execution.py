@@ -10,6 +10,8 @@ from trajcert.config import (
     TrajCertConfig,
 )
 from trajcert.constants import PRODUCTION_CONFIG_PATH
+from trajcert.data.laws import LAW_DISPLAY_NAMES
+from trajcert.data.partitions import partition_name
 from trajcert.experiments.dispatch import execute_phase_one_cell
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.provenance import ExperimentNameValue
@@ -46,7 +48,6 @@ def test_recovered_scientific_families_dispatch() -> None:
         "Strict Timing Gain",
         "Sharpness Against Generic Oracle",
         "Safety and Intrinsic Impossibility",
-        "Anytime Coverage Stress",
         "Population Sensitivity Utility",
         "Sequential Sensitivity Utility",
     )
@@ -54,6 +55,17 @@ def test_recovered_scientific_families_dispatch() -> None:
         cell = cells_for_experiment(plan, ExperimentNameValue(name))[0]
         result = execute_phase_one_cell(cell, runtime)
         assert result is not None
+
+
+def test_coverage_stress_cells_match_authoritative_configuration() -> None:
+    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    plan = build_plan(config)
+    cells = cells_for_experiment(plan, ExperimentNameValue("Anytime Coverage Stress"))
+    assert len(cells) == len(config.study_design.coverage_stress_cases)
+    for cell, case in zip(cells, config.study_design.coverage_stress_cases, strict=True):
+        assert cell.identity.coordinates.variant_name == case.name
+        assert cell.identity.coordinates.synthetic_law_name == LAW_DISPLAY_NAMES[case.law]
+        assert cell.identity.coordinates.partition_name == partition_name(case.band_count)
 
 
 def test_terminal_selection_failure_boundary_dispatches() -> None:
