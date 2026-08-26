@@ -198,7 +198,7 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
         )
         with temporary_path.open("rb") as stream:
             os.fsync(stream.fileno())
-        os.replace(temporary_path, path)
+        temporary_path.replace(path)
         directory_descriptor = os.open(path.parent, os.O_RDONLY)
         try:
             os.fsync(directory_descriptor)
