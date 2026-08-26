@@ -16,6 +16,7 @@ dependencies = [
     "libcst==1.8.6",
     "python-flint==0.9.0",
     "mpmath==1.3.0",
+    "threadpoolctl==3.6.0",
 ]
 
 [project.optional-dependencies]
