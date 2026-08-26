@@ -5,14 +5,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.partitions import build_partition
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 
 
 @pytest.fixture(autouse=True)
 def active_test_config() -> None:
-    TrajCertConfig.from_yaml(Path("configs/trajcert.yaml"))
+    active_config.set(TrajCertConfig.from_yaml(Path("configs/trajcert.yaml")))
 
 
 def summary(harmful: list[float], correct: list[float], unresolved: float) -> ObservableSummary:
