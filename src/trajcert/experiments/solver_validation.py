@@ -30,6 +30,9 @@ class SolverOracleComparison(DomainModel):
     risk_upper: RiskValue | None
     passed: bool
     state_match: bool
+    abs_u_lower_error: float | None
+    abs_u_upper_error: float | None
+    abs_risk_upper_error: float | None
     max_endpoint_error: float | None
     max_root_bracket_width: float | None
     max_root_residual: float | None
@@ -58,12 +61,19 @@ def compare_production_solver_to_oracle(
     )
     oracle = solve_information_oracle(summary, sensitivity_budget, oracle_digits)
     state_match = production.compatibility.regime == oracle.regime
+    lower_error: float | None = None
+    upper_error: float | None = None
+    risk_upper_error: float | None = None
     endpoint_error: float | None = None
     if production.interval is not None and oracle.hidden_mass_interval is not None:
-        endpoint_error = max(
-            abs(float(production.interval.lower) - float(oracle.hidden_mass_interval.lower)),
-            abs(float(production.interval.upper) - float(oracle.hidden_mass_interval.upper)),
+        lower_error = abs(
+            float(production.interval.lower) - float(oracle.hidden_mass_interval.lower)
         )
+        upper_error = abs(
+            float(production.interval.upper) - float(oracle.hidden_mass_interval.upper)
+        )
+        risk_upper_error = upper_error
+        endpoint_error = max(lower_error, upper_error)
     elif production.interval is not None or oracle.hidden_mass_interval is not None:
         state_match = False
     brackets = tuple(
@@ -96,6 +106,9 @@ def compare_production_solver_to_oracle(
         risk_upper=risk_upper,
         passed=passed,
         state_match=state_match,
+        abs_u_lower_error=lower_error,
+        abs_u_upper_error=upper_error,
+        abs_risk_upper_error=risk_upper_error,
         max_endpoint_error=endpoint_error,
         max_root_bracket_width=max_width,
         max_root_residual=max_residual,
