@@ -112,7 +112,7 @@ def _dispatch(parser: ArgumentParser, arguments: Namespace, command: CliCommand)
     if command is CliCommand.DOCTOR:
         result = doctor()
         if result.passed:
-            print("TrajCert doctor: core scientific inputs are valid (PASS)")
+            print("TrajCert doctor: PASS")
         else:
             print("TrajCert doctor: FAIL")
     elif command is CliCommand.PREPROCESS:

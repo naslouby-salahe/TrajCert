@@ -246,4 +246,4 @@ def test_cli_doctor_validates_inputs_and_reports_success(
 ) -> None:
     monkeypatch.setattr("sys.argv", ["trajcert", "doctor"])
     cli.main()
-    assert "core scientific inputs are valid" in capsys.readouterr().out
+    assert capsys.readouterr().out == "TrajCert doctor: PASS\n"
