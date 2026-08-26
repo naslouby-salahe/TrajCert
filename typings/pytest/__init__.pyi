@@ -4,7 +4,8 @@ from _pytest.fixtures import FixtureFunction, FixtureFunctionMarker, fixture
 from _pytest.mark import MARK_GEN as mark
 from _pytest.mark.structures import MarkDecorator, MarkGenerator, ParameterSet
 from _pytest.monkeypatch import MonkeyPatch
-from _pytest.python_api import ApproxBase, RaisesContext, raises
+from _pytest.python_api import ApproxBase
+from _pytest.raises import raises
 
 __all__ = [
     "ApproxBase",
@@ -16,7 +17,6 @@ __all__ = [
     "MarkGenerator",
     "MonkeyPatch",
     "ParameterSet",
-    "RaisesContext",
     "approx",
     "fixture",
     "mark",

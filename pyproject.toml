@@ -32,7 +32,7 @@ quality = [
     "nox==2026.8.10",
     "pip-audit==2.10.0",
     "pyarrow-stubs==20.0.0.20260819",
-    "pytest==8.3.5",
+    "pytest==9.0.3",
     "pytest-archon==0.0.6",
     "pytest-cov==6.2.1",
     "pytest-randomly==3.16.0",

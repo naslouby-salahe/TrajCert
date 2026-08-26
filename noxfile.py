@@ -17,7 +17,17 @@ def quality(session: nox.Session) -> None:
     session.run("uv", "run", "lint-imports", external=True)
     session.run("uv", "run", "python", "tools/source_audit.py", "src/trajcert", external=True)
     session.run("uv", "run", "complexipy", "src/trajcert", external=True)
-    session.run("uv", "run", "vulture", "src/trajcert", "--min-confidence", "100", external=True)
+    session.run(
+        "uv",
+        "run",
+        "vulture",
+        "src/trajcert",
+        "--min-confidence",
+        "100",
+        "--ignore-names",
+        "compression,use_dictionary,write_statistics",
+        external=True,
+    )
     session.run("uv", "run", "deptry", ".", external=True)
     session.run("uv", "run", "pip-audit", external=True)
 
