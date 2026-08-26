@@ -105,8 +105,7 @@ def validate_scientific_inventory(config: TrajCertConfig) -> InventoryValidation
         )
         nonnegative_mass_pass = nonnegative_mass_pass and all(value >= 0.0 for value in masses)
         law_sum_pass = (
-            law_sum_pass
-            and abs(float(full_law.total) - 1.0) <= config.numerics.comparison_guard
+            law_sum_pass and abs(float(full_law.total) - 1.0) <= config.numerics.comparison_guard
         )
         summary = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
         tau = float(observed_timing_information(summary) or 0.0)

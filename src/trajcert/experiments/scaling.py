@@ -19,7 +19,7 @@ from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.experiments.anytime import run_sequential_trace
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.oracle import direct_mutual_information
-from trajcert.types import DomainModel, LawKey, SeedIndex
+from trajcert.types import DomainModel, LawKey
 
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 _OUTER_SAMPLE_SIZE = 500
@@ -211,7 +211,7 @@ def _execute_target(
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=SeedIndex(0),
+        stream_index=0,
         event_count=_OUTER_SAMPLE_SIZE,
     )
     full_law = build_full_law(parameters, band_count)

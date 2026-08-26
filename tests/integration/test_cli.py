@@ -19,9 +19,7 @@ def test_cli_exposes_exact_public_command_set() -> None:
 
 
 def test_run_accepts_only_experiment_family_and_overwrite() -> None:
-    arguments = cli._parser().parse_args(
-        ["run", "Population Sensitivity Utility", "--overwrite"]
-    )
+    arguments = cli._parser().parse_args(["run", "Population Sensitivity Utility", "--overwrite"])
     assert arguments.command == "run"
     assert arguments.experiment_name == "Population Sensitivity Utility"
     assert arguments.overwrite is True
@@ -42,9 +40,7 @@ def test_status_and_report_accept_optional_experiment_scope() -> None:
     bare_status = parser.parse_args(["status"])
     scoped_status = parser.parse_args(["status", "Population Sensitivity Utility"])
     bare_report = parser.parse_args(["report"])
-    scoped_report = parser.parse_args(
-        ["report", "Population Sensitivity Utility", "--overwrite"]
-    )
+    scoped_report = parser.parse_args(["report", "Population Sensitivity Utility", "--overwrite"])
     assert bare_status.experiment_name is None
     assert scoped_status.experiment_name == "Population Sensitivity Utility"
     assert bare_report.experiment_name is None

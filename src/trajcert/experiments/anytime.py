@@ -46,7 +46,6 @@ from trajcert.inference.projection import (
 from trajcert.math.information import minimum_information_point, observed_timing_information
 from trajcert.math.oracle import (
     OracleMassInterval,
-    ProjectionFeasibleOracleResult,
     ProjectionOracleInput,
     direct_mutual_information,
     feasible_projection_lower_oracle,
@@ -59,14 +58,12 @@ from trajcert.types import (
     EpochId,
     EventId,
     LawKey,
-    OutcomeLabel,
     RiskBudget,
     ScientificState,
-    SeedIndex,
     SensitivityBudget,
 )
 
-_HAND_CASE_STREAM = SeedIndex(0)
+_HAND_CASE_STREAM = 0
 _PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 _DIAGNOSTIC_NODE_CAP = 1
 
@@ -203,7 +200,6 @@ def run_coverage_stress(
     partition: TrajectoryPartition,
     config: TrajCertConfig,
     sensitivity_budget: SensitivityBudget,
-    risk_budget: RiskBudget,
 ) -> CoverageStressResult:
     stream_count = int(config.sequential.coverage.streams)
     max_events = int(config.sequential.coverage.max_events)
@@ -215,7 +211,7 @@ def run_coverage_stress(
         ledger = generate_stochastic_ledger(
             parameters=parameters,
             partition=partition,
-            stream_index=SeedIndex(stream_index),
+            stream_index=stream_index,
             event_count=max_events,
         )
         events = mature_ledger(ledger, partition)

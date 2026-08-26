@@ -227,9 +227,7 @@ def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
         _PROTOCOL_CONSTANTS_KEY: _aggregate(
             "scientific-and-data-inventory", "protocol_constants.parquet"
         ),
-        _SYNTHETIC_LAWS_KEY: _aggregate(
-            "scientific-and-data-inventory", "synthetic_laws.parquet"
-        ),
+        _SYNTHETIC_LAWS_KEY: _aggregate("scientific-and-data-inventory", "synthetic_laws.parquet"),
         _BASELINES_KEY: _aggregate("scientific-and-data-inventory", "baselines.parquet"),
         _EXPERIMENT_MATRIX_KEY: _aggregate(
             "scientific-and-data-inventory", "experiment_matrix.parquet"
@@ -242,9 +240,7 @@ def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
         _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",
         _ANYTIME_COVERAGE_KEY: _aggregate("anytime-coverage-stress", "anytime_coverage.parquet"),
         _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",
-        _FAILURE_BOUNDARIES_KEY: _aggregate(
-            "failure-boundary-atlas", "failure_boundaries.parquet"
-        ),
+        _FAILURE_BOUNDARIES_KEY: _aggregate("failure-boundary-atlas", "failure_boundaries.parquet"),
         _COMPUTATIONAL_SCALING_KEY: _aggregate(
             "computational-scaling", "computational_scaling.parquet"
         ),
@@ -253,9 +249,7 @@ def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
         _FIGURE_PROFILE_KEY: _aggregate(
             "safety-and-intrinsic-impossibility", "figure_information_profile.parquet"
         ),
-        _FIGURE_PATHS_KEY: _aggregate(
-            "anytime-coverage-stress", "figure_anytime_paths.parquet"
-        ),
+        _FIGURE_PATHS_KEY: _aggregate("anytime-coverage-stress", "figure_anytime_paths.parquet"),
         _FIGURE_COVERAGE_KEY: _aggregate(
             "anytime-coverage-stress", "figure_anytime_coverage.parquet"
         ),

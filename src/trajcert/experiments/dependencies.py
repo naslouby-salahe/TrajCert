@@ -39,7 +39,9 @@ _PRODUCER_ROOTS = {
     "Endpoint Special-Case Identity": Path("src/trajcert/experiments/mathematics.py"),
     "Anytime Projection Proof Check": Path("src/trajcert/experiments/mathematics.py"),
     "Population Complexity Proof Check": Path("src/trajcert/experiments/mathematics.py"),
-    "Production Solver vs Independent Oracle": Path("src/trajcert/experiments/solver_validation.py"),
+    "Production Solver vs Independent Oracle": Path(
+        "src/trajcert/experiments/solver_validation.py"
+    ),
     "Callback-Model Reduction Falsification": Path(
         "src/trajcert/experiments/comparator_reduction.py"
     ),
@@ -90,9 +92,7 @@ def scientific_dependency_digest(
     semantic_cell_key: str,
     component_digest: DigestHex,
 ) -> SpecificationDigest:
-    payload = f"{scientific_specification}|{semantic_cell_key}|{component_digest}".encode(
-        "utf-8"
-    )
+    payload = f"{scientific_specification}|{semantic_cell_key}|{component_digest}".encode()
     return SpecificationDigest(sha256(payload).hexdigest())
 
 
@@ -103,9 +103,7 @@ def cell_dependency_fingerprint(
     scientific_dependency: SpecificationDigest,
 ) -> DependencyFingerprint:
     required = set(cell.required_experiments)
-    parents = tuple(
-        item for item in plan.cells if item.identity.experiment_name in required
-    )
+    parents = tuple(item for item in plan.cells if item.identity.experiment_name in required)
     parent_digests = tuple(
         str(file_digest(cell_completion_path(parent, workspace_root)))
         for parent in parents

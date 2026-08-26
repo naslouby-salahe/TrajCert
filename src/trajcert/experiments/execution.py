@@ -4,7 +4,7 @@ from pathlib import Path
 
 from trajcert.config import TrajCertConfig
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.dispatch import execute_phase_one_cell
+from trajcert.experiments.dispatch import execute_scientific_cell
 from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.runner import CellExecutionResult, ExecutionContext
 from trajcert.paths import ExperimentLeaf, semantic_cell_path
@@ -50,7 +50,7 @@ def execute_dispatched_cell(
     relative_path = scientific_result_path(cell)
     digest = atomic_write_model(
         context.workspace_root / relative_path,
-        execute_phase_one_cell(cell, config),
+        execute_scientific_cell(cell, config),
     )
     return CellExecutionResult(
         artifact_index=CellArtifactIndex(

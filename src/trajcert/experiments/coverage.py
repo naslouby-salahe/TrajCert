@@ -20,7 +20,6 @@ from trajcert.data.summaries import ObservableSummary, summarize_full_law
 from trajcert.data.synthetic import generate_stochastic_ledger
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import (
-    CoverageStressResult,
     SequentialMethod,
     run_coverage_stress,
     run_sequential_trace,
@@ -28,7 +27,7 @@ from trajcert.experiments.anytime import (
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.information import minimum_information_point
 from trajcert.math.oracle import direct_mutual_information
-from trajcert.types import DomainModel, ScientificState, SeedIndex, SensitivityBudget
+from trajcert.types import DomainModel, ScientificState, SensitivityBudget
 
 _EXACT_COVERAGE_LEVEL = 0.95
 _REPRESENTATIVE_STREAMS = (0, 1, 2, 3)
@@ -93,7 +92,6 @@ def evaluate_configured_coverage_stress(
         partition=partition,
         config=config,
         sensitivity_budget=rho,
-        risk_budget=beta,
     )
     true_information = _true_information(parameters, partition, config)
     first_certified, certified_fractions, representative = _trajcert_trajectory_evidence(
@@ -191,7 +189,7 @@ def _trajcert_trajectory_evidence(
         ledger = generate_stochastic_ledger(
             parameters=parameters,
             partition=partition,
-            stream_index=SeedIndex(stream_index),
+            stream_index=stream_index,
             event_count=max_events,
         )
         trace = run_sequential_trace(

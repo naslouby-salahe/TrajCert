@@ -13,8 +13,8 @@ from trajcert.analysis.locality import (
 )
 from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
-from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
+from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.dependencies import (
@@ -61,7 +61,6 @@ from trajcert.provenance import (
 from trajcert.reporting.export import ReportExportResult, export_report, validate_results_layout
 from trajcert.reporting.source_data import figure_source_descriptors, table_source_descriptors
 from trajcert.storage import (
-    ArtifactKey,
     DigestHex,
     ProvenanceFingerprint,
     SpecificationDigest,
@@ -113,7 +112,7 @@ class DoctorResult(DomainModel):
         return all(self.model_dump().values())
 
 
-def doctor(workspace_root: Path = Path(".")) -> DoctorResult:
+def doctor(workspace_root: Path = Path()) -> DoctorResult:
     config = _load_config(workspace_root)
     plan = build_plan(config)
     expected_cells = sum(item.declared_cells for item in authoritative_registry())
@@ -142,7 +141,9 @@ def doctor(workspace_root: Path = Path(".")) -> DoctorResult:
     _assert_workspace_writable(workspace_root)
     descriptors = (*table_source_descriptors(), *figure_source_descriptors())
     if len(descriptors) != 20 or len({item.source_path for item in descriptors}) != 20:
-        raise InvalidScientificDataError("publication source contract must contain 12 tables and 8 figures")
+        raise InvalidScientificDataError(
+            "publication source contract must contain 12 tables and 8 figures"
+        )
     validate_results_layout(workspace_root)
     return DoctorResult(
         configuration_valid=True,
@@ -156,7 +157,7 @@ def doctor(workspace_root: Path = Path(".")) -> DoctorResult:
     )
 
 
-def preprocess(workspace_root: Path = Path(".")) -> Path:
+def preprocess(workspace_root: Path = Path()) -> Path:
     result = validate_scientific_inventory(_load_config(workspace_root))
     if not result.valid:
         raise InvalidScientificDataError("scientific preprocessing/inventory validation failed")
@@ -165,18 +166,18 @@ def preprocess(workspace_root: Path = Path(".")) -> Path:
     return target
 
 
-def plan_view(workspace_root: Path = Path(".")) -> ExperimentPlan:
+def plan_view(workspace_root: Path = Path()) -> ExperimentPlan:
     return build_plan(_load_config(workspace_root))
 
 
-def smoke(workspace_root: Path = Path(".")) -> SmokeResult:
+def smoke(workspace_root: Path = Path()) -> SmokeResult:
     return run_smoke_fixtures(_load_config(workspace_root))
 
 
 def run_experiment(
     experiment_name: str,
     *,
-    workspace_root: Path = Path("."),
+    workspace_root: Path = Path(),
     overwrite: bool = False,
 ) -> RunExperimentResult:
     if _dirty_tree(workspace_root):
@@ -221,7 +222,7 @@ def run_experiment(
 def experiment_status(
     experiment_name: str,
     *,
-    workspace_root: Path = Path("."),
+    workspace_root: Path = Path(),
 ) -> ExperimentStatus:
     config = _load_config(workspace_root)
     plan = build_plan(config)
@@ -231,7 +232,7 @@ def experiment_status(
 
 def report(
     *,
-    workspace_root: Path = Path("."),
+    workspace_root: Path = Path(),
     experiment_name: str | None = None,
     overwrite: bool = False,
 ) -> ReportExportResult:

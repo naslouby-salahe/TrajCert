@@ -102,7 +102,10 @@ def export_report(
             )
             _write_reproducibility(
                 workspace_root,
-                staged_target / "project_summary" / "reproducibility" / "report_reproducibility.json",
+                staged_target
+                / "project_summary"
+                / "reproducibility"
+                / "report_reproducibility.json",
                 sources,
                 rendered,
             )
@@ -209,9 +212,7 @@ def _copy_sources(
             ) from exc
         copied_digest = atomic_write_bytes(destination / source_path.name, payload)
         if copied_digest != source.lineage.source_sha256:
-            raise SerializationError(
-                f"copied publication source checksum changed: {source_path}"
-            )
+            raise SerializationError(f"copied publication source checksum changed: {source_path}")
 
 
 def _finalized_render_paths(
@@ -380,9 +381,7 @@ def _require_local_validity_pass(
         raise InvalidScientificDataError("Statistical Synthesis record checksum is stale")
     record = read_model(record_path, StatisticalSynthesisRecord)
     if not record.local_validity.passed:
-        raise InvalidScientificDataError(
-            "Statistical Synthesis local-validity audit did not pass"
-        )
+        raise InvalidScientificDataError("Statistical Synthesis local-validity audit did not pass")
 
 
 def _source_commit(workspace_root: Path) -> str:

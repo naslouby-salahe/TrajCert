@@ -13,7 +13,7 @@ from trajcert.inference.envelope import singleton_summary_envelope
 from trajcert.inference.projection import project_upper_risk
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.information import observed_timing_information
-from trajcert.types import DomainModel, LawKey, NonNegativeInt, SeedIndex
+from trajcert.types import DomainModel, LawKey, NonNegativeInt
 
 _SMOKE_COMPATIBLE_OFFSET = 0.01
 _SMOKE_REFINEMENT_OFFSET = 0.025
@@ -121,7 +121,7 @@ def _confidence_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
     ledger = generate_balanced_prefix_ledger(
         parameters,
         partition,
-        SeedIndex(0),
+        0,
         _SMOKE_CS_EVENTS,
     )
     state = initialize_categorical_state(ledger.identity, partition)

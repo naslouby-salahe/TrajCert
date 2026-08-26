@@ -112,7 +112,9 @@ class _AuditVisitor(cst.CSTVisitor):
             )
         if call in {"open", "Path.read_text", "Path.read_bytes"}:
             for argument in node.args:
-                if isinstance(argument.value, cst.SimpleString) and _contains_roadmap(argument.value):
+                if isinstance(argument.value, cst.SimpleString) and _contains_roadmap(
+                    argument.value
+                ):
                     self._add(RULE_ROADMAP, node, "runtime roadmap access is forbidden")
         if (
             isinstance(node.func, cst.Name)

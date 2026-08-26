@@ -170,9 +170,7 @@ def partition_coherence_figure_rows(
         (item.law_name, item.partition_name) for item in population_evidence
     )
     _require_exact_family("Figure 1 population", supplied_population, expected_population)
-    population_by_key = {
-        (item.law_name, item.partition_name): item for item in population_evidence
-    }
+    population_by_key = {(item.law_name, item.partition_name): item for item in population_evidence}
 
     timed_law = LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING]
     expected_same_endpoint = tuple((timed_law, name) for name, _ in partition_pairs)
@@ -293,7 +291,9 @@ def compatibility_safety_evidence(
             )
         )
     if not rows:
-        raise InvalidScientificDataError("Table 8 requires compatibility, sharpness, or safety evidence")
+        raise InvalidScientificDataError(
+            "Table 8 requires compatibility, sharpness, or safety evidence"
+        )
     return tuple(rows)
 
 

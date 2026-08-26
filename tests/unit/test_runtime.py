@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-# Parametrized Pydantic model factories and pytest helpers are dynamically typed.
-# pyright: reportUnknownMemberType=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportUnknownLambdaType=false
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import numpy as np
 import pytest
@@ -15,14 +14,13 @@ from trajcert.config import (
     BudgetsConfig,
     ComparatorsConfig,
     ConfidenceConfig,
+    CoverageConfig,
     FailureBoundaryConfig,
     GridsConfig,
+    LegacyPatternMixtureConfig,
     MinimumEvidenceConfig,
-    PatternMixtureConfig,
-    SequentialCoverageConfig,
     SequentialUtilityConfig,
     TrajCertConfig,
-    load_config_with_runner_overrides,
 )
 from trajcert.determinism import (
     bootstrap_namespace,
@@ -36,6 +34,7 @@ from trajcert.exceptions import ConfigurationError, InvalidScientificDataError
 from trajcert.types import (
     DomainModel,
     LawName,
+    SeedNamespace,
     SeedNamespaceRole,
     SemanticComparisonKey,
     Vector,
@@ -64,17 +63,17 @@ class VectorModel(DomainModel):
     ],
 )
 def test_config_models_enforce_cross_field_contracts(
-    model, payload: dict[str, object], message: str
+    model: type[BaseModel], payload: dict[str, object], message: str
 ) -> None:
     with pytest.raises(ValidationError, match=message):
-        model.model_validate(payload)
+        _ = model.model_validate(payload)
 
 
 @pytest.mark.parametrize(
     ("model", "payload", "message"),
     [
         (
-            PatternMixtureConfig,
+            LegacyPatternMixtureConfig,
             {
                 "c": (0,),
                 "coefficient_bounds": (1.0, 1.0),
@@ -99,7 +98,7 @@ def test_config_models_enforce_cross_field_contracts(
             "strictly increasing",
         ),
         (
-            SequentialCoverageConfig,
+            CoverageConfig,
             {"streams": 1, "max_events": 1, "checkpoint_every": 2, "acceptance_upper_limit": 0.5},
             "cannot exceed",
         ),
@@ -127,55 +126,68 @@ def test_remaining_config_model_contracts(
     model: type[BaseModel], payload: dict[str, object], message: str
 ) -> None:
     with pytest.raises(ValidationError, match=message):
-        model.model_validate(payload)
+        _ = model.model_validate(payload)
+
+
+def _clear_laws(payload: dict[str, object]) -> None:
+    payload.update(laws={})
+
+
+def _reorder_finest_partition(payload: dict[str, object]) -> None:
+    cast(dict[str, object], payload["grids"]).update(partitions=[2, 1])
+
+
+def _misorder_finest_partition(payload: dict[str, object]) -> None:
+    cast(dict[str, object], payload["grids"]).update(partitions=[8, 4])
+
+
+def _noncoarsening_partitions(payload: dict[str, object]) -> None:
+    cast(dict[str, object], payload["grids"]).update(partitions=[8, 3, 1])
+
+
+def _utility_rho_outside_grid(payload: dict[str, object]) -> None:
+    sequential = cast(dict[str, object], payload["sequential"])
+    cast(dict[str, object], sequential["utility"]).update(rho=[0.35])
 
 
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [
-        (lambda payload: payload.update(laws={}), "at least one"),
-        (lambda payload: payload["grids"].update(partitions=[2, 1]), "first configured"),
-        (lambda payload: payload["grids"].update(partitions=[8, 4]), "must end"),
-        (lambda payload: payload["grids"].update(partitions=[8, 3, 1]), "coarsen"),
-        (lambda payload: payload["sequential"]["utility"].update(rho=[0.35]), "subset"),
+        (_clear_laws, "at least one"),
+        (_reorder_finest_partition, "first configured"),
+        (_misorder_finest_partition, "must end"),
+        (_noncoarsening_partitions, "coarsen"),
+        (_utility_rho_outside_grid, "subset"),
     ],
 )
-def test_config_cross_field_contracts(mutate, message: str) -> None:
-    payload = yaml.safe_load(Path("configs/trajcert.yaml").read_text(encoding="utf-8"))
+def test_config_cross_field_contracts(
+    mutate: Callable[[dict[str, object]], None], message: str
+) -> None:
+    payload = cast(
+        dict[str, object],
+        yaml.safe_load(Path("configs/trajcert.yaml").read_text(encoding="utf-8")),
+    )
     mutate(payload)
     with pytest.raises(ValidationError, match=message):
-        TrajCertConfig.model_validate(payload)
+        _ = TrajCertConfig.model_validate(payload)
 
 
 def test_config_loads_freezes_laws_and_reports_bad_files(tmp_path: Path) -> None:
     configuration = TrajCertConfig.from_yaml(Path("configs/trajcert.yaml"))
-    laws = cast(Any, configuration.laws)
-    with pytest.raises(AttributeError):
-        laws.clear()
+    assert not hasattr(configuration.laws, "clear")
     invalid = tmp_path / "invalid.yaml"
-    invalid.write_text("- not-a-mapping\n", encoding="utf-8")
+    _ = invalid.write_text("- not-a-mapping\n", encoding="utf-8")
     with pytest.raises(ConfigurationError, match="configuration root"):
-        TrajCertConfig.from_yaml(invalid)
+        _ = TrajCertConfig.from_yaml(invalid)
 
 
-def test_config_file_error_paths_and_empty_overrides(tmp_path: Path) -> None:
-    production = tmp_path / "production.yaml"
-    production.write_text(
-        Path("configs/trajcert.yaml").read_text(encoding="utf-8"), encoding="utf-8"
-    )
-    empty_overrides = tmp_path / "overrides.yaml"
-    empty_overrides.write_text("", encoding="utf-8")
-    assert load_config_with_runner_overrides(production, empty_overrides).schema_version == 1
+def test_config_file_error_paths(tmp_path: Path) -> None:
     invalid_yaml = tmp_path / "invalid.yaml"
-    invalid_yaml.write_text("invalid: [", encoding="utf-8")
+    _ = invalid_yaml.write_text("invalid: [", encoding="utf-8")
     with pytest.raises(ConfigurationError, match="invalid YAML"):
-        TrajCertConfig.from_yaml(invalid_yaml)
+        _ = TrajCertConfig.from_yaml(invalid_yaml)
     with pytest.raises(ConfigurationError, match="cannot read"):
-        TrajCertConfig.from_yaml(tmp_path / "missing.yaml")
-    invalid_overrides = tmp_path / "invalid-overrides.yaml"
-    invalid_overrides.write_text("benchmark: {measured_repetitions: 0}", encoding="utf-8")
-    with pytest.raises(ConfigurationError, match="invalid runner overrides"):
-        load_config_with_runner_overrides(production, invalid_overrides)
+        _ = TrajCertConfig.from_yaml(tmp_path / "missing.yaml")
 
 
 def test_vector_annotation_normalizes_and_serializes() -> None:
@@ -183,25 +195,31 @@ def test_vector_annotation_normalizes_and_serializes() -> None:
     assert model.values.dtype == np.float64
     assert model.model_dump(mode="json") == {"values": [1.0, 2.0]}
     with pytest.raises(ValidationError):
-        VectorModel.model_validate({"values": [1], "extra": 1})
+        _ = VectorModel.model_validate({"values": [1], "extra": 1})
+
+
+def _bootstrap_seed_namespace() -> SeedNamespace:
+    return bootstrap_namespace(SemanticComparisonKey("comparison"))
+
+
+def _permutation_seed_namespace() -> SeedNamespace:
+    return permutation_namespace(SemanticComparisonKey("comparison"))
+
+
+def _oracle_seed_namespace() -> SeedNamespace:
+    return namespace_for_role(SeedNamespaceRole.ORACLE)
 
 
 @pytest.mark.parametrize(
     ("factory", "role"),
     [
-        (
-            lambda: bootstrap_namespace(SemanticComparisonKey("comparison")),
-            SeedNamespaceRole.BOOTSTRAP,
-        ),
-        (
-            lambda: permutation_namespace(SemanticComparisonKey("comparison")),
-            SeedNamespaceRole.PERMUTATION,
-        ),
-        (lambda: namespace_for_role(SeedNamespaceRole.ORACLE), SeedNamespaceRole.ORACLE),
+        (_bootstrap_seed_namespace, SeedNamespaceRole.BOOTSTRAP),
+        (_permutation_seed_namespace, SeedNamespaceRole.PERMUTATION),
+        (_oracle_seed_namespace, SeedNamespaceRole.ORACLE),
     ],
 )
 def test_seed_namespaces_are_descriptive_and_deterministic(
-    factory, role: SeedNamespaceRole
+    factory: Callable[[], SeedNamespace], role: SeedNamespaceRole
 ) -> None:
     namespace = factory()
     assert role.value in namespace
@@ -218,9 +236,9 @@ def test_seed_descriptor_and_event_band_validation(descriptor: str) -> None:
     semantic_key = SemanticComparisonKey(descriptor)
     law_name = LawName("law")
     with pytest.raises(InvalidScientificDataError):
-        bootstrap_namespace(semantic_key)
+        _ = bootstrap_namespace(semantic_key)
     with pytest.raises(InvalidScientificDataError):
-        event_stream_namespace(law_name, 0)
+        _ = event_stream_namespace(law_name, 0)
 
 
 def test_cli_doctor_validates_inputs_and_reports_success(

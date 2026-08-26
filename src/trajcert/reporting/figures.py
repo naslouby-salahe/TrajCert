@@ -470,10 +470,7 @@ def _panel_scale(panel: Panel, xs: tuple[float, ...], ys: tuple[float, ...]) -> 
 def _expanded_bounds(lower: float, upper: float) -> tuple[float, float]:
     if not isfinite(lower) or not isfinite(upper):
         raise InvalidScientificDataError("figure coordinate must be finite")
-    if lower == upper:
-        pad = max(abs(lower) * 0.05, 0.05)
-    else:
-        pad = (upper - lower) * 0.05
+    pad = max(abs(lower) * 0.05, 0.05) if lower == upper else (upper - lower) * 0.05
     return lower - pad, upper + pad
 
 
@@ -522,8 +519,8 @@ def _matching_rows(table: pa.Table, column: str, value: str) -> tuple[dict[str, 
 
 def _required_float(row: dict[str, object], column: str) -> float:
     value = row[column]
-    if value is None:
-        raise InvalidScientificDataError(f"figure requires non-null {column}")
+    if not isinstance(value, int | float):
+        raise InvalidScientificDataError(f"figure requires non-null numeric {column}")
     numeric = float(value)
     if not isfinite(numeric):
         raise InvalidScientificDataError(f"figure requires finite {column}")
@@ -534,6 +531,8 @@ def _optional_float(row: dict[str, object], column: str) -> float | None:
     value = row[column]
     if value is None:
         return None
+    if not isinstance(value, int | float):
+        raise InvalidScientificDataError(f"figure requires numeric {column} when present")
     numeric = float(value)
     if not isfinite(numeric):
         raise InvalidScientificDataError(f"figure requires finite {column} when present")
@@ -543,11 +542,11 @@ def _optional_float(row: dict[str, object], column: str) -> float | None:
 def _svg_bytes(document: PlotDocument) -> bytes:
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{_WIDTH}" height="{_HEIGHT}" viewBox="0 0 {_WIDTH} {_HEIGHT}">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{_WIDTH}" height="{_HEIGHT}" '
+        f'viewBox="0 0 {_WIDTH} {_HEIGHT}">',
         f'<rect width="100%" height="100%" fill="{_BACKGROUND}"/>',
     ]
-    for command in document.commands:
-        lines.append(_svg_command(command))
+    lines.extend(_svg_command(command) for command in document.commands)
     lines.append("</svg>")
     return ("\n".join(lines) + "\n").encode("utf-8")
 
@@ -630,8 +629,8 @@ def _png_chunk(kind: bytes, payload: bytes) -> bytes:
 
 
 def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = False) -> None:
-    x0, y0 = int(round(start.x)), int(round(start.y))
-    x1, y1 = int(round(end.x)), int(round(end.y))
+    x0, y0 = round(start.x), round(start.y)
+    x1, y1 = round(end.x), round(end.y)
     dx = abs(x1 - x0)
     sx = 1 if x0 < x1 else -1
     dy = -abs(y1 - y0)
@@ -654,8 +653,8 @@ def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = 
 
 
 def _raster_circle(pixels: bytearray, center: Point, radius: float, hollow: bool) -> None:
-    cx, cy = int(round(center.x)), int(round(center.y))
-    r = max(1, int(round(radius)))
+    cx, cy = round(center.x), round(center.y)
+    r = max(1, round(radius))
     for y in range(cy - r, cy + r + 1):
         for x in range(cx - r, cx + r + 1):
             distance = (x - cx) ** 2 + (y - cy) ** 2
@@ -667,10 +666,10 @@ def _raster_circle(pixels: bytearray, center: Point, radius: float, hollow: bool
 
 
 def _raster_rectangle(pixels: bytearray, rectangle: Rectangle) -> None:
-    left = int(round(rectangle.left))
-    top = int(round(rectangle.top))
-    right = int(round(rectangle.left + rectangle.width))
-    bottom = int(round(rectangle.top + rectangle.height))
+    left = round(rectangle.left)
+    top = round(rectangle.top)
+    right = round(rectangle.left + rectangle.width)
+    bottom = round(rectangle.top + rectangle.height)
     if rectangle.filled:
         for y in range(top, bottom + 1):
             for x in range(left, right + 1):

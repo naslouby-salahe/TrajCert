@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import ceil, floor, inf, isfinite, ldexp, log as float_log, log2, nextafter
+from math import ceil, floor, inf, isfinite, ldexp, log2, nextafter
+from math import log as float_log
 from typing import Self
 
 from flint import arb, ctx
@@ -713,7 +714,9 @@ def _mutual_information(
     correct_row = (*correct, unresolved - hidden_terminal_harmful)
     harmful_total = sum(harmful_row, mpf(0))
     correct_total = sum(correct_row, mpf(0))
-    column_totals = tuple(left + right for left, right in zip(harmful_row, correct_row, strict=True))
+    column_totals = tuple(
+        left + right for left, right in zip(harmful_row, correct_row, strict=True)
+    )
     value = mpf(0)
     for row, row_total in ((harmful_row, harmful_total), (correct_row, correct_total)):
         for cell, column_total in zip(row, column_totals, strict=True):

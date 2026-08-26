@@ -14,6 +14,7 @@ from trajcert.types import DomainModel, RiskValue
 _INITIAL_CLIP = 1e-8
 _GRADIENT_ACCEPTANCE = 1e-8
 _BOUNDARY_DISTANCE = 1e-8
+_MINIMUM_NONEMPTY_BANDS = 2
 
 
 class PatternMixtureStatus(StrEnum):
@@ -45,7 +46,7 @@ def fit_pattern_mixture(
     correct = np.asarray(summary.correct_by_band, dtype=np.float64)
     masses = harmful + correct
     nonempty = np.flatnonzero(masses > 0.0)
-    if nonempty.size < 2:
+    if nonempty.size < _MINIMUM_NONEMPTY_BANDS:
         return _empty_result(PatternMixtureStatus.NOT_APPLICABLE)
     indices = nonempty.astype(np.float64) + 1.0
     weights = masses[nonempty]

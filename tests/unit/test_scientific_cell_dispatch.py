@@ -15,7 +15,7 @@ from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.dispatch import execute_phase_one_cell
+from trajcert.experiments.dispatch import execute_scientific_cell
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.provenance import ExperimentNameValue
 from trajcert.reporting.source_data import (
@@ -25,17 +25,19 @@ from trajcert.reporting.source_data import (
     read_source_data,
     write_source_data,
 )
-from trajcert.types import LawName
+from trajcert.types import LawName, PartitionName
 
 _RUNTIME_STREAMS = 2
 _RUNTIME_EVENTS = 200
 _RUNTIME_CHECKPOINT = 100
+_PRODUCTION_REGISTRY_TOTAL = 1_423
+_SHA256_HEX_DIGEST_LENGTH = 64
 
 
 def test_recovered_plan_has_no_configuration_gap_cells() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     plan = build_plan(config)
-    assert plan.registry_total == 1_423
+    assert plan.registry_total == _PRODUCTION_REGISTRY_TOTAL
     assert plan.executable_cells == plan.registry_total
     assert plan.invalid_cells == 0
 
@@ -56,7 +58,7 @@ def test_recovered_scientific_families_dispatch() -> None:
     )
     for name in names:
         cell = cells_for_experiment(plan, ExperimentNameValue(name))[0]
-        result = execute_phase_one_cell(cell, runtime)
+        result = execute_scientific_cell(cell, runtime)
         assert result is not None
 
 
@@ -93,7 +95,7 @@ def test_terminal_selection_failure_boundary_dispatches() -> None:
         if "terminal-selection-asymmetry="
         in str(item.identity.coordinates.failure_boundary_axis_and_level)
     )
-    result = execute_phase_one_cell(cell, config)
+    result = execute_scientific_cell(cell, config)
     assert result is not None
 
 
@@ -103,14 +105,14 @@ def test_source_data_parquet_roundtrip_preserves_columns(tmp_path: Path) -> None
         analysis_type=AnalysisType.POPULATION,
         law_name=LawName("law"),
         rho=0.05,
-        partition_name="8-band partition",
+        partition_name=PartitionName("8-band partition"),
         metric_name=MetricName("risk upper"),
         metric_value=0.1,
         materiality_pass=True,
     )
     digest = write_source_data(path, (row,))
     table = read_source_data(path)
-    assert len(str(digest)) == 64
+    assert len(str(digest)) == _SHA256_HEX_DIGEST_LENGTH
     assert table.num_rows == 1
     assert "materiality_pass" in table.column_names
 
@@ -119,8 +121,8 @@ def test_source_data_parquet_uses_pass_serialization_alias(tmp_path: Path) -> No
     path = tmp_path / "partition-timing.parquet"
     row = PartitionTimingRow(
         law_name=LawName("law"),
-        coarse_partition="4-band partition",
-        fine_partition="8-band partition",
+        coarse_partition=PartitionName("4-band partition"),
+        fine_partition=PartitionName("8-band partition"),
         rho=0.05,
         tau_coarse=0.01,
         tau_fine=0.02,
@@ -143,15 +145,15 @@ def test_source_data_rejects_mixed_row_schemas(tmp_path: Path) -> None:
         analysis_type=AnalysisType.POPULATION,
         law_name=LawName("law"),
         rho=0.05,
-        partition_name="8-band partition",
+        partition_name=PartitionName("8-band partition"),
         metric_name=MetricName("risk upper"),
         metric_value=0.1,
         materiality_pass=True,
     )
     timing_row = PartitionTimingRow(
         law_name=LawName("law"),
-        coarse_partition="4-band partition",
-        fine_partition="8-band partition",
+        coarse_partition=PartitionName("4-band partition"),
+        fine_partition=PartitionName("8-band partition"),
         rho=0.05,
         tau_coarse=0.01,
         tau_fine=0.02,

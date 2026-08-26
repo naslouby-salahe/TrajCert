@@ -14,6 +14,7 @@ _MINIMUM_BRACKET_WIDTH = mpf("1e-30")
 _COMMON_SLOPE_TOLERANCE = mpf("1e-20")
 _STABLE_EQUALITY_TOLERANCE = mpf("1e-10")
 _ROOT_DEDUPLICATION_TOLERANCE = mpf("1e-12")
+_MINIMUM_COMPARABLE_BANDS = 2
 
 
 class CallbackStatus(StrEnum):
@@ -48,7 +49,7 @@ def alho_common_slope_callback(
         left > mpf(0) and right > mpf(0)
         for left, right in zip(data.harmful, data.correct, strict=True)
     )
-    if informative < 2:
+    if informative < _MINIMUM_COMPARABLE_BANDS:
         return _not_applicable(informative)
     roots = _accepted_roots(
         data,
@@ -63,7 +64,7 @@ def stable_resistance_callback(
     summary: ObservableSummary,
     oracle_digits: PositiveInt,
 ) -> CallbackResult:
-    if summary.partition.band_count < 2:
+    if summary.partition.band_count < _MINIMUM_COMPARABLE_BANDS:
         return _not_applicable(0)
     data = _data(summary)
     roots = _accepted_roots(
@@ -144,7 +145,7 @@ def _common_slope_objective(data: _CallbackData, hidden: mpf) -> mpf:
         for index in range(len(data.harmful))
         if (value := _log_odds_ratio(data, index, hidden)) is not None
     )
-    if len(values) < 2:
+    if len(values) < _MINIMUM_COMPARABLE_BANDS:
         return mpf("inf")
     mean = sum(values, mpf(0)) / mpf(len(values))
     return sum(((value - mean) ** 2 for value in values), mpf(0))

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from math import log
 
 from pydantic import Field
 
@@ -497,9 +496,7 @@ def _oracle_error_by_partition(
     return {k: max(values) for k, values in grouped.items() if values}
 
 
-def _timing_figure_rows(
-    plan: ExperimentPlan, workspace_root
-) -> tuple[TimingValueFigureRow, ...]:
+def _timing_figure_rows(plan: ExperimentPlan, workspace_root) -> tuple[TimingValueFigureRow, ...]:
     rows: list[TimingValueFigureRow] = []
     for cell in _cells(plan, "Strict Timing Gain"):
         result = read_verified_scientific_result(cell, workspace_root, PartitionCoherenceResult)
@@ -563,8 +560,7 @@ def _information_profile_rows(
         for cell, result in population
         if cell.identity.coordinates.synthetic_law_name == target_law
         and _required_partition(cell) == target_partition
-        and abs(float(result.sensitivity_budget) - target_rho)
-        <= config.numerics.comparison_guard
+        and abs(float(result.sensitivity_budget) - target_rho) <= config.numerics.comparison_guard
     )
     if len(matches) != 1:
         raise InvalidScientificDataError("Figure 3 requires one target population sensitivity cell")
