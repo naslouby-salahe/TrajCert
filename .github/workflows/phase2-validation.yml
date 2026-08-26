@@ -1,0 +1,92 @@
+name: Phase 2 Targeted Validation
+
+on:
+  push:
+    branches:
+      - feat/trajcert-scientific-execution-spine
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra quality --locked --no-build
+      - run: |
+          uv run --no-sync --no-build ruff format --check \
+            src/trajcert/analysis \
+            src/trajcert/config.py \
+            src/trajcert/experiments/coverage.py \
+            src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/failure_boundaries.py \
+            src/trajcert/experiments/legacy_incoherence.py \
+            src/trajcert/experiments/plan.py \
+            src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/synthesis.py \
+            src/trajcert/reporting/source_data.py \
+            tests/unit/test_statistics.py \
+            tests/unit/test_phase2_execution.py \
+            tests/architecture/test_locality.py
+      - run: |
+          uv run --no-sync --no-build ruff check \
+            src/trajcert/analysis \
+            src/trajcert/config.py \
+            src/trajcert/experiments/coverage.py \
+            src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/failure_boundaries.py \
+            src/trajcert/experiments/legacy_incoherence.py \
+            src/trajcert/experiments/plan.py \
+            src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/synthesis.py \
+            src/trajcert/reporting/source_data.py \
+            tests/unit/test_statistics.py \
+            tests/unit/test_phase2_execution.py \
+            tests/architecture/test_locality.py
+      - run: |
+          uv run --no-sync --no-build basedpyright \
+            src/trajcert/analysis \
+            src/trajcert/config.py \
+            src/trajcert/experiments/coverage.py \
+            src/trajcert/experiments/dispatch.py \
+            src/trajcert/experiments/failure_boundaries.py \
+            src/trajcert/experiments/legacy_incoherence.py \
+            src/trajcert/experiments/plan.py \
+            src/trajcert/experiments/registry.py \
+            src/trajcert/experiments/sensitivity.py \
+            src/trajcert/experiments/synthesis.py \
+            src/trajcert/reporting/source_data.py
+      - run: python -m compileall -q src/trajcert
+      - run: |
+          PYTHONPATH=src uv run --no-sync --no-build python - <<'PY'
+          from trajcert.config import TrajCertConfig
+          from trajcert.constants import PRODUCTION_CONFIG_PATH
+          from trajcert.experiments.plan import build_plan
+          from trajcert.experiments.registry import authoritative_registry
+
+          config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+          registry = authoritative_registry()
+          plan = build_plan(config)
+          assert len(registry) == 30
+          assert plan.registry_total == 1423
+          assert plan.executable_cells == 1423
+          assert plan.invalid_cells == 0
+          assert all(item.configuration_gap_cells == 0 for item in registry)
+          PY
+      - run: |
+          uv run --no-sync --no-build pytest -q \
+            tests/unit/test_config.py \
+            tests/unit/test_statistics.py \
+            tests/unit/test_phase2_execution.py \
+            tests/architecture/test_locality.py
+      - run: uv run --no-sync --no-build semgrep --config semgrep src/trajcert
+      - run: uv run --no-sync --no-build deptry .
