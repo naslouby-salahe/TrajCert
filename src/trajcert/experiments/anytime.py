@@ -80,11 +80,11 @@ from trajcert.types import (
     SensitivityBudget,
 )
 
-_HAND_CASE_STREAM = 0
+_HAND_CASE_STREAM = 0 #TODO: Should be in yaml unless i'm mistaken. Also should be accessed from config
 _PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
-_DIAGNOSTIC_NODE_CAP = 1
-_EXACT_COVERAGE_LEVEL = 0.95
-_REPRESENTATIVE_STREAMS = (0, 1, 2, 3)
+_DIAGNOSTIC_NODE_CAP = 1 #TODO: Should be in yaml unless i'm mistaken. Also should be accessed from config
+_EXACT_COVERAGE_LEVEL = 0.95 #TODO: Should be in yaml unless i'm mistaken. Also should be accessed from config
+_REPRESENTATIVE_STREAMS = (0, 1, 2, 3) #TODO: Should be in yaml unless i'm mistaken. Also should be accessed from config
 
 
 class SequentialMethod(StrEnum):
@@ -95,8 +95,8 @@ class SequentialMethod(StrEnum):
 
 
 class SequentialCheckpoint(DomainModel):
-    matured_count: int
-    resolved_count: int
+    matured_count: int #TODO: don't use primitive int and check why tests aren't catching it
+    resolved_count: int #TODO: don't use primitive int and check why tests aren't catching it
     confidence: CategoricalConfidenceRegion
     projection: ProjectionResult
     assessment: CertificationAssessment
@@ -109,8 +109,8 @@ class SequentialTrace(DomainModel):
 
 
 class HandCaseResult(DomainModel):
-    case_index: int
-    partition_bands: int
+    case_index: int #TODO: don't use primitive int and check why tests aren't catching it
+    partition_bands: int #TODO: don't use primitive int and check why tests aren't catching it
     expected_state: ScientificState | None
     observed_state: ScientificState | None
     projection_upper: float | None
@@ -123,9 +123,9 @@ class HandCaseResult(DomainModel):
 class CoverageMethodResult(DomainModel):
     method: SequentialMethod
     applicable: bool
-    streams: int
-    anytime_failures: int
-    failure_rate: float | None
+    streams: int #TODO: don't use primitive int and check why tests aren't catching it
+    anytime_failures: int #TODO: don't use primitive int and check why tests aren't catching it
+    failure_rate: float | None #TODO: don't use primitive float and check why tests aren't catching it
 
 
 class CoverageStressResult(DomainModel):
@@ -134,35 +134,35 @@ class CoverageStressResult(DomainModel):
 
 
 class CoverageMethodEvidence(DomainModel):
-    method_name: str
+    method_name: str #TODO: don't use primitive str and check why tests aren't catching it
     applicable: bool
-    independent_streams: int
-    ever_violations: int
-    violation_rate: float | None
-    clopper_pearson_upper_95: float | None
+    independent_streams: int #TODO: don't use primitive int and check why tests aren't catching it
+    ever_violations: int #TODO: don't use primitive int and check why tests aren't catching it
+    violation_rate: float | None #TODO: don't use primitive float and check why tests aren't catching it
+    clopper_pearson_upper_95: float | None #TODO: don't use primitive float and check why tests aren't catching it
     criterion_pass: bool | None
-    median_first_certified_n: float | None
-    median_certified_update_fraction: float | None
+    median_first_certified_n: float | None #TODO: don't use primitive float and check why tests aren't catching it
+    median_certified_update_fraction: float | None #TODO: don't use primitive float and check why tests aren't catching it
 
 
 class AnytimePathEvidence(DomainModel):
-    stream_seed_index: int
-    n_matured: int
-    risk_upper_anytime: float
-    true_theta: float
-    beta: float
+    stream_seed_index: int #TODO: don't use primitive int and check why tests aren't catching it
+    n_matured: int #TODO: don't use primitive int and check why tests aren't catching it
+    risk_upper_anytime: float #TODO: don't use primitive float and check why tests aren't catching it
+    true_theta: float #TODO: don't use primitive float and check why tests aren't catching it
+    beta: float #TODO: don't use primitive float and check why tests aren't catching it
     evidence_gate_pass: bool
-    operational_state: str
+    operational_state: str #TODO: don't use primitive str and check why tests aren't catching it
 
 
 class CoverageEvidenceResult(DomainModel):
-    band_count: int
-    true_theta: float
-    true_mutual_information: float
+    band_count: int #TODO: don't use primitive int and check why tests aren't catching it
+    true_theta: float #TODO: don't use primitive float and check why tests aren't catching it
+    true_mutual_information: float #TODO: don't use primitive float and check why tests aren't catching it
     rho: SensitivityBudget
-    beta: float
-    delta: float
-    acceptance_upper_limit: float
+    beta: float #TODO: don't use primitive float and check why tests aren't catching it
+    delta: float #TODO: don't use primitive float and check why tests aren't catching it
+    acceptance_upper_limit: float #TODO: don't use primitive float and check why tests aren't catching it
     methods: tuple[CoverageMethodEvidence, ...]
     representative_paths: tuple[AnytimePathEvidence, ...]
     primary_passed: bool
@@ -175,8 +175,8 @@ def run_sequential_trace(
     config: TrajCertConfig,
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
-    checkpoint_every: int,
-    outer_max_nodes: int | None = None,
+    checkpoint_every: int, #TODO: don't use primitive int and check why tests aren't catching it
+    outer_max_nodes: int | None = None, #TODO: don't use primitive int and check why tests aren't catching it
 ) -> SequentialTrace:
     if checkpoint_every <= 0:
         raise ValueError("checkpoint_every must be positive")
@@ -228,7 +228,7 @@ def run_sequential_trace(
 
 
 def run_anytime_hand_case(
-    case_index: int,
+    case_index: int, #TODO: don't use primitive int and check why tests aren't catching it
     partition: TrajectoryPartition,
     config: TrajCertConfig,
 ) -> HandCaseResult:
@@ -295,10 +295,10 @@ def _coverage_stream_failures(
     config: TrajCertConfig,
     sensitivity_budget: SensitivityBudget,
     assumption_valid: bool,
-    max_events: int,
-    checkpoint_every: int,
-    true_risk: float,
-    stream_index: int,
+    max_events: int, #TODO: don't use primitive int and check why tests aren't catching it
+    checkpoint_every: int, #TODO: don't use primitive int and check why tests aren't catching it
+    true_risk: float, #TODO: don't use primitive float and check why tests aren't catching it
+    stream_index: int, #TODO: don't use primitive int and check why tests aren't catching it
 ) -> dict[SequentialMethod, bool]:
     ledger = generate_stochastic_ledger(
         parameters=parameters,
@@ -354,7 +354,7 @@ def _record_checkpoint_failures(
     config: TrajCertConfig,
     sensitivity_budget: SensitivityBudget,
     assumption_valid: bool,
-    true_risk: float,
+    true_risk: float, #TODO: don't use primitive float and check why tests aren't catching it
 ) -> None:
     envelope = summary_envelope_from_confidence(partition, running)
     projection = _project(envelope, config, sensitivity_budget)
@@ -381,8 +381,8 @@ def _record_checkpoint_failures(
 def _coverage_method_result(
     method: SequentialMethod,
     assumption_valid: bool,
-    stream_count: int,
-    failures: dict[SequentialMethod, int],
+    stream_count: int, #TODO: don't use primitive int and check why tests aren't catching it
+    failures: dict[SequentialMethod, int], #TODO: don't use primitive int and check why tests aren't catching it
 ) -> CoverageMethodResult:
     applicable = method is not SequentialMethod.IGNORABLE_DELAY or assumption_valid
     failure_rate = (
@@ -463,12 +463,12 @@ def evaluate_configured_coverage_stress(
 def _coverage_method_evidence(
     method: SequentialMethod,
     applicable: bool,
-    streams: int,
-    failures: int,
-    failure_rate: float | None,
-    config: TrajCertConfig,
-    first_certified: tuple[float, ...],
-    certified_fractions: tuple[float, ...],
+    streams: int, #TODO: don't use primitive int and check why tests aren't catching it
+    failures: int, #TODO: don't use primitive int and check why tests aren't catching it
+    failure_rate: float | None, #TODO: don't use primitive float and check why tests aren't catching it
+    config: TrajCertConfig, #TODO: don't use config as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
+    first_certified: tuple[float, ...], #TODO: don't use primitive float and check why tests aren't catching it
+    certified_fractions: tuple[float, ...], #TODO: don't use primitive float and check why tests aren't catching it
 ) -> CoverageMethodEvidence:
     upper = None if not applicable else _clopper_pearson_upper(failures, streams)
     criterion = (
@@ -489,7 +489,7 @@ def _coverage_method_evidence(
     )
 
 
-def _clopper_pearson_upper(failures: int, streams: int) -> float:
+def _clopper_pearson_upper(failures: int, streams: int) -> float: #TODO: don't use primitive int in the inputs and float in the outputs and check why tests aren't catching it
     if streams <= 0 or failures < 0 or failures > streams:
         raise InvalidScientificDataError("invalid binomial counts for exact coverage limit")
     if failures == streams:
@@ -508,8 +508,8 @@ def _trajcert_trajectory_evidence(
     partition: TrajectoryPartition,
     config: TrajCertConfig,
     rho: SensitivityBudget,
-    beta: float,
-) -> tuple[tuple[float, ...], tuple[float, ...], tuple[AnytimePathEvidence, ...]]:
+    beta: float, #TODO: don't use primitive float and check why tests aren't catching it
+) -> tuple[tuple[float, ...], tuple[float, ...], tuple[AnytimePathEvidence, ...]]: #TODO: this output is complicated and has also primitive floats that should be replaced with a more robust numeric type. And a different approach to output
     stream_count = int(config.sequential.coverage.streams)
     max_events = int(config.sequential.coverage.max_events)
     checkpoint_every = int(config.sequential.coverage.checkpoint_every)
@@ -544,7 +544,7 @@ def _trajcert_trajectory_evidence(
 
 def _stream_certification_summary(
     trace: SequentialTrace,
-) -> tuple[int | None, float]:
+) -> tuple[int | None, float]: #TODO: don't use primitive int and float and check why tests aren't catching it
     eligible = 0
     certified = 0
     first: int | None = None
@@ -563,9 +563,9 @@ def _stream_certification_summary(
 
 def _representative_path_evidence(
     parameters: LawParameters,
-    beta: float,
+    beta: float, #TODO: don't use primitive float and check why tests aren't catching it
     trace: SequentialTrace,
-    stream_index: int,
+    stream_index: int, #TODO: don't use primitive int and check why tests aren't catching it
 ) -> tuple[AnytimePathEvidence, ...]:
     return tuple(
         _representative_checkpoint_evidence(parameters, beta, checkpoint, stream_index)
@@ -575,9 +575,9 @@ def _representative_path_evidence(
 
 def _representative_checkpoint_evidence(
     parameters: LawParameters,
-    beta: float,
+    beta: float, #TODO: don't use primitive float and check why tests aren't catching it
     checkpoint: SequentialCheckpoint,
-    stream_index: int,
+    stream_index: int, #TODO: don't use primitive int and check why tests aren't catching it
 ) -> AnytimePathEvidence:
     state = checkpoint.assessment.scientific_state
     return AnytimePathEvidence(
@@ -594,8 +594,8 @@ def _representative_checkpoint_evidence(
 def _true_information(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
-) -> float:
+    config: TrajCertConfig, #TODO: don't use config as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
+) -> float: #TODO: don't use primitive float and check why tests aren't catching it
     full_law = build_full_law(parameters, partition.band_count)
     summary = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
     return float(
@@ -624,8 +624,8 @@ def _parameters(case: CoverageStressCaseConfig, config: TrajCertConfig) -> LawPa
 
 def _minimum_information_completion(
     parameters: LawParameters,
-    band_count: int,
-    config: TrajCertConfig,
+    band_count: int, #TODO: don't use primitive int and check why tests aren't catching it
+    config: TrajCertConfig, #TODO: don't use config as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
 ) -> LawParameters:
     full_law = build_full_law(parameters, band_count)
     partition = build_partition(
@@ -659,10 +659,10 @@ def _minimum_information_completion(
 
 
 def _sensitivity_budget(
-    case: CoverageStressCaseConfig,
+    case: CoverageStressCaseConfig, #TODO: don't use case as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
     parameters: LawParameters,
     summary: ObservableSummary,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: don't use config as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
 ) -> SensitivityBudget:
     if case.sensitivity_reference is CoverageStressSensitivityReference.COMPATIBILITY_FLOOR:
         minimum = minimum_information_point(summary)
@@ -691,10 +691,10 @@ def _sensitivity_budget(
 
 
 def _risk_budget(
-    case: CoverageStressCaseConfig,
+    case: CoverageStressCaseConfig, #TODO: don't use case as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
     summary: ObservableSummary,
     rho: SensitivityBudget,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: don't use config as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
 ) -> float:
     if case.beta_offset is None:
         return float(config.budgets.risk)
@@ -711,12 +711,12 @@ def _risk_budget(
     return min(1.0, float(solved.latent_risk.upper) + float(case.beta_offset))
 
 
-def _float_tuple(values: NDArray[np.float64]) -> tuple[float, ...]:
+def _float_tuple(values: NDArray[np.float64]) -> tuple[float, ...]: #TODO: is there a better approach? ALso no primitive usage
     return tuple(cast(list[float], values.tolist()))
 
 
 def _hand_case_insufficient_matured(
-    partition: TrajectoryPartition, config: TrajCertConfig
+    partition: TrajectoryPartition, config: TrajCertConfig #TODO: don't use config as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
 ) -> HandCaseResult:
     parameters = _law(config, _PRINCIPAL_LAW)
     ledger = generate_balanced_prefix_ledger(parameters, partition, _HAND_CASE_STREAM, 199)
@@ -728,12 +728,12 @@ def _hand_case_insufficient_matured(
         config,
         config.budgets.information_nats,
         config.budgets.risk,
-        199,
+        199, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
     )
     observed = trace.checkpoints[-1].assessment.scientific_state
     return _state_result(
-        1,
+        1, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         partition,
         ScientificState.INSUFFICIENT_EVIDENCE,
         observed,
@@ -742,7 +742,7 @@ def _hand_case_insufficient_matured(
 
 
 def _hand_case_insufficient_resolved(
-    partition: TrajectoryPartition, config: TrajCertConfig
+    partition: TrajectoryPartition, config: TrajCertConfig #TODO: don't use config as input. it's already in context and should be accessed globally. Identify all similar usage in the code and fix it
 ) -> HandCaseResult:
     parameters = _law(config, _PRINCIPAL_LAW)
     full_law = build_full_law(parameters, partition.band_count)
@@ -757,17 +757,17 @@ def _hand_case_insufficient_resolved(
         )
         for category in finite
     )
-    finite_counts = hamilton_apportionment(conditional, 49)
-    final_counts = (*finite_counts, 151)
+    finite_counts = hamilton_apportionment(conditional, 49) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
+    final_counts = (*finite_counts, 151) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     empirical = tuple(
         ObservableCategoryProbability(
             band_index=category.band_index,
             correctness_label=category.correctness_label,
-            probability=count / 200.0,
+            probability=count / 200.0, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         )
         for category, count in zip(categories, final_counts, strict=True)
     )
-    sequence = balanced_prefix(empirical, 200)
+    sequence = balanced_prefix(empirical, 200) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     identity = _hand_identity(2)
     events = _matured_sequence(identity, empirical, sequence.categories)
     trace = run_sequential_trace(
@@ -777,12 +777,12 @@ def _hand_case_insufficient_resolved(
         config,
         config.budgets.information_nats,
         config.budgets.risk,
-        200,
+        200, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
     )
     observed = trace.checkpoints[-1].assessment.scientific_state
     return _state_result(
-        2,
+        2, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         partition,
         ScientificState.INSUFFICIENT_EVIDENCE,
         observed,
@@ -798,7 +798,7 @@ def _hand_case_model_incompatible(
     if tau_value is None:
         raise ValueError("model-incompatible hand case requires positive resolved mass")
     tau = float(tau_value)
-    rho = tau - min(0.005, tau / 2.0)
+    rho = tau - min(0.005, tau / 2.0) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     projection = _project(singleton_summary_envelope(summary), config, rho)
     assessment = _singleton_assessment(partition, config, projection, rho, config.budgets.risk)
     return _state_result(
@@ -813,7 +813,7 @@ def _hand_case_model_incompatible(
 def _hand_case_intrinsic(partition: TrajectoryPartition, config: TrajCertConfig) -> HandCaseResult:
     summary = _population_summary(config, LawKey.INTRINSIC_IMPOSSIBILITY, partition)
     tau = float(observed_timing_information(summary) or 0.0)
-    rho = tau + 0.01
+    rho = tau + 0.01 #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     projection = _project(singleton_summary_envelope(summary), config, rho)
     assessment = _singleton_assessment(partition, config, projection, rho, config.budgets.risk)
     return _state_result(
@@ -828,9 +828,9 @@ def _hand_case_intrinsic(partition: TrajectoryPartition, config: TrajCertConfig)
 def _hand_case_certified(partition: TrajectoryPartition, config: TrajCertConfig) -> HandCaseResult:
     summary = _population_summary(config, _PRINCIPAL_LAW, partition)
     tau = float(observed_timing_information(summary) or 0.0)
-    rho = tau + 0.01
+    rho = tau + 0.01 #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     projection = _project(singleton_summary_envelope(summary), config, rho)
-    beta = min(1.0, float(projection.proven_upper) + 0.005)
+    beta = min(1.0, float(projection.proven_upper) + 0.005) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     assessment = _singleton_assessment(partition, config, projection, rho, beta)
     return _state_result(
         5,
@@ -842,14 +842,14 @@ def _hand_case_certified(partition: TrajectoryPartition, config: TrajCertConfig)
 
 
 def _hand_case_uncertified(
-    partition: TrajectoryPartition, config: TrajCertConfig
+    partition: TrajectoryPartition, config: TrajCertConfig #TODO: do not use config as input param. It is accessed globally
 ) -> HandCaseResult:
     summary = _population_summary(config, _PRINCIPAL_LAW, partition)
     tau = float(observed_timing_information(summary) or 0.0)
     minimum = minimum_information_point(summary)
     if minimum is None:
         raise ValueError("uncertified hand case requires a nondegenerate minimum")
-    rho = tau + 0.01
+    rho = tau + 0.01 #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     projection = _project(singleton_summary_envelope(summary), config, rho)
     assessment = _singleton_assessment(
         partition,
@@ -859,7 +859,7 @@ def _hand_case_uncertified(
         float(minimum.latent_risk),
     )
     return _state_result(
-        6,
+        6, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         partition,
         ScientificState.UNCERTIFIED,
         assessment.scientific_state,
@@ -870,7 +870,7 @@ def _hand_case_uncertified(
 def _hand_case_zero_resolved_plausible(
     partition: TrajectoryPartition, config: TrajCertConfig
 ) -> HandCaseResult:
-    band_upper = 0.2 / (2.0 * partition.band_count)
+    band_upper = 0.2 / (2.0 * partition.band_count) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     harmful = tuple(
         ScalarEnvelope(lower=0.0, upper=band_upper) for _ in range(partition.band_count)
     )
@@ -881,10 +881,10 @@ def _hand_case_zero_resolved_plausible(
         partition=partition,
         harmful_by_band=harmful,
         correct_by_band=correct,
-        unresolved=ScalarEnvelope(lower=0.8, upper=1.0),
-        resolved_harmful=ScalarEnvelope(lower=0.0, upper=0.1),
-        resolved_correct=ScalarEnvelope(lower=0.0, upper=0.1),
-        resolved_entropy=ScalarEnvelope(lower=0.0, upper=0.2 * log(2.0)),
+        unresolved=ScalarEnvelope(lower=0.8, upper=1.0), #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
+        resolved_harmful=ScalarEnvelope(lower=0.0, upper=0.1), #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
+        resolved_correct=ScalarEnvelope(lower=0.0, upper=0.1), #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
+        resolved_entropy=ScalarEnvelope(lower=0.0, upper=0.2 * log(2.0)), #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     )
     projection = _project(
         envelope,
@@ -892,7 +892,7 @@ def _hand_case_zero_resolved_plausible(
         config.budgets.information_nats,
         outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
     )
-    state = _gate_state(partition, 200, 50)
+    state = _gate_state(partition, 200, 50) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     assessment = classify_certification(
         state=state,
         projection=projection,
@@ -909,7 +909,7 @@ def _hand_case_zero_resolved_plausible(
         else ScientificState.UNCERTIFIED
     )
     return HandCaseResult(
-        case_index=7,
+        case_index=7, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         partition_bands=partition.band_count,
         expected_state=expected,
         observed_state=assessment.scientific_state,
@@ -959,7 +959,7 @@ def _hand_case_no_unresolved(
         and abs(float(projection.proven_upper) - harmful_total) <= config.numerics.identity_atol
     )
     return HandCaseResult(
-        case_index=8,
+        case_index=8, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         partition_bands=partition.band_count,
         expected_state=ScientificState.CERTIFIED,
         observed_state=assessment.scientific_state,
@@ -976,22 +976,22 @@ def _hand_case_simplex_boundary(
 ) -> HandCaseResult:
     harmful = np.zeros(partition.band_count, dtype=np.float64)
     harmful[1:] = 0.1 / (partition.band_count - 1)
-    correct = np.full(partition.band_count, 0.7 / partition.band_count, dtype=np.float64)
+    correct = np.full(partition.band_count, 0.7 / partition.band_count, dtype=np.float64) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     summary = summarize_observable_masses(
         partition,
         harmful,
         correct,
-        0.2,
+        0.2, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         config.numerics.comparison_guard,
     )
     information_true = direct_mutual_information(
         tuple(float(value) for value in harmful),
         tuple(float(value) for value in correct),
-        0.2,
-        0.05,
+        0.2, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
+        0.05, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         config.numerics.oracle_digits,
     )
-    rho = float(information_true) + 0.01
+    rho = float(information_true) + 0.01 #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     projection = _project(singleton_summary_envelope(summary), config, rho)
     oracle = solve_information_oracle(summary, rho, config.numerics.oracle_digits)
     oracle_upper = (
@@ -1017,7 +1017,7 @@ def _hand_case_optimizer_fallback(
     partition: TrajectoryPartition, config: TrajCertConfig
 ) -> HandCaseResult:
     parameters = _law(config, _PRINCIPAL_LAW)
-    ledger = generate_balanced_prefix_ledger(parameters, partition, _HAND_CASE_STREAM, 500)
+    ledger = generate_balanced_prefix_ledger(parameters, partition, _HAND_CASE_STREAM, 500) #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     events = mature_ledger(ledger, partition)
     state = initialize_categorical_state(ledger.identity, partition)
     running: CategoricalConfidenceRegion | None = None
@@ -1039,7 +1039,7 @@ def _hand_case_optimizer_fallback(
         float(full_law.terminal_harmful),
         config.numerics.oracle_digits,
     )
-    rho = float(information_true) + 0.01
+    rho = float(information_true) + 0.01 #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
     envelope = summary_envelope_from_confidence(partition, running)
     projection = _project(envelope, config, rho, outer_max_nodes=_DIAGNOSTIC_NODE_CAP)
     oracle = feasible_projection_lower_oracle(
@@ -1056,7 +1056,7 @@ def _hand_case_optimizer_fallback(
         ProjectionTerminationReason.CONVERGED,
     }
     return HandCaseResult(
-        case_index=10,
+        case_index=10, #TODO: what's this magic number? It should be in the yaml and accessed through globally accessed config
         partition_bands=partition.band_count,
         expected_state=None,
         observed_state=None,
@@ -1070,9 +1070,9 @@ def _hand_case_optimizer_fallback(
 
 def _project(
     envelope: ObservableSummaryEnvelope,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param
     sensitivity_budget: SensitivityBudget,
-    outer_max_nodes: int | None = None,
+    outer_max_nodes: int | None = None, #TODO: Do not use primitives and check why it's not caught in tests
 ) -> ProjectionResult:
     return project_upper_risk(
         envelope=envelope,
@@ -1090,7 +1090,7 @@ def _project(
 
 def _singleton_assessment(
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param
     projection: ProjectionResult,
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
@@ -1112,8 +1112,8 @@ def _singleton_assessment(
 
 def _gate_state(
     partition: TrajectoryPartition,
-    matured: int,
-    resolved: int,
+    matured: int, #TODO:  Do not use primitives and check why it wasn't caught by tests
+    resolved: int, #TODO: Do not use primitives and check why it wasn't caught by tests
 ) -> CategoricalState:
     harmful = resolved // 2
     correct = resolved - harmful
@@ -1134,7 +1134,7 @@ def _gate_state(
 
 
 def _state_result(
-    case_index: int,
+    case_index: int, #TODO: Do not use primitives and check why it wasn't caught by tests
     partition: TrajectoryPartition,
     expected: ScientificState,
     observed: ScientificState | None,
@@ -1154,7 +1154,7 @@ def _state_result(
 
 
 def _population_summary(
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param
     law_key: LawKey,
     partition: TrajectoryPartition,
 ) -> ObservableSummary:

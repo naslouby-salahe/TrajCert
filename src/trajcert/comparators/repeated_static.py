@@ -53,7 +53,7 @@ def repeated_static_projection(
     )
 
 
-def _wilson_interval(successes: int, total: int, z: float) -> ClosedProbabilityInterval:
+def _wilson_interval(successes: int, total: int, z: float) -> ClosedProbabilityInterval: #TODO: don't use primitive int and float and check why tests aren't catching it
     proportion = successes / total
     z_squared = z * z
     denominator = 1.0 + z_squared / total

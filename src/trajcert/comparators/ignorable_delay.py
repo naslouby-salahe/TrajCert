@@ -17,7 +17,7 @@ class IgnorableDelayStatus(StrEnum):
 
 class IgnorableDelayResult(DomainModel):
     status: IgnorableDelayStatus
-    resolved_count: int
+    resolved_count: int #TODO: don't use primitive int and check why tests aren't catching it
     interval: ClosedProbabilityInterval | None
 
 
@@ -53,10 +53,10 @@ def ignorable_delay_update(
 
 
 def _bernoulli_interval(
-    successes: int,
-    total: int,
-    delta: float,
-    root_tolerance: float,
+    successes: int, #TODO: don't use primitive int and check why tests aren't catching it
+    total: int, #TODO: don't use primitive int and check why tests aren't catching it
+    delta: float, #TODO: don't use primitive float and check why tests aren't catching it
+    root_tolerance: float, #TODO: don't use primitive float and check why tests aren't catching it
 ) -> ClosedProbabilityInterval:
     if total == 0:
         return ClosedProbabilityInterval(lower=0.0, upper=1.0)
@@ -76,12 +76,12 @@ def _bernoulli_interval(
 
 
 def _root(
-    successes: int,
-    total: int,
-    lower: float,
-    upper: float,
-    threshold: float,
-    tolerance: float,
+    successes: int, #TODO: don't use primitive int and check why tests aren't catching it
+    total: int, #TODO: don't use primitive int and check why tests aren't catching it
+    lower: float, #TODO: don't use primitive float and check why tests aren't catching it
+    upper: float, #TODO: don't use primitive float and check why tests aren't catching it
+    threshold: float, #TODO: don't use primitive float and check why tests aren't catching it
+    tolerance: float, #TODO: don't use primitive float and check why tests aren't catching it
     lower_branch: bool,
 ) -> float:
     while upper - lower > tolerance:
@@ -99,7 +99,7 @@ def _root(
     return lower if lower_branch else upper
 
 
-def _log_mixture_ratio(successes: int, total: int, probability: float) -> float:
+def _log_mixture_ratio(successes: int, total: int, probability: float) -> float: #TODO: don't use primitives in input and outputs
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:

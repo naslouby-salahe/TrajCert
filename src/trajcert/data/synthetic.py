@@ -35,7 +35,7 @@ CategoryIndex = NewType("CategoryIndex", int)
 
 _SYNTHETIC_CLIENT_ID = ClientId("synthetic-client")
 _SYNTHETIC_ACTION_CHANNEL_ID = ActionChannelId("automatic-action")
-_EVENT_INDEX_WIDTH = 6
+_EVENT_INDEX_WIDTH = 6 #TODO: I think this should be in yaml unless i'm mistaken and it should be accessed through the config
 
 
 class ObservableCategoryProbability(DomainModel):
@@ -173,7 +173,7 @@ def _sample_event(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: int,
+    event_index: int, #TODO: don't use primitive int and check why tests aren't catching it
     random: np.random.Generator,
     harmful_weights: np.ndarray,
     correct_weights: np.ndarray,
@@ -207,7 +207,7 @@ def _event_from_observable_category(
     law_name: LawName,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: int,
+    event_index: int, #TODO: don't use primitive int and check why tests aren't catching it
     category: ObservableCategoryProbability,
 ) -> LedgerEvent:
     issue = float(event_index)
@@ -237,14 +237,14 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
     )
 
 
-def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: int) -> EventId:
+def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: int) -> EventId: #TODO: don't use primitive int and check why tests aren't catching it
     return EventId(
         f"{_slug(law_name)}::S{int(stream_index):0{_EVENT_INDEX_WIDTH}d}"
         + f"::E{event_index:0{_EVENT_INDEX_WIDTH}d}"
     )
 
 
-def _slug(value: LawName) -> str:
+def _slug(value: LawName) -> str: #TODO: don't use primitive str and check why tests aren't catching it
     characters = tuple(character.lower() if character.isalnum() else "-" for character in value)
     collapsed: list[str] = []
     for character in characters:

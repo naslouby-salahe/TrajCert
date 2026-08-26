@@ -9,12 +9,12 @@ from mpmath import log, mp, mpf, sqrt
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import DomainModel, PositiveInt, RiskInterval
 
-_GRID_POINTS = 10_001
-_MINIMUM_BRACKET_WIDTH = mpf("1e-30")
-_COMMON_SLOPE_TOLERANCE = mpf("1e-20")
-_STABLE_EQUALITY_TOLERANCE = mpf("1e-10")
-_ROOT_DEDUPLICATION_TOLERANCE = mpf("1e-12")
-_MINIMUM_COMPARABLE_BANDS = 2
+_GRID_POINTS = 10_001 #TODO: move this to yaml and access it though configuration
+_MINIMUM_BRACKET_WIDTH = mpf("1e-30") #TODO: move this to yaml and access it though configuration
+_COMMON_SLOPE_TOLERANCE = mpf("1e-20") #TODO: move this to yaml and access it though configuration
+_STABLE_EQUALITY_TOLERANCE = mpf("1e-10") #TODO: move this to yaml and access it though configuration
+_ROOT_DEDUPLICATION_TOLERANCE = mpf("1e-12") #TODO: move this to yaml and access it though configuration
+_MINIMUM_COMPARABLE_BANDS = 2 #TODO: move this to yaml and access it though configuration
 
 
 class CallbackStatus(StrEnum):
@@ -25,9 +25,9 @@ class CallbackStatus(StrEnum):
 
 class CallbackResult(DomainModel):
     status: CallbackStatus
-    accepted_hidden_roots: tuple[float, ...]
+    accepted_hidden_roots: tuple[float, ...] #TODO: do not use float primitive. Also check why architecture tests aren't catching this?
     latent_risk_interval: RiskInterval | None
-    informative_bands: int
+    informative_bands: int #TODO: do not use int primitive. Also check why architecture tests aren't catching this?
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,7 +117,7 @@ def _golden_minimize(
 ) -> tuple[mpf, mpf]:
     if left == right:
         return left, objective(data, left)
-    ratio = (sqrt(mpf(5)) - mpf(1)) / mpf(2)
+    ratio = (sqrt(mpf(5)) - mpf(1)) / mpf(2) #TODO: I'm not sure how i feel regarding the magic number usage of for example 5
     x_left = right - ratio * (right - left)
     x_right = left + ratio * (right - left)
     f_left = objective(data, x_left)
@@ -159,7 +159,7 @@ def _stable_resistance_objective(data: _CallbackData, hidden: mpf) -> mpf:
     return abs(first - second)
 
 
-def _log_odds_ratio(data: _CallbackData, index: int, hidden: mpf) -> mpf | None:
+def _log_odds_ratio(data: _CallbackData, index: int, hidden: mpf) -> mpf | None: #TODO: don't use primitive int and check why tests aren't catching it
     harmful_band = data.harmful[index]
     correct_band = data.correct[index]
     if harmful_band <= mpf(0) or correct_band <= mpf(0):
@@ -192,7 +192,7 @@ def _data(summary: ObservableSummary) -> _CallbackData:
 def _result(
     summary: ObservableSummary,
     roots: tuple[mpf, ...],
-    informative: int,
+    informative: int, #TODO: don't use primitive int and check why tests aren't catching it
 ) -> CallbackResult:
     if not roots:
         return CallbackResult(
@@ -214,7 +214,7 @@ def _result(
     )
 
 
-def _not_applicable(informative: int) -> CallbackResult:
+def _not_applicable(informative: int) -> CallbackResult: #TODO: don't use primitive int and check why tests aren't catching it
     return CallbackResult(
         status=CallbackStatus.NOT_APPLICABLE,
         accepted_hidden_roots=(),

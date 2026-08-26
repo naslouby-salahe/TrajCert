@@ -12,10 +12,10 @@ from trajcert.config import LegacyPatternMixtureConfig
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import DomainModel, RiskValue
 
-_INITIAL_CLIP = 1e-8
-_GRADIENT_ACCEPTANCE = 1e-8
-_BOUNDARY_DISTANCE = 1e-8
-_MINIMUM_NONEMPTY_BANDS = 2
+_INITIAL_CLIP = 1e-8 #TODO: these should be in yml and accessed through the configuration
+_GRADIENT_ACCEPTANCE = 1e-8 #TODO: these should be in yml and accessed through the configuration
+_BOUNDARY_DISTANCE = 1e-8 #TODO: these should be in yml and accessed through the configuration
+_MINIMUM_NONEMPTY_BANDS = 2 #TODO: these should be in yml and accessed through the configuration
 
 _CoefficientVector = np.ndarray[tuple[int], np.dtype[np.float64]]
 
@@ -27,17 +27,17 @@ class PatternMixtureStatus(StrEnum):
 
 
 class PatternMixturePoint(DomainModel):
-    sensitivity_c: int
+    sensitivity_c: int #TODO: don't use primitive int and check why tests aren't catching it
     terminal_harmful_probability: RiskValue
     latent_risk: RiskValue
 
 
 class PatternMixtureResult(DomainModel):
     status: PatternMixtureStatus
-    intercept: float | None
-    slope: float | None
-    gradient_infinity_norm: float | None
-    objective: float | None
+    intercept: float | None #TODO: don't use primitive float and check why tests aren't catching it
+    slope: float | None #TODO: don't use primitive float and check why tests aren't catching it
+    gradient_infinity_norm: float | None #TODO: don't use primitive float and check why tests aren't catching it
+    objective: float | None #TODO: don't use primitive float and check why tests aren't catching it
     points: tuple[PatternMixturePoint, ...]
 
 

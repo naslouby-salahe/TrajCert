@@ -12,68 +12,68 @@ from trajcert.math.information import observed_timing_information
 from trajcert.math.oracle import direct_mutual_information
 from trajcert.types import DomainModel
 
-_AUTHORITATIVE_LAW_COUNT = 12
-_AUTHORITATIVE_REGISTRY_EXPERIMENT_COUNT = 30
-_AUTHORITATIVE_REGISTRY_CELL_TOTAL = 1423
+_AUTHORITATIVE_LAW_COUNT = 12 #TODO: should be either dynamic or should be in yaml and accessed through config
+_AUTHORITATIVE_REGISTRY_EXPERIMENT_COUNT = 30 #TODO: should be either dynamic or should be in yaml and accessed through config
+_AUTHORITATIVE_REGISTRY_CELL_TOTAL = 1423 #TODO: should be either dynamic or should be in yaml and accessed through config
 
 
 class ProtocolConstantRow(DomainModel):
-    quantity: str
-    value: str
-    unit: str
-    value_class: str
-    fixed_or_swept: str
-    scientific_role: str
+    quantity: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    value: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    unit: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    value_class: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    fixed_or_swept: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    scientific_role: str #TODO: Do not use primitives and check why it wasn't caught by tests
 
 
 class SyntheticLawRow(DomainModel):
-    law_name: str
-    theta: float
-    q1: float
-    q0: float
-    lambda1: float
-    lambda0: float
-    K: int
-    A: float
-    G: float
-    c: float
-    tau_at_8_band_partition: float
-    true_mutual_information_at_8_band_partition: float
-    scientific_role: str
+    law_name: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    theta: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    q1: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    q0: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    lambda1: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    lambda0: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    K: int #TODO: Do not use primitives and check why it wasn't caught by tests
+    A: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    G: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    c: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    tau_at_8_band_partition: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    true_mutual_information_at_8_band_partition: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    scientific_role: str #TODO: Do not use primitives and check why it wasn't caught by tests
 
 
 class BaselineAssumptionRow(DomainModel):
-    baseline_name: str
-    purpose: str
-    observation_access: str
-    assumption: str
-    numerical_contract: str
-    sensitivity_grid: str
-    seed_pairing: str
-    metrics: str
-    valid_scope: str
-    forbidden_interpretation: str
+    baseline_name: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    purpose: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    observation_access: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    assumption: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    numerical_contract: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    sensitivity_grid: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    seed_pairing: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    metrics: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    valid_scope: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    forbidden_interpretation: str #TODO: Do not use primitives and check why it wasn't caught by tests
 
 
 class ExperimentMatrixRow(DomainModel):
-    execution_group: str
-    experiment_name: str
-    classification: str
-    purpose: str
-    cell_expansion: str
-    cell_count: int
-    primary_metrics: str
-    claim_ids: str
+    execution_group: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    experiment_name: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    classification: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    purpose: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    cell_expansion: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    cell_count: int #TODO: Do not use primitives and check why it wasn't caught by tests
+    primary_metrics: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    claim_ids: str #TODO: Do not use primitives and check why it wasn't caught by tests
 
 
 class InventoryValidationResult(DomainModel):
-    configured_law_count: int
-    configured_partition_count: int
-    registry_experiment_count: int
-    registry_cell_count: int
+    configured_law_count: int #TODO: Do not use primitives and check why it wasn't caught by tests
+    configured_partition_count: int #TODO: Do not use primitives and check why it wasn't caught by tests
+    registry_experiment_count: int #TODO: Do not use primitives and check why it wasn't caught by tests
+    registry_cell_count: int #TODO: Do not use primitives and check why it wasn't caught by tests
     semantic_cell_uniqueness_pass: bool
     nonnegative_mass_pass: bool
-    law_sum_pass: bool
+    law_sum_pass: bool #TODO: Do not use primitives and check why it wasn't caught by tests
     valid: bool
     protocol_constants: tuple[ProtocolConstantRow, ...]
     synthetic_laws: tuple[SyntheticLawRow, ...]
@@ -167,7 +167,7 @@ def validate_scientific_inventory(config: TrajCertConfig) -> InventoryValidation
     )
 
 
-def _protocol_constant_rows(config: TrajCertConfig) -> tuple[ProtocolConstantRow, ...]:
+def _protocol_constant_rows(config: TrajCertConfig) -> tuple[ProtocolConstantRow, ...]: #TODO: what's the purpose of this function?
     entries = (
         (
             "risk budget beta",

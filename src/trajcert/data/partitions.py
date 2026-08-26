@@ -135,5 +135,5 @@ def coarsen_mass_vector(
     return np.sum(values.reshape(-1, ratio), axis=1)
 
 
-def _coarsening_map_values(finest: int, bands: int) -> tuple[int, ...]:
+def _coarsening_map_values(finest: int, bands: int) -> tuple[int, ...]: #TODO: don't use primitive int and check why tests aren't catching it
     return tuple((fine_band * bands - 1) // finest + 1 for fine_band in range(1, finest + 1))

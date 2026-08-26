@@ -42,24 +42,24 @@ class FailureBoundaryAxis(StrEnum):
 
 class FailureBoundaryResult(DomainModel):
     axis: FailureBoundaryAxis
-    level: str
-    band_count: int
+    level: str #TODO: Do not use primitives and check why it wasn't caught by tests
+    band_count: int #TODO: Do not use primitives and check why it wasn't caught by tests
     sensitivity_budget: SensitivityBudget
     risk_budget: RiskBudget
-    tau: float | None
+    tau: float | None #TODO: Do not use primitives and check why it wasn't caught by tests
     operational_state: ScientificState
-    risk_upper: float
-    compatibility_lower: float | None
-    intrinsic_risk_lower: float | None
-    optimizer_gap: float | None
-    optimizer_nodes: int | None
-    runtime_ms: float | None
+    risk_upper: float #TODO: Do not use primitives and check why it wasn't caught by tests
+    compatibility_lower: float | None #TODO: Do not use primitives and check why it wasn't caught by tests
+    intrinsic_risk_lower: float | None #TODO: Do not use primitives and check why it wasn't caught by tests
+    optimizer_gap: float | None #TODO: Do not use primitives and check why it wasn't caught by tests
+    optimizer_nodes: int | None #TODO: Do not use primitives and check why it wasn't caught by tests
+    runtime_ms: float | None #TODO: Do not use primitives and check why it wasn't caught by tests
 
 
 def evaluate_failure_boundary(
     axis: FailureBoundaryAxis,
-    level: float | int,
-    config: TrajCertConfig,
+    level: float | int, #TODO: Do not use primitives and check why it wasn't caught by tests
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param
 ) -> FailureBoundaryResult:
     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
         return _finite_sample_size(int(level), config)
@@ -104,9 +104,9 @@ def evaluate_failure_boundary(
 
 
 def evaluate_terminal_selection_asymmetry(
-    q1: float,
-    q0: float,
-    config: TrajCertConfig,
+    q1: float, #TODO: Do not use primitives and check why it wasn't caught by tests
+    q0: float, #TODO: Do not use primitives and check why it wasn't caught by tests
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param
 ) -> FailureBoundaryResult:
     parameters = _base_parameters(config).model_copy(update={"q1": q1, "q0": q0})
     partition = _partition(config.method.finest_bands, config)
@@ -133,8 +133,8 @@ def evaluate_terminal_selection_asymmetry(
 
 
 def evaluate_optimizer_node_budget(
-    node_budget: int,
-    config: TrajCertConfig,
+    node_budget: int, #TODO: Do not use primitives and check why it wasn't caught by tests
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param
 ) -> FailureBoundaryResult:
     if node_budget <= 0:
         raise ValueError("optimizer node budget must be positive")
@@ -150,7 +150,7 @@ def evaluate_optimizer_node_budget(
     full_law = build_full_law(parameters, partition.band_count)
     truth = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
     true_information = _true_information(truth, float(full_law.terminal_harmful), config)
-    rho = true_information + 0.01
+    rho = true_information + 0.01 #TODO: what's this magic number? Should be in yaml and accessed from config
     start = perf_counter_ns()
     trace = run_sequential_trace(
         events=mature_ledger(ledger, partition),
@@ -162,7 +162,7 @@ def evaluate_optimizer_node_budget(
         checkpoint_every=sample_size,
         outer_max_nodes=node_budget,
     )
-    elapsed_ms = (perf_counter_ns() - start) / 1_000_000.0
+    elapsed_ms = (perf_counter_ns() - start) / 1_000_000.0 #TODO: what's this magic number? Should be in yaml and accessed from config
     checkpoint = trace.checkpoints[-1]
     projection = checkpoint.projection
     state = checkpoint.assessment.scientific_state or ScientificState.UNCERTIFIED
@@ -187,7 +187,7 @@ def evaluate_optimizer_node_budget(
     )
 
 
-def _finite_sample_size(sample_size: int, config: TrajCertConfig) -> FailureBoundaryResult:
+def _finite_sample_size(sample_size: int, config: TrajCertConfig) -> FailureBoundaryResult: #TODO: do not use primitives
     if sample_size <= 0:
         raise ValueError("matured sample size must be positive")
     parameters = _base_parameters(config)
@@ -209,7 +209,7 @@ def _finite_sample_size(sample_size: int, config: TrajCertConfig) -> FailureBoun
         risk_budget=config.budgets.risk,
         checkpoint_every=sample_size,
     )
-    elapsed_ms = (perf_counter_ns() - start) / 1_000_000.0
+    elapsed_ms = (perf_counter_ns() - start) / 1_000_000.0 #TODO: Should be in yaml and accessed through config
     checkpoint = trace.checkpoints[-1]
     state = checkpoint.assessment.scientific_state or ScientificState.UNCERTIFIED
     return FailureBoundaryResult(
@@ -235,9 +235,9 @@ def _finite_sample_size(sample_size: int, config: TrajCertConfig) -> FailureBoun
 
 def _population_coordinate(
     axis: FailureBoundaryAxis,
-    level: float | int,
+    level: float | int, #TODO: Do not use primitives and check why it wasn't caught by tests. especially here it's checking either float or int
     config: TrajCertConfig,
-) -> tuple[LawParameters, TrajectoryPartition, float, float]:
+) -> tuple[LawParameters, TrajectoryPartition, float, float]: #TODO: Do not use primitives in the return type and check why it wasn't caught by tests and consider using more specific types
     parameters = _base_parameters(config)
     bands = int(config.method.finest_bands)
     rho = float(config.budgets.information_nats)
@@ -295,7 +295,7 @@ def _population_state(
     solved: SharpRiskSet,
     rho: SensitivityBudget,
     beta: RiskBudget,
-) -> tuple[ScientificState, float, float | None, float | None]:
+) -> tuple[ScientificState, float, float | None, float | None]: #TODO: Do not use primitives in the return type and check why it wasn't caught by tests
     compatibility = solved.solve_result.compatibility
     minimum = compatibility.minimum_information_point
     compatibility_floor = None if minimum is None else float(minimum.information_floor)
@@ -316,8 +316,8 @@ def _population_state(
 
 def _true_information(
     summary: ObservableSummary,
-    hidden_terminal_harmful: float,
-    config: TrajCertConfig,
+    hidden_terminal_harmful: float, #TODO: Do not use primitives and check why it wasn't caught by tests
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param and check why it wasn't caught by tests
 ) -> float:
     harmful = _float_tuple(summary.harmful_by_band)
     correct = _float_tuple(summary.correct_by_band)
@@ -332,10 +332,10 @@ def _true_information(
     )
 
 
-def _tau(summary: ObservableSummary) -> float | None:
+def _tau(summary: ObservableSummary) -> float | None: #TODO: Do not use primitives in the return type and check why it wasn't caught by tests
     value = observed_timing_information(summary)
     return None if value is None else float(value)
 
 
-def _float_tuple(values: NDArray[np.float64]) -> tuple[float, ...]:
+def _float_tuple(values: NDArray[np.float64]) -> tuple[float, ...]: #TODO: Do not use primitives in the return type and check why it wasn't caught by tests
     return tuple(cast(list[float], values.tolist()))

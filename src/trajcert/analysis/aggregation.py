@@ -7,7 +7,7 @@ import numpy as np
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import DomainModel, FiniteFloat, PositiveInt, Vector
 
-_MINIMUM_PAIRED_VALUES = 2
+_MINIMUM_PAIRED_VALUES = 2 #TODO: move this to yml and get it from conf directly where it's used
 
 
 class StandardizedEffectStatus(StrEnum):

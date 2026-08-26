@@ -35,44 +35,44 @@ from trajcert.types import (
     ToleranceValue,
 )
 
-_PROFILE_GRID_POINTS = 1_001
-_SHARP_DIAGNOSTIC_GRID_POINTS = 2_001
+_PROFILE_GRID_POINTS = 1_001 #TODO: should be in yaml and accessed through config
+_SHARP_DIAGNOSTIC_GRID_POINTS = 2_001 #TODO: should be in yaml and accessed through config
 
 
 class IdentityResult(DomainModel):
     passed: bool
-    max_absolute_error: float
+    max_absolute_error: float #TODO: don't use primitives
 
 
 class ConvexityResult(DomainModel):
     passed: bool
-    evaluated_points: int
-    minimum_second_derivative: float | None
-    max_direct_second_derivative_error: float
+    evaluated_points: int #TODO: don't use primitives
+    minimum_second_derivative: float | None #TODO: don't use primitives
+    max_direct_second_derivative_error: float #TODO: don't use primitives
 
 
 class SharpSetIdentityResult(DomainModel):
     passed: bool
-    production_lower: float | None
-    production_upper: float | None
-    oracle_lower: float | None
-    oracle_upper: float | None
-    max_endpoint_error: float | None
-    diagnostic_grid_mismatches: int
+    production_lower: float | None #TODO: don't use primitives
+    production_upper: float | None #TODO: don't use primitives
+    oracle_lower: float | None #TODO: don't use primitives
+    oracle_upper: float | None #TODO: don't use primitives
+    max_endpoint_error: float | None #TODO: don't use primitives
+    diagnostic_grid_mismatches: int #TODO: don't use primitives
 
 
 class RefinementIdentityResult(DomainModel):
     passed: bool
-    timing_gain: float
-    max_profile_order_violation: float
-    max_profile_difference_error: float
+    timing_gain: float #TODO: don't use primitives
+    max_profile_order_violation: float #TODO: don't use primitives
+    max_profile_difference_error: float #TODO: don't use primitives
 
 
 class SafetyBoundaryIdentityResult(DomainModel):
     passed: bool
     assessment: SafetyAssessment
-    frontier_direct_information: float | None
-    frontier_error: float | None
+    frontier_direct_information: float | None #TODO: don't use primitives
+    frontier_error: float | None #TODO: don't use primitives
 
 
 class SafetyBoundaryCaseEvaluation(DomainModel):
@@ -83,7 +83,7 @@ class SafetyBoundaryCaseEvaluation(DomainModel):
 
 def path_information_decomposition(
     summary: ObservableSummary,
-    oracle_digits: int,
+    oracle_digits: int, #TODO: don't use primitives
     identity_atol: ToleranceValue,
 ) -> IdentityResult:
     tau = observed_timing_information(summary)
@@ -103,7 +103,7 @@ def path_information_decomposition(
 
 def information_profile_convexity(
     summary: ObservableSummary,
-    oracle_digits: int,
+    oracle_digits: int, #TODO: don't use primitives
     identity_atol: ToleranceValue,
 ) -> ConvexityResult:
     del oracle_digits
@@ -268,7 +268,7 @@ def strict_timing_gain_identity(
 def safety_boundary_identity(
     summary: ObservableSummary,
     risk_budget: RiskBudget,
-    oracle_digits: int,
+    oracle_digits: int, #TODO: don't use primitives
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryIdentityResult:
     assessment = assess_safety_geometry(summary, risk_budget)
@@ -299,7 +299,7 @@ def safety_boundary_identity(
 def evaluate_safety_boundary_case(
     summary: ObservableSummary,
     case: SafetyBudgetCase,
-    oracle_digits: int,
+    oracle_digits: int, #TODO: don't use primitives
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryCaseEvaluation:
     if not case.valid or case.risk_budget is None:
@@ -336,7 +336,7 @@ def population_complexity_proof_check() -> IdentityResult:
     return IdentityResult(passed=True, max_absolute_error=0.0)
 
 
-def _direct_second_derivative(summary: ObservableSummary, hidden: float) -> float:
+def _direct_second_derivative(summary: ObservableSummary, hidden: float) -> float: #TODO: don't use primitives in inputs or outputs
     harmful = float(summary.resolved_harmful_mass)
     correct = float(summary.resolved_correct_mass)
     unresolved = float(summary.unresolved_mass)
@@ -348,9 +348,9 @@ def _direct_second_derivative(summary: ObservableSummary, hidden: float) -> floa
 def _sharp_grid_mismatches(
     summary: ObservableSummary,
     sensitivity_budget: SensitivityBudget,
-    lower_risk: float,
-    upper_risk: float,
-) -> int:
+    lower_risk: float, #TODO: don't use primitives
+    upper_risk: float, #TODO: don't use primitives
+) -> int: #TODO: don't use primitives
     unresolved = float(summary.unresolved_mass)
     harmful = float(summary.resolved_harmful_mass)
     mismatches = 0
@@ -384,8 +384,8 @@ class LegacyPartitionIncoherenceResult(DomainModel):
 
 
 def evaluate_legacy_partition_incoherence(
-    gamma: float,
-    q: float,
+    gamma: float, #TODO: don't use primitives
+    q: float, #TODO: don't use primitives
     config: TrajCertConfig,
 ) -> LegacyPartitionIncoherenceResult:
     if gamma < 1.0:
@@ -465,14 +465,14 @@ def evaluate_legacy_partition_incoherence(
     )
 
 
-def _tilted_probability(q: float, gamma: float) -> float:
+def _tilted_probability(q: float, gamma: float) -> float: #TODO: don't use primitives in inputs or outputs
     return gamma * q / (1.0 - q + gamma * q)
 
 
 def _response_masses(
-    prior: float,
-    hazards: tuple[float, float],
-) -> tuple[tuple[float, float], float]:
+    prior: float, #TODO: don't use primitives in inputs or outputs
+    hazards: tuple[float, float], #TODO: don't use primitives in inputs or outputs
+) -> tuple[tuple[float, float], float]: #TODO: don't use primitives in inputs or outputs
     first, second = hazards
     first_mass = prior * first
     second_mass = prior * (1.0 - first) * second

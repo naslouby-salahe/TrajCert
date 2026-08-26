@@ -30,7 +30,7 @@ class ComparatorReductionResult(DomainModel):
 
 def evaluate_comparator_reduction(
     summary: ObservableSummary,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param. Add a tests that catches all configuration inputs to catch and have it fixed.
 ) -> ComparatorReductionResult:
     if summary.partition.band_count != config.method.finest_bands:
         raise ValueError("comparator reduction requires the configured finest partition")
