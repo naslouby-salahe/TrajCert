@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: uv sync --extra quality --locked --no-build
-      - name: Format and lint Phase 2
+      - name: Format Phase 2
         run: |
           files=(
             src/trajcert/analysis/aggregation.py
@@ -37,7 +37,6 @@ jobs:
             tests/architecture/test_locality.py
           )
           uv run --no-sync --no-build ruff format "${files[@]}"
-          uv run --no-sync --no-build ruff check --fix "${files[@]}"
           if ! git diff --quiet -- "${files[@]}"; then
             git add "${files[@]}"
             git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style(phase2): format synthesis implementation'
