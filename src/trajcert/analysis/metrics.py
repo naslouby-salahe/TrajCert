@@ -7,8 +7,6 @@ from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import DomainModel, FiniteFloat, NonNegativeInt
 
 MetricName = NewType("MetricName", str)
-MethodName = NewType("MethodName", str)
-BaselineName = NewType("BaselineName", str)
 
 
 class PracticalMetric(StrEnum):
