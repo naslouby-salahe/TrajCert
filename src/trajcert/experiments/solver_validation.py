@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from trajcert.data.summaries import ObservableSummary
+from trajcert.math.information import observed_timing_information
 from trajcert.math.oracle import direct_mutual_information, solve_information_oracle
 from trajcert.math.safety import assess_safety_geometry
 from trajcert.math.solver import solve_hidden_mass_interval
 from trajcert.types import (
+    CompatibilityRegime,
     DomainModel,
+    InformationNats,
     RiskBudget,
+    RiskValue,
     SafetyRegime,
     SensitivityBudget,
     ToleranceValue,
@@ -14,6 +18,11 @@ from trajcert.types import (
 
 
 class SolverOracleComparison(DomainModel):
+    sensitivity_budget: SensitivityBudget
+    compatibility_regime: CompatibilityRegime
+    tau: InformationNats | None
+    risk_lower: RiskValue | None
+    risk_upper: RiskValue | None
     passed: bool
     state_match: bool
     max_endpoint_error: float | None
@@ -64,7 +73,19 @@ def compare_production_solver_to_oracle(
         passed = passed and max_width <= root_atol
     if max_residual is not None:
         passed = passed and max_residual <= identity_atol
+    risk_lower: RiskValue | None = None
+    risk_upper: RiskValue | None = None
+    if production.interval is not None:
+        resolved_harmful = float(summary.resolved_harmful_mass)
+        risk_lower = resolved_harmful + float(production.interval.lower)
+        risk_upper = resolved_harmful + float(production.interval.upper)
+    tau_value = observed_timing_information(summary)
     return SolverOracleComparison(
+        sensitivity_budget=sensitivity_budget,
+        compatibility_regime=production.compatibility.regime,
+        tau=None if tau_value is None else float(tau_value),
+        risk_lower=risk_lower,
+        risk_upper=risk_upper,
         passed=passed,
         state_match=state_match,
         max_endpoint_error=endpoint_error,
