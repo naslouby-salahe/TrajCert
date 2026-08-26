@@ -163,6 +163,12 @@ class SeedNamespaceRole(StrEnum):
 
 class CliCommand(StrEnum):
     DOCTOR = "doctor"
+    PREPROCESS = "preprocess"
+    PLAN = "plan"
+    SMOKE = "smoke"
+    RUN = "run"
+    STATUS = "status"
+    REPORT = "report"
 
 
 class OutcomeLabel(IntEnum):
