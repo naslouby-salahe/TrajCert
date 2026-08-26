@@ -7,6 +7,7 @@ from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     DomainModel,
     FiniteFloat,
+    NonNegativeInt,
     PositiveInt,
     Probability,
     SeedIndex,
@@ -17,7 +18,7 @@ from trajcert.types import (
 
 class SignFlipResult(DomainModel):
     observed_statistic: FiniteFloat
-    favorable_or_more_extreme_count: int
+    favorable_or_more_extreme_count: NonNegativeInt
     randomization_count: PositiveInt
     p_value: Probability
 
