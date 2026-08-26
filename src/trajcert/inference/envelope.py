@@ -163,10 +163,7 @@ def _resolved_entropy_envelope(
     )
     resolved_mass_upper = min(
         1.0,
-        sum(
-            left.upper + right.upper
-            for left, right in zip(harmful, correct, strict=True)
-        ),
+        sum(left.upper + right.upper for left, right in zip(harmful, correct, strict=True)),
     )
     upper = min(coordinate_upper, resolved_mass_upper * log(2.0), log(2.0))
     return ScalarEnvelope(lower=lower, upper=upper)
