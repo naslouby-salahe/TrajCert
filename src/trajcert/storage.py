@@ -132,7 +132,7 @@ def _atomic_write_bytes(path: Path, payload: bytes) -> None:
         with tempfile.NamedTemporaryFile(
             mode="wb", dir=path.parent, prefix=f".{path.name}.", delete=False
         ) as stream:
-            stream.write(payload)
+            _ = stream.write(payload)
             stream.flush()
             os.fsync(stream.fileno())
             temporary_path = Path(stream.name)
@@ -159,9 +159,7 @@ def _canonical_json(value: JsonValue) -> str:
         return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
     if isinstance(value, Mapping):
         return _canonical_json_object(value)
-    if isinstance(value, Sequence):
-        return _canonical_json_array(value)
-    raise SerializationError("unsupported canonical JSON value")
+    return _canonical_json_array(value)
 
 
 def _canonical_json_number(value: int | float) -> str:
@@ -173,11 +171,7 @@ def _canonical_json_number(value: int | float) -> str:
 
 
 def _canonical_json_object(value: Mapping[str, JsonValue]) -> str:
-    entries: list[str] = []
-    for key in sorted(value):
-        if not isinstance(key, str):
-            raise SerializationError("canonical JSON object keys must be strings")
-        entries.append(f"{_canonical_json(key)}:{_canonical_json(value[key])}")
+    entries = [f"{_canonical_json(key)}:{_canonical_json(value[key])}" for key in sorted(value)]
     return "{" + ",".join(entries) + "}"
 
 

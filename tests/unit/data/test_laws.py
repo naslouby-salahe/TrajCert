@@ -17,7 +17,7 @@ def test_resolved_band_weights_are_normalized_and_follow_slope(slope: float) -> 
     if slope == 0.0:
         assert np.allclose(weights, np.repeat(0.25, 4))
     else:
-        assert bool(weights[-1] > weights[0]) is (slope > 0.0)
+        assert bool(weights.item(-1) > weights.item(0)) is (slope > 0.0)
 
 
 def test_full_law_and_summary_preserve_probability_mass() -> None:

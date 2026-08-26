@@ -83,6 +83,26 @@ class _MinimumSearch:
     zero_resolved_mass_plausible: bool
 
 
+@dataclass(frozen=True, slots=True)
+class _ProjectionSearchContext:
+    initial: _Box
+    envelope: ObservableSummaryEnvelope
+    rho: SensitivityBudget
+    gap: float
+    root_atol: ToleranceValue
+    identity_atol: ToleranceValue
+    comparison_guard: ToleranceValue
+
+
+@dataclass(frozen=True, slots=True)
+class _IntrinsicSearchContext:
+    initial: _Box
+    envelope: ObservableSummaryEnvelope
+    rho: SensitivityBudget
+    gap: float
+    comparison_guard: ToleranceValue
+
+
 def project_upper_risk(
     envelope: ObservableSummaryEnvelope,
     sensitivity_budget: SensitivityBudget,
@@ -223,62 +243,135 @@ def _projection_search(
     incumbent = _verified_incumbent(
         initial, envelope, rho, root_atol, identity_atol, comparison_guard
     )
+    context = _ProjectionSearchContext(
+        initial=initial,
+        envelope=envelope,
+        rho=rho,
+        gap=gap,
+        root_atol=root_atol,
+        identity_atol=identity_atol,
+        comparison_guard=comparison_guard,
+    )
     visited = 0
     active: _Box | None = None
     try:
         while queue and visited < node_cap:
-            _, _, active = heappop(queue)
+            active = heappop(queue)[2]
             visited += 1
-            if _sensitivity_lower(active, envelope) > rho:
-                active = None
-                continue
-            if incumbent is not None and active.objective_upper - incumbent <= gap:
-                active = None
-                continue
-            candidate = _verified_incumbent(
-                active, envelope, rho, root_atol, identity_atol, comparison_guard
+            counter, incumbent, completed = _projection_step(
+                queue,
+                counter,
+                incumbent,
+                active,
+                context,
+                visited,
             )
-            if candidate is not None and (incumbent is None or candidate > incumbent):
-                incumbent = candidate
-            if _box_resolution(active, initial) <= gap:
-                counter += 1
-                heappush(queue, (-active.objective_upper, counter, active))
-                active = None
-                break
-            counter = _enqueue_projection_children(queue, counter, active, initial, envelope, rho)
+            if completed is not None:
+                return completed
             active = None
-            proven_upper = _queue_upper(queue, incumbent)
-            if incumbent is not None and proven_upper - incumbent <= gap:
-                return _ProjectionSearch(
-                    proven_upper=proven_upper,
-                    incumbent=incumbent,
-                    visited_nodes=visited,
-                    surviving_boxes=len(queue),
-                    final_gap=max(0.0, proven_upper - incumbent),
-                    termination_reason=ProjectionTerminationReason.CONVERGED,
-                )
     except (ArithmeticError, ValueError, OverflowError, NumericalError):
-        proven = _queue_upper(queue, incumbent, active)
-        return _ProjectionSearch(
-            proven_upper=proven,
-            incumbent=incumbent,
-            visited_nodes=visited,
-            surviving_boxes=len(queue) + int(active is not None),
-            final_gap=None if incumbent is None else max(0.0, proven - incumbent),
-            termination_reason=ProjectionTerminationReason.ARITHMETIC_FALLBACK,
+        return _projection_fallback(queue, incumbent, visited, active)
+    return _final_projection(queue, incumbent, visited, active)
+
+
+def _projection_step(
+    queue: list[tuple[float, int, _Box]],
+    counter: int,
+    incumbent: float | None,
+    active: _Box,
+    context: _ProjectionSearchContext,
+    visited: int,
+) -> tuple[int, float | None, _ProjectionSearch | None]:
+    if _projection_pruned(active, context.envelope, context.rho, incumbent, context.gap):
+        return counter, incumbent, None
+    candidate = _verified_incumbent(
+        active,
+        context.envelope,
+        context.rho,
+        context.root_atol,
+        context.identity_atol,
+        context.comparison_guard,
+    )
+    if candidate is not None and (incumbent is None or candidate > incumbent):
+        incumbent = candidate
+    if _box_resolution(active, context.initial) <= context.gap:
+        counter += 1
+        heappush(queue, (-active.objective_upper, counter, active))
+        return counter, incumbent, _final_projection(queue, incumbent, visited, None)
+    counter = _enqueue_projection_children(
+        queue, counter, active, context.initial, context.envelope, context.rho
+    )
+    if incumbent is not None and _projection_converged(queue, incumbent, context.gap):
+        proven = _queue_upper(queue, incumbent)
+        return (
+            counter,
+            incumbent,
+            _ProjectionSearch(
+                proven_upper=proven,
+                incumbent=incumbent,
+                visited_nodes=visited,
+                surviving_boxes=len(queue),
+                final_gap=max(0.0, proven - incumbent),
+                termination_reason=ProjectionTerminationReason.CONVERGED,
+            ),
         )
+    return counter, incumbent, None
+
+
+def _projection_pruned(
+    active: _Box,
+    envelope: ObservableSummaryEnvelope,
+    rho: SensitivityBudget,
+    incumbent: float | None,
+    gap: float,
+) -> bool:
+    if _sensitivity_lower(active, envelope) > rho:
+        return True
+    return incumbent is not None and active.objective_upper - incumbent <= gap
+
+
+def _projection_converged(
+    queue: list[tuple[float, int, _Box]],
+    incumbent: float,
+    gap: float,
+) -> bool:
+    return _queue_upper(queue, incumbent) - incumbent <= gap
+
+
+def _final_projection(
+    queue: list[tuple[float, int, _Box]],
+    incumbent: float | None,
+    visited: int,
+    active: _Box | None,
+) -> _ProjectionSearch:
     proven = _queue_upper(queue, incumbent, active)
     reason = (
         ProjectionTerminationReason.CONVERGED if not queue else ProjectionTerminationReason.NODE_CAP
     )
-    final_gap = None if incumbent is None else max(0.0, proven - incumbent)
     return _ProjectionSearch(
         proven_upper=proven,
         incumbent=incumbent,
         visited_nodes=visited,
         surviving_boxes=len(queue) + int(active is not None),
-        final_gap=final_gap,
+        final_gap=None if incumbent is None else max(0.0, proven - incumbent),
         termination_reason=reason,
+    )
+
+
+def _projection_fallback(
+    queue: list[tuple[float, int, _Box]],
+    incumbent: float | None,
+    visited: int,
+    active: _Box | None,
+) -> _ProjectionSearch:
+    proven = _queue_upper(queue, incumbent, active)
+    return _ProjectionSearch(
+        proven_upper=proven,
+        incumbent=incumbent,
+        visited_nodes=visited,
+        surviving_boxes=len(queue) + int(active is not None),
+        final_gap=None if incumbent is None else max(0.0, proven - incumbent),
+        termination_reason=ProjectionTerminationReason.ARITHMETIC_FALLBACK,
     )
 
 
@@ -319,26 +412,72 @@ def _compatibility_search(
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)
             visited += 1
-            if lower >= best_upper:
-                active = None
-                continue
-            point_upper = _verified_compatibility_point(active, envelope)
-            if point_upper is not None:
-                best_upper = min(best_upper, point_upper)
-            global_lower = min(lower, queue[0][0] if queue else lower)
-            if best_upper < inf and best_upper - global_lower <= gap:
-                return _MinimumSearch(max(0.0, global_lower), _zero_resolved_plausible(envelope))
-            if _box_resolution(active, initial) <= gap:
-                counter += 1
-                heappush(queue, (lower, counter, active))
-                active = None
-                break
-            counter = _enqueue_compatibility_children(
-                queue, counter, active, initial, envelope, best_upper
+            counter, best_upper, completed = _compatibility_step(
+                queue,
+                counter,
+                best_upper,
+                lower,
+                active,
+                initial,
+                envelope,
+                gap,
             )
+            if completed is not None:
+                return completed
             active = None
     except (ArithmeticError, ValueError, OverflowError, NumericalError):
         pass
+    return _compatibility_final(queue, best_upper, active, envelope)
+
+
+def _compatibility_step(
+    queue: list[tuple[float, int, _Box]],
+    counter: int,
+    best_upper: float,
+    lower: float,
+    active: _Box,
+    initial: _Box,
+    envelope: ObservableSummaryEnvelope,
+    gap: float,
+) -> tuple[int, float, _MinimumSearch | None]:
+    if lower >= best_upper:
+        return counter, best_upper, None
+    point_upper = _verified_compatibility_point(active, envelope)
+    if point_upper is not None:
+        best_upper = min(best_upper, point_upper)
+    if _compatibility_converged(lower, queue, best_upper, gap):
+        global_lower = min(lower, queue[0][0] if queue else lower)
+        return (
+            counter,
+            best_upper,
+            _MinimumSearch(max(0.0, global_lower), _zero_resolved_plausible(envelope)),
+        )
+    if _box_resolution(active, initial) <= gap:
+        counter += 1
+        heappush(queue, (lower, counter, active))
+        return counter, best_upper, _compatibility_final(queue, best_upper, None, envelope)
+    counter = _enqueue_compatibility_children(queue, counter, active, initial, envelope, best_upper)
+    return counter, best_upper, None
+
+
+def _compatibility_converged(
+    lower: float,
+    queue: list[tuple[float, int, _Box]],
+    best_upper: float,
+    gap: float,
+) -> bool:
+    if best_upper == inf:
+        return False
+    global_lower = min(lower, queue[0][0] if queue else lower)
+    return best_upper - global_lower <= gap
+
+
+def _compatibility_final(
+    queue: list[tuple[float, int, _Box]],
+    best_upper: float,
+    active: _Box | None,
+    envelope: ObservableSummaryEnvelope,
+) -> _MinimumSearch:
     lower_candidates = [item[0] for item in queue]
     if active is not None:
         lower_candidates.append(_compatibility_box_lower(active, envelope))
@@ -383,32 +522,78 @@ def _intrinsic_search(
     if _box_possible(initial, envelope) and _sensitivity_lower(initial, envelope) <= rho:
         heappush(queue, (_intrinsic_box_lower(initial), counter, initial))
     best_upper = inf
+    context = _IntrinsicSearchContext(
+        initial=initial,
+        envelope=envelope,
+        rho=rho,
+        gap=gap,
+        comparison_guard=comparison_guard,
+    )
     visited = 0
     active: _Box | None = None
     try:
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)
             visited += 1
-            if lower >= best_upper or _sensitivity_lower(active, envelope) > rho:
-                active = None
-                continue
-            best_upper = _update_intrinsic_best_upper(
-                active, envelope, rho, comparison_guard, best_upper
+            counter, best_upper, completed = _intrinsic_step(
+                queue,
+                counter,
+                best_upper,
+                lower,
+                active,
+                context,
             )
-            global_lower = min(lower, queue[0][0] if queue else lower)
-            if best_upper < inf and best_upper - global_lower <= gap:
-                return _MinimumSearch(_unit(global_lower), False)
-            if _box_resolution(active, initial) <= gap:
-                counter += 1
-                heappush(queue, (lower, counter, active))
-                active = None
-                break
-            counter = _enqueue_intrinsic_children(
-                queue, counter, active, initial, envelope, rho, best_upper
-            )
+            if completed is not None:
+                return completed
             active = None
     except (ArithmeticError, ValueError, OverflowError, NumericalError):
         pass
+    return _intrinsic_final(queue, best_upper, active)
+
+
+def _intrinsic_step(
+    queue: list[tuple[float, int, _Box]],
+    counter: int,
+    best_upper: float,
+    lower: float,
+    active: _Box,
+    context: _IntrinsicSearchContext,
+) -> tuple[int, float, _MinimumSearch | None]:
+    if lower >= best_upper or _sensitivity_lower(active, context.envelope) > context.rho:
+        return counter, best_upper, None
+    best_upper = _update_intrinsic_best_upper(
+        active, context.envelope, context.rho, context.comparison_guard, best_upper
+    )
+    if _intrinsic_converged(lower, queue, best_upper, context.gap):
+        global_lower = min(lower, queue[0][0] if queue else lower)
+        return counter, best_upper, _MinimumSearch(_unit(global_lower), False)
+    if _box_resolution(active, context.initial) <= context.gap:
+        counter += 1
+        heappush(queue, (lower, counter, active))
+        return counter, best_upper, _intrinsic_final(queue, best_upper, None)
+    counter = _enqueue_intrinsic_children(
+        queue, counter, active, context.initial, context.envelope, context.rho, best_upper
+    )
+    return counter, best_upper, None
+
+
+def _intrinsic_converged(
+    lower: float,
+    queue: list[tuple[float, int, _Box]],
+    best_upper: float,
+    gap: float,
+) -> bool:
+    if best_upper == inf:
+        return False
+    global_lower = min(lower, queue[0][0] if queue else lower)
+    return best_upper - global_lower <= gap
+
+
+def _intrinsic_final(
+    queue: list[tuple[float, int, _Box]],
+    best_upper: float,
+    active: _Box | None,
+) -> _MinimumSearch:
     lower_candidates = [item[0] for item in queue]
     if active is not None:
         lower_candidates.append(_intrinsic_box_lower(active))

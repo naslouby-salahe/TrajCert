@@ -8,6 +8,7 @@ from html import escape
 from itertools import pairwise
 from math import isfinite, log2
 from pathlib import Path
+from typing import cast
 
 import pyarrow as pa
 
@@ -196,7 +197,7 @@ def _timing_value(table: pa.Table) -> PlotDocument:
 
 
 def _information_profile(table: pa.Table) -> PlotDocument:
-    rows = table.to_pylist()
+    rows = _rows(table)
     xs = tuple(_required_float(row, "u") for row in rows)
     ys = tuple(_required_float(row, "information_profile") for row in rows)
     panel = _single_panel()
@@ -241,7 +242,7 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
         raise InvalidScientificDataError(
             "representative anytime figure source must contain exactly seed indices [0,1,2,3]"
         )
-    rows = table.to_pylist()
+    rows = _rows(table)
     xs = tuple(_required_float(row, "n_matured") for row in rows)
     ys = tuple(_required_float(row, "risk_upper_anytime") for row in rows)
     panel = _single_panel()
@@ -273,7 +274,7 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
 
 
 def _anytime_coverage(table: pa.Table) -> PlotDocument:
-    rows = table.to_pylist()
+    rows = _rows(table)
     xs = tuple(float(index) for index in range(len(rows)))
     ys = tuple(_required_float(row, "clopper_pearson_upper_95") for row in rows)
     refs = tuple(
@@ -311,37 +312,62 @@ def _anytime_coverage(table: pa.Table) -> PlotDocument:
 def _rho_sensitivity(table: pa.Table) -> PlotDocument:
     laws = _unique_strings(table, "law_name")
     commands = _base_commands("Full rho sensitivity")
-    panels = _horizontal_panels(len(laws))
-    for law, panel in zip(laws, panels, strict=True):
-        rows = _matching_rows(table, "law_name", law)
-        xs = tuple(_required_float(row, "rho") for row in rows)
-        finite_ys = tuple(
-            value for row in rows if (value := _optional_float(row, "risk_upper")) is not None
-        )
-        scale = _panel_scale(panel, xs, finite_ys or (0.0, 1.0))
-        commands.extend(_panel_frame(panel, law))
-        for partition in sorted({str(row["partition_name"]) for row in rows}):
-            selected = tuple(row for row in rows if str(row["partition_name"]) == partition)
-            compatible = tuple(
-                row for row in selected if _optional_float(row, "risk_upper") is not None
-            )
-            commands.extend(
-                _polyline(
-                    scale,
-                    tuple(_required_float(row, "rho") for row in compatible),
-                    tuple(_required_float(row, "risk_upper") for row in compatible),
-                )
-            )
-            for row in selected:
-                x = scale.map_x(_required_float(row, "rho"))
-                risk = _optional_float(row, "risk_upper")
-                if risk is None:
-                    commands.append(Cross(Point(x, panel.bottom - 5.0), radius=4.0))
-                else:
-                    commands.append(Circle(Point(x, scale.map_y(risk)), radius=3.0))
-                if bool(row["rho_is_log2"]):
-                    commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
+    for law, panel in zip(laws, _horizontal_panels(len(laws)), strict=True):
+        _rho_sensitivity_law(commands, table, law, panel)
     return PlotDocument(title="Full rho sensitivity", commands=tuple(commands))
+
+
+def _rho_sensitivity_law(
+    commands: list[DrawCommand],
+    table: pa.Table,
+    law: str,
+    panel: Panel,
+) -> None:
+    rows = _matching_rows(table, "law_name", law)
+    xs = tuple(_required_float(row, "rho") for row in rows)
+    finite_ys = tuple(
+        value for row in rows if (value := _optional_float(row, "risk_upper")) is not None
+    )
+    scale = _panel_scale(panel, xs, finite_ys or (0.0, 1.0))
+    commands.extend(_panel_frame(panel, law))
+    for partition in sorted({str(row["partition_name"]) for row in rows}):
+        _rho_sensitivity_partition(commands, scale, rows, partition, panel)
+
+
+def _rho_sensitivity_partition(
+    commands: list[DrawCommand],
+    scale: PanelScale,
+    rows: tuple[dict[str, TabularCellValue], ...],
+    partition: str,
+    panel: Panel,
+) -> None:
+    selected = tuple(row for row in rows if str(row["partition_name"]) == partition)
+    compatible = tuple(row for row in selected if _optional_float(row, "risk_upper") is not None)
+    commands.extend(
+        _polyline(
+            scale,
+            tuple(_required_float(row, "rho") for row in compatible),
+            tuple(_required_float(row, "risk_upper") for row in compatible),
+        )
+    )
+    for row in selected:
+        _rho_sensitivity_marker(commands, scale, row, panel)
+
+
+def _rho_sensitivity_marker(
+    commands: list[DrawCommand],
+    scale: PanelScale,
+    row: dict[str, TabularCellValue],
+    panel: Panel,
+) -> None:
+    x = scale.map_x(_required_float(row, "rho"))
+    risk = _optional_float(row, "risk_upper")
+    if risk is None:
+        commands.append(Cross(Point(x, panel.bottom - 5.0), radius=4.0))
+    else:
+        commands.append(Circle(Point(x, scale.map_y(risk)), radius=3.0))
+    if bool(row["rho_is_log2"]):
+        commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
 
 
 def _failure_boundaries(table: pa.Table) -> PlotDocument:
@@ -364,7 +390,7 @@ def _failure_boundaries(table: pa.Table) -> PlotDocument:
 
 
 def _computational_scaling(table: pa.Table) -> PlotDocument:
-    rows = table.to_pylist()
+    rows = _rows(table)
     xs = tuple(log2(_required_float(row, "K")) for row in rows)
     population = tuple(_required_float(row, "population_median_runtime_ms") for row in rows)
     outer = tuple(_required_float(row, "outer_median_runtime_ms") for row in rows)
@@ -505,20 +531,28 @@ def _polyline(
     return [Line(left, right, dashed=dashed) for left, right in pairwise(points)]
 
 
+def _rows(table: pa.Table) -> tuple[dict[str, TabularCellValue], ...]:
+    return tuple(cast(dict[str, TabularCellValue], row) for row in table.to_pylist())
+
+
+def _column_values(table: pa.Table, column: str) -> tuple[TabularCellValue, ...]:
+    return tuple(cast(TabularCellValue, value) for value in table.column(column).to_pylist())
+
+
 def _unique_strings(table: pa.Table, column: str) -> tuple[str, ...]:
-    values = tuple(str(value) for value in table.column(column).to_pylist() if value is not None)
+    values = tuple(str(value) for value in _column_values(table, column) if value is not None)
     return tuple(dict.fromkeys(values))
 
 
 def _unique_numbers(table: pa.Table, column: str) -> tuple[float, ...]:
-    values = tuple(float(value) for value in table.column(column).to_pylist() if value is not None)
+    values = tuple(float(value) for value in _column_values(table, column) if value is not None)
     return tuple(dict.fromkeys(values))
 
 
 def _matching_rows(
     table: pa.Table, column: str, value: str
 ) -> tuple[dict[str, TabularCellValue], ...]:
-    return tuple(row for row in table.to_pylist() if str(row[column]) == value)
+    return tuple(row for row in _rows(table) if str(row[column]) == value)
 
 
 def _required_float(row: Mapping[str, TabularCellValue], column: str) -> float:
@@ -547,7 +581,7 @@ def _svg_bytes(document: PlotDocument) -> bytes:
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{_WIDTH}" height="{_HEIGHT}" '
-        f'viewBox="0 0 {_WIDTH} {_HEIGHT}">',
+        + f'viewBox="0 0 {_WIDTH} {_HEIGHT}">',
         f'<rect width="100%" height="100%" fill="{_BACKGROUND}"/>',
     ]
     lines.extend(_svg_command(command) for command in document.commands)

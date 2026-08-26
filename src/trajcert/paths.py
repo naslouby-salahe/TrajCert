@@ -73,41 +73,53 @@ def canonical_number_token(value: float) -> CoordinateToken:
         raise SerializationError("semantic numeric path coordinate must be finite")
     if value == 0.0:
         return CoordinateToken("0")
+    sign, coefficient, exponent = _parsed_coefficient(value)
+    integer, fractional = _split_coefficient(coefficient)
+    digits = (integer + fractional).lstrip("0") or "0"
+    decimal_position = _decimal_position(integer, fractional)
+    n = decimal_position + exponent
+    digits = digits.rstrip("0") or "0"
+    return CoordinateToken(sign + _format_number_token(digits, n))
+
+
+def _parsed_coefficient(value: float) -> tuple[str, str, int]:
     representation = repr(value)
-    sign = ""
     if representation.startswith("-"):
         sign = "-"
         representation = representation[1:]
+    else:
+        sign = ""
     if "e" in representation or "E" in representation:
         coefficient, exponent_text = representation.lower().split("e", maxsplit=1)
-        exponent = int(exponent_text)
-    else:
-        coefficient = representation
-        exponent = 0
-    if "." in coefficient:
-        integer, fractional = coefficient.split(".", maxsplit=1)
-    else:
-        integer, fractional = coefficient, ""
-    digits = (integer + fractional).lstrip("0") or "0"
-    decimal_position = len(integer.lstrip("0"))
+        return sign, coefficient, int(exponent_text)
+    return sign, representation, 0
+
+
+def _split_coefficient(coefficient: str) -> tuple[str, str]:
+    if "." not in coefficient:
+        return coefficient, ""
+    integer, fractional = coefficient.split(".", maxsplit=1)
+    return integer, fractional
+
+
+def _decimal_position(integer: str, fractional: str) -> int:
     if integer == "0":
         leading_fraction_zeros = len(fractional) - len(fractional.lstrip("0"))
-        decimal_position = -leading_fraction_zeros
-    n = decimal_position + exponent
-    digits = digits.rstrip("0") or "0"
+        return -leading_fraction_zeros
+    return len(integer.lstrip("0"))
+
+
+def _format_number_token(digits: str, n: int) -> str:
     k = len(digits)
     if k <= n <= _MAX_FIXED_NOTATION_EXPONENT:
-        token = digits + "0" * (n - k)
-    elif 0 < n <= _MAX_FIXED_NOTATION_EXPONENT:
-        token = digits[:n] + "." + digits[n:]
-    elif _MIN_FIXED_NOTATION_EXPONENT < n <= 0:
-        token = "0." + "0" * (-n) + digits
-    else:
-        mantissa = digits[0] if k == 1 else f"{digits[0]}.{digits[1:]}"
-        scientific_exponent = n - 1
-        exponent_sign = "+" if scientific_exponent >= 0 else ""
-        token = f"{mantissa}e{exponent_sign}{scientific_exponent}"
-    return CoordinateToken(sign + token)
+        return digits + "0" * (n - k)
+    if 0 < n <= _MAX_FIXED_NOTATION_EXPONENT:
+        return digits[:n] + "." + digits[n:]
+    if _MIN_FIXED_NOTATION_EXPONENT < n <= 0:
+        return "0." + "0" * (-n) + digits
+    mantissa = digits[0] if k == 1 else f"{digits[0]}.{digits[1:]}"
+    exponent_sign = "+" if n - 1 >= 0 else ""
+    return f"{mantissa}e{exponent_sign}{n - 1}"
 
 
 def experiment_root(experiment_slug: ExperimentSlug) -> Path:

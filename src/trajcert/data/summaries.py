@@ -60,8 +60,8 @@ def summarize_observable_masses(
     band_mass = harmful_by_band + correct_by_band
     harmful_rate = tuple(
         (
-            None if total_band <= 0.0 else harmful / total_band
-            for harmful, total_band in zip(harmful_by_band, band_mass, strict=True)
+            None if (total_band := harmful + correct) <= 0.0 else harmful / total_band
+            for harmful, correct in zip(harmful_by_band, correct_by_band, strict=True)
         )
     )
     return ObservableSummary(

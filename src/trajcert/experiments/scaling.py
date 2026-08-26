@@ -6,6 +6,7 @@ from multiprocessing import get_context
 from multiprocessing.connection import Connection
 from statistics import mean, median, stdev
 from time import perf_counter_ns
+from typing import cast
 
 import numpy as np
 from threadpoolctl import threadpool_limits
@@ -87,7 +88,7 @@ def _benchmark_target(
     config: TrajCertConfig,
 ) -> ScalingTargetSummary:
     for _ in range(int(config.benchmark.warmup_repetitions)):
-        _isolated_measurement(target, band_count, config)
+        _ = _isolated_measurement(target, band_count, config)
     measurements = tuple(
         _isolated_measurement(target, band_count, config)
         for _ in range(int(config.benchmark.measured_repetitions))
@@ -96,7 +97,7 @@ def _benchmark_target(
         tuple(measurement.runtime_ns / 1_000_000_000.0 for measurement in measurements),
         dtype=np.float64,
     )
-    quartiles = np.quantile(runtimes, (0.25, 0.75))
+    quartiles = np.asarray(np.quantile(runtimes, (0.25, 0.75)), dtype=np.float64)
     root_iterations = tuple(
         measurement.root_iterations
         for measurement in measurements
@@ -110,7 +111,7 @@ def _benchmark_target(
     return ScalingTargetSummary(
         target=target,
         median_runtime_seconds=float(median(runtimes)),
-        iqr_runtime_seconds=float(quartiles[1] - quartiles[0]),
+        iqr_runtime_seconds=float(quartiles.item(1) - quartiles.item(0)),
         mean_runtime_seconds=float(mean(runtimes)),
         sample_sd_runtime_seconds=(
             0.0
@@ -139,7 +140,7 @@ def _isolated_measurement(
     process.join()
     if not parent_connection.poll():
         raise RuntimeError(f"isolated scaling worker exited without a result: {process.exitcode}")
-    envelope = ScalingWorkerEnvelope.model_validate_json(parent_connection.recv())
+    envelope = ScalingWorkerEnvelope.model_validate_json(cast(str, parent_connection.recv()))
     parent_connection.close()
     if process.exitcode != 0 or envelope.measurement is None:
         raise RuntimeError(
@@ -161,7 +162,7 @@ def _worker(
 ) -> None:
     try:
         config = TrajCertConfig.model_validate_json(config_json)
-        active_config.set(config)
+        _ = active_config.set(config)
         with threadpool_limits(limits=1):
             start = perf_counter_ns()
             root_iterations, outer_nodes = _execute_target(target, band_count, config)

@@ -635,14 +635,27 @@ def _first_party_import_closure(workspace_root: Path, root: Path) -> tuple[Path,
 def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:
     modules: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module is not None:
-            if node.module.startswith("trajcert") and not _non_scientific_module(node.module):
-                modules.add(node.module)
+        if isinstance(node, ast.ImportFrom):
+            modules.update(_first_party_import_from(node))
         elif isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name.startswith("trajcert") and not _non_scientific_module(alias.name):
-                    modules.add(alias.name)
+            modules.update(_first_party_import(node))
     return tuple(sorted(modules))
+
+
+def _first_party_import_from(node: ast.ImportFrom) -> tuple[str, ...]:
+    if node.module is None:
+        return ()
+    if _is_first_party_module(node.module):
+        return (node.module,)
+    return ()
+
+
+def _first_party_import(node: ast.Import) -> tuple[str, ...]:
+    return tuple(alias.name for alias in node.names if _is_first_party_module(alias.name))
+
+
+def _is_first_party_module(module_name: str) -> bool:
+    return module_name.startswith("trajcert") and not _non_scientific_module(module_name)
 
 
 def _non_scientific_module(module_name: str) -> bool:
@@ -794,8 +807,8 @@ def execute_scientific_cell(cell: PlannedCell, config: TrajCertConfig) -> Domain
     handler = _DISPATCH_TABLE.get(name)
     if handler is None:
         raise ScientificCellDispatchError(
-            f"experiment lacks a registered dispatch handler or authoritative "
-            f"scientific coordinates: {name}"
+            "experiment lacks a registered dispatch handler or authoritative "
+            + f"scientific coordinates: {name}"
         )
     return handler(cell, config)
 

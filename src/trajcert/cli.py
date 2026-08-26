@@ -4,9 +4,11 @@ import importlib
 import os
 import subprocess
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
+from collections.abc import Sequence
 from enum import IntEnum
 from pathlib import Path
+from typing import cast
 
 from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
@@ -89,17 +91,21 @@ class CliExitCode(IntEnum):
     COMPLETION_OR_EVIDENCE_FAILURE = 30
 
 
+class CliArguments(DomainModel):
+    command: CliCommand
+    experiment_name: str | None
+    overwrite: bool
+
+
 def main() -> None:
-    parser = _parser()
-    arguments = parser.parse_args()
-    command = CliCommand(arguments.command)
+    arguments = parse_args()
     try:
-        _dispatch(parser, arguments, command)
+        _dispatch(arguments)
     except InvalidScientificDataError as exc:
         print(f"TrajCert: {exc}", file=sys.stderr)
         code = (
             CliExitCode.COMPLETION_OR_EVIDENCE_FAILURE
-            if command is CliCommand.REPORT
+            if arguments.command is CliCommand.REPORT
             else CliExitCode.ENVIRONMENT_OR_PREREQUISITE_BLOCK
         )
         raise SystemExit(code) from exc
@@ -108,7 +114,20 @@ def main() -> None:
         raise SystemExit(CliExitCode.TECHNICAL_EXECUTION_FAILURE) from exc
 
 
-def _dispatch(parser: ArgumentParser, arguments: Namespace, command: CliCommand) -> None:
+def parse_args(argv: Sequence[str] | None = None) -> CliArguments:
+    parser = build_parser()
+    arguments = parser.parse_args(argv)
+    command = CliCommand(cast(str, arguments.command))
+    raw_name = getattr(arguments, "experiment_name", None)
+    return CliArguments(
+        command=command,
+        experiment_name=None if raw_name is None else cast(str, raw_name),
+        overwrite=cast(bool, getattr(arguments, "overwrite", False)),
+    )
+
+
+def _dispatch(arguments: CliArguments) -> None:
+    command = arguments.command
     if command is CliCommand.DOCTOR:
         result = doctor()
         if result.passed:
@@ -121,82 +140,77 @@ def _dispatch(parser: ArgumentParser, arguments: Namespace, command: CliCommand)
         plan = plan_view()
         print(
             f"TrajCert plan: {plan.registry_total} cells "
-            f"({plan.executable_cells} executable, {plan.invalid_cells} invalid)"
+            + f"({plan.executable_cells} executable, {plan.invalid_cells} invalid)"
         )
     elif command is CliCommand.SMOKE:
         _print_smoke(smoke())
     elif command is CliCommand.RUN:
-        name = _experiment_name(parser, arguments, required=True)
+        name = _experiment_name(arguments, required=True)
         assert name is not None
-        _print_run(run_experiment(name, overwrite=bool(arguments.overwrite)))
+        _print_run(run_experiment(name, overwrite=arguments.overwrite))
     elif command is CliCommand.STATUS:
-        name = _experiment_name(parser, arguments, required=False)
+        name = _experiment_name(arguments, required=False)
         if name is None:
             _print_project_status()
         else:
             _print_status(experiment_status(name))
     elif command is CliCommand.REPORT:
-        name = _experiment_name(parser, arguments, required=False)
+        name = _experiment_name(arguments, required=False)
         exported = report(
             experiment_name=name,
-            overwrite=bool(arguments.overwrite),
+            overwrite=arguments.overwrite,
         )
         action = "reused" if exported.reused else "rendered"
         print(
             f"TrajCert report: {action} {exported.rendered_artifact_count} artifacts "
-            f"from {exported.source_artifact_count} verified sources at {exported.target}"
+            + f"from {exported.source_artifact_count} verified sources at {exported.target}"
         )
 
 
-def _parser() -> ArgumentParser:
+def build_parser() -> ArgumentParser:
     parser = ArgumentParser(prog="trajcert")
     subparsers = parser.add_subparsers(dest="command", required=True)
     for command in (CliCommand.DOCTOR, CliCommand.PREPROCESS, CliCommand.PLAN, CliCommand.SMOKE):
         _ = subparsers.add_parser(command.value)
     run_parser = subparsers.add_parser(CliCommand.RUN.value)
-    run_parser.add_argument("experiment_name")
-    run_parser.add_argument("--overwrite", action="store_true")
+    _ = run_parser.add_argument("experiment_name")
+    _ = run_parser.add_argument("--overwrite", action="store_true")
     status_parser = subparsers.add_parser(CliCommand.STATUS.value)
-    status_parser.add_argument("experiment_name", nargs="?")
+    _ = status_parser.add_argument("experiment_name", nargs="?")
     report_parser = subparsers.add_parser(CliCommand.REPORT.value)
-    report_parser.add_argument("experiment_name", nargs="?")
-    report_parser.add_argument("--overwrite", action="store_true")
+    _ = report_parser.add_argument("experiment_name", nargs="?")
+    _ = report_parser.add_argument("--overwrite", action="store_true")
     return parser
 
 
-def _experiment_name(
-    parser: ArgumentParser,
-    arguments: Namespace,
-    *,
-    required: bool,
-) -> str | None:
-    value = getattr(arguments, "experiment_name", None)
+def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None:
+    value = arguments.experiment_name
     if value is None:
         if required:
-            parser.error("experiment name is required")
+            build_parser().error("experiment name is required")
         return None
-    if not isinstance(value, str) or not value:
-        parser.error("experiment name must be a non-empty descriptive name")
+    if not value:
+        build_parser().error("experiment name must be a non-empty descriptive name")
     known = {str(item.experiment_name) for item in authoritative_registry()}
     if value not in known:
-        parser.error(f"unknown experiment name: {value}")
+        build_parser().error(f"unknown experiment name: {value}")
     return value
 
 
 def _print_run(result: RunExperimentResult) -> None:
     print(
         f"{result.experiment_name}: {result.state.value} "
-        f"({result.completed_cells} completed, {result.reused_cells} reused, "
-        f"{result.failed_cells} failed, {result.blocked_cells} blocked)"
+        + f"({result.completed_cells} completed, {result.reused_cells} reused, "
+        + f"{result.failed_cells} failed, {result.blocked_cells} blocked)"
     )
 
 
 def _print_status(status: ExperimentStatus) -> None:
     print(
         f"{status.experiment_name}: {status.state.value} "
-        f"({status.completed_cells}/{status.total_cells} completed, "
-        f"{status.invalid_cells} invalid, {status.failed_cells} failed, "
-        f"{status.blocked_cells} blocked, {status.running_cells} running)"
+        + f"({status.completed_cells}/{status.total_cells} completed, "
+        + f"{status.invalid_cells} invalid, {status.failed_cells} failed, "
+        + f"{status.blocked_cells} blocked, {status.running_cells} running)"
     )
 
 
@@ -210,7 +224,7 @@ def _print_project_status() -> None:
     running = sum(item.state is PublicExecutionState.RUNNING for item in statuses)
     print(
         f"TrajCert status: {completed}/{len(statuses)} experiments completed, "
-        f"{failed} failed, {blocked} blocked, {running} running"
+        + f"{failed} failed, {blocked} blocked, {running} running"
     )
 
 
@@ -257,7 +271,8 @@ class DoctorResult(DomainModel):
         return all(self.model_dump().values())
 
 
-def doctor(workspace_root: Path = Path()) -> DoctorResult:
+def doctor(workspace_root: Path | None = None) -> DoctorResult:
+    workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
     plan = build_plan(config)
     expected_cells = sum(item.declared_cells for item in authoritative_registry())
@@ -305,7 +320,8 @@ def doctor(workspace_root: Path = Path()) -> DoctorResult:
     )
 
 
-def preprocess(workspace_root: Path = Path()) -> Path:
+def preprocess(workspace_root: Path | None = None) -> Path:
+    workspace_root = workspace_root if workspace_root is not None else Path()
     result = validate_scientific_inventory(_load_config(workspace_root))
     if not result.valid:
         raise InvalidScientificDataError("scientific preprocessing/inventory validation failed")
@@ -314,20 +330,23 @@ def preprocess(workspace_root: Path = Path()) -> Path:
     return target
 
 
-def plan_view(workspace_root: Path = Path()) -> ExperimentPlan:
+def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
+    workspace_root = workspace_root if workspace_root is not None else Path()
     return build_plan(_load_config(workspace_root))
 
 
-def smoke(workspace_root: Path = Path()) -> SmokeResult:
+def smoke(workspace_root: Path | None = None) -> SmokeResult:
+    workspace_root = workspace_root if workspace_root is not None else Path()
     return run_smoke_fixtures(_load_config(workspace_root))
 
 
 def run_experiment(
     experiment_name: str,
     *,
-    workspace_root: Path = Path(),
+    workspace_root: Path | None = None,
     overwrite: bool = False,
 ) -> RunExperimentResult:
+    workspace_root = workspace_root if workspace_root is not None else Path()
     if _dirty_tree(workspace_root):
         raise InvalidScientificDataError("authoritative run requires a clean Git working tree")
     config = _load_config(workspace_root)
@@ -370,8 +389,9 @@ def run_experiment(
 def experiment_status(
     experiment_name: str,
     *,
-    workspace_root: Path = Path(),
+    workspace_root: Path | None = None,
 ) -> ExperimentStatus:
+    workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
     plan = build_plan(config)
     name = _known_experiment_name(experiment_name)
@@ -380,10 +400,11 @@ def experiment_status(
 
 def report(
     *,
-    workspace_root: Path = Path(),
+    workspace_root: Path | None = None,
     experiment_name: str | None = None,
     overwrite: bool = False,
 ) -> ReportExportResult:
+    workspace_root = workspace_root if workspace_root is not None else Path()
     if experiment_name is not None:
         _ = _known_experiment_name(experiment_name)
     return export_report(workspace_root, experiment_name=experiment_name, overwrite=overwrite)

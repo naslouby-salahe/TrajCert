@@ -13,7 +13,7 @@ from trajcert.types import CompatibilityRegime
 def test_compatibility_guard_rejects_invalid_rho() -> None:
     observed = summary([0.2], [0.4], 0.4)
     with pytest.raises(InvalidScientificDataError, match="finite and nonnegative"):
-        assess_compatibility(observed, -0.1)
+        _ = assess_compatibility(observed, -0.1)
 
 
 @pytest.mark.parametrize(

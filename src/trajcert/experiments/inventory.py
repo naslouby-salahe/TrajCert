@@ -540,7 +540,7 @@ def _experiment_matrix_rows() -> tuple[ExperimentMatrixRow, ...]:
             purpose=str(definition.execution_group),
             cell_expansion=str(definition.expansion),
             cell_count=int(definition.declared_cells),
-            primary_metrics="roadmap-defined experiment outputs",
+            primary_metrics="protocol-declared experiment outputs",
             claim_ids="",
         )
         for definition in authoritative_registry()

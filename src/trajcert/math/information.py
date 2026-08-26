@@ -21,8 +21,11 @@ from trajcert.types import (
 
 
 def resolved_timing_entropy(summary: ObservableSummary) -> EntropyValue:
-    entropy_vector = binary_entropy_from_masses(summary.harmful_by_band, summary.correct_by_band)
-    return np.sum(entropy_vector)
+    entropy_vector = np.asarray(
+        binary_entropy_from_masses(summary.harmful_by_band, summary.correct_by_band),
+        dtype=np.float64,
+    )
+    return float(entropy_vector.sum())
 
 
 def observed_timing_information(summary: ObservableSummary) -> InformationNats | None:
@@ -126,7 +129,7 @@ def profile_difference(
     hidden_terminal_harmful_mass: Mass,
     identity_tolerance: ToleranceValue,
 ) -> InformationNats:
-    timing_gain(fine, coarse, identity_tolerance)
+    _ = timing_gain(fine, coarse, identity_tolerance)
     return information_profile(fine, hidden_terminal_harmful_mass) - information_profile(
         coarse, hidden_terminal_harmful_mass
     )

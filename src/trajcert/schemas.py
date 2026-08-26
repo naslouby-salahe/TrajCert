@@ -63,8 +63,6 @@ class PublicationReproducibilityRecord(DomainModel):
     source_commit: str
     configuration_path: Path
     configuration_sha256: DigestHex
-    roadmap_path: Path
-    roadmap_sha256: DigestHex
     environment: EnvironmentReproducibilityRecord
     sources: tuple[VerifiedSourceLineage, ...]
     rendered_artifacts: tuple[RenderedPublicationArtifact, ...]

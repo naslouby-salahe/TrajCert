@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from math import isfinite
+
 import numpy as np
 
 from trajcert.config import active_config
@@ -71,10 +73,10 @@ def resolved_band_weights(band_count: BandCount, slope: SlopeValue) -> Vector:
     indices = np.arange(1, bands + 1, dtype=np.float64)
     center = (bands + 1) / 2.0
     logits = slope * (indices - center)
-    shifted_logits = logits - np.max(logits)
-    unnormalized_weights = np.exp(shifted_logits)
-    total_weight = np.sum(unnormalized_weights)
-    if not np.isfinite(total_weight) or total_weight <= 0.0:
+    shifted_logits = logits - logits.max()
+    unnormalized_weights = np.asarray(np.exp(shifted_logits), dtype=np.float64)
+    total_weight = float(unnormalized_weights.sum())
+    if not isfinite(total_weight) or total_weight <= 0.0:
         raise InvalidScientificDataError("law band weights could not be normalized")
     return unnormalized_weights / total_weight
 

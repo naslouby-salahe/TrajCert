@@ -59,7 +59,6 @@ from trajcert.storage import (
     read_model,
 )
 
-_ROADMAP_PATH = Path("docs/TrajCert_Roadmap.md")
 _LOCK_PATH = Path("uv.lock")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
 _SYNTHESIS_OWNER = "statistical-synthesis"
@@ -85,7 +84,7 @@ def export_report(
     overwrite: bool = False,
 ) -> ReportExportResult:
     config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
-    _require_synthesis_completion(workspace_root, config)
+    require_synthesis_completion(workspace_root, config)
     descriptors = _selected_descriptors(experiment_name)
     sources = tuple(read_verified_source_data(workspace_root, item) for item in descriptors)
     with tempfile.TemporaryDirectory(prefix=".trajcert-report-", dir=workspace_root) as temporary:
@@ -120,7 +119,7 @@ def export_report(
                 staged_target,
                 final_target,
             )
-        reused = _replace_tree(staged_target, final_target, overwrite=overwrite)
+        reused = replace_tree(staged_target, final_target, overwrite=overwrite)
     _validate_results_layout(workspace_root / RESULTS_ROOT)
     return ReportExportResult(
         rendered_artifact_count=len(rendered),
@@ -217,17 +216,14 @@ def _write_reproducibility(
     rendered: tuple[RenderedPublicationArtifact, ...],
 ) -> None:
     config_path = workspace_root / PRODUCTION_CONFIG_PATH
-    roadmap_path = workspace_root / _ROADMAP_PATH
     lock_path = workspace_root / _LOCK_PATH
-    for required in (config_path, roadmap_path, lock_path):
+    for required in (config_path, lock_path):
         if not required.is_file():
             raise InvalidScientificDataError(f"reproducibility input is missing: {required}")
     record = PublicationReproducibilityRecord(
         source_commit=_source_commit(workspace_root),
         configuration_path=PRODUCTION_CONFIG_PATH,
         configuration_sha256=file_digest(config_path),
-        roadmap_path=_ROADMAP_PATH,
-        roadmap_sha256=file_digest(roadmap_path),
         environment=EnvironmentReproducibilityRecord(
             dependency_authority="uv.lock",
             dependency_lock_path=_LOCK_PATH,
@@ -240,7 +236,7 @@ def _write_reproducibility(
     _ = atomic_write_model(staged_path, record)
 
 
-def _require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) -> None:
+def require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) -> None:
     plan = build_plan(config)
     cells = cells_for_experiment(plan, _SYNTHESIS_NAME)
     if len(cells) != 1:
@@ -378,7 +374,7 @@ def _source_commit(workspace_root: Path) -> str:
     return commit
 
 
-def _replace_tree(staged: Path, target: Path, *, overwrite: bool) -> bool:
+def replace_tree(staged: Path, target: Path, *, overwrite: bool) -> bool:
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists() and _tree_digest(staged) == _tree_digest(target):
         return True

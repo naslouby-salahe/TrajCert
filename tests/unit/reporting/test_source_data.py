@@ -85,4 +85,4 @@ def test_source_data_rejects_mixed_row_schemas(tmp_path: Path) -> None:
         passed=True,
     )
     with pytest.raises(InvalidScientificDataError, match="one row schema"):
-        write_source_data(tmp_path / "mixed.parquet", (rho_row, timing_row))
+        _ = write_source_data(tmp_path / "mixed.parquet", (rho_row, timing_row))

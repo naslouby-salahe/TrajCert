@@ -4,6 +4,7 @@ from enum import StrEnum
 from math import isfinite, log
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import minimize
 from scipy.special import expit
 
@@ -15,6 +16,8 @@ _INITIAL_CLIP = 1e-8
 _GRADIENT_ACCEPTANCE = 1e-8
 _BOUNDARY_DISTANCE = 1e-8
 _MINIMUM_NONEMPTY_BANDS = 2
+
+_CoefficientVector = np.ndarray[tuple[int], np.dtype[np.float64]]
 
 
 class PatternMixtureStatus(StrEnum):
@@ -57,13 +60,15 @@ def fit_pattern_mixture(
     lower, upper = config.coefficient_bounds
     bounds = ((float(lower), float(upper)), (float(lower), float(upper)))
 
-    def objective(coefficients: np.ndarray) -> float:
-        eta = coefficients[0] + coefficients[1] * indices
+    def objective(coefficients: _CoefficientVector) -> float:
+        intercept, slope = coefficients
+        eta = intercept + slope * indices
         value = np.sum(weights * (np.logaddexp(0.0, eta) - rates * eta))
         return float(value)
 
-    def gradient(coefficients: np.ndarray) -> np.ndarray:
-        eta = coefficients[0] + coefficients[1] * indices
+    def gradient(coefficients: _CoefficientVector) -> NDArray[np.float64]:
+        intercept, slope = coefficients
+        eta = intercept + slope * indices
         residual = weights * (expit(eta) - rates)
         return np.asarray((np.sum(residual), np.sum(residual * indices)), dtype=np.float64)
 
@@ -79,10 +84,12 @@ def fit_pattern_mixture(
             "maxiter": int(config.max_iterations),
         },
     )
-    coefficients = np.asarray(result.x, dtype=np.float64)
+    coefficients = result.x
     final_gradient = gradient(coefficients)
-    gradient_norm = float(np.max(np.abs(final_gradient)))
+    gradient_norm = max(abs(final_gradient.item(0)), abs(final_gradient.item(1)))
     final_objective = float(result.fun)
+    intercept = float(coefficients.item(0))
+    slope = float(coefficients.item(1))
     stable = (
         bool(result.success)
         and np.all(np.isfinite(coefficients))
@@ -97,14 +104,12 @@ def fit_pattern_mixture(
     if not stable:
         return PatternMixtureResult(
             status=PatternMixtureStatus.BASELINE_NUMERICALLY_UNSTABLE,
-            intercept=float(coefficients[0]) if np.isfinite(coefficients[0]) else None,
-            slope=float(coefficients[1]) if np.isfinite(coefficients[1]) else None,
+            intercept=intercept if isfinite(intercept) else None,
+            slope=slope if isfinite(slope) else None,
             gradient_infinity_norm=gradient_norm if isfinite(gradient_norm) else None,
             objective=final_objective if isfinite(final_objective) else None,
             points=(),
         )
-    intercept = float(coefficients[0])
-    slope = float(coefficients[1])
     harmful_mass = float(summary.resolved_harmful_mass)
     unresolved = float(summary.unresolved_mass)
     band_count = summary.partition.band_count

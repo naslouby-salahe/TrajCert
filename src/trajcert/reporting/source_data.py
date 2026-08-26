@@ -12,8 +12,8 @@ from math import isfinite
 from pathlib import Path
 from typing import Final, NewType, Protocol, cast
 
+import numpy as np
 import pyarrow as pa
-import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from pydantic import Field
 
@@ -75,6 +75,7 @@ from trajcert.types import (
     RiskValue,
     ScientificState,
     SensitivityBudget,
+    TabularCellValue,
 )
 
 TheoremName = NewType("TheoremName", str)
@@ -542,59 +543,113 @@ def partition_coherence_figure_rows(
     for law_name in population_laws:
         for partition_name_value, band_count in partition_pairs:
             item = population_by_key[(law_name, partition_name_value)]
-            if item.result.sensitivity_budget != target_rho:
-                raise InvalidScientificDataError(
-                    "Figure 1 population evidence must use the configured fixed sensitivity"
-                )
-            if item.partition_band_count != band_count:
-                raise InvalidScientificDataError(
-                    "Figure 1 population partition band count does not match configuration"
-                )
-            if (
-                item.result.tau is None
-                or item.result.risk_lower is None
-                or item.result.risk_upper is None
-            ):
-                raise InvalidScientificDataError(
-                    "Figure 1 population evidence requires compatible risk intervals"
-                )
+            tau, risk_lower, risk_upper = _population_coherence_values(item, target_rho, band_count)
             rows.append(
-                PartitionCoherenceFigureRow(
-                    law_name=law_name,
-                    partition_name=partition_name_value,
-                    partition_band_count=band_count,
-                    rho=target_rho,
-                    tau=item.result.tau,
-                    risk_lower=item.result.risk_lower,
-                    risk_upper=item.result.risk_upper,
+                _population_coherence_row(
+                    law_name,
+                    partition_name_value,
+                    band_count,
+                    target_rho,
+                    tau,
+                    risk_lower,
+                    risk_upper,
                 )
             )
     for partition_name_value, band_count in partition_pairs:
         item = same_endpoint_by_key[(timed_law, partition_name_value)]
-        if item.rho != target_rho:
-            raise InvalidScientificDataError(
-                "Figure 1 same-endpoint evidence must use the configured fixed sensitivity"
-            )
-        if item.partition_band_count != band_count:
-            raise InvalidScientificDataError(
-                "Figure 1 same-endpoint partition band count does not match configuration"
-            )
-        if item.result.timing_lower is None or item.result.timing_upper is None:
-            raise InvalidScientificDataError(
-                "Figure 1 same-endpoint evidence requires a compatible timed risk interval"
-            )
+        tau, risk_lower, risk_upper = _same_endpoint_coherence_values(item, target_rho, band_count)
         rows.append(
-            PartitionCoherenceFigureRow(
-                law_name=timed_law,
-                partition_name=partition_name_value,
-                partition_band_count=band_count,
-                rho=target_rho,
-                tau=item.result.timing_tau,
-                risk_lower=item.result.timing_lower,
-                risk_upper=item.result.timing_upper,
+            _same_endpoint_coherence_row(
+                timed_law,
+                partition_name_value,
+                band_count,
+                target_rho,
+                tau,
+                risk_lower,
+                risk_upper,
             )
         )
     return tuple(rows)
+
+
+def _population_coherence_values(
+    item: PopulationFigureEvidence,
+    target_rho: SensitivityBudget,
+    band_count: NonNegativeInt,
+) -> tuple[InformationNats, RiskValue, RiskValue]:
+    if item.result.sensitivity_budget != target_rho:
+        raise InvalidScientificDataError(
+            "Figure 1 population evidence must use the configured fixed sensitivity"
+        )
+    if item.partition_band_count != band_count:
+        raise InvalidScientificDataError(
+            "Figure 1 population partition band count does not match configuration"
+        )
+    if item.result.tau is None or item.result.risk_lower is None or item.result.risk_upper is None:
+        raise InvalidScientificDataError(
+            "Figure 1 population evidence requires compatible risk intervals"
+        )
+    return item.result.tau, item.result.risk_lower, item.result.risk_upper
+
+
+def _population_coherence_row(
+    law_name: LawName,
+    partition_name_value: PartitionName,
+    band_count: NonNegativeInt,
+    target_rho: SensitivityBudget,
+    tau: InformationNats,
+    risk_lower: RiskValue,
+    risk_upper: RiskValue,
+) -> PartitionCoherenceFigureRow:
+    return PartitionCoherenceFigureRow(
+        law_name=law_name,
+        partition_name=partition_name_value,
+        partition_band_count=band_count,
+        rho=target_rho,
+        tau=tau,
+        risk_lower=risk_lower,
+        risk_upper=risk_upper,
+    )
+
+
+def _same_endpoint_coherence_values(
+    item: SameEndpointFigureEvidence,
+    target_rho: SensitivityBudget,
+    band_count: NonNegativeInt,
+) -> tuple[InformationNats, RiskValue, RiskValue]:
+    if item.rho != target_rho:
+        raise InvalidScientificDataError(
+            "Figure 1 same-endpoint evidence must use the configured fixed sensitivity"
+        )
+    if item.partition_band_count != band_count:
+        raise InvalidScientificDataError(
+            "Figure 1 same-endpoint partition band count does not match configuration"
+        )
+    if item.result.timing_lower is None or item.result.timing_upper is None:
+        raise InvalidScientificDataError(
+            "Figure 1 same-endpoint evidence requires a compatible timed risk interval"
+        )
+    return item.result.timing_tau, item.result.timing_lower, item.result.timing_upper
+
+
+def _same_endpoint_coherence_row(
+    timed_law: LawName,
+    partition_name_value: PartitionName,
+    band_count: NonNegativeInt,
+    target_rho: SensitivityBudget,
+    tau: InformationNats,
+    risk_lower: RiskValue,
+    risk_upper: RiskValue,
+) -> PartitionCoherenceFigureRow:
+    return PartitionCoherenceFigureRow(
+        law_name=timed_law,
+        partition_name=partition_name_value,
+        partition_band_count=band_count,
+        rho=target_rho,
+        tau=tau,
+        risk_lower=risk_lower,
+        risk_upper=risk_upper,
+    )
 
 
 def compatibility_safety_evidence(
@@ -1300,14 +1355,20 @@ def _validate_source_columns(table: pa.Table, descriptor: PublicationSourceDescr
 
 
 def _validate_scientific_values(table: pa.Table, source_path: Path) -> None:
-    for field in table.schema:
-        if not pa.types.is_floating(field.type):
+    for column_name, column_type in zip(table.schema.names, table.schema.types, strict=True):
+        if not pa.types.is_floating(column_type):
             continue
-        for value in table.column(field.name).to_pylist():
+        for raw_value in table.column(column_name).to_pylist():
+            value = cast(TabularCellValue, raw_value)
             if value is not None and not isfinite(float(value)):
                 raise InvalidScientificDataError(
-                    f"source-data float column contains NaN or infinity: {source_path}:{field.name}"
+                    "source-data float column contains NaN or infinity: "
+                    + f"{source_path}:{column_name}"
                 )
+
+
+def _table_rows(table: pa.Table) -> tuple[dict[str, TabularCellValue], ...]:
+    return tuple(cast(dict[str, TabularCellValue], row) for row in table.to_pylist())
 
 
 def _deterministic_order(table: pa.Table, columns: tuple[str, ...]) -> pa.Table:
@@ -1316,11 +1377,12 @@ def _deterministic_order(table: pa.Table, columns: tuple[str, ...]) -> pa.Table:
     missing = tuple(column for column in columns if column not in table.column_names)
     if missing:
         raise InvalidScientificDataError(f"source sort columns are missing: {missing}")
-    indices = pc.sort_indices(
-        table,
-        sort_keys=[(column, "ascending") for column in columns],
-        null_placement="at_start",
+    rows = _table_rows(table)
+    ordered = sorted(
+        range(len(rows)),
+        key=lambda index: tuple(rows[index][column] for column in columns),
     )
+    indices = np.asarray(ordered, dtype=np.int64)
     return table.take(indices)
 
 

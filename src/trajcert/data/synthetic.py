@@ -240,7 +240,7 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
 def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: int) -> EventId:
     return EventId(
         f"{_slug(law_name)}::S{int(stream_index):0{_EVENT_INDEX_WIDTH}d}"
-        f"::E{event_index:0{_EVENT_INDEX_WIDTH}d}"
+        + f"::E{event_index:0{_EVENT_INDEX_WIDTH}d}"
     )
 
 

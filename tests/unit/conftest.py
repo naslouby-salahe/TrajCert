@@ -12,7 +12,7 @@ from trajcert.data.summaries import ObservableSummary, summarize_observable_mass
 
 @pytest.fixture(autouse=True)
 def active_test_config() -> None:
-    active_config.set(TrajCertConfig.from_yaml(Path("configs/trajcert.yaml")))
+    _ = active_config.set(TrajCertConfig.from_yaml(Path("configs/trajcert.yaml")))
 
 
 def summary(harmful: list[float], correct: list[float], unresolved: float) -> ObservableSummary:

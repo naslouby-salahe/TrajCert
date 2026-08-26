@@ -53,4 +53,4 @@ def test_weighted_entropy_allows_undefined_rate_for_zero_mass(
 
 def test_weighted_entropy_requires_rate_for_positive_mass() -> None:
     with pytest.raises(InvalidProbabilityError):
-        weighted_binary_entropy(0.1, None)
+        _ = weighted_binary_entropy(0.1, None)

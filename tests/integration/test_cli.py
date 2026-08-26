@@ -13,14 +13,18 @@ from trajcert.types import CliCommand
 
 
 def test_cli_exposes_exact_public_command_set() -> None:
-    parser = cli._parser()
-    action = next(item for item in parser._actions if getattr(item, "choices", None))
-    assert set(action.choices) == {command.value for command in CliCommand}
+    for command in CliCommand:
+        argv = [command.value]
+        if command is CliCommand.RUN:
+            argv.append("Population Sensitivity Utility")
+        assert cli.parse_args(argv).command is command
+    with pytest.raises(SystemExit):
+        _ = cli.parse_args(["unknown-command"])
 
 
 def test_run_accepts_only_experiment_family_and_overwrite() -> None:
-    arguments = cli._parser().parse_args(["run", "Population Sensitivity Utility", "--overwrite"])
-    assert arguments.command == "run"
+    arguments = cli.parse_args(["run", "Population Sensitivity Utility", "--overwrite"])
+    assert arguments.command is CliCommand.RUN
     assert arguments.experiment_name == "Population Sensitivity Utility"
     assert arguments.overwrite is True
 
@@ -31,16 +35,15 @@ def test_run_accepts_only_experiment_family_and_overwrite() -> None:
 )
 def test_run_rejects_public_scientific_knobs(forbidden: str) -> None:
     with pytest.raises(SystemExit) as raised:
-        cli._parser().parse_args(["run", "Population Sensitivity Utility", forbidden, "1"])
+        _ = cli.parse_args(["run", "Population Sensitivity Utility", forbidden, "1"])
     assert raised.value.code == cli.CliExitCode.USAGE_OR_UNKNOWN_NAME
 
 
 def test_status_and_report_accept_optional_experiment_scope() -> None:
-    parser = cli._parser()
-    bare_status = parser.parse_args(["status"])
-    scoped_status = parser.parse_args(["status", "Population Sensitivity Utility"])
-    bare_report = parser.parse_args(["report"])
-    scoped_report = parser.parse_args(["report", "Population Sensitivity Utility", "--overwrite"])
+    bare_status = cli.parse_args(["status"])
+    scoped_status = cli.parse_args(["status", "Population Sensitivity Utility"])
+    bare_report = cli.parse_args(["report"])
+    scoped_report = cli.parse_args(["report", "Population Sensitivity Utility", "--overwrite"])
     assert bare_status.experiment_name is None
     assert scoped_status.experiment_name == "Population Sensitivity Utility"
     assert bare_report.experiment_name is None
@@ -76,16 +79,15 @@ def test_report_prints_scoped_export_summary(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(
-        cli,
-        "report",
-        lambda *, experiment_name, overwrite: ReportExportResult(
+    def scoped_report(*, experiment_name: str | None, overwrite: bool) -> ReportExportResult:
+        return ReportExportResult(
             rendered_artifact_count=2,
             source_artifact_count=1,
             target=Path("results/experiments/population-sensitivity-utility"),
             reused=not overwrite and experiment_name is not None,
-        ),
-    )
+        )
+
+    monkeypatch.setattr(cli, "report", scoped_report)
     monkeypatch.setattr(
         sys,
         "argv",

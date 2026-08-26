@@ -70,7 +70,7 @@ def test_build_partition_constructs_deterministic_coarsenings(
 )
 def test_build_partition_rejects_invalid_shapes(finest: int, bands: int, horizon: float) -> None:
     with pytest.raises(InvalidPartitionError):
-        build_partition(finest, bands, horizon)
+        _ = build_partition(finest, bands, horizon)
 
 
 @pytest.mark.parametrize(
@@ -90,7 +90,7 @@ def test_partition_model_rejects_inconsistent_mapping() -> None:
         "coarsening_map_from_finest": (1, 2, 1, 2),
     }
     with pytest.raises(InvalidPartitionError, match="inconsistent"):
-        TrajectoryPartition.model_validate(invalid_partition)
+        _ = TrajectoryPartition.model_validate(invalid_partition)
 
 
 @pytest.mark.parametrize(
@@ -115,7 +115,7 @@ def test_partition_model_rejects_every_structural_invariant(payload: dict[str, o
     }
     valid.update(payload)
     with pytest.raises(InvalidPartitionError):
-        TrajectoryPartition.model_validate(valid)
+        _ = TrajectoryPartition.model_validate(valid)
 
 
 @pytest.mark.parametrize(
@@ -138,19 +138,19 @@ def test_partition_public_guards_reject_invalid_indices_and_coarsenings() -> Non
     coarse = build_partition(4, 2, 8.0)
     unrelated = build_partition(6, 2, 8.0)
     with pytest.raises(InvalidPartitionError):
-        fine.coarse_band_for_finest(0)
+        _ = fine.coarse_band_for_finest(0)
     with pytest.raises(InvalidPartitionError):
-        partition_name(0)
+        _ = partition_name(0)
     with pytest.raises(InvalidPartitionError):
-        coarsen_mass_vector(np.array([0.1]), fine, coarse)
+        _ = coarsen_mass_vector(np.array([0.1]), fine, coarse)
     with pytest.raises(InvalidPartitionError):
-        coarsen_mass_vector(np.array([0.1, 0.2, 0.3, 0.4]), fine, unrelated)
+        _ = coarsen_mass_vector(np.array([0.1, 0.2, 0.3, 0.4]), fine, unrelated)
 
 
 def test_summary_helpers_reject_mismatched_inputs() -> None:
     partition = build_partition(2, 2, 1.0)
     with pytest.raises(InvalidScientificDataError, match="vectors"):
-        summarize_observable_masses(partition, np.array([0.2]), np.array([0.8]), 0.0, 1e-12)
+        _ = summarize_observable_masses(partition, np.array([0.2]), np.array([0.8]), 0.0, 1e-12)
     law = FullLawProbabilities(
         harmful_resolved=np.array([0.2]),
         correct_resolved=np.array([0.8]),
@@ -158,10 +158,10 @@ def test_summary_helpers_reject_mismatched_inputs() -> None:
         terminal_correct=0.0,
     )
     with pytest.raises(InvalidScientificDataError, match="resolution"):
-        summarize_full_law(partition, law, 1e-12)
+        _ = summarize_full_law(partition, law, 1e-12)
     invalid_counts = ObservableCounts(harmful_by_band=(1,), correct_by_band=(1,), unresolved=0)
     with pytest.raises(InvalidScientificDataError, match="count vectors"):
-        summarize_counts(partition, invalid_counts, 1e-12)
+        _ = summarize_counts(partition, invalid_counts, 1e-12)
 
 
 @pytest.mark.parametrize(
@@ -177,7 +177,7 @@ def test_summarize_observable_masses_validates_mass(
     partition = build_partition(1, 1, 1.0)
     if exception:
         with pytest.raises(exception):
-            summarize_observable_masses(
+            _ = summarize_observable_masses(
                 partition, np.array(harmful), np.array(correct), unresolved, 1e-12
             )
     else:
@@ -201,7 +201,7 @@ def test_summarize_counts_and_counts_total(
     assert counts.total == expected_total
     if raises:
         with pytest.raises(InvalidScientificDataError, match="at least one"):
-            summarize_counts(partition, counts, 1e-12)
+            _ = summarize_counts(partition, counts, 1e-12)
     else:
         assert summarize_counts(partition, counts, 1e-12).total_mass == pytest.approx(1.0)
 
@@ -221,4 +221,4 @@ def test_coarsen_summary_and_intervals(observable_summary: ObservableSummary) ->
 )
 def test_domain_models_forbid_extra_and_invalid_probability(payload: dict[str, float]) -> None:
     with pytest.raises(ValidationError):
-        HiddenMassInterval.model_validate(payload)
+        _ = HiddenMassInterval.model_validate(payload)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
-from typing import Annotated, NewType
+from typing import Annotated, ClassVar, NewType
 
 import numpy as np
 from numpy.typing import NDArray
@@ -69,15 +69,15 @@ class NDArrayFloat64Annotation:
         return value.astype(np.float64)
 
     @classmethod
-    def serialize(cls, value: NDArray[np.float64]) -> list[float]:
+    def serialize(cls, value: Vector) -> list[float]:
         return [float(element) for element in value.tolist()]
 
 
-Vector = Annotated[NDArray[np.float64], NDArrayFloat64Annotation]
+Vector = Annotated[np.ndarray[tuple[int], np.dtype[np.float64]], NDArrayFloat64Annotation]
 
 
 class DomainModel(BaseModel):
-    model_config = ConfigDict(
+    model_config: ClassVar[ConfigDict] = ConfigDict(
         extra="forbid", frozen=True, validate_default=True, allow_inf_nan=False
     )
 

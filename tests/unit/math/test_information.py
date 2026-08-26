@@ -20,9 +20,9 @@ from trajcert.math.information import (
 def test_information_guards_reject_invalid_inputs() -> None:
     observed = summary([0.2], [0.4], 0.4)
     with pytest.raises(InvalidScientificDataError, match="finite and positive"):
-        timing_gain(observed, observed, 0.0)
+        _ = timing_gain(observed, observed, 0.0)
     with pytest.raises(InvalidScientificDataError, match="0 < u < c"):
-        information_profile_derivative(observed, 0.0)
+        _ = information_profile_derivative(observed, 0.0)
 
 
 def test_information_profile_geometry_and_derivatives() -> None:
@@ -49,7 +49,7 @@ def test_information_profile_geometry_and_derivatives() -> None:
 def test_information_profile_rejects_hidden_mass_outside_unresolved_domain(hidden: float) -> None:
     observed = summary([0.2], [0.4], 0.4)
     with pytest.raises(InvalidScientificDataError):
-        information_profile(observed, hidden)
+        _ = information_profile(observed, hidden)
 
 
 def test_information_handles_degenerate_and_coarsened_summaries() -> None:

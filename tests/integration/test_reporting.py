@@ -9,8 +9,8 @@ from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.reporting.export import (
-    _replace_tree,
-    _require_synthesis_completion,
+    replace_tree,
+    require_synthesis_completion,
     validate_results_layout,
 )
 from trajcert.reporting.figures import render_figure
@@ -72,13 +72,13 @@ def test_publication_contract_has_exact_twelve_tables_and_eight_figures() -> Non
 def test_report_is_blocked_without_statistical_synthesis_completion(tmp_path: Path) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     with pytest.raises((InvalidScientificDataError, SerializationError)):
-        _require_synthesis_completion(tmp_path, config)
+        _ = require_synthesis_completion(tmp_path, config)
 
 
 def test_results_allowlist_rejects_debug_or_cache_artifacts(tmp_path: Path) -> None:
     forbidden = tmp_path / "results" / "project_summary" / "debug"
     forbidden.mkdir(parents=True)
-    (forbidden / "trace.txt").write_text("debug", encoding="utf-8")
+    _ = (forbidden / "trace.txt").write_text("debug", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError, match="invalid artifact classes"):
         validate_results_layout(tmp_path)
 
@@ -88,9 +88,9 @@ def test_identical_report_tree_is_idempotently_reused(tmp_path: Path) -> None:
     target = tmp_path / "target"
     staged.mkdir()
     target.mkdir()
-    (staged / "table.csv").write_text("a,b\n1,2\n", encoding="utf-8")
-    (target / "table.csv").write_text("a,b\n1,2\n", encoding="utf-8")
-    assert _replace_tree(staged, target, overwrite=False) is True
+    _ = (staged / "table.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    _ = (target / "table.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    assert replace_tree(staged, target, overwrite=False) is True
     assert (target / "table.csv").read_text(encoding="utf-8") == "a,b\n1,2\n"
 
 
@@ -99,10 +99,10 @@ def test_different_report_tree_requires_explicit_overwrite(tmp_path: Path) -> No
     target = tmp_path / "target"
     staged.mkdir()
     target.mkdir()
-    (staged / "table.csv").write_text("new\n", encoding="utf-8")
-    (target / "table.csv").write_text("old\n", encoding="utf-8")
+    _ = (staged / "table.csv").write_text("new\n", encoding="utf-8")
+    _ = (target / "table.csv").write_text("old\n", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError, match="use --overwrite"):
-        _replace_tree(staged, target, overwrite=False)
+        _ = replace_tree(staged, target, overwrite=False)
     assert (target / "table.csv").read_text(encoding="utf-8") == "old\n"
 
 
@@ -127,7 +127,7 @@ def test_table_renderer_preserves_nulls_and_p_value_display_rule(tmp_path: Path)
     descriptor = next(
         item for item in table_source_descriptors() if item.source_path.stem == "rho_utility"
     )
-    table = pa.table(
+    table = pa.Table.from_pydict(
         {
             "holm_adjusted_p": [0.00001, None],
             "metric_value": [0.2, None],
@@ -151,7 +151,7 @@ def _scaling_source() -> VerifiedSourceData:
         for item in figure_source_descriptors()
         if item.source_path.stem == "figure_computational_scaling"
     )
-    table = pa.table(
+    table = pa.Table.from_pydict(
         {
             "K": [1, 2, 4],
             "population_median_runtime_ms": [1.0, 1.5, 2.0],

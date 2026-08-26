@@ -46,7 +46,7 @@ def test_solver_bisects_interior_roots_and_rejects_invalid_tolerances() -> None:
     assert result.lower_root.status is RootStatus.BISECTION
     assert result.upper_root.status is RootStatus.BISECTION
     with pytest.raises(Exception, match="root_atol"):
-        solve_hidden_mass_interval(observed, 0.45, 0.0, 1e-7)
+        _ = solve_hidden_mass_interval(observed, 0.45, 0.0, 1e-7)
 
 
 @pytest.mark.parametrize(("width", "tolerance", "expected"), [(0.0, 0.1, 0), (0.1, 0.1, 2)])

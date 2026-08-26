@@ -9,7 +9,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import beta as beta_distribution
 
-from trajcert.comparators.ignorable_delay import ignorable_delay_update
+from trajcert.comparators.ignorable_delay import IgnorableDelayResult, ignorable_delay_update
 from trajcert.comparators.repeated_static import repeated_static_projection
 from trajcert.config import (
     CoverageStressCaseConfig,
@@ -43,7 +43,11 @@ from trajcert.inference.categorical import (
     initialize_categorical_state,
 )
 from trajcert.inference.certification import CertificationAssessment, classify_certification
-from trajcert.inference.confidence import CategoricalConfidenceRegion, confidence_sequence_update
+from trajcert.inference.confidence import (
+    CategoricalConfidenceRegion,
+    ClosedProbabilityInterval,
+    confidence_sequence_update,
+)
 from trajcert.inference.envelope import (
     ObservableSummaryEnvelope,
     ScalarEnvelope,
@@ -258,76 +262,21 @@ def run_coverage_stress(
     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
     failures = {method: 0 for method in SequentialMethod}
     for stream_index in range(stream_count):
-        ledger = generate_stochastic_ledger(
-            parameters=parameters,
-            partition=partition,
-            stream_index=stream_index,
-            event_count=max_events,
-        )
-        events = mature_ledger(ledger, partition)
-        state = initialize_categorical_state(ledger.identity, partition)
-        running: CategoricalConfidenceRegion | None = None
-        ignorable_running = None
-        failed = {method: False for method in SequentialMethod}
-        for position, event in enumerate(events, start=1):
-            state = append_matured_event(state, event)
-            update = confidence_sequence_update(
-                state=state,
-                anytime_delta=config.confidence.anytime_delta,
-                root_tolerance=config.numerics.anytime_root_atol,
-                previous_running=running,
-            )
-            running = update.running
-            ignorable = ignorable_delay_update(
-                state=state,
-                anytime_delta=config.confidence.anytime_delta,
-                root_tolerance=config.numerics.anytime_root_atol,
-                previous_running=ignorable_running,
-                assumption_valid=assumption_valid,
-            )
-            if ignorable.interval is not None:
-                ignorable_running = ignorable.interval
-            if position % checkpoint_every != 0 and position != max_events:
-                continue
-            envelope = summary_envelope_from_confidence(partition, running)
-            projection = _project(envelope, config, sensitivity_budget)
-            if projection.proven_upper < true_risk:
-                failed[SequentialMethod.TRAJCERT] = True
-                failed[SequentialMethod.TIME_UNIFORM_PROJECTION] = True
-            static = repeated_static_projection(
-                state=state,
-                anytime_delta=config.confidence.anytime_delta,
-                sensitivity_budget=sensitivity_budget,
-                root_atol=config.numerics.root_atol,
-                identity_atol=config.numerics.identity_atol,
-                comparison_guard=config.numerics.comparison_guard,
-                arbitrary_precision_bits=config.numerics.arbitrary_precision_bits,
-                outer_gap=config.numerics.outer_gap,
-                outer_max_nodes=config.numerics.outer_max_nodes,
-            )
-            if static.proven_upper < true_risk:
-                failed[SequentialMethod.REPEATED_STATIC] = True
-            if (
-                assumption_valid
-                and ignorable.interval is not None
-                and ignorable.interval.upper < true_risk
-            ):
-                failed[SequentialMethod.IGNORABLE_DELAY] = True
-        for method, did_fail in failed.items():
+        for method, did_fail in _coverage_stream_failures(
+            parameters,
+            partition,
+            config,
+            sensitivity_budget,
+            assumption_valid,
+            max_events,
+            checkpoint_every,
+            true_risk,
+            stream_index,
+        ).items():
             if did_fail:
                 failures[method] += 1
     results = tuple(
-        CoverageMethodResult(
-            method=method,
-            applicable=method is not SequentialMethod.IGNORABLE_DELAY or assumption_valid,
-            streams=stream_count,
-            anytime_failures=failures[method],
-            failure_rate=(
-                None
-                if method is SequentialMethod.IGNORABLE_DELAY and not assumption_valid
-                else failures[method] / stream_count
-            ),
-        )
+        _coverage_method_result(method, assumption_valid, stream_count, failures)
         for method in SequentialMethod
     )
     primary = next(result for result in results if result.method is SequentialMethod.TRAJCERT)
@@ -337,6 +286,116 @@ def run_coverage_stress(
             primary.failure_rate is not None
             and primary.failure_rate <= config.sequential.coverage.acceptance_upper_limit
         ),
+    )
+
+
+def _coverage_stream_failures(
+    parameters: LawParameters,
+    partition: TrajectoryPartition,
+    config: TrajCertConfig,
+    sensitivity_budget: SensitivityBudget,
+    assumption_valid: bool,
+    max_events: int,
+    checkpoint_every: int,
+    true_risk: float,
+    stream_index: int,
+) -> dict[SequentialMethod, bool]:
+    ledger = generate_stochastic_ledger(
+        parameters=parameters,
+        partition=partition,
+        stream_index=stream_index,
+        event_count=max_events,
+    )
+    events = mature_ledger(ledger, partition)
+    state = initialize_categorical_state(ledger.identity, partition)
+    running: CategoricalConfidenceRegion | None = None
+    ignorable_running: ClosedProbabilityInterval | None = None
+    failed = {method: False for method in SequentialMethod}
+    for position, event in enumerate(events, start=1):
+        state = append_matured_event(state, event)
+        update = confidence_sequence_update(
+            state=state,
+            anytime_delta=config.confidence.anytime_delta,
+            root_tolerance=config.numerics.anytime_root_atol,
+            previous_running=running,
+        )
+        running = update.running
+        ignorable = ignorable_delay_update(
+            state=state,
+            anytime_delta=config.confidence.anytime_delta,
+            root_tolerance=config.numerics.anytime_root_atol,
+            previous_running=ignorable_running,
+            assumption_valid=assumption_valid,
+        )
+        if ignorable.interval is not None:
+            ignorable_running = ignorable.interval
+        if position % checkpoint_every != 0 and position != max_events:
+            continue
+        _record_checkpoint_failures(
+            failed,
+            state,
+            partition,
+            running,
+            ignorable,
+            config,
+            sensitivity_budget,
+            assumption_valid,
+            true_risk,
+        )
+    return failed
+
+
+def _record_checkpoint_failures(
+    failed: dict[SequentialMethod, bool],
+    state: CategoricalState,
+    partition: TrajectoryPartition,
+    running: CategoricalConfidenceRegion,
+    ignorable: IgnorableDelayResult,
+    config: TrajCertConfig,
+    sensitivity_budget: SensitivityBudget,
+    assumption_valid: bool,
+    true_risk: float,
+) -> None:
+    envelope = summary_envelope_from_confidence(partition, running)
+    projection = _project(envelope, config, sensitivity_budget)
+    if projection.proven_upper < true_risk:
+        failed[SequentialMethod.TRAJCERT] = True
+        failed[SequentialMethod.TIME_UNIFORM_PROJECTION] = True
+    static = repeated_static_projection(
+        state=state,
+        anytime_delta=config.confidence.anytime_delta,
+        sensitivity_budget=sensitivity_budget,
+        root_atol=config.numerics.root_atol,
+        identity_atol=config.numerics.identity_atol,
+        comparison_guard=config.numerics.comparison_guard,
+        arbitrary_precision_bits=config.numerics.arbitrary_precision_bits,
+        outer_gap=config.numerics.outer_gap,
+        outer_max_nodes=config.numerics.outer_max_nodes,
+    )
+    if static.proven_upper < true_risk:
+        failed[SequentialMethod.REPEATED_STATIC] = True
+    if assumption_valid and ignorable.interval is not None and ignorable.interval.upper < true_risk:
+        failed[SequentialMethod.IGNORABLE_DELAY] = True
+
+
+def _coverage_method_result(
+    method: SequentialMethod,
+    assumption_valid: bool,
+    stream_count: int,
+    failures: dict[SequentialMethod, int],
+) -> CoverageMethodResult:
+    applicable = method is not SequentialMethod.IGNORABLE_DELAY or assumption_valid
+    failure_rate = (
+        None
+        if method is SequentialMethod.IGNORABLE_DELAY and not assumption_valid
+        else failures[method] / stream_count
+    )
+    return CoverageMethodResult(
+        method=method,
+        applicable=applicable,
+        streams=stream_count,
+        anytime_failures=failures[method],
+        failure_rate=failure_rate,
     )
 
 
@@ -473,33 +532,63 @@ def _trajcert_trajectory_evidence(
             risk_budget=beta,
             checkpoint_every=checkpoint_every,
         )
-        eligible = 0
-        certified = 0
-        first: int | None = None
-        for checkpoint in trace.checkpoints:
-            state = checkpoint.assessment.scientific_state
-            evidence_gate_pass = state is not ScientificState.INSUFFICIENT_EVIDENCE
-            if evidence_gate_pass and state is not None:
-                eligible += 1
-                if state is ScientificState.CERTIFIED:
-                    certified += 1
-                    if first is None:
-                        first = int(checkpoint.matured_count)
-            if stream_index in _REPRESENTATIVE_STREAMS:
-                representative.append(
-                    AnytimePathEvidence(
-                        stream_seed_index=stream_index,
-                        n_matured=int(checkpoint.matured_count),
-                        risk_upper_anytime=float(checkpoint.projection.proven_upper),
-                        true_theta=float(parameters.theta),
-                        beta=float(beta),
-                        evidence_gate_pass=evidence_gate_pass,
-                        operational_state=("TECHNICAL_FAIL" if state is None else state.value),
-                    )
-                )
+        first, fraction = _stream_certification_summary(trace)
         first_certified.append(float(max_events + 1 if first is None else first))
-        certified_fractions.append(0.0 if eligible == 0 else certified / eligible)
+        certified_fractions.append(fraction)
+        if stream_index in _REPRESENTATIVE_STREAMS:
+            representative.extend(
+                _representative_path_evidence(parameters, beta, trace, stream_index)
+            )
     return tuple(first_certified), tuple(certified_fractions), tuple(representative)
+
+
+def _stream_certification_summary(
+    trace: SequentialTrace,
+) -> tuple[int | None, float]:
+    eligible = 0
+    certified = 0
+    first: int | None = None
+    for checkpoint in trace.checkpoints:
+        state = checkpoint.assessment.scientific_state
+        if state is None or state is ScientificState.INSUFFICIENT_EVIDENCE:
+            continue
+        eligible += 1
+        if state is not ScientificState.CERTIFIED:
+            continue
+        certified += 1
+        if first is None:
+            first = int(checkpoint.matured_count)
+    return first, (0.0 if eligible == 0 else certified / eligible)
+
+
+def _representative_path_evidence(
+    parameters: LawParameters,
+    beta: float,
+    trace: SequentialTrace,
+    stream_index: int,
+) -> tuple[AnytimePathEvidence, ...]:
+    return tuple(
+        _representative_checkpoint_evidence(parameters, beta, checkpoint, stream_index)
+        for checkpoint in trace.checkpoints
+    )
+
+
+def _representative_checkpoint_evidence(
+    parameters: LawParameters,
+    beta: float,
+    checkpoint: SequentialCheckpoint,
+    stream_index: int,
+) -> AnytimePathEvidence:
+    state = checkpoint.assessment.scientific_state
+    return AnytimePathEvidence(
+        stream_seed_index=stream_index,
+        n_matured=int(checkpoint.matured_count),
+        risk_upper_anytime=float(checkpoint.projection.proven_upper),
+        true_theta=float(parameters.theta),
+        beta=float(beta),
+        evidence_gate_pass=state is not ScientificState.INSUFFICIENT_EVIDENCE,
+        operational_state=("TECHNICAL_FAIL" if state is None else state.value),
+    )
 
 
 def _true_information(

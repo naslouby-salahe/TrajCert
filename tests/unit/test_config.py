@@ -57,23 +57,23 @@ def test_root_model_owns_yaml_loading() -> None:
 
 
 def test_yaml_loading_rejects_unknown_top_level_key(tmp_path: Path) -> None:
-    payload = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
+    payload = cast(dict[str, object], yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8")))
     payload["unexpected"] = {"value": 1}
     path = tmp_path / "invalid.yaml"
-    path.write_text(yaml.safe_dump(payload), encoding="utf-8")
+    _ = path.write_text(yaml.safe_dump(payload), encoding="utf-8")
 
     with pytest.raises(ConfigurationError):
-        TrajCertConfig.from_yaml(path)
+        _ = TrajCertConfig.from_yaml(path)
 
 
 def test_cross_section_validation_rejects_non_nested_partitions(tmp_path: Path) -> None:
-    payload = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
-    payload["grids"]["partitions"] = [8, 3, 2, 1]
+    payload = cast(dict[str, object], yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8")))
+    cast(dict[str, object], payload["grids"])["partitions"] = [8, 3, 2, 1]
     path = tmp_path / "invalid-partitions.yaml"
-    path.write_text(yaml.safe_dump(payload), encoding="utf-8")
+    _ = path.write_text(yaml.safe_dump(payload), encoding="utf-8")
 
     with pytest.raises(ConfigurationError, match="nested"):
-        TrajCertConfig.from_yaml(path)
+        _ = TrajCertConfig.from_yaml(path)
 
 
 @pytest.mark.parametrize(

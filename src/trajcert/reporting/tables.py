@@ -70,7 +70,10 @@ def _csv_payload(table: pa.Table) -> bytes:
     writer = csv.writer(stream, lineterminator="\n")
     writer.writerow(table.column_names)
     for row in table.to_pylist():
-        writer.writerow(_format_csv_value(column, row[column]) for column in table.column_names)
+        typed_row: dict[str, TabularCellValue] = row
+        writer.writerow(
+            _format_csv_value(column, typed_row[column]) for column in table.column_names
+        )
     return stream.getvalue().encode("utf-8")
 
 
@@ -81,7 +84,8 @@ def _tex_payload(table: pa.Table) -> bytes:
     lines.append(" & ".join(_escape_tex(column) for column in columns) + r" \\")
     lines.append("\\midrule")
     for row in table.to_pylist():
-        rendered = tuple(_format_tex_value(column, row[column]) for column in columns)
+        typed_row: dict[str, TabularCellValue] = row
+        rendered = tuple(_format_tex_value(column, typed_row[column]) for column in columns)
         lines.append(" & ".join(rendered) + r" \\")
     lines.extend(("\\bottomrule", "\\end{tabular}", ""))
     return "\n".join(lines).encode("utf-8")
