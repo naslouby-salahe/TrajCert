@@ -1,18 +1,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from itertools import product
 
 from trajcert.config import TrajCertConfig
-from trajcert.data.summaries import ObservableSummary
+from trajcert.data.laws import LAW_DISPLAY_NAMES
+from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.solver_validation import (
-    compare_production_solver_to_oracle,
-    compare_safety_frontier_to_oracle,
-)
-from trajcert.experiments.timing import PartitionCoherenceResult
-from trajcert.math.bounds import sharp_risk_set
-from trajcert.math.information import minimum_information_point, observed_timing_information
-from trajcert.math.safety import assess_safety_geometry
+from trajcert.experiments.sensitivity import PopulationUtilityResult
+from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.reporting.source_data import (
     CompatibilitySafetyRow,
     PartitionCoherenceFigureRow,
@@ -26,10 +22,13 @@ from trajcert.storage import ArtifactKey
 from trajcert.types import (
     DomainModel,
     FiniteFloat,
+    InformationNats,
+    LawKey,
     LawName,
     NonNegativeInt,
     PartitionName,
     RiskBudget,
+    RiskValue,
     SensitivityBudget,
 )
 
@@ -56,10 +55,32 @@ class PartitionTimingEvidence(DomainModel):
 class CompatibilitySafetyEvidence(DomainModel):
     law_name: LawName
     partition_name: PartitionName
-    summary: ObservableSummary
     rho: SensitivityBudget
     beta: RiskBudget
+    tau: InformationNats | None
+    theta_dagger: RiskValue | None
+    risk_lower: RiskValue | None
+    risk_upper: RiskValue | None
+    rho_star: InformationNats | None
     expected_regime: RegimeName
+    observed_regime: RegimeName
+    oracle_error: FiniteFloat | None
+    passed: bool
+
+
+class PopulationFigureEvidence(DomainModel):
+    law_name: LawName
+    partition_name: PartitionName
+    partition_band_count: NonNegativeInt
+    result: PopulationUtilityResult
+
+
+class SameEndpointFigureEvidence(DomainModel):
+    law_name: LawName
+    partition_name: PartitionName
+    partition_band_count: NonNegativeInt
+    rho: SensitivityBudget
+    result: SameEndpointTimingResult
 
 
 def theorem_validation_summary_rows(
@@ -105,40 +126,98 @@ def partition_timing_rows(
 
 
 def partition_coherence_figure_rows(
-    evidence: tuple[PartitionTimingEvidence, ...],
+    population_evidence: tuple[PopulationFigureEvidence, ...],
+    same_endpoint_evidence: tuple[SameEndpointFigureEvidence, ...],
+    config: TrajCertConfig,
 ) -> tuple[PartitionCoherenceFigureRow, ...]:
+    target_rho = config.study_design.partition_coherence_figure_rho
+    partition_pairs = tuple(
+        (partition_name(band_count), band_count) for band_count in config.grids.partitions
+    )
+    population_laws = (
+        LAW_DISPLAY_NAMES[LawKey.TIMING_HARMFUL_LATE],
+        LAW_DISPLAY_NAMES[LawKey.TERMINAL_HARMFUL_UNRESOLVED],
+        LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE],
+    )
+    expected_population = tuple(
+        product(population_laws, tuple(name for name, _ in partition_pairs))
+    )
+    supplied_population = tuple(
+        (item.law_name, item.partition_name) for item in population_evidence
+    )
+    _require_exact_family("Figure 1 population", supplied_population, expected_population)
+    population_by_key = {
+        (item.law_name, item.partition_name): item for item in population_evidence
+    }
+
+    timed_law = LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING]
+    expected_same_endpoint = tuple((timed_law, name) for name, _ in partition_pairs)
+    supplied_same_endpoint = tuple(
+        (item.law_name, item.partition_name) for item in same_endpoint_evidence
+    )
+    _require_exact_family(
+        "Figure 1 same-endpoint",
+        supplied_same_endpoint,
+        expected_same_endpoint,
+    )
+    same_endpoint_by_key = {
+        (item.law_name, item.partition_name): item for item in same_endpoint_evidence
+    }
+
     rows: list[PartitionCoherenceFigureRow] = []
-    for item in evidence:
-        result = item.result
-        if (
-            result.coarse_lower is None
-            or result.coarse_upper is None
-            or result.fine_lower is None
-            or result.fine_upper is None
-        ):
-            raise InvalidScientificDataError(
-                "partition-coherence figure requires compatible fine and coarse risk intervals"
+    for law_name in population_laws:
+        for partition_name_value, band_count in partition_pairs:
+            item = population_by_key[(law_name, partition_name_value)]
+            if item.result.sensitivity_budget != target_rho:
+                raise InvalidScientificDataError(
+                    "Figure 1 population evidence must use the configured fixed sensitivity"
+                )
+            if item.partition_band_count != band_count:
+                raise InvalidScientificDataError(
+                    "Figure 1 population partition band count does not match configuration"
+                )
+            if (
+                item.result.tau is None
+                or item.result.risk_lower is None
+                or item.result.risk_upper is None
+            ):
+                raise InvalidScientificDataError(
+                    "Figure 1 population evidence requires compatible risk intervals"
+                )
+            rows.append(
+                PartitionCoherenceFigureRow(
+                    law_name=law_name,
+                    partition_name=partition_name_value,
+                    partition_band_count=band_count,
+                    rho=target_rho,
+                    tau=item.result.tau,
+                    risk_lower=item.result.risk_lower,
+                    risk_upper=item.result.risk_upper,
+                )
             )
-        rows.extend(
-            (
-                PartitionCoherenceFigureRow(
-                    law_name=item.law_name,
-                    partition_name=item.coarse_partition,
-                    partition_band_count=item.coarse_band_count,
-                    rho=item.rho,
-                    tau=result.coarse_tau,
-                    risk_lower=result.coarse_lower,
-                    risk_upper=result.coarse_upper,
-                ),
-                PartitionCoherenceFigureRow(
-                    law_name=item.law_name,
-                    partition_name=item.fine_partition,
-                    partition_band_count=item.fine_band_count,
-                    rho=item.rho,
-                    tau=result.fine_tau,
-                    risk_lower=result.fine_lower,
-                    risk_upper=result.fine_upper,
-                ),
+    for partition_name_value, band_count in partition_pairs:
+        item = same_endpoint_by_key[(timed_law, partition_name_value)]
+        if item.rho != target_rho:
+            raise InvalidScientificDataError(
+                "Figure 1 same-endpoint evidence must use the configured fixed sensitivity"
+            )
+        if item.partition_band_count != band_count:
+            raise InvalidScientificDataError(
+                "Figure 1 same-endpoint partition band count does not match configuration"
+            )
+        if item.result.timing_lower is None or item.result.timing_upper is None:
+            raise InvalidScientificDataError(
+                "Figure 1 same-endpoint evidence requires a compatible timed risk interval"
+            )
+        rows.append(
+            PartitionCoherenceFigureRow(
+                law_name=timed_law,
+                partition_name=partition_name_value,
+                partition_band_count=band_count,
+                rho=target_rho,
+                tau=item.result.timing_tau,
+                risk_lower=item.result.timing_lower,
+                risk_upper=item.result.timing_upper,
             )
         )
     return tuple(rows)
@@ -146,9 +225,25 @@ def partition_coherence_figure_rows(
 
 def compatibility_safety_rows(
     evidence: tuple[CompatibilitySafetyEvidence, ...],
-    config: TrajCertConfig,
 ) -> tuple[CompatibilitySafetyRow, ...]:
-    return tuple(_compatibility_safety_row(item, config) for item in evidence)
+    return tuple(
+        CompatibilitySafetyRow(
+            law_name=item.law_name,
+            partition_name=item.partition_name,
+            rho=item.rho,
+            beta=item.beta,
+            tau=item.tau,
+            theta_dagger=item.theta_dagger,
+            risk_lower=item.risk_lower,
+            risk_upper=item.risk_upper,
+            rho_star=item.rho_star,
+            expected_regime=item.expected_regime,
+            observed_regime=item.observed_regime,
+            oracle_error=item.oracle_error,
+            passed=item.passed,
+        )
+        for item in evidence
+    )
 
 
 def _partition_timing_row(
@@ -186,60 +281,16 @@ def _partition_timing_row(
     )
 
 
-def _compatibility_safety_row(
-    item: CompatibilitySafetyEvidence,
-    config: TrajCertConfig,
-) -> CompatibilitySafetyRow:
-    sharp = sharp_risk_set(
-        summary=item.summary,
-        sensitivity_budget=item.rho,
-        root_atol=config.numerics.root_atol,
-        identity_atol=config.numerics.identity_atol,
-    )
-    minimum = minimum_information_point(item.summary)
-    tau = observed_timing_information(item.summary)
-    safety = assess_safety_geometry(item.summary, item.beta)
-    solver_oracle = compare_production_solver_to_oracle(
-        summary=item.summary,
-        sensitivity_budget=item.rho,
-        root_atol=config.numerics.root_atol,
-        identity_atol=config.numerics.identity_atol,
-        oracle_digits=config.numerics.oracle_digits,
-    )
-    safety_oracle = compare_safety_frontier_to_oracle(
-        summary=item.summary,
-        risk_budget=item.beta,
-        oracle_digits=config.numerics.oracle_digits,
-        identity_atol=config.numerics.identity_atol,
-    )
-    observed_regime = (
-        RegimeName(sharp.solve_result.compatibility.regime.value)
-        if sharp.latent_risk is None
-        else RegimeName(safety.regime.value)
-    )
-    errors = tuple(
-        value
-        for value in (solver_oracle.max_endpoint_error, safety_oracle.absolute_error)
-        if value is not None
-    )
-    interval = sharp.latent_risk
-    passed = (
-        solver_oracle.passed
-        and safety_oracle.passed
-        and observed_regime == item.expected_regime
-    )
-    return CompatibilitySafetyRow(
-        law_name=item.law_name,
-        partition_name=item.partition_name,
-        rho=item.rho,
-        beta=item.beta,
-        tau=None if tau is None else float(tau),
-        theta_dagger=None if minimum is None else float(minimum.latent_risk),
-        risk_lower=None if interval is None else float(interval.lower),
-        risk_upper=None if interval is None else float(interval.upper),
-        rho_star=None if safety.safety_frontier is None else float(safety.safety_frontier),
-        expected_regime=item.expected_regime,
-        observed_regime=observed_regime,
-        oracle_error=max(errors, default=None),
-        passed=passed,
-    )
+def _require_exact_family[KeyT](
+    label: str,
+    supplied: tuple[KeyT, ...],
+    expected: tuple[KeyT, ...],
+) -> None:
+    if len(supplied) != len(set(supplied)):
+        raise InvalidScientificDataError(f"{label} evidence contains duplicates")
+    if set(supplied) != set(expected):
+        missing = set(expected).difference(supplied)
+        extra = set(supplied).difference(expected)
+        raise InvalidScientificDataError(
+            f"{label} evidence mismatch: missing={len(missing)}, extra={len(extra)}"
+        )
