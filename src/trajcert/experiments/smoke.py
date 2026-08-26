@@ -3,7 +3,7 @@ from __future__ import annotations
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.maturity import mature_ledger
-from trajcert.data.partitions import build_partition
+from trajcert.data.partitions import TrajectoryPartition, build_partition
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
 from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.experiments.timing import evaluate_partition_coherence
@@ -14,6 +14,13 @@ from trajcert.inference.projection import project_upper_risk
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.information import observed_timing_information
 from trajcert.types import DomainModel, LawKey, NonNegativeInt, SeedIndex
+
+_SMOKE_COMPATIBLE_OFFSET = 0.01
+_SMOKE_REFINEMENT_OFFSET = 0.025
+_SMOKE_CS_EVENTS = 25
+_SMOKE_COARSE_BANDS = 4
+_SMOKE_CS_BANDS = 2
+_SMOKE_FIXTURE_COUNT = 6
 
 
 class SmokeResult(DomainModel):
@@ -27,7 +34,7 @@ class SmokeResult(DomainModel):
 
     @property
     def passed(self) -> bool:
-        return self.passed_fixture_count == 6
+        return self.passed_fixture_count == _SMOKE_FIXTURE_COUNT
 
 
 def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
@@ -41,7 +48,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     )
     coarse = build_partition(
         config.method.finest_bands,
-        config.method.finest_bands // 2,
+        _SMOKE_COARSE_BANDS,
         config.method.terminal_horizon,
     )
     endpoint = build_partition(
@@ -55,7 +62,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     principal_tau = float(observed_timing_information(principal_fine) or 0.0)
     compatible = sharp_risk_set(
         principal_fine,
-        principal_tau + 0.01,
+        principal_tau + _SMOKE_COMPATIBLE_OFFSET,
         config.numerics.root_atol,
         config.numerics.identity_atol,
     )
@@ -77,7 +84,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     refinement = evaluate_partition_coherence(
         fine=principal_fine,
         coarse_partition=coarse,
-        sensitivity_budget=principal_tau + 0.025,
+        sensitivity_budget=principal_tau + _SMOKE_REFINEMENT_OFFSET,
         root_atol=config.numerics.root_atol,
         identity_atol=config.numerics.identity_atol,
         comparison_guard=config.numerics.comparison_guard,
@@ -108,14 +115,14 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
 def _confidence_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool:
     partition = build_partition(
         config.method.finest_bands,
-        2,
+        _SMOKE_CS_BANDS,
         config.method.terminal_horizon,
     )
     ledger = generate_balanced_prefix_ledger(
         parameters,
         partition,
         SeedIndex(0),
-        25,
+        _SMOKE_CS_EVENTS,
     )
     state = initialize_categorical_state(ledger.identity, partition)
     running: CategoricalConfidenceRegion | None = None
@@ -128,18 +135,18 @@ def _confidence_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
             running,
         )
         running = update.running
-    return running is not None and int(running.matured_count) == 25
+    return running is not None and int(running.matured_count) == _SMOKE_CS_EVENTS
 
 
 def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool:
     partition = build_partition(
         config.method.finest_bands,
-        2,
+        _SMOKE_CS_BANDS,
         config.method.terminal_horizon,
     )
     summary = _summary(parameters, partition, config)
     tau = float(observed_timing_information(summary) or 0.0)
-    rho = tau + 0.01
+    rho = tau + _SMOKE_COMPATIBLE_OFFSET
     population = sharp_risk_set(
         summary,
         rho,
@@ -177,7 +184,7 @@ def _parameters(config: TrajCertConfig, key: LawKey) -> LawParameters:
 
 def _summary(
     parameters: LawParameters,
-    partition,
+    partition: TrajectoryPartition,
     config: TrajCertConfig,
 ) -> ObservableSummary:
     return summarize_full_law(
