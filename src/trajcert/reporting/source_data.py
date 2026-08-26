@@ -353,7 +353,9 @@ def _verify_registered_lineage(
 ) -> VerifiedSourceLineage:
     checkpoints_root = workspace_root / "outputs" / "experiments"
     if not checkpoints_root.is_dir():
-        raise InvalidScientificDataError("publication sources require completed experiment evidence")
+        raise InvalidScientificDataError(
+            "publication sources require completed experiment evidence"
+        )
     relative_source = descriptor.source_path
     matches: list[tuple[Path, CellArtifactIndex, ArtifactKey]] = []
     for index_path in checkpoints_root.glob("*/checkpoints/execution/**/artifact_index.json"):
@@ -647,56 +649,117 @@ _FIGURE_SOURCES = (
     _source(
         "outputs/experiments/statistical-synthesis/evaluations/aggregates/figure_partition_coherence.parquet",
         PublicationSourceRole.FIGURE,
-        ("law_name", "partition_name", "partition_band_count", "rho", "tau", "risk_lower", "risk_upper"),
+        (
+            "law_name",
+            "partition_name",
+            "partition_band_count",
+            "rho",
+            "tau",
+            "risk_lower",
+            "risk_upper",
+        ),
         ("law_name", "partition_band_count"),
         "statistical-synthesis",
     ),
     _source(
         "outputs/experiments/strict-timing-gain/evaluations/aggregates/figure_timing_value.parquet",
         PublicationSourceRole.FIGURE,
-        ("semantic_timing_case", "rho_offset", "delta_tau", "bound_gain", "coarse_risk_upper", "fine_risk_upper"),
+        (
+            "semantic_timing_case",
+            "rho_offset",
+            "delta_tau",
+            "bound_gain",
+            "coarse_risk_upper",
+            "fine_risk_upper",
+        ),
         ("rho_offset", "semantic_timing_case", "delta_tau"),
         "strict-timing-gain",
     ),
     _source(
         "outputs/experiments/safety-and-intrinsic-impossibility/evaluations/aggregates/figure_information_profile.parquet",
         PublicationSourceRole.FIGURE,
-        ("u", "information_profile", "u_dagger", "tau", "rho", "u_beta", "rho_star", "feasible_lower", "feasible_upper"),
+        (
+            "u",
+            "information_profile",
+            "u_dagger",
+            "tau",
+            "rho",
+            "u_beta",
+            "rho_star",
+            "feasible_lower",
+            "feasible_upper",
+        ),
         ("u",),
         "safety-and-intrinsic-impossibility",
     ),
     _source(
         "outputs/experiments/anytime-coverage-stress/evaluations/aggregates/figure_anytime_paths.parquet",
         PublicationSourceRole.FIGURE,
-        ("stream_seed_index", "n_matured", "risk_upper_anytime", "true_theta", "beta", "evidence_gate_pass", "operational_state"),
+        (
+            "stream_seed_index",
+            "n_matured",
+            "risk_upper_anytime",
+            "true_theta",
+            "beta",
+            "evidence_gate_pass",
+            "operational_state",
+        ),
         ("stream_seed_index", "n_matured"),
         "anytime-coverage-stress",
     ),
     _source(
         "outputs/experiments/anytime-coverage-stress/evaluations/aggregates/figure_anytime_coverage.parquet",
         PublicationSourceRole.FIGURE,
-        ("stress_cell", "method_name", "K", "clopper_pearson_upper_95", "delta", "acceptance_upper_limit", "criterion_pass"),
+        (
+            "stress_cell",
+            "method_name",
+            "K",
+            "clopper_pearson_upper_95",
+            "delta",
+            "acceptance_upper_limit",
+            "criterion_pass",
+        ),
         ("stress_cell", "method_name"),
         "anytime-coverage-stress",
     ),
     _source(
         "outputs/experiments/population-sensitivity-utility/evaluations/aggregates/figure_rho_sensitivity.parquet",
         PublicationSourceRole.FIGURE,
-        ("law_name", "partition_name", "rho", "risk_upper", "compatibility_state", "rho_is_log2"),
+        (
+            "law_name",
+            "partition_name",
+            "rho",
+            "risk_upper",
+            "compatibility_state",
+            "rho_is_log2",
+        ),
         ("law_name", "partition_name", "rho"),
         "population-sensitivity-utility",
     ),
     _source(
         "outputs/experiments/failure-boundary-atlas/evaluations/aggregates/figure_failure_boundaries.parquet",
         PublicationSourceRole.FIGURE,
-        ("axis", "level", "controlled_value_json", "risk_upper", "operational_state", "optimizer_gap", "runtime_ms"),
+        (
+            "axis",
+            "level",
+            "controlled_value_json",
+            "risk_upper",
+            "operational_state",
+            "optimizer_gap",
+            "runtime_ms",
+        ),
         ("axis", "level"),
         "failure-boundary-atlas",
     ),
     _source(
         "outputs/experiments/computational-scaling/evaluations/aggregates/figure_computational_scaling.parquet",
         PublicationSourceRole.FIGURE,
-        ("K", "population_median_runtime_ms", "outer_median_runtime_ms", "median_outer_nodes"),
+        (
+            "K",
+            "population_median_runtime_ms",
+            "outer_median_runtime_ms",
+            "median_outer_nodes",
+        ),
         ("K",),
         "computational-scaling",
     ),
