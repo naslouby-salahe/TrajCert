@@ -123,9 +123,7 @@ def _population_utility_evidence(
         PopulationUtilitySourceEvidence(
             law_name=_required_law(cell),
             partition_name=_required_partition(cell),
-            result=read_verified_scientific_result(
-                cell, workspace_root, PopulationUtilityResult
-            ),
+            result=read_verified_scientific_result(cell, workspace_root, PopulationUtilityResult),
         )
         for cell in _cells(plan, "Population Sensitivity Utility")
     )
@@ -138,9 +136,7 @@ def _sequential_utility_evidence(
     return tuple(
         SequentialUtilityEvidence(
             law_name=_required_law(cell),
-            result=read_verified_scientific_result(
-                cell, workspace_root, SequentialUtilityResult
-            ),
+            result=read_verified_scientific_result(cell, workspace_root, SequentialUtilityResult),
         )
         for cell in _cells(plan, "Sequential Sensitivity Utility")
     )
@@ -162,9 +158,7 @@ def _partition_timing_evidence(
             raise InvalidScientificDataError("partition-coherence comparison pair is malformed")
         fine = PartitionName(fine_text)
         coarse = PartitionName(coarse_text)
-        result = read_verified_scientific_result(
-            cell, workspace_root, PartitionCoherenceResult
-        )
+        result = read_verified_scientific_result(cell, workspace_root, PartitionCoherenceResult)
         evidence.append(
             PartitionTimingEvidence(
                 law_name=_required_law(cell),
@@ -203,9 +197,7 @@ def _sharpness_evidence(
         SharpnessSourceEvidence(
             law_name=_required_law(cell),
             partition_name=_required_partition(cell),
-            result=read_verified_scientific_result(
-                cell, workspace_root, SolverOracleComparison
-            ),
+            result=read_verified_scientific_result(cell, workspace_root, SolverOracleComparison),
         )
         for cell in _cells(plan, "Sharpness Against Generic Oracle")
     )
@@ -221,9 +213,7 @@ def _safety_evidence(
         SafetySourceEvidence(
             law_name=_required_law(cell),
             partition_name=finest,
-            result=read_verified_scientific_result(
-                cell, workspace_root, SafetyCaseEvaluation
-            ),
+            result=read_verified_scientific_result(cell, workspace_root, SafetyCaseEvaluation),
         )
         for cell in _cells(plan, "Safety and Intrinsic Impossibility")
     )
@@ -294,9 +284,7 @@ def _theorem_validation_observations(
     )
     observations.extend(_sharp_set_observations(plan, workspace_root))
     observations.extend(_refinement_observations(plan, workspace_root))
-    observations.extend(
-        _identity_observations(plan, workspace_root, "Strict Timing-Gain Identity")
-    )
+    observations.extend(_identity_observations(plan, workspace_root, "Strict Timing-Gain Identity"))
     observations.extend(_safety_boundary_observations(plan, workspace_root))
     observations.extend(
         _identity_observations(plan, workspace_root, "Endpoint Special-Case Identity")
@@ -366,9 +354,7 @@ def _convexity_observations(
     name = "Information Profile Convexity"
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
-    return tuple(
-        _convexity_observation(cell, workspace_root, name, primary) for cell in cells
-    )
+    return tuple(_convexity_observation(cell, workspace_root, name, primary) for cell in cells)
 
 
 def _convexity_observation(
@@ -444,9 +430,7 @@ def _safety_boundary_observations(
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
     for cell in cells:
-        result = read_verified_scientific_result(
-            cell, workspace_root, SafetyBoundaryCaseEvaluation
-        )
+        result = read_verified_scientific_result(cell, workspace_root, SafetyBoundaryCaseEvaluation)
         frontier_error = None if result.identity is None else result.identity.frontier_error
         observations.append(
             _theorem_observation(
@@ -552,7 +536,9 @@ def _band_count(
     try:
         return configured[name]
     except KeyError as exc:
-        raise InvalidScientificDataError(f"unknown configured partition in synthesis: {name}") from exc
+        raise InvalidScientificDataError(
+            f"unknown configured partition in synthesis: {name}"
+        ) from exc
 
 
 def _same_endpoint_timed_law(config: TrajCertConfig) -> LawName:
