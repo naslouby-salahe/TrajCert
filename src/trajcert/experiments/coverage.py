@@ -143,9 +143,7 @@ def _coverage_method_evidence(
 ) -> CoverageMethodEvidence:
     upper = None if not applicable else _clopper_pearson_upper(failures, streams)
     criterion = (
-        None
-        if upper is None
-        else upper <= float(config.sequential.coverage.acceptance_upper_limit)
+        None if upper is None else upper <= float(config.sequential.coverage.acceptance_upper_limit)
     )
     return CoverageMethodEvidence(
         method_name=method.value,
