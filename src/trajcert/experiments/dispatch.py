@@ -410,7 +410,9 @@ def _coverage_stress_case(cell: PlannedCell, config: TrajCertConfig) -> DomainMo
         expected_law = LAW_DISPLAY_NAMES[case.law]
         expected_partition = partition_name(case.band_count)
         if cell.identity.coordinates.synthetic_law_name != expected_law:
-            raise PhaseOneDispatchError("coverage-stress law coordinate does not match configuration")
+            raise PhaseOneDispatchError(
+                "coverage-stress law coordinate does not match configuration"
+            )
         if cell.identity.coordinates.partition_name != expected_partition:
             raise PhaseOneDispatchError(
                 "coverage-stress partition coordinate does not match configuration"

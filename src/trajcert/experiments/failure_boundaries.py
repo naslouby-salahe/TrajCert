@@ -282,9 +282,7 @@ def _summary(
     )
 
 
-def _population_state(
-    summary: ObservableSummary, solved, rho: SensitivityBudget, beta: RiskBudget
-):
+def _population_state(summary: ObservableSummary, solved, rho: SensitivityBudget, beta: RiskBudget):
     compatibility = solved.solve_result.compatibility
     minimum = compatibility.minimum_information_point
     compatibility_floor = None if minimum is None else float(minimum.information_floor)

@@ -13,7 +13,12 @@ from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.dispatch import execute_phase_one_cell
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.provenance import ExperimentNameValue
-from trajcert.reporting.source_data import AnalysisType, RhoUtilityRow, read_source_data, write_source_data
+from trajcert.reporting.source_data import (
+    AnalysisType,
+    RhoUtilityRow,
+    read_source_data,
+    write_source_data,
+)
 from trajcert.types import LawName
 
 _RUNTIME_STREAMS = 2
