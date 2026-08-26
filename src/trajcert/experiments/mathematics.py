@@ -180,7 +180,9 @@ def sharp_set_constructive_identity(
         abs(production_lower - oracle_lower),
         abs(production_upper - oracle_upper),
     )
-    mismatches = _sharp_grid_mismatches(summary, sensitivity_budget, production_lower, production_upper)
+    mismatches = _sharp_grid_mismatches(
+        summary, sensitivity_budget, production_lower, production_upper
+    )
     return SharpSetIdentityResult(
         passed=endpoint_error <= identity_atol and mismatches == 0,
         production_lower=production_lower,
