@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -55,10 +57,12 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> FiniteFl
     position = (values.size - 1) * float(probability)
     lower_index = int(np.floor(position))
     upper_index = int(np.ceil(position))
+    lower_value = float(cast(np.float64, values[lower_index]))
     if lower_index == upper_index:
-        return float(values[lower_index])
+        return lower_value
+    upper_value = float(cast(np.float64, values[upper_index]))
     weight = position - lower_index
-    return float(values[lower_index] + weight * (values[upper_index] - values[lower_index]))
+    return lower_value + weight * (upper_value - lower_value)
 
 
 def _validated_vector(values: Vector) -> NDArray[np.float64]:
