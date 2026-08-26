@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --extra quality --locked --no-build
-      - run: uv run --no-sync --no-build ruff format --diff src tools noxfile.py
+      - run: uv run --no-sync --no-build ruff format --check src tools noxfile.py
       - run: uv run --no-sync --no-build ruff check src tools noxfile.py
       - run: uv run --no-sync --no-build basedpyright
       - run: PYTHONPATH=src uv run --no-sync --no-build lint-imports
