@@ -24,27 +24,20 @@ _DIGEST = "0" * 64
 
 
 def test_computational_scaling_renderer_emits_svg_and_png(tmp_path: Path) -> None:
-    descriptor = next(
-        item
-        for item in figure_source_descriptors()
-        if item.source_path.stem == "figure_computational_scaling"
-    )
-    table = pa.table(
-        {
-            "K": [1, 2, 4],
-            "population_median_runtime_ms": [1.0, 1.5, 2.0],
-            "outer_median_runtime_ms": [2.0, 3.0, 4.0],
-            "median_outer_nodes": [10.0, 20.0, 40.0],
-        }
-    )
-    source = VerifiedSourceData(
-        descriptor=descriptor,
-        table=table,
-        lineage=_lineage(descriptor.source_path),
-    )
+    source = _scaling_source()
     rendered = render_figure(source, tmp_path)
     assert rendered.svg.destination_path.read_text(encoding="utf-8").startswith("<?xml")
     assert rendered.png.destination_path.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_figure_renderer_is_byte_deterministic(tmp_path: Path) -> None:
+    source = _scaling_source()
+    first = render_figure(source, tmp_path / "first")
+    second = render_figure(source, tmp_path / "second")
+    assert first.svg.destination_sha256 == second.svg.destination_sha256
+    assert first.png.destination_sha256 == second.png.destination_sha256
+    assert first.svg.destination_path.read_bytes() == second.svg.destination_path.read_bytes()
+    assert first.png.destination_path.read_bytes() == second.png.destination_path.read_bytes()
 
 
 def test_table_renderer_preserves_nulls_and_p_value_display_rule(tmp_path: Path) -> None:
@@ -67,6 +60,27 @@ def test_table_renderer_preserves_nulls_and_p_value_display_rule(tmp_path: Path)
     tex_text = rendered.tex.destination_path.read_text(encoding="utf-8")
     assert "<0.0001" in csv_text
     assert "\\text{null}" in tex_text
+
+
+def _scaling_source() -> VerifiedSourceData:
+    descriptor = next(
+        item
+        for item in figure_source_descriptors()
+        if item.source_path.stem == "figure_computational_scaling"
+    )
+    table = pa.table(
+        {
+            "K": [1, 2, 4],
+            "population_median_runtime_ms": [1.0, 1.5, 2.0],
+            "outer_median_runtime_ms": [2.0, 3.0, 4.0],
+            "median_outer_nodes": [10.0, 20.0, 40.0],
+        }
+    )
+    return VerifiedSourceData(
+        descriptor=descriptor,
+        table=table,
+        lineage=_lineage(descriptor.source_path),
+    )
 
 
 def _lineage(path: Path) -> VerifiedSourceLineage:
