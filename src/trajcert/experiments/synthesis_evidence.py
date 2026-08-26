@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from trajcert.config import TrajCertConfig
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
@@ -8,7 +10,7 @@ from trajcert.experiments.mathematics import (
     ConvexityResult,
     IdentityResult,
     RefinementIdentityResult,
-    SafetyBoundaryIdentityResult,
+    SafetyBoundaryCaseEvaluation,
     SharpSetIdentityResult,
 )
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
@@ -30,11 +32,11 @@ from trajcert.reporting.source_data import (
     CompatibilitySafetyRow,
     PartitionCoherenceFigureRow,
     PartitionTimingRow,
+    PopulationUtilitySourceEvidence,
     RhoUtilityRow,
     ScientificConsequence,
     TheoremName,
     TheoremValidationSummaryRow,
-    PopulationUtilitySourceEvidence,
     population_rho_utility_rows,
     sequential_rho_utility_rows,
 )
@@ -68,7 +70,7 @@ class SynthesisEvidenceBundle(DomainModel):
 
 def build_synthesis_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
     config: TrajCertConfig,
 ) -> SynthesisEvidenceBundle:
     population_source = _population_utility_evidence(plan, workspace_root)
@@ -115,7 +117,7 @@ def build_synthesis_evidence(
 
 def _population_utility_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[PopulationUtilitySourceEvidence, ...]:
     return tuple(
         PopulationUtilitySourceEvidence(
@@ -131,7 +133,7 @@ def _population_utility_evidence(
 
 def _sequential_utility_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[SequentialUtilityEvidence, ...]:
     return tuple(
         SequentialUtilityEvidence(
@@ -146,7 +148,7 @@ def _sequential_utility_evidence(
 
 def _partition_timing_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
     config: TrajCertConfig,
 ) -> tuple[PartitionTimingEvidence, ...]:
     band_counts = {partition_name(value): value for value in config.grids.partitions}
@@ -179,7 +181,7 @@ def _partition_timing_evidence(
 
 def _compatibility_floor_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[CompatibilityFloorSourceEvidence, ...]:
     return tuple(
         CompatibilityFloorSourceEvidence(
@@ -195,7 +197,7 @@ def _compatibility_floor_evidence(
 
 def _sharpness_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[SharpnessSourceEvidence, ...]:
     return tuple(
         SharpnessSourceEvidence(
@@ -211,7 +213,7 @@ def _sharpness_evidence(
 
 def _safety_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
     config: TrajCertConfig,
 ) -> tuple[SafetySourceEvidence, ...]:
     finest = partition_name(config.method.finest_bands)
@@ -252,7 +254,7 @@ def _population_figure_evidence(
 
 def _same_endpoint_figure_evidence(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
     config: TrajCertConfig,
 ) -> tuple[SameEndpointFigureEvidence, ...]:
     target = float(config.study_design.partition_coherence_figure_rho)
@@ -279,7 +281,7 @@ def _same_endpoint_figure_evidence(
 
 def _theorem_validation_observations(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
     observations: list[TheoremValidationObservation] = []
     observations.extend(_legacy_observations(plan, workspace_root))
@@ -308,30 +310,34 @@ def _theorem_validation_observations(
     return tuple(observations)
 
 
-def _legacy_observations(plan: ExperimentPlan, workspace_root) -> tuple[TheoremValidationObservation, ...]:
+def _legacy_observations(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[TheoremValidationObservation, ...]:
     name = "Legacy Partition Incoherence Check"
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
-    return tuple(
-        _theorem_observation(
-            name,
-            primary,
-            read_verified_scientific_result(
-                cell, workspace_root, LegacyPartitionIncoherenceResult
-            ).passed,
-            None,
-            read_verified_scientific_result(
-                cell, workspace_root, LegacyPartitionIncoherenceResult
-            ).endpoint_difference_magnitude,
-            "Legacy bandwise odds-ratio sensitivity changes under trajectory coarsening.",
+    observations: list[TheoremValidationObservation] = []
+    for cell in cells:
+        result = read_verified_scientific_result(
+            cell, workspace_root, LegacyPartitionIncoherenceResult
         )
-        for cell in cells
-    )
+        observations.append(
+            _theorem_observation(
+                name,
+                primary,
+                result.passed,
+                None,
+                result.endpoint_difference_magnitude,
+                "Legacy bandwise odds-ratio sensitivity changes under trajectory coarsening.",
+            )
+        )
+    return tuple(observations)
 
 
 def _identity_observations(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
     name: str,
 ) -> tuple[TheoremValidationObservation, ...]:
     cells = _cells(plan, name)
@@ -355,7 +361,7 @@ def _identity_observations(
 
 def _convexity_observations(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
     name = "Information Profile Convexity"
     cells = _cells(plan, name)
@@ -367,7 +373,7 @@ def _convexity_observations(
 
 def _convexity_observation(
     cell: PlannedCell,
-    workspace_root,
+    workspace_root: Path,
     name: str,
     primary: ArtifactKey,
 ) -> TheoremValidationObservation:
@@ -384,7 +390,7 @@ def _convexity_observation(
 
 def _sharp_set_observations(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
     name = "Sharp-Set Constructive Identity"
     cells = _cells(plan, name)
@@ -407,7 +413,7 @@ def _sharp_set_observations(
 
 def _refinement_observations(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
     name = "Refinement Dominance Identity"
     cells = _cells(plan, name)
@@ -431,7 +437,7 @@ def _refinement_observations(
 
 def _safety_boundary_observations(
     plan: ExperimentPlan,
-    workspace_root,
+    workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
     name = "Safety-Boundary Identity"
     cells = _cells(plan, name)
@@ -439,14 +445,15 @@ def _safety_boundary_observations(
     observations: list[TheoremValidationObservation] = []
     for cell in cells:
         result = read_verified_scientific_result(
-            cell, workspace_root, SafetyBoundaryIdentityResult
+            cell, workspace_root, SafetyBoundaryCaseEvaluation
         )
+        frontier_error = None if result.identity is None else result.identity.frontier_error
         observations.append(
             _theorem_observation(
                 name,
                 primary,
                 result.passed,
-                result.frontier_error,
+                frontier_error,
                 None,
                 "The interior safety frontier equals direct path information at the risk-budget boundary.",
             )
