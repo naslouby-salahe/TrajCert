@@ -14,7 +14,12 @@ from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.experiments.runner import cell_completion_path
 from trajcert.experiments.synthesis_execution import synthesis_artifact_keys
-from trajcert.paths import PROJECT_SUMMARY_ROOT, RESULTS_EXPERIMENTS_ROOT, RESULTS_ROOT, semantic_slug
+from trajcert.paths import (
+    PROJECT_SUMMARY_ROOT,
+    RESULTS_EXPERIMENTS_ROOT,
+    RESULTS_ROOT,
+    semantic_slug,
+)
 from trajcert.provenance import EnvironmentDigest, ExperimentNameValue
 from trajcert.reporting.figures import FigureRenderResult, render_figures
 from trajcert.reporting.source_data import (
@@ -43,7 +48,9 @@ from trajcert.storage import (
 _ROADMAP_PATH = Path("docs/TrajCert_Roadmap.md")
 _LOCK_PATH = Path("uv.lock")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
-_ALLOWED_EXPERIMENT_CHILDREN = frozenset({"figures", "tables", "metrics", "statistics", "source_data"})
+_ALLOWED_EXPERIMENT_CHILDREN = frozenset(
+    {"figures", "tables", "metrics", "statistics", "source_data"}
+)
 _ALLOWED_PROJECT_CHILDREN = frozenset({"figures", "tables", "source_data", "reproducibility"})
 
 
@@ -129,8 +136,12 @@ def _render_publication_tree(
     staged_target: Path,
     final_target: Path,
 ) -> tuple[RenderedPublicationArtifact, ...]:
-    tables = tuple(item for item in sources if item.descriptor.source_role is PublicationSourceRole.TABLE)
-    figures = tuple(item for item in sources if item.descriptor.source_role is PublicationSourceRole.FIGURE)
+    tables = tuple(
+        item for item in sources if item.descriptor.source_role is PublicationSourceRole.TABLE
+    )
+    figures = tuple(
+        item for item in sources if item.descriptor.source_role is PublicationSourceRole.FIGURE
+    )
     table_results = render_tables(tables, staged_target / "tables")
     figure_results = render_figures(figures, staged_target / "figures")
     _copy_sources(workspace_root, sources, staged_target / "source_data")
@@ -147,10 +158,14 @@ def _copy_sources(
         try:
             payload = source_path.read_bytes()
         except OSError as exc:
-            raise SerializationError(f"cannot copy verified publication source: {source_path}") from exc
+            raise SerializationError(
+                f"cannot copy verified publication source: {source_path}"
+            ) from exc
         copied_digest = atomic_write_bytes(destination / source_path.name, payload)
         if copied_digest != source.lineage.source_sha256:
-            raise SerializationError(f"copied publication source checksum changed: {source_path}")
+            raise SerializationError(
+                f"copied publication source checksum changed: {source_path}"
+            )
 
 
 def _finalized_render_paths(
@@ -159,14 +174,8 @@ def _finalized_render_paths(
     staged_target: Path,
     final_target: Path,
 ) -> tuple[RenderedPublicationArtifact, ...]:
-    staged = tuple(
-        artifact
-        for result in tables
-        for artifact in (result.csv, result.tex)
-    ) + tuple(
-        artifact
-        for result in figures
-        for artifact in (result.svg, result.png)
+    staged = tuple(artifact for result in tables for artifact in (result.csv, result.tex)) + tuple(
+        artifact for result in figures for artifact in (result.svg, result.png)
     )
     return tuple(
         artifact.model_copy(
@@ -245,7 +254,9 @@ def _source_commit(workspace_root: Path) -> str:
             text=True,
         )
     except (OSError, subprocess.CalledProcessError) as exc:
-        raise InvalidScientificDataError("cannot resolve source commit for reproducibility") from exc
+        raise InvalidScientificDataError(
+            "cannot resolve source commit for reproducibility"
+        ) from exc
     commit = result.stdout.strip()
     if len(commit) != 40:
         raise InvalidScientificDataError("resolved source commit is not a full Git SHA-1")
@@ -303,7 +314,9 @@ def _validate_results_layout(results_root: Path) -> None:
     if experiments.is_dir():
         for experiment in experiments.iterdir():
             if not experiment.is_dir():
-                raise InvalidScientificDataError("results/experiments contains a non-directory entry")
+                raise InvalidScientificDataError(
+                    "results/experiments contains a non-directory entry"
+                )
             invalid = {
                 item.name
                 for item in experiment.iterdir()
