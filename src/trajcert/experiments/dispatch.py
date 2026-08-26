@@ -19,16 +19,22 @@ from trajcert.experiments.mathematics import (
     refinement_dominance_identity,
     safety_boundary_identity,
     sharp_set_constructive_identity,
+    strict_timing_gain_identity,
 )
 from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.safety import compatibility_floor_behavior
 from trajcert.experiments.scaling import benchmark_scaling_cell
 from trajcert.experiments.solver_validation import compare_production_solver_to_oracle
+from trajcert.experiments.timing import (
+    evaluate_partition_coherence,
+    evaluate_same_endpoint_different_timing,
+    evaluate_strict_timing_gain,
+)
 from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyBudgetCase, safety_budget_cases
 from trajcert.paths import semantic_slug
 from trajcert.provenance import FailureBoundaryCoordinate, SensitivityCoordinate, VariantName
-from trajcert.types import DomainModel, LawName, PartitionName
+from trajcert.types import DomainModel, LawKey, LawName, PartitionName, SensitivityBudget
 
 
 class PhaseOneDispatchError(ValueError):
@@ -57,6 +63,62 @@ def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainM
         return refinement_dominance_identity(
             fine=fine,
             coarse_partition=coarse,
+            identity_atol=config.numerics.identity_atol,
+            comparison_guard=config.numerics.comparison_guard,
+        )
+    if name == "Strict Timing-Gain Identity":
+        fine, coarse = _refinement_inputs(cell, config)
+        return strict_timing_gain_identity(
+            fine=fine,
+            coarse_partition=coarse,
+            sensitivity_budget=_rho_from_offset(
+                fine, cell.identity.coordinates.sensitivity_coordinate
+            ),
+            root_atol=config.numerics.root_atol,
+            identity_atol=config.numerics.identity_atol,
+            comparison_guard=config.numerics.comparison_guard,
+        )
+    if name == "Partition Coherence":
+        fine, coarse = _refinement_inputs(cell, config)
+        return evaluate_partition_coherence(
+            fine=fine,
+            coarse_partition=coarse,
+            sensitivity_budget=_rho_from_offset(
+                fine, cell.identity.coordinates.sensitivity_coordinate
+            ),
+            root_atol=config.numerics.root_atol,
+            identity_atol=config.numerics.identity_atol,
+            comparison_guard=config.numerics.comparison_guard,
+        )
+    if name == "Same Endpoint, Different Timing":
+        partition = _partition_from_coordinates(cell, config)
+        rho = _direct_rho(cell)
+        no_timing = _population_summary(
+            _law_from_name(LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_NO_TIMING], config),
+            partition,
+            config,
+        )
+        with_timing = _population_summary(
+            _law_from_name(LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING], config),
+            partition,
+            config,
+        )
+        return evaluate_same_endpoint_different_timing(
+            no_timing=no_timing,
+            with_timing=with_timing,
+            sensitivity_budget=rho,
+            root_atol=config.numerics.root_atol,
+            identity_atol=config.numerics.identity_atol,
+        )
+    if name == "Strict Timing Gain":
+        fine, coarse = _refinement_inputs(cell, config)
+        return evaluate_strict_timing_gain(
+            fine=fine,
+            coarse_partition=coarse,
+            sensitivity_budget=_rho_from_offset(
+                fine, cell.identity.coordinates.sensitivity_coordinate
+            ),
+            root_atol=config.numerics.root_atol,
             identity_atol=config.numerics.identity_atol,
             comparison_guard=config.numerics.comparison_guard,
         )
@@ -250,12 +312,19 @@ def _partition_named(name: PartitionName, config: TrajCertConfig) -> TrajectoryP
 def _rho_from_offset(
     summary: ObservableSummary,
     coordinate: SensitivityCoordinate | None,
-) -> float:
+) -> SensitivityBudget:
     prefix = "rho-offset="
     if coordinate is None or not str(coordinate).startswith(prefix):
         raise PhaseOneDispatchError("rho-offset cell is missing its sensitivity coordinate")
     offset = float(str(coordinate)[len(prefix) :])
     return float(observed_timing_information(summary) or 0.0) + offset
+
+
+def _direct_rho(cell: PlannedCell) -> SensitivityBudget:
+    rho = cell.identity.coordinates.rho
+    if rho is None:
+        raise PhaseOneDispatchError("scientific cell is missing its rho coordinate")
+    return rho
 
 
 def _variant_index(variant: VariantName | None, prefix: str) -> int:
