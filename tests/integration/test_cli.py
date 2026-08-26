@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from trajcert import cli
+from trajcert.cli import DoctorResult
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.operator import DoctorResult
 from trajcert.reporting.export import ReportExportResult
 from trajcert.types import CliCommand
 

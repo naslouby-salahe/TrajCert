@@ -115,7 +115,6 @@ _RESULT_FILENAME = "scientific_result.json"
 
 _NON_SCIENTIFIC_MODULE_PREFIXES = (
     "trajcert.cli",
-    "trajcert.operator",
     "trajcert.reporting.export",
     "trajcert.reporting.figures",
     "trajcert.reporting.tables",
@@ -318,15 +317,18 @@ def run_cell(
             failure_path=failure_path,
             reason=dependency_reason,
         )
-    if completion_path.is_file() and not overwrite:
-        if completion_is_compatible(cell, context, completion_path):
-            return CellRunOutcome(
-                state=PublicExecutionState.COMPLETED,
-                reused=True,
-                completion_path=completion_path,
-                failure_path=failure_path,
-                reason=None,
-            )
+    if (
+        completion_path.is_file()
+        and not overwrite
+        and completion_is_compatible(cell, context, completion_path)
+    ):
+        return CellRunOutcome(
+            state=PublicExecutionState.COMPLETED,
+            reused=True,
+            completion_path=completion_path,
+            failure_path=failure_path,
+            reason=None,
+        )
     completion_path.unlink(missing_ok=True)
     failure_path.unlink(missing_ok=True)
     running_record = RunningRecord(
