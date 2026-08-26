@@ -36,6 +36,11 @@ _METHOD_NAME = MethodName("TrajCert finest trajectory partition")
 _BASELINE_NAME = BaselineName("Endpoint-only partition")
 
 
+class SequentialUtilityEvidence(DomainModel):
+    law_name: LawName
+    result: SequentialUtilityResult
+
+
 class PairedSeries(DomainModel):
     semantic_comparison_key: SemanticComparisonKey
     law_name: LawName
@@ -69,6 +74,39 @@ class TrajectoryOperationalGainSynthesis(DomainModel):
     tests: tuple[PairedInferenceResult, ...]
     family_size: PositiveInt
     materiality: SequentialMaterialitySummary
+
+
+def synthesize_from_sequential_utility(
+    evidence: tuple[SequentialUtilityEvidence, ...],
+    config: TrajCertConfig,
+) -> TrajectoryOperationalGainSynthesis:
+    expected = _expected_utility_keys(config)
+    supplied = tuple(
+        (item.law_name, float(item.result.sensitivity_budget)) for item in evidence
+    )
+    if len(supplied) != len(set(supplied)):
+        raise InvalidScientificDataError("sequential utility synthesis input contains duplicates")
+    if set(supplied) != set(expected):
+        missing = set(expected).difference(supplied)
+        extra = set(supplied).difference(expected)
+        message = (
+            "sequential utility synthesis input mismatch: "
+            f"missing={len(missing)}, extra={len(extra)}"
+        )
+        raise InvalidScientificDataError(message)
+    by_key = {
+        (item.law_name, float(item.result.sensitivity_budget)): item for item in evidence
+    }
+    series = tuple(
+        paired
+        for key in expected
+        for paired in paired_series_from_sequential_utility(
+            law_name=by_key[key].law_name,
+            result=by_key[key].result,
+            config=config,
+        )
+    )
+    return synthesize_trajectory_operational_gain(series, config)
 
 
 def paired_series_from_sequential_utility(
@@ -283,21 +321,32 @@ def _never_certified_fractions(
     return method_fraction, baseline_fraction
 
 
-def _expected_family_keys(
+def _expected_utility_keys(
     config: TrajCertConfig,
-) -> tuple[tuple[LawName, float, PracticalMetric], ...]:
+) -> tuple[tuple[LawName, float], ...]:
+    law_names = tuple(
+        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
+    )
+    rho_values = tuple(float(value) for value in config.sequential.utility.rho)
     definition = next(
         item
         for item in authoritative_registry()
         if str(item.experiment_name) == "Sequential Sensitivity Utility"
     )
-    rho_values = tuple(float(value) for value in config.sequential.utility.rho)
-    law_names = tuple(
-        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
-    )
-    if definition.declared_cells != len(law_names) * len(rho_values):
+    expected = tuple(product(law_names, rho_values))
+    if definition.declared_cells != len(expected):
         raise InvalidScientificDataError("sequential utility registry expansion is inconsistent")
-    return tuple(product(law_names, rho_values, tuple(PracticalMetric)))
+    return expected
+
+
+def _expected_family_keys(
+    config: TrajCertConfig,
+) -> tuple[tuple[LawName, float, PracticalMetric], ...]:
+    return tuple(
+        (law_name, rho, metric)
+        for law_name, rho in _expected_utility_keys(config)
+        for metric in PracticalMetric
+    )
 
 
 def _comparison_key(
