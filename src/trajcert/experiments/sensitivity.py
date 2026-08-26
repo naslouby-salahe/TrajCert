@@ -1,0 +1,233 @@
+from __future__ import annotations
+
+from statistics import mean
+
+from trajcert.config import TrajCertConfig
+from trajcert.data.laws import LawParameters
+from trajcert.data.maturity import mature_ledger
+from trajcert.data.partitions import TrajectoryPartition, build_partition
+from trajcert.data.summaries import ObservableSummary
+from trajcert.data.synthetic import generate_stochastic_ledger
+from trajcert.experiments.anytime import SequentialCheckpoint, run_sequential_trace
+from trajcert.math.bounds import sharp_risk_set, unresolved_as_harm_upper
+from trajcert.math.information import observed_timing_information
+from trajcert.types import (
+    CompatibilityRegime,
+    DomainModel,
+    FiniteFloat,
+    InformationNats,
+    RiskValue,
+    ScientificState,
+    SeedIndex,
+    SensitivityBudget,
+)
+
+
+class PopulationUtilityResult(DomainModel):
+    sensitivity_budget: SensitivityBudget
+    compatibility_regime: CompatibilityRegime
+    tau: InformationNats | None
+    risk_lower: RiskValue | None
+    risk_upper: RiskValue | None
+    identified_width: FiniteFloat | None
+    unresolved_as_harm_upper: RiskValue
+    absolute_tightening: FiniteFloat | None
+    relative_unresolved_gain: FiniteFloat | None
+    materially_nonvacuous: bool
+
+
+class SequentialStreamUtility(DomainModel):
+    stream_index: SeedIndex
+    fine_certified_update_fraction: float
+    endpoint_certified_update_fraction: float
+    certified_update_fraction_gain: float
+    fine_time_to_first_certification: int | None
+    endpoint_time_to_first_certification: int | None
+    fine_mean_anytime_upper_risk: float
+    endpoint_mean_anytime_upper_risk: float
+    mean_bound_gain: float
+
+
+class SequentialUtilityResult(DomainModel):
+    sensitivity_budget: SensitivityBudget
+    streams: tuple[SequentialStreamUtility, ...]
+    mean_certified_update_fraction_gain: float
+    mean_bound_gain: float
+
+
+def population_sensitivity_utility(
+    summary: ObservableSummary,
+    sensitivity_budget: SensitivityBudget,
+    config: TrajCertConfig,
+) -> PopulationUtilityResult:
+    solved = sharp_risk_set(
+        summary=summary,
+        sensitivity_budget=sensitivity_budget,
+        root_atol=config.numerics.root_atol,
+        identity_atol=config.numerics.identity_atol,
+    )
+    tau_value = observed_timing_information(summary)
+    tau = None if tau_value is None else float(tau_value)
+    worst = float(unresolved_as_harm_upper(summary))
+    if solved.latent_risk is None:
+        return PopulationUtilityResult(
+            sensitivity_budget=sensitivity_budget,
+            compatibility_regime=solved.solve_result.compatibility.regime,
+            tau=tau,
+            risk_lower=None,
+            risk_upper=None,
+            identified_width=None,
+            unresolved_as_harm_upper=worst,
+            absolute_tightening=None,
+            relative_unresolved_gain=None,
+            materially_nonvacuous=False,
+        )
+    lower = float(solved.latent_risk.lower)
+    upper = float(solved.latent_risk.upper)
+    width = float(solved.latent_risk.width)
+    tightening = worst - upper
+    unresolved = float(summary.unresolved_mass)
+    relative = None if unresolved == 0.0 else tightening / unresolved
+    materially_nonvacuous = (
+        solved.solve_result.compatibility.regime is not CompatibilityRegime.MODEL_INCOMPATIBLE
+        and tightening >= config.materiality.population.absolute_tightening
+        and relative is not None
+        and relative >= config.materiality.population.relative_unresolved_gain
+    )
+    return PopulationUtilityResult(
+        sensitivity_budget=sensitivity_budget,
+        compatibility_regime=solved.solve_result.compatibility.regime,
+        tau=tau,
+        risk_lower=lower,
+        risk_upper=upper,
+        identified_width=width,
+        unresolved_as_harm_upper=worst,
+        absolute_tightening=tightening,
+        relative_unresolved_gain=relative,
+        materially_nonvacuous=materially_nonvacuous,
+    )
+
+
+def sequential_sensitivity_utility(
+    parameters: LawParameters,
+    fine_partition: TrajectoryPartition,
+    config: TrajCertConfig,
+    sensitivity_budget: SensitivityBudget,
+) -> SequentialUtilityResult:
+    if fine_partition.band_count != config.method.finest_bands:
+        raise ValueError("sequential utility requires the configured finest partition")
+    endpoint_partition = build_partition(
+        finest_band_count=fine_partition.finest_band_count,
+        band_count=1,
+        terminal_horizon=fine_partition.terminal_horizon,
+    )
+    streams = tuple(
+        _sequential_stream_utility(
+            parameters=parameters,
+            fine_partition=fine_partition,
+            endpoint_partition=endpoint_partition,
+            config=config,
+            sensitivity_budget=sensitivity_budget,
+            stream_index=stream_index,
+        )
+        for stream_index in range(int(config.sequential.utility.streams))
+    )
+    return SequentialUtilityResult(
+        sensitivity_budget=sensitivity_budget,
+        streams=streams,
+        mean_certified_update_fraction_gain=mean(
+            stream.certified_update_fraction_gain for stream in streams
+        ),
+        mean_bound_gain=mean(stream.mean_bound_gain for stream in streams),
+    )
+
+
+def _sequential_stream_utility(
+    parameters: LawParameters,
+    fine_partition: TrajectoryPartition,
+    endpoint_partition: TrajectoryPartition,
+    config: TrajCertConfig,
+    sensitivity_budget: SensitivityBudget,
+    stream_index: SeedIndex,
+) -> SequentialStreamUtility:
+    ledger = generate_stochastic_ledger(
+        parameters=parameters,
+        partition=fine_partition,
+        stream_index=stream_index,
+        event_count=config.sequential.utility.max_events,
+    )
+    fine_events = mature_ledger(ledger, fine_partition)
+    endpoint_events = mature_ledger(ledger, endpoint_partition)
+    fine_trace = run_sequential_trace(
+        events=fine_events,
+        identity=ledger.identity,
+        partition=fine_partition,
+        config=config,
+        sensitivity_budget=sensitivity_budget,
+        risk_budget=config.budgets.risk,
+        checkpoint_every=config.sequential.utility.checkpoint_every,
+    )
+    endpoint_trace = run_sequential_trace(
+        events=endpoint_events,
+        identity=ledger.identity,
+        partition=endpoint_partition,
+        config=config,
+        sensitivity_budget=sensitivity_budget,
+        risk_budget=config.budgets.risk,
+        checkpoint_every=config.sequential.utility.checkpoint_every,
+    )
+    if len(fine_trace.checkpoints) != len(endpoint_trace.checkpoints):
+        raise ValueError("paired sequential utility traces have different checkpoint counts")
+    pairs = tuple(zip(fine_trace.checkpoints, endpoint_trace.checkpoints, strict=True))
+    eligible_pairs = tuple(
+        pair for pair in pairs if _eligible(pair[0], config) and _eligible(pair[1], config)
+    )
+    fine_checkpoints = tuple(pair[0] for pair in eligible_pairs)
+    endpoint_checkpoints = tuple(pair[1] for pair in eligible_pairs)
+    fine_fraction = _certified_fraction(fine_checkpoints)
+    endpoint_fraction = _certified_fraction(endpoint_checkpoints)
+    fine_risk = _mean_anytime_upper_risk(fine_checkpoints)
+    endpoint_risk = _mean_anytime_upper_risk(endpoint_checkpoints)
+    return SequentialStreamUtility(
+        stream_index=stream_index,
+        fine_certified_update_fraction=fine_fraction,
+        endpoint_certified_update_fraction=endpoint_fraction,
+        certified_update_fraction_gain=fine_fraction - endpoint_fraction,
+        fine_time_to_first_certification=_time_to_first_certification(fine_checkpoints),
+        endpoint_time_to_first_certification=_time_to_first_certification(endpoint_checkpoints),
+        fine_mean_anytime_upper_risk=fine_risk,
+        endpoint_mean_anytime_upper_risk=endpoint_risk,
+        mean_bound_gain=endpoint_risk - fine_risk,
+    )
+
+
+def _eligible(checkpoint: SequentialCheckpoint, config: TrajCertConfig) -> bool:
+    return (
+        checkpoint.matured_count >= config.minimum_evidence.matured_events
+        and checkpoint.resolved_count >= config.minimum_evidence.resolved_events
+    )
+
+
+def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]) -> float:
+    if not checkpoints:
+        return 0.0
+    certified = sum(
+        checkpoint.assessment.scientific_state is ScientificState.CERTIFIED
+        for checkpoint in checkpoints
+    )
+    return certified / len(checkpoints)
+
+
+def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]) -> float:
+    if not checkpoints:
+        return 1.0
+    return mean(float(checkpoint.projection.proven_upper) for checkpoint in checkpoints)
+
+
+def _time_to_first_certification(
+    checkpoints: tuple[SequentialCheckpoint, ...],
+) -> int | None:
+    for checkpoint in checkpoints:
+        if checkpoint.assessment.scientific_state is ScientificState.CERTIFIED:
+            return checkpoint.matured_count
+    return None

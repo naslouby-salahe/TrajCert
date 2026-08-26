@@ -8,8 +8,7 @@ laws:
   timing_harmful_late: {theta: 0.05, q1: 0.1, q0: 0.1, lambda1: 0.45, lambda0: -0.15}
   terminal_harmful_unresolved: {theta: 0.05, q1: 0.3, q0: 0.05, lambda1: 0.0, lambda0: 0.0}
   timing_terminal_harmful_late: {theta: 0.05, q1: 0.3, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
-  timing_terminal_harmful_early: {theta: 0.05, q1: 0.05, q0: 0.3, lambda1: -0.45,
-    lambda0: 0.15}
+  timing_terminal_harmful_early: {theta: 0.05, q1: 0.05, q0: 0.3, lambda1: -0.45, lambda0: 0.15}
   high_unresolvedness: {theta: 0.05, q1: 0.7, q0: 0.4, lambda1: 0.35, lambda0: -0.1}
   low_prevalence: {theta: 0.01, q1: 0.3, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
   high_prevalence: {theta: 0.2, q1: 0.3, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
@@ -20,12 +19,63 @@ laws:
 grids:
   partitions: [8, 4, 2, 1]
   scaling_bands: [1, 2, 4, 8, 16, 32, 64, 128]
-  rho: [0, 0.0025, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4,
-    0.5]
+  rho: [0, 0.0025, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]
+  same_endpoint_rho: [0.01, 0.05, 0.10, 0.20, 0.40]
   beta: [0.01, 0.025, 0.05, 0.1, 0.2]
-numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12,
-  oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000,
-  arbitrary_precision_bits: 128, float_roundoff_ulps: 32.0}
+study_design:
+  utility_and_coherence_laws:
+    - no_path_dependence
+    - timing_harmful_late
+    - terminal_harmful_unresolved
+    - timing_terminal_harmful_late
+    - high_unresolvedness
+    - low_prevalence
+  sharpness_oracle_laws:
+    - no_path_dependence
+    - timing_harmful_late
+    - terminal_harmful_unresolved
+    - timing_terminal_harmful_late
+    - timing_terminal_harmful_early
+    - high_unresolvedness
+    - low_prevalence
+    - high_prevalence
+    - intrinsic_impossibility
+    - near_degeneracy
+  safety_and_impossibility_laws:
+    - no_path_dependence
+    - timing_harmful_late
+    - terminal_harmful_unresolved
+    - timing_terminal_harmful_late
+    - timing_terminal_harmful_early
+    - high_unresolvedness
+    - low_prevalence
+    - intrinsic_impossibility
+  strict_timing_cases:
+    - {law: no_path_dependence, fine_bands: 8, coarse_bands: 4, expectation: ZERO}
+    - {law: terminal_harmful_unresolved, fine_bands: 8, coarse_bands: 4, expectation: ZERO}
+    - {law: same_endpoint_no_timing, fine_bands: 8, coarse_bands: 2, expectation: ZERO}
+    - {law: timing_harmful_late, fine_bands: 8, coarse_bands: 4, expectation: POSITIVE}
+    - {law: timing_terminal_harmful_late, fine_bands: 8, coarse_bands: 4, expectation: POSITIVE}
+    - {law: same_endpoint_with_timing, fine_bands: 8, coarse_bands: 2, expectation: POSITIVE}
+  legacy_partition_incoherence:
+    gamma: [1.5, 2, 4]
+    q: [0.1, 0.3]
+    latent_outcome_probabilities: [0.5, 0.5]
+  coverage_stress_cases:
+    - {name: "Independent resolution control", law: no_path_dependence, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Timing-only harmful-late stress", law: timing_harmful_late, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Terminal-selection harmful-unresolved stress", law: terminal_harmful_unresolved, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Timing-and-terminal harmful-late stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Timing-and-terminal harmful-early stress", law: timing_terminal_harmful_early, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "High unresolvedness stress", law: high_unresolvedness, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Low error-prevalence stress", law: low_prevalence, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Near-degeneracy stress", law: near_degeneracy, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Sixteen-band resolution stress", law: timing_terminal_harmful_late, band_count: 16, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Thirty-two-band resolution stress", law: timing_terminal_harmful_late, band_count: 32, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Minimum-information completion stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.002, sensitivity_reference: COMPATIBILITY_FLOOR, minimum_information_completion: true}
+    - {name: "Near-certification risk-budget stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION, beta_offset: 0.002}
+  partition_coherence_figure_rho: 0.10
+numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, float_roundoff_ulps: 32.0}
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
   pattern_mixture:
@@ -43,8 +93,7 @@ sequential:
     rho: [0.05, 0.1, 0.2]
 statistics: {bootstrap_resamples: 10000, sign_flip_randomizations: 20000}
 materiality:
-  population: {absolute_tightening: 0.005, relative_unresolved_gain: 0.2, qualifying_laws: 3,
-    compatible_rho_values: 2}
+  population: {absolute_tightening: 0.005, relative_unresolved_gain: 0.2, qualifying_laws: 3, compatible_rho_values: 2}
   sequential: {certified_fraction_gain: 0.05, qualifying_laws: 3}
 benchmark: {warmup_repetitions: 5, measured_repetitions: 30}
 failure_boundary:
@@ -55,3 +104,13 @@ failure_boundary:
   information_margin: [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05]
   risk_offset: [-0.05, -0.02, -0.005, 0, 0.005, 0.02, 0.05]
   sample_size: [25, 50, 100, 200, 500, 1000, 2000]
+  terminal_selection_asymmetry:
+    - [0.01, 0.50]
+    - [0.02, 0.40]
+    - [0.05, 0.30]
+    - [0.10, 0.10]
+    - [0.30, 0.05]
+    - [0.40, 0.02]
+    - [0.50, 0.01]
+  optimizer_nodes: [1000, 5000, 20000, 100000, 500000, 1000000, 2000000]
+  optimizer_sample_size: 500

@@ -3,11 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
-from trajcert.config import (
-    RunnerOverrides,
-    TrajCertConfig,
-)
+from trajcert.config import TrajCertConfig
+from trajcert.exceptions import ConfigurationError
 
 CONFIG_PATH = Path("configs/trajcert.yaml")
 
@@ -17,52 +16,25 @@ def test_root_model_owns_yaml_loading() -> None:
 
     assert configuration.schema_version == 1
     assert len(configuration.laws) == 12
+    assert configuration.method.finest_bands == configuration.grids.partitions[0]
+    assert configuration.study_design.partition_coherence_figure_rho == pytest.approx(0.10)
 
 
-def test_runner_overrides_change_only_runner_fields() -> None:
-    configuration = TrajCertConfig.from_yaml(CONFIG_PATH)
-    overrides = RunnerOverrides.model_validate(
-        {
-            "sequential": {
-                "coverage": {
-                    "streams": 4,
-                    "max_events": 40,
-                    "checkpoint_every": 20,
-                },
-                "utility": {
-                    "streams": 3,
-                },
-            },
-            "benchmark": {
-                "warmup_repetitions": 0,
-                "measured_repetitions": 2,
-            },
-        }
-    )
+def test_yaml_loading_rejects_unknown_top_level_key(tmp_path: Path) -> None:
+    payload = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
+    payload["unexpected"] = {"value": 1}
+    path = tmp_path / "invalid.yaml"
+    path.write_text(yaml.safe_dump(payload), encoding="utf-8")
 
-    updated = configuration.with_runner_overrides(overrides)
-
-    assert updated.sequential.coverage.streams == 4
-    assert updated.sequential.coverage.max_events == 40
-    assert updated.sequential.coverage.checkpoint_every == 20
-    assert updated.sequential.utility.streams == 3
-    assert updated.sequential.utility.max_events == configuration.sequential.utility.max_events
-    assert updated.benchmark.warmup_repetitions == 0
-    assert updated.benchmark.measured_repetitions == 2
-    assert updated.grids == configuration.grids
+    with pytest.raises(ConfigurationError):
+        TrajCertConfig.from_yaml(path)
 
 
-def test_runner_overrides_receive_full_validation() -> None:
-    configuration = TrajCertConfig.from_yaml(CONFIG_PATH)
-    overrides = RunnerOverrides.model_validate(
-        {
-            "sequential": {
-                "coverage": {
-                    "max_events": 10,
-                }
-            }
-        }
-    )
+def test_cross_section_validation_rejects_non_nested_partitions(tmp_path: Path) -> None:
+    payload = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
+    payload["grids"]["partitions"] = [8, 3, 2, 1]
+    path = tmp_path / "invalid-partitions.yaml"
+    path.write_text(yaml.safe_dump(payload), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="checkpoint_every"):
-        configuration.with_runner_overrides(overrides)
+    with pytest.raises(ConfigurationError, match="nested"):
+        TrajCertConfig.from_yaml(path)
