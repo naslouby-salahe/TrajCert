@@ -20,7 +20,9 @@ from trajcert.types import (
 class SolverOracleComparison(DomainModel):
     sensitivity_budget: SensitivityBudget
     compatibility_regime: CompatibilityRegime
+    oracle_regime: CompatibilityRegime
     tau: InformationNats | None
+    theta_dagger: RiskValue | None
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
     passed: bool
@@ -79,11 +81,14 @@ def compare_production_solver_to_oracle(
         resolved_harmful = float(summary.resolved_harmful_mass)
         risk_lower = resolved_harmful + float(production.interval.lower)
         risk_upper = resolved_harmful + float(production.interval.upper)
+    minimum = production.compatibility.minimum_information_point
     tau_value = observed_timing_information(summary)
     return SolverOracleComparison(
         sensitivity_budget=sensitivity_budget,
         compatibility_regime=production.compatibility.regime,
+        oracle_regime=oracle.regime,
         tau=None if tau_value is None else float(tau_value),
+        theta_dagger=None if minimum is None else float(minimum.latent_risk),
         risk_lower=risk_lower,
         risk_upper=risk_upper,
         passed=passed,
