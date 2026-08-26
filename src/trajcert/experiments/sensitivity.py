@@ -128,7 +128,7 @@ def sequential_sensitivity_utility(
             endpoint_partition=endpoint_partition,
             config=config,
             sensitivity_budget=sensitivity_budget,
-            stream_index=SeedIndex(stream_index),
+            stream_index=stream_index,
         )
         for stream_index in range(int(config.sequential.utility.streams))
     )
