@@ -3,6 +3,7 @@ from __future__ import annotations
 from itertools import product
 
 import numpy as np
+from numpy.typing import NDArray
 
 from trajcert.analysis.aggregation import PairedEffectSummary, summarize_paired_differences
 from trajcert.analysis.bootstrap import PercentileBootstrapInterval, paired_percentile_bootstrap
@@ -11,13 +12,14 @@ from trajcert.analysis.materiality import (
     SequentialMaterialitySummary,
     evaluate_sequential_materiality,
 )
-from trajcert.analysis.metrics import MetricName, PracticalMetric
+from trajcert.analysis.metrics import MetricName, PracticalMetric, numeric_first_certification
 from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust
 from trajcert.analysis.sign_flip import SignFlipResult, one_sided_sign_flip
 from trajcert.config import TrajCertConfig
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.registry import authoritative_registry
+from trajcert.experiments.sensitivity import SequentialUtilityResult
 from trajcert.provenance import BaselineName, MethodName
 from trajcert.types import (
     DomainModel,
@@ -29,6 +31,9 @@ from trajcert.types import (
     SemanticComparisonKey,
     Vector,
 )
+
+_METHOD_NAME = MethodName("TrajCert finest trajectory partition")
+_BASELINE_NAME = BaselineName("Endpoint-only partition")
 
 
 class PairedSeries(DomainModel):
@@ -66,6 +71,59 @@ class TrajectoryOperationalGainSynthesis(DomainModel):
     materiality: SequentialMaterialitySummary
 
 
+def paired_series_from_sequential_utility(
+    law_name: LawName,
+    result: SequentialUtilityResult,
+    config: TrajCertConfig,
+) -> tuple[PairedSeries, ...]:
+    rho = result.sensitivity_budget
+    max_events = config.sequential.utility.max_events
+    risk_method = np.asarray(
+        [stream.fine_mean_anytime_upper_risk for stream in result.streams], dtype=np.float64
+    )
+    risk_baseline = np.asarray(
+        [stream.endpoint_mean_anytime_upper_risk for stream in result.streams], dtype=np.float64
+    )
+    time_method = np.asarray(
+        [
+            numeric_first_certification(stream.fine_time_to_first_certification, max_events)
+            for stream in result.streams
+        ],
+        dtype=np.float64,
+    )
+    time_baseline = np.asarray(
+        [
+            numeric_first_certification(stream.endpoint_time_to_first_certification, max_events)
+            for stream in result.streams
+        ],
+        dtype=np.float64,
+    )
+    fraction_method = np.asarray(
+        [stream.fine_certified_update_fraction for stream in result.streams], dtype=np.float64
+    )
+    fraction_baseline = np.asarray(
+        [stream.endpoint_certified_update_fraction for stream in result.streams], dtype=np.float64
+    )
+    values = (
+        (PracticalMetric.ANYTIME_UPPER_RISK, risk_method, risk_baseline),
+        (PracticalMetric.TIME_TO_FIRST_CERTIFICATION, time_method, time_baseline),
+        (PracticalMetric.CERTIFIED_UPDATE_FRACTION, fraction_method, fraction_baseline),
+    )
+    return tuple(
+        PairedSeries(
+            semantic_comparison_key=_comparison_key(law_name, rho, metric),
+            law_name=law_name,
+            sensitivity_budget=rho,
+            metric_name=metric,
+            method_name=_METHOD_NAME,
+            baseline_name=_BASELINE_NAME,
+            method_values=method_values,
+            baseline_values=baseline_values,
+        )
+        for metric, method_values, baseline_values in values
+    )
+
+
 def synthesize_trajectory_operational_gain(
     paired_series: tuple[PairedSeries, ...],
     config: TrajCertConfig,
@@ -81,9 +139,11 @@ def synthesize_trajectory_operational_gain(
     if set(supplied_keys) != expected_keys:
         missing = expected_keys.difference(supplied_keys)
         extra = set(supplied_keys).difference(expected_keys)
-        raise InvalidScientificDataError(
-            f"trajectory operational gain family mismatch: missing={len(missing)}, extra={len(extra)}"
+        message = (
+            "trajectory operational gain family mismatch: "
+            f"missing={len(missing)}, extra={len(extra)}"
         )
+        raise InvalidScientificDataError(message)
     series_by_key = {
         (series.law_name, float(series.sensitivity_budget), series.metric_name): series
         for series in paired_series
@@ -211,8 +271,8 @@ def _apply_adjusted_inference(
 
 def _never_certified_fractions(
     metric_name: PracticalMetric,
-    method_values: np.ndarray,
-    baseline_values: np.ndarray,
+    method_values: NDArray[np.float64],
+    baseline_values: NDArray[np.float64],
     config: TrajCertConfig,
 ) -> tuple[Probability | None, Probability | None]:
     if metric_name is not PracticalMetric.TIME_TO_FIRST_CERTIFICATION:
@@ -232,12 +292,19 @@ def _expected_family_keys(
         if str(item.experiment_name) == "Sequential Sensitivity Utility"
     )
     rho_values = tuple(float(value) for value in config.sequential.utility.rho)
-    if definition.declared_cells % len(rho_values) != 0:
+    law_names = tuple(
+        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
+    )
+    if definition.declared_cells != len(law_names) * len(rho_values):
         raise InvalidScientificDataError("sequential utility registry expansion is inconsistent")
-    law_count = definition.declared_cells // len(rho_values)
-    law_names = tuple(LAW_DISPLAY_NAMES[key] for key, _ in config.ordered_laws[:law_count])
-    if len(law_names) != law_count:
-        raise InvalidScientificDataError(
-            "configured law set cannot satisfy sequential utility registry"
-        )
     return tuple(product(law_names, rho_values, tuple(PracticalMetric)))
+
+
+def _comparison_key(
+    law_name: LawName,
+    sensitivity_budget: SensitivityBudget,
+    metric: PracticalMetric,
+) -> SemanticComparisonKey:
+    return SemanticComparisonKey(
+        f"Sequential Sensitivity Utility|{law_name}|rho={float(sensitivity_budget):.17g}|{metric.value}"
+    )
