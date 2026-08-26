@@ -3,10 +3,12 @@ from __future__ import annotations
 import pytest
 
 from trajcert.analysis.locality import (
+    LocalValidityTarget,
     RuntimeLineageArtifact,
     ScientificInputClass,
     StaticComponentDependency,
     audit_local_validity,
+    audit_local_validity_targets,
 )
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.exceptions import InvalidScientificDataError
@@ -33,6 +35,7 @@ def test_local_bound_lineage_accepts_only_target_identity() -> None:
     )
     result = audit_local_validity(identity, dependencies, root.artifact_key, (source, root))
     assert result.passed
+    assert result.audited_root_count == 1
     assert result.foreign_scientific_parent_count == 0
 
 
@@ -56,6 +59,54 @@ def test_local_bound_lineage_rejects_foreign_scientific_parent() -> None:
     result = audit_local_validity(identity, dependencies, root.artifact_key, (foreign, root))
     assert not result.passed
     assert result.violating_artifact_keys == (foreign.artifact_key,)
+
+
+def test_multi_root_audit_aggregates_all_bound_roots_and_violations() -> None:
+    identity = _identity()
+    first_root = RuntimeLineageArtifact(
+        artifact_key=ArtifactKey("first-bound"),
+        client_id=identity.client_id,
+        action_channel_id=identity.action_channel_id,
+        epoch_id=identity.epoch_id,
+    )
+    foreign_parent = RuntimeLineageArtifact(
+        artifact_key=ArtifactKey("foreign-parent"),
+        client_id=ClientId("foreign-client"),
+        action_channel_id=identity.action_channel_id,
+        epoch_id=identity.epoch_id,
+    )
+    second_root = RuntimeLineageArtifact(
+        artifact_key=ArtifactKey("second-bound"),
+        parent_artifact_keys=(foreign_parent.artifact_key,),
+        client_id=identity.client_id,
+        action_channel_id=identity.action_channel_id,
+        epoch_id=identity.epoch_id,
+    )
+    targets = (
+        LocalValidityTarget(
+            target_identity=identity,
+            root_artifact_key=first_root.artifact_key,
+            lineage_artifacts=(first_root,),
+        ),
+        LocalValidityTarget(
+            target_identity=identity,
+            root_artifact_key=second_root.artifact_key,
+            lineage_artifacts=(foreign_parent, second_root),
+        ),
+    )
+    result = audit_local_validity_targets(
+        _static_dependencies(identity.client_id),
+        targets,
+    )
+    assert result.audited_root_count == 2
+    assert not result.runtime_lineage_pass
+    assert result.foreign_scientific_parent_count == 1
+    assert result.violating_artifact_keys == (foreign_parent.artifact_key,)
+
+
+def test_multi_root_audit_rejects_empty_target_set() -> None:
+    with pytest.raises(InvalidScientificDataError, match="at least one bound root"):
+        audit_local_validity_targets(_static_dependencies(ClientId("target-client")), ())
 
 
 def test_static_dependency_audit_rejects_foreign_client_input() -> None:
