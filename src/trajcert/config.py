@@ -399,7 +399,9 @@ class TrajCertConfig(ConfigModel):
     @model_validator(mode="after")
     def validate_cross_section_contracts(self) -> TrajCertConfig:
         if self.method.finest_bands != self.grids.partitions[0]:
-            raise ValueError("method.finest_bands must equal the first configured primary partition")
+            raise ValueError(
+                "method.finest_bands must equal the first configured primary partition"
+            )
         if self.method.finest_bands not in self.grids.scaling_bands:
             raise ValueError("method.finest_bands must appear in grids.scaling_bands")
         if self.minimum_evidence.matured_events > self.sequential.coverage.max_events:
@@ -442,7 +444,9 @@ class TrajCertConfig(ConfigModel):
 def _validate_nested_partitions(partitions: tuple[PositiveInt, ...]) -> None:
     for fine, coarse in pairwise(partitions):
         if fine <= coarse or fine % coarse != 0:
-            raise ValueError("grids.partitions must define strictly nested deterministic coarsenings")
+            raise ValueError(
+                "grids.partitions must define strictly nested deterministic coarsenings"
+            )
 
 
 def _require_unique(values: tuple[Hashable, ...], label: str) -> None:
