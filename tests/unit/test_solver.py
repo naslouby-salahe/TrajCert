@@ -1,1 +1,75 @@
+from __future__ import annotations
 
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from trajcert.config import TrajCertConfig
+from trajcert.data.partitions import build_partition
+from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
+from trajcert.math import solver
+from trajcert.math.solver import solve_hidden_mass_interval
+from trajcert.types import CompatibilityRegime, RootBranch, RootStatus
+
+
+@pytest.fixture(autouse=True)
+def active_test_config() -> None:
+    TrajCertConfig.from_yaml(Path("configs/trajcert.yaml"))
+
+
+def summary(harmful: list[float], correct: list[float], unresolved: float) -> ObservableSummary:
+    partition = build_partition(len(harmful), len(harmful), 1.0)
+    return summarize_observable_masses(
+        partition, np.array(harmful), np.array(correct), unresolved, 1e-12
+    )
+
+
+@pytest.mark.parametrize(
+    ("observed", "rho", "regime", "interval"),
+    [
+        (summary([0.0], [0.0], 1.0), 0.0, CompatibilityRegime.NO_RESOLVED_MASS, (0.0, 1.0)),
+        (summary([0.2], [0.8], 0.0), 0.0, CompatibilityRegime.NO_UNRESOLVED_MASS, (0.0, 0.0)),
+        (summary([0.2, 0.0], [0.0, 0.4], 0.4), 0.0, CompatibilityRegime.MODEL_INCOMPATIBLE, None),
+        (summary([0.2, 0.0], [0.0, 0.4], 0.4), 0.6, CompatibilityRegime.COMPATIBLE_INTERVAL, None),
+    ],
+)
+def test_solver_handles_all_non_singleton_branches(
+    observed: ObservableSummary,
+    rho: float,
+    regime: CompatibilityRegime,
+    interval: tuple[float, float] | None,
+) -> None:
+    result = solve_hidden_mass_interval(observed, rho, 1e-8, 1e-7)
+    assert result.compatibility.regime is regime
+    if interval is not None:
+        assert result.interval is not None
+        assert (result.interval.lower, result.interval.upper) == pytest.approx(interval)
+    elif regime is CompatibilityRegime.MODEL_INCOMPATIBLE:
+        assert result.interval is None
+    else:
+        assert result.interval is not None
+        assert result.lower_root is not None
+        assert result.upper_root is not None
+        assert result.lower_root.status in (RootStatus.BISECTION, RootStatus.EXACT_BOUNDARY)
+
+
+def test_solver_bisects_interior_roots_and_rejects_invalid_tolerances() -> None:
+    observed = summary([0.2, 0.0], [0.0, 0.4], 0.4)
+    result = solve_hidden_mass_interval(observed, 0.45, 1e-8, 1e-7)
+    assert result.lower_root is not None
+    assert result.upper_root is not None
+    assert result.lower_root.status is RootStatus.BISECTION
+    assert result.upper_root.status is RootStatus.BISECTION
+    with pytest.raises(Exception, match="root_atol"):
+        solve_hidden_mass_interval(observed, 0.45, 0.0, 1e-7)
+
+
+@pytest.mark.parametrize(("width", "tolerance", "expected"), [(0.0, 0.1, 0), (0.1, 0.1, 2)])
+def test_solver_boundary_helper_values(width: float, tolerance: float, expected: int) -> None:
+    assert solver._iteration_cap(width, tolerance) == expected
+    solver._validate_final_signs(RootBranch.LOWER, 0.0, -1.0)
+    with pytest.raises(Exception, match="sign-valid"):
+        solver._validate_initial_signs(RootBranch.LOWER, 0.0, -1.0)
+    with pytest.raises(Exception, match="sign-valid"):
+        solver._validate_initial_signs(RootBranch.UPPER, 1.0, 0.0)
