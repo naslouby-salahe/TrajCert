@@ -8,8 +8,11 @@ from numpy.typing import NDArray
 from trajcert.analysis.aggregation import PairedEffectSummary, summarize_paired_differences
 from trajcert.analysis.bootstrap import PercentileBootstrapInterval, paired_percentile_bootstrap
 from trajcert.analysis.materiality import (
+    PopulationMaterialityObservation,
+    PopulationMaterialitySummary,
     SequentialMaterialityObservation,
     SequentialMaterialitySummary,
+    evaluate_population_materiality,
     evaluate_sequential_materiality,
 )
 from trajcert.analysis.metrics import MetricName, PracticalMetric, numeric_first_certification
@@ -19,7 +22,7 @@ from trajcert.config import TrajCertConfig
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.registry import authoritative_registry
-from trajcert.experiments.sensitivity import SequentialUtilityResult
+from trajcert.experiments.sensitivity import PopulationUtilityResult, SequentialUtilityResult
 from trajcert.provenance import BaselineName, MethodName
 from trajcert.types import (
     DomainModel,
@@ -34,6 +37,16 @@ from trajcert.types import (
 
 _METHOD_NAME = MethodName("TrajCert finest trajectory partition")
 _BASELINE_NAME = BaselineName("Endpoint-only partition")
+
+
+class PopulationUtilityEvidence(DomainModel):
+    law_name: LawName
+    result: PopulationUtilityResult
+
+
+class PopulationUtilitySynthesis(DomainModel):
+    evidence_count: PositiveInt
+    materiality: PopulationMaterialitySummary
 
 
 class SequentialUtilityEvidence(DomainModel):
@@ -76,22 +89,40 @@ class TrajectoryOperationalGainSynthesis(DomainModel):
     materiality: SequentialMaterialitySummary
 
 
+def synthesize_population_utility(
+    evidence: tuple[PopulationUtilityEvidence, ...],
+    config: TrajCertConfig,
+) -> PopulationUtilitySynthesis:
+    expected = _expected_utility_keys(config, "Population Sensitivity Utility")
+    supplied = tuple((item.law_name, float(item.result.sensitivity_budget)) for item in evidence)
+    _validate_utility_family("population", supplied, expected)
+    by_key = {(item.law_name, float(item.result.sensitivity_budget)): item for item in evidence}
+    materiality = evaluate_population_materiality(
+        (
+            PopulationMaterialityObservation(
+                law_name=by_key[key].law_name,
+                sensitivity_budget=by_key[key].result.sensitivity_budget,
+                compatibility_regime=by_key[key].result.compatibility_regime,
+                absolute_tightening=by_key[key].result.absolute_tightening,
+                relative_unresolved_gain=by_key[key].result.relative_unresolved_gain,
+            )
+            for key in expected
+        ),
+        config,
+    )
+    return PopulationUtilitySynthesis(
+        evidence_count=len(evidence),
+        materiality=materiality,
+    )
+
+
 def synthesize_from_sequential_utility(
     evidence: tuple[SequentialUtilityEvidence, ...],
     config: TrajCertConfig,
 ) -> TrajectoryOperationalGainSynthesis:
-    expected = _expected_utility_keys(config)
+    expected = _expected_utility_keys(config, "Sequential Sensitivity Utility")
     supplied = tuple((item.law_name, float(item.result.sensitivity_budget)) for item in evidence)
-    if len(supplied) != len(set(supplied)):
-        raise InvalidScientificDataError("sequential utility synthesis input contains duplicates")
-    if set(supplied) != set(expected):
-        missing = set(expected).difference(supplied)
-        extra = set(supplied).difference(expected)
-        message = (
-            "sequential utility synthesis input mismatch: "
-            f"missing={len(missing)}, extra={len(extra)}"
-        )
-        raise InvalidScientificDataError(message)
+    _validate_utility_family("sequential", supplied, expected)
     by_key = {(item.law_name, float(item.result.sensitivity_budget)): item for item in evidence}
     series = tuple(
         paired
@@ -317,8 +348,26 @@ def _never_certified_fractions(
     return method_fraction, baseline_fraction
 
 
+def _validate_utility_family(
+    label: str,
+    supplied: tuple[tuple[LawName, float], ...],
+    expected: tuple[tuple[LawName, float], ...],
+) -> None:
+    if len(supplied) != len(set(supplied)):
+        raise InvalidScientificDataError(f"{label} utility synthesis input contains duplicates")
+    if set(supplied) != set(expected):
+        missing = set(expected).difference(supplied)
+        extra = set(supplied).difference(expected)
+        message = (
+            f"{label} utility synthesis input mismatch: "
+            f"missing={len(missing)}, extra={len(extra)}"
+        )
+        raise InvalidScientificDataError(message)
+
+
 def _expected_utility_keys(
     config: TrajCertConfig,
+    experiment_name: str,
 ) -> tuple[tuple[LawName, float], ...]:
     law_names = tuple(
         LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
@@ -327,11 +376,11 @@ def _expected_utility_keys(
     definition = next(
         item
         for item in authoritative_registry()
-        if str(item.experiment_name) == "Sequential Sensitivity Utility"
+        if str(item.experiment_name) == experiment_name
     )
     expected = tuple(product(law_names, rho_values))
     if definition.declared_cells != len(expected):
-        raise InvalidScientificDataError("sequential utility registry expansion is inconsistent")
+        raise InvalidScientificDataError(f"{experiment_name} registry expansion is inconsistent")
     return expected
 
 
@@ -340,7 +389,9 @@ def _expected_family_keys(
 ) -> tuple[tuple[LawName, float, PracticalMetric], ...]:
     return tuple(
         (law_name, rho, metric)
-        for law_name, rho in _expected_utility_keys(config)
+        for law_name, rho in _expected_utility_keys(
+            config, "Sequential Sensitivity Utility"
+        )
         for metric in PracticalMetric
     )
 
