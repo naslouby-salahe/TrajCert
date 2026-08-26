@@ -40,7 +40,9 @@ def evaluate_legacy_partition_incoherence(
         raise InvalidScientificDataError("legacy incoherence Gamma must be at least one")
     if not 0.0 < q < 1.0:
         raise InvalidScientificDataError("legacy incoherence q must lie strictly inside (0, 1)")
-    p_correct, p_harmful = config.study_design.legacy_partition_incoherence.latent_outcome_probabilities
+    p_correct, p_harmful = (
+        config.study_design.legacy_partition_incoherence.latent_outcome_probabilities
+    )
     harmful_hazards = (_tilted_probability(q, gamma), _tilted_probability(q, 1.0 / gamma))
     correct_hazards = (q, q)
     harmful_by_band, harmful_unresolved = _response_masses(float(p_harmful), harmful_hazards)
@@ -95,9 +97,7 @@ def evaluate_legacy_partition_incoherence(
         direction = EndpointDifferenceDirection.SHIFTED
     hidden_interval = fine_result.hidden_mass_interval
     true_hidden_feasible = (
-        float(hidden_interval.lower) - atol
-        <= true_hidden
-        <= float(hidden_interval.upper) + atol
+        float(hidden_interval.lower) - atol <= true_hidden <= float(hidden_interval.upper) + atol
     )
     return LegacyPartitionIncoherenceResult(
         gamma=gamma,

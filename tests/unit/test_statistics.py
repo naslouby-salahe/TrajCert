@@ -124,9 +124,7 @@ def test_sequential_materiality_uses_only_certified_fraction_vote() -> None:
 
 def test_full_synthesis_requires_and_retains_complete_family() -> None:
     config = _small_synthesis_config()
-    laws = tuple(
-        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
-    )
+    laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
     series = tuple(
         PairedSeries(
             semantic_comparison_key=SemanticComparisonKey(
