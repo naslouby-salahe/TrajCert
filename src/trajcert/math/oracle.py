@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from math import floor
+from typing import Self
 
+import numpy as np
 from mpmath import log, mp, mpf, sqrt
+from pydantic import model_validator
 
-from trajcert.data.summaries import ObservableSummary
+from trajcert.data.partitions import TrajectoryPartition
+from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.types import (
     CompatibilityRegime,
@@ -14,10 +19,14 @@ from trajcert.types import (
     PositiveInt,
     RiskInterval,
     SensitivityBudget,
+    ToleranceValue,
     UnitFloat,
 )
 
 _ORACLE_BRACKET_WIDTH = mpf("1e-14")
+_PROJECTION_GRID_POINTS = 1001
+_PROJECTION_REFINEMENT_CANDIDATES = 20
+_PROJECTION_REFINEMENT_STEPS = 24
 
 
 class OracleBracket(DomainModel):
@@ -39,6 +48,62 @@ class InformationOracleResult(DomainModel):
     latent_risk_interval: RiskInterval | None
 
 
+class OracleMassInterval(DomainModel):
+    lower: UnitFloat
+    upper: UnitFloat
+
+    @model_validator(mode="after")
+    def validate_order(self) -> Self:
+        if self.lower > self.upper:
+            raise ValueError("oracle mass interval is reversed")
+        return self
+
+
+class ProjectionOracleInput(DomainModel):
+    partition: TrajectoryPartition
+    harmful_by_band: tuple[OracleMassInterval, ...]
+    correct_by_band: tuple[OracleMassInterval, ...]
+    unresolved: OracleMassInterval
+
+    @model_validator(mode="after")
+    def validate_shape_and_simplex(self) -> Self:
+        bands = self.partition.band_count
+        if len(self.harmful_by_band) != bands or len(self.correct_by_band) != bands:
+            raise ValueError("projection-oracle intervals do not match partition dimension")
+        lower_sum = (
+            sum(interval.lower for interval in self.harmful_by_band)
+            + sum(interval.lower for interval in self.correct_by_band)
+            + self.unresolved.lower
+        )
+        upper_sum = (
+            sum(interval.upper for interval in self.harmful_by_band)
+            + sum(interval.upper for interval in self.correct_by_band)
+            + self.unresolved.upper
+        )
+        if lower_sum > 1.0 or upper_sum < 1.0:
+            raise ValueError("projection-oracle rectangle has empty simplex intersection")
+        return self
+
+
+class ProjectionFeasibleOracleResult(DomainModel):
+    best_feasible_risk: UnitFloat | None
+    best_resolved_harmful: UnitFloat | None
+    best_resolved_correct: UnitFloat | None
+    best_hidden_terminal_harmful: UnitFloat | None
+    grid_points_per_axis: PositiveInt
+    aggregate_points_checked: int
+    feasible_points: int
+    locally_refined_candidates: int
+
+
+@dataclass(frozen=True, slots=True)
+class _ProjectionCandidate:
+    risk: float
+    harmful: float
+    correct: float
+    hidden: float
+
+
 def solve_information_oracle(
     summary: ObservableSummary,
     sensitivity_budget: SensitivityBudget,
@@ -54,52 +119,272 @@ def solve_information_oracle(
         correct = tuple(mpf(repr(float(value))) for value in summary.correct_by_band)
         unresolved = mpf(repr(float(summary.unresolved_mass)))
         rho = mpf(repr(float(sensitivity_budget)))
-        minimum_bracket = _golden_minimum(harmful, correct, unresolved)
-        minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
-        minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
-        equality_tolerance = mpf(10) ** (-floor(digits / 2))
-        if rho < minimum_information - equality_tolerance:
-            return _result(
-                summary,
+        return _solve_information_oracle_data(summary, harmful, correct, unresolved, rho, digits)
+    finally:
+        mp.dps = previous_digits
+
+
+def feasible_projection_lower_oracle(
+    oracle_input: ProjectionOracleInput,
+    sensitivity_budget: SensitivityBudget,
+    oracle_digits: PositiveInt,
+    comparison_guard: ToleranceValue,
+) -> ProjectionFeasibleOracleResult:
+    digits = int(oracle_digits)
+    if digits <= 0:
+        raise InvalidScientificDataError("oracle precision must be positive")
+    previous_digits = mp.dps
+    mp.dps = digits
+    try:
+        rho = mpf(repr(float(sensitivity_budget)))
+        harmful_lower = sum(float(interval.lower) for interval in oracle_input.harmful_by_band)
+        harmful_upper = sum(float(interval.upper) for interval in oracle_input.harmful_by_band)
+        correct_lower = sum(float(interval.lower) for interval in oracle_input.correct_by_band)
+        correct_upper = sum(float(interval.upper) for interval in oracle_input.correct_by_band)
+        checked = 0
+        feasible_count = 0
+        candidates: list[_ProjectionCandidate] = []
+        denominator = _PROJECTION_GRID_POINTS - 1
+        for harmful_index in range(_PROJECTION_GRID_POINTS):
+            harmful = harmful_lower + (harmful_upper - harmful_lower) * harmful_index / denominator
+            for correct_index in range(_PROJECTION_GRID_POINTS):
+                correct = correct_lower + (correct_upper - correct_lower) * correct_index / denominator
+                checked += 1
+                candidate = _projection_candidate(
+                    oracle_input,
+                    harmful,
+                    correct,
+                    rho,
+                    digits,
+                    comparison_guard,
+                )
+                if candidate is None:
+                    continue
+                feasible_count += 1
+                _retain_best(candidates, candidate)
+        initial = tuple(sorted(candidates, key=lambda item: item.risk, reverse=True))
+        refined = tuple(
+            _refine_projection_candidate(
+                oracle_input,
+                candidate,
                 rho,
-                minimum_hidden,
-                minimum_information,
-                minimum_bracket,
-                CompatibilityRegime.MODEL_INCOMPATIBLE,
-                None,
-                None,
+                digits,
+                comparison_guard,
+                harmful_upper - harmful_lower,
+                correct_upper - correct_lower,
             )
-        if abs(rho - minimum_information) <= equality_tolerance:
-            singleton = (minimum_hidden, minimum_hidden)
-            return _result(
-                summary,
-                rho,
-                minimum_hidden,
-                minimum_information,
-                minimum_bracket,
-                CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON,
-                singleton,
-                singleton,
-            )
-        lower_boundary = _left_boundary(harmful, correct, unresolved, rho, minimum_hidden)
-        upper_boundary = _right_boundary(harmful, correct, unresolved, rho, minimum_hidden)
-        regime = (
-            CompatibilityRegime.NO_UNRESOLVED_MASS
-            if unresolved == mpf(0)
-            else CompatibilityRegime.COMPATIBLE_INTERVAL
+            for candidate in initial[:_PROJECTION_REFINEMENT_CANDIDATES]
         )
+        all_candidates = (*initial, *refined)
+        best = max(all_candidates, key=lambda item: item.risk) if all_candidates else None
+        return ProjectionFeasibleOracleResult(
+            best_feasible_risk=None if best is None else best.risk,
+            best_resolved_harmful=None if best is None else best.harmful,
+            best_resolved_correct=None if best is None else best.correct,
+            best_hidden_terminal_harmful=None if best is None else best.hidden,
+            grid_points_per_axis=_PROJECTION_GRID_POINTS,
+            aggregate_points_checked=checked,
+            feasible_points=feasible_count,
+            locally_refined_candidates=len(refined),
+        )
+    finally:
+        mp.dps = previous_digits
+
+
+def direct_mutual_information(
+    harmful: tuple[float, ...],
+    correct: tuple[float, ...],
+    unresolved: float,
+    hidden_terminal_harmful: float,
+    oracle_digits: PositiveInt,
+) -> InformationNats:
+    previous_digits = mp.dps
+    mp.dps = int(oracle_digits)
+    try:
+        value = _mutual_information(
+            tuple(mpf(repr(item)) for item in harmful),
+            tuple(mpf(repr(item)) for item in correct),
+            mpf(repr(unresolved)),
+            mpf(repr(hidden_terminal_harmful)),
+        )
+        return max(0.0, float(value))
+    finally:
+        mp.dps = previous_digits
+
+
+def _solve_information_oracle_data(
+    summary: ObservableSummary,
+    harmful: tuple[mpf, ...],
+    correct: tuple[mpf, ...],
+    unresolved: mpf,
+    rho: mpf,
+    digits: int,
+) -> InformationOracleResult:
+    minimum_bracket = _golden_minimum(harmful, correct, unresolved)
+    minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
+    minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
+    equality_tolerance = mpf(10) ** (-floor(digits / 2))
+    if rho < minimum_information - equality_tolerance:
         return _result(
             summary,
             rho,
             minimum_hidden,
             minimum_information,
             minimum_bracket,
-            regime,
-            lower_boundary,
-            upper_boundary,
+            CompatibilityRegime.MODEL_INCOMPATIBLE,
+            None,
+            None,
         )
-    finally:
-        mp.dps = previous_digits
+    if abs(rho - minimum_information) <= equality_tolerance:
+        singleton = (minimum_hidden, minimum_hidden)
+        return _result(
+            summary,
+            rho,
+            minimum_hidden,
+            minimum_information,
+            minimum_bracket,
+            CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON,
+            singleton,
+            singleton,
+        )
+    lower_boundary = _left_boundary(harmful, correct, unresolved, rho, minimum_hidden)
+    upper_boundary = _right_boundary(harmful, correct, unresolved, rho, minimum_hidden)
+    regime = (
+        CompatibilityRegime.NO_UNRESOLVED_MASS
+        if unresolved == mpf(0)
+        else CompatibilityRegime.COMPATIBLE_INTERVAL
+    )
+    return _result(
+        summary,
+        rho,
+        minimum_hidden,
+        minimum_information,
+        minimum_bracket,
+        regime,
+        lower_boundary,
+        upper_boundary,
+    )
+
+
+def _projection_candidate(
+    oracle_input: ProjectionOracleInput,
+    harmful_total: float,
+    correct_total: float,
+    rho: mpf,
+    digits: int,
+    comparison_guard: ToleranceValue,
+) -> _ProjectionCandidate | None:
+    unresolved = 1.0 - harmful_total - correct_total
+    if unresolved < float(oracle_input.unresolved.lower) or unresolved > float(
+        oracle_input.unresolved.upper
+    ):
+        return None
+    harmful = _allocate_total(oracle_input.harmful_by_band, harmful_total, comparison_guard)
+    correct = _allocate_total(oracle_input.correct_by_band, correct_total, comparison_guard)
+    if harmful is None or correct is None:
+        return None
+    try:
+        summary = summarize_observable_masses(
+            partition=oracle_input.partition,
+            harmful_by_band=np.asarray(harmful, dtype=np.float64),
+            correct_by_band=np.asarray(correct, dtype=np.float64),
+            unresolved_mass=unresolved,
+            comparison_guard=comparison_guard,
+        )
+    except InvalidScientificDataError:
+        return None
+    harmful_mp = tuple(mpf(repr(value)) for value in harmful)
+    correct_mp = tuple(mpf(repr(value)) for value in correct)
+    unresolved_mp = mpf(repr(unresolved))
+    oracle = _solve_information_oracle_data(
+        summary,
+        harmful_mp,
+        correct_mp,
+        unresolved_mp,
+        rho,
+        digits,
+    )
+    if oracle.upper_boundary is None:
+        return None
+    hidden = float(oracle.upper_boundary.lower)
+    information = _mutual_information(
+        harmful_mp,
+        correct_mp,
+        unresolved_mp,
+        mpf(repr(hidden)),
+    )
+    if information > rho:
+        return None
+    return _ProjectionCandidate(
+        risk=min(1.0, harmful_total + hidden),
+        harmful=harmful_total,
+        correct=correct_total,
+        hidden=hidden,
+    )
+
+
+def _refine_projection_candidate(
+    oracle_input: ProjectionOracleInput,
+    initial: _ProjectionCandidate,
+    rho: mpf,
+    digits: int,
+    comparison_guard: ToleranceValue,
+    harmful_span: float,
+    correct_span: float,
+) -> _ProjectionCandidate:
+    best = initial
+    harmful_step = harmful_span / (_PROJECTION_GRID_POINTS - 1)
+    correct_step = correct_span / (_PROJECTION_GRID_POINTS - 1)
+    for _ in range(_PROJECTION_REFINEMENT_STEPS):
+        local: list[_ProjectionCandidate] = [best]
+        for harmful_direction in (-1, 0, 1):
+            for correct_direction in (-1, 0, 1):
+                if harmful_direction == 0 and correct_direction == 0:
+                    continue
+                candidate = _projection_candidate(
+                    oracle_input,
+                    best.harmful + harmful_direction * harmful_step,
+                    best.correct + correct_direction * correct_step,
+                    rho,
+                    digits,
+                    comparison_guard,
+                )
+                if candidate is not None:
+                    local.append(candidate)
+        best = max(local, key=lambda item: item.risk)
+        harmful_step /= 2.0
+        correct_step /= 2.0
+    return best
+
+
+def _allocate_total(
+    intervals: tuple[OracleMassInterval, ...],
+    target: float,
+    comparison_guard: ToleranceValue,
+) -> tuple[float, ...] | None:
+    lower_sum = sum(float(interval.lower) for interval in intervals)
+    upper_sum = sum(float(interval.upper) for interval in intervals)
+    guard = float(comparison_guard)
+    if target < lower_sum - guard or target > upper_sum + guard:
+        return None
+    values = [float(interval.lower) for interval in intervals]
+    remaining = target - lower_sum
+    for index, interval in enumerate(intervals):
+        if remaining <= 0.0:
+            break
+        capacity = float(interval.upper) - values[index]
+        increment = min(remaining, capacity)
+        values[index] += increment
+        remaining -= increment
+    if abs(remaining) > guard:
+        return None
+    return tuple(values)
+
+
+def _retain_best(candidates: list[_ProjectionCandidate], candidate: _ProjectionCandidate) -> None:
+    candidates.append(candidate)
+    candidates.sort(key=lambda item: item.risk, reverse=True)
+    del candidates[_PROJECTION_REFINEMENT_CANDIDATES:]
 
 
 def _golden_minimum(
@@ -170,27 +455,6 @@ def _right_boundary(
         else:
             right = midpoint
     return left, right
-
-
-def direct_mutual_information(
-    harmful: tuple[float, ...],
-    correct: tuple[float, ...],
-    unresolved: float,
-    hidden_terminal_harmful: float,
-    oracle_digits: PositiveInt,
-) -> InformationNats:
-    previous_digits = mp.dps
-    mp.dps = int(oracle_digits)
-    try:
-        value = _mutual_information(
-            tuple(mpf(repr(item)) for item in harmful),
-            tuple(mpf(repr(item)) for item in correct),
-            mpf(repr(unresolved)),
-            mpf(repr(hidden_terminal_harmful)),
-        )
-        return max(0.0, float(value))
-    finally:
-        mp.dps = previous_digits
 
 
 def _mutual_information(
