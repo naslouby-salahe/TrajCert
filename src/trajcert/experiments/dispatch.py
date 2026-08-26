@@ -6,6 +6,7 @@ from trajcert.data.partitions import TrajectoryPartition, build_partition, parti
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
 from trajcert.experiments.anytime import run_anytime_hand_case
 from trajcert.experiments.comparator_reduction import evaluate_comparator_reduction
+from trajcert.experiments.coverage import evaluate_configured_coverage_stress
 from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
     evaluate_failure_boundary,
@@ -148,6 +149,8 @@ def execute_phase_one_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainM
         )
     if name == "Safety and Intrinsic Impossibility":
         return _safety_intrinsic_case(cell, config)
+    if name == "Anytime Coverage Stress":
+        return _coverage_stress_case(cell, config)
     if name == "Population Sensitivity Utility":
         return population_sensitivity_utility(
             summary=_summary_from_coordinates(cell, config),
@@ -338,10 +341,10 @@ def _partition_from_coordinates(cell: PlannedCell, config: TrajCertConfig) -> Tr
 
 
 def _partition_named(name: PartitionName, config: TrajCertConfig) -> TrajectoryPartition:
-    for bands in config.grids.partitions:
+    for bands in (*config.grids.partitions, *config.grids.scaling_bands):
         if partition_name(bands) == name:
             return build_partition(
-                config.method.finest_bands,
+                max(config.method.finest_bands, bands),
                 bands,
                 config.method.terminal_horizon,
             )
@@ -395,6 +398,25 @@ def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyC
         if str(semantic_slug(str(evaluation.case.name))) == str(variant):
             return evaluation
     raise PhaseOneDispatchError(f"unknown safety/impossibility case: {variant}")
+
+
+def _coverage_stress_case(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+    variant = cell.identity.coordinates.variant_name
+    if variant is None:
+        raise PhaseOneDispatchError("coverage-stress cell is missing its configured case name")
+    for case in config.study_design.coverage_stress_cases:
+        if case.name != str(variant):
+            continue
+        expected_law = LAW_DISPLAY_NAMES[case.law]
+        expected_partition = partition_name(case.band_count)
+        if cell.identity.coordinates.synthetic_law_name != expected_law:
+            raise PhaseOneDispatchError("coverage-stress law coordinate does not match configuration")
+        if cell.identity.coordinates.partition_name != expected_partition:
+            raise PhaseOneDispatchError(
+                "coverage-stress partition coordinate does not match configuration"
+            )
+        return evaluate_configured_coverage_stress(case, config)
+    raise PhaseOneDispatchError(f"unknown configured coverage-stress case: {variant}")
 
 
 def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
