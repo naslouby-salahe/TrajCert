@@ -4,12 +4,11 @@ from pathlib import Path
 
 from trajcert.analysis.locality import (
     LocalValidityAuditResult,
-    RuntimeLineageArtifact,
+    LocalValidityTarget,
     StaticComponentDependency,
-    audit_local_validity,
+    audit_local_validity_targets,
 )
 from trajcert.config import TrajCertConfig
-from trajcert.data.ledger import LedgerIdentity
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell
 from trajcert.experiments.runner import CellExecutionResult, CellExecutor, ExecutionContext
@@ -57,10 +56,8 @@ _LOCAL_VALIDITY_KEY = ArtifactKey("statistical-synthesis|local-validity-audit")
 
 
 class SynthesisLocalValidityInput(DomainModel):
-    target_identity: LedgerIdentity
     static_dependencies: tuple[StaticComponentDependency, ...]
-    root_artifact_key: ArtifactKey
-    lineage_artifacts: tuple[RuntimeLineageArtifact, ...]
+    targets: tuple[LocalValidityTarget, ...]
 
 
 class StatisticalSynthesisRecord(DomainModel):
@@ -123,11 +120,9 @@ def execute_statistical_synthesis(
     )
     evidence = build_synthesis_evidence(plan, context.workspace_root, config)
     publication = build_publication_source_rows(plan, context.workspace_root, config)
-    local_validity = audit_local_validity(
-        target_identity=locality.target_identity,
-        static_dependencies=locality.static_dependencies,
-        root_artifact_key=locality.root_artifact_key,
-        lineage_artifacts=locality.lineage_artifacts,
+    local_validity = audit_local_validity_targets(
+        locality.static_dependencies,
+        locality.targets,
     )
     record = StatisticalSynthesisRecord(
         population=evidence.population_synthesis,
