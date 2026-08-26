@@ -136,13 +136,17 @@ def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferen
     baseline_values = np.asarray(series.baseline_values, dtype=np.float64)
     expected_pairs = int(config.sequential.utility.streams)
     if method_values.shape != baseline_values.shape:
-        raise InvalidScientificDataError("paired method and baseline vectors must have identical shape")
+        raise InvalidScientificDataError(
+            "paired method and baseline vectors must have identical shape"
+        )
     if method_values.ndim != 1 or method_values.size != expected_pairs:
         raise InvalidScientificDataError(
             f"paired series must contain exactly {expected_pairs} independent streams"
         )
     if not np.all(np.isfinite(method_values)) or not np.all(np.isfinite(baseline_values)):
-        raise InvalidScientificDataError("paired synthesis forbids failed/undefined stream deletion")
+        raise InvalidScientificDataError(
+            "paired synthesis forbids failed/undefined stream deletion"
+        )
     if series.metric_name in {
         PracticalMetric.ANYTIME_UPPER_RISK,
         PracticalMetric.TIME_TO_FIRST_CERTIFICATION,
@@ -233,5 +237,7 @@ def _expected_family_keys(
     law_count = definition.declared_cells // len(rho_values)
     law_names = tuple(LAW_DISPLAY_NAMES[key] for key, _ in config.ordered_laws[:law_count])
     if len(law_names) != law_count:
-        raise InvalidScientificDataError("configured law set cannot satisfy sequential utility registry")
+        raise InvalidScientificDataError(
+            "configured law set cannot satisfy sequential utility registry"
+        )
     return tuple(product(law_names, rho_values, tuple(PracticalMetric)))

@@ -17,7 +17,12 @@ from trajcert.analysis.metrics import (
 )
 from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust
 from trajcert.analysis.sign_flip import one_sided_sign_flip
-from trajcert.config import SequentialConfig, SequentialUtilityConfig, StatisticsConfig, TrajCertConfig
+from trajcert.config import (
+    SequentialConfig,
+    SequentialUtilityConfig,
+    StatisticsConfig,
+    TrajCertConfig,
+)
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.experiments.synthesis import PairedSeries, synthesize_trajectory_operational_gain
