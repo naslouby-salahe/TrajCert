@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Hashable, Mapping
 from contextvars import ContextVar
+from enum import StrEnum
 from itertools import pairwise
 from math import isclose
 from pathlib import Path
@@ -27,6 +28,13 @@ from trajcert.types import (
 type YamlValue = (
     None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
 )
+
+_UTILITY_AND_COHERENCE_LAW_COUNT = 6
+_SHARPNESS_ORACLE_LAW_COUNT = 10
+_SAFETY_AND_IMPOSSIBILITY_LAW_COUNT = 8
+_STRICT_TIMING_CASE_COUNT = 6
+_COVERAGE_STRESS_CASE_COUNT = 12
+_FAILURE_BOUNDARY_LEVEL_COUNT = 7
 
 active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
 
@@ -82,10 +90,128 @@ class LawConfig(ConfigModel):
     lambda0: StrictFloat
 
 
+class TimingInformationExpectation(StrEnum):
+    ZERO = "ZERO"
+    POSITIVE = "POSITIVE"
+
+
+class StrictTimingCaseConfig(ConfigModel):
+    law: LawKey
+    fine_bands: PositiveInt
+    coarse_bands: PositiveInt
+    expectation: TimingInformationExpectation
+
+    @model_validator(mode="after")
+    def validate_refinement(self) -> StrictTimingCaseConfig:
+        if self.fine_bands <= self.coarse_bands:
+            raise ValueError("strict timing fine partition must refine the coarse partition")
+        if self.fine_bands % self.coarse_bands != 0:
+            raise ValueError("strict timing partitions must be deterministic nested coarsenings")
+        return self
+
+
+class LegacyPartitionIncoherenceConfig(ConfigModel):
+    gamma: tuple[Annotated[StrictFloat, Field(ge=1.0)], ...]
+    q: tuple[Annotated[StrictFloat, Field(gt=0.0, lt=1.0)], ...]
+    latent_outcome_probabilities: tuple[UnitFloat, UnitFloat]
+
+    @model_validator(mode="after")
+    def validate_grid(self) -> LegacyPartitionIncoherenceConfig:
+        _require_unique(self.gamma, "study_design.legacy_partition_incoherence.gamma")
+        _require_unique(self.q, "study_design.legacy_partition_incoherence.q")
+        _require_strictly_increasing(self.gamma, "study_design.legacy_partition_incoherence.gamma")
+        _require_strictly_increasing(self.q, "study_design.legacy_partition_incoherence.q")
+        if sum(self.latent_outcome_probabilities) != 1.0:
+            raise ValueError("legacy latent outcome probabilities must sum exactly to one")
+        if any(value <= 0.0 for value in self.latent_outcome_probabilities):
+            raise ValueError("legacy latent outcome probabilities must be positive")
+        return self
+
+
+class CoverageStressSensitivityReference(StrEnum):
+    TRUE_INFORMATION = "TRUE_INFORMATION"
+    COMPATIBILITY_FLOOR = "COMPATIBILITY_FLOOR"
+
+
+class CoverageStressCaseConfig(ConfigModel):
+    name: str
+    law: LawKey
+    band_count: PositiveInt
+    rho_offset: NonNegativeFloat
+    sensitivity_reference: CoverageStressSensitivityReference
+    beta_offset: NonNegativeFloat | None = None
+    minimum_information_completion: bool = False
+
+    @model_validator(mode="after")
+    def validate_reference(self) -> CoverageStressCaseConfig:
+        requires_completion = (
+            self.sensitivity_reference is CoverageStressSensitivityReference.COMPATIBILITY_FLOOR
+        )
+        if requires_completion != self.minimum_information_completion:
+            raise ValueError(
+                "compatibility-floor stress must be the declared minimum-information completion"
+            )
+        return self
+
+
+class StudyDesignConfig(ConfigModel):
+    utility_and_coherence_laws: tuple[LawKey, ...]
+    sharpness_oracle_laws: tuple[LawKey, ...]
+    safety_and_impossibility_laws: tuple[LawKey, ...]
+    strict_timing_cases: tuple[StrictTimingCaseConfig, ...]
+    legacy_partition_incoherence: LegacyPartitionIncoherenceConfig
+    coverage_stress_cases: tuple[CoverageStressCaseConfig, ...]
+
+    @model_validator(mode="after")
+    def validate_registry_cardinalities(self) -> StudyDesignConfig:
+        expected_lengths = (
+            (
+                len(self.utility_and_coherence_laws),
+                _UTILITY_AND_COHERENCE_LAW_COUNT,
+                "utility_and_coherence_laws",
+            ),
+            (
+                len(self.sharpness_oracle_laws),
+                _SHARPNESS_ORACLE_LAW_COUNT,
+                "sharpness_oracle_laws",
+            ),
+            (
+                len(self.safety_and_impossibility_laws),
+                _SAFETY_AND_IMPOSSIBILITY_LAW_COUNT,
+                "safety_and_impossibility_laws",
+            ),
+            (
+                len(self.strict_timing_cases),
+                _STRICT_TIMING_CASE_COUNT,
+                "strict_timing_cases",
+            ),
+            (
+                len(self.coverage_stress_cases),
+                _COVERAGE_STRESS_CASE_COUNT,
+                "coverage_stress_cases",
+            ),
+        )
+        for observed, expected, field_name in expected_lengths:
+            if observed != expected:
+                raise ValueError(f"study_design.{field_name} must contain {expected} entries")
+        for field_name, values in (
+            ("utility_and_coherence_laws", self.utility_and_coherence_laws),
+            ("sharpness_oracle_laws", self.sharpness_oracle_laws),
+            ("safety_and_impossibility_laws", self.safety_and_impossibility_laws),
+        ):
+            _require_unique(values, f"study_design.{field_name}")
+        _require_unique(
+            tuple(case.name for case in self.coverage_stress_cases),
+            "study_design.coverage_stress_cases.name",
+        )
+        return self
+
+
 class GridsConfig(ConfigModel):
     partitions: tuple[PositiveInt, ...]
     scaling_bands: tuple[PositiveInt, ...]
     rho: tuple[SensitivityBudget, ...]
+    same_endpoint_rho: tuple[SensitivityBudget, ...]
     beta: tuple[UnitFloat, ...]
 
     @model_validator(mode="after")
@@ -93,10 +219,12 @@ class GridsConfig(ConfigModel):
         _require_unique(self.partitions, "grids.partitions")
         _require_unique(self.scaling_bands, "grids.scaling_bands")
         _require_unique(self.rho, "grids.rho")
+        _require_unique(self.same_endpoint_rho, "grids.same_endpoint_rho")
         _require_unique(self.beta, "grids.beta")
         _require_strictly_decreasing(self.partitions, "grids.partitions")
         _require_strictly_increasing(self.scaling_bands, "grids.scaling_bands")
         _require_strictly_increasing(self.rho, "grids.rho")
+        _require_strictly_increasing(self.same_endpoint_rho, "grids.same_endpoint_rho")
         _require_strictly_increasing(self.beta, "grids.beta")
         if any(bool(x) for x in (value > BINARY_MAX_INFORMATION_NATS for value in self.rho)):
             raise ValueError("grids.rho cannot exceed log(2) for binary latent outcomes")
@@ -212,6 +340,9 @@ class FailureBoundaryConfig(ConfigModel):
     information_margin: tuple[NonNegativeFloat, ...]
     risk_offset: tuple[StrictFloat, ...]
     sample_size: tuple[PositiveInt, ...]
+    terminal_selection_asymmetry: tuple[tuple[UnitFloat, UnitFloat], ...]
+    optimizer_nodes: tuple[PositiveInt, ...]
+    optimizer_sample_size: PositiveInt
 
     @model_validator(mode="after")
     def validate_failure_boundary_axes(self) -> FailureBoundaryConfig:
@@ -223,9 +354,20 @@ class FailureBoundaryConfig(ConfigModel):
             ("failure_boundary.information_margin", self.information_margin),
             ("failure_boundary.risk_offset", self.risk_offset),
             ("failure_boundary.sample_size", self.sample_size),
+            ("failure_boundary.optimizer_nodes", self.optimizer_nodes),
         ):
             _require_unique(values, field_name)
             _require_strictly_increasing(values, field_name)
+            if len(values) != _FAILURE_BOUNDARY_LEVEL_COUNT:
+                raise ValueError(f"{field_name} must contain seven levels")
+        _require_unique(
+            self.terminal_selection_asymmetry,
+            "failure_boundary.terminal_selection_asymmetry",
+        )
+        if len(self.terminal_selection_asymmetry) != _FAILURE_BOUNDARY_LEVEL_COUNT:
+            raise ValueError(
+                "failure_boundary.terminal_selection_asymmetry must contain seven levels"
+            )
         return self
 
 
@@ -239,6 +381,7 @@ class TrajCertConfig(ConfigModel):
     grids: GridsConfig
     numerics: NumericsConfig
     comparators: ComparatorsConfig
+    study_design: StudyDesignConfig
     sequential: SequentialConfig
     statistics: StatisticsConfig
     materiality: MaterialityConfig
@@ -275,6 +418,30 @@ class TrajCertConfig(ConfigModel):
             raise ValueError("an analysis partition cannot be finer than method.finest_bands")
         if any(bool(x) for x in (rho not in self.grids.rho for rho in self.sequential.utility.rho)):
             raise ValueError("sequential.utility.rho must be a subset of grids.rho")
+        if any(rho not in self.grids.rho for rho in self.grids.same_endpoint_rho):
+            raise ValueError("grids.same_endpoint_rho must be a subset of grids.rho")
+        selected_laws = (
+            *self.study_design.utility_and_coherence_laws,
+            *self.study_design.sharpness_oracle_laws,
+            *self.study_design.safety_and_impossibility_laws,
+            *(case.law for case in self.study_design.strict_timing_cases),
+            *(case.law for case in self.study_design.coverage_stress_cases),
+        )
+        if any(law not in self.laws for law in selected_laws):
+            raise ValueError("study-design law selections must reference configured laws")
+        configured_partitions = set(self.grids.partitions)
+        for case in self.study_design.strict_timing_cases:
+            if (
+                case.fine_bands not in configured_partitions
+                or case.coarse_bands not in configured_partitions
+            ):
+                raise ValueError("strict timing cases must use configured analysis partitions")
+        available_stress_bands = configured_partitions | set(self.grids.scaling_bands)
+        if any(
+            case.band_count not in available_stress_bands
+            for case in self.study_design.coverage_stress_cases
+        ):
+            raise ValueError("coverage stress cases must use a predeclared partition resolution")
         return self
 
     @property
