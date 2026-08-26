@@ -47,7 +47,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.VALIDATION,
         expansion=ExpansionDescription("3 Gamma × 2 q"),
         declared_cells=6,
-        configuration_gap_cells=6,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=3,
@@ -101,7 +101,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.VALIDATION,
         expansion=ExpansionDescription("6 cases × 3 offsets"),
         declared_cells=18,
-        configuration_gap_cells=18,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=9,
@@ -173,7 +173,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.CONFIRMATORY,
         expansion=ExpansionDescription("6 laws × 3 pairs × 3 offsets"),
         declared_cells=54,
-        configuration_gap_cells=54,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=17,
@@ -182,7 +182,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.ABLATION,
         expansion=ExpansionDescription("4 partitions × 5 rho paired-law cells"),
         declared_cells=20,
-        configuration_gap_cells=20,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=18,
@@ -191,7 +191,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.CONFIRMATORY,
         expansion=ExpansionDescription("6 cases × 3 offsets"),
         declared_cells=18,
-        configuration_gap_cells=18,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=19,
@@ -209,7 +209,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.CONFIRMATORY,
         expansion=ExpansionDescription("10 laws × 4 partitions"),
         declared_cells=40,
-        configuration_gap_cells=40,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=21,
@@ -218,7 +218,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.CONFIRMATORY,
         expansion=ExpansionDescription("8 laws × 5 safety-budget cases"),
         declared_cells=40,
-        configuration_gap_cells=40,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=22,
@@ -236,7 +236,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.CONFIRMATORY,
         expansion=ExpansionDescription("12 stress cases"),
         declared_cells=12,
-        configuration_gap_cells=12,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=24,
@@ -245,7 +245,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.ROBUSTNESS,
         expansion=ExpansionDescription("6 laws × 4 partitions × 15 rho"),
         declared_cells=360,
-        configuration_gap_cells=360,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=25,
@@ -254,7 +254,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.ROBUSTNESS,
         expansion=ExpansionDescription("6 laws × 3 rho"),
         declared_cells=18,
-        configuration_gap_cells=18,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=26,
@@ -263,7 +263,7 @@ _REGISTRY = (
         evidence_class=EvidenceClass.FAILURE_BOUNDARY,
         expansion=ExpansionDescription("9 axes × 7 levels"),
         declared_cells=63,
-        configuration_gap_cells=14,
+        configuration_gap_cells=0,
     ),
     ExperimentDefinition(
         order=27,

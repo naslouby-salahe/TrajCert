@@ -160,12 +160,22 @@ def _coordinates_for_definition(
     adjacent_pairs = tuple(
         ComparisonPairName(f"{fine} -> {coarse}") for fine, coarse in pairwise(partitions)
     )
+    utility_laws = tuple(
+        LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws
+    )
     if definition.declared_cells == 0:
         return ()
     if name == "Scientific and Data Inventory":
         return (_variant("protocol-inventory-gate"),)
     if name == "Legacy Partition Incoherence Check":
-        return tuple(_variant(f"unresolved-legacy-cell-{index:02d}") for index in range(1, 7))
+        legacy = config.study_design.legacy_partition_incoherence
+        return tuple(
+            SemanticCoordinates(
+                gamma=gamma,
+                variant_name=VariantName(f"q={q}"),
+            )
+            for gamma, q in product(legacy.gamma, legacy.q)
+        )
     if name in {
         "Path Information Decomposition",
         "Information Profile Convexity",
@@ -192,10 +202,13 @@ def _coordinates_for_definition(
     if name in {"Strict Timing-Gain Identity", "Strict Timing Gain"}:
         return tuple(
             SemanticCoordinates(
-                variant_name=VariantName(f"timing-case-{case_index:02d}"),
+                synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
+                comparison_pair_name=ComparisonPairName(
+                    f"{partition_name(case.fine_bands)} -> {partition_name(case.coarse_bands)}"
+                ),
                 sensitivity_coordinate=_offset_coordinate(offset),
             )
-            for case_index, offset in product(range(1, 7), _TIMING_OFFSETS)
+            for case, offset in product(config.study_design.strict_timing_cases, _TIMING_OFFSETS)
         )
     if name == "Safety-Boundary Identity":
         return tuple(
@@ -234,19 +247,23 @@ def _coordinates_for_definition(
     if name == "Partition Coherence":
         return tuple(
             SemanticCoordinates(
-                variant_name=VariantName(f"coherence-law-{law_index:02d}"),
+                synthetic_law_name=law,
                 comparison_pair_name=pair,
                 sensitivity_coordinate=_offset_coordinate(offset),
             )
-            for law_index, pair, offset in product(range(1, 7), adjacent_pairs, _TIMING_OFFSETS)
+            for law, pair, offset in product(utility_laws, adjacent_pairs, _TIMING_OFFSETS)
         )
     if name == "Same Endpoint, Different Timing":
+        comparison = ComparisonPairName(
+            "Same endpoint without timing information|Same endpoint with timing information"
+        )
         return tuple(
             SemanticCoordinates(
+                comparison_pair_name=comparison,
                 partition_name=partition,
-                sensitivity_coordinate=SensitivityCoordinate(f"paired-rho-{rho_index:02d}"),
+                rho=rho,
             )
-            for partition, rho_index in product(partitions, range(1, 6))
+            for partition, rho in product(partitions, config.grids.same_endpoint_rho)
         )
     if name == "Compatibility Floor Behavior":
         selected_partitions = (partitions[0], partitions[-1])
@@ -255,19 +272,23 @@ def _coordinates_for_definition(
             for law, partition in product(laws, selected_partitions)
         )
     if name == "Sharpness Against Generic Oracle":
+        selected_laws = tuple(
+            LAW_DISPLAY_NAMES[key] for key in config.study_design.sharpness_oracle_laws
+        )
         return tuple(
-            SemanticCoordinates(
-                variant_name=VariantName(f"sharpness-law-{law_index:02d}"),
-                partition_name=partition,
-            )
-            for law_index, partition in product(range(1, 11), partitions)
+            SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
+            for law, partition in product(selected_laws, partitions)
         )
     if name == "Safety and Intrinsic Impossibility":
+        selected_laws = tuple(
+            LAW_DISPLAY_NAMES[key] for key in config.study_design.safety_and_impossibility_laws
+        )
         return tuple(
             SemanticCoordinates(
-                variant_name=VariantName(f"safety-law-{law_index:02d}-{safety_case}"),
+                synthetic_law_name=law,
+                variant_name=VariantName(safety_case),
             )
-            for law_index, safety_case in product(range(1, 9), _SAFETY_CASES)
+            for law, safety_case in product(selected_laws, _SAFETY_CASES)
         )
     if name == "Anytime Implementation Hand Cases":
         return tuple(
@@ -278,24 +299,28 @@ def _coordinates_for_definition(
             for case_index, partition in product(range(1, 11), partitions[:3])
         )
     if name == "Anytime Coverage Stress":
-        return tuple(_variant(f"stress-case-{index:02d}") for index in range(1, 13))
+        return tuple(
+            SemanticCoordinates(
+                synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
+                partition_name=partition_name(case.band_count),
+                variant_name=VariantName(case.name),
+            )
+            for case in config.study_design.coverage_stress_cases
+        )
     if name == "Population Sensitivity Utility":
         rho_values = _population_rho_values(config)
         return tuple(
             SemanticCoordinates(
-                variant_name=VariantName(f"utility-law-{law_index:02d}"),
+                synthetic_law_name=law,
                 partition_name=partition,
                 rho=rho,
             )
-            for law_index, partition, rho in product(range(1, 7), partitions, rho_values)
+            for law, partition, rho in product(utility_laws, partitions, rho_values)
         )
     if name == "Sequential Sensitivity Utility":
         return tuple(
-            SemanticCoordinates(
-                variant_name=VariantName(f"utility-law-{law_index:02d}"),
-                rho=rho,
-            )
-            for law_index, rho in product(range(1, 7), config.sequential.utility.rho)
+            SemanticCoordinates(synthetic_law_name=law, rho=rho)
+            for law, rho in product(utility_laws, config.sequential.utility.rho)
         )
     if name == "Failure Boundary Atlas":
         return _failure_boundary_coordinates(config)
@@ -338,6 +363,7 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
         ("information-margin", tuple(config.failure_boundary.information_margin)),
         ("risk-offset", tuple(config.failure_boundary.risk_offset)),
         ("matured-sample-size", tuple(config.failure_boundary.sample_size)),
+        ("optimizer-node-budget", tuple(config.failure_boundary.optimizer_nodes)),
     )
     coordinates: list[SemanticCoordinates] = []
     for axis_name, levels in configured_axes:
@@ -351,15 +377,14 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
                     )
                 )
             )
-    for axis_name in ("terminal-selection-asymmetry", "optimizer-node-budget"):
-        for level_index in range(1, 8):
-            coordinates.append(
-                SemanticCoordinates(
-                    failure_boundary_axis_and_level=FailureBoundaryCoordinate(
-                        f"{axis_name}=missing-level-{level_index:02d}"
-                    )
+    for q1, q0 in config.failure_boundary.terminal_selection_asymmetry:
+        coordinates.append(
+            SemanticCoordinates(
+                failure_boundary_axis_and_level=FailureBoundaryCoordinate(
+                    f"terminal-selection-asymmetry=q1:{q1},q0:{q0}"
                 )
             )
+        )
     return tuple(coordinates)
 
 
@@ -384,10 +409,6 @@ def _invalid_reason(
 ) -> ReasonCode | None:
     if definition.configuration_gap_cells == 0 or ordinal < gap_start:
         return None
-    if str(definition.experiment_name) == "Legacy Partition Incoherence Check":
-        return _MISSING_LEGACY_GRID
-    if str(definition.experiment_name) == "Failure Boundary Atlas":
-        return _MISSING_FAILURE_AXIS
     return ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
 
 
