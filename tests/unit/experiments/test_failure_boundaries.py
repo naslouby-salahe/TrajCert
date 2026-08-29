@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
@@ -11,7 +11,7 @@ from trajcert.experiments.failure_boundaries import (
     evaluate_optimizer_node_budget,
     evaluate_terminal_selection_asymmetry,
 )
-from trajcert.types import ScientificState
+from trajcert.types import FailureBoundaryLevel, ScientificState
 
 _NODE_BUDGET = 500
 _FINEST_BANDS = 8
@@ -23,7 +23,9 @@ _RISK_ATOL = 1e-4
 def _small_config() -> TrajCertConfig:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     numerics = config.numerics.model_copy(update={"outer_max_nodes": _NODE_BUDGET})
-    return config.model_copy(update={"numerics": numerics})
+    config = config.model_copy(update={"numerics": numerics})
+    _ = active_config.set(config)
+    return config
 
 
 def test_failure_boundary_axis_enum_values() -> None:
@@ -41,7 +43,7 @@ def test_failure_boundary_axis_enum_values() -> None:
 def test_failure_boundary_result_constructs() -> None:
     result = FailureBoundaryResult(
         axis=FailureBoundaryAxis.TIMING_CONTRAST,
-        level="0.4",
+        level=FailureBoundaryLevel("0.4"),
         band_count=_FINEST_BANDS,
         sensitivity_budget=0.05,
         risk_budget=0.05,
@@ -71,9 +73,7 @@ def test_failure_boundary_result_constructs() -> None:
 
 def test_evaluate_failure_boundary_terminal_unresolved_severity() -> None:
     config = _small_config()
-    result = evaluate_failure_boundary(
-        FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY, 0.3, config
-    )
+    result = evaluate_failure_boundary(FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY, 0.3)
     assert isinstance(result, FailureBoundaryResult)
     assert result.operational_state is ScientificState.UNCERTIFIED
     assert result.risk_upper == pytest.approx(0.095508, abs=_RISK_ATOL)
@@ -92,8 +92,8 @@ def test_evaluate_failure_boundary_terminal_unresolved_severity() -> None:
 
 
 def test_evaluate_failure_boundary_timing_contrast() -> None:
-    config = _small_config()
-    result = evaluate_failure_boundary(FailureBoundaryAxis.TIMING_CONTRAST, 0.4, config)
+    _ = _small_config()
+    result = evaluate_failure_boundary(FailureBoundaryAxis.TIMING_CONTRAST, 0.4)
     assert result.operational_state is ScientificState.UNCERTIFIED
     assert result.risk_upper == pytest.approx(0.060452, abs=_RISK_ATOL)
     assert result.tau is not None
@@ -101,16 +101,16 @@ def test_evaluate_failure_boundary_timing_contrast() -> None:
 
 
 def test_evaluate_failure_boundary_harmful_prevalence_model_incompatible() -> None:
-    config = _small_config()
-    result = evaluate_failure_boundary(FailureBoundaryAxis.HARMFUL_PREVALENCE, 0.2, config)
+    _ = _small_config()
+    result = evaluate_failure_boundary(FailureBoundaryAxis.HARMFUL_PREVALENCE, 0.2)
     assert result.operational_state is ScientificState.MODEL_INCOMPATIBLE
     assert result.risk_upper == pytest.approx(1.0, abs=_NEAR_ZERO)
     assert result.compatibility_lower is not None
 
 
 def test_evaluate_failure_boundary_path_resolution_coarsens_partition() -> None:
-    config = _small_config()
-    result = evaluate_failure_boundary(FailureBoundaryAxis.PATH_RESOLUTION, _COARSER_BANDS, config)
+    _ = _small_config()
+    result = evaluate_failure_boundary(FailureBoundaryAxis.PATH_RESOLUTION, _COARSER_BANDS)
     assert result.band_count == _COARSER_BANDS
     assert result.operational_state is ScientificState.UNCERTIFIED
     assert result.risk_upper == pytest.approx(0.063072, abs=_RISK_ATOL)
@@ -119,7 +119,7 @@ def test_evaluate_failure_boundary_path_resolution_coarsens_partition() -> None:
 
 def test_evaluate_failure_boundary_information_margin_adds_tau() -> None:
     config = _small_config()
-    result = evaluate_failure_boundary(FailureBoundaryAxis.INFORMATION_MARGIN, 0.05, config)
+    result = evaluate_failure_boundary(FailureBoundaryAxis.INFORMATION_MARGIN, 0.05)
     assert result.operational_state is ScientificState.UNCERTIFIED
     assert result.sensitivity_budget > config.budgets.information_nats
     assert result.risk_upper == pytest.approx(0.065835, abs=_RISK_ATOL)
@@ -127,8 +127,8 @@ def test_evaluate_failure_boundary_information_margin_adds_tau() -> None:
 
 
 def test_evaluate_failure_boundary_risk_offset_clamps_to_zero() -> None:
-    config = _small_config()
-    result = evaluate_failure_boundary(FailureBoundaryAxis.RISK_OFFSET, -0.05, config)
+    _ = _small_config()
+    result = evaluate_failure_boundary(FailureBoundaryAxis.RISK_OFFSET, -0.05)
     assert result.operational_state is ScientificState.INTRINSICALLY_UNCERTIFIABLE
     assert result.risk_budget == pytest.approx(0.0, abs=_NEAR_ZERO)
     assert result.risk_upper == pytest.approx(0.055241, abs=_RISK_ATOL)
@@ -137,7 +137,7 @@ def test_evaluate_failure_boundary_risk_offset_clamps_to_zero() -> None:
 
 def test_evaluate_failure_boundary_matured_sample_size_small() -> None:
     config = _small_config()
-    result = evaluate_failure_boundary(FailureBoundaryAxis.MATURED_SAMPLE_SIZE, 30, config)
+    result = evaluate_failure_boundary(FailureBoundaryAxis.MATURED_SAMPLE_SIZE, 30)
     assert isinstance(result, FailureBoundaryResult)
     assert result.operational_state is ScientificState.INSUFFICIENT_EVIDENCE
     assert result.band_count == config.method.finest_bands
@@ -153,24 +153,22 @@ def test_evaluate_failure_boundary_matured_sample_size_small() -> None:
 
 
 def test_evaluate_failure_boundary_rejects_nonpositive_matured_sample_size() -> None:
-    config = _small_config()
+    _ = _small_config()
     with pytest.raises(ValueError, match="must be positive"):
-        _ = evaluate_failure_boundary(FailureBoundaryAxis.MATURED_SAMPLE_SIZE, 0, config)
+        _ = evaluate_failure_boundary(FailureBoundaryAxis.MATURED_SAMPLE_SIZE, 0)
 
 
 def test_evaluate_failure_boundary_requires_dedicated_evaluator() -> None:
-    config = _small_config()
+    _ = _small_config()
     with pytest.raises(ValueError, match="dedicated evaluator"):
-        _ = evaluate_failure_boundary(FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY, 0.0, config)
+        _ = evaluate_failure_boundary(FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY, 0.0)
     with pytest.raises(ValueError, match="dedicated evaluator"):
-        _ = evaluate_failure_boundary(
-            FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET, _NODE_BUDGET, config
-        )
+        _ = evaluate_failure_boundary(FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET, _NODE_BUDGET)
 
 
 def test_evaluate_terminal_selection_asymmetry() -> None:
     config = _small_config()
-    result = evaluate_terminal_selection_asymmetry(0.3, 0.5, config)
+    result = evaluate_terminal_selection_asymmetry(0.3, 0.5)
     assert isinstance(result, FailureBoundaryResult)
     assert result.axis is FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY
     assert result.level == "q1=0.3,q0=0.5"
@@ -186,7 +184,7 @@ def test_evaluate_terminal_selection_asymmetry() -> None:
 
 def test_evaluate_optimizer_node_budget_small() -> None:
     config = _small_config()
-    result = evaluate_optimizer_node_budget(_NODE_BUDGET, config)
+    result = evaluate_optimizer_node_budget(_NODE_BUDGET)
     assert isinstance(result, FailureBoundaryResult)
     assert result.axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET
     assert result.level == str(_NODE_BUDGET)
@@ -202,8 +200,8 @@ def test_evaluate_optimizer_node_budget_small() -> None:
 
 
 def test_evaluate_optimizer_node_budget_rejects_nonpositive() -> None:
-    config = _small_config()
+    _ = _small_config()
     with pytest.raises(ValueError, match="must be positive"):
-        _ = evaluate_optimizer_node_budget(0, config)
+        _ = evaluate_optimizer_node_budget(0)
     with pytest.raises(ValueError, match="must be positive"):
-        _ = evaluate_optimizer_node_budget(-5, config)
+        _ = evaluate_optimizer_node_budget(-5)

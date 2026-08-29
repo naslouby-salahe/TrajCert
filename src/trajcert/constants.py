@@ -13,3 +13,5 @@ TERMINAL_CATEGORY_NAME = "infinity"
 ENDPOINT_PARTITION_NAME = "Endpoint-only partition"
 BINARY_MAX_INFORMATION_NATS = log(2.0)
 PRODUCTION_CONFIG_PATH = Path("configs/trajcert.yaml")
+SMOKE_CONFIG_OVERRIDES_PATH = Path("configs/smoke.yaml")
+TESTS_CONFIG_OVERRIDES_PATH = Path("configs/tests.yaml")

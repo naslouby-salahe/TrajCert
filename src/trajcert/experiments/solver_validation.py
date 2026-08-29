@@ -11,6 +11,7 @@ from trajcert.types import (
     CompatibilityRegime,
     DomainModel,
     InformationNats,
+    PositiveInt,
     RiskBudget,
     RiskValue,
     RootStatus,
@@ -52,7 +53,7 @@ def compare_production_solver_to_oracle(
     sensitivity_budget: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: int,
+    oracle_digits: PositiveInt,
 ) -> SolverOracleComparison:
     production = solve_hidden_mass_interval(
         summary,
@@ -123,7 +124,7 @@ def compare_production_solver_to_oracle(
 def compare_safety_frontier_to_oracle(
     summary: ObservableSummary,
     risk_budget: RiskBudget,
-    oracle_digits: int,
+    oracle_digits: PositiveInt,
     identity_atol: ToleranceValue,
 ) -> SafetyFrontierOracleComparison:
     safety = assess_safety_geometry(summary, risk_budget)

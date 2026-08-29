@@ -2,10 +2,22 @@ from __future__ import annotations
 
 from enum import StrEnum
 from math import isfinite
+from typing import Annotated
+
+from pydantic import Field, StrictFloat
 
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.types import DomainModel, HiddenMassInterval, RiskInterval
+from trajcert.types import (
+    Count,
+    DomainModel,
+    HiddenMassInterval,
+    Mass,
+    NonNegativeInt,
+    RiskInterval,
+)
+
+LegacyGamma = Annotated[StrictFloat, Field(ge=1.0)]
 
 
 class LegacyApplicability(StrEnum):
@@ -14,16 +26,16 @@ class LegacyApplicability(StrEnum):
 
 
 class LegacySensitivityResult(DomainModel):
-    gamma: float #TODO: don't use primitive float and check why tests aren't catching it
+    gamma: LegacyGamma
     applicability: LegacyApplicability
     hidden_mass_interval: HiddenMassInterval | None
     latent_risk_interval: RiskInterval | None
-    informative_bands: int #TODO: don't use primitive int and check why tests aren't catching it
+    informative_bands: Count
 
 
 def legacy_bandwise_odds_ratio(
     summary: ObservableSummary,
-    gamma: float, #TODO: don't use primitive float and check why tests aren't catching it
+    gamma: LegacyGamma,
 ) -> LegacySensitivityResult:
     if not isfinite(gamma) or gamma < 1.0:
         raise InvalidScientificDataError("legacy Gamma must be finite and at least one")
@@ -70,8 +82,8 @@ def legacy_bandwise_odds_ratio(
 
 def response_hazard_odds_ratio(
     summary: ObservableSummary,
-    band_index: int, #TODO: don't use primitive int and check why tests aren't catching it
-    hidden_terminal_harmful: float, #TODO: don't use primitive int and check why tests aren't catching it
+    band_index: NonNegativeInt,
+    hidden_terminal_harmful: Mass,
 ) -> float | None:
     if band_index < 0 or band_index >= summary.partition.band_count:
         raise InvalidScientificDataError("legacy band index is outside the partition")
@@ -97,7 +109,7 @@ def response_hazard_odds_ratio(
     return numerator / denominator
 
 
-def _incompatible(gamma: float, informative: int) -> LegacySensitivityResult: #TODO: don't use primitive float and int and check why tests aren't catching it
+def _incompatible(gamma: LegacyGamma, informative: Count) -> LegacySensitivityResult:
     return LegacySensitivityResult(
         gamma=gamma,
         applicability=LegacyApplicability.MODEL_INCOMPATIBLE,

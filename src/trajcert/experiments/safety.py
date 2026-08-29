@@ -19,6 +19,7 @@ from trajcert.math.safety import (
 from trajcert.types import (
     DomainModel,
     InformationNats,
+    PositiveInt,
     SafetyCaseName,
     SafetyRegime,
     ToleranceValue,
@@ -64,7 +65,7 @@ def compatibility_floor_behavior(
     summary: ObservableSummary,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: int,
+    oracle_digits: PositiveInt,
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
@@ -108,7 +109,7 @@ def sharpness_against_generic_oracle(
     summary: ObservableSummary,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: int,
+    oracle_digits: PositiveInt,
 ) -> SolverOracleComparison:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
@@ -123,7 +124,7 @@ def sharpness_against_generic_oracle(
 
 def safety_and_intrinsic_impossibility(
     summary: ObservableSummary,
-    oracle_digits: int,
+    oracle_digits: PositiveInt,
     identity_atol: ToleranceValue,
 ) -> SafetyIntrinsicResult:
     tau_value = observed_timing_information(summary)

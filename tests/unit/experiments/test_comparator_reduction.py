@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from tests.unit.conftest import summary
-from trajcert.config import GridsConfig, TrajCertConfig
+from trajcert.config import GridsConfig, TrajCertConfig, active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS, PRODUCTION_CONFIG_PATH
 from trajcert.data.summaries import ObservableSummary
 from trajcert.experiments.comparator_reduction import (
@@ -48,15 +48,15 @@ def _mixed_summary() -> ObservableSummary:
 
 
 def _evaluate(rho: tuple[float, ...]) -> ComparatorReductionResult:
-    return evaluate_comparator_reduction(
-        _uniform_summary(), _reduced_config(_production_config(), rho)
-    )
+    _ = active_config.set(_reduced_config(_production_config(), rho))
+    return evaluate_comparator_reduction(_uniform_summary())
 
 
 def test_comparator_reduction_requires_configured_finest_partition() -> None:
     coarse = summary([0.125] * 4, [0.125] * 4, 0.0)
+    _ = active_config.set(_reduced_config(_production_config(), (0.0, 0.1)))
     with pytest.raises(ValueError, match="finest partition"):
-        _ = evaluate_comparator_reduction(coarse, _reduced_config(_production_config(), (0.0, 0.1)))
+        _ = evaluate_comparator_reduction(coarse)
 
 
 def test_comparator_reduction_appends_binary_maximum_information() -> None:
@@ -86,9 +86,8 @@ def test_comparator_reduction_uniform_summary_accepts_all_reductions() -> None:
 
 
 def test_comparator_reduction_mixed_summary_reports_incompatibility() -> None:
-    result = evaluate_comparator_reduction(
-        _mixed_summary(), _reduced_config(_production_config(), (0.0, 0.1))
-    )
+    _ = active_config.set(_reduced_config(_production_config(), (0.0, 0.1)))
+    result = evaluate_comparator_reduction(_mixed_summary())
     assert result.alho_common_slope.status == "MODEL_INCOMPATIBLE"
     assert result.alho_common_slope.accepted_hidden_roots == ()
     assert result.stable_resistance.status == "MODEL_INCOMPATIBLE"

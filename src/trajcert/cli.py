@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import cast
 
 from trajcert.config import TrajCertConfig
-from trajcert.constants import PRODUCTION_CONFIG_PATH
+from trajcert.constants import PRODUCTION_CONFIG_PATH, SMOKE_CONFIG_OVERRIDES_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import build_partition
@@ -161,9 +161,10 @@ def _dispatch(arguments: CliArguments) -> None:
             overwrite=arguments.overwrite,
         )
         action = "reused" if exported.reused else "rendered"
+        target = exported.target.as_posix()
         print(
             f"TrajCert report: {action} {exported.rendered_artifact_count} artifacts "
-            + f"from {exported.source_artifact_count} verified sources at {exported.target}"
+            + f"from {exported.source_artifact_count} verified sources at {target}"
         )
 
 
@@ -337,7 +338,10 @@ def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
 
 def smoke(workspace_root: Path | None = None) -> SmokeResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
-    return run_smoke_fixtures(_load_config(workspace_root))
+    config = TrajCertConfig.from_yaml_with_overrides(
+        workspace_root / PRODUCTION_CONFIG_PATH, workspace_root / SMOKE_CONFIG_OVERRIDES_PATH
+    )
+    return run_smoke_fixtures(config)
 
 
 def run_experiment(

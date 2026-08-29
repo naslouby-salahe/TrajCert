@@ -10,6 +10,7 @@ from trajcert.data.partitions import TrajectoryPartition
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 from trajcert.exceptions import NumericalError
 from trajcert.inference.confidence import CategoricalConfidenceRegion, ClosedProbabilityInterval
+from trajcert.math.entropy import binary_entropy_from_masses
 from trajcert.types import DomainModel, ToleranceValue, UnitFloat
 
 
@@ -154,11 +155,11 @@ def _resolved_entropy_envelope(
     correct: tuple[ClosedProbabilityInterval, ...],
 ) -> ScalarEnvelope:
     lower = sum(
-        _binary_entropy_from_masses(left.lower, right.lower)
+        float(binary_entropy_from_masses(left.lower, right.lower))
         for left, right in zip(harmful, correct, strict=True)
     )
     coordinate_upper = sum(
-        _binary_entropy_from_masses(left.upper, right.upper)
+        float(binary_entropy_from_masses(left.upper, right.upper))
         for left, right in zip(harmful, correct, strict=True)
     )
     resolved_mass_upper = min(
@@ -171,21 +172,9 @@ def _resolved_entropy_envelope(
 
 def _resolved_entropy_exact(harmful: tuple[float, ...], correct: tuple[float, ...]) -> float:
     return sum(
-        _binary_entropy_from_masses(left, right)
+        float(binary_entropy_from_masses(left, right))
         for left, right in zip(harmful, correct, strict=True)
     )
-
-
-def _binary_entropy_from_masses(harmful: float, correct: float) -> float:
-    total = harmful + correct
-    if total == 0.0:
-        return 0.0
-    value = 0.0
-    if harmful > 0.0:
-        value -= harmful * log(harmful / total)
-    if correct > 0.0:
-        value -= correct * log(correct / total)
-    return value
 
 
 def _scalar(interval: ClosedProbabilityInterval) -> ScalarEnvelope:

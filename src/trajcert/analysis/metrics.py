@@ -15,44 +15,9 @@ class PracticalMetric(StrEnum):
     CERTIFIED_UPDATE_FRACTION = "Certified update fraction"
 
 
-class PairedMetricValue(DomainModel):
-    metric_name: PracticalMetric
-    method_value: FiniteFloat
-    baseline_value: FiniteFloat
-    favorable_difference: FiniteFloat
-
-
 class PopulationGain(DomainModel):
     absolute_tightening: FiniteFloat
     relative_unresolved_gain: FiniteFloat | None
-
-
-def favorable_difference(
-    metric_name: PracticalMetric,
-    method_value: FiniteFloat,
-    baseline_value: FiniteFloat,
-) -> FiniteFloat:
-    if metric_name in {
-        PracticalMetric.ANYTIME_UPPER_RISK,
-        PracticalMetric.TIME_TO_FIRST_CERTIFICATION,
-    }:
-        return float(baseline_value) - float(method_value)
-    if metric_name is PracticalMetric.CERTIFIED_UPDATE_FRACTION:
-        return float(method_value) - float(baseline_value)
-    raise InvalidScientificDataError(f"unsupported practical metric: {metric_name}")
-
-
-def paired_metric_value(
-    metric_name: PracticalMetric,
-    method_value: FiniteFloat,
-    baseline_value: FiniteFloat,
-) -> PairedMetricValue:
-    return PairedMetricValue(
-        metric_name=metric_name,
-        method_value=method_value,
-        baseline_value=baseline_value,
-        favorable_difference=favorable_difference(metric_name, method_value, baseline_value),
-    )
 
 
 def numeric_first_certification(

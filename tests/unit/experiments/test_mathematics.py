@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from tests.unit.conftest import summary
-from trajcert.config import active_config
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.mathematics import (
@@ -263,22 +262,19 @@ def test_proof_check_helpers_always_pass() -> None:
 
 
 def test_legacy_partition_incoherence_rejects_gamma_below_one() -> None:
-    config = active_config.get()
     with pytest.raises(InvalidScientificDataError, match="at least one"):
-        _ = evaluate_legacy_partition_incoherence(0.5, 0.1, config)
+        _ = evaluate_legacy_partition_incoherence(0.5, 0.1)
 
 
 def test_legacy_partition_incoherence_rejects_outside_unit_q() -> None:
-    config = active_config.get()
     with pytest.raises(InvalidScientificDataError, match="strictly inside"):
-        _ = evaluate_legacy_partition_incoherence(2.0, 0.0, config)
+        _ = evaluate_legacy_partition_incoherence(2.0, 0.0)
     with pytest.raises(InvalidScientificDataError, match="strictly inside"):
-        _ = evaluate_legacy_partition_incoherence(2.0, 1.0, config)
+        _ = evaluate_legacy_partition_incoherence(2.0, 1.0)
 
 
 def test_legacy_partition_incoherence_measures_endpoint_widening() -> None:
-    config = active_config.get()
-    result = evaluate_legacy_partition_incoherence(2.0, 0.1, config)
+    result = evaluate_legacy_partition_incoherence(2.0, 0.1)
     assert isinstance(result, LegacyPartitionIncoherenceResult)
     assert result.passed
     assert result.endpoint_difference_direction in (

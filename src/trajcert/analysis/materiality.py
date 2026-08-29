@@ -96,7 +96,7 @@ def evaluate_sequential_materiality(
     observations: Iterable[SequentialMaterialityObservation],
     config: TrajCertConfig,
 ) -> SequentialMaterialitySummary:
-    qualified_by_law: dict[LawName, set[float]] = defaultdict(set) #TODO: why use set of float instead of set of sensitivity budgets?
+    qualified_by_law: dict[LawName, set[SensitivityBudget]] = defaultdict(set)
     encountered_laws: set[LawName] = set()
     for observation in observations:
         encountered_laws.add(observation.law_name)

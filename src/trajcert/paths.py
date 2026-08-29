@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import os
+import sys
 from enum import StrEnum
 from math import isnan
 from pathlib import Path
 from typing import NewType
 
 from trajcert.exceptions import SerializationError
+
+_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
 
 ExperimentSlug = NewType("ExperimentSlug", str)
 CoordinateName = NewType("CoordinateName", str)
@@ -44,6 +48,25 @@ class ExperimentLeaf(StrEnum):
     PROVENANCE_CODE = "provenance/code"
     PROVENANCE_ENVIRONMENT = "provenance/environment"
     PROVENANCE_DEPENDENCIES = "provenance/dependencies"
+
+
+def long_path_safe(path: Path) -> Path:
+    if sys.platform != "win32":
+        return path
+    resolved = path.resolve()
+    if str(resolved).startswith(_WINDOWS_EXTENDED_LENGTH_PREFIX):
+        return resolved
+    return Path(f"{_WINDOWS_EXTENDED_LENGTH_PREFIX}{resolved}")
+
+
+def fsync_directory(directory: Path) -> None:
+    if sys.platform == "win32":
+        return
+    descriptor = os.open(directory, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
 
 
 def semantic_slug(value: str) -> CoordinateToken:

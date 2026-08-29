@@ -8,7 +8,14 @@ from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import CategoricalConfidenceRegion, ClosedProbabilityInterval
 from trajcert.inference.envelope import summary_envelope_from_confidence
 from trajcert.inference.projection import ProjectionResult, project_upper_risk
-from trajcert.types import NonNegativeInt, SensitivityBudget, ToleranceValue, UnitFloat
+from trajcert.types import (
+    Count,
+    FiniteFloat,
+    NonNegativeInt,
+    SensitivityBudget,
+    ToleranceValue,
+    UnitFloat,
+)
 
 
 def repeated_static_region(
@@ -53,7 +60,7 @@ def repeated_static_projection(
     )
 
 
-def _wilson_interval(successes: int, total: int, z: float) -> ClosedProbabilityInterval: #TODO: don't use primitive int and float and check why tests aren't catching it
+def _wilson_interval(successes: Count, total: Count, z: FiniteFloat) -> ClosedProbabilityInterval:
     proportion = successes / total
     z_squared = z * z
     denominator = 1.0 + z_squared / total

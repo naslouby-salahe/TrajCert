@@ -1,3 +1,5 @@
+from typing import NoReturn
+
 from _pytest._code import ExceptionInfo
 from _pytest.capture import CaptureFixture
 from _pytest.fixtures import FixtureFunction, FixtureFunctionMarker, fixture
@@ -21,7 +23,10 @@ __all__ = [
     "fixture",
     "mark",
     "raises",
+    "skip",
 ]
+
+def skip(reason: str = "", *, allow_module_level: bool = False) -> NoReturn: ...
 
 def approx(
     expected: object,

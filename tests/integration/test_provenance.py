@@ -73,8 +73,15 @@ def _write_workspace_commit(workspace_root: Path) -> None:
     )
 
 
+def _symlink_or_skip(link: Path, target: Path) -> None:
+    try:
+        link.symlink_to(target)
+    except OSError as exc:
+        pytest.skip(f"symlink creation unavailable in this environment: {exc}")
+
+
 def _link_source_and_config(workspace_root: Path) -> None:
-    (workspace_root / "src").symlink_to((_REPO_ROOT / "src").resolve())
+    _symlink_or_skip(workspace_root / "src", (_REPO_ROOT / "src").resolve())
     (workspace_root / "configs").mkdir(parents=True, exist_ok=True)
     _ = shutil.copyfile(
         _REPO_ROOT / "configs" / "trajcert.yaml",
@@ -157,7 +164,7 @@ def test_scientific_specification_digest_is_config_content_sensitive() -> None:
 
 
 def test_producer_component_digest_is_deterministic_over_a_symlinked_tree(tmp_path: Path) -> None:
-    (tmp_path / "src").symlink_to((_REPO_ROOT / "src").resolve())
+    _symlink_or_skip(tmp_path / "src", (_REPO_ROOT / "src").resolve())
     first = producer_component_digest(tmp_path, _LEGACY_CHECK_NAME)
     second = producer_component_digest(tmp_path, _LEGACY_CHECK_NAME)
     assert first == second
@@ -181,7 +188,7 @@ def test_producer_component_digest_is_sensitive_to_real_file_content(tmp_path: P
 
 
 def test_producer_component_digest_rejects_unknown_experiment_name(tmp_path: Path) -> None:
-    (tmp_path / "src").symlink_to((_REPO_ROOT / "src").resolve())
+    _symlink_or_skip(tmp_path / "src", (_REPO_ROOT / "src").resolve())
     with pytest.raises(InvalidScientificDataError):
         _ = producer_component_digest(tmp_path, ExperimentNameValue("Not A Real Experiment"))
 

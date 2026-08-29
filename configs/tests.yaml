@@ -1,1 +1,5 @@
-
+sequential:
+  coverage: {streams: 20, max_events: 200, checkpoint_every: 100}
+  utility: {streams: 10, max_events: 200, checkpoint_every: 100}
+statistics: {bootstrap_resamples: 100, sign_flip_randomizations: 100}
+benchmark: {warmup_repetitions: 1, measured_repetitions: 2}

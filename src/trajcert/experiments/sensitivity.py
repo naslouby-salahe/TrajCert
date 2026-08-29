@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from statistics import mean
 
+from trajcert.analysis.metrics import population_gain
 from trajcert.config import TrajCertConfig
 from trajcert.data.laws import LawParameters
 from trajcert.data.maturity import mature_ledger
@@ -85,9 +86,10 @@ def population_sensitivity_utility(
     lower = float(solved.latent_risk.lower)
     upper = float(solved.latent_risk.upper)
     width = float(solved.latent_risk.width)
-    tightening = worst - upper
     unresolved = float(summary.unresolved_mass)
-    relative = None if unresolved == 0.0 else tightening / unresolved
+    gain = population_gain(worst, upper, unresolved)
+    tightening = gain.absolute_tightening
+    relative = gain.relative_unresolved_gain
     materially_nonvacuous = (
         solved.solve_result.compatibility.regime is not CompatibilityRegime.MODEL_INCOMPATIBLE
         and tightening >= config.materiality.population.absolute_tightening

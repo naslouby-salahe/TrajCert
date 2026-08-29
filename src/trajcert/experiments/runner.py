@@ -69,7 +69,7 @@ from trajcert.inference.projection import project_upper_risk
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyBudgetCase, safety_budget_cases
-from trajcert.paths import ExperimentLeaf, semantic_cell_path, semantic_slug
+from trajcert.paths import ExperimentLeaf, long_path_safe, semantic_cell_path, semantic_slug
 from trajcert.provenance import (
     ExperimentNameValue,
     FailureBoundaryCoordinate,
@@ -478,7 +478,7 @@ def _verify_artifacts(index: CellArtifactIndex, workspace_root: Path) -> None:
         artifact_path = (workspace_root / entry.relative_path).resolve()
         if not artifact_path.is_relative_to(root):
             raise InvariantViolationError("artifact path escapes the workspace root")
-        if not artifact_path.is_file():
+        if not long_path_safe(artifact_path).is_file():
             raise InvariantViolationError(
                 f"required produced artifact is missing: {entry.artifact_key}"
             )
@@ -823,6 +823,7 @@ def _dispatch_scientific_and_data_inventory(
 def _dispatch_legacy_partition_incoherence(
     cell: PlannedCell, config: TrajCertConfig
 ) -> DomainModel:
+    del config
     gamma = cell.identity.coordinates.gamma
     variant = cell.identity.coordinates.variant_name
     if gamma is None or variant is None or not str(variant).startswith("q="):
@@ -830,7 +831,6 @@ def _dispatch_legacy_partition_incoherence(
     return evaluate_legacy_partition_incoherence(
         gamma=float(gamma),
         q=float(str(variant).removeprefix("q=")),
-        config=config,
     )
 
 
@@ -1081,8 +1081,8 @@ def _summary_safety_boundary_identity(
 def _summary_comparator_reduction(
     cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
 ) -> DomainModel:
-    del cell
-    return evaluate_comparator_reduction(summary, config)
+    del cell, config
+    return evaluate_comparator_reduction(summary)
 
 
 _SUMMARY_DISPATCH_TABLE: dict[
@@ -1265,6 +1265,7 @@ def _coverage_stress_case(cell: PlannedCell, config: TrajCertConfig) -> DomainMo
 
 
 def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+    del config
     coordinate = cell.identity.coordinates.failure_boundary_axis_and_level
     if coordinate is None:
         raise ScientificCellDispatchError("failure-boundary cell is missing axis/level")
@@ -1279,12 +1280,11 @@ def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> Doma
         return evaluate_terminal_selection_asymmetry(
             q1=float(q1_text.removeprefix("q1:")),
             q0=float(q0_text),
-            config=config,
         )
     if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
-        return evaluate_optimizer_node_budget(int(value_text), config)
+        return evaluate_optimizer_node_budget(int(value_text))
     parsed_axis, level = _failure_coordinate(coordinate)
-    return evaluate_failure_boundary(parsed_axis, level, config)
+    return evaluate_failure_boundary(parsed_axis, level)
 
 
 def _failure_coordinate(
@@ -1403,7 +1403,7 @@ def _validate_upstream_artifact_entry(
         raise InvalidScientificDataError("upstream artifact index contains a stale result path")
     result_path = (workspace_root / entry.relative_path).resolve()
     root = workspace_root.resolve()
-    if not result_path.is_relative_to(root) or not result_path.is_file():
+    if not result_path.is_relative_to(root) or not long_path_safe(result_path).is_file():
         raise InvalidScientificDataError("upstream scientific-result artifact is missing")
     if file_digest(result_path) != entry.sha256:
         raise InvalidScientificDataError("upstream scientific-result checksum mismatch")

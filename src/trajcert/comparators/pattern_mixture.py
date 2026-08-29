@@ -10,12 +10,9 @@ from scipy.special import expit
 
 from trajcert.config import LegacyPatternMixtureConfig
 from trajcert.data.summaries import ObservableSummary
-from trajcert.types import DomainModel, RiskValue
+from trajcert.types import Count, DomainModel, NonNegativeFloat, RiskValue
 
-_INITIAL_CLIP = 1e-8 #TODO: these should be in yml and accessed through the configuration
-_GRADIENT_ACCEPTANCE = 1e-8 #TODO: these should be in yml and accessed through the configuration
-_BOUNDARY_DISTANCE = 1e-8 #TODO: these should be in yml and accessed through the configuration
-_MINIMUM_NONEMPTY_BANDS = 2 #TODO: these should be in yml and accessed through the configuration
+_MINIMUM_NONEMPTY_BANDS = 2
 
 _CoefficientVector = np.ndarray[tuple[int], np.dtype[np.float64]]
 
@@ -27,17 +24,17 @@ class PatternMixtureStatus(StrEnum):
 
 
 class PatternMixturePoint(DomainModel):
-    sensitivity_c: int #TODO: don't use primitive int and check why tests aren't catching it
+    sensitivity_c: Count
     terminal_harmful_probability: RiskValue
     latent_risk: RiskValue
 
 
 class PatternMixtureResult(DomainModel):
     status: PatternMixtureStatus
-    intercept: float | None #TODO: don't use primitive float and check why tests aren't catching it
-    slope: float | None #TODO: don't use primitive float and check why tests aren't catching it
-    gradient_infinity_norm: float | None #TODO: don't use primitive float and check why tests aren't catching it
-    objective: float | None #TODO: don't use primitive float and check why tests aren't catching it
+    intercept: float | None
+    slope: float | None
+    gradient_infinity_norm: NonNegativeFloat | None
+    objective: float | None
     points: tuple[PatternMixturePoint, ...]
 
 
@@ -55,7 +52,7 @@ def fit_pattern_mixture(
     weights = masses[nonempty]
     rates = harmful[nonempty] / weights
     resolved_rate = float(summary.resolved_harmful_mass / summary.resolved_mass)
-    clipped = min(1.0 - _INITIAL_CLIP, max(_INITIAL_CLIP, resolved_rate))
+    clipped = min(1.0 - config.initial_clip, max(config.initial_clip, resolved_rate))
     initial = np.asarray((log(clipped / (1.0 - clipped)), 0.0), dtype=np.float64)
     lower, upper = config.coefficient_bounds
     bounds = ((float(lower), float(upper)), (float(lower), float(upper)))
@@ -95,9 +92,9 @@ def fit_pattern_mixture(
         and np.all(np.isfinite(coefficients))
         and np.all(np.isfinite(final_gradient))
         and isfinite(final_objective)
-        and gradient_norm <= _GRADIENT_ACCEPTANCE
+        and gradient_norm <= config.gradient_acceptance
         and all(
-            min(coefficient - float(lower), float(upper) - coefficient) > _BOUNDARY_DISTANCE
+            min(coefficient - float(lower), float(upper) - coefficient) > config.boundary_distance
             for coefficient in coefficients
         )
     )

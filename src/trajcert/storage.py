@@ -12,7 +12,7 @@ from typing import Literal, NewType, TypeVar, cast
 from pydantic import BaseModel, ValidationError
 
 from trajcert.exceptions import SerializationError
-from trajcert.paths import canonical_number_token
+from trajcert.paths import canonical_number_token, fsync_directory, long_path_safe
 from trajcert.types import DomainModel, NonNegativeInt
 
 ArtifactKey = NewType("ArtifactKey", str)
@@ -86,6 +86,7 @@ def models_digest(models: tuple[BaseModel, ...]) -> DigestHex:
 
 
 def file_digest(path: Path) -> DigestHex:
+    path = long_path_safe(path)
     digest = sha256()
     try:
         with path.open("rb") as stream:
@@ -110,6 +111,7 @@ def atomic_write_model(path: Path, model: BaseModel) -> DigestHex:
 
 
 def read_model[ModelT: BaseModel](path: Path, model_type: type[ModelT]) -> ModelT:
+    path = long_path_safe(path)
     try:
         payload = path.read_bytes()
     except OSError as exc:
@@ -121,11 +123,13 @@ def read_model[ModelT: BaseModel](path: Path, model_type: type[ModelT]) -> Model
 
 
 def write_completion_last(directory: Path, completion: CompletionRecord) -> DigestHex:
+    directory = long_path_safe(directory)
     directory.mkdir(parents=True, exist_ok=True)
     return atomic_write_model(directory / "COMPLETED.json", completion)
 
 
 def _atomic_write_bytes(path: Path, payload: bytes) -> None:
+    path = long_path_safe(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path: Path | None = None
     try:
@@ -137,11 +141,7 @@ def _atomic_write_bytes(path: Path, payload: bytes) -> None:
             os.fsync(stream.fileno())
             temporary_path = Path(stream.name)
         _ = temporary_path.replace(path)
-        directory_descriptor = os.open(path.parent, os.O_RDONLY)
-        try:
-            os.fsync(directory_descriptor)
-        finally:
-            os.close(directory_descriptor)
+        fsync_directory(path.parent)
     except OSError as exc:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)

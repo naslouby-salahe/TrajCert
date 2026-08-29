@@ -16,6 +16,7 @@ from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity
 from trajcert.data.partitions import TrajectoryPartition
 from trajcert.determinism import event_stream_namespace, generator_for
 from trajcert.exceptions import InvalidProbabilityError
+from trajcert.paths import semantic_slug
 from trajcert.types import (
     ActionChannelId,
     BandIndex,
@@ -25,6 +26,7 @@ from trajcert.types import (
     EpochId,
     EventId,
     LawName,
+    NonNegativeInt,
     OutcomeLabel,
     PositiveInt,
     Probability,
@@ -35,7 +37,7 @@ CategoryIndex = NewType("CategoryIndex", int)
 
 _SYNTHETIC_CLIENT_ID = ClientId("synthetic-client")
 _SYNTHETIC_ACTION_CHANNEL_ID = ActionChannelId("automatic-action")
-_EVENT_INDEX_WIDTH = 6 #TODO: I think this should be in yaml unless i'm mistaken and it should be accessed through the config
+_EVENT_INDEX_WIDTH = 6
 
 
 class ObservableCategoryProbability(DomainModel):
@@ -173,7 +175,7 @@ def _sample_event(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: int, #TODO: don't use primitive int and check why tests aren't catching it
+    event_index: NonNegativeInt,
     random: np.random.Generator,
     harmful_weights: np.ndarray,
     correct_weights: np.ndarray,
@@ -207,7 +209,7 @@ def _event_from_observable_category(
     law_name: LawName,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: int, #TODO: don't use primitive int and check why tests aren't catching it
+    event_index: NonNegativeInt,
     category: ObservableCategoryProbability,
 ) -> LedgerEvent:
     issue = float(event_index)
@@ -221,7 +223,7 @@ def _event_from_observable_category(
         event_id=_event_id(law_name, stream_index, event_index),
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
-        epoch_id=EpochId(f"{_slug(law_name)}::static-epoch"),
+        epoch_id=EpochId(f"{semantic_slug(str(law_name))}::static-epoch"),
         issue_age_unit=issue,
         terminal_horizon=partition.terminal_horizon,
         adjudication_completion_age=completion,
@@ -233,24 +235,15 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
-        epoch_id=EpochId(f"{_slug(law_name)}::static-epoch"),
+        epoch_id=EpochId(f"{semantic_slug(str(law_name))}::static-epoch"),
     )
 
 
-def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: int) -> EventId: #TODO: don't use primitive int and check why tests aren't catching it
+def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: NonNegativeInt) -> EventId:
     return EventId(
-        f"{_slug(law_name)}::S{int(stream_index):0{_EVENT_INDEX_WIDTH}d}"
+        f"{semantic_slug(str(law_name))}::S{int(stream_index):0{_EVENT_INDEX_WIDTH}d}"
         + f"::E{event_index:0{_EVENT_INDEX_WIDTH}d}"
     )
-
-
-def _slug(value: LawName) -> str: #TODO: don't use primitive str and check why tests aren't catching it
-    characters = tuple(character.lower() if character.isalnum() else "-" for character in value)
-    collapsed: list[str] = []
-    for character in characters:
-        if character != "-" or not collapsed or collapsed[-1] != "-":
-            collapsed.append(character)
-    return "".join(collapsed).strip("-")
 
 
 def _validate_probability_vector(probabilities: tuple[Probability, ...]) -> None:

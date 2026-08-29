@@ -2348,7 +2348,7 @@ TrajCert/
 │       │   # Minimal package marker / intentionally small public API.
 │       │
 │       ├── cli.py
-│       │   # Public Typer CLI.
+│       │   # Public argparse-based CLI.
 │       │   # doctor / preprocess / plan / smoke / run / status / report.
 │       │
 │       ├── config.py
@@ -2564,44 +2564,33 @@ TrajCert/
 │
 ├── tests/
 │   ├── unit/
-│   │   ├── test_config.py
-│   │   │   # Configuration parsing and cross-field validation.
-│   │   ├── test_laws.py
-│   │   │   # Synthetic-law validity and simplex constraints.
-│   │   ├── test_ledger.py
-│   │   │   # Ledger integrity and maturity rules.
-│   │   ├── test_partitions.py
-│   │   │   # Coarsening/refinement correctness.
-│   │   ├── test_entropy.py
-│   │   │   # Entropy boundaries and numerical stability.
-│   │   ├── test_information.py
-│   │   │   # tau and S(u) identities.
-│   │   ├── test_compatibility.py
-│   │   │   # Compatibility-floor behavior.
-│   │   ├── test_bounds.py
-│   │   │   # Sharp risk sets and root branches.
-│   │   ├── test_safety.py
-│   │   │   # Intrinsic impossibility and safety-frontier regimes.
-│   │   ├── test_solver.py
-│   │   │   # Solver bracketing/tolerance behavior.
-│   │   ├── test_oracle.py
-│   │   │   # Independent-oracle correctness.
-│   │   ├── test_confidence.py
-│   │   │   # Sequential confidence construction.
-│   │   ├── test_projection.py
-│   │   │   # Observable-law projection.
-│   │   ├── test_certification.py
-│   │   │   # Scientific state assignment.
-│   │   ├── test_comparators.py
-│   │   │   # Comparator formulas and assumptions.
-│   │   ├── test_metrics.py
-│   │   │   # Derived metrics.
-│   │   ├── test_statistics.py
-│   │   │   # Bootstrap/sign-flip/multiplicity.
-│   │   ├── test_materiality.py
-│   │   │   # Materiality decisions.
-│   │   └── test_storage.py
-│   │       # Persistence and atomic-write semantics.
+│   │   ├── test_config.py, test_constants.py, test_types.py, test_schemas.py,
+│   │   │   test_paths.py, test_storage.py, test_provenance.py,
+│   │   │   test_determinism.py, test_cli.py
+│   │   │   # Cross-cutting: configuration, domain types, schemas, path
+│   │   │   # helpers, persistence, provenance, determinism, CLI entry points.
+│   │   ├── analysis/
+│   │   │   # test_aggregation.py, test_bootstrap.py, test_materiality.py,
+│   │   │   # test_metrics.py, test_multiplicity.py, test_sign_flip.py.
+│   │   ├── comparators/
+│   │   │   # test_comparators.py — comparator formulas and assumptions.
+│   │   ├── data/
+│   │   │   # test_laws.py, test_ledger.py, test_maturity.py,
+│   │   │   # test_partitions.py, test_synthetic.py.
+│   │   ├── experiments/
+│   │   │   # One file per experiments/ module (anytime, comparator_reduction,
+│   │   │   # failure_boundaries, inventory, mathematics, plan, registry,
+│   │   │   # runner, safety, scaling, sensitivity, solver_validation,
+│   │   │   # status, synthesis, timing).
+│   │   ├── inference/
+│   │   │   # test_categorical.py, test_certification.py, test_confidence.py,
+│   │   │   # test_envelope.py, test_projection.py.
+│   │   ├── math/
+│   │   │   # test_compatibility.py, test_entropy.py, test_information.py,
+│   │   │   # test_oracle.py, test_safety.py, test_solver.py.
+│   │   └── reporting/
+│   │       # test_export.py, test_figures.py, test_source_data.py,
+│   │       # test_tables.py.
 │   │
 │   ├── integration/
 │   │   ├── test_preprocessing.py

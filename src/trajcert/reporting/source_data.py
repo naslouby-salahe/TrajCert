@@ -46,6 +46,7 @@ from trajcert.math.information import (
     observed_timing_information,
 )
 from trajcert.math.safety import assess_safety_geometry
+from trajcert.paths import fsync_directory
 from trajcert.provenance import ExperimentNameValue
 from trajcert.schemas import (
     PublicationSourceDescriptor,
@@ -1454,14 +1455,10 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
             use_dictionary=True,
             write_statistics=True,
         )
-        with temporary_path.open("rb") as stream:
+        with temporary_path.open("rb+") as stream:
             os.fsync(stream.fileno())
         _ = temporary_path.replace(path)
-        directory_descriptor = os.open(path.parent, os.O_RDONLY)
-        try:
-            os.fsync(directory_descriptor)
-        finally:
-            os.close(directory_descriptor)
+        fsync_directory(path.parent)
     except (OSError, pa.ArrowException) as exc:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)

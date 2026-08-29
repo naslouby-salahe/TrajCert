@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import resource
+import sys
 from enum import StrEnum
 from multiprocessing import get_context
 from multiprocessing.connection import Connection
@@ -9,6 +9,7 @@ from time import perf_counter_ns
 from typing import cast
 
 import numpy as np
+import psutil
 from threadpoolctl import threadpool_limits
 
 from trajcert.config import TrajCertConfig, active_config
@@ -167,7 +168,7 @@ def _worker(
             start = perf_counter_ns()
             root_iterations, outer_nodes = _execute_target(target, band_count, config)
             runtime_ns = perf_counter_ns() - start
-            peak_rss_mib = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+            peak_rss_mib = _peak_resident_set_mib()
         envelope = ScalingWorkerEnvelope(
             measurement=ScalingMeasurement(
                 target=target,
@@ -182,6 +183,18 @@ def _worker(
         envelope = ScalingWorkerEnvelope(measurement=None, failure=f"{type(exc).__name__}: {exc}")
     connection.send(envelope.model_dump_json())
     connection.close()
+
+
+if sys.platform == "win32":
+
+    def _peak_resident_set_mib() -> float:
+        peak_wset = cast(int, psutil.Process().memory_info().peak_wset)
+        return peak_wset / (1024.0 * 1024.0)
+else:
+    import resource
+
+    def _peak_resident_set_mib() -> float:
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
 
 
 def _execute_target(

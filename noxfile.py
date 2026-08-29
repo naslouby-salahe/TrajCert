@@ -41,8 +41,6 @@ def tests(session: nox.Session) -> None:
 @nox.session(reuse_venv=True)
 def verify(session: nox.Session) -> None:
     session.run("uv", "sync", "--extra", "quality", external=True)
-    session.run(
-        "uv", "run", "pytest", "tests/architecture/test_guardrail_integrity.py", external=True
-    )
+    session.run("uv", "run", "pytest", "tests/architecture", external=True)
     session.run("uv", "run", "crosshair", "check", "src/trajcert/math/safety.py", external=True)
     session.run("uv", "run", "mutmut", "run", "--max-children", "1", external=True)

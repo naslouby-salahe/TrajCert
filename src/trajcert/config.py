@@ -248,6 +248,8 @@ class NumericsConfig(ConfigModel):
     outer_max_nodes: PositiveInt
     arbitrary_precision_bits: PositiveInt
     float_roundoff_ulps: PositiveFloat
+    profile_grid_points: PositiveInt
+    sharp_diagnostic_grid_points: PositiveInt
 
 
 class LegacyPatternMixtureConfig(ConfigModel):
@@ -256,6 +258,9 @@ class LegacyPatternMixtureConfig(ConfigModel):
     ftol: PositiveFloat
     gtol: PositiveFloat
     max_iterations: PositiveInt
+    initial_clip: PositiveFloat
+    gradient_acceptance: PositiveFloat
+    boundary_distance: PositiveFloat
 
     @model_validator(mode="after")
     def validate_bounds(self) -> LegacyPatternMixtureConfig:
@@ -265,9 +270,18 @@ class LegacyPatternMixtureConfig(ConfigModel):
         return self
 
 
+class CallbackConfig(ConfigModel):
+    grid_points: PositiveInt
+    minimum_bracket_width: PositiveFloat
+    common_slope_tolerance: PositiveFloat
+    stable_equality_tolerance: PositiveFloat
+    root_deduplication_tolerance: PositiveFloat
+
+
 class ComparatorsConfig(ConfigModel):
     legacy_gamma: tuple[Annotated[StrictFloat, Field(ge=1.0)], ...]
     pattern_mixture: LegacyPatternMixtureConfig
+    callback: CallbackConfig
 
     @model_validator(mode="after")
     def validate_grids(self) -> ComparatorsConfig:
@@ -336,6 +350,39 @@ class BenchmarkConfig(ConfigModel):
     measured_repetitions: PositiveInt
 
 
+class CoverageSizeOverrides(ConfigModel):
+    streams: PositiveInt | None = None
+    max_events: PositiveInt | None = None
+    checkpoint_every: PositiveInt | None = None
+
+
+class SequentialUtilitySizeOverrides(ConfigModel):
+    streams: PositiveInt | None = None
+    max_events: PositiveInt | None = None
+    checkpoint_every: PositiveInt | None = None
+
+
+class SequentialSizeOverrides(ConfigModel):
+    coverage: CoverageSizeOverrides = CoverageSizeOverrides()
+    utility: SequentialUtilitySizeOverrides = SequentialUtilitySizeOverrides()
+
+
+class StatisticsSizeOverrides(ConfigModel):
+    bootstrap_resamples: PositiveInt | None = None
+    sign_flip_randomizations: PositiveInt | None = None
+
+
+class BenchmarkSizeOverrides(ConfigModel):
+    warmup_repetitions: NonNegativeInt | None = None
+    measured_repetitions: PositiveInt | None = None
+
+
+class ExecutionSizeOverrides(ConfigModel):
+    sequential: SequentialSizeOverrides = SequentialSizeOverrides()
+    statistics: StatisticsSizeOverrides = StatisticsSizeOverrides()
+    benchmark: BenchmarkSizeOverrides = BenchmarkSizeOverrides()
+
+
 class FailureBoundaryConfig(ConfigModel):
     unresolvedness: tuple[UnitFloat, ...]
     timing_contrast: tuple[NonNegativeFloat, ...]
@@ -347,6 +394,7 @@ class FailureBoundaryConfig(ConfigModel):
     terminal_selection_asymmetry: tuple[tuple[UnitFloat, UnitFloat], ...]
     optimizer_nodes: tuple[PositiveInt, ...]
     optimizer_sample_size: PositiveInt
+    optimizer_information_margin: NonNegativeFloat
 
     @model_validator(mode="after")
     def validate_axes(self) -> FailureBoundaryConfig:
@@ -453,6 +501,54 @@ class TrajCertConfig(ConfigModel):
             return cls.model_validate(data)
         except ValueError as exc:
             raise ConfigurationError(str(exc)) from exc
+
+    @classmethod
+    def from_yaml_with_overrides(cls, path: Path, overrides_path: Path) -> TrajCertConfig:
+        config = cls.from_yaml(path)
+        overrides = _execution_size_overrides(overrides_path)
+        if overrides is None:
+            return config
+        merged = cast(dict[str, dict[str, YamlValue]], config.model_dump(mode="json"))
+        sequential = merged["sequential"]
+        sequential["coverage"] = _merge_size_fields(
+            cast(dict[str, YamlValue], sequential["coverage"]), overrides.sequential.coverage
+        )
+        sequential["utility"] = _merge_size_fields(
+            cast(dict[str, YamlValue], sequential["utility"]), overrides.sequential.utility
+        )
+        merged["statistics"] = _merge_size_fields(merged["statistics"], overrides.statistics)
+        merged["benchmark"] = _merge_size_fields(merged["benchmark"], overrides.benchmark)
+        try:
+            return cls.model_validate(merged)
+        except ValueError as exc:
+            raise ConfigurationError(str(exc)) from exc
+
+
+def _execution_size_overrides(overrides_path: Path) -> ExecutionSizeOverrides | None:
+    if not overrides_path.is_file():
+        return None
+    try:
+        text = overrides_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ConfigurationError(f"cannot read overrides file: {overrides_path}") from exc
+    try:
+        loaded = cast(RawYamlValue, yaml.safe_load(text))
+    except yaml.YAMLError as exc:
+        raise ConfigurationError(f"invalid YAML overrides: {overrides_path}") from exc
+    if loaded is None:
+        return None
+    data = _coerce_yaml_value(loaded)
+    if not isinstance(data, Mapping):
+        raise ConfigurationError("overrides root must be a mapping")
+    try:
+        return ExecutionSizeOverrides.model_validate(data)
+    except ValueError as exc:
+        raise ConfigurationError(str(exc)) from exc
+
+
+def _merge_size_fields(base: dict[str, YamlValue], overrides: ConfigModel) -> dict[str, YamlValue]:
+    override_values = cast(dict[str, YamlValue], overrides.model_dump(mode="json"))
+    return {**base, **{name: value for name, value in override_values.items() if value is not None}}
 
 
 def _validate_nested_partitions(partitions: tuple[PositiveInt, ...]) -> None:

@@ -691,7 +691,7 @@ def test_main_report_prints_rendered_summary(
     exported = _fake_report_rendered(experiment_name=None, overwrite=False)
     expected = (
         f"TrajCert report: rendered {exported.rendered_artifact_count} artifacts "
-        f"from {exported.source_artifact_count} verified sources at {exported.target}\n"
+        f"from {exported.source_artifact_count} verified sources at {exported.target.as_posix()}\n"
     )
     assert capsys.readouterr().out == expected
 
@@ -1041,7 +1041,10 @@ def test_run_experiment_rejects_missing_uv_lock(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    _ = (workspace / "src").symlink_to(_REPO_SRC, target_is_directory=True)
+    try:
+        _ = (workspace / "src").symlink_to(_REPO_SRC, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"symlink creation unavailable in this environment: {exc}")
     monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)

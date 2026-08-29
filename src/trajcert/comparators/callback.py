@@ -6,15 +6,11 @@ from enum import StrEnum
 
 from mpmath import log, mp, mpf, sqrt
 
+from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
-from trajcert.types import DomainModel, PositiveInt, RiskInterval
+from trajcert.types import Count, DomainModel, Mass, NonNegativeInt, PositiveInt, RiskInterval
 
-_GRID_POINTS = 10_001 #TODO: move this to yaml and access it though configuration
-_MINIMUM_BRACKET_WIDTH = mpf("1e-30") #TODO: move this to yaml and access it though configuration
-_COMMON_SLOPE_TOLERANCE = mpf("1e-20") #TODO: move this to yaml and access it though configuration
-_STABLE_EQUALITY_TOLERANCE = mpf("1e-10") #TODO: move this to yaml and access it though configuration
-_ROOT_DEDUPLICATION_TOLERANCE = mpf("1e-12") #TODO: move this to yaml and access it though configuration
-_MINIMUM_COMPARABLE_BANDS = 2 #TODO: move this to yaml and access it though configuration
+_MINIMUM_COMPARABLE_BANDS = 2
 
 
 class CallbackStatus(StrEnum):
@@ -25,9 +21,9 @@ class CallbackStatus(StrEnum):
 
 class CallbackResult(DomainModel):
     status: CallbackStatus
-    accepted_hidden_roots: tuple[float, ...] #TODO: do not use float primitive. Also check why architecture tests aren't catching this?
+    accepted_hidden_roots: tuple[Mass, ...]
     latent_risk_interval: RiskInterval | None
-    informative_bands: int #TODO: do not use int primitive. Also check why architecture tests aren't catching this?
+    informative_bands: Count
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +40,7 @@ def alho_common_slope_callback(
     summary: ObservableSummary,
     oracle_digits: PositiveInt,
 ) -> CallbackResult:
+    config = active_config.get().comparators.callback
     data = _data(summary)
     informative = sum(
         left > mpf(0) and right > mpf(0)
@@ -55,7 +52,10 @@ def alho_common_slope_callback(
         data,
         oracle_digits,
         _common_slope_objective,
-        _COMMON_SLOPE_TOLERANCE,
+        mpf(repr(config.common_slope_tolerance)),
+        config.grid_points,
+        mpf(repr(config.minimum_bracket_width)),
+        mpf(repr(config.root_deduplication_tolerance)),
     )
     return _result(summary, roots, informative)
 
@@ -64,6 +64,7 @@ def stable_resistance_callback(
     summary: ObservableSummary,
     oracle_digits: PositiveInt,
 ) -> CallbackResult:
+    config = active_config.get().comparators.callback
     if summary.partition.band_count < _MINIMUM_COMPARABLE_BANDS:
         return _not_applicable(0)
     data = _data(summary)
@@ -71,7 +72,10 @@ def stable_resistance_callback(
         data,
         oracle_digits,
         _stable_resistance_objective,
-        _STABLE_EQUALITY_TOLERANCE,
+        mpf(repr(config.stable_equality_tolerance)),
+        config.grid_points,
+        mpf(repr(config.minimum_bracket_width)),
+        mpf(repr(config.root_deduplication_tolerance)),
     )
     return _result(summary, roots, 2)
 
@@ -81,6 +85,9 @@ def _accepted_roots(
     oracle_digits: PositiveInt,
     objective: _CallbackObjective,
     acceptance_tolerance: mpf,
+    grid_points: PositiveInt,
+    minimum_bracket_width: mpf,
+    deduplication_tolerance: mpf,
 ) -> tuple[mpf, ...]:
     previous_digits = mp.dps
     mp.dps = int(oracle_digits)
@@ -88,23 +95,23 @@ def _accepted_roots(
         if data.unresolved == mpf(0):
             value = objective(data, mpf(0))
             return (mpf(0),) if value <= acceptance_tolerance else ()
-        denominator = mpf(_GRID_POINTS - 1)
-        grid = tuple(data.unresolved * mpf(index) / denominator for index in range(_GRID_POINTS))
+        denominator = mpf(grid_points - 1)
+        grid = tuple(data.unresolved * mpf(index) / denominator for index in range(grid_points))
         values = tuple(objective(data, hidden) for hidden in grid)
         local_indices = tuple(
             index
             for index, value in enumerate(values)
             if (index == 0 or value <= values[index - 1])
-            and (index == _GRID_POINTS - 1 or value <= values[index + 1])
+            and (index == grid_points - 1 or value <= values[index + 1])
         )
         candidates: list[mpf] = []
         for index in local_indices:
             left = grid[max(0, index - 1)]
-            right = grid[min(_GRID_POINTS - 1, index + 1)]
-            root, minimum = _golden_minimize(data, objective, left, right)
+            right = grid[min(grid_points - 1, index + 1)]
+            root, minimum = _golden_minimize(data, objective, left, right, minimum_bracket_width)
             if minimum <= acceptance_tolerance:
                 candidates.append(root)
-        return _deduplicate(tuple(sorted(candidates)))
+        return _deduplicate(tuple(sorted(candidates)), deduplication_tolerance)
     finally:
         mp.dps = previous_digits
 
@@ -114,15 +121,16 @@ def _golden_minimize(
     objective: _CallbackObjective,
     left: mpf,
     right: mpf,
+    minimum_bracket_width: mpf,
 ) -> tuple[mpf, mpf]:
     if left == right:
         return left, objective(data, left)
-    ratio = (sqrt(mpf(5)) - mpf(1)) / mpf(2) #TODO: I'm not sure how i feel regarding the magic number usage of for example 5
+    ratio = (sqrt(mpf(5)) - mpf(1)) / mpf(2)
     x_left = right - ratio * (right - left)
     x_right = left + ratio * (right - left)
     f_left = objective(data, x_left)
     f_right = objective(data, x_right)
-    while right - left > _MINIMUM_BRACKET_WIDTH:
+    while right - left > minimum_bracket_width:
         if f_left <= f_right:
             right = x_right
             x_right = x_left
@@ -159,7 +167,7 @@ def _stable_resistance_objective(data: _CallbackData, hidden: mpf) -> mpf:
     return abs(first - second)
 
 
-def _log_odds_ratio(data: _CallbackData, index: int, hidden: mpf) -> mpf | None: #TODO: don't use primitive int and check why tests aren't catching it
+def _log_odds_ratio(data: _CallbackData, index: NonNegativeInt, hidden: mpf) -> mpf | None:
     harmful_band = data.harmful[index]
     correct_band = data.correct[index]
     if harmful_band <= mpf(0) or correct_band <= mpf(0):
@@ -173,10 +181,10 @@ def _log_odds_ratio(data: _CallbackData, index: int, hidden: mpf) -> mpf | None:
     return log(numerator / denominator)
 
 
-def _deduplicate(values: tuple[mpf, ...]) -> tuple[mpf, ...]:
+def _deduplicate(values: tuple[mpf, ...], deduplication_tolerance: mpf) -> tuple[mpf, ...]:
     kept: list[mpf] = []
     for value in values:
-        if not kept or abs(value - kept[-1]) > _ROOT_DEDUPLICATION_TOLERANCE:
+        if not kept or abs(value - kept[-1]) > deduplication_tolerance:
             kept.append(value)
     return tuple(kept)
 
@@ -192,7 +200,7 @@ def _data(summary: ObservableSummary) -> _CallbackData:
 def _result(
     summary: ObservableSummary,
     roots: tuple[mpf, ...],
-    informative: int, #TODO: don't use primitive int and check why tests aren't catching it
+    informative: Count,
 ) -> CallbackResult:
     if not roots:
         return CallbackResult(
@@ -214,7 +222,7 @@ def _result(
     )
 
 
-def _not_applicable(informative: int) -> CallbackResult: #TODO: don't use primitive int and check why tests aren't catching it
+def _not_applicable(informative: Count) -> CallbackResult:
     return CallbackResult(
         status=CallbackStatus.NOT_APPLICABLE,
         accepted_hidden_roots=(),

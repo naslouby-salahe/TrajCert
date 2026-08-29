@@ -8,7 +8,7 @@ from trajcert.comparators.callback import (
 from trajcert.comparators.information_optimization import generic_information_constrained_oracle
 from trajcert.comparators.legacy import LegacySensitivityResult, legacy_bandwise_odds_ratio
 from trajcert.comparators.pattern_mixture import PatternMixtureResult, fit_pattern_mixture
-from trajcert.config import TrajCertConfig
+from trajcert.config import active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.oracle import InformationOracleResult
@@ -30,8 +30,8 @@ class ComparatorReductionResult(DomainModel):
 
 def evaluate_comparator_reduction(
     summary: ObservableSummary,
-    config: TrajCertConfig, #TODO: config is accessed globally. Do not use it as input param. Add a tests that catches all configuration inputs to catch and have it fixed.
 ) -> ComparatorReductionResult:
+    config = active_config.get()
     if summary.partition.band_count != config.method.finest_bands:
         raise ValueError("comparator reduction requires the configured finest partition")
     rho_values = tuple(float(value) for value in config.grids.rho)

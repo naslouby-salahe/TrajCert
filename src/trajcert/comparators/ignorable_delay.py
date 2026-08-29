@@ -7,7 +7,7 @@ from scipy.special import betaln
 
 from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import ClosedProbabilityInterval
-from trajcert.types import DomainModel, ToleranceValue, UnitFloat
+from trajcert.types import Count, DomainModel, FiniteFloat, ToleranceValue, UnitFloat
 
 
 class IgnorableDelayStatus(StrEnum):
@@ -17,7 +17,7 @@ class IgnorableDelayStatus(StrEnum):
 
 class IgnorableDelayResult(DomainModel):
     status: IgnorableDelayStatus
-    resolved_count: int #TODO: don't use primitive int and check why tests aren't catching it
+    resolved_count: Count
     interval: ClosedProbabilityInterval | None
 
 
@@ -53,10 +53,10 @@ def ignorable_delay_update(
 
 
 def _bernoulli_interval(
-    successes: int, #TODO: don't use primitive int and check why tests aren't catching it
-    total: int, #TODO: don't use primitive int and check why tests aren't catching it
-    delta: float, #TODO: don't use primitive float and check why tests aren't catching it
-    root_tolerance: float, #TODO: don't use primitive float and check why tests aren't catching it
+    successes: Count,
+    total: Count,
+    delta: UnitFloat,
+    root_tolerance: ToleranceValue,
 ) -> ClosedProbabilityInterval:
     if total == 0:
         return ClosedProbabilityInterval(lower=0.0, upper=1.0)
@@ -76,12 +76,12 @@ def _bernoulli_interval(
 
 
 def _root(
-    successes: int, #TODO: don't use primitive int and check why tests aren't catching it
-    total: int, #TODO: don't use primitive int and check why tests aren't catching it
-    lower: float, #TODO: don't use primitive float and check why tests aren't catching it
-    upper: float, #TODO: don't use primitive float and check why tests aren't catching it
-    threshold: float, #TODO: don't use primitive float and check why tests aren't catching it
-    tolerance: float, #TODO: don't use primitive float and check why tests aren't catching it
+    successes: Count,
+    total: Count,
+    lower: UnitFloat,
+    upper: UnitFloat,
+    threshold: FiniteFloat,
+    tolerance: ToleranceValue,
     lower_branch: bool,
 ) -> float:
     while upper - lower > tolerance:
@@ -99,7 +99,7 @@ def _root(
     return lower if lower_branch else upper
 
 
-def _log_mixture_ratio(successes: int, total: int, probability: float) -> float: #TODO: don't use primitives in input and outputs
+def _log_mixture_ratio(successes: Count, total: Count, probability: UnitFloat) -> float:
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:

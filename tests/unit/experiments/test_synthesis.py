@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
@@ -22,6 +23,7 @@ from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import (
+    AnytimeOperationalState,
     AnytimePathEvidence,
     CoverageEvidenceResult,
     CoverageMethodEvidence,
@@ -34,7 +36,10 @@ from trajcert.experiments.inventory import (
     BaselineAssumptionRow,
     ExperimentMatrixRow,
     InventoryValidationResult,
+    ParameterVariability,
     ProtocolConstantRow,
+    ProtocolUnit,
+    ProtocolValueClass,
     SyntheticLawRow,
 )
 from trajcert.experiments.mathematics import (
@@ -118,6 +123,7 @@ from trajcert.types import (
     ClientId,
     CompatibilityRegime,
     EpochId,
+    FailureBoundaryLevel,
     HiddenMassInterval,
     LawKey,
     RiskInterval,
@@ -472,10 +478,18 @@ def _upstream_cells(plan: ExperimentPlan) -> tuple[PlannedCell, ...]:
     return tuple(cell for cell in plan.cells if cell.identity != synthesis.identity)
 
 
+def _long_path_safe(path: Path) -> Path:
+    if sys.platform != "win32":
+        return path
+    resolved = path.resolve()
+    prefix = "\\\\?\\"
+    return resolved if str(resolved).startswith(prefix) else Path(f"{prefix}{resolved}")
+
+
 def _write_upstream_artifacts(plan: ExperimentPlan, config: TrajCertConfig, root: Path) -> None:
     for cell in _upstream_cells(plan):
         payload = _result_payload(cell, config)
-        result_path = root / scientific_result_path(cell)
+        result_path = _long_path_safe(root / scientific_result_path(cell))
         result_path.parent.mkdir(parents=True, exist_ok=True)
         _ = result_path.write_bytes(payload)
         result_key = scientific_result_artifact_key(cell)
@@ -489,11 +503,11 @@ def _write_upstream_artifacts(plan: ExperimentPlan, config: TrajCertConfig, root
                 ),
             )
         )
-        index_path = cell_artifact_index_path(cell, root)
+        index_path = _long_path_safe(cell_artifact_index_path(cell, root))
         index_path.parent.mkdir(parents=True, exist_ok=True)
         _ = index_path.write_bytes(canonical_model_bytes(index))
         completion = _completion_record(cell, config, result_key, digest)
-        completion_path = cell_completion_path(cell, root)
+        completion_path = _long_path_safe(cell_completion_path(cell, root))
         completion_path.parent.mkdir(parents=True, exist_ok=True)
         _ = completion_path.write_bytes(canonical_model_bytes(completion))
 
@@ -895,9 +909,9 @@ def _inventory_result(config: TrajCertConfig) -> InventoryValidationResult:
             ProtocolConstantRow(
                 quantity="information-grid",
                 value="0.0..0.5",
-                unit="nats",
-                value_class="grid",
-                fixed_or_swept="swept",
+                unit=ProtocolUnit.NATS,
+                value_class=ProtocolValueClass.GRID,
+                fixed_or_swept=ParameterVariability.SWEPT,
                 scientific_role="sensitivity",
             ),
         ),
@@ -980,7 +994,7 @@ def _coverage_result(cell: PlannedCell, config: TrajCertConfig) -> CoverageEvide
                 true_theta=0.2,
                 beta=float(config.budgets.risk),
                 evidence_gate_pass=True,
-                operational_state="CERTIFIED",
+                operational_state=AnytimeOperationalState.CERTIFIED,
             ),
         )
     else:
@@ -1004,7 +1018,7 @@ def _coverage_result(cell: PlannedCell, config: TrajCertConfig) -> CoverageEvide
 def _failure_result() -> FailureBoundaryResult:
     return FailureBoundaryResult(
         axis=FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY,
-        level="1",
+        level=FailureBoundaryLevel("1"),
         band_count=8,
         sensitivity_budget=0.05,
         risk_budget=0.05,
