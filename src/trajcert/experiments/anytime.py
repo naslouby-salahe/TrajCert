@@ -1101,7 +1101,9 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
     )
     rho = float(information_true) + _SIMPLEX_BOUNDARY_RHO_MARGIN
     projection = _project(singleton_summary_envelope(summary), rho)
-    oracle = solve_information_oracle(summary, rho, config.numerics.oracle_digits)
+    oracle = solve_information_oracle(
+        summary, rho, config.numerics.oracle_digits, config.numerics.oracle_bracket_width
+    )
     oracle_upper = (
         None if oracle.latent_risk_interval is None else float(oracle.latent_risk_interval.upper)
     )
@@ -1161,6 +1163,9 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
         rho,
         config.numerics.oracle_digits,
         config.numerics.comparison_guard,
+        config.numerics.profile_grid_points,
+        config.numerics.projection_refinement_candidates,
+        config.numerics.projection_refinement_steps,
     )
     lower = oracle.best_feasible_risk
     anti = None if lower is None else max(0.0, float(lower) - float(projection.proven_upper))

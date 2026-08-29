@@ -25,11 +25,6 @@ from trajcert.types import (
     UnitFloat,
 )
 
-_ORACLE_BRACKET_WIDTH = mpf("1e-14")
-_PROJECTION_GRID_POINTS = 1001
-_PROJECTION_REFINEMENT_CANDIDATES = 20
-_PROJECTION_REFINEMENT_STEPS = 24
-
 
 class OracleBracket(DomainModel):
     lower: UnitFloat
@@ -110,6 +105,7 @@ def solve_information_oracle(
     summary: ObservableSummary,
     sensitivity_budget: SensitivityBudget,
     oracle_digits: PositiveInt,
+    oracle_bracket_width: ToleranceValue,
 ) -> InformationOracleResult:
     digits = int(oracle_digits)
     if digits <= 0:
@@ -121,7 +117,10 @@ def solve_information_oracle(
         correct = tuple(mpf(repr(float(value))) for value in summary.correct_by_band)
         unresolved = mpf(repr(float(summary.unresolved_mass)))
         rho = mpf(repr(float(sensitivity_budget)))
-        return _solve_information_oracle_data(summary, harmful, correct, unresolved, rho, digits)
+        bracket_width = mpf(repr(float(oracle_bracket_width)))
+        return _solve_information_oracle_data(
+            summary, harmful, correct, unresolved, rho, digits, bracket_width
+        )
     finally:
         mp.dps = previous_digits
 
@@ -131,6 +130,9 @@ def feasible_projection_lower_oracle(
     sensitivity_budget: SensitivityBudget,
     oracle_digits: PositiveInt,
     comparison_guard: ToleranceValue,
+    grid_points: PositiveInt,
+    refinement_candidates: PositiveInt,
+    refinement_steps: PositiveInt,
 ) -> ProjectionFeasibleOracleResult:
     digits = int(oracle_digits)
     if digits <= 0:
@@ -146,10 +148,10 @@ def feasible_projection_lower_oracle(
         checked = 0
         feasible_count = 0
         candidates: list[_ProjectionCandidate] = []
-        denominator = _PROJECTION_GRID_POINTS - 1
-        for harmful_index in range(_PROJECTION_GRID_POINTS):
+        denominator = grid_points - 1
+        for harmful_index in range(grid_points):
             harmful = harmful_lower + (harmful_upper - harmful_lower) * harmful_index / denominator
-            for correct_index in range(_PROJECTION_GRID_POINTS):
+            for correct_index in range(grid_points):
                 correct = (
                     correct_lower + (correct_upper - correct_lower) * correct_index / denominator
                 )
@@ -164,7 +166,7 @@ def feasible_projection_lower_oracle(
                 if candidate is None:
                     continue
                 feasible_count += 1
-                _retain_best(candidates, candidate)
+                _retain_best(candidates, candidate, refinement_candidates)
         initial = tuple(sorted(candidates, key=lambda item: item.risk, reverse=True))
         refined = tuple(
             _refine_projection_candidate(
@@ -174,8 +176,10 @@ def feasible_projection_lower_oracle(
                 comparison_guard,
                 harmful_upper - harmful_lower,
                 correct_upper - correct_lower,
+                grid_points,
+                refinement_steps,
             )
-            for candidate in initial[:_PROJECTION_REFINEMENT_CANDIDATES]
+            for candidate in initial[:refinement_candidates]
         )
         all_candidates = (*initial, *refined)
         best = max(all_candidates, key=lambda item: item.risk) if all_candidates else None
@@ -184,7 +188,7 @@ def feasible_projection_lower_oracle(
             best_resolved_harmful=None if best is None else best.harmful,
             best_resolved_correct=None if best is None else best.correct,
             best_hidden_terminal_harmful=None if best is None else best.hidden,
-            grid_points_per_axis=_PROJECTION_GRID_POINTS,
+            grid_points_per_axis=grid_points,
             aggregate_points_checked=checked,
             feasible_points=feasible_count,
             locally_refined_candidates=len(refined),
@@ -221,8 +225,9 @@ def _solve_information_oracle_data(
     unresolved: mpf,
     rho: mpf,
     digits: int,
+    bracket_width: mpf,
 ) -> InformationOracleResult:
-    minimum_bracket = _golden_minimum(harmful, correct, unresolved)
+    minimum_bracket = _golden_minimum(harmful, correct, unresolved, bracket_width)
     minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
     minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
     equality_tolerance = mpf(10) ** (-floor(digits / 2))
@@ -249,8 +254,12 @@ def _solve_information_oracle_data(
             singleton,
             singleton,
         )
-    lower_boundary = _left_boundary(harmful, correct, unresolved, rho, minimum_hidden)
-    upper_boundary = _right_boundary(harmful, correct, unresolved, rho, minimum_hidden)
+    lower_boundary = _left_boundary(
+        harmful, correct, unresolved, rho, minimum_hidden, bracket_width
+    )
+    upper_boundary = _right_boundary(
+        harmful, correct, unresolved, rho, minimum_hidden, bracket_width
+    )
     regime = (
         CompatibilityRegime.NO_UNRESOLVED_MASS
         if unresolved == mpf(0)
@@ -302,11 +311,13 @@ def _refine_projection_candidate(
     comparison_guard: ToleranceValue,
     harmful_span: float,
     correct_span: float,
+    grid_points: PositiveInt,
+    refinement_steps: PositiveInt,
 ) -> _ProjectionCandidate:
     best = initial
-    harmful_step = harmful_span / (_PROJECTION_GRID_POINTS - 1)
-    correct_step = correct_span / (_PROJECTION_GRID_POINTS - 1)
-    for _ in range(_PROJECTION_REFINEMENT_STEPS):
+    harmful_step = harmful_span / (grid_points - 1)
+    correct_step = correct_span / (grid_points - 1)
+    for _ in range(refinement_steps):
         local: list[_ProjectionCandidate] = [best]
         for harmful_direction in (-1, 0, 1):
             for correct_direction in (-1, 0, 1):
@@ -667,16 +678,21 @@ def _allocate_total(
     return tuple(values)
 
 
-def _retain_best(candidates: list[_ProjectionCandidate], candidate: _ProjectionCandidate) -> None:
+def _retain_best(
+    candidates: list[_ProjectionCandidate],
+    candidate: _ProjectionCandidate,
+    limit: PositiveInt,
+) -> None:
     candidates.append(candidate)
     candidates.sort(key=lambda item: item.risk, reverse=True)
-    del candidates[_PROJECTION_REFINEMENT_CANDIDATES:]
+    del candidates[limit:]
 
 
 def _golden_minimum(
     harmful: tuple[mpf, ...],
     correct: tuple[mpf, ...],
     unresolved: mpf,
+    bracket_width: mpf,
 ) -> tuple[mpf, mpf]:
     if unresolved == mpf(0):
         return mpf(0), mpf(0)
@@ -687,7 +703,7 @@ def _golden_minimum(
     x_right = left + ratio * (right - left)
     f_left = _mutual_information(harmful, correct, unresolved, x_left)
     f_right = _mutual_information(harmful, correct, unresolved, x_right)
-    while right - left > _ORACLE_BRACKET_WIDTH:
+    while right - left > bracket_width:
         if f_left <= f_right:
             right = x_right
             x_right = x_left
@@ -709,12 +725,13 @@ def _left_boundary(
     unresolved: mpf,
     rho: mpf,
     minimum_hidden: mpf,
+    bracket_width: mpf,
 ) -> tuple[mpf, mpf]:
     if _mutual_information(harmful, correct, unresolved, mpf(0)) <= rho:
         return mpf(0), mpf(0)
     left = mpf(0)
     right = minimum_hidden
-    while right - left > _ORACLE_BRACKET_WIDTH:
+    while right - left > bracket_width:
         midpoint = (left + right) / mpf(2)
         if _mutual_information(harmful, correct, unresolved, midpoint) <= rho:
             right = midpoint
@@ -729,12 +746,13 @@ def _right_boundary(
     unresolved: mpf,
     rho: mpf,
     minimum_hidden: mpf,
+    bracket_width: mpf,
 ) -> tuple[mpf, mpf]:
     if _mutual_information(harmful, correct, unresolved, unresolved) <= rho:
         return unresolved, unresolved
     left = minimum_hidden
     right = unresolved
-    while right - left > _ORACLE_BRACKET_WIDTH:
+    while right - left > bracket_width:
         midpoint = (left + right) / mpf(2)
         if _mutual_information(harmful, correct, unresolved, midpoint) <= rho:
             left = midpoint

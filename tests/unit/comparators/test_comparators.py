@@ -107,7 +107,7 @@ def test_repeated_static_projection_terminates_at_node_cap() -> None:
 
 
 def test_generic_information_constrained_oracle_delegates_to_solver() -> None:
-    result = generic_information_constrained_oracle(summary([0.5], [0.2], 0.3), 0.0, 50)
+    result = generic_information_constrained_oracle(summary([0.5], [0.2], 0.3), 0.0, 50, 1e-14)
     assert result.regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
 
 

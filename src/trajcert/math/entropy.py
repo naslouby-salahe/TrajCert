@@ -18,9 +18,10 @@ def binary_entropy(probability: Probability | Vector) -> EntropyValue | Vector:
 def binary_entropy_from_masses(
     harmful: Mass | Vector, correct: Mass | Vector
 ) -> EntropyValue | Vector:
-    total = harmful + correct
+    harmful_array = np.asarray(harmful, dtype=np.float64)
+    total = harmful_array + np.asarray(correct, dtype=np.float64)
     with np.errstate(divide="ignore", invalid="ignore"):
-        p = harmful / total
+        p = harmful_array / total
     entropy = np.where(total > 0, (entr(p) + entr(1.0 - p)) * total, 0.0)
     return entropy
 

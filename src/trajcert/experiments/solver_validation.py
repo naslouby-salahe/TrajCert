@@ -54,6 +54,7 @@ def compare_production_solver_to_oracle(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     oracle_digits: PositiveInt,
+    oracle_bracket_width: ToleranceValue,
 ) -> SolverOracleComparison:
     production = solve_hidden_mass_interval(
         summary,
@@ -61,7 +62,9 @@ def compare_production_solver_to_oracle(
         root_atol,
         identity_atol,
     )
-    oracle = solve_information_oracle(summary, sensitivity_budget, oracle_digits)
+    oracle = solve_information_oracle(
+        summary, sensitivity_budget, oracle_digits, oracle_bracket_width
+    )
     state_match = production.compatibility.regime == oracle.regime
     lower_error: float | None = None
     upper_error: float | None = None

@@ -31,6 +31,7 @@ from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import safety_budget_cases
 
 _ORACLE_DIGITS = 50
+_ORACLE_BRACKET_WIDTH = 1e-14
 _IDENTITY_ATOL = 1e-6
 _SHARP_IDENTITY_ATOL = 1e-8
 _ROOT_ATOL = 1e-12
@@ -97,6 +98,7 @@ def test_sharp_set_constructive_identity_matches_oracle() -> None:
         _ROOT_ATOL,
         _SHARP_IDENTITY_ATOL,
         _ORACLE_DIGITS,
+        _ORACLE_BRACKET_WIDTH,
     )
     assert isinstance(result, SharpSetIdentityResult)
     assert result.passed
@@ -117,6 +119,7 @@ def test_sharp_set_constructive_identity_model_incompatible() -> None:
         _ROOT_ATOL,
         _SHARP_IDENTITY_ATOL,
         _ORACLE_DIGITS,
+        _ORACLE_BRACKET_WIDTH,
     )
     assert result.passed
     assert result.production_lower is None
@@ -218,7 +221,7 @@ def test_safety_boundary_identity_without_frontier() -> None:
 
 
 def test_evaluate_safety_boundary_case_invalid_case() -> None:
-    cases = safety_budget_cases(summary([0.0], [0.0], 1.0))
+    cases = safety_budget_cases(summary([0.0], [0.0], 1.0), 0.005)
     invalid = next(case for case in cases if not case.valid)
     result = evaluate_safety_boundary_case(
         summary([0.2], [0.4], 0.4), invalid, _ORACLE_DIGITS, _IDENTITY_ATOL
@@ -229,7 +232,7 @@ def test_evaluate_safety_boundary_case_invalid_case() -> None:
 
 
 def test_evaluate_safety_boundary_case_valid_case() -> None:
-    cases = safety_budget_cases(summary([0.2], [0.4], 0.4))
+    cases = safety_budget_cases(summary([0.2], [0.4], 0.4), 0.005)
     valid = next(case for case in cases if case.valid and case.risk_budget is not None)
     result = evaluate_safety_boundary_case(
         summary([0.2], [0.4], 0.4), valid, _ORACLE_DIGITS, _IDENTITY_ATOL

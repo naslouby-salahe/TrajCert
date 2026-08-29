@@ -106,6 +106,7 @@ from trajcert.types import (
     PublicExecutionState,
     ReasonCode,
     SensitivityBudget,
+    ToleranceValue,
 )
 
 FailureType = NewType("FailureType", str)
@@ -919,6 +920,7 @@ def _dispatch_sharpness_against_generic_oracle(
         root_atol=config.numerics.root_atol,
         identity_atol=config.numerics.identity_atol,
         oracle_digits=config.numerics.oracle_digits,
+        oracle_bracket_width=config.numerics.oracle_bracket_width,
     )
 
 
@@ -1031,6 +1033,7 @@ def _summary_sharp_set_constructive_identity(
         config.numerics.root_atol,
         config.numerics.identity_atol,
         config.numerics.oracle_digits,
+        config.numerics.oracle_bracket_width,
     )
 
 
@@ -1051,6 +1054,7 @@ def _summary_production_solver_vs_independent_oracle(
         config.numerics.root_atol,
         config.numerics.identity_atol,
         config.numerics.oracle_digits,
+        config.numerics.oracle_bracket_width,
     )
 
 
@@ -1063,13 +1067,18 @@ def _summary_compatibility_floor_behavior(
         config.numerics.root_atol,
         config.numerics.identity_atol,
         config.numerics.oracle_digits,
+        config.numerics.oracle_bracket_width,
     )
 
 
 def _summary_safety_boundary_identity(
     cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
 ) -> DomainModel:
-    case = _safety_case(summary, cell.identity.coordinates.variant_name)
+    case = _safety_case(
+        summary,
+        cell.identity.coordinates.variant_name,
+        config.numerics.resolved_harm_boundary_offset,
+    )
     return evaluate_safety_boundary_case(
         summary,
         case,
@@ -1216,10 +1225,14 @@ def _variant_index(variant: VariantName | None, prefix: str) -> int:
     return int(str(variant)[len(prefix) :])
 
 
-def _safety_case(summary: ObservableSummary, variant: VariantName | None) -> SafetyBudgetCase:
+def _safety_case(
+    summary: ObservableSummary,
+    variant: VariantName | None,
+    resolved_harm_boundary_offset: ToleranceValue,
+) -> SafetyBudgetCase:
     if variant is None:
         raise ScientificCellDispatchError("safety cell is missing its case variant")
-    for case in safety_budget_cases(summary):
+    for case in safety_budget_cases(summary, resolved_harm_boundary_offset):
         if str(semantic_slug(str(case.name))) == str(variant):
             return case
     raise ScientificCellDispatchError(f"unknown safety case: {variant}")
@@ -1231,6 +1244,7 @@ def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyC
         summary=summary,
         oracle_digits=config.numerics.oracle_digits,
         identity_atol=config.numerics.identity_atol,
+        resolved_harm_boundary_offset=config.numerics.resolved_harm_boundary_offset,
     )
     variant = cell.identity.coordinates.variant_name
     if variant is None:

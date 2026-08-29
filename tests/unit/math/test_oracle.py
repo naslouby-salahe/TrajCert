@@ -8,7 +8,6 @@ from pydantic import ValidationError
 from tests.unit.conftest import summary
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.math import oracle
 from trajcert.math.oracle import (
     OracleMassInterval,
     ProjectionOracleInput,
@@ -34,13 +33,9 @@ def _oracle_input(correct_upper: float = 0.0) -> ProjectionOracleInput:
 
 _GRID_POINTS = 5
 _REFINEMENT_CANDIDATES = 2
+_REFINEMENT_STEPS = 3
 _GRID_POINTS_CHECKED = _GRID_POINTS * _GRID_POINTS
-
-
-def _shrink_grid(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(oracle, "_PROJECTION_GRID_POINTS", _GRID_POINTS)
-    monkeypatch.setattr(oracle, "_PROJECTION_REFINEMENT_CANDIDATES", _REFINEMENT_CANDIDATES)
-    monkeypatch.setattr(oracle, "_PROJECTION_REFINEMENT_STEPS", 3)
+_ORACLE_BRACKET_WIDTH = 1e-14
 
 
 def test_oracle_mass_interval_rejects_reversed_order() -> None:
@@ -76,12 +71,12 @@ def test_projection_oracle_input_rejects_empty_simplex() -> None:
 def test_solve_information_oracle_rejects_nonpositive_digits() -> None:
     observable = summary([0.5], [0.0], 0.5)
     with pytest.raises(InvalidScientificDataError, match="oracle precision"):
-        _ = solve_information_oracle(observable, 0.0, 0)
+        _ = solve_information_oracle(observable, 0.0, 0, _ORACLE_BRACKET_WIDTH)
 
 
 def test_solve_information_oracle_reports_model_incompatible_regime() -> None:
     observable = summary([0.5], [0.0], 0.5)
-    result = solve_information_oracle(observable, 0.0, 50)
+    result = solve_information_oracle(observable, 0.0, 50, _ORACLE_BRACKET_WIDTH)
     assert result.regime is CompatibilityRegime.MODEL_INCOMPATIBLE
     assert result.minimum_hidden_mass == pytest.approx(0.5, abs=1e-9)
     assert result.hidden_mass_interval is None
@@ -90,7 +85,7 @@ def test_solve_information_oracle_reports_model_incompatible_regime() -> None:
 
 def test_solve_information_oracle_reports_minimum_information_singleton() -> None:
     observable = summary([0.5], [0.2], 0.3)
-    result = solve_information_oracle(observable, 0.0, 50)
+    result = solve_information_oracle(observable, 0.0, 50, _ORACLE_BRACKET_WIDTH)
     assert result.regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
     assert result.minimum_hidden_mass == pytest.approx(3 / 14, abs=1e-9)
     assert result.hidden_mass_interval is not None
@@ -99,14 +94,15 @@ def test_solve_information_oracle_reports_minimum_information_singleton() -> Non
 
 def test_feasible_projection_lower_oracle_rejects_nonpositive_digits() -> None:
     with pytest.raises(InvalidScientificDataError, match="oracle precision"):
-        _ = feasible_projection_lower_oracle(_oracle_input(), 0.05, 0, 1e-12)
+        _ = feasible_projection_lower_oracle(
+            _oracle_input(), 0.05, 0, 1e-12, _GRID_POINTS, _REFINEMENT_CANDIDATES, _REFINEMENT_STEPS
+        )
 
 
-def test_feasible_projection_lower_oracle_at_entropy_singularity(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _shrink_grid(monkeypatch)
-    result = feasible_projection_lower_oracle(_oracle_input(), 0.05, 50, 1e-12)
+def test_feasible_projection_lower_oracle_at_entropy_singularity() -> None:
+    result = feasible_projection_lower_oracle(
+        _oracle_input(), 0.05, 50, 1e-12, _GRID_POINTS, _REFINEMENT_CANDIDATES, _REFINEMENT_STEPS
+    )
     assert result.best_feasible_risk == pytest.approx(1.0)
     assert result.best_resolved_harmful == pytest.approx(0.4)
     assert result.best_resolved_correct == pytest.approx(0.0)
@@ -117,11 +113,16 @@ def test_feasible_projection_lower_oracle_at_entropy_singularity(
     assert result.locally_refined_candidates == _REFINEMENT_CANDIDATES
 
 
-def test_feasible_projection_lower_oracle_filters_infeasible_grid_points(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _shrink_grid(monkeypatch)
-    result = feasible_projection_lower_oracle(_oracle_input(correct_upper=0.2), 0.05, 50, 1e-12)
+def test_feasible_projection_lower_oracle_filters_infeasible_grid_points() -> None:
+    result = feasible_projection_lower_oracle(
+        _oracle_input(correct_upper=0.2),
+        0.05,
+        50,
+        1e-12,
+        _GRID_POINTS,
+        _REFINEMENT_CANDIDATES,
+        _REFINEMENT_STEPS,
+    )
     assert result.best_feasible_risk is not None
     assert 0.0 <= result.best_feasible_risk <= 1.0
     assert result.aggregate_points_checked == _GRID_POINTS_CHECKED

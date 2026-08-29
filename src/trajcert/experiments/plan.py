@@ -32,11 +32,7 @@ from trajcert.types import (
     SensitivityBudget,
 )
 
-_SHARP_SET_OFFSETS = (0.0, 0.005, 0.025, 0.1)
-_ORACLE_OFFSETS = (0.0, 0.0025, 0.01, 0.05, 0.15)
-_TIMING_OFFSETS = (0.005, 0.025, 0.1)
 _POPULATION_RHO_VALUE_COUNT = 15
-_FAILURE_BOUNDARY_LEVELS_PER_AXIS = 7
 _SAFETY_CASES = (
     "below-resolved-harmful-mass",
     "between-resolved-mass-and-intrinsic-boundary",
@@ -216,7 +212,7 @@ def _coordinates_sharp_set_constructive_identity(
             sensitivity_coordinate=_offset_coordinate(offset),
         )
         for law, partition, offset in product(
-            _law_names(config), _partition_names(config), _SHARP_SET_OFFSETS
+            _law_names(config), _partition_names(config), config.study_design.sharp_set_offsets
         )
     )
 
@@ -239,7 +235,9 @@ def _coordinates_strict_timing_gain(config: TrajCertConfig) -> tuple[SemanticCoo
             ),
             sensitivity_coordinate=_offset_coordinate(offset),
         )
-        for case, offset in product(config.study_design.strict_timing_cases, _TIMING_OFFSETS)
+        for case, offset in product(
+            config.study_design.strict_timing_cases, config.study_design.timing_offsets
+        )
     )
 
 
@@ -286,7 +284,7 @@ def _coordinates_production_solver_vs_independent_oracle(
             sensitivity_coordinate=_offset_coordinate(offset),
         )
         for law, partition, offset in product(
-            _law_names(config), _partition_names(config), _ORACLE_OFFSETS
+            _law_names(config), _partition_names(config), config.study_design.oracle_offsets
         )
     )
 
@@ -307,7 +305,9 @@ def _coordinates_partition_coherence(config: TrajCertConfig) -> tuple[SemanticCo
             sensitivity_coordinate=_offset_coordinate(offset),
         )
         for law, pair, offset in product(
-            _utility_and_coherence_laws(config), _adjacent_partition_pairs(config), _TIMING_OFFSETS
+            _utility_and_coherence_laws(config),
+            _adjacent_partition_pairs(config),
+            config.study_design.timing_offsets,
         )
     )
 
@@ -454,9 +454,10 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
         ("matured-sample-size", tuple(config.failure_boundary.sample_size)),
         ("optimizer-node-budget", tuple(config.failure_boundary.optimizer_nodes)),
     )
+    levels_per_axis = len(config.failure_boundary.unresolvedness)
     coordinates: list[SemanticCoordinates] = []
     for axis_name, levels in configured_axes:
-        if len(levels) != _FAILURE_BOUNDARY_LEVELS_PER_AXIS:
+        if len(levels) != levels_per_axis:
             raise InvalidScientificDataError(
                 f"failure-boundary axis {axis_name} must contain exactly seven levels"
             )

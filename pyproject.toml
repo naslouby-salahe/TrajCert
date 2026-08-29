@@ -42,7 +42,6 @@ quality = [
     "ruff==0.14.13",
     "semgrep==1.174.0",
     "vulture==2.16",
-    "wemake-python-styleguide==1.4.0",
 ]
 
 [project.scripts]

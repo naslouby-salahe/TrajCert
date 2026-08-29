@@ -52,6 +52,7 @@ def evaluate_comparator_reduction(
                     summary,
                     rho,
                     config.numerics.oracle_digits,
+                    config.numerics.oracle_bracket_width,
                 ),
             )
             for rho in rho_values

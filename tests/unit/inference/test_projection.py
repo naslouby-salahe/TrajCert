@@ -100,7 +100,7 @@ def test_finite_sample_compatibility_lower_bound_is_unit_scaled() -> None:
     state = _state((3, 0, 0, 2, 1), 2)
     confidence = raw_confidence_region(state, 0.05, 1e-6)
     envelope = summary_envelope_from_confidence(partition, confidence)
-    compatibility = finite_sample_compatibility_lower_bound(envelope)
+    compatibility = finite_sample_compatibility_lower_bound(envelope, 128, 1e-8, 200_000)
     assert 0.0 <= compatibility <= 1.0
 
 
@@ -112,7 +112,9 @@ def test_finite_sample_intrinsic_risk_lower_bound_on_singleton() -> None:
         0.5,
         1e-12,
     )
-    intrinsic = finite_sample_intrinsic_risk_lower_bound(singleton_summary_envelope(summary))
+    intrinsic = finite_sample_intrinsic_risk_lower_bound(
+        singleton_summary_envelope(summary), 128, 1e-8, 200_000, 1e-12
+    )
     assert intrinsic == pytest.approx(1.0)
 
 
@@ -126,4 +128,4 @@ def test_finite_sample_intrinsic_risk_lower_bound_zero_resolved_plausible() -> N
         resolved_correct=ScalarEnvelope(lower=0.0, upper=0.0),
         resolved_entropy=ScalarEnvelope(lower=0.0, upper=0.0),
     )
-    assert finite_sample_intrinsic_risk_lower_bound(envelope) is None
+    assert finite_sample_intrinsic_risk_lower_bound(envelope, 128, 1e-8, 200_000, 1e-12) is None

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 from heapq import heappop, heappush
-from math import inf, ldexp, log, nextafter
+from math import inf, ldexp, nextafter
 
 import numpy as np
 from flint import arb, ctx
@@ -12,6 +12,7 @@ from trajcert.data.summaries import ObservableSummary, summarize_observable_mass
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelope
 from trajcert.math.bounds import sharp_risk_set
+from trajcert.math.entropy import binary_entropy_from_masses
 from trajcert.types import (
     DomainModel,
     InformationNats,
@@ -23,6 +24,7 @@ from trajcert.types import (
 )
 
 _ENTROPY_MAXIMIZING_PROBABILITY = 0.5
+_BISECTION_ITERATIONS_PAST_FLOAT64_PRECISION = 80
 
 
 class ProjectionTerminationReason(StrEnum):
@@ -167,11 +169,14 @@ def project_upper_risk(
 
 def finite_sample_compatibility_lower_bound(
     envelope: ObservableSummaryEnvelope,
+    arbitrary_precision_bits: NonNegativeInt,
+    outer_gap: ToleranceValue,
+    outer_max_nodes: NonNegativeInt,
 ) -> InformationNats:
     previous_precision = ctx.prec
-    ctx.prec = max(previous_precision, 128)
+    ctx.prec = max(previous_precision, int(arbitrary_precision_bits))
     try:
-        result = _compatibility_search(envelope, 1e-8, 200_000)
+        result = _compatibility_search(envelope, float(outer_gap), int(outer_max_nodes))
     finally:
         ctx.prec = previous_precision
     return max(0.0, result.proven_lower)
@@ -179,12 +184,22 @@ def finite_sample_compatibility_lower_bound(
 
 def finite_sample_intrinsic_risk_lower_bound(
     envelope: ObservableSummaryEnvelope,
+    arbitrary_precision_bits: NonNegativeInt,
+    outer_gap: ToleranceValue,
+    outer_max_nodes: NonNegativeInt,
+    comparison_guard: ToleranceValue,
     sensitivity_budget: SensitivityBudget = 0.0,
 ) -> RiskValue | None:
     previous_precision = ctx.prec
-    ctx.prec = max(previous_precision, 128)
+    ctx.prec = max(previous_precision, int(arbitrary_precision_bits))
     try:
-        result = _intrinsic_search(envelope, float(sensitivity_budget), 1e-8, 200_000, 1e-12)
+        result = _intrinsic_search(
+            envelope,
+            float(sensitivity_budget),
+            float(outer_gap),
+            int(outer_max_nodes),
+            float(comparison_guard),
+        )
     finally:
         ctx.prec = previous_precision
     if result.zero_resolved_mass_plausible:
@@ -758,9 +773,10 @@ def _verified_compatibility_point(box: _Box, envelope: ObservableSummaryEnvelope
     correct = _allocate_total(envelope.correct_by_band, correct_total)
     if harmful is None or correct is None:
         return None
-    marginal_entropy = _mass_entropy_point(harmful_total, correct_total)
+    marginal_entropy = float(binary_entropy_from_masses(harmful_total, correct_total))
     resolved_entropy = sum(
-        _mass_entropy_point(left, right) for left, right in zip(harmful, correct, strict=True)
+        float(binary_entropy_from_masses(left, right))
+        for left, right in zip(harmful, correct, strict=True)
     )
     return max(0.0, marginal_entropy - resolved_entropy)
 
@@ -809,7 +825,7 @@ def _bisected_hidden_mass(
         return None
     lower = max(hidden_lower, minimum_hidden)
     upper = hidden_upper
-    for _ in range(80):
+    for _ in range(_BISECTION_ITERATIONS_PAST_FLOAT64_PRECISION):
         candidate = (lower + upper) / 2.0
         if _verified_information_feasible(summary, candidate, rho):
             lower = candidate
@@ -895,11 +911,13 @@ def _minimum_profile_point(summary: ObservableSummary) -> tuple[float, float] | 
 
 
 def _timing_information(summary: ObservableSummary) -> float:
-    resolved = _mass_entropy_point(
-        float(summary.resolved_harmful_mass), float(summary.resolved_correct_mass)
+    resolved = float(
+        binary_entropy_from_masses(
+            float(summary.resolved_harmful_mass), float(summary.resolved_correct_mass)
+        )
     )
     bandwise = sum(
-        _mass_entropy_point(float(left), float(right))
+        float(binary_entropy_from_masses(float(left), float(right)))
         for left, right in zip(summary.harmful_by_band, summary.correct_by_band, strict=True)
     )
     return max(0.0, resolved - bandwise)
@@ -961,18 +979,6 @@ def _mass_entropy_arb(left: arb, right: arb) -> arb:
         value -= left * (left / total).log()
     if not right.is_zero():
         value -= right * (right / total).log()
-    return value
-
-
-def _mass_entropy_point(left: float, right: float) -> float:
-    total = left + right
-    if total <= 0.0:
-        return 0.0
-    value = 0.0
-    if left > 0.0:
-        value -= left * log(left / total)
-    if right > 0.0:
-        value -= right * log(right / total)
     return value
 
 

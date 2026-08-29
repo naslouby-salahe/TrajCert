@@ -164,6 +164,9 @@ class StudyDesignConfig(ConfigModel):
     legacy_partition_incoherence: LegacyPartitionIncoherenceConfig
     coverage_stress_cases: tuple[CoverageStressCaseConfig, ...]
     partition_coherence_figure_rho: SensitivityBudget
+    sharp_set_offsets: tuple[NonNegativeFloat, ...]
+    oracle_offsets: tuple[NonNegativeFloat, ...]
+    timing_offsets: tuple[NonNegativeFloat, ...]
 
     @model_validator(mode="after")
     def validate_registry_cardinalities(self) -> StudyDesignConfig:
@@ -207,6 +210,13 @@ class StudyDesignConfig(ConfigModel):
             tuple(case.name for case in self.coverage_stress_cases),
             "study_design.coverage_stress_cases.name",
         )
+        for field_name, offsets in (
+            ("sharp_set_offsets", self.sharp_set_offsets),
+            ("oracle_offsets", self.oracle_offsets),
+            ("timing_offsets", self.timing_offsets),
+        ):
+            _require_unique(offsets, f"study_design.{field_name}")
+            _require_strictly_increasing(offsets, f"study_design.{field_name}")
         return self
 
 
@@ -250,6 +260,10 @@ class NumericsConfig(ConfigModel):
     float_roundoff_ulps: PositiveFloat
     profile_grid_points: PositiveInt
     sharp_diagnostic_grid_points: PositiveInt
+    oracle_bracket_width: PositiveFloat
+    projection_refinement_candidates: PositiveInt
+    projection_refinement_steps: PositiveInt
+    resolved_harm_boundary_offset: PositiveFloat
 
 
 class LegacyPatternMixtureConfig(ConfigModel):

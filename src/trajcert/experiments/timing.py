@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from trajcert.config import active_config
 from trajcert.data.partitions import TrajectoryPartition
 from trajcert.data.summaries import ObservableSummary, coarsen_summary
 from trajcert.math.bounds import sharp_risk_set
@@ -48,8 +49,9 @@ def evaluate_partition_coherence(
     coarse_set = sharp_risk_set(coarse, sensitivity_budget, root_atol, identity_atol)
     max_difference_error = 0.0
     unresolved = float(fine.unresolved_mass)
-    for index in range(1001):
-        hidden = unresolved * index / 1000.0
+    grid_points = active_config.get().numerics.profile_grid_points
+    for index in range(grid_points):
+        hidden = unresolved * index / (grid_points - 1)
         difference = float(profile_difference(fine, coarse, hidden, identity_atol))
         max_difference_error = max(max_difference_error, abs(difference - delta))
     if fine_set.latent_risk is None or coarse_set.latent_risk is None:

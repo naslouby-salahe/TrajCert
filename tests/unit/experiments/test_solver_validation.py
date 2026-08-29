@@ -13,6 +13,7 @@ from trajcert.math.information import observed_timing_information
 from trajcert.types import CompatibilityRegime
 
 _ORACLE_DIGITS = 20
+_ORACLE_BRACKET_WIDTH = 1e-14
 _ROOT_ATOL = 1e-8
 _IDENTITY_ATOL = 1e-8
 _TAU = 0.01834500701737518
@@ -38,6 +39,7 @@ def _compare(
         _ROOT_ATOL,
         _IDENTITY_ATOL,
         oracle_digits,
+        _ORACLE_BRACKET_WIDTH,
     )
 
 

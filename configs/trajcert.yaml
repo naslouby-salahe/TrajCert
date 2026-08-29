@@ -75,7 +75,10 @@ study_design:
     - {name: "Minimum-information completion stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.002, sensitivity_reference: COMPATIBILITY_FLOOR, minimum_information_completion: true}
     - {name: "Near-certification risk-budget stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION, beta_offset: 0.002}
   partition_coherence_figure_rho: 0.10
-numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, float_roundoff_ulps: 32.0, profile_grid_points: 1001, sharp_diagnostic_grid_points: 2001}
+  sharp_set_offsets: [0.0, 0.005, 0.025, 0.1]
+  oracle_offsets: [0.0, 0.0025, 0.01, 0.05, 0.15]
+  timing_offsets: [0.005, 0.025, 0.1]
+numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, float_roundoff_ulps: 32.0, profile_grid_points: 1001, sharp_diagnostic_grid_points: 2001, oracle_bracket_width: 1.0e-14, projection_refinement_candidates: 20, projection_refinement_steps: 24, resolved_harm_boundary_offset: 0.005}
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
   pattern_mixture:

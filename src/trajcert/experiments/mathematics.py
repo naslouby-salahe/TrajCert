@@ -179,9 +179,12 @@ def sharp_set_constructive_identity(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     oracle_digits: PositiveInt,
+    oracle_bracket_width: ToleranceValue,
 ) -> SharpSetIdentityResult:
     production = sharp_risk_set(summary, sensitivity_budget, root_atol, identity_atol)
-    oracle = solve_information_oracle(summary, sensitivity_budget, oracle_digits)
+    oracle = solve_information_oracle(
+        summary, sensitivity_budget, oracle_digits, oracle_bracket_width
+    )
     if production.latent_risk is None or oracle.latent_risk_interval is None:
         passed = production.latent_risk is None and oracle.latent_risk_interval is None
         return SharpSetIdentityResult(

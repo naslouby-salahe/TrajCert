@@ -66,6 +66,7 @@ def compatibility_floor_behavior(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     oracle_digits: PositiveInt,
+    oracle_bracket_width: ToleranceValue,
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
@@ -92,6 +93,7 @@ def compatibility_floor_behavior(
             root_atol=root_atol,
             identity_atol=identity_atol,
             oracle_digits=oracle_digits,
+            oracle_bracket_width=oracle_bracket_width,
         )
         points.append(
             CompatibilitySweepPoint(
@@ -110,6 +112,7 @@ def sharpness_against_generic_oracle(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     oracle_digits: PositiveInt,
+    oracle_bracket_width: ToleranceValue,
 ) -> SolverOracleComparison:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
@@ -119,6 +122,7 @@ def sharpness_against_generic_oracle(
         root_atol=root_atol,
         identity_atol=identity_atol,
         oracle_digits=oracle_digits,
+        oracle_bracket_width=oracle_bracket_width,
     )
 
 
@@ -126,11 +130,12 @@ def safety_and_intrinsic_impossibility(
     summary: ObservableSummary,
     oracle_digits: PositiveInt,
     identity_atol: ToleranceValue,
+    resolved_harm_boundary_offset: ToleranceValue,
 ) -> SafetyIntrinsicResult:
     tau_value = observed_timing_information(summary)
     tau = None if tau_value is None else float(tau_value)
     evaluations: list[SafetyCaseEvaluation] = []
-    for case in safety_budget_cases(summary):
+    for case in safety_budget_cases(summary, resolved_harm_boundary_offset):
         expected_regime = _expected_safety_regime(case)
         if not case.valid or case.risk_budget is None:
             evaluations.append(
