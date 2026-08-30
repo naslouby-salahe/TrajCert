@@ -55,7 +55,7 @@ def ignorable_delay_update(
 def _bernoulli_interval(
     successes: Count,
     total: Count,
-    delta: UnitFloat,
+    delta: UnitFloat, #TODO: I prefer an alias instead of UnitFloat
     root_tolerance: ToleranceValue,
 ) -> ClosedProbabilityInterval:
     if total == 0:
@@ -83,7 +83,7 @@ def _root(
     threshold: FiniteFloat,
     tolerance: ToleranceValue,
     lower_branch: bool,
-) -> float:
+) -> float: #TODO: I prefer an alias instead of float
     while upper - lower > tolerance:
         midpoint = (lower + upper) / 2.0
         residual = _log_mixture_ratio(successes, total, midpoint) - threshold
@@ -99,7 +99,7 @@ def _root(
     return lower if lower_branch else upper
 
 
-def _log_mixture_ratio(successes: Count, total: Count, probability: UnitFloat) -> float:
+def _log_mixture_ratio(successes: Count, total: Count, probability: UnitFloat) -> float: #TODO: I prefer an alias instead of float
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:

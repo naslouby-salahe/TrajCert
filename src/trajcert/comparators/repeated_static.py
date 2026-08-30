@@ -20,7 +20,7 @@ from trajcert.types import (
 
 def repeated_static_region(
     state: CategoricalState,
-    anytime_delta: UnitFloat,
+    anytime_delta: UnitFloat, #TODO: I prefer an alias instead of UnitFloat
 ) -> CategoricalConfidenceRegion:
     total = int(state.matured_count)
     dimension = len(state.canonical_count_vector)
@@ -37,14 +37,14 @@ def repeated_static_region(
 
 def repeated_static_projection(
     state: CategoricalState,
-    anytime_delta: UnitFloat,
+    anytime_delta: UnitFloat, #TODO: I prefer an alias instead of UnitFloat
     sensitivity_budget: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     comparison_guard: ToleranceValue,
-    arbitrary_precision_bits: NonNegativeInt,
+    arbitrary_precision_bits: NonNegativeInt, #TODO: I prefer an alias instead of NonNegativeInt
     outer_gap: ToleranceValue,
-    outer_max_nodes: NonNegativeInt,
+    outer_max_nodes: NonNegativeInt, #TODO: I prefer an alias instead of NonNegativeInt
 ) -> ProjectionResult:
     region = repeated_static_region(state, anytime_delta)
     envelope = summary_envelope_from_confidence(state.partition, region)

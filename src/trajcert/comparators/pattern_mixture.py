@@ -12,9 +12,9 @@ from trajcert.config import LegacyPatternMixtureConfig
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import Count, DomainModel, NonNegativeFloat, RiskValue
 
-_MINIMUM_NONEMPTY_BANDS = 2
+_MINIMUM_NONEMPTY_BANDS = 2 #TODO: This should be in yaml and accessed through the config
 
-_CoefficientVector = np.ndarray[tuple[int], np.dtype[np.float64]]
+_CoefficientVector = np.ndarray[tuple[int], np.dtype[np.float64]] #TODO: move to types
 
 
 class PatternMixtureStatus(StrEnum):
@@ -31,10 +31,10 @@ class PatternMixturePoint(DomainModel):
 
 class PatternMixtureResult(DomainModel):
     status: PatternMixtureStatus
-    intercept: float | None
-    slope: float | None
+    intercept: float | None #TODO: I prefer an alias instead of float
+    slope: float | None #TODO: I prefer an alias instead of float
     gradient_infinity_norm: NonNegativeFloat | None
-    objective: float | None
+    objective: float | None #TODO: I prefer an alias instead of float
     points: tuple[PatternMixturePoint, ...]
 
 
@@ -57,7 +57,7 @@ def fit_pattern_mixture(
     lower, upper = config.coefficient_bounds
     bounds = ((float(lower), float(upper)), (float(lower), float(upper)))
 
-    def objective(coefficients: _CoefficientVector) -> float:
+    def objective(coefficients: _CoefficientVector) -> float: #TODO: I prefer an alias instead of float
         intercept, slope = coefficients
         eta = intercept + slope * indices
         value = np.sum(weights * (np.logaddexp(0.0, eta) - rates * eta))
@@ -134,7 +134,7 @@ def fit_pattern_mixture(
     )
 
 
-def _empty_result(status: PatternMixtureStatus) -> PatternMixtureResult:
+def _empty_result(status: PatternMixtureStatus) -> PatternMixtureResult: #TODO: method used only once. No need
     return PatternMixtureResult(
         status=status,
         intercept=None,

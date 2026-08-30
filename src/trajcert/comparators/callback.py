@@ -10,7 +10,7 @@ from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import Count, DomainModel, Mass, NonNegativeInt, PositiveInt, RiskInterval
 
-_MINIMUM_COMPARABLE_BANDS = 2
+_MINIMUM_COMPARABLE_BANDS = 2 #TODO: This should be in yaml and accessed through the config
 
 
 class CallbackStatus(StrEnum):
@@ -38,7 +38,7 @@ _CallbackObjective = Callable[[_CallbackData, mpf], mpf]
 
 def alho_common_slope_callback(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
 ) -> CallbackResult:
     config = active_config.get().comparators.callback
     data = _data(summary)
@@ -62,7 +62,7 @@ def alho_common_slope_callback(
 
 def stable_resistance_callback(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
 ) -> CallbackResult:
     config = active_config.get().comparators.callback
     if summary.partition.band_count < _MINIMUM_COMPARABLE_BANDS:
@@ -85,7 +85,7 @@ def _accepted_roots(
     oracle_digits: PositiveInt,
     objective: _CallbackObjective,
     acceptance_tolerance: mpf,
-    grid_points: PositiveInt,
+    grid_points: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
     minimum_bracket_width: mpf,
     deduplication_tolerance: mpf,
 ) -> tuple[mpf, ...]:

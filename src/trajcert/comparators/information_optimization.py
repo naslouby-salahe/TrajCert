@@ -5,7 +5,7 @@ from trajcert.math.oracle import InformationOracleResult, solve_information_orac
 from trajcert.types import PositiveInt, SensitivityBudget, ToleranceValue
 
 
-def generic_information_constrained_oracle(
+def generic_information_constrained_oracle( #TODO: having shims and redirects and wrappers is not allowed. Use the method directly 
     summary: ObservableSummary,
     sensitivity_budget: SensitivityBudget,
     oracle_digits: PositiveInt,

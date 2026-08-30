@@ -20,19 +20,19 @@ class PopulationMaterialityObservation(DomainModel):
     law_name: LawName
     sensitivity_budget: SensitivityBudget
     compatibility_regime: CompatibilityRegime
-    absolute_tightening: FiniteFloat | None
-    relative_unresolved_gain: FiniteFloat | None
+    absolute_tightening: FiniteFloat | None #TODO: I prefer an alias instead of FiniteFloat
+    relative_unresolved_gain: FiniteFloat | None #TODO: I prefer an alias instead of FiniteFloat
 
 
 class PopulationLawMateriality(DomainModel):
     law_name: LawName
-    qualifying_rho_count: NonNegativeInt
+    qualifying_rho_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
     qualifies: bool
 
 
 class PopulationMaterialitySummary(DomainModel):
     laws: tuple[PopulationLawMateriality, ...]
-    qualifying_law_count: NonNegativeInt
+    qualifying_law_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
     support_threshold_met: bool
 
 
@@ -40,26 +40,26 @@ class SequentialMaterialityObservation(DomainModel):
     law_name: LawName
     sensitivity_budget: SensitivityBudget
     metric_name: PracticalMetric
-    mean_paired_difference: FiniteFloat
-    bootstrap_lower: FiniteFloat
+    mean_paired_difference: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
+    bootstrap_lower: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
     holm_adjusted_p_value: Probability
 
 
 class SequentialLawMateriality(DomainModel):
     law_name: LawName
-    qualifying_rho_count: NonNegativeInt
+    qualifying_rho_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
     qualifies: bool
 
 
 class SequentialMaterialitySummary(DomainModel):
     laws: tuple[SequentialLawMateriality, ...]
-    qualifying_law_count: NonNegativeInt
+    qualifying_law_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
     support_threshold_met: bool
 
 
 def evaluate_population_materiality(
     observations: Iterable[PopulationMaterialityObservation],
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: Config should be accessed anywhere and whenever through context. It is forbidden to pass it explicitly in functions
 ) -> PopulationMaterialitySummary:
     qualified_by_law: dict[LawName, set[float]] = defaultdict(set)
     encountered_laws: set[LawName] = set()

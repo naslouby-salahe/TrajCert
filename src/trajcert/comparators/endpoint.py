@@ -9,7 +9,7 @@ from trajcert.types import SensitivityBudget, ToleranceValue
 def endpoint_partition(summary: ObservableSummary) -> TrajectoryPartition:
     return build_partition(
         finest_band_count=summary.partition.finest_band_count,
-        band_count=1,
+        band_count=1, #TODO:  what's this magic number?  Should be in yaml
         terminal_horizon=summary.partition.terminal_horizon,
     )
 

@@ -21,7 +21,7 @@ class HolmAdjustedTest(DomainModel):
     metric_name: MetricName
     raw_p_value: Probability
     adjusted_p_value: Probability
-    family_size: PositiveInt
+    family_size: PositiveInt #TODO: I prefer an alias instead of PositiveInt
 
 
 def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ...]:
@@ -63,7 +63,7 @@ def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ..
 
 
 def require_family_size(
-    tests: tuple[HolmAdjustedTest, ...], expected_size: PositiveInt
+    tests: tuple[HolmAdjustedTest, ...], expected_size: PositiveInt #TODO: I prefer an alias instead of PositiveInt
 ) -> tuple[HolmAdjustedTest, ...]:
     if len(tests) != int(expected_size):
         raise InvalidScientificDataError(

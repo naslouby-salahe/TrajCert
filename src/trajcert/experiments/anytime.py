@@ -1298,7 +1298,8 @@ def _law(config: TrajCertConfig, law_key: LawKey) -> LawParameters:
     )
 
 
-def _hand_identity(case_index: int) -> LedgerIdentity:
+def _hand_identity(case_index: int #TODO: No primitive usage, consider using a type alias instead of int
+                   ) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId("hand-case-client"),
         action_channel_id=ActionChannelId("hand-case-action"),

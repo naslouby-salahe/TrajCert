@@ -33,11 +33,11 @@ from trajcert.types import (
     SeedIndex,
 )
 
-CategoryIndex = NewType("CategoryIndex", int)
+CategoryIndex = NewType("CategoryIndex", int) #TODO: Move to types and follow the same architecture as the others
 
 _SYNTHETIC_CLIENT_ID = ClientId("synthetic-client")
 _SYNTHETIC_ACTION_CHANNEL_ID = ActionChannelId("automatic-action")
-_EVENT_INDEX_WIDTH = 6
+_EVENT_INDEX_WIDTH = 6 #TODO: Should be in yaml and accessed through conf
 
 
 class ObservableCategoryProbability(DomainModel):

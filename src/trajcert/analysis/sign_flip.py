@@ -17,16 +17,16 @@ from trajcert.types import (
 
 
 class SignFlipResult(DomainModel):
-    observed_statistic: FiniteFloat
-    favorable_or_more_extreme_count: NonNegativeInt
-    randomization_count: PositiveInt
+    observed_statistic: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
+    favorable_or_more_extreme_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
+    randomization_count: PositiveInt #TODO: I prefer an alias instead of PositiveInt
     p_value: Probability
 
 
 def one_sided_sign_flip(
     differences: Vector,
     semantic_comparison_key: SemanticComparisonKey,
-    randomization_count: PositiveInt,
+    randomization_count: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
 ) -> SignFlipResult:
     values = _validated_vector(differences)
     observed = float(np.mean(values, dtype=np.float64))

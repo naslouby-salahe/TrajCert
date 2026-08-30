@@ -16,23 +16,23 @@ class PracticalMetric(StrEnum):
 
 
 class PopulationGain(DomainModel):
-    absolute_tightening: FiniteFloat
-    relative_unresolved_gain: FiniteFloat | None
+    absolute_tightening: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
+    relative_unresolved_gain: FiniteFloat | None #TODO: I prefer an alias instead of FiniteFloat
 
 
 def numeric_first_certification(
-    first_certified_n: NonNegativeInt | None,
-    max_events: NonNegativeInt,
-) -> NonNegativeInt:
+    first_certified_n: NonNegativeInt | None,   #TODO: I prefer an alias instead of NonNegativeInt
+    max_events: NonNegativeInt,  #TODO: I prefer an alias instead of NonNegativeInt
+) -> NonNegativeInt: #TODO: I prefer an alias instead of NonNegativeInt
     if first_certified_n is not None:
         return first_certified_n
     return int(max_events) + 1
 
 
 def population_gain(
-    unresolved_as_harm_upper: FiniteFloat,
-    risk_upper: FiniteFloat,
-    unresolved_mass: FiniteFloat,
+    unresolved_as_harm_upper: FiniteFloat, #TODO: I prefer an alias instead of FiniteFloat
+    risk_upper: FiniteFloat, #TODO: I prefer an alias instead of FiniteFloat
+    unresolved_mass: FiniteFloat, #TODO: I prefer an alias instead of FiniteFloat
 ) -> PopulationGain:
     if unresolved_mass < 0.0:
         raise InvalidScientificDataError("unresolved mass cannot be negative")
