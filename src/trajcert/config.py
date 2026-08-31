@@ -7,22 +7,56 @@ from itertools import pairwise
 from math import isclose
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, Literal, cast
+from typing import Literal, cast
 
 import yaml
-from pydantic import Field, StrictFloat, field_serializer, field_validator, model_validator
+from pydantic import field_serializer, field_validator, model_validator
 
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.exceptions import ConfigurationError
 from trajcert.types import (
+    AbsoluteTightening,
+    AcceptanceUpperLimit,
+    AnytimeConfidenceDelta,
+    ArbitraryPrecisionBits,
+    BandCount,
+    CertifiedFractionGain,
+    CoefficientValue,
+    ConfidenceLevel,
+    CoverageStressCaseName,
     DomainModel,
+    EventCount,
+    GammaSensitivity,
+    GridPointCount,
+    HazardProbability,
+    InformationNats,
+    IterationBudget,
+    LawCount,
     LawKey,
     NonNegativeFloat,
-    NonNegativeInt,
-    PositiveFloat,
+    OracleDigits,
+    OuterMaxNodes,
+    PairCount,
     PositiveInt,
+    Probability,
+    RandomizationCount,
+    RefinementCandidateCount,
+    RefinementStepCount,
+    RelativeUnresolvedGain,
+    RepetitionCount,
+    ResampleCount,
+    RhoValueCount,
+    RiskBudget,
+    RiskOffset,
     SensitivityBudget,
-    UnitFloat,
+    SensitivityOffset,
+    SignificanceLevel,
+    SlopeValue,
+    StreamCount,
+    TerminalHorizon,
+    TimingContrast,
+    ToleranceValue,
+    WarmupRepetitionCount,
 )
 
 type YamlValue = (
@@ -31,12 +65,6 @@ type YamlValue = (
 type RawYamlScalar = None | bool | int | float | str
 type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "RawYamlValue"]
 
-_UTILITY_AND_COHERENCE_LAW_COUNT = 6 #TODO: should be in yml and accessed through conf
-_SHARPNESS_ORACLE_LAW_COUNT = 10 #TODO: should be in yml and accessed through conf
-_SAFETY_AND_IMPOSSIBILITY_LAW_COUNT = 8 #TODO: should be in yml and accessed through conf
-_STRICT_TIMING_CASE_COUNT = 6 #TODO: should be in yml and accessed through conf
-_COVERAGE_STRESS_CASE_COUNT = 12 #TODO: should be in yml and accessed through conf
-_FAILURE_BOUNDARY_LEVEL_COUNT = 7 #TODO: should be in yml and accessed through conf
 
 active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
 
@@ -46,13 +74,13 @@ class ConfigModel(DomainModel):
 
 
 class MethodConfig(ConfigModel):
-    finest_bands: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    terminal_horizon: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    finest_bands: BandCount
+    terminal_horizon: TerminalHorizon
 
 
 class BudgetsConfig(ConfigModel):
-    risk: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    information_nats: NonNegativeFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    risk: RiskBudget
+    information_nats: InformationNats
 
     @model_validator(mode="after")
     def validate_information_budget(self) -> BudgetsConfig:
@@ -62,9 +90,9 @@ class BudgetsConfig(ConfigModel):
 
 
 class ConfidenceConfig(ConfigModel):
-    anytime_delta: Annotated[StrictFloat, Field(gt=0.0, lt=1.0)] #TODO: why aren't we using the types we have already. Or just create an alias fot this
-    level: Annotated[StrictFloat, Field(gt=0.0, lt=1.0)] #TODO: why aren't we using the types we have already. Or just create an alias fot this
-    alpha: Annotated[StrictFloat, Field(gt=0.0, lt=1.0)] #TODO: why aren't we using the types we have already. Or just create an alias fot this
+    anytime_delta: AnytimeConfidenceDelta
+    level: ConfidenceLevel
+    alpha: SignificanceLevel
 
     @model_validator(mode="after")
     def validate_level_alpha_pair(self) -> ConfidenceConfig:
@@ -74,8 +102,8 @@ class ConfidenceConfig(ConfigModel):
 
 
 class MinimumEvidenceConfig(ConfigModel):
-    matured_events: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    resolved_events: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    matured_events: EventCount
+    resolved_events: EventCount
 
     @model_validator(mode="after")
     def validate_resolved_not_greater_than_matured(self) -> MinimumEvidenceConfig:
@@ -85,11 +113,11 @@ class MinimumEvidenceConfig(ConfigModel):
 
 
 class LawConfig(ConfigModel):
-    theta: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    q1: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    q0: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    lambda1: StrictFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    lambda0: StrictFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    theta: Probability
+    q1: Probability
+    q0: Probability
+    lambda1: SlopeValue
+    lambda0: SlopeValue
 
 
 class TimingInformationExpectation(StrEnum):
@@ -99,8 +127,8 @@ class TimingInformationExpectation(StrEnum):
 
 class StrictTimingCaseConfig(ConfigModel):
     law: LawKey
-    fine_bands: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    coarse_bands: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    fine_bands: BandCount
+    coarse_bands: BandCount
     expectation: TimingInformationExpectation
 
     @model_validator(mode="after")
@@ -113,9 +141,9 @@ class StrictTimingCaseConfig(ConfigModel):
 
 
 class LegacyPartitionIncoherenceConfig(ConfigModel):
-    gamma: tuple[Annotated[StrictFloat, Field(ge=1.0)], ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    q: tuple[Annotated[StrictFloat, Field(gt=0.0, lt=1.0)], ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    latent_outcome_probabilities: tuple[UnitFloat, UnitFloat] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gamma: tuple[GammaSensitivity, ...]
+    q: tuple[HazardProbability, ...]
+    latent_outcome_probabilities: tuple[Probability, Probability]
 
     @model_validator(mode="after")
     def validate_grid(self) -> LegacyPartitionIncoherenceConfig:
@@ -136,13 +164,13 @@ class CoverageStressSensitivityReference(StrEnum):
 
 
 class CoverageStressCaseConfig(ConfigModel):
-    name: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    name: CoverageStressCaseName
     law: LawKey
-    band_count: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    rho_offset: NonNegativeFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    band_count: BandCount
+    rho_offset: SensitivityOffset
     sensitivity_reference: CoverageStressSensitivityReference
-    beta_offset: NonNegativeFloat | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    minimum_information_completion: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    beta_offset: SensitivityOffset | None = None
+    minimum_information_completion: bool = False
 
     @model_validator(mode="after")
     def validate_reference(self) -> CoverageStressCaseConfig:
@@ -164,42 +192,12 @@ class StudyDesignConfig(ConfigModel):
     legacy_partition_incoherence: LegacyPartitionIncoherenceConfig
     coverage_stress_cases: tuple[CoverageStressCaseConfig, ...]
     partition_coherence_figure_rho: SensitivityBudget
-    sharp_set_offsets: tuple[NonNegativeFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    oracle_offsets: tuple[NonNegativeFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    timing_offsets: tuple[NonNegativeFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    sharp_set_offsets: tuple[SensitivityOffset, ...]
+    oracle_offsets: tuple[SensitivityOffset, ...]
+    timing_offsets: tuple[SensitivityOffset, ...]
 
     @model_validator(mode="after")
     def validate_registry_cardinalities(self) -> StudyDesignConfig:
-        expected_lengths = (
-            (
-                len(self.utility_and_coherence_laws),
-                _UTILITY_AND_COHERENCE_LAW_COUNT,
-                "utility_and_coherence_laws",
-            ),
-            (
-                len(self.sharpness_oracle_laws),
-                _SHARPNESS_ORACLE_LAW_COUNT,
-                "sharpness_oracle_laws",
-            ),
-            (
-                len(self.safety_and_impossibility_laws),
-                _SAFETY_AND_IMPOSSIBILITY_LAW_COUNT,
-                "safety_and_impossibility_laws",
-            ),
-            (
-                len(self.strict_timing_cases),
-                _STRICT_TIMING_CASE_COUNT,
-                "strict_timing_cases",
-            ),
-            (
-                len(self.coverage_stress_cases),
-                _COVERAGE_STRESS_CASE_COUNT,
-                "coverage_stress_cases",
-            ),
-        )
-        for observed, expected, field_name in expected_lengths:
-            if observed != expected:
-                raise ValueError(f"study_design.{field_name} must contain {expected} entries")
         for field_name, values in (
             ("utility_and_coherence_laws", self.utility_and_coherence_laws),
             ("sharpness_oracle_laws", self.sharpness_oracle_laws),
@@ -221,11 +219,11 @@ class StudyDesignConfig(ConfigModel):
 
 
 class GridsConfig(ConfigModel):
-    partitions: tuple[PositiveInt, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    scaling_bands: tuple[PositiveInt, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    partitions: tuple[BandCount, ...]
+    scaling_bands: tuple[BandCount, ...]
     rho: tuple[SensitivityBudget, ...]
     same_endpoint_rho: tuple[SensitivityBudget, ...]
-    beta: tuple[UnitFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    beta: tuple[RiskBudget, ...]
 
     @model_validator(mode="after")
     def validate_grids(self) -> GridsConfig:
@@ -249,35 +247,35 @@ class GridsConfig(ConfigModel):
 
 
 class NumericsConfig(ConfigModel):
-    root_atol: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    identity_atol: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    comparison_guard: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    oracle_digits: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    anytime_root_atol: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    outer_gap: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    outer_max_nodes: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    arbitrary_precision_bits: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    float_roundoff_ulps: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    profile_grid_points: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sharp_diagnostic_grid_points: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    oracle_bracket_width: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    projection_refinement_candidates: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    projection_refinement_steps: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    resolved_harm_boundary_offset: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    compatibility_floor_offset: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sharpness_diagnostic_offset: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    root_atol: ToleranceValue
+    identity_atol: ToleranceValue
+    comparison_guard: ToleranceValue
+    oracle_digits: OracleDigits
+    anytime_root_atol: ToleranceValue
+    outer_gap: ToleranceValue
+    outer_max_nodes: OuterMaxNodes
+    arbitrary_precision_bits: ArbitraryPrecisionBits
+    float_roundoff_ulps: ToleranceValue
+    profile_grid_points: GridPointCount
+    sharp_diagnostic_grid_points: GridPointCount
+    oracle_bracket_width: ToleranceValue
+    projection_refinement_candidates: RefinementCandidateCount
+    projection_refinement_steps: RefinementStepCount
+    resolved_harm_boundary_offset: ToleranceValue
+    compatibility_floor_offset: ToleranceValue
+    sharpness_diagnostic_offset: ToleranceValue
 
 
 class LegacyPatternMixtureConfig(ConfigModel):
     c: tuple[NonNegativeFloat, ...]
-    coefficient_bounds: tuple[StrictFloat, StrictFloat] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    ftol: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    gtol: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_iterations: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    initial_clip: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    gradient_acceptance: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    boundary_distance: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    minimum_nonempty_bands: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    coefficient_bounds: tuple[CoefficientValue, CoefficientValue]
+    ftol: ToleranceValue
+    gtol: ToleranceValue
+    max_iterations: IterationBudget
+    initial_clip: ToleranceValue
+    gradient_acceptance: ToleranceValue
+    boundary_distance: ToleranceValue
+    minimum_nonempty_bands: BandCount
 
     @model_validator(mode="after")
     def validate_bounds(self) -> LegacyPatternMixtureConfig:
@@ -288,16 +286,16 @@ class LegacyPatternMixtureConfig(ConfigModel):
 
 
 class CallbackConfig(ConfigModel):
-    grid_points: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    minimum_bracket_width: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    common_slope_tolerance: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    stable_equality_tolerance: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    root_deduplication_tolerance: PositiveFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    minimum_comparable_bands: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    grid_points: GridPointCount
+    minimum_bracket_width: ToleranceValue
+    common_slope_tolerance: ToleranceValue
+    stable_equality_tolerance: ToleranceValue
+    root_deduplication_tolerance: ToleranceValue
+    minimum_comparable_bands: BandCount
 
 
 class ComparatorsConfig(ConfigModel):
-    legacy_gamma: tuple[Annotated[StrictFloat, Field(ge=1.0)], ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    legacy_gamma: tuple[GammaSensitivity, ...]
     pattern_mixture: LegacyPatternMixtureConfig
     callback: CallbackConfig
 
@@ -309,10 +307,10 @@ class ComparatorsConfig(ConfigModel):
 
 
 class CoverageConfig(ConfigModel):
-    streams: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_events: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    checkpoint_every: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    acceptance_upper_limit: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    streams: StreamCount
+    max_events: EventCount
+    checkpoint_every: EventCount
+    acceptance_upper_limit: AcceptanceUpperLimit
 
     @model_validator(mode="after")
     def validate_checkpoint_interval(self) -> CoverageConfig:
@@ -322,9 +320,9 @@ class CoverageConfig(ConfigModel):
 
 
 class SequentialUtilityConfig(ConfigModel):
-    streams: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_events: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    checkpoint_every: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    streams: StreamCount
+    max_events: EventCount
+    checkpoint_every: EventCount
     rho: tuple[SensitivityBudget, ...]
 
     @model_validator(mode="after")
@@ -342,21 +340,21 @@ class SequentialConfig(ConfigModel):
 
 
 class StatisticsConfig(ConfigModel):
-    bootstrap_resamples: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sign_flip_randomizations: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    minimum_paired_values: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    bootstrap_resamples: ResampleCount
+    sign_flip_randomizations: RandomizationCount
+    minimum_paired_values: PairCount
 
 
 class PopulationMaterialityConfig(ConfigModel):
-    absolute_tightening: NonNegativeFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    relative_unresolved_gain: NonNegativeFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    qualifying_laws: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    compatible_rho_values: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    absolute_tightening: AbsoluteTightening
+    relative_unresolved_gain: RelativeUnresolvedGain
+    qualifying_laws: LawCount
+    compatible_rho_values: RhoValueCount
 
 
 class SequentialMaterialityConfig(ConfigModel):
-    certified_fraction_gain: NonNegativeFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    qualifying_laws: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    certified_fraction_gain: CertifiedFractionGain
+    qualifying_laws: LawCount
 
 
 class MaterialityConfig(ConfigModel):
@@ -365,22 +363,22 @@ class MaterialityConfig(ConfigModel):
 
 
 class BenchmarkConfig(ConfigModel):
-    warmup_repetitions: NonNegativeInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    measured_repetitions: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    outer_sample_size: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    minimum_samples_for_standard_deviation: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    warmup_repetitions: WarmupRepetitionCount
+    measured_repetitions: RepetitionCount
+    outer_sample_size: EventCount
+    minimum_samples_for_standard_deviation: RepetitionCount
 
 
 class CoverageSizeOverrides(ConfigModel):
-    streams: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_events: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    checkpoint_every: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    streams: StreamCount | None = None
+    max_events: EventCount | None = None
+    checkpoint_every: EventCount | None = None
 
 
 class SequentialUtilitySizeOverrides(ConfigModel):
-    streams: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_events: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    checkpoint_every: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    streams: StreamCount | None = None
+    max_events: EventCount | None = None
+    checkpoint_every: EventCount | None = None
 
 
 class SequentialSizeOverrides(ConfigModel):
@@ -389,13 +387,13 @@ class SequentialSizeOverrides(ConfigModel):
 
 
 class StatisticsSizeOverrides(ConfigModel):
-    bootstrap_resamples: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sign_flip_randomizations: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    bootstrap_resamples: ResampleCount | None = None
+    sign_flip_randomizations: RandomizationCount | None = None
 
 
 class BenchmarkSizeOverrides(ConfigModel):
-    warmup_repetitions: NonNegativeInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    measured_repetitions: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    warmup_repetitions: WarmupRepetitionCount | None = None
+    measured_repetitions: RepetitionCount | None = None
 
 
 class ExecutionSizeOverrides(ConfigModel):
@@ -405,17 +403,17 @@ class ExecutionSizeOverrides(ConfigModel):
 
 
 class FailureBoundaryConfig(ConfigModel):
-    unresolvedness: tuple[UnitFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    timing_contrast: tuple[NonNegativeFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    prevalence: tuple[UnitFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    bands: tuple[PositiveInt, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    information_margin: tuple[NonNegativeFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    risk_offset: tuple[StrictFloat, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sample_size: tuple[PositiveInt, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    terminal_selection_asymmetry: tuple[tuple[UnitFloat, UnitFloat], ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    optimizer_nodes: tuple[PositiveInt, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    optimizer_sample_size: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    optimizer_information_margin: NonNegativeFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    unresolvedness: tuple[Probability, ...]
+    timing_contrast: tuple[TimingContrast, ...]
+    prevalence: tuple[Probability, ...]
+    bands: tuple[BandCount, ...]
+    information_margin: tuple[InformationNats, ...]
+    risk_offset: tuple[RiskOffset, ...]
+    sample_size: tuple[EventCount, ...]
+    terminal_selection_asymmetry: tuple[tuple[Probability, Probability], ...]
+    optimizer_nodes: tuple[OuterMaxNodes, ...]
+    optimizer_sample_size: EventCount
+    optimizer_information_margin: InformationNats
 
     @model_validator(mode="after")
     def validate_axes(self) -> FailureBoundaryConfig:
@@ -430,11 +428,10 @@ class FailureBoundaryConfig(ConfigModel):
             ("terminal_selection_asymmetry", self.terminal_selection_asymmetry),
             ("optimizer_nodes", self.optimizer_nodes),
         )
+        level_count = len(axes[0][1])
         for name, values in axes:
-            if len(values) != _FAILURE_BOUNDARY_LEVEL_COUNT:
-                raise ValueError(
-                    f"failure_boundary.{name} must contain {_FAILURE_BOUNDARY_LEVEL_COUNT} levels"
-                )
+            if len(values) != level_count:
+                raise ValueError(f"failure_boundary.{name} must contain {level_count} levels")
             _require_unique(values, f"failure_boundary.{name}")
         _require_strictly_increasing(self.unresolvedness, "failure_boundary.unresolvedness")
         _require_strictly_increasing(self.timing_contrast, "failure_boundary.timing_contrast")

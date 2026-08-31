@@ -21,12 +21,13 @@ from trajcert.types import (
     BandCount,
     Count,
     DomainModel,
+    EventCount,
     FailureBoundaryLevel,
     InformationNats,
     LawKey,
     Mass,
     NonNegativeFloat,
-    PositiveInt,
+    OuterMaxNodes,
     Probability,
     RiskBudget,
     RiskValue,
@@ -143,7 +144,7 @@ def evaluate_terminal_selection_asymmetry(
 
 
 def evaluate_optimizer_node_budget(
-    node_budget: PositiveInt, # TODO: Consider using a proper alias type for the optimizer node budget or whatever already exists with actually fits this
+    node_budget: OuterMaxNodes,
 ) -> FailureBoundaryResult:
     config = active_config.get()
     if node_budget <= 0:
@@ -197,7 +198,7 @@ def evaluate_optimizer_node_budget(
     )
 
 
-def _finite_sample_size(sample_size: PositiveInt, config: TrajCertConfig) -> FailureBoundaryResult: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
+def _finite_sample_size(sample_size: EventCount, config: TrajCertConfig) -> FailureBoundaryResult: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
     if sample_size <= 0:
         raise ValueError("matured sample size must be positive")
     parameters = _base_parameters(config)
