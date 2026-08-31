@@ -323,7 +323,7 @@ def synthesize_trajectory_operational_gain(
     )
     adjusted = require_family_size(adjusted, len(raw_results))
     adjusted_by_key = {
-        (item.semantic_comparison_key, str(item.metric_name)): item for item in adjusted
+        (item.semantic_comparison_key, item.metric_name): item for item in adjusted
     }
     final_results = tuple(
         _apply_adjusted_inference(
@@ -540,7 +540,7 @@ def _comparison_key(
 ) -> SemanticComparisonKey:
     return SemanticComparisonKey(
         f"Sequential Sensitivity Utility|{law_name}|"
-        + f"rho={float(sensitivity_budget):.17g}|{metric.value}"
+        + f"rho={sensitivity_budget:.17g}|{metric}"
     )
 
 

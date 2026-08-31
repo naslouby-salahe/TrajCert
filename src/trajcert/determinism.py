@@ -40,7 +40,7 @@ def event_stream_namespace(law_name: LawName, band_count: BandCount) -> SeedName
     if band_count <= 0:
         raise InvalidScientificDataError("event-stream band count must be positive")
     return SeedNamespace(
-        f"{SeedNamespaceRole.EVENT_STREAM.value}{SEED_FIELD_SEPARATOR}law={law_name}{SEED_FIELD_SEPARATOR}K={band_count}"
+        f"{SeedNamespaceRole.EVENT_STREAM}{SEED_FIELD_SEPARATOR}law={law_name}{SEED_FIELD_SEPARATOR}K={band_count}"
     )
 
 
@@ -61,4 +61,4 @@ def _descriptor_namespace(
         raise InvalidScientificDataError(
             "seed namespace descriptor cannot contain leading or trailing whitespace"
         )
-    return SeedNamespace(f"{role.value}{SEED_FIELD_SEPARATOR}{descriptor}")
+    return SeedNamespace(f"{role}{SEED_FIELD_SEPARATOR}{descriptor}")

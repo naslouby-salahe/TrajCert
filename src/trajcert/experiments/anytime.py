@@ -106,11 +106,11 @@ class SequentialMethod(StrEnum):
 
 
 class AnytimeOperationalState(StrEnum):
-    CERTIFIED = ScientificState.CERTIFIED.value
-    UNCERTIFIED = ScientificState.UNCERTIFIED.value
-    MODEL_INCOMPATIBLE = ScientificState.MODEL_INCOMPATIBLE.value
-    INTRINSICALLY_UNCERTIFIABLE = ScientificState.INTRINSICALLY_UNCERTIFIABLE.value
-    INSUFFICIENT_EVIDENCE = ScientificState.INSUFFICIENT_EVIDENCE.value
+    CERTIFIED = "CERTIFIED"
+    UNCERTIFIED = "UNCERTIFIED"
+    MODEL_INCOMPATIBLE = "MODEL_INCOMPATIBLE"
+    INTRINSICALLY_UNCERTIFIABLE = "INTRINSICALLY_UNCERTIFIABLE"
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
     TECHNICAL_FAIL = "TECHNICAL_FAIL"
 
 
@@ -486,7 +486,7 @@ def evaluate_configured_coverage_stress(
         )
         for result in base.methods
     )
-    primary = next(item for item in methods if item.method_name == SequentialMethod.TRAJCERT.value)
+    primary = next(item for item in methods if item.method_name == SequentialMethod.TRAJCERT)
     return CoverageEvidenceResult(
         band_count=partition.band_count,
         true_theta=float(parameters.theta),
@@ -516,7 +516,7 @@ def _coverage_method_evidence(
         None if upper is None else upper <= float(config.sequential.coverage.acceptance_upper_limit)
     )
     return CoverageMethodEvidence(
-        method_name=method.value,
+        method_name=method,
         applicable=applicable,
         independent_streams=streams,
         ever_violations=failures,
@@ -643,7 +643,7 @@ def _representative_checkpoint_evidence(
         operational_state=(
             AnytimeOperationalState.TECHNICAL_FAIL
             if state is None
-            else AnytimeOperationalState(state.value)
+            else AnytimeOperationalState(state)
         ),
     )
 

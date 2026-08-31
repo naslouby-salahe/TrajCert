@@ -178,18 +178,18 @@ def build_parser() -> ArgumentParser:
     parser = ArgumentParser(prog="trajcert")
     subparsers = parser.add_subparsers(dest="command", required=True)
     for command in (CliCommand.DOCTOR, CliCommand.PLAN):
-        _ = subparsers.add_parser(command.value)
-    preprocess_parser = subparsers.add_parser(CliCommand.PREPROCESS.value)
+        _ = subparsers.add_parser(command)
+    preprocess_parser = subparsers.add_parser(CliCommand.PREPROCESS)
     _ = preprocess_parser.add_argument("dataset_name", nargs="?")
     _ = preprocess_parser.add_argument("--overwrite", action="store_true")
-    smoke_parser = subparsers.add_parser(CliCommand.SMOKE.value)
+    smoke_parser = subparsers.add_parser(CliCommand.SMOKE)
     _ = smoke_parser.add_argument("--overwrite", action="store_true")
-    run_parser = subparsers.add_parser(CliCommand.RUN.value)
+    run_parser = subparsers.add_parser(CliCommand.RUN)
     _ = run_parser.add_argument("experiment_name")
     _ = run_parser.add_argument("--overwrite", action="store_true")
-    status_parser = subparsers.add_parser(CliCommand.STATUS.value)
+    status_parser = subparsers.add_parser(CliCommand.STATUS)
     _ = status_parser.add_argument("experiment_name", nargs="?")
-    report_parser = subparsers.add_parser(CliCommand.REPORT.value)
+    report_parser = subparsers.add_parser(CliCommand.REPORT)
     _ = report_parser.add_argument("experiment_name", nargs="?")
     _ = report_parser.add_argument("--overwrite", action="store_true")
     return parser
@@ -213,14 +213,14 @@ def _dataset_name(arguments: CliArguments) -> str | None:
     value = arguments.dataset_name
     if value is None:
         return None
-    if not value or value not in {str(name) for name in LAW_DISPLAY_NAMES.values()}:
+    if not value or value not in LAW_DISPLAY_NAMES.values():
         build_parser().error(f"unknown dataset name: {value}")
     return value
 
 
 def _print_run(result: RunExperimentResult) -> None:
     print(
-        f"{result.experiment_name}: {result.state.value} "
+        f"{result.experiment_name}: {result.state} "
         + f"({result.completed_cells} completed, {result.reused_cells} reused, "
         + f"{result.failed_cells} failed, {result.blocked_cells} blocked)"
     )
@@ -228,7 +228,7 @@ def _print_run(result: RunExperimentResult) -> None:
 
 def _print_status(status: ExperimentStatus) -> None:
     print(
-        f"{status.experiment_name}: {status.state.value} "
+        f"{status.experiment_name}: {status.state} "
         + f"({status.completed_cells}/{status.total_cells} completed, "
         + f"{status.invalid_cells} invalid, {status.failed_cells} failed, "
         + f"{status.blocked_cells} blocked, {status.running_cells} running)"
@@ -406,7 +406,7 @@ def run_experiment(
         outcome = run_cell(cell, context, dependencies, executor, overwrite)
         if outcome.state is PublicExecutionState.COMPLETED:
             completed += 1
-            reused += int(outcome.reused)
+            reused += outcome.reused
         elif outcome.state is PublicExecutionState.FAILED:
             failed += 1
         elif outcome.state is PublicExecutionState.BLOCKED:
@@ -719,7 +719,7 @@ def _local_validity_target(
     identity = LedgerIdentity(
         client_id=client_id,
         action_channel_id=ActionChannelId("automatic-action"),
-        epoch_id=EpochId(f"{semantic_slug(str(law_name))}::static-epoch"),
+        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),
     )
     root_key = scientific_result_artifact_key(cell)
     root = RuntimeLineageArtifact(

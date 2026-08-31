@@ -1001,14 +1001,14 @@ def _failure_rows(
 ) -> tuple[FailureBoundaryRow, ...]:
     return tuple(
         FailureBoundaryRow(
-            axis=result.axis.value,
+            axis=result.axis,
             level=result.level,
             controlled_value_json=_controlled_value_json(result),
             rho=result.sensitivity_budget,
             beta=result.risk_budget,
             tau=result.tau,
             risk_upper=result.risk_upper,
-            operational_state=result.operational_state.value,
+            operational_state=result.operational_state,
             optimizer_gap=result.optimizer_gap,
             runtime_ms=result.runtime_ms,
             scientific_interpretation=_state_interpretation(result.operational_state),
@@ -1022,11 +1022,11 @@ def _failure_figure_rows(
 ) -> tuple[FailureBoundaryFigureRow, ...]:
     return tuple(
         FailureBoundaryFigureRow(
-            axis=result.axis.value,
+            axis=result.axis,
             level=result.level,
             controlled_value_json=_controlled_value_json(result),
             risk_upper=result.risk_upper,
-            operational_state=result.operational_state.value,
+            operational_state=result.operational_state,
             optimizer_gap=result.optimizer_gap,
             runtime_ms=result.runtime_ms,
         )
@@ -1037,7 +1037,7 @@ def _failure_figure_rows(
 def _controlled_value_json(result: FailureBoundaryResult) -> str:
     return json.dumps(
         {
-            "axis": result.axis.value,
+            "axis": result.axis,
             "band_count": result.band_count,
             "level": result.level,
         },

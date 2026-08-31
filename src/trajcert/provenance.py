@@ -80,7 +80,7 @@ class SemanticCellIdentity(DomainModel):
 
     @property
     def experiment_slug(self) -> ExperimentSlug:
-        return ExperimentSlug(str(semantic_slug(str(self.experiment_name))))
+        return ExperimentSlug(semantic_slug(self.experiment_name))
 
     @property
     def path_coordinates(self) -> tuple[tuple[CoordinateName, CoordinateToken], ...]:
@@ -95,7 +95,7 @@ class SemanticCellIdentity(DomainModel):
             ("variant", coordinates.variant_name),
         ):
             if value is not None:
-                values.append((CoordinateName(name), semantic_slug(str(value))))
+                values.append((CoordinateName(name), semantic_slug(value)))
         for name, value in (
             ("rho", coordinates.rho),
             ("beta", coordinates.beta),
@@ -115,7 +115,7 @@ class SemanticCellIdentity(DomainModel):
             values.append(
                 (
                     CoordinateName("failure-boundary"),
-                    semantic_slug(str(coordinates.failure_boundary_axis_and_level)),
+                    semantic_slug(coordinates.failure_boundary_axis_and_level),
                 )
             )
         if coordinates.scaling_band_count is not None:
@@ -133,7 +133,7 @@ class SemanticCellIdentity(DomainModel):
             values.append(
                 (
                     CoordinateName("sensitivity"),
-                    semantic_slug(str(coordinates.sensitivity_coordinate)),
+                    semantic_slug(coordinates.sensitivity_coordinate),
                 )
             )
         return tuple(values)

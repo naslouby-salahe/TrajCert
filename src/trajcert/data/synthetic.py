@@ -220,7 +220,7 @@ def _event_from_observable_category(
         event_id=_event_id(law_name, stream_index, event_index),
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
-        epoch_id=EpochId(f"{semantic_slug(str(law_name))}::static-epoch"),
+        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),
         issue_age_unit=issue,
         terminal_horizon=partition.terminal_horizon,
         adjudication_completion_age=completion,
@@ -232,14 +232,14 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
-        epoch_id=EpochId(f"{semantic_slug(str(law_name))}::static-epoch"),
+        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),
     )
 
 
 def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: NonNegativeInt) -> EventId:
     width = active_config.get().identifiers.event_index_width
     return EventId(
-        f"{semantic_slug(str(law_name))}::S{stream_index:0{width}d}"
+        f"{semantic_slug(law_name)}::S{stream_index:0{width}d}"
         + f"::E{event_index:0{width}d}"
     )
 

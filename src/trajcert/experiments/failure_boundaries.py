@@ -77,7 +77,7 @@ def evaluate_failure_boundary(
         FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
         FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET,
     }:
-        raise ValueError(f"{axis.value} requires its dedicated evaluator")
+        raise ValueError(f"{axis} requires its dedicated evaluator")
     parameters, partition, rho, beta = _population_coordinate(axis, level, config)
     summary = _summary(parameters, partition, config)
     tau = _tau(summary)
@@ -264,7 +264,7 @@ def _population_coordinate(
     elif axis is FailureBoundaryAxis.PATH_RESOLUTION:
         bands = int(level)
     elif axis not in {FailureBoundaryAxis.INFORMATION_MARGIN, FailureBoundaryAxis.RISK_OFFSET}:
-        raise ValueError(f"unsupported population failure-boundary axis: {axis.value}")
+        raise ValueError(f"unsupported population failure-boundary axis: {axis}")
     return parameters, _partition(bands, config), rho, beta
 
 

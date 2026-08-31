@@ -113,8 +113,8 @@ def solve_information_oracle(
     previous_digits = mp.dps
     mp.dps = digits
     try:
-        harmful = tuple(mpf(repr(value)) for value in summary.harmful_by_band)
-        correct = tuple(mpf(repr(value)) for value in summary.correct_by_band)
+        harmful = tuple(mpf(repr(float(value))) for value in summary.harmful_by_band)
+        correct = tuple(mpf(repr(float(value))) for value in summary.correct_by_band)
         unresolved = mpf(repr(summary.unresolved_mass))
         rho = mpf(repr(sensitivity_budget))
         bracket_width = mpf(repr(float(oracle_bracket_width)))

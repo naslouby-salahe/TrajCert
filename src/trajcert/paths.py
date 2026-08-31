@@ -146,11 +146,11 @@ def _format_number_token(digits: str, n: int) -> str:
 
 
 def experiment_root(experiment_slug: ExperimentSlug) -> Path:
-    return EXPERIMENTS_ROOT / str(experiment_slug)
+    return EXPERIMENTS_ROOT / experiment_slug
 
 
 def experiment_leaf(experiment_slug: ExperimentSlug, leaf: ExperimentLeaf) -> Path:
-    return experiment_root(experiment_slug) / Path(leaf.value)
+    return experiment_root(experiment_slug) / Path(leaf)
 
 
 def semantic_cell_path(

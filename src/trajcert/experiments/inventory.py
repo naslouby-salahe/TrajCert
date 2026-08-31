@@ -573,11 +573,11 @@ def _baseline_rows(config: TrajCertConfig) -> tuple[BaselineAssumptionRow, ...]:
 def _experiment_matrix_rows() -> tuple[ExperimentMatrixRow, ...]:
     return tuple(
         ExperimentMatrixRow(
-            execution_group=str(definition.execution_group),
-            experiment_name=str(definition.experiment_name),
-            classification=definition.evidence_class.value,
-            purpose=str(definition.execution_group),
-            cell_expansion=str(definition.expansion),
+            execution_group=definition.execution_group,
+            experiment_name=definition.experiment_name,
+            classification=definition.evidence_class,
+            purpose=definition.execution_group,
+            cell_expansion=definition.expansion,
             cell_count=definition.declared_cells,
             primary_metrics="protocol-declared experiment outputs",
             claim_ids="",
