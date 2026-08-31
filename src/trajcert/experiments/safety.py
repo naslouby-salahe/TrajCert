@@ -32,14 +32,14 @@ class CompatibilitySweepStatus(StrEnum):
 
 
 class CompatibilitySweepPoint(DomainModel):
-    label: str
-    rho: float | None
+    label: str # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    rho: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     status: CompatibilitySweepStatus
     comparison: SolverOracleComparison | None
 
 
 class CompatibilityFloorBehaviorResult(DomainModel):
-    tau: float
+    tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     points: tuple[CompatibilitySweepPoint, ...]
     passed: bool
 
@@ -62,7 +62,7 @@ def compatibility_floor_behavior(
     summary: ObservableSummary,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     oracle_bracket_width: ToleranceValue,
     compatibility_floor_offset: ToleranceValue,
 ) -> CompatibilityFloorBehaviorResult:
@@ -109,7 +109,7 @@ def sharpness_against_generic_oracle(
     summary: ObservableSummary,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     oracle_bracket_width: ToleranceValue,
     sharpness_diagnostic_offset: ToleranceValue,
 ) -> SolverOracleComparison:
@@ -127,7 +127,7 @@ def sharpness_against_generic_oracle(
 
 def safety_and_intrinsic_impossibility(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
     resolved_harm_boundary_offset: ToleranceValue,
 ) -> SafetyIntrinsicResult:

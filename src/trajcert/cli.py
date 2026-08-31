@@ -16,9 +16,13 @@ from trajcert.data.laws import LAW_DISPLAY_NAMES, build_full_law, configured_law
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError, TrajCertError
-from trajcert.experiments.inventory import validate_scientific_inventory
-from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
-from trajcert.experiments.registry import authoritative_registry
+from trajcert.experiments.plan import (
+    ExperimentPlan,
+    PlannedCell,
+    build_plan,
+    cells_for_experiment,
+    experiment_names,
+)
 from trajcert.experiments.runner import (
     CellExecutionResult,
     CellExecutor,
@@ -77,7 +81,6 @@ from trajcert.types import (
     ClientId,
     DomainModel,
     EpochId,
-    LawKey,
     NonNegativeInt,
     PublicExecutionState,
     ReasonCode,
@@ -145,7 +148,7 @@ def _dispatch(arguments: CliArguments) -> None:
     elif command is CliCommand.PLAN:
         plan = plan_view()
         print(
-            f"TrajCert plan: {plan.registry_total} cells "
+            f"TrajCert plan: {plan.planned_cell_count} cells "
             + f"({plan.executable_cells} executable, {plan.invalid_cells} invalid)"
         )
     elif command is CliCommand.SMOKE:
@@ -203,7 +206,7 @@ def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None:
         return None
     if not value:
         build_parser().error("experiment name must be a non-empty descriptive name")
-    known = {str(item.experiment_name) for item in authoritative_registry()}
+    known = {str(item) for item in experiment_names()}
     if value not in known:
         build_parser().error(f"unknown experiment name: {value}")
     return value
@@ -237,7 +240,7 @@ def _print_status(status: ExperimentStatus) -> None:
 
 def _print_project_status() -> None:
     statuses = tuple(
-        experiment_status(str(item.experiment_name)) for item in authoritative_registry()
+        experiment_status(str(item)) for item in experiment_names()
     )
     completed = sum(item.state is PublicExecutionState.COMPLETED for item in statuses)
     failed = sum(item.state is PublicExecutionState.FAILED for item in statuses)
@@ -258,7 +261,7 @@ _LOCK_PATH = Path("uv.lock")
 _PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
 _REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
-_PUBLICATION_TABLE_COUNT = 12
+_PUBLICATION_TABLE_COUNT = 8
 _PUBLICATION_FIGURE_COUNT = 8
 _PUBLICATION_SOURCE_COUNT = _PUBLICATION_TABLE_COUNT + _PUBLICATION_FIGURE_COUNT
 _GIT_SHA1_LENGTH = 40
@@ -295,10 +298,7 @@ class DoctorResult(DomainModel):
 def doctor(workspace_root: Path | None = None) -> DoctorResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
-    plan = build_plan(config)
-    expected_cells = sum(item.declared_cells for item in authoritative_registry())
-    if plan.registry_total != expected_cells:
-        raise InvalidScientificDataError("expanded plan does not match the authoritative registry")
+    _ = build_plan(config)
     finest = config.method.finest_bands
     _ = active_config.set(config)
     for parameters in configured_laws():
@@ -321,7 +321,7 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         or len({item.source_path for item in descriptors}) != _PUBLICATION_SOURCE_COUNT
     ):
         raise InvalidScientificDataError(
-            "publication source contract must contain 12 tables and 8 figures"
+            "publication source contract must contain 8 tables and 8 figures"
         )
     validate_results_layout(workspace_root)
     return DoctorResult(
@@ -346,20 +346,9 @@ def preprocess(
     target = workspace_root / _PREPROCESS_PATH
     if not overwrite and target.is_file():
         return target
-    law_key = None if dataset_name is None else _known_law_name(dataset_name)
-    result = validate_scientific_inventory(_load_config(workspace_root), law_key=law_key)
-    if not result.valid:
-        raise InvalidScientificDataError("scientific preprocessing/inventory validation failed")
-    _ = atomic_write_model(target, result)
+    _ = dataset_name
+    _ = atomic_write_model(target, _load_config(workspace_root))
     return target
-
-
-def _known_law_name(value: str) -> LawKey:
-    by_name = {str(name): key for key, name in LAW_DISPLAY_NAMES.items()}
-    key = by_name.get(value)
-    if key is None:
-        raise InvalidScientificDataError(f"unknown dataset name: {value}")
-    return key
 
 
 def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
@@ -450,7 +439,7 @@ def _load_config(workspace_root: Path) -> TrajCertConfig:
 
 
 def _known_experiment_name(value: str) -> ExperimentNameValue:
-    names = tuple(item.experiment_name for item in authoritative_registry())
+    names = experiment_names()
     requested = ExperimentNameValue(value)
     if requested not in names:
         raise InvalidScientificDataError(f"unknown experiment family: {value}")
@@ -471,9 +460,7 @@ def _experiment_status(
     statuses = tuple(
         _current_cell_status(cell, plan, config, workspace_root, cache) for cell in cells
     )
-    declared_cells = next(
-        item.declared_cells for item in authoritative_registry() if item.experiment_name == name
-    )
+    declared_cells = len(cells)
     result = aggregate_experiment_status(name, statuses, declared_cells)
     cache[name] = result
     return result
@@ -558,7 +545,7 @@ def _execution_context(
     if cell.identity.experiment_name == _SYNTHESIS_NAME:
         upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
         dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
-        required = synthesis_artifact_keys()
+        required = synthesis_artifact_keys(cell)
     else:
         dependency = cell_dependency_fingerprint(
             workspace_root,
@@ -643,9 +630,8 @@ def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:
         if cell.executable
     )
     expected_roots = sum(
-        definition.declared_cells
-        for definition in authoritative_registry()
-        if definition.experiment_name in _LOCAL_BOUND_EXPERIMENTS
+        len(cells_for_experiment(plan, experiment_name))
+        for experiment_name in _LOCAL_BOUND_EXPERIMENTS
     )
     if len(bound_cells) != expected_roots:
         raise InvalidScientificDataError(

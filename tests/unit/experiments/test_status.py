@@ -121,17 +121,17 @@ def test_inspect_cell_status_ready_without_artifacts(tmp_path: Path) -> None:
 
 
 def test_inspect_cell_status_blocked_missing_dependency_status() -> None:
-    cell = _cell(required=(ExperimentNameValue("Scientific and Data Inventory"),))
+    cell = _cell(required=(ExperimentNameValue("Legacy Partition Incoherence Check"),))
     result = inspect_cell_status(cell, _context(Path("/nonexistent")), ())
     assert result.state is PublicExecutionState.BLOCKED
     assert result.reason == ReasonCode("MISSING_DEPENDENCY_STATUS")
 
 
 def test_inspect_cell_status_blocked_uncompleted_dependency() -> None:
-    cell = _cell(required=(ExperimentNameValue("Scientific and Data Inventory"),))
+    cell = _cell(required=(ExperimentNameValue("Legacy Partition Incoherence Check"),))
     dependencies = (
         DependencyReadiness(
-            experiment_name=ExperimentNameValue("Scientific and Data Inventory"),
+            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
             state=PublicExecutionState.READY,
         ),
     )

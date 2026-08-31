@@ -17,10 +17,9 @@ from trajcert.config import (
     StatisticsConfig,
     TrajCertConfig,
 )
-from trajcert.constants import BINARY_MAX_INFORMATION_NATS, PRODUCTION_CONFIG_PATH
+from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.ledger import LedgerIdentity
-from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import (
     AnytimeOperationalState,
@@ -31,16 +30,6 @@ from trajcert.experiments.anytime import (
 from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
     FailureBoundaryResult,
-)
-from trajcert.experiments.inventory import (
-    BaselineAssumptionRow,
-    ExperimentMatrixRow,
-    InventoryValidationResult,
-    ParameterVariability,
-    ProtocolConstantRow,
-    ProtocolUnit,
-    ProtocolValueClass,
-    SyntheticLawRow,
 )
 from trajcert.experiments.mathematics import (
     ConvexityResult,
@@ -84,7 +73,6 @@ from trajcert.experiments.solver_validation import (
 )
 from trajcert.experiments.synthesis import (
     PairedSeries,
-    PopulationUtilityEvidence,
     SequentialUtilityEvidence,
     SynthesisLocalValidityInput,
     build_synthesis_evidence,
@@ -96,7 +84,6 @@ from trajcert.experiments.synthesis import (
     synthesis_artifact_paths,
     synthesis_dependency_fingerprint,
     synthesize_from_sequential_utility,
-    synthesize_population_utility,
     synthesize_trajectory_operational_gain,
     verify_synthesis_dependency_fingerprint,
 )
@@ -125,7 +112,6 @@ from trajcert.types import (
     EpochId,
     FailureBoundaryLevel,
     HiddenMassInterval,
-    LawKey,
     RiskInterval,
     SafetyCaseName,
     SafetyRegime,
@@ -135,7 +121,7 @@ from trajcert.types import (
 
 _TEST_STREAM_COUNT = 2
 _THEOREM_EXPERIMENTS = 11
-_SYNTHESIS_ARTIFACT_COUNT = 22
+_SYNTHESIS_ARTIFACT_COUNT = 17
 _POPULATION_EVIDENCE_COUNT = 360
 _SEQUENTIAL_FAMILY_SIZE = 54
 _PAIRED_METRIC_COUNT = 3
@@ -224,17 +210,6 @@ def test_trajectory_gain_rejects_nonfinite_stream(small_config: TrajCertConfig) 
         _ = synthesize_trajectory_operational_gain((bad, *family[1:]), small_config)
 
 
-def test_population_utility_rejects_incomplete_evidence(small_config: TrajCertConfig) -> None:
-    with pytest.raises(InvalidScientificDataError, match="population utility synthesis input"):
-        _ = synthesize_population_utility((), small_config)
-
-
-def test_population_utility_rejects_duplicates(small_config: TrajCertConfig) -> None:
-    evidence = _population_evidence(small_config)
-    with pytest.raises(InvalidScientificDataError, match="contains duplicates"):
-        _ = synthesize_population_utility((evidence[0], evidence[0]), small_config)
-
-
 def test_sequential_utility_rejects_incomplete_evidence(small_config: TrajCertConfig) -> None:
     with pytest.raises(InvalidScientificDataError, match="sequential utility synthesis input"):
         _ = synthesize_from_sequential_utility((), small_config)
@@ -259,17 +234,6 @@ def test_synthesis_artifact_paths_require_synthesis_cell(synthesis_plan: Experim
     cell = _experiment_cell(synthesis_plan, "Population Sensitivity Utility")
     with pytest.raises(InvalidScientificDataError, match="require the synthesis cell"):
         _ = synthesis_artifact_paths(cell)
-
-
-def test_synthesize_population_utility_reports_complete_family(
-    small_config: TrajCertConfig,
-) -> None:
-    evidence = _population_evidence(small_config)
-    synthesis = synthesize_population_utility(evidence, small_config)
-    assert synthesis.evidence_count == _POPULATION_EVIDENCE_COUNT
-    assert len(synthesis.materiality.laws) == len(
-        small_config.study_design.utility_and_coherence_laws
-    )
 
 
 def test_synthesize_from_sequential_utility_reports_complete_family(
@@ -309,8 +273,8 @@ def test_paired_series_from_sequential_utility_orders_paired_metrics(
     assert fraction.method_values[0] > fraction.baseline_values[0]
 
 
-def test_synthesis_artifact_keys_are_stable_and_unique() -> None:
-    keys = synthesis_artifact_keys()
+def test_synthesis_artifact_keys_are_stable_and_unique(synthesis_plan: ExperimentPlan) -> None:
+    keys = synthesis_artifact_keys(_synthesis_cell(synthesis_plan))
     assert len(keys) == _SYNTHESIS_ARTIFACT_COUNT
     assert len(set(keys)) == _SYNTHESIS_ARTIFACT_COUNT
 
@@ -318,9 +282,8 @@ def test_synthesis_artifact_keys_are_stable_and_unique() -> None:
 def test_synthesis_artifact_paths_cover_all_keys(synthesis_plan: ExperimentPlan) -> None:
     cell = _synthesis_cell(synthesis_plan)
     paths = synthesis_artifact_paths(cell)
-    assert tuple(paths) == synthesis_artifact_keys()
-    record = paths[synthesis_artifact_keys()[0]]
-    assert str(record).endswith("synthesis_record.json")
+    assert tuple(paths) == synthesis_artifact_keys(cell)
+    assert str(paths[next(reversed(paths))]).endswith("local_validity_audit.json")
 
 
 def test_make_statistical_synthesis_executor_forwards_call(
@@ -361,8 +324,7 @@ def test_build_synthesis_evidence_assembles_complete_bundle(
     small_config: TrajCertConfig,
 ) -> None:
     bundle = build_synthesis_evidence(synthesis_plan, synthesis_workspace, small_config)
-    assert bundle.population_synthesis.evidence_count == _POPULATION_EVIDENCE_COUNT
-    assert bundle.sequential_synthesis.family_size == _SEQUENTIAL_FAMILY_SIZE
+    assert bundle.rho_utility
     assert len(bundle.theorem_validation) == _THEOREM_EXPERIMENTS
     assert len(bundle.partition_timing) == _SEQUENTIAL_FAMILY_SIZE
     assert len(bundle.rho_utility) == _POPULATION_EVIDENCE_COUNT + _SEQUENTIAL_FAMILY_SIZE
@@ -384,7 +346,7 @@ def test_execute_statistical_synthesis_writes_all_artifacts(
     assert result.completed_seed_count == 0
     assert len(result.artifact_index.artifacts) == _SYNTHESIS_ARTIFACT_COUNT
     paths = synthesis_artifact_paths(cell)
-    for key in synthesis_artifact_keys():
+    for key in synthesis_artifact_keys(cell):
         assert (synthesis_workspace / paths[key]).is_file()
 
 
@@ -579,7 +541,6 @@ def _result_factories() -> dict[str, Callable[[PlannedCell, TrajCertConfig], Bas
         "Sharp-Set Constructive Identity": lambda _cell, _config: _sharp_set_result(),
         "Refinement Dominance Identity": lambda _cell, _config: _refinement_result(),
         "Safety-Boundary Identity": lambda _cell, _config: _safety_boundary_result(),
-        "Scientific and Data Inventory": lambda _cell, config: _inventory_result(config),
         "Anytime Coverage Stress": lambda cell, config: _coverage_result(cell, config),
         "Failure Boundary Atlas": lambda _cell, _config: _failure_result(),
         "Computational Scaling": lambda cell, config: _scaling_result(
@@ -616,7 +577,7 @@ def _execution_context(
         provenance_fingerprint=ProvenanceFingerprint("provenance"),
         dependency_fingerprint=fingerprint,
         manifest_digest=DigestHex("manifest"),
-        required_artifact_keys=synthesis_artifact_keys(),
+        required_artifact_keys=synthesis_artifact_keys(_synthesis_cell(plan)),
         expected_seed_count=0,
     )
 
@@ -631,7 +592,7 @@ def _synthesis_locality() -> SynthesisLocalValidityInput:
                     action_channel_id=ActionChannelId("synthetic-channel"),
                     epoch_id=EpochId("0"),
                 ),
-                root_artifact_key=synthesis_artifact_keys()[0],
+                root_artifact_key=ArtifactKey("publication-source|theorem-validation-summary"),
                 lineage_artifacts=(),
             ),
         ),
@@ -656,25 +617,6 @@ def _sequential_series_family(config: TrajCertConfig) -> tuple[PairedSeries, ...
         for law in laws
         for rho in config.sequential.utility.rho
         for metric in PracticalMetric
-    )
-
-
-def _population_evidence(config: TrajCertConfig) -> tuple[PopulationUtilityEvidence, ...]:
-    laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
-    partitions = tuple(partition_name(bands) for bands in config.grids.partitions)
-    rho_values = tuple(float(value) for value in config.grids.rho)
-    binary_endpoint = float(BINARY_MAX_INFORMATION_NATS)
-    if binary_endpoint not in rho_values:
-        rho_values = (*rho_values, binary_endpoint)
-    return tuple(
-        PopulationUtilityEvidence(
-            law_name=law,
-            partition_name=partition,
-            result=_population_result(rho),
-        )
-        for law in laws
-        for partition in partitions
-        for rho in rho_values
     )
 
 
@@ -897,72 +839,6 @@ def _safety_boundary_result() -> SafetyBoundaryCaseEvaluation:
         case=_safety_budget_case(),
         identity=identity,
         passed=True,
-    )
-
-
-def _inventory_result(config: TrajCertConfig) -> InventoryValidationResult:
-    return InventoryValidationResult(
-        configured_law_count=len(LawKey),
-        configured_partition_count=len(config.grids.partitions),
-        registry_experiment_count=1,
-        registry_cell_count=1,
-        semantic_cell_uniqueness_pass=True,
-        nonnegative_mass_pass=True,
-        law_sum_pass=True,
-        valid=True,
-        protocol_constants=(
-            ProtocolConstantRow(
-                quantity="information-grid",
-                value="0.0..0.5",
-                unit=ProtocolUnit.NATS,
-                value_class=ProtocolValueClass.GRID,
-                fixed_or_swept=ParameterVariability.SWEPT,
-                scientific_role="sensitivity",
-            ),
-        ),
-        synthetic_laws=(
-            SyntheticLawRow(
-                law_name="timing-terminal",
-                theta=0.5,
-                q1=0.5,
-                q0=0.5,
-                lambda1=0.5,
-                lambda0=0.5,
-                K=8,
-                A=0.5,
-                G=0.5,
-                c=0.5,
-                tau_at_8_band_partition=0.05,
-                true_mutual_information_at_8_band_partition=0.2,
-                scientific_role="population",
-            ),
-        ),
-        baselines=(
-            BaselineAssumptionRow(
-                baseline_name="Endpoint-only partition",
-                purpose="control",
-                observation_access="full",
-                assumption="none",
-                numerical_contract="endpoint",
-                sensitivity_grid="rho",
-                seed_pairing="paired",
-                metrics="all",
-                valid_scope="all",
-                forbidden_interpretation="none",
-            ),
-        ),
-        experiment_matrix=(
-            ExperimentMatrixRow(
-                execution_group="synthesis",
-                experiment_name="Statistical Synthesis",
-                classification="aggregate",
-                purpose="report",
-                cell_expansion="fixed",
-                cell_count=1423,
-                primary_metrics="utility",
-                claim_ids="theorem-1",
-            ),
-        ),
     )
 
 

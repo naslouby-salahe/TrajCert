@@ -10,7 +10,6 @@ from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.registry import ExperimentDefinition, authoritative_registry
 from trajcert.provenance import (
     ComparisonPairName,
     ExperimentNameValue,
@@ -41,6 +40,38 @@ _SAFETY_CASES = (
     "assumption-free-boundary",
 )
 
+_EXPERIMENTS: tuple[tuple[ExperimentNameValue, EvidenceClass], ...] = (
+    (ExperimentNameValue("Legacy Partition Incoherence Check"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Path Information Decomposition"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Information Profile Convexity"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Minimum Compatibility Identity"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Sharp-Set Constructive Identity"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Refinement Dominance Identity"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Strict Timing-Gain Identity"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Safety-Boundary Identity"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Endpoint Special-Case Identity"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Anytime Projection Proof Check"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Population Complexity Proof Check"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Production Solver vs Independent Oracle"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Callback-Model Reduction Falsification"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Generic Information-Optimization Reduction"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Partition Coherence"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Same Endpoint, Different Timing"), EvidenceClass.ABLATION),
+    (ExperimentNameValue("Strict Timing Gain"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Compatibility Floor Behavior"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Sharpness Against Generic Oracle"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Safety and Intrinsic Impossibility"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Anytime Implementation Hand Cases"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Anytime Coverage Stress"), EvidenceClass.CONFIRMATORY),
+    (ExperimentNameValue("Population Sensitivity Utility"), EvidenceClass.ROBUSTNESS),
+    (ExperimentNameValue("Sequential Sensitivity Utility"), EvidenceClass.ROBUSTNESS),
+    (ExperimentNameValue("Failure Boundary Atlas"), EvidenceClass.FAILURE_BOUNDARY),
+    (ExperimentNameValue("Real-Trajectory Validation"), EvidenceClass.GENERALIZATION),
+    (ExperimentNameValue("Foreign-Information Negative Control"), EvidenceClass.DIAGNOSTIC),
+    (ExperimentNameValue("Computational Scaling"), EvidenceClass.VALIDATION),
+    (ExperimentNameValue("Statistical Synthesis"), EvidenceClass.VALIDATION),
+)
+
 
 class PlannedCell(DomainModel):
     experiment_order: PositiveInt
@@ -67,7 +98,7 @@ class PlanDigestMaterial(DomainModel):
 
 class ExperimentPlan(DomainModel):
     cells: tuple[PlannedCell, ...]
-    registry_total: NonNegativeInt
+    planned_cell_count: NonNegativeInt
     executable_cells: NonNegativeInt
     invalid_cells: NonNegativeInt
     nonapplicable_experiments: tuple[ExperimentNameValue, ...]
@@ -75,10 +106,10 @@ class ExperimentPlan(DomainModel):
 
     @model_validator(mode="after")
     def validate_plan(self) -> ExperimentPlan:
-        if len(self.cells) != self.registry_total:
-            raise ValueError("plan cell count must equal the authoritative registry total")
-        if self.executable_cells + self.invalid_cells != self.registry_total:
-            raise ValueError("plan executable and invalid cell counts do not cover the registry")
+        if len(self.cells) != self.planned_cell_count:
+            raise ValueError("plan cell count must equal the planned cell count")
+        if self.executable_cells + self.invalid_cells != self.planned_cell_count:
+            raise ValueError("plan executable and invalid cell counts do not cover the plan")
         keys = tuple(cell.identity.semantic_cell_key for cell in self.cells)
         if len(keys) != len(set(keys)):
             raise ValueError("semantic cell identities must be unique")
@@ -86,30 +117,30 @@ class ExperimentPlan(DomainModel):
 
 
 def build_plan(config: TrajCertConfig) -> ExperimentPlan:
-    registry = authoritative_registry()
     cells = tuple(
-        cell for definition in registry for cell in _expand_definition(definition, registry, config)
+        cell
+        for order, (name, evidence_class) in enumerate(_EXPERIMENTS, start=1)
+        for cell in _expand_experiment(order, name, evidence_class, config)
     )
     nonapplicable = tuple(
-        definition.experiment_name for definition in registry if definition.declared_cells == 0
+        name for name, _ in _EXPERIMENTS if not _coordinates_for_experiment(name, config)
     )
     executable_count = sum(cell.executable for cell in cells)
     invalid_count = len(cells) - executable_count
     material = PlanDigestMaterial(cells=cells, nonapplicable_experiments=nonapplicable)
     plan = ExperimentPlan(
         cells=cells,
-        registry_total=len(cells),
+        planned_cell_count=len(cells),
         executable_cells=executable_count,
         invalid_cells=invalid_count,
         nonapplicable_experiments=nonapplicable,
         plan_digest=PlanDigest(str(model_digest(material))),
     )
-    expected_total = sum(definition.declared_cells for definition in registry)
-    if plan.registry_total != expected_total:
-        raise InvalidScientificDataError(
-            "expanded plan does not reproduce the authoritative registry total"
-        )
     return plan
+
+
+def experiment_names() -> tuple[ExperimentNameValue, ...]:
+    return tuple(name for name, _ in _EXPERIMENTS)
 
 
 def cells_for_experiment(
@@ -118,49 +149,45 @@ def cells_for_experiment(
     return tuple(cell for cell in plan.cells if cell.identity.experiment_name == experiment_name)
 
 
-def _expand_definition(
-    definition: ExperimentDefinition,
-    registry: tuple[ExperimentDefinition, ...],
+def _expand_experiment(
+    order: int,
+    name: ExperimentNameValue,
+    evidence_class: EvidenceClass,
     config: TrajCertConfig,
 ) -> tuple[PlannedCell, ...]:
-    dependencies = _required_experiments(definition, registry)
-    coordinates = _coordinates_for_definition(definition, config)
-    if len(coordinates) != definition.declared_cells:
-        counts = f"expected {definition.declared_cells}, got {len(coordinates)}"
-        raise InvalidScientificDataError(
-            f"registry expansion mismatch for {definition.experiment_name}: {counts}"
-        )
-    gap_start = definition.declared_cells - definition.configuration_gap_cells + 1
+    dependencies = _required_experiments(name)
+    coordinates = _coordinates_for_experiment(name, config)
     cells: list[PlannedCell] = []
     for ordinal, coordinate in enumerate(coordinates, start=1):
-        invalid_reason = _invalid_reason(definition, ordinal, gap_start)
         cells.append(
             PlannedCell(
-                experiment_order=definition.order,
+                experiment_order=order,
                 cell_ordinal=ordinal,
                 identity=SemanticCellIdentity(
-                    experiment_name=definition.experiment_name,
+                    experiment_name=name,
                     coordinates=coordinate,
                 ),
-                evidence_class=definition.evidence_class,
-                executable=invalid_reason is None,
-                invalid_reason=invalid_reason,
+                evidence_class=evidence_class,
+                executable=True,
+                invalid_reason=None,
                 required_experiments=dependencies,
             )
         )
     return tuple(cells)
 
 
-def _coordinates_for_definition(
-    definition: ExperimentDefinition, config: TrajCertConfig
+def _coordinates_for_experiment(
+    name: ExperimentNameValue, config: TrajCertConfig
 ) -> tuple[SemanticCoordinates, ...]:
-    if definition.declared_cells == 0:
+    handler = _COORDINATE_DISPATCH.get(str(name))
+    if handler is None and str(name) in {
+        "Real-Trajectory Validation",
+        "Foreign-Information Negative Control",
+    }:
         return ()
-    name = str(definition.experiment_name)
-    handler = _COORDINATE_DISPATCH.get(name)
     if handler is None:
         raise InvalidScientificDataError(
-            f"no plan expansion implementation for registry experiment: {name}"
+            f"no plan expansion implementation for experiment: {name}"
         )
     return handler(config)
 
@@ -174,13 +201,6 @@ def _adjacent_partition_pairs(config: TrajCertConfig) -> tuple[ComparisonPairNam
 
 def _utility_and_coherence_laws(config: TrajCertConfig) -> tuple[LawName, ...]:
     return tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
-
-
-def _coordinates_scientific_and_data_inventory(
-    config: TrajCertConfig,
-) -> tuple[SemanticCoordinates, ...]:
-    del config
-    return (_variant("protocol-inventory-gate"),)
 
 
 def _coordinates_legacy_partition_incoherence_check(
@@ -481,7 +501,6 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
 
 
 _COORDINATE_DISPATCH: dict[str, Callable[[TrajCertConfig], tuple[SemanticCoordinates, ...]]] = {
-    "Scientific and Data Inventory": _coordinates_scientific_and_data_inventory,
     "Legacy Partition Incoherence Check": _coordinates_legacy_partition_incoherence_check,
     "Path Information Decomposition": _coordinates_law_and_partition_product,
     "Information Profile Convexity": _coordinates_law_and_partition_product,
@@ -528,21 +547,21 @@ def _variant(name: str) -> SemanticCoordinates:
     return SemanticCoordinates(variant_name=VariantName(name))
 
 
-def _invalid_reason(
-    definition: ExperimentDefinition, ordinal: int, gap_start: int
-) -> ReasonCode | None:
-    if definition.configuration_gap_cells == 0 or ordinal < gap_start:
-        return None
-    return ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
-
-
 def _required_experiments(
-    definition: ExperimentDefinition,
-    registry: tuple[ExperimentDefinition, ...],
+    name: ExperimentNameValue,
 ) -> tuple[ExperimentNameValue, ...]:
-    if definition.order == 1:
+    precondition = _EXPERIMENTS[0][0]
+    if name == precondition:
         return ()
-    inventory = registry[0].experiment_name
-    if str(definition.experiment_name) != "Statistical Synthesis":
-        return (inventory,)
-    return tuple(item.experiment_name for item in registry[:-1] if item.declared_cells > 0)
+    if str(name) != "Statistical Synthesis":
+        return (precondition,)
+    return tuple(
+        experiment_name
+        for experiment_name, _ in _EXPERIMENTS
+        if experiment_name != name
+        and experiment_name
+        not in {
+            ExperimentNameValue("Real-Trajectory Validation"),
+            ExperimentNameValue("Foreign-Information Negative Control"),
+        }
+    )

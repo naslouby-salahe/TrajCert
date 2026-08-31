@@ -32,8 +32,8 @@ def classify_certification(
     projection: ProjectionResult | None,
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
-    minimum_matured_events: PositiveInt,
-    minimum_resolved_events: PositiveInt,
+    minimum_matured_events: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    minimum_resolved_events: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     comparison_guard: ToleranceValue,
 ) -> CertificationAssessment:
     rho = sensitivity_budget

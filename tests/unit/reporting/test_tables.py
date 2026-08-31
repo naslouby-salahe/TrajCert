@@ -80,7 +80,7 @@ def _table_source(
 ) -> VerifiedSourceData:
     descriptor = PublicationSourceDescriptor(
         source_path=Path(
-            "outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/"
+            "outputs/experiments/statistical-synthesis/evaluations/aggregates/"
             + f"{stem}.parquet"
         ),
         source_role=source_role,

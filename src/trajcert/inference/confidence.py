@@ -12,8 +12,8 @@ from trajcert.types import Count, DomainModel, ToleranceValue, UnitFloat
 
 
 class ClosedProbabilityInterval(DomainModel):
-    lower: UnitFloat
-    upper: UnitFloat
+    lower: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    upper: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
     @model_validator(mode="after")
     def validate_order(self) -> Self:
@@ -44,7 +44,7 @@ class ConfidenceSequenceUpdate(DomainModel):
 
 def raw_confidence_region(
     state: CategoricalState,
-    anytime_delta: UnitFloat,
+    anytime_delta: UnitFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     root_tolerance: ToleranceValue,
 ) -> CategoricalConfidenceRegion:
     delta = anytime_delta
@@ -62,7 +62,7 @@ def raw_confidence_region(
 
 def confidence_sequence_update(
     state: CategoricalState,
-    anytime_delta: UnitFloat,
+    anytime_delta: UnitFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     root_tolerance: ToleranceValue,
     previous_running: CategoricalConfidenceRegion | None,
 ) -> ConfidenceSequenceUpdate:
@@ -85,7 +85,7 @@ def confidence_sequence_update(
 def _invert_category_count(
     successes: Count,
     matured_count: Count,
-    threshold: float,
+    threshold: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     root_tolerance: ToleranceValue,
 ) -> ClosedProbabilityInterval:
     success_count = successes
@@ -105,10 +105,10 @@ def _invert_category_count(
 
 
 def _lower_root(
-    successes: int,
-    total: int,
-    maximum_likelihood: float,
-    threshold: float,
+    successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    maximum_likelihood: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    threshold: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     root_tolerance: ToleranceValue,
 ) -> float:
     lower = 0.0
@@ -127,10 +127,10 @@ def _lower_root(
 
 
 def _upper_root(
-    successes: int,
-    total: int,
-    maximum_likelihood: float,
-    threshold: float,
+    successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    maximum_likelihood: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    threshold: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     root_tolerance: ToleranceValue,
 ) -> float:
     lower = maximum_likelihood
@@ -148,11 +148,18 @@ def _upper_root(
     return upper
 
 
-def _root_function(successes: int, total: int, probability: float, threshold: float) -> float:
+def _root_function(successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                   total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                   probability: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                   threshold: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                   ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     return _log_mixture_likelihood_ratio(successes, total, probability) - threshold
 
 
-def _log_mixture_likelihood_ratio(successes: int, total: int, probability: float) -> float:
+def _log_mixture_likelihood_ratio(successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                                  total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                                  probability: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                                  ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:

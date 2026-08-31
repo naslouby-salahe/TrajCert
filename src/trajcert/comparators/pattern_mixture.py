@@ -38,7 +38,7 @@ class PatternMixtureResult(DomainModel):
     status: PatternMixtureStatus
     intercept: InterceptValue | None
     slope: SlopeValue | None
-    gradient_infinity_norm: NonNegativeFloat | None
+    gradient_infinity_norm: NonNegativeFloat | None # TODO: Use a proper alias type for this
     objective: ObjectiveValue | None
     points: tuple[PatternMixturePoint, ...]
 
@@ -96,9 +96,9 @@ def fit_pattern_mixture(
     coefficients = result.x
     final_gradient = gradient(coefficients)
     gradient_norm = max(abs(final_gradient.item(0)), abs(final_gradient.item(1)))
-    final_objective = float(result.fun)
-    intercept = float(coefficients.item(0))
-    slope = float(coefficients.item(1))
+    final_objective = result.fun
+    intercept = coefficients.item(0)
+    slope = coefficients.item(1)
     stable = (
         bool(result.success)
         and np.all(np.isfinite(coefficients))
@@ -131,7 +131,7 @@ def fit_pattern_mixture(
             latent_risk=min(
                 1.0,
                 harmful_mass
-                + unresolved * float(expit(intercept + slope * (band_count + int(sensitivity_c)))),
+                + unresolved * expit(intercept + slope * (band_count + int(sensitivity_c))),
             ),
         )
         for sensitivity_c in config.c

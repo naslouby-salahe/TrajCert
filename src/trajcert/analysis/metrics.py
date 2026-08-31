@@ -13,7 +13,7 @@ from trajcert.types import (
     RiskValue,
 )
 
-MetricName = NewType("MetricName", str)  # TODO: Consider replacing with an Enum for better type safety
+MetricName = NewType("MetricName", str)  # TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
 
 
 class PracticalMetric(StrEnum):

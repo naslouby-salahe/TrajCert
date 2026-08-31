@@ -44,8 +44,8 @@ from trajcert.types import PublicExecutionState, ReasonCode
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SHA256_HEX_LENGTH = 64
-_INVENTORY_NAME = ExperimentNameValue("Scientific and Data Inventory")
-_LEGACY_INCOHERENCE_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
+_INVENTORY_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
+_LEGACY_INCOHERENCE_NAME = ExperimentNameValue("Path Information Decomposition")
 _EXECUTOR_INVOCATIONS_AFTER_OVERWRITE = 2
 
 

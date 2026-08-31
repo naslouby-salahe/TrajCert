@@ -92,10 +92,10 @@ from trajcert.types import (
     UnitFloat,
 )
 
-_HAND_CASE_STREAM = 0
-_PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
-_DIAGNOSTIC_NODE_CAP = 1
-_REPRESENTATIVE_STREAM_SEED_INDICES = (0, 1, 2, 3)
+_HAND_CASE_STREAM = 0 # TODO:  I believe this could have been handled better
+_PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE # TODO:  I believe this could have been handled better
+_DIAGNOSTIC_NODE_CAP = 1 # TODO: Consider using a proper alias type for the diagnostic node cap or whatever already exists with actually fits this
+_REPRESENTATIVE_STREAM_SEED_INDICES = (0, 1, 2, 3) # TODO: should be in yaml and accessed through config
 
 
 class SequentialMethod(StrEnum):
@@ -133,9 +133,9 @@ class HandCaseResult(DomainModel):
     partition_bands: BandCount
     expected_state: ScientificState | None
     observed_state: ScientificState | None
-    projection_upper: float | None
-    oracle_feasible_lower: float | None
-    anti_conservatism: float | None
+    projection_upper: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
+    oracle_feasible_lower: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
+    anti_conservatism: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
     zero_resolved_mass_plausible: bool | None
     passed: bool
 
@@ -143,9 +143,9 @@ class HandCaseResult(DomainModel):
 class CoverageMethodResult(DomainModel):
     method: SequentialMethod
     applicable: bool
-    streams: PositiveInt
+    streams: PositiveInt # TODO: Consider using a proper alias type for the number of streams
     anytime_failures: Count
-    failure_rate: UnitFloat | None
+    failure_rate: UnitFloat | None # TODO: Consider using a proper alias type for failure rate or whatever already exists with actually fits this
 
 
 class CoverageStressResult(DomainModel):
@@ -154,15 +154,15 @@ class CoverageStressResult(DomainModel):
 
 
 class CoverageMethodEvidence(DomainModel):
-    method_name: str
+    method_name: str # TODO: Consider using a proper alias type for the method name or use a predefined enumeration of method names
     applicable: bool
-    independent_streams: PositiveInt
+    independent_streams: PositiveInt # TODO: Consider using a proper alias type for the number of independent streams
     ever_violations: Count
-    violation_rate: UnitFloat | None
-    clopper_pearson_upper_95: UnitFloat | None
+    violation_rate: UnitFloat | None # TODO: Consider using a proper alias type for violation rate or whatever already exists with actually fits this
+    clopper_pearson_upper_95: UnitFloat | None # TODO: Consider using a proper alias type for violation rate or whatever already exists with actually fits this
     criterion_pass: bool | None
-    median_first_certified_n: NonNegativeFloat | None
-    median_certified_update_fraction: UnitFloat | None
+    median_first_certified_n: NonNegativeFloat | None  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    median_certified_update_fraction: UnitFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class AnytimePathEvidence(DomainModel):
@@ -181,8 +181,8 @@ class CoverageEvidenceResult(DomainModel):
     true_mutual_information: InformationNats
     rho: SensitivityBudget
     beta: RiskBudget
-    delta: UnitFloat
-    acceptance_upper_limit: UnitFloat
+    delta: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    acceptance_upper_limit: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     methods: tuple[CoverageMethodEvidence, ...]
     representative_paths: tuple[AnytimePathEvidence, ...]
     primary_passed: bool
@@ -190,12 +190,12 @@ class CoverageEvidenceResult(DomainModel):
 
 class _StreamCertificationSummary(DomainModel):
     first_certified_matured_count: Count | None
-    certified_fraction: UnitFloat
+    certified_fraction: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class _TrajectoryEvidenceSummary(DomainModel):
-    first_certified: tuple[NonNegativeFloat, ...]
-    certified_fractions: tuple[UnitFloat, ...]
+    first_certified: tuple[NonNegativeFloat, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    certified_fractions: tuple[UnitFloat, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     representative_paths: tuple[AnytimePathEvidence, ...]
 
 
@@ -206,8 +206,8 @@ def run_sequential_trace(
     config: TrajCertConfig,
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
-    checkpoint_every: PositiveInt,
-    outer_max_nodes: PositiveInt | None = None,
+    checkpoint_every: PositiveInt, # TODO: Consider using a proper alias type for the checkpoint interval
+    outer_max_nodes: PositiveInt | None = None, # TODO: Consider using a proper alias type for the maximum number of outer nodes
 ) -> SequentialTrace:
     _ = active_config.set(config)
     if checkpoint_every <= 0:
@@ -259,12 +259,12 @@ def run_sequential_trace(
 
 
 def run_anytime_hand_case(
-    case_index: PositiveInt,
+    case_index: PositiveInt, # TODO: Should probably use an enum instead of magic numbers
     partition: TrajectoryPartition,
     config: TrajCertConfig,
 ) -> HandCaseResult:
     _ = active_config.set(config)
-    handlers = (
+    handlers = ( # TODO: i believe there should be a more systematic way to manage hand cases rather than hardcoding them here
         _hand_case_insufficient_matured,
         _hand_case_insufficient_resolved,
         _hand_case_model_incompatible,
@@ -277,7 +277,7 @@ def run_anytime_hand_case(
         _hand_case_optimizer_fallback,
     )
     if case_index < 1 or case_index > len(handlers):
-        raise ValueError("hand case index must lie in [1, 10]")
+        raise ValueError("hand case index must lie in [1, 10]") # TODO: Should probably validate against the enum instead of hardcoding the range
     return handlers[case_index - 1](partition)
 
 
@@ -328,8 +328,8 @@ def _coverage_stream_failures(
     config: TrajCertConfig,
     sensitivity_budget: SensitivityBudget,
     assumption_valid: bool,
-    max_events: PositiveInt,
-    checkpoint_every: PositiveInt,
+    max_events: PositiveInt, # TODO: consider using a proper alias type for the maximum number of events
+    checkpoint_every: PositiveInt, # TODO: consider using a proper alias type for the checkpoint interval
     true_risk: RiskValue,
     stream_index: SeedIndex,
 ) -> dict[SequentialMethod, bool]:
@@ -384,7 +384,7 @@ def _record_checkpoint_failures(
     partition: TrajectoryPartition,
     running: CategoricalConfidenceRegion,
     ignorable: IgnorableDelayResult,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     sensitivity_budget: SensitivityBudget,
     assumption_valid: bool,
     true_risk: RiskValue,
@@ -414,7 +414,7 @@ def _record_checkpoint_failures(
 def _coverage_method_result(
     method: SequentialMethod,
     assumption_valid: bool,
-    stream_count: PositiveInt,
+    stream_count: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     failures: dict[SequentialMethod, Count],
 ) -> CoverageMethodResult:
     applicable = method is not SequentialMethod.IGNORABLE_DELAY or assumption_valid
@@ -504,11 +504,11 @@ def evaluate_configured_coverage_stress(
 def _coverage_method_evidence(
     method: SequentialMethod,
     applicable: bool,
-    streams: PositiveInt,
+    streams: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     failures: Count,
-    failure_rate: UnitFloat | None,
-    first_certified: tuple[NonNegativeFloat, ...],
-    certified_fractions: tuple[UnitFloat, ...],
+    failure_rate: UnitFloat | None, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    first_certified: tuple[NonNegativeFloat, ...], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    certified_fractions: tuple[UnitFloat, ...], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> CoverageMethodEvidence:
     config = active_config.get()
     upper = None if not applicable else _clopper_pearson_upper(failures, streams)
@@ -530,7 +530,8 @@ def _coverage_method_evidence(
     )
 
 
-def _clopper_pearson_upper(failures: Count, streams: PositiveInt) -> UnitFloat:
+def _clopper_pearson_upper(failures: Count, streams: PositiveInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                           ) -> UnitFloat: # TODO: Consider using a proper alias type for the return value as well
     if streams <= 0 or failures < 0 or failures > streams:
         raise InvalidScientificDataError("invalid binomial counts for exact coverage limit")
     if failures == streams:
@@ -548,7 +549,7 @@ def _clopper_pearson_upper(failures: Count, streams: PositiveInt) -> UnitFloat:
 def _trajcert_trajectory_evidence(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     rho: SensitivityBudget,
     beta: RiskBudget,
 ) -> _TrajectoryEvidenceSummary:
@@ -666,7 +667,9 @@ def _true_information(
     )
 
 
-def _parameters(case: CoverageStressCaseConfig, config: TrajCertConfig) -> LawParameters:
+def _parameters(case: CoverageStressCaseConfig,
+                config: TrajCertConfig # TODO: acceess config directly. Do not pass it as an argument. check in tests why this wasn't identified. If no tests exist then add it
+                ) -> LawParameters:
     law = config.laws[case.law]
     return LawParameters(
         key=case.law,
@@ -751,10 +754,10 @@ def _risk_budget(
     case: CoverageStressCaseConfig,
     summary: ObservableSummary,
     rho: SensitivityBudget,
-) -> float:
+) -> float: # TODO: Consider adding proper type hint for SensitivityBudget if it's not just a float
     config = active_config.get()
     if case.beta_offset is None:
-        return float(config.budgets.risk)
+        return config.budgets.risk
     solved = sharp_risk_set(
         summary=summary,
         sensitivity_budget=rho,
@@ -765,15 +768,15 @@ def _risk_budget(
         raise InvalidScientificDataError(
             "near-certification coverage stress requires a compatible true-law bound"
         )
-    return min(1.0, float(solved.latent_risk.upper) + float(case.beta_offset))
+    return min(1.0, solved.latent_risk.upper + case.beta_offset)
 
 
-def _float_tuple(values: NDArray[np.float64]) -> tuple[Mass, ...]:
+def _float_tuple(values: NDArray[np.float64]) -> tuple[Mass, ...]: # TODO: is there a cleaner way? Or is this even necessary? It seems redundant 
     return tuple(cast(list[float], values.tolist()))
 
 
-_HAND_CASE_INSUFFICIENT_MATURED_INDEX = 1
-_INSUFFICIENT_MATURED_EVENT_COUNT = 199
+_HAND_CASE_INSUFFICIENT_MATURED_INDEX = 1 # TODO: Move this to yml and access it through config
+_INSUFFICIENT_MATURED_EVENT_COUNT = 199 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseResult:
@@ -803,10 +806,10 @@ def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseR
     )
 
 
-_HAND_CASE_INSUFFICIENT_RESOLVED_INDEX = 2
-_INSUFFICIENT_RESOLVED_FINITE_COUNT = 49
-_INSUFFICIENT_RESOLVED_UNRESOLVED_COUNT = 151
-_INSUFFICIENT_RESOLVED_TOTAL_COUNT = 200
+_HAND_CASE_INSUFFICIENT_RESOLVED_INDEX = 2 # TODO: Move this to yml and access it through config
+_INSUFFICIENT_RESOLVED_FINITE_COUNT = 49 # TODO: Move this to yml and access it through config
+_INSUFFICIENT_RESOLVED_UNRESOLVED_COUNT = 151 # TODO: Move this to yml and access it through config
+_INSUFFICIENT_RESOLVED_TOTAL_COUNT = 200 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCaseResult:
@@ -815,7 +818,7 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
     full_law = build_full_law(parameters, partition.band_count)
     categories = observable_category_probabilities(full_law)
     finite = categories[:-1]
-    finite_total = sum(float(category.probability) for category in finite)
+    finite_total = sum(category.probability for category in finite)
     conditional = tuple(
         ObservableCategoryProbability(
             band_index=category.band_index,
@@ -835,7 +838,7 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
         for category, count in zip(categories, final_counts, strict=True)
     )
     sequence = balanced_prefix(empirical, _INSUFFICIENT_RESOLVED_TOTAL_COUNT)
-    identity = _hand_identity(2)
+    identity = _hand_identity(2) # TODO: what's this magic number 2 represent? Consider moving it to config or making it more descriptive or use enum. Identify and fix in the whole project
     events = _matured_sequence(identity, empirical, sequence.categories)
     trace = run_sequential_trace(
         events,
@@ -857,8 +860,8 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
     )
 
 
-_HAND_CASE_MODEL_INCOMPATIBLE_INDEX = 3
-_MODEL_INCOMPATIBLE_RHO_MARGIN = 0.005
+_HAND_CASE_MODEL_INCOMPATIBLE_INDEX = 3 # TODO: Move this to yml and access it through config
+_MODEL_INCOMPATIBLE_RHO_MARGIN = 0.005 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseResult:
@@ -880,8 +883,8 @@ def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseRes
     )
 
 
-_HAND_CASE_INTRINSIC_INDEX = 4
-_INTRINSIC_RHO_MARGIN = 0.01
+_HAND_CASE_INTRINSIC_INDEX = 4 # TODO: Move this to yml and access it through config
+_INTRINSIC_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_intrinsic(partition: TrajectoryPartition) -> HandCaseResult:
@@ -900,9 +903,9 @@ def _hand_case_intrinsic(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_CERTIFIED_INDEX = 5
-_CERTIFIED_RHO_MARGIN = 0.01
-_CERTIFIED_BETA_MARGIN = 0.005
+_HAND_CASE_CERTIFIED_INDEX = 5 # TODO: Move this to yml and access it through config
+_CERTIFIED_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
+_CERTIFIED_BETA_MARGIN = 0.005 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_certified(partition: TrajectoryPartition) -> HandCaseResult:
@@ -921,13 +924,13 @@ def _hand_case_certified(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_UNCERTIFIED_INDEX = 6
-_UNCERTIFIED_RHO_MARGIN = 0.01
+_HAND_CASE_UNCERTIFIED_INDEX = 6 # TODO: Move this to yml and access it through config
+_UNCERTIFIED_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_uncertified(partition: TrajectoryPartition) -> HandCaseResult:
     summary = _population_summary(_PRINCIPAL_LAW, partition)
-    tau = float(observed_timing_information(summary) or 0.0)
+    tau = observed_timing_information(summary) or 0.0
     minimum = minimum_information_point(summary)
     if minimum is None:
         raise ValueError("uncertified hand case requires a nondegenerate minimum")
@@ -937,7 +940,7 @@ def _hand_case_uncertified(partition: TrajectoryPartition) -> HandCaseResult:
         partition,
         projection,
         rho,
-        float(minimum.latent_risk),
+        minimum.latent_risk,
     )
     return _state_result(
         _HAND_CASE_UNCERTIFIED_INDEX,
@@ -948,13 +951,13 @@ def _hand_case_uncertified(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_ZERO_RESOLVED_PLAUSIBLE_INDEX = 7
-_ZERO_RESOLVED_BAND_MASS_SCALE = 0.2
-_ZERO_RESOLVED_UNRESOLVED_LOWER = 0.8
-_ZERO_RESOLVED_RESOLVED_MASS_UPPER = 0.1
-_ZERO_RESOLVED_ENTROPY_SCALE = 0.2
-_ZERO_RESOLVED_GATE_MATURED = 200
-_ZERO_RESOLVED_GATE_RESOLVED = 50
+_HAND_CASE_ZERO_RESOLVED_PLAUSIBLE_INDEX = 7 # TODO: Move this to yml and access it through config
+_ZERO_RESOLVED_BAND_MASS_SCALE = 0.2 # TODO: Move this to yml and access it through config
+_ZERO_RESOLVED_UNRESOLVED_LOWER = 0.8 # TODO: Move this to yml and access it through config
+_ZERO_RESOLVED_RESOLVED_MASS_UPPER = 0.1 # TODO: Move this to yml and access it through config
+_ZERO_RESOLVED_ENTROPY_SCALE = 0.2 # TODO: Move this to yml and access it through config
+_ZERO_RESOLVED_GATE_MATURED = 200 # TODO: Move this to yml and access it through config
+_ZERO_RESOLVED_GATE_RESOLVED = 50 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_zero_resolved_plausible(partition: TrajectoryPartition) -> HandCaseResult:
@@ -1009,12 +1012,12 @@ def _hand_case_zero_resolved_plausible(partition: TrajectoryPartition) -> HandCa
     )
 
 
-_HAND_CASE_NO_UNRESOLVED_INDEX = 8
+_HAND_CASE_NO_UNRESOLVED_INDEX = 8 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_no_unresolved(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
-    harmful_total = float(config.budgets.risk)
+    harmful_total = config.budgets.risk
     harmful = np.full(
         partition.band_count,
         harmful_total / partition.band_count,
@@ -1044,14 +1047,14 @@ def _hand_case_no_unresolved(partition: TrajectoryPartition) -> HandCaseResult:
     )
     passed = (
         assessment.scientific_state is ScientificState.CERTIFIED
-        and abs(float(projection.proven_upper) - harmful_total) <= config.numerics.identity_atol
+        and abs(projection.proven_upper - harmful_total) <= config.numerics.identity_atol
     )
     return HandCaseResult(
         case_index=_HAND_CASE_NO_UNRESOLVED_INDEX,
         partition_bands=partition.band_count,
         expected_state=ScientificState.CERTIFIED,
         observed_state=assessment.scientific_state,
-        projection_upper=float(projection.proven_upper),
+        projection_upper=projection.proven_upper,
         oracle_feasible_lower=None,
         anti_conservatism=None,
         zero_resolved_mass_plausible=False,
@@ -1059,12 +1062,12 @@ def _hand_case_no_unresolved(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_SIMPLEX_BOUNDARY_INDEX = 9
-_SIMPLEX_BOUNDARY_HARMFUL_MASS_SCALE = 0.1
-_SIMPLEX_BOUNDARY_CORRECT_MASS_SCALE = 0.7
-_SIMPLEX_BOUNDARY_UNRESOLVED_MASS = 0.2
-_SIMPLEX_BOUNDARY_HIDDEN_TERMINAL_HARMFUL = 0.05
-_SIMPLEX_BOUNDARY_RHO_MARGIN = 0.01
+_HAND_CASE_SIMPLEX_BOUNDARY_INDEX = 9 # TODO: Move this to yml and access it through config
+_SIMPLEX_BOUNDARY_HARMFUL_MASS_SCALE = 0.1 # TODO: Move this to yml and access it through config
+_SIMPLEX_BOUNDARY_CORRECT_MASS_SCALE = 0.7 # TODO: Move this to yml and access it through config
+_SIMPLEX_BOUNDARY_UNRESOLVED_MASS = 0.2 # TODO: Move this to yml and access it through config
+_SIMPLEX_BOUNDARY_HIDDEN_TERMINAL_HARMFUL = 0.05 # TODO: Move this to yml and access it through config
+_SIMPLEX_BOUNDARY_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResult:
@@ -1114,9 +1117,9 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
     )
 
 
-_HAND_CASE_OPTIMIZER_FALLBACK_INDEX = 10
-_OPTIMIZER_FALLBACK_EVENT_COUNT = 500
-_OPTIMIZER_FALLBACK_RHO_MARGIN = 0.01
+_HAND_CASE_OPTIMIZER_FALLBACK_INDEX = 10 # TODO: Move this to yml and access it through config
+_OPTIMIZER_FALLBACK_EVENT_COUNT = 500 # TODO: Move this to yml and access it through config
+_OPTIMIZER_FALLBACK_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
 
 
 def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseResult:
@@ -1181,7 +1184,7 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
 def _project(
     envelope: ObservableSummaryEnvelope,
     sensitivity_budget: SensitivityBudget,
-    outer_max_nodes: PositiveInt | None = None,
+    outer_max_nodes: PositiveInt | None = None, # TODO: Consider using a proper alias type for outer max nodes or whatever already exists with actually fits this
 ) -> ProjectionResult:
     config = active_config.get()
     return project_upper_risk(
@@ -1244,7 +1247,7 @@ def _gate_state(
 
 
 def _state_result(
-    case_index: PositiveInt,
+    case_index: PositiveInt, # TODO: Consider using a proper alias type for case index or whatever already exists with actually fits this
     partition: TrajectoryPartition,
     expected: ScientificState,
     observed: ScientificState | None,

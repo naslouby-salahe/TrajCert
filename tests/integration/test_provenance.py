@@ -34,8 +34,8 @@ from trajcert.storage import DigestHex, ProvenanceFingerprint, SpecificationDige
 from trajcert.types import PublicExecutionState
 
 _REPO_ROOT = Path.cwd()
-_INVENTORY_NAME = ExperimentNameValue("Scientific and Data Inventory")
-_LEGACY_CHECK_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
+_INVENTORY_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
+_LEGACY_CHECK_NAME = ExperimentNameValue("Path Information Decomposition")
 _ALTERNATE_ROOT_ATOL = 5.0e-11
 _PLACEHOLDER_PROVENANCE = ProvenanceFingerprint("0" * 64)
 

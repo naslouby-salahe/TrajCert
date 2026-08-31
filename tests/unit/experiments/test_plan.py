@@ -5,7 +5,6 @@ from pydantic import ValidationError
 
 from trajcert.config import GridsConfig, TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
-from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.plan import (
     ExperimentPlan,
     PlannedCell,
@@ -22,6 +21,7 @@ from trajcert.storage import PlanDigest
 from trajcert.types import EvidenceClass, ReasonCode
 
 _EXPECTED_REGISTRY_TOTAL = 1423
+_EXPECTED_SCALING_CELL_COUNT = 2
 _PLAN_DIGEST = PlanDigest("digest")
 
 
@@ -34,7 +34,7 @@ def _cell(executable: bool, invalid_reason: ReasonCode | None) -> PlannedCell:
         experiment_order=1,
         cell_ordinal=1,
         identity=SemanticCellIdentity(
-            experiment_name=ExperimentNameValue("Scientific and Data Inventory"),
+            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
             coordinates=SemanticCoordinates(variant_name=VariantName("protocol-inventory-gate")),
         ),
         evidence_class=EvidenceClass.VALIDATION,
@@ -61,10 +61,10 @@ def test_planned_cell_accepts_valid_contracts() -> None:
     ).executable
 
 
-def test_build_plan_production_reproduces_registry_total() -> None:
+def test_build_plan_production_reproduces_cell_total() -> None:
     plan = build_plan(_production_config())
-    assert plan.registry_total == _EXPECTED_REGISTRY_TOTAL
-    assert plan.executable_cells == _EXPECTED_REGISTRY_TOTAL
+    assert plan.planned_cell_count == _EXPECTED_REGISTRY_TOTAL - 1
+    assert plan.executable_cells == _EXPECTED_REGISTRY_TOTAL - 1
     assert plan.invalid_cells == 0
 
 
@@ -102,7 +102,7 @@ def test_cells_for_experiment_unknown_name_is_empty() -> None:
     assert cells_for_experiment(plan, ExperimentNameValue("Unknown Experiment")) == ()
 
 
-def test_build_plan_rejects_scaling_band_mismatch() -> None:
+def test_build_plan_adapts_to_configured_scaling_bands() -> None:
     config = _production_config()
     grids = GridsConfig(
         partitions=config.grids.partitions,
@@ -111,17 +111,18 @@ def test_build_plan_rejects_scaling_band_mismatch() -> None:
         same_endpoint_rho=config.grids.same_endpoint_rho,
         beta=config.grids.beta,
     )
-    with pytest.raises(
-        InvalidScientificDataError, match="registry expansion mismatch for Computational Scaling"
-    ):
-        _ = build_plan(config.model_copy(update={"grids": grids}))
+    plan = build_plan(config.model_copy(update={"grids": grids}))
+    assert (
+        len(cells_for_experiment(plan, ExperimentNameValue("Computational Scaling")))
+        == _EXPECTED_SCALING_CELL_COUNT
+    )
 
 
 def test_experiment_plan_rejects_cell_count_mismatch() -> None:
     with pytest.raises(ValidationError, match="cell count must equal"):
         _ = ExperimentPlan(
             cells=(),
-            registry_total=1,
+            planned_cell_count=1,
             executable_cells=0,
             invalid_cells=0,
             nonapplicable_experiments=(),
@@ -131,10 +132,10 @@ def test_experiment_plan_rejects_cell_count_mismatch() -> None:
 
 def test_experiment_plan_rejects_uncounted_executable_cells() -> None:
     cell = _cell(executable=True, invalid_reason=None)
-    with pytest.raises(ValidationError, match="do not cover the registry"):
+    with pytest.raises(ValidationError, match="do not cover the plan"):
         _ = ExperimentPlan(
             cells=(cell,),
-            registry_total=1,
+            planned_cell_count=1,
             executable_cells=0,
             invalid_cells=0,
             nonapplicable_experiments=(),
@@ -147,7 +148,7 @@ def test_experiment_plan_rejects_duplicate_cell_keys() -> None:
     with pytest.raises(ValidationError, match="must be unique"):
         _ = ExperimentPlan(
             cells=(cell, cell),
-            registry_total=2,
+            planned_cell_count=2,
             executable_cells=2,
             invalid_cells=0,
             nonapplicable_experiments=(),

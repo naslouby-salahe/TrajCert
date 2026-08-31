@@ -30,7 +30,6 @@ from trajcert.experiments.failure_boundaries import (
     evaluate_optimizer_node_budget,
     evaluate_terminal_selection_asymmetry,
 )
-from trajcert.experiments.inventory import validate_scientific_inventory
 from trajcert.experiments.mathematics import (
     anytime_projection_proof_check,
     endpoint_special_case_identity,
@@ -122,7 +121,6 @@ _NON_SCIENTIFIC_MODULE_PREFIXES = (
 )
 
 _PRODUCER_ROOTS = {
-    "Scientific and Data Inventory": Path("src/trajcert/experiments/inventory.py"),
     "Legacy Partition Incoherence Check": Path("src/trajcert/experiments/mathematics.py"),
     "Path Information Decomposition": Path("src/trajcert/experiments/mathematics.py"),
     "Information Profile Convexity": Path("src/trajcert/experiments/mathematics.py"),
@@ -800,13 +798,6 @@ def execute_scientific_cell(cell: PlannedCell, config: TrajCertConfig) -> Domain
     return handler(cell, config)
 
 
-def _dispatch_scientific_and_data_inventory(
-    cell: PlannedCell, config: TrajCertConfig
-) -> DomainModel:
-    del cell
-    return validate_scientific_inventory(config)
-
-
 def _dispatch_legacy_partition_incoherence(
     cell: PlannedCell, config: TrajCertConfig
 ) -> DomainModel:
@@ -958,7 +949,6 @@ def _dispatch_summary_coordinate_experiment(
 
 
 _DISPATCH_TABLE: dict[str, Callable[[PlannedCell, TrajCertConfig], DomainModel]] = {
-    "Scientific and Data Inventory": _dispatch_scientific_and_data_inventory,
     "Legacy Partition Incoherence Check": _dispatch_legacy_partition_incoherence,
     "Refinement Dominance Identity": _dispatch_refinement_dominance_identity,
     "Strict Timing-Gain Identity": _dispatch_strict_timing_gain_identity,

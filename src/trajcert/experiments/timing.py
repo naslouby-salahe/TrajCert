@@ -10,25 +10,25 @@ from trajcert.types import DomainModel, SensitivityBudget, ToleranceValue
 
 class PartitionCoherenceResult(DomainModel):
     passed: bool
-    fine_tau: float
-    coarse_tau: float
-    timing_gain: float
-    fine_lower: float | None
-    fine_upper: float | None
-    coarse_lower: float | None
-    coarse_upper: float | None
-    max_profile_difference_error: float
+    fine_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    coarse_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    timing_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    fine_lower: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    fine_upper: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    coarse_lower: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    coarse_upper: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_profile_difference_error: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SameEndpointTimingResult(DomainModel):
     passed: bool
-    no_timing_tau: float
-    timing_tau: float
-    no_timing_lower: float | None
-    no_timing_upper: float | None
-    timing_lower: float | None
-    timing_upper: float | None
-    upper_tightening: float | None
+    no_timing_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    timing_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    no_timing_lower: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    no_timing_upper: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    timing_lower: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    timing_upper: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    upper_tightening: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def evaluate_partition_coherence(

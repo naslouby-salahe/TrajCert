@@ -15,8 +15,8 @@ from trajcert.types import DomainModel, ToleranceValue, UnitFloat
 
 
 class ScalarEnvelope(DomainModel):
-    lower: UnitFloat
-    upper: UnitFloat
+    lower: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    upper: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
     @model_validator(mode="after")
     def validate_order(self) -> Self:
@@ -132,7 +132,8 @@ def singleton_summary_envelope(summary: ObservableSummary) -> ObservableSummaryE
 
 
 def _subset_interval(
-    intervals: tuple[ClosedProbabilityInterval, ...], selected: tuple[int, ...]
+    intervals: tuple[ClosedProbabilityInterval, ...],
+    selected: tuple[int, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> ClosedProbabilityInterval:
     selected_set = frozenset(selected)
     direct_lower = sum(intervals[index].lower for index in selected)
@@ -170,7 +171,9 @@ def _resolved_entropy_envelope(
     return ScalarEnvelope(lower=lower, upper=upper)
 
 
-def _resolved_entropy_exact(harmful: tuple[float, ...], correct: tuple[float, ...]) -> float:
+def _resolved_entropy_exact(harmful: tuple[float, ...], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                            correct: tuple[float, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                            ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     return sum(
         binary_entropy_from_masses(left, right)
         for left, right in zip(harmful, correct, strict=True)

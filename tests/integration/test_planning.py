@@ -7,14 +7,14 @@ from trajcert.data.partitions import partition_name
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.provenance import ExperimentNameValue
 
-_PRODUCTION_REGISTRY_TOTAL = 1_423
+_PRODUCTION_CELL_TOTAL = 1_422
 
 
 def test_recovered_plan_has_no_configuration_gap_cells() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     plan = build_plan(config)
-    assert plan.registry_total == _PRODUCTION_REGISTRY_TOTAL
-    assert plan.executable_cells == plan.registry_total
+    assert plan.planned_cell_count == _PRODUCTION_CELL_TOTAL
+    assert plan.executable_cells == plan.planned_cell_count
     assert plan.invalid_cells == 0
 
 

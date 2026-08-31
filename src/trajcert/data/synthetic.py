@@ -81,7 +81,8 @@ def observable_category_probabilities(
 
 
 def hamilton_apportionment(
-    categories: tuple[ObservableCategoryProbability, ...], total_count: PositiveInt
+    categories: tuple[ObservableCategoryProbability, ...], 
+    total_count: PositiveInt # TODO: Consider using a proper alias type for total count or whatever already exists with actually fits this
 ) -> tuple[Count, ...]:
     _validate_probability_vector(tuple(category.probability for category in categories))
     total = total_count
@@ -99,7 +100,8 @@ def hamilton_apportionment(
 
 
 def balanced_prefix(
-    categories: tuple[ObservableCategoryProbability, ...], total_count: PositiveInt
+    categories: tuple[ObservableCategoryProbability, ...],
+    total_count: PositiveInt, # TODO: Consider using a proper alias type for total count or whatever already exists with actually fits this
 ) -> DeterministicCategorySequence:
     _validate_probability_vector(tuple(category.probability for category in categories))
     probabilities = tuple(Decimal(str(category.probability)) for category in categories)
@@ -123,7 +125,7 @@ def generate_stochastic_ledger(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_count: PositiveInt,
+    event_count: PositiveInt, # TODO: Consider using a proper alias type for event count or whatever already exists with actually fits this
 ) -> EventLedger:
     namespace = event_stream_namespace(parameters.name, partition.band_count)
     random = generator_for(namespace, stream_index)
@@ -149,7 +151,7 @@ def generate_balanced_prefix_ledger(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_count: PositiveInt,
+    event_count: PositiveInt, # TODO: Consider using a proper alias type for event count or whatever already exists with actually fits this
 ) -> EventLedger:
     full_law = build_full_law(parameters, partition.band_count)
     categories = observable_category_probabilities(full_law)
@@ -172,7 +174,7 @@ def _sample_event(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: NonNegativeInt,
+    event_index: NonNegativeInt, # TODO: Consider using a proper alias type for event index or whatever already exists with actually fits this
     random: np.random.Generator,
     harmful_weights: np.ndarray,
     correct_weights: np.ndarray,
@@ -206,7 +208,7 @@ def _event_from_observable_category(
     law_name: LawName,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: NonNegativeInt,
+    event_index: NonNegativeInt, # TODO: Consider using a proper alias type for event index or whatever already exists with actually fits this
     category: ObservableCategoryProbability,
 ) -> LedgerEvent:
     issue = event_index
@@ -236,7 +238,9 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
     )
 
 
-def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: NonNegativeInt) -> EventId:
+def _event_id(law_name: LawName, stream_index: SeedIndex,
+              event_index: NonNegativeInt, # TODO: Consider using a proper alias type for event index or whatever already exists with actually fits this
+              ) -> EventId:
     width = active_config.get().identifiers.event_index_width
     return EventId(
         f"{semantic_slug(law_name)}::S{stream_index:0{width}d}"

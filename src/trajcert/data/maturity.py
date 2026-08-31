@@ -38,7 +38,7 @@ class MaturedCategory(DomainModel):
 class MaturedEvent(DomainModel):
     event_id: EventId
     identity: LedgerIdentity
-    maturity_age_unit: NonNegativeFloat
+    maturity_age_unit: NonNegativeFloat # TODO: Consider using a proper alias type for maturity age unit or whatever already exists with actually fits this
     category: MaturedCategory
 
 

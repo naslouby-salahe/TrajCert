@@ -28,9 +28,9 @@ class LedgerEvent(DomainModel):
     client_id: ClientId
     action_channel_id: ActionChannelId
     epoch_id: EpochId
-    issue_age_unit: NonNegativeFloat
+    issue_age_unit: NonNegativeFloat # TODO: Consider using a proper alias type for adjudication completion age or whatever already exists with actually fits this
     terminal_horizon: TerminalHorizon
-    adjudication_completion_age: NonNegativeFloat | None
+    adjudication_completion_age: NonNegativeFloat | None # TODO: Consider using a proper alias type for adjudication completion age or whatever already exists with actually fits this
     correctness_label: OutcomeLabel | None
 
     @model_validator(mode="after")
@@ -62,7 +62,7 @@ class LedgerEvent(DomainModel):
         )
 
     @property
-    def maturity_age_unit(self) -> NonNegativeFloat:
+    def maturity_age_unit(self) -> NonNegativeFloat: # TODO: Consider using a proper alias type for maturity age unit or whatever already exists with actually fits this
         maturity = self.issue_age_unit + self.terminal_horizon
         if maturity < self.issue_age_unit:
             raise DataIntegrityError("maturity cannot precede issue")

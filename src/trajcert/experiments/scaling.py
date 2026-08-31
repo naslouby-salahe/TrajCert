@@ -33,38 +33,38 @@ class ScalingTarget(StrEnum):
 
 class ScalingMeasurement(DomainModel):
     target: ScalingTarget
-    runtime_ns: int
-    peak_rss_mib: float
-    root_iterations: int | None
-    outer_nodes: int | None
+    runtime_ns: int # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    peak_rss_mib: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    root_iterations: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    outer_nodes: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class ScalingWorkerEnvelope(DomainModel):
     measurement: ScalingMeasurement | None
-    failure: str | None
+    failure: str | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class ScalingTargetSummary(DomainModel):
     target: ScalingTarget
-    median_runtime_seconds: float
-    iqr_runtime_seconds: float
-    mean_runtime_seconds: float
-    sample_sd_runtime_seconds: float
-    peak_rss_mib: float
-    median_root_iterations: float | None
-    median_outer_nodes: float | None
+    median_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    iqr_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    mean_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    sample_sd_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    peak_rss_mib: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    median_root_iterations: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    median_outer_nodes: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class ComputationalScalingResult(DomainModel):
-    band_count: int
+    band_count: int # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     population: ScalingTargetSummary
     outer_projection: ScalingTargetSummary
-    peak_memory_mib: float
+    peak_memory_mib: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def benchmark_scaling_cell(
     band_count: int,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> ComputationalScalingResult:
     if band_count <= 0:
         raise ValueError("scaling band count must be positive")
@@ -83,8 +83,8 @@ def benchmark_scaling_cell(
 
 def _benchmark_target(
     target: ScalingTarget,
-    band_count: int,
-    config: TrajCertConfig,
+    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    config: TrajCertConfig, #TODO: do not pass config as input param
 ) -> ScalingTargetSummary:
     for _ in range(config.benchmark.warmup_repetitions):
         _ = _isolated_measurement(target, band_count, config)
@@ -93,10 +93,13 @@ def _benchmark_target(
         for _ in range(config.benchmark.measured_repetitions)
     )
     runtimes = np.asarray(
-        tuple(measurement.runtime_ns / 1_000_000_000.0 for measurement in measurements),
+        tuple(measurement.runtime_ns / 1_000_000_000.0 # TODO: This should have been in a more centralized alias type for runtime in seconds or whatever already exists with actually fits this
+              for measurement in measurements),
         dtype=np.float64,
     )
-    quartiles = np.asarray(np.quantile(runtimes, (0.25, 0.75)), dtype=np.float64)
+    quartiles = np.asarray(np.quantile(runtimes, 
+                                       (0.25, 0.75) # TODO: Do not use magic numbers like this. THis should be in yml and accessed through config
+                                       ), dtype=np.float64)
     root_iterations = tuple(
         measurement.root_iterations
         for measurement in measurements
@@ -125,8 +128,8 @@ def _benchmark_target(
 
 def _isolated_measurement(
     target: ScalingTarget,
-    band_count: int,
-    config: TrajCertConfig,
+    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> ScalingMeasurement:
     context = get_context("spawn")
     parent_connection, child_connection = context.Pipe(duplex=False)
@@ -148,7 +151,8 @@ def _isolated_measurement(
     return envelope.measurement
 
 
-def _worker_config_json(config: TrajCertConfig) -> str:
+def _worker_config_json(config: TrajCertConfig #TODO: do not pass config as input param
+                        ) -> str: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     serializable = config.model_copy(update={"laws": dict(config.laws)})
     return serializable.model_dump_json()
 
@@ -156,8 +160,8 @@ def _worker_config_json(config: TrajCertConfig) -> str:
 def _worker(
     connection: Connection,
     target: ScalingTarget,
-    band_count: int,
-    config_json: str,
+    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    config_json: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> None:
     try:
         config = TrajCertConfig.model_validate_json(config_json)
@@ -197,9 +201,9 @@ else:
 
 def _execute_target(
     target: ScalingTarget,
-    band_count: int,
+    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     config: TrajCertConfig,
-) -> tuple[int | None, int | None]:
+) -> tuple[int | None, int | None]: #TODO: this should be handled better
     parameters = _parameters(config)
     partition = build_partition(
         finest_band_count=band_count,
@@ -249,7 +253,7 @@ def _execute_target(
     return None, trace.checkpoints[-1].projection.visited_nodes
 
 
-def _parameters(config: TrajCertConfig) -> LawParameters:
+def _parameters(config: TrajCertConfig) -> LawParameters: #TODO: should have been handled better
     law = config.laws[_BASE_LAW]
     return LawParameters(
         key=_BASE_LAW,

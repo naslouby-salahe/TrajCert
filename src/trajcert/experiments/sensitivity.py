@@ -35,37 +35,37 @@ class PopulationUtilityResult(DomainModel):
     tau: InformationNats | None
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
-    identified_width: FiniteFloat | None
+    identified_width: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     complete_case_arrival_only: Probability | None
     unresolved_as_harm_upper: RiskValue
-    absolute_tightening: FiniteFloat | None
-    relative_unresolved_gain: FiniteFloat | None
+    absolute_tightening: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    relative_unresolved_gain: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     materially_nonvacuous: bool
 
 
 class SequentialStreamUtility(DomainModel):
     stream_index: SeedIndex
-    fine_certified_update_fraction: float
-    endpoint_certified_update_fraction: float
-    certified_update_fraction_gain: float
-    fine_time_to_first_certification: int | None
-    endpoint_time_to_first_certification: int | None
-    fine_mean_anytime_upper_risk: float
-    endpoint_mean_anytime_upper_risk: float
-    mean_bound_gain: float
+    fine_certified_update_fraction: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    endpoint_certified_update_fraction: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    certified_update_fraction_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    fine_time_to_first_certification: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    endpoint_time_to_first_certification: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    fine_mean_anytime_upper_risk: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    endpoint_mean_anytime_upper_risk: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    mean_bound_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SequentialUtilityResult(DomainModel):
     sensitivity_budget: SensitivityBudget
     streams: tuple[SequentialStreamUtility, ...]
-    mean_certified_update_fraction_gain: float
-    mean_bound_gain: float
+    mean_certified_update_fraction_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    mean_bound_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def population_sensitivity_utility(
     summary: ObservableSummary,
     sensitivity_budget: SensitivityBudget,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: make sure to add tests that identify any usage of config as input param
 ) -> PopulationUtilityResult:
     solved = sharp_risk_set(
         summary=summary,
@@ -219,7 +219,8 @@ def _eligible(checkpoint: SequentialCheckpoint, config: TrajCertConfig) -> bool:
     )
 
 
-def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]) -> float:
+def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]
+                        ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if not checkpoints:
         return 0.0
     certified = sum(
@@ -229,7 +230,8 @@ def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]) -> float:
     return certified / len(checkpoints)
 
 
-def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]) -> float:
+def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]
+                             ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if not checkpoints:
         return 1.0
     return mean(float(checkpoint.projection.proven_upper) for checkpoint in checkpoints)
@@ -237,7 +239,7 @@ def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]) -> f
 
 def _time_to_first_certification(
     checkpoints: tuple[SequentialCheckpoint, ...],
-) -> int | None:
+) -> int | None: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     for checkpoint in checkpoints:
         if checkpoint.assessment.scientific_state is ScientificState.CERTIFIED:
             return checkpoint.matured_count

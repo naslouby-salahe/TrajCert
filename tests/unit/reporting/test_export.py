@@ -16,7 +16,11 @@ from trajcert.experiments.runner import (
     scientific_dependency_digest,
     scientific_specification_digest,
 )
-from trajcert.experiments.synthesis import synthesis_artifact_keys, synthesis_artifact_paths
+from trajcert.experiments.synthesis import (
+    local_validity_artifact_key,
+    synthesis_artifact_keys,
+    synthesis_artifact_paths,
+)
 from trajcert.provenance import ExperimentNameValue
 from trajcert.reporting import export
 from trajcert.reporting.export import (
@@ -452,9 +456,9 @@ def _matching_completion(
         provenance_fingerprint=ProvenanceFingerprint("provenance"),
         dependency_fingerprint=dependency_fingerprint,
         manifest_digest=DigestHex(str(model_digest(cell))),
-        required_artifact_keys=synthesis_artifact_keys(),
-        produced_artifact_keys=synthesis_artifact_keys(),
-        expected_artifact_count=len(synthesis_artifact_keys()),
+        required_artifact_keys=synthesis_artifact_keys(cell),
+        produced_artifact_keys=synthesis_artifact_keys(cell),
+        expected_artifact_count=len(synthesis_artifact_keys(cell)),
         artifact_sha256_map=artifact_sha256_map,
         completed_seed_count=0,
         expected_seed_count=0,
@@ -562,10 +566,10 @@ def test_require_synthesis_completion_verifies_record_checksum(
     monkeypatch.setattr(export, "_validate_upstream_completions", _noop_upstream_completions)
     monkeypatch.setattr(export, "producer_component_digest", _fixed_component_digest)
     monkeypatch.setattr(export, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
-    record_key = synthesis_artifact_keys()[0]
-    record_path = workspace / synthesis_artifact_paths(cell)[record_key]
-    record_path.parent.mkdir(parents=True, exist_ok=True)
-    _ = record_path.write_bytes(b"dummy-record")
+    audit_key = local_validity_artifact_key()
+    audit_path = workspace / synthesis_artifact_paths(cell)[audit_key]
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    _ = audit_path.write_bytes(b"dummy-audit")
     completion = _matching_completion(cell, config, artifact_sha256_map=())
     _ = write_completion_last(cell_completion_path(cell, workspace).parent, completion)
     with pytest.raises(InvalidScientificDataError, match="record checksum is stale"):

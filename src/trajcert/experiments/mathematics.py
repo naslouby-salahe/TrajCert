@@ -46,7 +46,7 @@ from trajcert.types import (
 
 class IdentityResult(DomainModel):
     passed: bool
-    max_absolute_error: NonNegativeFloat
+    max_absolute_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class ConvexityResult(DomainModel):
@@ -62,22 +62,22 @@ class SharpSetIdentityResult(DomainModel):
     production_upper: RiskValue | None
     oracle_lower: RiskValue | None
     oracle_upper: RiskValue | None
-    max_endpoint_error: NonNegativeFloat | None
+    max_endpoint_error: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     diagnostic_grid_mismatches: Count
 
 
 class RefinementIdentityResult(DomainModel):
     passed: bool
     timing_gain: InformationNats
-    max_profile_order_violation: NonNegativeFloat
-    max_profile_difference_error: NonNegativeFloat
+    max_profile_order_violation: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_profile_difference_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyBoundaryIdentityResult(DomainModel):
     passed: bool
     assessment: SafetyAssessment
     frontier_direct_information: InformationNats | None
-    frontier_error: NonNegativeFloat | None
+    frontier_error: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyBoundaryCaseEvaluation(DomainModel):
@@ -88,7 +88,7 @@ class SafetyBoundaryCaseEvaluation(DomainModel):
 
 def path_information_decomposition(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> IdentityResult:
     tau = observed_timing_information(summary)
@@ -108,7 +108,7 @@ def path_information_decomposition(
 
 def information_profile_convexity(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> ConvexityResult:
     del oracle_digits
@@ -178,7 +178,7 @@ def sharp_set_constructive_identity(
     sensitivity_budget: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     oracle_bracket_width: ToleranceValue,
 ) -> SharpSetIdentityResult:
     production = sharp_risk_set(summary, sensitivity_budget, root_atol, identity_atol)
@@ -196,7 +196,7 @@ def sharp_set_constructive_identity(
             max_endpoint_error=None,
             diagnostic_grid_mismatches=0,
         )
-    production_lower = float(production.latent_risk.lower)
+    production_lower = production.latent_risk.lower
     production_upper = float(production.latent_risk.upper)
     oracle_lower = float(oracle.latent_risk_interval.lower)
     oracle_upper = float(oracle.latent_risk_interval.upper)
@@ -278,7 +278,7 @@ def strict_timing_gain_identity(
 def safety_boundary_identity(
     summary: ObservableSummary,
     risk_budget: RiskBudget,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryIdentityResult:
     assessment = assess_safety_geometry(summary, risk_budget)
@@ -309,7 +309,7 @@ def safety_boundary_identity(
 def evaluate_safety_boundary_case(
     summary: ObservableSummary,
     case: SafetyBudgetCase,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryCaseEvaluation:
     if not case.valid or case.risk_budget is None:
@@ -382,21 +382,21 @@ class EndpointDifferenceDirection(StrEnum):
 
 
 class LegacyPartitionIncoherenceResult(DomainModel):
-    gamma: FiniteFloat
-    q: FiniteFloat
-    true_hidden_terminal_harmful: FiniteFloat
+    gamma: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    q: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    true_hidden_terminal_harmful: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     fine_hidden_mass_interval: HiddenMassInterval
     endpoint_hidden_mass_interval: HiddenMassInterval
     fine_risk_interval: RiskInterval
     endpoint_risk_interval: RiskInterval
     endpoint_difference_direction: EndpointDifferenceDirection
-    endpoint_difference_magnitude: FiniteFloat
+    endpoint_difference_magnitude: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     passed: bool
 
 
 def evaluate_legacy_partition_incoherence(
-    gamma: FiniteFloat,
-    q: FiniteFloat,
+    gamma: FiniteFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    q: FiniteFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> LegacyPartitionIncoherenceResult:
     config = active_config.get()
     if gamma < 1.0:
@@ -412,8 +412,8 @@ def evaluate_legacy_partition_incoherence(
     correct_by_band, correct_unresolved = _response_masses(float(p_correct), correct_hazards)
     unresolved = harmful_unresolved + correct_unresolved
     fine_partition = build_partition(
-        finest_band_count=2,
-        band_count=2,
+        finest_band_count=2, # TODO: these are magic numbers that should be from conf
+        band_count=2, # TODO: these are magic numbers that should be from conf
         terminal_horizon=config.method.terminal_horizon,
     )
     fine = summarize_observable_masses(
@@ -424,8 +424,8 @@ def evaluate_legacy_partition_incoherence(
         comparison_guard=config.numerics.comparison_guard,
     )
     endpoint_partition = build_partition(
-        finest_band_count=2,
-        band_count=1,
+        finest_band_count=2, # TODO: these are magic numbers that should be from conf
+        band_count=1, # TODO: these are magic numbers that should be from conf
         terminal_horizon=config.method.terminal_horizon,
     )
     endpoint = coarsen_summary(fine, endpoint_partition, config.numerics.comparison_guard)
@@ -476,14 +476,16 @@ def evaluate_legacy_partition_incoherence(
     )
 
 
-def _tilted_probability(q: FiniteFloat, gamma: FiniteFloat) -> Probability:
+def _tilted_probability(q: FiniteFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                        gamma: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                        ) -> Probability:
     return gamma * q / (1.0 - q + gamma * q)
 
 
 def _response_masses(
     prior: Probability,
     hazards: tuple[Probability, Probability],
-) -> tuple[tuple[Mass, Mass], Mass]:
+) -> tuple[tuple[Mass, Mass], Mass]: # TODO:  This output should be better
     first, second = hazards
     first_mass = prior * first
     second_mass = prior * (1.0 - first) * second

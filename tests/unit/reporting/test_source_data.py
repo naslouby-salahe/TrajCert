@@ -40,7 +40,6 @@ from trajcert.reporting.source_data import (
     RhoUtilityRow,
     SafetySourceEvidence,
     SameEndpointFigureEvidence,
-    ScientificConsequence,
     SharpnessSourceEvidence,
     TheoremName,
     TheoremValidationObservation,
@@ -108,7 +107,7 @@ _TWO_OBSERVATIONS = 2
 _TWO_ROWS = 2
 _ONE_ROW = 1
 _POPULATION_LAW_COUNT = 3
-_TABLE_SOURCE_COUNT = 12
+_TABLE_SOURCE_COUNT = 8
 _FIGURE_SOURCE_COUNT = 8
 
 
@@ -243,7 +242,6 @@ def test_theorem_validation_summary_rows_aggregates_grouped_observations() -> No
                 absolute_error=0.1,
                 inequality_margin=0.2,
                 primary_artifact=ArtifactKey("a"),
-                scientific_consequence=ScientificConsequence("ok"),
             ),
             TheoremValidationObservation(
                 theorem_name=TheoremName("T1"),
@@ -251,7 +249,6 @@ def test_theorem_validation_summary_rows_aggregates_grouped_observations() -> No
                 absolute_error=0.3,
                 inequality_margin=None,
                 primary_artifact=ArtifactKey("a"),
-                scientific_consequence=ScientificConsequence("ok"),
             ),
             TheoremValidationObservation(
                 theorem_name=TheoremName("T2"),
@@ -259,7 +256,6 @@ def test_theorem_validation_summary_rows_aggregates_grouped_observations() -> No
                 absolute_error=0.2,
                 inequality_margin=0.4,
                 primary_artifact=ArtifactKey("b"),
-                scientific_consequence=ScientificConsequence("ok"),
             ),
         )
     )
@@ -289,7 +285,6 @@ def test_theorem_validation_summary_rows_rejects_multiple_artifacts_per_theorem(
                     absolute_error=0.1,
                     inequality_margin=0.2,
                     primary_artifact=ArtifactKey("a"),
-                    scientific_consequence=ScientificConsequence("ok"),
                 ),
                 TheoremValidationObservation(
                     theorem_name=TheoremName("T1"),
@@ -297,7 +292,6 @@ def test_theorem_validation_summary_rows_rejects_multiple_artifacts_per_theorem(
                     absolute_error=0.1,
                     inequality_margin=0.2,
                     primary_artifact=ArtifactKey("b"),
-                    scientific_consequence=ScientificConsequence("ok"),
                 ),
             )
         )

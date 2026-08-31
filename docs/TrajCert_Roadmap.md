@@ -71,7 +71,7 @@ FAILURE_BOUNDARY
 DIAGNOSTIC
 ```
 
-The authoritative registry uses `VALIDATION`, `CONFIRMATORY`, `ABLATION`, `ROBUSTNESS`, `GENERALIZATION`, `FAILURE_BOUNDARY`, and `DIAGNOSTIC`. Exploratory evidence cannot be retrospectively promoted to confirmatory evidence.
+The experiment plan uses `VALIDATION`, `CONFIRMATORY`, `ABLATION`, `ROBUSTNESS`, `GENERALIZATION`, `FAILURE_BOUNDARY`, and `DIAGNOSTIC`. Exploratory evidence cannot be retrospectively promoted to confirmatory evidence.
 
 Execution state and scientific state are distinct. A valid scientific null, unfavorable bound, incompatibility result, intrinsic impossibility result, or theorem falsification is completed scientific evidence rather than a technical execution failure.
 
@@ -523,7 +523,7 @@ The solver returns explicit degeneracy/scientific states rather than hiding boun
 
 This section is the single authoritative source for values that are genuinely supplied, selected, or swept as configuration data. It contains numerical parameters, thresholds, tolerances, counts, probabilities, seed-index ranges, booleans, paths, environment identifiers, categorical experiment selections, and experiment-grid values only.
 
-Derived quantities, mathematical formulas, fixed scientific or algorithmic behavior, validation and failure semantics, provenance rules, reporting procedures, semantic-identity rules, experiment-registry definitions, and claim wording are intentionally excluded from YAML. Those requirements are defined in the authoritative roadmap sections where they belong and are computed or enforced by the implementation.
+Derived quantities, mathematical formulas, fixed scientific or algorithmic behavior, validation and failure semantics, provenance rules, reporting procedures, semantic-identity rules, experiment-plan definitions, and claim wording are intentionally excluded from YAML. Those requirements are defined in the authoritative roadmap sections where they belong and are computed or enforced by the implementation.
 
 One production scientific/runtime configuration file is sufficient for the current study. `configs/tests.yaml` and `configs/smoke.yaml` contain runner settings only and do not define independently editable production scientific values.
 
@@ -719,7 +719,7 @@ The following configuration-adjacent rules are mandatory:
 3. The exact binary maximum-information endpoint is the mathematical constant $\log 2$. It is required where Sections 7.12 and 18.9 specify it and is not stored as an approximate configurable constant.
 4. The file order of `laws` is authoritative where deterministic law ordering is required.
 5. Experiment ordering is authoritative in Section 17.
-6. `grids.beta` is a prespecified descriptive reference grid included in Table 1 and configuration provenance. No current registry experiment sweeps that grid independently; beta values used by executable experiments are defined by their experiment-specific contracts.
+6. `grids.beta` is a prespecified descriptive reference grid included in configuration provenance. No current experiment sweeps that grid independently; beta values used by executable experiments are defined by their experiment-specific contracts.
 7. Descriptive categorical values in YAML are semantic names only where they genuinely select configured laws, partitions, methods, or runtime identifiers.
 8. Scientific/statistical grid membership is prespecified. A scientific parameter change creates a different dependency identity for only the artifacts that actually consume it.
 
@@ -1021,7 +1021,7 @@ Current real-trajectory planning status is exactly:
 NOT_IN_CURRENT_CONFIRMATORY_PLAN
 ```
 
-Current confirmatory execution uses the synthetic benchmark defined under `laws`. `Real-Trajectory Validation` is a zero-cell planned nonapplicability in the authoritative registry, no current real-trajectory execution exists, and the Real-Trajectory Value claim remains `NOT_TESTED`.
+Current confirmatory execution uses the synthetic benchmark defined under `laws`. `Real-Trajectory Validation` is a zero-cell planned nonapplicability, no current real-trajectory execution exists, and the Real-Trajectory Value claim remains `NOT_TESTED`.
 
 The synthetic generator is authoritative, so generated and expected probability tables must agree within deterministic numerical tolerance.
 
@@ -2476,21 +2476,14 @@ TrajCert/
 │       ├── experiments/
 │       │   ├── __init__.py
 │       │   │
-│       │   ├── registry.py
-│       │   │   # Canonical experiment names, classes and dependencies.
-│       │   │   # Experiment registry only — no claim registry.
-│       │   │
 │       │   ├── plan.py
-│       │   │   # Deterministically expands the registry/config into cells.
+│       │   │   # Deterministically expands the configuration into cells.
 │       │   │
 │       │   ├── runner.py
 │       │   │   # Shared orchestration, resume, overwrite and failure handling.
 │       │   │
 │       │   ├── status.py
 │       │   │   # Experiment/cell execution-state inspection.
-│       │   │
-│       │   ├── inventory.py
-│       │   │   # Scientific/data inventory validation.
 │       │   │
 │       │   ├── mathematics.py
 │       │   │   # Mathematical identity validation experiments.
@@ -2661,9 +2654,6 @@ TrajCert/
 │   │
 │   ├── experiments/
 │   │   │
-│   │   ├── scientific-and-data-inventory/
-│   │   │   # Protocol/data/configuration inventory validation.
-│   │   │
 │   │   ├── legacy-partition-incoherence-check/
 │   │   │   # Legacy sensitivity partition-incoherence counterexamples.
 │   │   │
@@ -2763,7 +2753,6 @@ TrajCert/
 │   │
 │   ├── experiments/
 │   │   │
-│   │   ├── scientific-and-data-inventory/
 │   │   ├── legacy-partition-incoherence-check/
 │   │   ├── path-information-decomposition/
 │   │   ├── information-profile-convexity/
@@ -2896,7 +2885,7 @@ Responsibilities:
 * `config.py`, `types.py`, `constants.py`, `paths.py`, `provenance.py`, `storage.py`, `determinism.py`, `exceptions.py`, and `schemas.py` provide the shared configuration, domain, persistence, reproducibility, and filesystem foundations.
 * `data`, `math`, and `inference` contain synthetic-data handling, population mathematics, and sequential certification respectively.
 * `comparators` contains the endpoint baseline and comparator/reference methods.
-* `experiments` owns registry expansion, cell planning, execution, status inspection, validation studies, and synthesis.
+* `experiments` owns plan expansion, cell planning, execution, status inspection, validation studies, and synthesis.
 * `analysis` contains metrics, paired inference, aggregation, multiplicity adjustment, and materiality evaluation.
 * `reporting` renders verified data into publication figures, tables, source-data exports, and results.
 * `cli.py` exposes the public `trajcert` command defined in Section 16.
@@ -3931,9 +3920,9 @@ Command contract:
 
 * `doctor`: read-only workspace/environment/dataset/experiment/artifact-DAG integrity and next-valid-action view.
 * `preprocess`: validates and deterministically materializes current-plan datasets, laws, manifests, mappings, checksums, and observed structure.
-* `plan`: read-only registry expansion/dependency view. It must reproduce the exact total in Section 17.
+* `plan`: read-only expansion/dependency view. It derives the cells in Section 17.
 * `smoke`: executes the exact smoke fixtures below.
-* `run`: executes one authoritative registry experiment, reusing compatible artifacts and recovering compatible checkpoints.
+* `run`: executes one planned experiment, reusing compatible artifacts and recovering compatible checkpoints.
 * `status`: read-only lifecycle/progress/blocking/export-state inspection.
 * `report`: performs no new science; exports only verified completed evidence.
 
@@ -4018,13 +4007,12 @@ rho=tau+0.01
 
 The certified outer projection must agree with the population upper endpoint within `numerics.identity_atol`.
 
-# 17. Authoritative Experiment Registry
+# 17. Experiment Plan
 
-This table is the authoritative experiment registry. Experiment names, execution groups, evidence classes, expansions, counts, and row order are fixed here.
+The plan defines the executable experiment families and their expected expansions.
 
 | Execution group                         | Experiment                                 | Class            | Expansion                              |     Cells |
 | --------------------------------------- | ------------------------------------------ | ---------------- | -------------------------------------- | --------: |
-| Inventory validation                    | Scientific and Data Inventory              | VALIDATION       | one protocol/inventory gate            |         1 |
 | Formal mathematics validation           | Legacy Partition Incoherence Check         | VALIDATION       | 3 Gamma × 2 q                          |         6 |
 | Formal mathematics validation           | Path Information Decomposition             | VALIDATION       | 12 laws × 4 partitions                 |        48 |
 | Formal mathematics validation           | Information Profile Convexity              | VALIDATION       | 12 laws × 4 partitions                 |        48 |
@@ -4054,9 +4042,9 @@ This table is the authoritative experiment registry. Experiment names, execution
 | Foreign-information diagnostic          | Foreign-Information Negative Control       | DIAGNOSTIC       | absent                                 |         0 |
 | Computational scaling                   | Computational Scaling                      | VALIDATION       | 8 K values                             |         8 |
 | Statistical synthesis                   | Statistical Synthesis                      | VALIDATION       | deterministic synthesis                |         1 |
-| **TOTAL**                               |                                            |                  |                                        | **1,423** |
+| **TOTAL**                               |                                            |                  |                                        | **1,422** |
 
-No experiment exists outside this registry.
+No experiment exists outside this plan.
 
 # 18. Experiment-Specific Contracts
 
@@ -4068,7 +4056,6 @@ Each deterministic cell requires one schema-valid primary result record unless o
 
 | Experiment                                 | Required/reusable inputs                                               | Required authoritative cell outputs                                                      |
 | ------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Scientific and Data Inventory              | configuration snapshot, prepared laws, partition/seed manifests, smoke | validation record                                                                        |
 | Legacy Partition Incoherence Check         | §7.4.1 construction                                                    | counterexample result                                                                    |
 | Path Information Decomposition             | population summaries                                                   | theorem result                                                                           |
 | Information Profile Convexity              | population profiles                                                    | theorem result                                                                           |
@@ -4103,20 +4090,6 @@ Experiment overall state becomes `COMPLETED` only when:
 * all experiment-level required aggregates/statistics/source-data products validate;
 * planned invalid/nonapplicable combinations are accounted for;
 * no required artifact is stale or missing.
-
-## 18.1 Inventory validation — Scientific and Data Inventory
-
-Requires:
-
-```text
-environment interpretable
-synthetic preprocessing pass
-smoke pass
-registry total = 1423
-semantic-cell uniqueness pass
-```
-
-It checks all configured constants, twelve generated laws, partition/seed manifests, schemas, real-data status, nonnegative masses, law sums, source/component registrations, and registry counts.
 
 ## 18.2 Formal mathematics validation
 
@@ -4206,7 +4179,7 @@ Table 6 aggregates `max_abs_rho_star_error` over applicable rows only.
 
 ## 18.4 Comparator reduction
 
-For every 8-band law, execute all internal comparator evaluations inside the one law-level registry cell.
+For every 8-band law, execute all internal comparator evaluations inside the one law-level planned cell.
 
 Evaluate:
 
@@ -4308,7 +4281,7 @@ tau = 0
 below-floor case = NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET
 ```
 
-without adding a separate registry cell.
+without adding a separate planned cell.
 
 `Sharpness Against Generic Oracle` uses:
 
@@ -4863,88 +4836,7 @@ P-values below `0.0001` are rendered as:
 
 at current configuration.
 
-## Table 1 — Scientific constants and numerical protocol
-
-```text
-outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/protocol_constants.parquet
-```
-
-Columns:
-
-```text
-quantity
-value
-unit
-value_class
-fixed_or_swept
-scientific_role
-```
-
-## Table 2 — Synthetic laws
-
-```text
-outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/synthetic_laws.parquet
-```
-
-Columns:
-
-```text
-law_name
-theta
-q1
-q0
-lambda1
-lambda0
-K
-A
-G
-c
-tau_at_8_band_partition
-true_mutual_information_at_8_band_partition
-scientific_role
-```
-
-## Table 3 — Baseline assumptions
-
-```text
-outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/baselines.parquet
-```
-
-Columns:
-
-```text
-baseline_name
-purpose
-observation_access
-assumption
-numerical_contract
-sensitivity_grid
-seed_pairing
-metrics
-valid_scope
-forbidden_interpretation
-```
-
-## Table 4 — Experiment matrix
-
-```text
-outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/experiment_matrix.parquet
-```
-
-Columns:
-
-```text
-execution_group
-experiment_name
-classification
-purpose
-cell_expansion
-cell_count
-primary_metrics
-claim_ids
-```
-
-## Table 5 — Theorem validation
+## Table 1 — Theorem validation
 
 ```text
 outputs/experiments/statistical-synthesis/evaluations/aggregates/theorem_validation_summary.parquet
@@ -5649,7 +5541,7 @@ There is one scientific execution regime.
 
 No second execution phase is required.
 
-A registry cell reaches `COMPLETED` when its required artifacts and completion marker satisfy Sections 13–18.
+A planned cell reaches `COMPLETED` when its required artifacts and completion marker satisfy Sections 13–18.
 
 An experiment reaches `COMPLETED` when all executable cells and required experiment-level aggregates/statistics/source data validate.
 
@@ -5805,7 +5697,7 @@ Hypothesis-generated cases are test evidence only.
 
 Integration/regression coverage verifies:
 
-* Scientific and Data Inventory through at least one population cell;
+* the first validation experiment through at least one population cell;
 * idempotent rerun performs no scientific recomputation;
 * one failed later cell leaves earlier/sibling valid cells reusable;
 * overwrite recomputes only selected roots and true descendants;
@@ -5834,13 +5726,13 @@ Before reporting, reviewers verify:
 * **Identity/recovery:** no duplicate active semantic result; each reusable artifact has one producer; partial outputs never become active evidence; checkpoints never cross dependency incompatibility; stale descendants are removed; caches never become evidence.
 * **Evidence lineage:** every table/figure has stable machine-readable source data; exports use completed verified evidence only; `results/` contains no caches/debug/failures/invalid/stale/partial/checkpoint artifacts.
 * **Local validity:** static dependency and runtime lineage audits in Section 21.11 pass.
-* **Execution completeness:** all 1,423 planned registry cells are accounted for as executable-completed, planned-invalid, or zero-cell nonapplicable according to their contracts; no mandatory executable cell is missing.
+* **Execution completeness:** all 1,422 planned cells are accounted for as executable-completed, planned-invalid, or zero-cell nonapplicable according to their contracts; no mandatory executable cell is missing.
 
 This checklist guides review; it does not create a runtime artifact or block execution.
 
 # 28. Normal Operator Workflow
 
-The operator workflow is registry-driven:
+The operator workflow is plan-driven:
 
 ```text
 trajcert doctor
@@ -5848,10 +5740,7 @@ trajcert preprocess
 trajcert smoke
 trajcert plan
 
-trajcert run "Scientific and Data Inventory"
-
-trajcert run <each remaining experiment with nonzero cells,
-             in authoritative registry dependency order>
+trajcert run <each experiment with nonzero cells, in plan order>
 
 trajcert run "Statistical Synthesis"
 
@@ -5899,4 +5788,4 @@ scientific configuration
 
 The operator selects only an experiment family.
 
-The authoritative registry and configuration determine all cells and dependencies.
+The plan and configuration determine all cells and dependencies.

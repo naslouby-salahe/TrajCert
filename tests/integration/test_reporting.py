@@ -30,12 +30,12 @@ from trajcert.storage import (
 )
 
 _DIGEST = "0" * 64
-_EXPECTED_TABLE_COUNT = 12
+_EXPECTED_TABLE_COUNT = 8
 _EXPECTED_FIGURE_COUNT = 8
-_EXPECTED_DISTINCT_SOURCE_COUNT = 20
+_EXPECTED_DISTINCT_SOURCE_COUNT = 16
 
 
-def test_publication_contract_has_exact_twelve_tables_and_eight_figures() -> None:
+def test_publication_contract_has_exact_eight_tables_and_eight_figures() -> None:
     tables = table_source_descriptors()
     figures = figure_source_descriptors()
     assert len(tables) == _EXPECTED_TABLE_COUNT
@@ -44,10 +44,6 @@ def test_publication_contract_has_exact_twelve_tables_and_eight_figures() -> Non
         len({item.source_path for item in (*tables, *figures)}) == _EXPECTED_DISTINCT_SOURCE_COUNT
     )
     assert {item.source_path.stem for item in tables} == {
-        "protocol_constants",
-        "synthetic_laws",
-        "baselines",
-        "experiment_matrix",
         "theorem_validation_summary",
         "solver_oracle_validation",
         "partition_timing_results",

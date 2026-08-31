@@ -26,13 +26,6 @@ from trajcert.data.summaries import summarize_full_law
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.anytime import CoverageEvidenceResult
 from trajcert.experiments.failure_boundaries import FailureBoundaryResult
-from trajcert.experiments.inventory import (
-    BaselineAssumptionRow,
-    ExperimentMatrixRow,
-    InventoryValidationResult,
-    ProtocolConstantRow,
-    SyntheticLawRow,
-)
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
 from trajcert.experiments.runner import read_verified_scientific_result
 from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
@@ -80,7 +73,6 @@ from trajcert.types import (
 )
 
 TheoremName = NewType("TheoremName", str)
-ScientificConsequence = NewType("ScientificConsequence", str)
 RegimeName = NewType("RegimeName", str)
 
 _LOG2_MATCH_TOLERANCE: Final[float] = 1e-15
@@ -113,10 +105,6 @@ class AnalysisType(StrEnum):
 
 
 class PublicationSourceName(StrEnum):
-    PROTOCOL_CONSTANTS = "protocol_constants"
-    SYNTHETIC_LAWS = "synthetic_laws"
-    BASELINES = "baselines"
-    EXPERIMENT_MATRIX = "experiment_matrix"
     THEOREM_VALIDATION = "theorem_validation_summary"
     SOLVER_ORACLE_VALIDATION = "solver_oracle_validation"
     PARTITION_TIMING = "partition_timing_results"
@@ -142,7 +130,6 @@ class TheoremValidationSummaryRow(DomainModel):
     minimum_inequality_margin: FiniteFloat | None
     all_cases_pass: bool
     primary_artifact: ArtifactKey
-    scientific_consequence: ScientificConsequence
 
 
 class PartitionTimingRow(DomainModel):
@@ -346,10 +333,6 @@ class ComputationalScalingFigureRow(DomainModel):
 
 
 class PublicationSourceRows(DomainModel):
-    protocol_constants: tuple[ProtocolConstantRow, ...]
-    synthetic_laws: tuple[SyntheticLawRow, ...]
-    baselines: tuple[BaselineAssumptionRow, ...]
-    experiment_matrix: tuple[ExperimentMatrixRow, ...]
     solver_oracle_validation: tuple[SolverOracleValidationRow, ...]
     anytime_coverage: tuple[AnytimeCoverageRow, ...]
     failure_boundaries: tuple[FailureBoundaryRow, ...]
@@ -369,7 +352,6 @@ class TheoremValidationObservation(DomainModel):
     absolute_error: FiniteFloat | None
     inequality_margin: FiniteFloat | None
     primary_artifact: ArtifactKey
-    scientific_consequence: ScientificConsequence
 
 
 class PartitionTimingEvidence(DomainModel):
@@ -475,11 +457,8 @@ def theorem_validation_summary_rows(
     for theorem_name in sorted(grouped, key=str):
         group = tuple(grouped[theorem_name])
         artifacts = {item.primary_artifact for item in group}
-        consequences = {item.scientific_consequence for item in group}
-        if len(artifacts) != 1 or len(consequences) != 1:
-            raise InvalidScientificDataError(
-                "one theorem summary must use one primary artifact and scientific consequence"
-            )
+        if len(artifacts) != 1:
+            raise InvalidScientificDataError("one theorem summary must use one primary artifact")
         errors = tuple(item.absolute_error for item in group if item.absolute_error is not None)
         margins = tuple(
             item.inequality_margin for item in group if item.inequality_margin is not None
@@ -492,7 +471,6 @@ def theorem_validation_summary_rows(
                 minimum_inequality_margin=min(margins, default=None),
                 all_cases_pass=all(item.passed for item in group),
                 primary_artifact=next(iter(artifacts)),
-                scientific_consequence=next(iter(consequences)),
             )
         )
     return tuple(rows)
@@ -810,22 +788,12 @@ def build_publication_source_rows(
     workspace_root: Path,
     config: TrajCertConfig,
 ) -> PublicationSourceRows:
-    inventory = _single_result(
-        plan,
-        workspace_root,
-        "Scientific and Data Inventory",
-        InventoryValidationResult,
-    )
     solver_rows = _solver_rows(plan, workspace_root, config)
     coverage_results = _coverage_results(plan, workspace_root)
     failure_results = _failure_results(plan, workspace_root)
     scaling_results = _scaling_results(plan, workspace_root)
     population = _population_results(plan, workspace_root)
     return PublicationSourceRows(
-        protocol_constants=inventory.protocol_constants,
-        synthetic_laws=inventory.synthetic_laws,
-        baselines=inventory.baselines,
-        experiment_matrix=inventory.experiment_matrix,
         solver_oracle_validation=solver_rows,
         anytime_coverage=_coverage_rows(coverage_results),
         failure_boundaries=_failure_rows(failure_results),
@@ -1478,68 +1446,6 @@ def _source(
 
 _TABLE_SOURCES = (
     _source(
-        "outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/protocol_constants.parquet",
-        PublicationSourceRole.TABLE,
-        ("quantity", "value", "unit", "value_class", "fixed_or_swept", "scientific_role"),
-        ("quantity",),
-        "scientific-and-data-inventory",
-    ),
-    _source(
-        "outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/synthetic_laws.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "law_name",
-            "theta",
-            "q1",
-            "q0",
-            "lambda1",
-            "lambda0",
-            "K",
-            "A",
-            "G",
-            "c",
-            "tau_at_8_band_partition",
-            "true_mutual_information_at_8_band_partition",
-            "scientific_role",
-        ),
-        ("law_name",),
-        "scientific-and-data-inventory",
-    ),
-    _source(
-        "outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/baselines.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "baseline_name",
-            "purpose",
-            "observation_access",
-            "assumption",
-            "numerical_contract",
-            "sensitivity_grid",
-            "seed_pairing",
-            "metrics",
-            "valid_scope",
-            "forbidden_interpretation",
-        ),
-        ("baseline_name",),
-        "scientific-and-data-inventory",
-    ),
-    _source(
-        "outputs/experiments/scientific-and-data-inventory/evaluations/aggregates/experiment_matrix.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "execution_group",
-            "experiment_name",
-            "classification",
-            "purpose",
-            "cell_expansion",
-            "cell_count",
-            "primary_metrics",
-            "claim_ids",
-        ),
-        ("execution_group", "experiment_name"),
-        "scientific-and-data-inventory",
-    ),
-    _source(
         "outputs/experiments/statistical-synthesis/evaluations/aggregates/theorem_validation_summary.parquet",
         PublicationSourceRole.TABLE,
         (
@@ -1549,7 +1455,6 @@ _TABLE_SOURCES = (
             "minimum_inequality_margin",
             "all_cases_pass",
             "primary_artifact",
-            "scientific_consequence",
         ),
         ("theorem_name",),
         "statistical-synthesis",

@@ -12,7 +12,6 @@ from trajcert.data.ledger import LedgerIdentity
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments import runner
 from trajcert.experiments.anytime import HandCaseResult
-from trajcert.experiments.inventory import InventoryValidationResult
 from trajcert.experiments.mathematics import IdentityResult
 from trajcert.experiments.plan import PlannedCell, build_plan, cells_for_experiment
 from trajcert.provenance import (
@@ -49,7 +48,7 @@ from trajcert.types import (
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _SMOKE_FIXTURE_COUNT = 6
 _SHA256_HEX_LENGTH = 64
-_INVENTORY = ExperimentNameValue("Scientific and Data Inventory")
+_INVENTORY = ExperimentNameValue("Legacy Partition Incoherence Check")
 _HAND_CASE_EXPERIMENT = ExperimentNameValue("Anytime Implementation Hand Cases")
 _HAND_CASE_VARIANT = VariantName("hand-case-01")
 _HAND_CASE_PARTITION = PartitionName("8-band partition")
@@ -578,15 +577,6 @@ def test_execute_scientific_cell_dispatches_proof_checks() -> None:
     complexity_result = cast(IdentityResult, runner.execute_scientific_cell(complexity, config))
     assert projection_result.passed is True
     assert complexity_result.passed is True
-
-
-def test_execute_scientific_cell_dispatches_inventory() -> None:
-    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    plan = build_plan(config)
-    inventory = cells_for_experiment(plan, _INVENTORY)[0]
-    result = cast(InventoryValidationResult, runner.execute_scientific_cell(inventory, config))
-    assert result.valid is True
-    assert result.configured_law_count == len(tuple(config.ordered_laws))
 
 
 def test_execute_scientific_cell_rejects_planned_invalid_cell() -> None:

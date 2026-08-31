@@ -5,7 +5,7 @@ from trajcert.data.summaries import ObservableSummary, coarsen_summary
 from trajcert.math.bounds import SharpRiskSet, sharp_risk_set
 from trajcert.types import BandCount, SensitivityBudget, ToleranceValue
 
-_ENDPOINT_BAND_COUNT: BandCount = 1
+_ENDPOINT_BAND_COUNT: BandCount = 1 # TODO: should be in yaml and accessed through config
 
 
 def endpoint_partition(summary: ObservableSummary) -> TrajectoryPartition:

@@ -20,7 +20,7 @@ from trajcert.types import DomainModel, NonNegativeInt, PublicExecutionState, Re
 
 
 class CellStatus(DomainModel):
-    semantic_cell_key: str
+    semantic_cell_key: str # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     state: PublicExecutionState
     reason: ReasonCode | None
 
@@ -28,22 +28,22 @@ class CellStatus(DomainModel):
 class ExperimentStatus(DomainModel):
     experiment_name: ExperimentNameValue
     state: PublicExecutionState
-    total_cells: NonNegativeInt
-    completed_cells: NonNegativeInt
-    invalid_cells: NonNegativeInt
-    failed_cells: NonNegativeInt
-    blocked_cells: NonNegativeInt
-    running_cells: NonNegativeInt
-    ready_cells: NonNegativeInt
+    total_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    completed_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    invalid_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    failed_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    blocked_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    running_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    ready_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class StateCounts(DomainModel):
-    completed_cells: NonNegativeInt
-    invalid_cells: NonNegativeInt
-    failed_cells: NonNegativeInt
-    blocked_cells: NonNegativeInt
-    running_cells: NonNegativeInt
-    ready_cells: NonNegativeInt
+    completed_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    invalid_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    failed_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    blocked_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    running_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    ready_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def inspect_cell_status(
@@ -87,7 +87,7 @@ def inspect_cell_status(
 
 
 def _completion_status(
-    key: str,
+    key: str,# TODO: Consider using a proper alias type or whatever already exists with actually fits this
     cell: PlannedCell,
     context: ExecutionContext,
     completion_path: Path,
@@ -108,7 +108,7 @@ def _completion_status(
 def aggregate_experiment_status(
     experiment_name: ExperimentNameValue,
     statuses: tuple[CellStatus, ...],
-    declared_cells: NonNegativeInt,
+    declared_cells: NonNegativeInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> ExperimentStatus:
     if len(statuses) != declared_cells:
         raise ValueError("cell-status count does not match the declared experiment cell count")
@@ -128,7 +128,7 @@ def aggregate_experiment_status(
 
 
 def _matching_failure_status(
-    semantic_cell_key: str,
+    semantic_cell_key: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     context: ExecutionContext,
     failure_path: Path,
 ) -> CellStatus | None:
@@ -153,7 +153,8 @@ def _matching_failure_status(
     )
 
 
-def _aggregate_state(counts: StateCounts, declared_cells: NonNegativeInt) -> PublicExecutionState:
+def _aggregate_state(counts: StateCounts, declared_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                     ) -> PublicExecutionState:
     if declared_cells in (0, counts.invalid_cells):
         return PublicExecutionState.INVALID
     if counts.failed_cells > 0:

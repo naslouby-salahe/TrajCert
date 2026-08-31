@@ -35,7 +35,7 @@ from trajcert.types import (
 )
 
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
-_NANOSECONDS_PER_MILLISECOND = 1_000_000.0
+_NANOSECONDS_PER_MILLISECOND = 1_000_000.0 # TODO: This should be defined in a more central location or configuration
 
 
 class FailureBoundaryAxis(StrEnum):
@@ -61,14 +61,14 @@ class FailureBoundaryResult(DomainModel):
     risk_upper: RiskValue
     compatibility_lower: InformationNats | None
     intrinsic_risk_lower: RiskValue | None
-    optimizer_gap: NonNegativeFloat | None
+    optimizer_gap: NonNegativeFloat | None # TODO: Consider using a proper alias type for the optimizer gap or whatever already exists with actually fits this
     optimizer_nodes: Count | None
-    runtime_ms: NonNegativeFloat | None
+    runtime_ms: NonNegativeFloat | None # TODO: Consider using a proper alias type for the runtime in milliseconds or whatever already exists with actually fits this
 
 
 def evaluate_failure_boundary(
     axis: FailureBoundaryAxis,
-    level: float,
+    level: float, # TODO: Consider using a proper alias type for the level or whatever already exists with actually fits this
 ) -> FailureBoundaryResult:
     config = active_config.get()
     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
@@ -143,7 +143,7 @@ def evaluate_terminal_selection_asymmetry(
 
 
 def evaluate_optimizer_node_budget(
-    node_budget: PositiveInt,
+    node_budget: PositiveInt, # TODO: Consider using a proper alias type for the optimizer node budget or whatever already exists with actually fits this
 ) -> FailureBoundaryResult:
     config = active_config.get()
     if node_budget <= 0:
@@ -245,8 +245,8 @@ def _finite_sample_size(sample_size: PositiveInt, config: TrajCertConfig) -> Fai
 
 def _population_coordinate(
     axis: FailureBoundaryAxis,
-    level: float,
-    config: TrajCertConfig,
+    level: float, # TODO: Consider using a proper alias type for the level or whatever already exists with actually fits this
+    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[LawParameters, TrajectoryPartition, SensitivityBudget, RiskBudget]:
     parameters = _base_parameters(config)
     bands = config.method.finest_bands
@@ -281,7 +281,9 @@ def _base_parameters(config: TrajCertConfig) -> LawParameters:
     )
 
 
-def _partition(bands: int, config: TrajCertConfig) -> TrajectoryPartition:
+def _partition(bands: int # TODO: Consider using a proper alias type for the number of bands or whatever already exists with actually fits this
+               , config: TrajCertConfig # TODO: Do not pass the entire config. It can be globally accessed
+               ) -> TrajectoryPartition:
     return build_partition(
         finest_band_count=bands,
         band_count=bands,
@@ -292,7 +294,7 @@ def _partition(bands: int, config: TrajCertConfig) -> TrajectoryPartition:
 def _summary(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
 ) -> ObservableSummary:
     return summarize_full_law(
         partition,
@@ -305,7 +307,7 @@ def _population_state(
     solved: SharpRiskSet,
     rho: SensitivityBudget,
     beta: RiskBudget,
-) -> tuple[ScientificState, RiskValue, InformationNats | None, RiskValue | None]:
+) -> tuple[ScientificState, RiskValue, InformationNats | None, RiskValue | None]: # TODO:  i'm not sure i like how this output is handled
     compatibility = solved.solve_result.compatibility
     minimum = compatibility.minimum_information_point
     compatibility_floor = None if minimum is None else float(minimum.information_floor)
@@ -347,5 +349,5 @@ def _tau(summary: ObservableSummary) -> InformationNats | None:
     return None if value is None else float(value)
 
 
-def _float_tuple(values: NDArray[np.float64]) -> tuple[Mass, ...]:
+def _float_tuple(values: NDArray[np.float64]) -> tuple[Mass, ...]: # TODO: duplicate code and also feels redundant
     return tuple(cast(list[float], values.tolist()))

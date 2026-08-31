@@ -20,9 +20,13 @@ from trajcert.exceptions import (
     SerializationError,
 )
 from trajcert.experiments import runner
-from trajcert.experiments.inventory import InventoryValidationResult, validate_scientific_inventory
-from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
-from trajcert.experiments.registry import authoritative_registry
+from trajcert.experiments.plan import (
+    ExperimentPlan,
+    PlannedCell,
+    build_plan,
+    cells_for_experiment,
+    experiment_names,
+)
 from trajcert.experiments.runner import SmokeResult
 from trajcert.experiments.status import ExperimentStatus
 from trajcert.provenance import (
@@ -47,7 +51,6 @@ from trajcert.storage import (
 from trajcert.types import (
     CliCommand,
     EvidenceClass,
-    LawKey,
     PublicExecutionState,
     ReasonCode,
 )
@@ -78,8 +81,8 @@ def _single_cell_plan() -> ExperimentPlan:
         experiment_order=1,
         cell_ordinal=1,
         identity=SemanticCellIdentity(
-            experiment_name=ExperimentNameValue("Scientific and Data Inventory"),
-            coordinates=SemanticCoordinates(variant_name=VariantName("protocol-inventory-gate")),
+            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
+            coordinates=SemanticCoordinates(variant_name=VariantName("q=0.1, Gamma=1.5")),
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=True,
@@ -88,7 +91,7 @@ def _single_cell_plan() -> ExperimentPlan:
     )
     return ExperimentPlan(
         cells=(cell,),
-        registry_total=1,
+        planned_cell_count=1,
         executable_cells=1,
         invalid_cells=0,
         nonapplicable_experiments=(),
@@ -160,14 +163,6 @@ def _fake_report_rendered(*, experiment_name: str | None, overwrite: bool) -> Re
         source_artifact_count=_SOURCE_ARTIFACT_COUNT,
         target=Path("results/experiments/population-sensitivity-utility"),
         reused=False,
-    )
-
-
-def _invalid_inventory(
-    config: TrajCertConfig, *, law_key: LawKey | None = None
-) -> InventoryValidationResult:
-    return validate_scientific_inventory(config, law_key=law_key).model_copy(
-        update={"valid": False}
     )
 
 
@@ -262,8 +257,8 @@ def _invalid_cell() -> PlannedCell:
         experiment_order=1,
         cell_ordinal=1,
         identity=SemanticCellIdentity(
-            experiment_name=ExperimentNameValue("Scientific and Data Inventory"),
-            coordinates=SemanticCoordinates(variant_name=VariantName("protocol-inventory-gate")),
+            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
+            coordinates=SemanticCoordinates(variant_name=VariantName("q=0.1, Gamma=1.5")),
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=False,
@@ -545,23 +540,14 @@ def test_doctor_rejects_missing_dependency_lock(tmp_path: Path) -> None:
         _ = cli.doctor(workspace_root=workspace)
 
 
-def test_preprocess_writes_valid_inventory_artifact(tmp_path: Path) -> None:
+def test_preprocess_writes_configuration_artifact(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
     target = cli.preprocess(workspace_root=workspace)
     expected = workspace / "outputs" / "preprocessing" / "validation" / "scientific_inventory.json"
     assert target == expected
     assert target.is_file()
-    inventory = InventoryValidationResult.model_validate_json(target.read_text(encoding="utf-8"))
-    assert inventory.valid is True
-
-
-def test_preprocess_rejects_invalid_inventory(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "validate_scientific_inventory", _invalid_inventory)
-    with pytest.raises(InvalidScientificDataError, match="inventory validation failed"):
-        _ = cli.preprocess(workspace_root=workspace)
+    stored = TrajCertConfig.model_validate_json(target.read_text(encoding="utf-8"))
+    assert stored == TrajCertConfig.from_yaml(workspace / PRODUCTION_CONFIG_PATH)
 
 
 def test_preprocess_reuses_existing_artifact_without_overwrite(tmp_path: Path) -> None:
@@ -579,38 +565,14 @@ def test_preprocess_overwrite_forces_recompute(tmp_path: Path) -> None:
     _ = first.write_bytes(b"stale")
     second = cli.preprocess(workspace_root=workspace, overwrite=True)
     assert second == first
-    inventory = InventoryValidationResult.model_validate_json(second.read_text(encoding="utf-8"))
-    assert inventory.valid is True
+    stored = TrajCertConfig.model_validate_json(second.read_text(encoding="utf-8"))
+    assert stored == TrajCertConfig.from_yaml(workspace / PRODUCTION_CONFIG_PATH)
 
 
-def test_preprocess_scopes_result_to_named_dataset(tmp_path: Path) -> None:
-    workspace = _configured_workspace(tmp_path)
-    target = cli.preprocess("No outcome-path dependence", workspace_root=workspace)
-    inventory = InventoryValidationResult.model_validate_json(target.read_text(encoding="utf-8"))
-    assert len(inventory.synthetic_laws) == 1
-    assert inventory.synthetic_laws[0].law_name == "No outcome-path dependence"
-
-
-def test_preprocess_rejects_unknown_dataset_name(tmp_path: Path) -> None:
-    workspace = _configured_workspace(tmp_path)
-    with pytest.raises(InvalidScientificDataError, match="unknown dataset name"):
-        _ = cli.preprocess("not a real dataset", workspace_root=workspace)
-
-
-def test_main_preprocess_unknown_dataset_name_exits_with_usage_code(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(sys, "argv", ["trajcert", "preprocess", "not a real dataset"])
-    with pytest.raises(SystemExit) as raised:
-        cli.main()
-    assert raised.value.code == CliExitCode.USAGE_OR_UNKNOWN_NAME
-
-
-def test_plan_view_matches_registry_cell_count() -> None:
+def test_plan_view_matches_cell_count() -> None:
     plan = cli.plan_view()
-    declared = sum(item.declared_cells for item in authoritative_registry())
-    assert plan.registry_total == declared
-    assert plan.executable_cells + plan.invalid_cells == plan.registry_total
+    assert plan.planned_cell_count == len(plan.cells)
+    assert plan.executable_cells + plan.invalid_cells == plan.planned_cell_count
 
 
 def test_smoke_passes_all_fixtures() -> None:
@@ -644,9 +606,9 @@ def test_main_run_prints_execution_summary(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setattr(cli, "run_experiment", _fake_run_experiment)
-    monkeypatch.setattr(sys, "argv", ["trajcert", "run", "Scientific and Data Inventory"])
+    monkeypatch.setattr(sys, "argv", ["trajcert", "run", "Legacy Partition Incoherence Check"])
     cli.main()
-    result = _fake_run_experiment("Scientific and Data Inventory", overwrite=False)
+    result = _fake_run_experiment("Legacy Partition Incoherence Check", overwrite=False)
     expected = (
         f"{result.experiment_name}: {result.state.value} "
         f"({result.completed_cells} completed, {result.reused_cells} reused, "
@@ -677,7 +639,7 @@ def test_main_status_prints_project_summary(
     monkeypatch.setattr(cli, "experiment_status", _fake_experiment_status)
     monkeypatch.setattr(sys, "argv", ["trajcert", "status"])
     cli.main()
-    registry_count = len(authoritative_registry())
+    registry_count = len(experiment_names())
     expected = (
         f"TrajCert status: {registry_count}/{registry_count} experiments completed, "
         "0 failed, 0 blocked, 0 running\n"
@@ -717,7 +679,7 @@ def test_main_plan_prints_cell_counts(
     cli.main()
     plan = _single_cell_plan()
     expected = (
-        f"TrajCert plan: {plan.registry_total} cells "
+        f"TrajCert plan: {plan.planned_cell_count} cells "
         f"({plan.executable_cells} executable, {plan.invalid_cells} invalid)\n"
     )
     assert capsys.readouterr().out == expected
@@ -803,22 +765,6 @@ def test_doctor_passes_complete_git_workspace(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
     result = cli.doctor(workspace_root=workspace)
     assert result.passed is True
-
-
-def test_doctor_rejects_registry_mismatch(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    workspace = _git_workspace(tmp_path)
-    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    plan = build_plan(config)
-    mismatched = plan.model_copy(update={"registry_total": plan.registry_total + 1})
-
-    def _mismatched_plan(_config: TrajCertConfig) -> ExperimentPlan:
-        return mismatched
-
-    monkeypatch.setattr(cli, "build_plan", _mismatched_plan)
-    with pytest.raises(
-        InvalidScientificDataError, match="does not match the authoritative registry"
-    ):
-        _ = cli.doctor(workspace_root=workspace)
 
 
 def test_experiment_name_rejects_unknown_name(
@@ -922,24 +868,6 @@ def test_run_experiment_synthesis_resolves_real_locality(
     assert result.completed_cells == _real_cell_count("Statistical Synthesis")
 
 
-def test_run_experiment_synthesis_rejects_incomplete_bound_roots(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    def _partial_cells(plan: ExperimentPlan, name: ExperimentNameValue) -> tuple[PlannedCell, ...]:
-        if str(name) in ("Anytime Coverage Stress", "Sequential Sensitivity Utility"):
-            return ()
-        return cells_for_experiment(plan, name)
-
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
-    monkeypatch.setattr(cli, "cells_for_experiment", _partial_cells)
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    with pytest.raises(
-        InvalidScientificDataError, match="every declared coverage/utility bound root"
-    ):
-        _ = cli.run_experiment("Statistical Synthesis", workspace_root=Path())
-
-
 def test_run_experiment_requires_clean_working_tree(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -960,9 +888,9 @@ def test_run_experiment_rejects_dirty_working_tree(tmp_path: Path) -> None:
 
 
 def test_experiment_status_resolves_real_workspace() -> None:
-    status = cli.experiment_status("Scientific and Data Inventory", workspace_root=Path())
+    status = cli.experiment_status("Legacy Partition Incoherence Check", workspace_root=Path())
     assert status.state is PublicExecutionState.READY
-    assert status.total_cells == _real_cell_count("Scientific and Data Inventory")
+    assert status.total_cells == _real_cell_count("Legacy Partition Incoherence Check")
 
 
 def test_experiment_status_reports_invalid_cell(
@@ -970,7 +898,7 @@ def test_experiment_status_reports_invalid_cell(
 ) -> None:
     workspace = _configured_workspace(tmp_path)
     monkeypatch.setattr(cli, "cells_for_experiment", _single_invalid_cell)
-    status = cli.experiment_status("Scientific and Data Inventory", workspace_root=workspace)
+    status = cli.experiment_status("Legacy Partition Incoherence Check", workspace_root=workspace)
     assert status.state is PublicExecutionState.INVALID
 
 
@@ -991,7 +919,7 @@ def test_experiment_status_reports_ready_cell(
     workspace = _configured_workspace(tmp_path)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
-    status = cli.experiment_status("Scientific and Data Inventory", workspace_root=workspace)
+    status = cli.experiment_status("Legacy Partition Incoherence Check", workspace_root=workspace)
     assert status.state is PublicExecutionState.READY
 
 
@@ -1001,7 +929,7 @@ def test_experiment_status_blocks_when_context_unavailable(
     workspace = _configured_workspace(tmp_path)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _raise_context)
-    status = cli.experiment_status("Scientific and Data Inventory", workspace_root=workspace)
+    status = cli.experiment_status("Legacy Partition Incoherence Check", workspace_root=workspace)
     assert status.state is PublicExecutionState.BLOCKED
 
 

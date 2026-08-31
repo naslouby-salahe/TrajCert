@@ -12,6 +12,7 @@ from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
+    LocalValidityAuditResult,
     cell_completion_path,
     cell_dependency_fingerprint,
     expected_seed_count,
@@ -21,7 +22,7 @@ from trajcert.experiments.runner import (
     scientific_specification_digest,
 )
 from trajcert.experiments.synthesis import (
-    StatisticalSynthesisRecord,
+    local_validity_artifact_key,
     synthesis_artifact_keys,
     synthesis_artifact_paths,
     synthesis_dependency_fingerprint,
@@ -252,7 +253,7 @@ def require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) -
     )
     upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
     dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
-    required = synthesis_artifact_keys()
+    required = synthesis_artifact_keys(cell)
     expected_plan_digest = PlanDigest(str(model_digest(cell)))
     expected_manifest_digest = DigestHex(str(model_digest(cell)))
     checks = (
@@ -342,15 +343,14 @@ def _require_local_validity_pass(
     synthesis_cell: PlannedCell,
     completion: CompletionRecord,
 ) -> None:
-    keys = synthesis_artifact_keys()
-    record_key = keys[0]
-    record_path = workspace_root / synthesis_artifact_paths(synthesis_cell)[record_key]
-    digest = file_digest(record_path)
-    expected_checksum = ArtifactChecksum(artifact_key=record_key, sha256=digest)
+    audit_key = local_validity_artifact_key()
+    audit_path = workspace_root / synthesis_artifact_paths(synthesis_cell)[audit_key]
+    digest = file_digest(audit_path)
+    expected_checksum = ArtifactChecksum(artifact_key=audit_key, sha256=digest)
     if expected_checksum not in completion.artifact_sha256_map:
         raise InvalidScientificDataError("Statistical Synthesis record checksum is stale")
-    record = read_model(record_path, StatisticalSynthesisRecord)
-    if not record.local_validity.passed:
+    audit = read_model(audit_path, LocalValidityAuditResult)
+    if not audit.passed:
         raise InvalidScientificDataError("Statistical Synthesis local-validity audit did not pass")
 
 

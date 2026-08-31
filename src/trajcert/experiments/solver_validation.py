@@ -32,19 +32,19 @@ class SolverOracleComparison(DomainModel):
     risk_upper: RiskValue | None
     passed: bool
     state_match: bool
-    abs_u_lower_error: float | None
-    abs_u_upper_error: float | None
-    abs_risk_upper_error: float | None
-    max_endpoint_error: float | None
-    max_root_bracket_width: float | None
-    max_root_residual: float | None
+    abs_u_lower_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    abs_u_upper_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    abs_risk_upper_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_endpoint_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_root_bracket_width: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_root_residual: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyFrontierOracleComparison(DomainModel):
     applicable: bool
-    production_rho_star: float | None
-    oracle_rho_star: float | None
-    absolute_error: float | None
+    production_rho_star: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_rho_star: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    absolute_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     passed: bool
 
 
@@ -127,7 +127,7 @@ def compare_production_solver_to_oracle(
 def compare_safety_frontier_to_oracle(
     summary: ObservableSummary,
     risk_budget: RiskBudget,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> SafetyFrontierOracleComparison:
     safety = assess_safety_geometry(summary, risk_budget)
@@ -167,6 +167,6 @@ def compare_safety_frontier_to_oracle(
     )
 
 
-def _float_tuple(values: Vector) -> tuple[float, ...]:
+def _float_tuple(values: Vector) -> tuple[float, ...]: # TODO: This is duplicated and redundant
     array = np.asarray(values, dtype=np.float64)
     return tuple(array.item(index) for index in range(array.size))
