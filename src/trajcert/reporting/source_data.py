@@ -859,7 +859,7 @@ def _solver_rows(
         oracle = result.frontier_oracle
         if oracle is not None and oracle.applicable:
             if oracle.absolute_error is not None:
-                frontier_errors.append(float(oracle.absolute_error))
+                frontier_errors.append(oracle.absolute_error)
             frontier_pass = frontier_pass and oracle.passed
     finest = str(partition_name(config.method.finest_bands))
     rows: list[SolverOracleValidationRow] = []

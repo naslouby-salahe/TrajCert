@@ -147,16 +147,16 @@ def compare_safety_frontier_to_oracle(
             absolute_error=None,
             passed=False,
         )
-    hidden = float(risk_budget) - float(summary.resolved_harmful_mass)
+    hidden = risk_budget - summary.resolved_harmful_mass
     oracle_value = direct_mutual_information(
         harmful=_float_tuple(summary.harmful_by_band),
         correct=_float_tuple(summary.correct_by_band),
-        unresolved=float(summary.unresolved_mass),
+        unresolved=summary.unresolved_mass,
         hidden_terminal_harmful=hidden,
         oracle_digits=oracle_digits,
     )
-    production_value = float(safety.safety_frontier)
-    oracle_rho_star = float(oracle_value)
+    production_value = safety.safety_frontier
+    oracle_rho_star = oracle_value
     error = abs(production_value - oracle_rho_star)
     return SafetyFrontierOracleComparison(
         applicable=True,

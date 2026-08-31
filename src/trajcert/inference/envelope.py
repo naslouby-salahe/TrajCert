@@ -155,11 +155,11 @@ def _resolved_entropy_envelope(
     correct: tuple[ClosedProbabilityInterval, ...],
 ) -> ScalarEnvelope:
     lower = sum(
-        float(binary_entropy_from_masses(left.lower, right.lower))
+        binary_entropy_from_masses(left.lower, right.lower)
         for left, right in zip(harmful, correct, strict=True)
     )
     coordinate_upper = sum(
-        float(binary_entropy_from_masses(left.upper, right.upper))
+        binary_entropy_from_masses(left.upper, right.upper)
         for left, right in zip(harmful, correct, strict=True)
     )
     resolved_mass_upper = min(
@@ -172,7 +172,7 @@ def _resolved_entropy_envelope(
 
 def _resolved_entropy_exact(harmful: tuple[float, ...], correct: tuple[float, ...]) -> float:
     return sum(
-        float(binary_entropy_from_masses(left, right))
+        binary_entropy_from_masses(left, right)
         for left, right in zip(harmful, correct, strict=True)
     )
 

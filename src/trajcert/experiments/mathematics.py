@@ -289,15 +289,15 @@ def safety_boundary_identity(
             frontier_direct_information=None,
             frontier_error=None,
         )
-    hidden = float(risk_budget) - float(summary.resolved_harmful_mass)
+    hidden = risk_budget - summary.resolved_harmful_mass
     direct = direct_mutual_information(
         harmful=tuple(float(value) for value in summary.harmful_by_band),
         correct=tuple(float(value) for value in summary.correct_by_band),
-        unresolved=float(summary.unresolved_mass),
+        unresolved=summary.unresolved_mass,
         hidden_terminal_harmful=hidden,
         oracle_digits=oracle_digits,
     )
-    error = abs(float(assessment.safety_frontier) - float(direct))
+    error = abs(assessment.safety_frontier - direct)
     return SafetyBoundaryIdentityResult(
         passed=error <= identity_atol,
         assessment=assessment,
@@ -368,7 +368,7 @@ def _sharp_grid_mismatches(
     for index in range(grid_points):
         hidden = unresolved * index / (grid_points - 1)
         risk = harmful + hidden
-        feasible = float(information_profile(summary, hidden)) <= float(sensitivity_budget)
+        feasible = information_profile(summary, hidden) <= sensitivity_budget
         inside = lower_risk <= risk <= upper_risk
         if feasible != inside:
             mismatches += 1
@@ -446,12 +446,12 @@ def evaluate_legacy_partition_incoherence(
     fine_risk = fine_result.latent_risk_interval
     endpoint_risk = endpoint_result.latent_risk_interval
     difference = max(
-        abs(float(endpoint_risk.lower) - float(fine_risk.lower)),
-        abs(float(endpoint_risk.upper) - float(fine_risk.upper)),
+        abs(endpoint_risk.lower - fine_risk.lower),
+        abs(endpoint_risk.upper - fine_risk.upper),
     )
-    fine_width = float(fine_risk.upper) - float(fine_risk.lower)
-    endpoint_width = float(endpoint_risk.upper) - float(endpoint_risk.lower)
-    atol = float(config.numerics.identity_atol)
+    fine_width = fine_risk.upper - fine_risk.lower
+    endpoint_width = endpoint_risk.upper - endpoint_risk.lower
+    atol = config.numerics.identity_atol
     if endpoint_width > fine_width + atol:
         direction = EndpointDifferenceDirection.WIDER
     elif endpoint_width + atol < fine_width:

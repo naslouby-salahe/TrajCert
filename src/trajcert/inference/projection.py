@@ -733,9 +733,9 @@ def _verified_compatibility_point(box: _Box, envelope: ObservableSummaryEnvelope
     correct = _allocate_total(envelope.correct_by_band, correct_total)
     if harmful is None or correct is None:
         return None
-    marginal_entropy = float(binary_entropy_from_masses(harmful_total, correct_total))
+    marginal_entropy = binary_entropy_from_masses(harmful_total, correct_total)
     resolved_entropy = sum(
-        float(binary_entropy_from_masses(left, right))
+        binary_entropy_from_masses(left, right)
         for left, right in zip(harmful, correct, strict=True)
     )
     return max(0.0, marginal_entropy - resolved_entropy)
@@ -877,7 +877,7 @@ def _timing_information(summary: ObservableSummary) -> float:
         )
     )
     bandwise = sum(
-        float(binary_entropy_from_masses(left, right))
+        binary_entropy_from_masses(left, right)
         for left, right in zip(summary.harmful_by_band, summary.correct_by_band, strict=True)
     )
     return max(0.0, resolved - bandwise)

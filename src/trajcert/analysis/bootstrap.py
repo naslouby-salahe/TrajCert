@@ -55,7 +55,7 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDi
     values = _validated_vector(sorted_values)
     if np.any(values[:-1] > values[1:]):
         raise InvalidScientificDataError("linear quantile requires sorted values")
-    position = (values.size - 1) * float(probability)
+    position = (values.size - 1) * probability
     lower_index = floor(position)
     upper_index = ceil(position)
     lower_value = values.item(lower_index)

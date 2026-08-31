@@ -148,28 +148,28 @@ def validate_scientific_inventory(
         masses = (
             *tuple(float(value) for value in full_law.harmful_resolved),
             *tuple(float(value) for value in full_law.correct_resolved),
-            float(full_law.terminal_harmful),
-            float(full_law.terminal_correct),
+            full_law.terminal_harmful,
+            full_law.terminal_correct,
         )
         nonnegative_mass_pass = nonnegative_mass_pass and all(value >= 0.0 for value in masses)
         law_sum_pass = (
-            law_sum_pass and abs(float(full_law.total) - 1.0) <= config.numerics.comparison_guard
+            law_sum_pass and abs(full_law.total - 1.0) <= config.numerics.comparison_guard
         )
         summary = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
-        tau = float(observed_timing_information(summary) or 0.0)
+        tau = observed_timing_information(summary) or 0.0
         true_information = float(
             direct_mutual_information(
                 tuple(float(value) for value in summary.harmful_by_band),
                 tuple(float(value) for value in summary.correct_by_band),
-                float(summary.unresolved_mass),
-                float(full_law.terminal_harmful),
+                summary.unresolved_mass,
+                full_law.terminal_harmful,
                 config.numerics.oracle_digits,
             )
         )
         law_rows.append(
             SyntheticLawRow(
-                law_name=str(parameters.name),
-                theta=float(parameters.theta),
+                law_name=parameters.name,
+                theta=parameters.theta,
                 q1=parameters.q1,
                 q0=parameters.q0,
                 lambda1=parameters.lambda1,
@@ -419,12 +419,12 @@ def _protocol_constant_rows(config: TrajCertConfig) -> tuple[ProtocolConstantRow
     )
     return tuple(
         ProtocolConstantRow(
-            quantity=str(quantity),
+            quantity=quantity,
             value=_display_value(value),
             unit=ProtocolUnit(unit),
             value_class=ProtocolValueClass(value_class),
             fixed_or_swept=ParameterVariability(fixed_or_swept),
-            scientific_role=str(role),
+            scientific_role=role,
         )
         for quantity, value, unit, value_class, fixed_or_swept, role in entries
     )

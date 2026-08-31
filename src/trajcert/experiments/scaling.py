@@ -242,7 +242,7 @@ def _execute_target(
         identity=ledger.identity,
         partition=partition,
         config=config,
-        sensitivity_budget=float(true_information) + 0.01,
+        sensitivity_budget=true_information + 0.01,
         risk_budget=config.budgets.risk,
         checkpoint_every=config.benchmark.outer_sample_size,
     )
