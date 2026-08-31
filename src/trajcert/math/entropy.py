@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import overload
+
 import numpy as np
 from scipy.special import entr
 
@@ -15,6 +17,10 @@ def binary_entropy(probability: Probability | Vector) -> EntropyValue | Vector:
     return -(xlogx(probability) + xlogx(1.0 - probability))
 
 
+@overload
+def binary_entropy_from_masses(harmful: Mass, correct: Mass) -> EntropyValue: ...
+@overload
+def binary_entropy_from_masses(harmful: Vector, correct: Vector) -> Vector: ...
 def binary_entropy_from_masses(
     harmful: Mass | Vector, correct: Mass | Vector
 ) -> EntropyValue | Vector:
@@ -23,6 +29,8 @@ def binary_entropy_from_masses(
     with np.errstate(divide="ignore", invalid="ignore"):
         p = harmful_array / total
     entropy = np.where(total > 0, -(xlogx(p) + xlogx(1.0 - p)) * total, 0.0)
+    if harmful_array.ndim == 0:
+        return float(entropy)
     return entropy
 
 
