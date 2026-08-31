@@ -91,7 +91,7 @@ forbidden_modules = [
 [[tool.importlinter.contracts]]
 name = "independent-oracle-does-not-reuse-production-solver"
 type = "forbidden"
-source_modules = ["trajcert.math.oracle", "trajcert.comparators.information_optimization"]
+source_modules = ["trajcert.math.oracle"]
 forbidden_modules = ["trajcert.math.solver", "trajcert.math.information"]
 
 [[tool.importlinter.contracts]]

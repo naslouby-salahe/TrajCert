@@ -8,9 +8,15 @@ from mpmath import log, mp, mpf, sqrt
 
 from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
-from trajcert.types import Count, DomainModel, Mass, NonNegativeInt, PositiveInt, RiskInterval
-
-_MINIMUM_COMPARABLE_BANDS = 2 #TODO: This should be in yaml and accessed through the config
+from trajcert.types import (
+    Count,
+    DomainModel,
+    GridPointCount,
+    Mass,
+    NonNegativeInt,
+    OracleDigits,
+    RiskInterval,
+)
 
 
 class CallbackStatus(StrEnum):
@@ -38,7 +44,7 @@ _CallbackObjective = Callable[[_CallbackData, mpf], mpf]
 
 def alho_common_slope_callback(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
+    oracle_digits: OracleDigits,
 ) -> CallbackResult:
     config = active_config.get().comparators.callback
     data = _data(summary)
@@ -46,7 +52,7 @@ def alho_common_slope_callback(
         left > mpf(0) and right > mpf(0)
         for left, right in zip(data.harmful, data.correct, strict=True)
     )
-    if informative < _MINIMUM_COMPARABLE_BANDS:
+    if informative < config.minimum_comparable_bands:
         return _not_applicable(informative)
     roots = _accepted_roots(
         data,
@@ -62,10 +68,10 @@ def alho_common_slope_callback(
 
 def stable_resistance_callback(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
+    oracle_digits: OracleDigits,
 ) -> CallbackResult:
     config = active_config.get().comparators.callback
-    if summary.partition.band_count < _MINIMUM_COMPARABLE_BANDS:
+    if summary.partition.band_count < config.minimum_comparable_bands:
         return _not_applicable(0)
     data = _data(summary)
     roots = _accepted_roots(
@@ -82,10 +88,10 @@ def stable_resistance_callback(
 
 def _accepted_roots(
     data: _CallbackData,
-    oracle_digits: PositiveInt,
+    oracle_digits: OracleDigits,
     objective: _CallbackObjective,
     acceptance_tolerance: mpf,
-    grid_points: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
+    grid_points: GridPointCount,
     minimum_bracket_width: mpf,
     deduplication_tolerance: mpf,
 ) -> tuple[mpf, ...]:
@@ -153,7 +159,8 @@ def _common_slope_objective(data: _CallbackData, hidden: mpf) -> mpf:
         for index in range(len(data.harmful))
         if (value := _log_odds_ratio(data, index, hidden)) is not None
     )
-    if len(values) < _MINIMUM_COMPARABLE_BANDS:
+    minimum_comparable_bands = active_config.get().comparators.callback.minimum_comparable_bands
+    if len(values) < minimum_comparable_bands:
         return mpf("inf")
     mean = sum(values, mpf(0)) / mpf(len(values))
     return sum(((value - mean) ** 2 for value in values), mpf(0))

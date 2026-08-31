@@ -17,7 +17,6 @@ from trajcert.comparators.ignorable_delay import (
     IgnorableDelayStatus,
     ignorable_delay_update,
 )
-from trajcert.comparators.information_optimization import generic_information_constrained_oracle
 from trajcert.comparators.legacy import (
     LegacyApplicability,
     legacy_bandwise_odds_ratio,
@@ -32,7 +31,7 @@ from trajcert.data.summaries import ObservableCounts
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.projection import ProjectionTerminationReason
-from trajcert.types import ActionChannelId, ClientId, CompatibilityRegime, EpochId
+from trajcert.types import ActionChannelId, ClientId, EpochId
 
 
 def _state(counts: tuple[int, ...], band_count: int = 2) -> CategoricalState:
@@ -104,11 +103,6 @@ def test_repeated_static_projection_terminates_at_node_cap() -> None:
     assert result.termination_reason is ProjectionTerminationReason.NODE_CAP
     assert result.visited_nodes >= 1
     assert 0.0 <= result.proven_upper <= 1.0
-
-
-def test_generic_information_constrained_oracle_delegates_to_solver() -> None:
-    result = generic_information_constrained_oracle(summary([0.5], [0.2], 0.3), 0.0, 50, 1e-14)
-    assert result.regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
 
 
 def test_ignorable_delay_update_violated_assumption() -> None:

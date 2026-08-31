@@ -10,11 +10,16 @@ from scipy.special import expit
 
 from trajcert.config import LegacyPatternMixtureConfig
 from trajcert.data.summaries import ObservableSummary
-from trajcert.types import Count, DomainModel, NonNegativeFloat, RiskValue
-
-_MINIMUM_NONEMPTY_BANDS = 2 #TODO: This should be in yaml and accessed through the config
-
-_CoefficientVector = np.ndarray[tuple[int], np.dtype[np.float64]] #TODO: move to types
+from trajcert.types import (
+    Count,
+    DomainModel,
+    InterceptValue,
+    NonNegativeFloat,
+    ObjectiveValue,
+    RiskValue,
+    SlopeValue,
+    Vector,
+)
 
 
 class PatternMixtureStatus(StrEnum):
@@ -31,10 +36,10 @@ class PatternMixturePoint(DomainModel):
 
 class PatternMixtureResult(DomainModel):
     status: PatternMixtureStatus
-    intercept: float | None #TODO: I prefer an alias instead of float
-    slope: float | None #TODO: I prefer an alias instead of float
+    intercept: InterceptValue | None
+    slope: SlopeValue | None
     gradient_infinity_norm: NonNegativeFloat | None
-    objective: float | None #TODO: I prefer an alias instead of float
+    objective: ObjectiveValue | None
     points: tuple[PatternMixturePoint, ...]
 
 
@@ -46,8 +51,15 @@ def fit_pattern_mixture(
     correct = np.asarray(summary.correct_by_band, dtype=np.float64)
     masses = harmful + correct
     nonempty = np.flatnonzero(masses > 0.0)
-    if nonempty.size < _MINIMUM_NONEMPTY_BANDS:
-        return _empty_result(PatternMixtureStatus.NOT_APPLICABLE)
+    if nonempty.size < config.minimum_nonempty_bands:
+        return PatternMixtureResult(
+            status=PatternMixtureStatus.NOT_APPLICABLE,
+            intercept=None,
+            slope=None,
+            gradient_infinity_norm=None,
+            objective=None,
+            points=(),
+        )
     indices = nonempty.astype(np.float64) + 1.0
     weights = masses[nonempty]
     rates = harmful[nonempty] / weights
@@ -57,13 +69,13 @@ def fit_pattern_mixture(
     lower, upper = config.coefficient_bounds
     bounds = ((float(lower), float(upper)), (float(lower), float(upper)))
 
-    def objective(coefficients: _CoefficientVector) -> float: #TODO: I prefer an alias instead of float
+    def objective(coefficients: Vector) -> ObjectiveValue:
         intercept, slope = coefficients
         eta = intercept + slope * indices
         value = np.sum(weights * (np.logaddexp(0.0, eta) - rates * eta))
         return float(value)
 
-    def gradient(coefficients: _CoefficientVector) -> NDArray[np.float64]:
+    def gradient(coefficients: Vector) -> NDArray[np.float64]:
         intercept, slope = coefficients
         eta = intercept + slope * indices
         residual = weights * (expit(eta) - rates)
@@ -131,15 +143,4 @@ def fit_pattern_mixture(
         gradient_infinity_norm=gradient_norm,
         objective=final_objective,
         points=points,
-    )
-
-
-def _empty_result(status: PatternMixtureStatus) -> PatternMixtureResult: #TODO: method used only once. No need
-    return PatternMixtureResult(
-        status=status,
-        intercept=None,
-        slope=None,
-        gradient_infinity_norm=None,
-        objective=None,
-        points=(),
     )

@@ -3,13 +3,15 @@ from __future__ import annotations
 from trajcert.data.partitions import TrajectoryPartition, build_partition
 from trajcert.data.summaries import ObservableSummary, coarsen_summary
 from trajcert.math.bounds import SharpRiskSet, sharp_risk_set
-from trajcert.types import SensitivityBudget, ToleranceValue
+from trajcert.types import BandCount, SensitivityBudget, ToleranceValue
+
+_ENDPOINT_BAND_COUNT: BandCount = 1
 
 
 def endpoint_partition(summary: ObservableSummary) -> TrajectoryPartition:
     return build_partition(
         finest_band_count=summary.partition.finest_band_count,
-        band_count=1, #TODO:  what's this magic number?  Should be in yaml
+        band_count=_ENDPOINT_BAND_COUNT,
         terminal_horizon=summary.partition.terminal_horizon,
     )
 

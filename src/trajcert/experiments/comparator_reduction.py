@@ -5,13 +5,12 @@ from trajcert.comparators.callback import (
     alho_common_slope_callback,
     stable_resistance_callback,
 )
-from trajcert.comparators.information_optimization import generic_information_constrained_oracle
 from trajcert.comparators.legacy import LegacySensitivityResult, legacy_bandwise_odds_ratio
 from trajcert.comparators.pattern_mixture import PatternMixtureResult, fit_pattern_mixture
 from trajcert.config import active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.summaries import ObservableSummary
-from trajcert.math.oracle import InformationOracleResult
+from trajcert.math.oracle import InformationOracleResult, solve_information_oracle
 from trajcert.types import DomainModel, SensitivityBudget
 
 
@@ -48,7 +47,7 @@ def evaluate_comparator_reduction(
         generic_information=tuple(
             GenericInformationPoint(
                 rho=rho,
-                oracle=generic_information_constrained_oracle(
+                oracle=solve_information_oracle(
                     summary,
                     rho,
                     config.numerics.oracle_digits,
