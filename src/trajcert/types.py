@@ -124,14 +124,6 @@ class PublicExecutionState(StrEnum):
     INVALID = "INVALID"
 
 
-class InternalExecutionState(StrEnum):
-    PLANNED = "PLANNED"
-    RUNNING = "RUNNING"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    INVALID = "INVALID"
-
-
 class EvidenceClass(StrEnum):
     VALIDATION = "VALIDATION"
     EXPLORATORY = "EXPLORATORY"

@@ -11,7 +11,6 @@ from trajcert.types import (
     EvidenceClass,
     FiniteFloat,
     HiddenMassInterval,
-    InternalExecutionState,
     LawKey,
     MinimumInformationPoint,
     NonNegativeInt,
@@ -64,15 +63,6 @@ def test_public_execution_state_values() -> None:
     assert {member: member.value for member in PublicExecutionState} == expected
 
 
-def test_internal_execution_state_values() -> None:
-    expected: dict[InternalExecutionState, str] = {
-        InternalExecutionState.PLANNED: "PLANNED",
-        InternalExecutionState.RUNNING: "RUNNING",
-        InternalExecutionState.COMPLETED: "COMPLETED",
-        InternalExecutionState.FAILED: "FAILED",
-        InternalExecutionState.INVALID: "INVALID",
-    }
-    assert {member: member.value for member in InternalExecutionState} == expected
 
 
 def test_evidence_class_values() -> None:
