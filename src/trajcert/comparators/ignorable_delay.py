@@ -107,9 +107,7 @@ def _root(
     return lower if lower_branch else upper
 
 
-def _log_mixture_ratio(
-    successes: Count, total: Count, probability: Probability
-) -> LogMixtureRatio:
+def _log_mixture_ratio(successes: Count, total: Count, probability: Probability) -> LogMixtureRatio:
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:

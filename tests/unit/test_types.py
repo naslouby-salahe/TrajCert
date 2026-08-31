@@ -63,8 +63,6 @@ def test_public_execution_state_values() -> None:
     assert {member: member.value for member in PublicExecutionState} == expected
 
 
-
-
 def test_evidence_class_values() -> None:
     expected: dict[EvidenceClass, str] = {
         EvidenceClass.VALIDATION: "VALIDATION",

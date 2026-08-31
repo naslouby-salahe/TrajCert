@@ -134,9 +134,7 @@ def _fake_smoke_fail() -> SmokeResult:
     )
 
 
-def _fake_preprocess_target(
-    dataset_name: str | None = None, *, overwrite: bool = False
-) -> Path:
+def _fake_preprocess_target(dataset_name: str | None = None, *, overwrite: bool = False) -> Path:
     del dataset_name, overwrite
     return Path("outputs/preprocessing/validation/scientific_inventory.json")
 
