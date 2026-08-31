@@ -27,6 +27,8 @@ PositiveInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeInt = Annotated[StrictInt, Field(ge=0)]
 BandCount = PositiveInt
 BandIndex = PositiveInt
+CaseIndex = NonNegativeInt
+CategoryIndex = NonNegativeInt
 Count = NonNegativeInt
 IterationCount = NonNegativeInt
 SeedIndex = NonNegativeInt
@@ -44,6 +46,27 @@ SlopeValue = FiniteFloat
 TerminalHorizon = PositiveFloat
 ToleranceValue = PositiveFloat
 
+AbsoluteTightening = FiniteFloat
+AnytimeConfidenceDelta = UnitFloat
+ArbitraryPrecisionBits = NonNegativeInt
+ConfidenceLevel = UnitFloat
+FamilySize = PositiveInt
+FavorableCount = NonNegativeInt
+GridPointCount = PositiveInt
+InterceptValue = FiniteFloat
+ObjectiveValue = FiniteFloat
+ObservedStatistic = FiniteFloat
+OracleDigits = PositiveInt
+OuterMaxNodes = NonNegativeInt
+PairCount = PositiveInt
+PairedDifferenceDispersion = FiniteFloat
+PairedDifferenceValue = FiniteFloat
+RandomizationCount = PositiveInt
+RelativeUnresolvedGain = FiniteFloat
+ResampleCount = PositiveInt
+StandardizedEffectSize = FiniteFloat
+
+type LogMixtureRatio = float
 type TabularCellValue = None | bool | int | float | str
 
 
