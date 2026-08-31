@@ -7,9 +7,9 @@ from collections.abc import Mapping, Sequence
 from hashlib import sha256
 from math import isfinite
 from pathlib import Path
-from typing import Literal, NewType, TypeVar, cast
+from typing import Literal, NewType, TypeVar
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from trajcert.exceptions import SerializationError
 from trajcert.paths import canonical_number_token, fsync_directory, long_path_safe
@@ -24,11 +24,7 @@ ProvenanceFingerprint = NewType("ProvenanceFingerprint", str)
 SpecificationDigest = NewType("SpecificationDigest", str)
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
-# TODO: should be in yaml and accessed through config
 _CHECKSUM_CHUNK_BYTES = 1 << 20
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
-type JsonScalar = None | bool | int | float | str  # TODO: this is duplicated and redundant
-type JsonValue = JsonScalar | Sequence["JsonValue"] | Mapping[str, "JsonValue"]
 
 
 class ArtifactChecksum(DomainModel):
@@ -70,12 +66,12 @@ class CompletionRecord(DomainModel):
 
 
 def canonical_model_bytes(model: BaseModel) -> bytes:
-    value = cast(JsonValue, model.model_dump(mode="json"))
+    value: JsonValue = model.model_dump(mode="json")
     return _canonical_json(value).encode("utf-8")
 
 
 def canonical_models_bytes(models: tuple[BaseModel, ...]) -> bytes:
-    values = tuple(cast(JsonValue, model.model_dump(mode="json")) for model in models)
+    values: JsonValue = [model.model_dump(mode="json") for model in models]
     return _canonical_json(values).encode("utf-8")
 
 
@@ -164,7 +160,6 @@ def _canonical_json(value: JsonValue) -> str:
     return _canonical_json_array(value)
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def _canonical_json_number(value: int | float) -> str:
     if isinstance(value, int):
         return str(value)
