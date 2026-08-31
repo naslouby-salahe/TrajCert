@@ -29,7 +29,6 @@ from trajcert.data.summaries import (
     summarize_observable_masses,
 )
 from trajcert.data.synthetic import (
-    CategoryIndex,
     ObservableCategoryProbability,
     balanced_prefix,
     generate_balanced_prefix_ledger,
@@ -72,6 +71,8 @@ from trajcert.math.oracle import (
 from trajcert.types import (
     ActionChannelId,
     BandCount,
+    CaseIndex,
+    CategoryIndex,
     ClientId,
     Count,
     DomainModel,
@@ -91,17 +92,9 @@ from trajcert.types import (
     UnitFloat,
 )
 
-# Fixed stream index shared by every hand-crafted diagnostic ledger below: these
-# fixtures are deterministic-by-construction, not sampled, so a single reproducible
-# stream index is a structural constant rather than a sweepable parameter.
 _HAND_CASE_STREAM = 0
 _PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
-# Deliberately tiny outer-search node cap used only to force degenerate/boundary
-# projection behavior in diagnostic hand cases; the real search budget lives in
-# config.numerics.outer_max_nodes.
 _DIAGNOSTIC_NODE_CAP = 1
-# Streams selected for full representative-path reporting detail in the coverage
-# evidence output; a fixed reporting-detail choice, not an experiment sweep axis.
 _REPRESENTATIVE_STREAM_SEED_INDICES = (0, 1, 2, 3)
 
 
@@ -136,7 +129,7 @@ class SequentialTrace(DomainModel):
 
 
 class HandCaseResult(DomainModel):
-    case_index: PositiveInt
+    case_index: CaseIndex
     partition_bands: BandCount
     expected_state: ScientificState | None
     observed_state: ScientificState | None
@@ -161,8 +154,6 @@ class CoverageStressResult(DomainModel):
 
 
 class CoverageMethodEvidence(DomainModel):
-    # Free-form display label (e.g. "TrajCert anytime bound" in reporting contexts)
-    # rather than a strict SequentialMethod value, so it stays a plain string.
     method_name: str
     applicable: bool
     independent_streams: PositiveInt
@@ -1298,8 +1289,7 @@ def _law(config: TrajCertConfig, law_key: LawKey) -> LawParameters:
     )
 
 
-def _hand_identity(case_index: int #TODO: No primitive usage, consider using a type alias instead of int
-                   ) -> LedgerIdentity:
+def _hand_identity(case_index: CaseIndex) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId("hand-case-client"),
         action_channel_id=ActionChannelId("hand-case-action"),

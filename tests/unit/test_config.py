@@ -120,6 +120,7 @@ def test_config_models_enforce_cross_field_contracts(
                 "initial_clip": 1e-8,
                 "gradient_acceptance": 1e-8,
                 "boundary_distance": 1e-8,
+                "minimum_nonempty_bands": 2,
             },
             "strictly increasing",
         ),
@@ -136,6 +137,7 @@ def test_config_models_enforce_cross_field_contracts(
                     "initial_clip": 1e-8,
                     "gradient_acceptance": 1e-8,
                     "boundary_distance": 1e-8,
+                    "minimum_nonempty_bands": 2,
                 },
                 "callback": {
                     "grid_points": 101,
@@ -143,6 +145,7 @@ def test_config_models_enforce_cross_field_contracts(
                     "common_slope_tolerance": 1e-20,
                     "stable_equality_tolerance": 1e-10,
                     "root_deduplication_tolerance": 1e-12,
+                    "minimum_comparable_bands": 2,
                 },
             },
             "strictly increasing",
