@@ -79,14 +79,3 @@ def append_matured_event(state: CategoricalState, event: MaturedEvent) -> Catego
             unresolved=unresolved,
         ),
     )
-
-
-def accumulate_matured_events(
-    identity: LedgerIdentity,
-    partition: TrajectoryPartition,
-    events: tuple[MaturedEvent, ...],
-) -> CategoricalState:
-    state = initialize_categorical_state(identity, partition)
-    for event in events:
-        state = append_matured_event(state, event)
-    return state

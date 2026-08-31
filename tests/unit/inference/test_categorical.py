@@ -8,7 +8,6 @@ from trajcert.data.partitions import build_partition
 from trajcert.exceptions import DataIntegrityError, InvalidScientificDataError
 from trajcert.inference.categorical import (
     CategoricalState,
-    accumulate_matured_events,
     append_matured_event,
     initialize_categorical_state,
 )
@@ -127,13 +126,3 @@ def test_append_matured_event_rejects_unknown_label() -> None:
     )
     with pytest.raises(InvalidScientificDataError, match="binary correctness label"):
         _ = append_matured_event(state, event)
-
-
-def test_accumulate_matured_events_sums_over_sequence() -> None:
-    partition = build_partition(2, 2, 8.0)
-    events = (
-        _matured(MaturedCategoryKind.RESOLVED, 1, OutcomeLabel.HARMFUL),
-        _matured(MaturedCategoryKind.TERMINAL_UNRESOLVED, None, None),
-    )
-    state = accumulate_matured_events(_identity(), partition, events)
-    assert state.canonical_count_vector == (1, 0, 0, 0, 1)
