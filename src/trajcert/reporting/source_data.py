@@ -189,6 +189,7 @@ class RhoUtilityRow(DomainModel):
     tau: InformationNats | None = None
     risk_upper: RiskValue | None = None
     identified_width: FiniteFloat | None = None
+    complete_case_arrival_only: Probability | None = None
     worst_case_upper: RiskValue | None = None
     absolute_tightening: FiniteFloat | None = None
     relative_unresolved_gain: FiniteFloat | None = None
@@ -452,6 +453,7 @@ def population_rho_utility_rows(
             tau=item.result.tau,
             risk_upper=item.result.risk_upper,
             identified_width=item.result.identified_width,
+            complete_case_arrival_only=item.result.complete_case_arrival_only,
             worst_case_upper=item.result.unresolved_as_harm_upper,
             absolute_tightening=item.result.absolute_tightening,
             relative_unresolved_gain=item.result.relative_unresolved_gain,

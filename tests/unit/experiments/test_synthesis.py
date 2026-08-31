@@ -695,6 +695,7 @@ def _population_result(rho: float) -> PopulationUtilityResult:
         risk_lower=0.3,
         risk_upper=0.6,
         identified_width=0.3,
+        complete_case_arrival_only=0.4,
         unresolved_as_harm_upper=0.7,
         absolute_tightening=0.01,
         relative_unresolved_gain=0.5,

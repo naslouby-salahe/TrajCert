@@ -10,13 +10,18 @@ from trajcert.data.partitions import TrajectoryPartition, build_partition
 from trajcert.data.summaries import ObservableSummary
 from trajcert.data.synthetic import generate_stochastic_ledger
 from trajcert.experiments.anytime import SequentialCheckpoint, run_sequential_trace
-from trajcert.math.bounds import sharp_risk_set, unresolved_as_harm_upper
+from trajcert.math.bounds import (
+    complete_case_arrival_only,
+    sharp_risk_set,
+    unresolved_as_harm_upper,
+)
 from trajcert.math.information import observed_timing_information
 from trajcert.types import (
     CompatibilityRegime,
     DomainModel,
     FiniteFloat,
     InformationNats,
+    Probability,
     RiskValue,
     ScientificState,
     SeedIndex,
@@ -31,6 +36,7 @@ class PopulationUtilityResult(DomainModel):
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
     identified_width: FiniteFloat | None
+    complete_case_arrival_only: Probability | None
     unresolved_as_harm_upper: RiskValue
     absolute_tightening: FiniteFloat | None
     relative_unresolved_gain: FiniteFloat | None
@@ -70,6 +76,7 @@ def population_sensitivity_utility(
     tau_value = observed_timing_information(summary)
     tau = None if tau_value is None else float(tau_value)
     worst = float(unresolved_as_harm_upper(summary))
+    complete_case = complete_case_arrival_only(summary)
     if solved.latent_risk is None:
         return PopulationUtilityResult(
             sensitivity_budget=sensitivity_budget,
@@ -78,6 +85,7 @@ def population_sensitivity_utility(
             risk_lower=None,
             risk_upper=None,
             identified_width=None,
+            complete_case_arrival_only=complete_case,
             unresolved_as_harm_upper=worst,
             absolute_tightening=None,
             relative_unresolved_gain=None,
@@ -103,6 +111,7 @@ def population_sensitivity_utility(
         risk_lower=lower,
         risk_upper=upper,
         identified_width=width,
+        complete_case_arrival_only=complete_case,
         unresolved_as_harm_upper=worst,
         absolute_tightening=tightening,
         relative_unresolved_gain=relative,

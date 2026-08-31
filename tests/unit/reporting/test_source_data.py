@@ -311,6 +311,7 @@ def test_population_rho_utility_rows_maps_population_evidence() -> None:
         risk_lower=0.1,
         risk_upper=0.3,
         identified_width=0.2,
+        complete_case_arrival_only=0.4,
         unresolved_as_harm_upper=0.9,
         absolute_tightening=0.6,
         relative_unresolved_gain=0.75,
@@ -334,6 +335,7 @@ def test_population_rho_utility_rows_maps_population_evidence() -> None:
     assert row.tau == pytest.approx(0.02)
     assert row.risk_upper == pytest.approx(0.3)
     assert row.identified_width == pytest.approx(0.2)
+    assert row.complete_case_arrival_only == pytest.approx(0.4)
     assert row.worst_case_upper == pytest.approx(0.9)
     assert row.absolute_tightening == pytest.approx(0.6)
     assert row.relative_unresolved_gain == pytest.approx(0.75)
@@ -871,6 +873,7 @@ def _population_result(rho: SensitivityBudget, band_count: PositiveInt) -> Popul
         risk_lower=0.1,
         risk_upper=0.3,
         identified_width=0.2,
+        complete_case_arrival_only=0.4,
         unresolved_as_harm_upper=0.9,
         absolute_tightening=0.6,
         relative_unresolved_gain=0.75,

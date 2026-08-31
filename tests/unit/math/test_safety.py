@@ -3,7 +3,12 @@ from __future__ import annotations
 import pytest
 
 from tests.unit.conftest import summary
-from trajcert.math.bounds import SharpRiskSet, sharp_risk_set, unresolved_as_harm_upper
+from trajcert.math.bounds import (
+    SharpRiskSet,
+    complete_case_arrival_only,
+    sharp_risk_set,
+    unresolved_as_harm_upper,
+)
 from trajcert.math.safety import assess_safety_geometry, safety_budget_cases
 from trajcert.types import SafetyRegime
 
@@ -31,6 +36,8 @@ def test_safety_degenerate_case_and_bounds() -> None:
     cases = safety_budget_cases(observed, 0.005)
     assert [case.valid for case in cases] == [True, False, False, False, True]
     assert unresolved_as_harm_upper(summary([0.2], [0.4], 0.4)) == pytest.approx(0.6)
+    assert complete_case_arrival_only(summary([0.2], [0.4], 0.4)) == pytest.approx(1.0 / 3.0)
+    assert complete_case_arrival_only(summary([0.0], [0.0], 1.0)) is None
     sharp = sharp_risk_set(summary([0.2], [0.4], 0.4), 0.0, 1e-8, 1e-7)
     assert isinstance(sharp, SharpRiskSet)
     assert sharp.identified_width == pytest.approx(0.0)

@@ -6,6 +6,7 @@ from trajcert.data.summaries import ObservableSummary
 from trajcert.math.solver import HiddenMassSolveResult, solve_hidden_mass_interval
 from trajcert.types import (
     HiddenMassInterval,
+    Probability,
     RiskInterval,
     RiskValue,
     SensitivityBudget,
@@ -49,3 +50,10 @@ def sharp_risk_set(
 
 def unresolved_as_harm_upper(summary: ObservableSummary) -> RiskValue:
     return float(summary.resolved_harmful_mass) + float(summary.unresolved_mass)
+
+
+def complete_case_arrival_only(summary: ObservableSummary) -> Probability | None:
+    resolved = float(summary.resolved_mass)
+    if resolved <= 0.0:
+        return None
+    return float(summary.resolved_harmful_mass) / resolved
