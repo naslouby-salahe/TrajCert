@@ -275,6 +275,7 @@ class LegacyPatternMixtureConfig(ConfigModel):
     initial_clip: PositiveFloat
     gradient_acceptance: PositiveFloat
     boundary_distance: PositiveFloat
+    minimum_nonempty_bands: PositiveInt
 
     @model_validator(mode="after")
     def validate_bounds(self) -> LegacyPatternMixtureConfig:
@@ -290,6 +291,7 @@ class CallbackConfig(ConfigModel):
     common_slope_tolerance: PositiveFloat
     stable_equality_tolerance: PositiveFloat
     root_deduplication_tolerance: PositiveFloat
+    minimum_comparable_bands: PositiveInt
 
 
 class ComparatorsConfig(ConfigModel):
@@ -340,6 +342,7 @@ class SequentialConfig(ConfigModel):
 class StatisticsConfig(ConfigModel):
     bootstrap_resamples: PositiveInt
     sign_flip_randomizations: PositiveInt
+    minimum_paired_values: PositiveInt
 
 
 class PopulationMaterialityConfig(ConfigModel):
@@ -440,6 +443,10 @@ class FailureBoundaryConfig(ConfigModel):
         return self
 
 
+class IdentifiersConfig(ConfigModel):
+    event_index_width: PositiveInt
+
+
 class TrajCertConfig(ConfigModel):
     schema_version: Literal[1]
     method: MethodConfig
@@ -456,6 +463,7 @@ class TrajCertConfig(ConfigModel):
     materiality: MaterialityConfig
     benchmark: BenchmarkConfig
     failure_boundary: FailureBoundaryConfig
+    identifiers: IdentifiersConfig
 
     @field_validator("laws")
     @classmethod

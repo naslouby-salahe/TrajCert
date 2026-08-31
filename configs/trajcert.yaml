@@ -90,12 +90,14 @@ comparators:
     initial_clip: 1.0e-8
     gradient_acceptance: 1.0e-8
     boundary_distance: 1.0e-8
+    minimum_nonempty_bands: 2
   callback:
     grid_points: 10001
     minimum_bracket_width: 1.0e-30
     common_slope_tolerance: 1.0e-20
     stable_equality_tolerance: 1.0e-10
     root_deduplication_tolerance: 1.0e-12
+    minimum_comparable_bands: 2
 sequential:
   coverage: {streams: 5000, max_events: 500, checkpoint_every: 100, acceptance_upper_limit: 0.06}
   utility:
@@ -103,7 +105,7 @@ sequential:
     max_events: 2000
     checkpoint_every: 50
     rho: [0.05, 0.1, 0.2]
-statistics: {bootstrap_resamples: 10000, sign_flip_randomizations: 20000}
+statistics: {bootstrap_resamples: 10000, sign_flip_randomizations: 20000, minimum_paired_values: 2}
 materiality:
   population: {absolute_tightening: 0.005, relative_unresolved_gain: 0.2, qualifying_laws: 3, compatible_rho_values: 2}
   sequential: {certified_fraction_gain: 0.05, qualifying_laws: 3}
@@ -127,3 +129,4 @@ failure_boundary:
   optimizer_nodes: [1000, 5000, 20000, 100000, 500000, 1000000, 2000000]
   optimizer_sample_size: 500
   optimizer_information_margin: 0.01
+identifiers: {event_index_width: 6}
