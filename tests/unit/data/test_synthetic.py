@@ -6,7 +6,6 @@ import pytest
 from trajcert.data.laws import FullLawProbabilities, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition
 from trajcert.data.synthetic import (
-    CategoryIndex,
     DeterministicCategorySequence,
     ObservableCategoryProbability,
     balanced_prefix,
@@ -95,7 +94,7 @@ def test_balanced_prefix_is_deterministic_and_balanced() -> None:
 
 def test_balanced_prefix_model_roundtrip() -> None:
     sequence = DeterministicCategorySequence(
-        categories=(CategoryIndex(0), CategoryIndex(1), CategoryIndex(0)),
+        categories=(0, 1, 0),
         terminal_counts=(2, 1),
     )
     assert sequence.categories == (0, 1, 0)

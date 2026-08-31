@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from decimal import ROUND_FLOOR, Decimal
-from typing import NewType
 
 import numpy as np
 
@@ -20,6 +19,7 @@ from trajcert.paths import semantic_slug
 from trajcert.types import (
     ActionChannelId,
     BandIndex,
+    CategoryIndex,
     ClientId,
     Count,
     DomainModel,
@@ -33,11 +33,8 @@ from trajcert.types import (
     SeedIndex,
 )
 
-CategoryIndex = NewType("CategoryIndex", int) #TODO: Move to types and follow the same architecture as the others
-
 _SYNTHETIC_CLIENT_ID = ClientId("synthetic-client")
 _SYNTHETIC_ACTION_CHANNEL_ID = ActionChannelId("automatic-action")
-_EVENT_INDEX_WIDTH = 6 #TODO: Should be in yaml and accessed through conf
 
 
 class ObservableCategoryProbability(DomainModel):
@@ -115,7 +112,7 @@ def balanced_prefix(
             key=lambda index: (target * probabilities[index] - counts[index], -index),
         )
         counts[selected] += 1
-        sequence.append(CategoryIndex(selected))
+        sequence.append(selected)
     return DeterministicCategorySequence(
         categories=tuple(sequence),
         terminal_counts=tuple(counts),
@@ -240,9 +237,10 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
 
 
 def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: NonNegativeInt) -> EventId:
+    width = active_config.get().identifiers.event_index_width
     return EventId(
-        f"{semantic_slug(str(law_name))}::S{int(stream_index):0{_EVENT_INDEX_WIDTH}d}"
-        + f"::E{event_index:0{_EVENT_INDEX_WIDTH}d}"
+        f"{semantic_slug(str(law_name))}::S{int(stream_index):0{width}d}"
+        + f"::E{event_index:0{width}d}"
     )
 
 
