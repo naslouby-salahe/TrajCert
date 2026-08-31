@@ -37,8 +37,8 @@ class SafetyBudgetCase(DomainModel):
 
 def assess_safety_geometry(summary: ObservableSummary, risk_budget: RiskBudget) -> SafetyAssessment:
     beta = _risk_budget(risk_budget)
-    harmful = float(summary.resolved_harmful_mass)
-    assumption_free_upper = harmful + float(summary.unresolved_mass)
+    harmful = summary.resolved_harmful_mass
+    assumption_free_upper = harmful + summary.unresolved_mass
     minimum = minimum_information_point(summary)
     if minimum is None:
         return SafetyAssessment(
@@ -49,7 +49,7 @@ def assess_safety_geometry(summary: ObservableSummary, risk_budget: RiskBudget) 
             assumption_free_upper=assumption_free_upper,
             safety_frontier=None,
         )
-    theta_dagger = float(minimum.latent_risk)
+    theta_dagger = minimum.latent_risk
     if beta < harmful:
         regime = SafetyRegime.RESOLVED_HARM_EXCEEDS_BUDGET
         frontier = None
@@ -75,14 +75,14 @@ def assess_safety_geometry(summary: ObservableSummary, risk_budget: RiskBudget) 
 def safety_budget_cases(
     summary: ObservableSummary, resolved_harm_boundary_offset: ToleranceValue
 ) -> tuple[SafetyBudgetCase, ...]:
-    harmful = float(summary.resolved_harmful_mass)
-    theta_max = harmful + float(summary.unresolved_mass)
+    harmful = summary.resolved_harmful_mass
+    theta_max = harmful + summary.unresolved_mass
     minimum = minimum_information_point(summary)
     if minimum is None:
         return (
             SafetyBudgetCase(
                 name=SafetyCaseName("Below resolved harmful mass"),
-                risk_budget=max(0.0, harmful - float(resolved_harm_boundary_offset)),
+                risk_budget=max(0.0, harmful - resolved_harm_boundary_offset),
                 valid=True,
                 invalid_reason=None,
             ),
@@ -148,7 +148,6 @@ def safety_budget_cases(
 
 
 def _risk_budget(value: RiskBudget) -> float:
-    numeric = float(value)
-    if not isfinite(numeric) or numeric < 0.0 or numeric > 1.0:
+    if not isfinite(value) or value < 0.0 or value > 1.0:
         raise InvalidScientificDataError("risk budget must be finite and lie in [0, 1]")
-    return numeric
+    return value

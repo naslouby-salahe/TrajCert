@@ -141,7 +141,7 @@ def sequential_sensitivity_utility(
             sensitivity_budget=sensitivity_budget,
             stream_index=stream_index,
         )
-        for stream_index in range(int(config.sequential.utility.streams))
+        for stream_index in range(config.sequential.utility.streams)
     )
     return SequentialUtilityResult(
         sensitivity_budget=sensitivity_budget,

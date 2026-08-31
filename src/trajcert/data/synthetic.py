@@ -73,7 +73,7 @@ def observable_category_probabilities(
         ObservableCategoryProbability(
             band_index=None,
             correctness_label=None,
-            probability=float(full_law.unresolved),
+            probability=full_law.unresolved,
         )
     )
     _validate_probability_vector(tuple(item.probability for item in probabilities))
@@ -84,7 +84,7 @@ def hamilton_apportionment(
     categories: tuple[ObservableCategoryProbability, ...], total_count: PositiveInt
 ) -> tuple[Count, ...]:
     _validate_probability_vector(tuple(category.probability for category in categories))
-    total = int(total_count)
+    total = total_count
     quotas = tuple(Decimal(total) * Decimal(str(category.probability)) for category in categories)
     floors = tuple(int(quota.to_integral_value(rounding=ROUND_FLOOR)) for quota in quotas)
     remainder_count = total - sum(floors)
@@ -105,7 +105,7 @@ def balanced_prefix(
     probabilities = tuple(Decimal(str(category.probability)) for category in categories)
     counts = [0 for _ in categories]
     sequence: list[CategoryIndex] = []
-    for prefix_size in range(1, int(total_count) + 1):
+    for prefix_size in range(1, total_count + 1):
         target = Decimal(prefix_size)
         selected = max(
             range(len(categories)),
@@ -140,7 +140,7 @@ def generate_stochastic_ledger(
             harmful_weights=harmful_weights,
             correct_weights=correct_weights,
         )
-        for event_index in range(int(event_count))
+        for event_index in range(event_count)
     )
     return build_ledger(identity, events)
 
@@ -161,7 +161,7 @@ def generate_balanced_prefix_ledger(
             partition,
             stream_index,
             event_index,
-            categories[int(category_index)],
+            categories[category_index],
         )
         for event_index, category_index in enumerate(sequence.categories)
     )
@@ -187,7 +187,7 @@ def _sample_event(
         )
     else:
         weights = harmful_weights if harmful else correct_weights
-        band_index = int(random.choice(partition.band_count, p=weights)) + 1
+        band_index = random.choice(partition.band_count, p=weights) + 1
         category = ObservableCategoryProbability(
             band_index=band_index,
             correctness_label=OutcomeLabel.HARMFUL if harmful else OutcomeLabel.CORRECT,
@@ -209,7 +209,7 @@ def _event_from_observable_category(
     event_index: NonNegativeInt,
     category: ObservableCategoryProbability,
 ) -> LedgerEvent:
-    issue = float(event_index)
+    issue = event_index
     if category.band_index is None:
         completion = None
         label = None
@@ -239,7 +239,7 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
 def _event_id(law_name: LawName, stream_index: SeedIndex, event_index: NonNegativeInt) -> EventId:
     width = active_config.get().identifiers.event_index_width
     return EventId(
-        f"{semantic_slug(str(law_name))}::S{int(stream_index):0{width}d}"
+        f"{semantic_slug(str(law_name))}::S{stream_index:0{width}d}"
         + f"::E{event_index:0{width}d}"
     )
 
@@ -251,7 +251,7 @@ def _validate_probability_vector(probabilities: tuple[Probability, ...]) -> None
     if np.any(~np.isfinite(values)) or np.any(values < 0.0) or np.any(values > 1.0):
         raise InvalidProbabilityError("category probabilities must be finite and lie in [0, 1]")
     guard = active_config.get().numerics.comparison_guard
-    if abs(float(np.sum(values)) - 1.0) > guard:
+    if abs(np.sum(values) - 1.0) > guard:
         raise InvalidProbabilityError(
             "category probabilities do not sum to one within comparison_guard"
         )

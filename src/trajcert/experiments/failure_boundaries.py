@@ -150,7 +150,7 @@ def evaluate_optimizer_node_budget(
         raise ValueError("optimizer node budget must be positive")
     parameters = _base_parameters(config)
     partition = _partition(config.method.finest_bands, config)
-    sample_size = int(config.failure_boundary.optimizer_sample_size)
+    sample_size = config.failure_boundary.optimizer_sample_size
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
@@ -192,7 +192,7 @@ def evaluate_optimizer_node_budget(
             else float(projection.intrinsic_risk_lower_bound)
         ),
         optimizer_gap=projection.final_gap,
-        optimizer_nodes=int(projection.visited_nodes),
+        optimizer_nodes=projection.visited_nodes,
         runtime_ms=elapsed_ms,
     )
 
@@ -238,7 +238,7 @@ def _finite_sample_size(sample_size: PositiveInt, config: TrajCertConfig) -> Fai
             else float(checkpoint.projection.intrinsic_risk_lower_bound)
         ),
         optimizer_gap=checkpoint.projection.final_gap,
-        optimizer_nodes=int(checkpoint.projection.visited_nodes),
+        optimizer_nodes=checkpoint.projection.visited_nodes,
         runtime_ms=elapsed_ms,
     )
 
@@ -249,18 +249,18 @@ def _population_coordinate(
     config: TrajCertConfig,
 ) -> tuple[LawParameters, TrajectoryPartition, SensitivityBudget, RiskBudget]:
     parameters = _base_parameters(config)
-    bands = int(config.method.finest_bands)
-    rho = float(config.budgets.information_nats)
-    beta = float(config.budgets.risk)
+    bands = config.method.finest_bands
+    rho = config.budgets.information_nats
+    beta = config.budgets.risk
     if axis is FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY:
-        parameters = parameters.model_copy(update={"q1": float(level), "q0": float(level)})
+        parameters = parameters.model_copy(update={"q1": level, "q0": level})
     elif axis is FailureBoundaryAxis.TIMING_CONTRAST:
-        contrast = float(level)
+        contrast = level
         parameters = parameters.model_copy(
             update={"lambda1": contrast / 2.0, "lambda0": -contrast / 2.0}
         )
     elif axis is FailureBoundaryAxis.HARMFUL_PREVALENCE:
-        parameters = parameters.model_copy(update={"theta": float(level)})
+        parameters = parameters.model_copy(update={"theta": level})
     elif axis is FailureBoundaryAxis.PATH_RESOLUTION:
         bands = int(level)
     elif axis not in {FailureBoundaryAxis.INFORMATION_MARGIN, FailureBoundaryAxis.RISK_OFFSET}:

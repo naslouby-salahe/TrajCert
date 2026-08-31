@@ -115,16 +115,16 @@ def project_upper_risk(
     outer_gap: ToleranceValue,
     outer_max_nodes: NonNegativeInt,
 ) -> ProjectionResult:
-    rho = float(sensitivity_budget)
+    rho = sensitivity_budget
     if rho < 0.0:
         raise InvalidScientificDataError("sensitivity budget must be nonnegative")
-    precision_bits = int(arbitrary_precision_bits)
+    precision_bits = arbitrary_precision_bits
     if precision_bits <= 0:
         raise InvalidScientificDataError("arbitrary-precision bit count must be positive")
-    node_cap = int(outer_max_nodes)
+    node_cap = outer_max_nodes
     if node_cap <= 0:
         raise InvalidScientificDataError("outer_max_nodes must be positive")
-    gap = float(outer_gap)
+    gap = outer_gap
     if gap <= 0.0:
         raise InvalidScientificDataError("outer_gap must be positive")
     if envelope.is_singleton:
@@ -185,7 +185,7 @@ def _singleton_projection(
         upper = _assumption_free_envelope_upper(envelope)
         incumbent = None
     else:
-        upper = float(risk_set.latent_risk.upper)
+        upper = risk_set.latent_risk.upper
         incumbent = upper
     return ProjectionResult(
         sensitivity_budget=rho,
@@ -327,7 +327,7 @@ def _final_projection(
         proven_upper=proven,
         incumbent=incumbent,
         visited_nodes=visited,
-        surviving_boxes=len(queue) + int(active is not None),
+        surviving_boxes=len(queue) + (active is not None),
         final_gap=None if incumbent is None else max(0.0, proven - incumbent),
         termination_reason=reason,
     )
@@ -344,7 +344,7 @@ def _projection_fallback(
         proven_upper=proven,
         incumbent=incumbent,
         visited_nodes=visited,
-        surviving_boxes=len(queue) + int(active is not None),
+        surviving_boxes=len(queue) + (active is not None),
         final_gap=None if incumbent is None else max(0.0, proven - incumbent),
         termination_reason=ProjectionTerminationReason.ARITHMETIC_FALLBACK,
     )
@@ -623,34 +623,34 @@ def _enqueue_intrinsic_children(
 
 def _initial_box(envelope: ObservableSummaryEnvelope) -> _Box:
     return _Box(
-        harmful_lower=float(envelope.resolved_harmful.lower),
-        harmful_upper=float(envelope.resolved_harmful.upper),
-        correct_lower=float(envelope.resolved_correct.lower),
-        correct_upper=float(envelope.resolved_correct.upper),
+        harmful_lower=envelope.resolved_harmful.lower,
+        harmful_upper=envelope.resolved_harmful.upper,
+        correct_lower=envelope.resolved_correct.lower,
+        correct_upper=envelope.resolved_correct.upper,
         hidden_lower=0.0,
-        hidden_upper=float(envelope.unresolved.upper),
+        hidden_upper=envelope.unresolved.upper,
     )
 
 
 def _box_possible(box: _Box, envelope: ObservableSummaryEnvelope) -> bool:
     resolved_lower = box.harmful_lower + box.correct_lower
     resolved_upper = box.harmful_upper + box.correct_upper
-    required_lower = 1.0 - float(envelope.unresolved.upper)
-    required_upper = 1.0 - float(envelope.unresolved.lower)
+    required_lower = 1.0 - envelope.unresolved.upper
+    required_upper = 1.0 - envelope.unresolved.lower
     if resolved_upper < required_lower or resolved_lower > required_upper:
         return False
-    unresolved_upper = min(float(envelope.unresolved.upper), 1.0 - resolved_lower)
+    unresolved_upper = min(envelope.unresolved.upper, 1.0 - resolved_lower)
     return box.hidden_lower <= min(box.hidden_upper, unresolved_upper)
 
 
 def _sensitivity_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> float:
     unresolved_lower = max(
-        float(envelope.unresolved.lower),
+        envelope.unresolved.lower,
         1.0 - box.harmful_upper - box.correct_upper,
         0.0,
     )
     unresolved_upper = min(
-        float(envelope.unresolved.upper),
+        envelope.unresolved.upper,
         1.0 - box.harmful_lower - box.correct_lower,
         1.0,
     )
@@ -672,7 +672,7 @@ def _sensitivity_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> float:
     )
     return max(
         0.0,
-        entropy_lower - float(envelope.resolved_entropy.upper) - terminal_entropy_upper,
+        entropy_lower - envelope.resolved_entropy.upper - terminal_entropy_upper,
     )
 
 
@@ -683,7 +683,7 @@ def _compatibility_box_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> 
         box.correct_lower,
         box.correct_upper,
     )
-    return max(0.0, entropy_lower - float(envelope.resolved_entropy.upper))
+    return max(0.0, entropy_lower - envelope.resolved_entropy.upper)
 
 
 def _intrinsic_box_lower(box: _Box) -> float:
@@ -699,10 +699,10 @@ def _aggregate_midpoint(
     harmful = (box.harmful_lower + box.harmful_upper) / 2.0
     correct = (box.correct_lower + box.correct_upper) / 2.0
     resolved_target_lower = max(
-        1.0 - float(envelope.unresolved.upper), box.harmful_lower + box.correct_lower
+        1.0 - envelope.unresolved.upper, box.harmful_lower + box.correct_lower
     )
     resolved_target_upper = min(
-        1.0 - float(envelope.unresolved.lower), box.harmful_upper + box.correct_upper
+        1.0 - envelope.unresolved.lower, box.harmful_upper + box.correct_upper
     )
     if resolved_target_lower > resolved_target_upper:
         return None
@@ -719,7 +719,7 @@ def _aggregate_midpoint(
         delta += remove_harmful
         correct -= min(-delta, correct - box.correct_lower)
     unresolved = 1.0 - harmful - correct
-    if not float(envelope.unresolved.lower) <= unresolved <= float(envelope.unresolved.upper):
+    if not envelope.unresolved.lower <= unresolved <= envelope.unresolved.upper:
         return None
     return harmful, correct, unresolved
 
@@ -759,8 +759,8 @@ def _verified_incumbent(
     risk_set = sharp_risk_set(summary, rho, root_atol, identity_atol)
     if risk_set.hidden_mass is None:
         return None
-    hidden_lower = max(box.hidden_lower, float(risk_set.hidden_mass.lower))
-    hidden_upper = min(box.hidden_upper, unresolved, float(risk_set.hidden_mass.upper))
+    hidden_lower = max(box.hidden_lower, risk_set.hidden_mass.lower)
+    hidden_upper = min(box.hidden_upper, unresolved, risk_set.hidden_mass.upper)
     if hidden_lower > hidden_upper:
         return None
     hidden = hidden_upper
@@ -813,7 +813,7 @@ def _summary_at_aggregates(
             harmful_by_band=np.asarray(harmful, dtype=np.float64),
             correct_by_band=np.asarray(correct, dtype=np.float64),
             unresolved_mass=_unit(unresolved),
-            comparison_guard=float(comparison_guard),
+            comparison_guard=comparison_guard,
         )
     except InvalidScientificDataError:
         return None
@@ -822,12 +822,12 @@ def _summary_at_aggregates(
 def _allocate_total(
     intervals: tuple[ScalarEnvelope, ...], target: float
 ) -> tuple[float, ...] | None:
-    values = [float(interval.lower) for interval in intervals]
+    values = [interval.lower for interval in intervals]
     remaining = target - sum(values)
     if remaining < 0.0:
         return None
     for index, interval in enumerate(intervals):
-        capacity = float(interval.upper) - values[index]
+        capacity = interval.upper - values[index]
         increment = min(remaining, capacity)
         values[index] += increment
         remaining -= increment
@@ -846,8 +846,8 @@ def _verified_information_feasible(
 
 
 def _information_point_arb(summary: ObservableSummary, hidden: float) -> arb:
-    harmful = float(summary.resolved_harmful_mass)
-    unresolved = float(summary.unresolved_mass)
+    harmful = summary.resolved_harmful_mass
+    unresolved = summary.unresolved_mass
     theta_entropy = _binary_entropy_arb(_arb_exact(harmful + hidden))
     resolved_entropy = arb(0)
     for left, right in zip(summary.harmful_by_band, summary.correct_by_band, strict=True):
@@ -860,11 +860,11 @@ def _information_point_arb(summary: ObservableSummary, hidden: float) -> arb:
 
 
 def _minimum_profile_point(summary: ObservableSummary) -> tuple[float, float] | None:
-    resolved = float(summary.resolved_mass)
+    resolved = summary.resolved_mass
     if resolved <= 0.0:
         return None
-    harmful = float(summary.resolved_harmful_mass)
-    unresolved = float(summary.unresolved_mass)
+    harmful = summary.resolved_harmful_mass
+    unresolved = summary.unresolved_mass
     hidden = harmful * unresolved / resolved
     information = _arb_upper(_information_point_arb(summary, hidden))
     return harmful / resolved, max(0.0, information)
@@ -873,11 +873,11 @@ def _minimum_profile_point(summary: ObservableSummary) -> tuple[float, float] | 
 def _timing_information(summary: ObservableSummary) -> float:
     resolved = float(
         binary_entropy_from_masses(
-            float(summary.resolved_harmful_mass), float(summary.resolved_correct_mass)
+            summary.resolved_harmful_mass, summary.resolved_correct_mass
         )
     )
     bandwise = sum(
-        float(binary_entropy_from_masses(float(left), float(right)))
+        float(binary_entropy_from_masses(left, right))
         for left, right in zip(summary.harmful_by_band, summary.correct_by_band, strict=True)
     )
     return max(0.0, resolved - bandwise)
@@ -1039,8 +1039,8 @@ def _assumption_free_envelope_upper(envelope: ObservableSummaryEnvelope) -> floa
     return _unit(
         min(
             1.0,
-            float(envelope.resolved_harmful.upper) + float(envelope.unresolved.upper),
-            1.0 - float(envelope.resolved_correct.lower),
+            envelope.resolved_harmful.upper + envelope.unresolved.upper,
+            1.0 - envelope.resolved_correct.lower,
         )
     )
 

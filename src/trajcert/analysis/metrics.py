@@ -13,7 +13,7 @@ from trajcert.types import (
     RiskValue,
 )
 
-MetricName = NewType("MetricName", str)
+MetricName = NewType("MetricName", str)  # TODO: Consider replacing with an Enum for better type safety
 
 
 class PracticalMetric(StrEnum):
@@ -33,7 +33,7 @@ def numeric_first_certification(
 ) -> Count:
     if first_certified_n is not None:
         return first_certified_n
-    return int(max_events) + 1
+    return max_events + 1
 
 
 def population_gain(
@@ -43,8 +43,8 @@ def population_gain(
 ) -> PopulationGain:
     if unresolved_mass < 0.0:
         raise InvalidScientificDataError("unresolved mass cannot be negative")
-    tightening = float(unresolved_as_harm_upper) - float(risk_upper)
-    relative = None if unresolved_mass == 0.0 else tightening / float(unresolved_mass)
+    tightening = unresolved_as_harm_upper - risk_upper
+    relative = None if unresolved_mass == 0.0 else tightening / unresolved_mass
     return PopulationGain(
         absolute_tightening=tightening,
         relative_unresolved_gain=relative,

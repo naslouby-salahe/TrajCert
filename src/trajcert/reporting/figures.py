@@ -237,7 +237,7 @@ def _information_profile(table: pa.Table) -> PlotDocument:
 
 
 def _anytime_paths(table: pa.Table) -> PlotDocument:
-    seeds = tuple(int(value) for value in _unique_numbers(table, "stream_seed_index"))
+    seeds = _unique_numbers(table, "stream_seed_index")
     if seeds != (0, 1, 2, 3):
         raise InvalidScientificDataError(
             "representative anytime figure source must contain exactly seed indices [0,1,2,3]"
@@ -251,7 +251,7 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
     commands.extend(_panel_frame(panel, "Seeds 0-3"))
     for seed in seeds:
         selected = tuple(
-            row for row in rows if int(_required_float(row, "stream_seed_index")) == seed
+            row for row in rows if _required_float(row, "stream_seed_index") == seed
         )
         seed_xs = tuple(_required_float(row, "n_matured") for row in selected)
         seed_ys = tuple(_required_float(row, "risk_upper_anytime") for row in selected)

@@ -944,7 +944,7 @@ def _anytime_path_rows(
             > config.numerics.comparison_guard
         ):
             continue
-        if abs(result.beta - float(config.budgets.risk)) > config.numerics.comparison_guard:
+        if abs(result.beta - config.budgets.risk) > config.numerics.comparison_guard:
             continue
         matches.append(result)
     if len(matches) != 1:
@@ -1004,8 +1004,8 @@ def _failure_rows(
             axis=result.axis.value,
             level=result.level,
             controlled_value_json=_controlled_value_json(result),
-            rho=float(result.sensitivity_budget),
-            beta=float(result.risk_budget),
+            rho=result.sensitivity_budget,
+            beta=result.risk_budget,
             tau=result.tau,
             risk_upper=result.risk_upper,
             operational_state=result.operational_state.value,
@@ -1110,7 +1110,7 @@ def _scaling_figure_rows(
 def _oracle_error_by_partition(
     plan: ExperimentPlan, workspace_root: Path, config: TrajCertConfig
 ) -> dict[int, float]:
-    name_to_k = {str(partition_name(k)): int(k) for k in config.grids.partitions}
+    name_to_k = {str(partition_name(k)): k for k in config.grids.partitions}
     grouped: dict[int, list[float]] = defaultdict(list)
     for cell in _cells(plan, "Production Solver vs Independent Oracle"):
         k = name_to_k.get(_required_partition(cell))
@@ -1139,10 +1139,10 @@ def _timing_figure_rows(
             TimingValueFigureRow(
                 semantic_timing_case=f"{law} | {pair}",
                 rho_offset=offset,
-                delta_tau=float(result.timing_gain),
-                bound_gain=float(result.coarse_upper - result.fine_upper),
-                coarse_risk_upper=float(result.coarse_upper),
-                fine_risk_upper=float(result.fine_upper),
+                delta_tau=result.timing_gain,
+                bound_gain=result.coarse_upper - result.fine_upper,
+                coarse_risk_upper=result.coarse_upper,
+                fine_risk_upper=result.fine_upper,
             )
         )
     return tuple(rows)
@@ -1160,15 +1160,15 @@ def _population_results(
 def _rho_sensitivity_rows(
     evidence: tuple[tuple[PlannedCell, PopulationUtilityResult], ...],
 ) -> tuple[RhoSensitivityFigureRow, ...]:
-    log2_value = float(BINARY_MAX_INFORMATION_NATS)
+    log2_value = BINARY_MAX_INFORMATION_NATS
     return tuple(
         RhoSensitivityFigureRow(
             law_name=str(cell.identity.coordinates.synthetic_law_name or ""),
             partition_name=_required_partition(cell),
-            rho=float(result.sensitivity_budget),
-            risk_upper=None if result.risk_upper is None else float(result.risk_upper),
+            rho=result.sensitivity_budget,
+            risk_upper=None if result.risk_upper is None else result.risk_upper,
             compatibility_state=RegimeName(result.compatibility_regime.value),
-            rho_is_log2=abs(float(result.sensitivity_budget) - log2_value) <= _LOG2_MATCH_TOLERANCE,
+            rho_is_log2=abs(result.sensitivity_budget - log2_value) <= _LOG2_MATCH_TOLERANCE,
         )
         for cell, result in evidence
     )
@@ -1181,13 +1181,13 @@ def _information_profile_rows(
     target_law_key = LawKey.TIMING_TERMINAL_HARMFUL_LATE
     target_law = LAW_DISPLAY_NAMES[target_law_key]
     target_partition = str(partition_name(config.method.finest_bands))
-    target_rho = float(config.budgets.information_nats)
+    target_rho = config.budgets.information_nats
     matches = tuple(
         result
         for cell, result in population
         if cell.identity.coordinates.synthetic_law_name == target_law
         and _required_partition(cell) == target_partition
-        and abs(float(result.sensitivity_budget) - target_rho) <= config.numerics.comparison_guard
+        and abs(result.sensitivity_budget - target_rho) <= config.numerics.comparison_guard
     )
     if len(matches) != 1:
         raise InvalidScientificDataError("Figure 3 requires one target population sensitivity cell")
@@ -1214,24 +1214,24 @@ def _information_profile_rows(
     )
     minimum = minimum_information_point(summary)
     tau_value = observed_timing_information(summary)
-    tau = None if tau_value is None else float(tau_value)
-    u_dagger = None if minimum is None else float(minimum.hidden_terminal_harmful_mass)
-    beta = float(config.budgets.risk)
-    resolved_harmful = float(summary.resolved_harmful_mass)
-    unresolved = float(summary.unresolved_mass)
+    tau = None if tau_value is None else tau_value
+    u_dagger = None if minimum is None else minimum.hidden_terminal_harmful_mass
+    beta = config.budgets.risk
+    resolved_harmful = summary.resolved_harmful_mass
+    unresolved = summary.unresolved_mass
     u_beta_value = beta - resolved_harmful
     u_beta = u_beta_value if 0.0 <= u_beta_value <= unresolved else None
     safety = assess_safety_geometry(summary, beta)
-    rho_star = None if safety.safety_frontier is None else float(safety.safety_frontier)
+    rho_star = None if safety.safety_frontier is None else safety.safety_frontier
     feasible_lower = (
         None
         if population_result.risk_lower is None
-        else float(population_result.risk_lower) - resolved_harmful
+        else population_result.risk_lower - resolved_harmful
     )
     feasible_upper = (
         None
         if population_result.risk_upper is None
-        else float(population_result.risk_upper) - resolved_harmful
+        else population_result.risk_upper - resolved_harmful
     )
     rows: list[InformationProfileFigureRow] = []
     for index in range(1001):
@@ -1239,7 +1239,7 @@ def _information_profile_rows(
         rows.append(
             InformationProfileFigureRow(
                 u=u,
-                information_profile=float(information_profile(summary, u)),
+                information_profile=information_profile(summary, u),
                 u_dagger=u_dagger,
                 tau=tau,
                 rho=target_rho,
@@ -1287,7 +1287,7 @@ def _rho_offset(cell: PlannedCell) -> float:
 
 
 def _max_optional(values: Iterable[float | None]) -> float | None:
-    finite = tuple(float(value) for value in values if value is not None)
+    finite = tuple(value for value in values if value is not None)
     return max(finite, default=None)
 
 

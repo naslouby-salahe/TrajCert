@@ -96,7 +96,7 @@ def _accepted_roots(
     deduplication_tolerance: mpf,
 ) -> tuple[mpf, ...]:
     previous_digits = mp.dps
-    mp.dps = int(oracle_digits)
+    mp.dps = oracle_digits
     try:
         if data.unresolved == mpf(0):
             value = objective(data, mpf(0))

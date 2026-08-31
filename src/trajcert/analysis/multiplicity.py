@@ -34,16 +34,16 @@ def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ..
     ordered = sorted(
         records,
         key=lambda item: (
-            float(item.raw_p_value),
-            str(item.semantic_comparison_key),
-            str(item.metric_name),
+            item.raw_p_value,
+            item.semantic_comparison_key,
+            item.metric_name,
         ),
     )
     family_size = len(ordered)
     adjusted_by_identity: dict[tuple[SemanticComparisonKey, MetricName], float] = {}
     running_maximum = 0.0
     for rank, record in enumerate(ordered, start=1):
-        scaled = (family_size - rank + 1) * float(record.raw_p_value)
+        scaled = (family_size - rank + 1) * record.raw_p_value
         running_maximum = max(running_maximum, scaled)
         adjusted_by_identity[(record.semantic_comparison_key, record.metric_name)] = min(
             1.0, running_maximum
@@ -65,10 +65,10 @@ def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ..
 def require_family_size(
     tests: tuple[HolmAdjustedTest, ...], expected_size: FamilySize
 ) -> tuple[HolmAdjustedTest, ...]:
-    if len(tests) != int(expected_size):
+    if len(tests) != expected_size:
         raise InvalidScientificDataError(
-            f"multiplicity family is incomplete: expected {int(expected_size)}, got {len(tests)}"
+            f"multiplicity family is incomplete: expected {expected_size}, got {len(tests)}"
         )
-    if any(int(test.family_size) != int(expected_size) for test in tests):
+    if any(test.family_size != expected_size for test in tests):
         raise InvalidScientificDataError("Holm records carry an inconsistent family size")
     return tests

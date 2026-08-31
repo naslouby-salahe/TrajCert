@@ -86,11 +86,11 @@ def _benchmark_target(
     band_count: int,
     config: TrajCertConfig,
 ) -> ScalingTargetSummary:
-    for _ in range(int(config.benchmark.warmup_repetitions)):
+    for _ in range(config.benchmark.warmup_repetitions):
         _ = _isolated_measurement(target, band_count, config)
     measurements = tuple(
         _isolated_measurement(target, band_count, config)
-        for _ in range(int(config.benchmark.measured_repetitions))
+        for _ in range(config.benchmark.measured_repetitions)
     )
     runtimes = np.asarray(
         tuple(measurement.runtime_ns / 1_000_000_000.0 for measurement in measurements),
@@ -219,7 +219,7 @@ def _execute_target(
             config.numerics.identity_atol,
         )
         iterations = sum(
-            0 if bracket is None else int(bracket.iterations)
+            0 if bracket is None else bracket.iterations
             for bracket in (solved.solve_result.lower_root, solved.solve_result.upper_root)
         )
         return iterations, None
@@ -246,7 +246,7 @@ def _execute_target(
         risk_budget=config.budgets.risk,
         checkpoint_every=config.benchmark.outer_sample_size,
     )
-    return None, int(trace.checkpoints[-1].projection.visited_nodes)
+    return None, trace.checkpoints[-1].projection.visited_nodes
 
 
 def _parameters(config: TrajCertConfig) -> LawParameters:

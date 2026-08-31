@@ -39,13 +39,13 @@ def ignorable_delay_update(
     if not assumption_valid:
         return IgnorableDelayResult(
             status=IgnorableDelayStatus.ASSUMPTION_VIOLATED,
-            resolved_count=int(state.resolved_count),
+            resolved_count=state.resolved_count,
             interval=None,
         )
     harmful = sum(state.counts.harmful_by_band)
     correct = sum(state.counts.correct_by_band)
     total = harmful + correct
-    raw = _bernoulli_interval(harmful, total, float(anytime_delta), float(root_tolerance))
+    raw = _bernoulli_interval(harmful, total, anytime_delta, root_tolerance)
     if previous_running is None:
         running = raw
     else:
@@ -111,7 +111,7 @@ def _log_mixture_ratio(successes: Count, total: Count, probability: Probability)
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:
-        return float(beta_term) if successes == 0 else inf
+        return beta_term if successes == 0 else inf
     if probability == 1.0:
-        return float(beta_term) if failures == 0 else inf
-    return float(beta_term) - successes * log(probability) - failures * log1p(-probability)
+        return beta_term if failures == 0 else inf
+    return beta_term - successes * log(probability) - failures * log1p(-probability)

@@ -244,8 +244,8 @@ def run_sequential_trace(
         )
         checkpoints.append(
             SequentialCheckpoint(
-                matured_count=int(state.matured_count),
-                resolved_count=int(state.resolved_count),
+                matured_count=state.matured_count,
+                resolved_count=state.resolved_count,
                 confidence=running,
                 projection=projection,
                 assessment=assessment,
@@ -288,10 +288,10 @@ def run_coverage_stress(
     sensitivity_budget: SensitivityBudget,
 ) -> CoverageStressResult:
     _ = active_config.set(config)
-    stream_count = int(config.sequential.coverage.streams)
-    max_events = int(config.sequential.coverage.max_events)
-    checkpoint_every = int(config.sequential.coverage.checkpoint_every)
-    true_risk = float(parameters.theta)
+    stream_count = config.sequential.coverage.streams
+    max_events = config.sequential.coverage.max_events
+    checkpoint_every = config.sequential.coverage.checkpoint_every
+    true_risk = parameters.theta
     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
     failures = {method: 0 for method in SequentialMethod}
     for stream_index in range(stream_count):
@@ -552,9 +552,9 @@ def _trajcert_trajectory_evidence(
     rho: SensitivityBudget,
     beta: RiskBudget,
 ) -> _TrajectoryEvidenceSummary:
-    stream_count = int(config.sequential.coverage.streams)
-    max_events = int(config.sequential.coverage.max_events)
-    checkpoint_every = int(config.sequential.coverage.checkpoint_every)
+    stream_count = config.sequential.coverage.streams
+    max_events = config.sequential.coverage.max_events
+    checkpoint_every = config.sequential.coverage.checkpoint_every
     first_certified: list[float] = []
     certified_fractions: list[float] = []
     representative: list[AnytimePathEvidence] = []
@@ -607,7 +607,7 @@ def _stream_certification_summary(trace: SequentialTrace) -> _StreamCertificatio
             continue
         certified += 1
         if first is None:
-            first = int(checkpoint.matured_count)
+            first = checkpoint.matured_count
     return _StreamCertificationSummary(
         first_certified_matured_count=first,
         certified_fraction=(0.0 if eligible == 0 else certified / eligible),
@@ -635,10 +635,10 @@ def _representative_checkpoint_evidence(
     state = checkpoint.assessment.scientific_state
     return AnytimePathEvidence(
         stream_seed_index=stream_index,
-        n_matured=int(checkpoint.matured_count),
-        risk_upper_anytime=float(checkpoint.projection.proven_upper),
-        true_theta=float(parameters.theta),
-        beta=float(beta),
+        n_matured=checkpoint.matured_count,
+        risk_upper_anytime=checkpoint.projection.proven_upper,
+        true_theta=parameters.theta,
+        beta=beta,
         evidence_gate_pass=state is not ScientificState.INSUFFICIENT_EVIDENCE,
         operational_state=(
             AnytimeOperationalState.TECHNICAL_FAIL
@@ -1208,8 +1208,8 @@ def _singleton_assessment(
     return classify_certification(
         state=_gate_state(
             partition,
-            int(config.minimum_evidence.matured_events),
-            int(config.minimum_evidence.resolved_events),
+            config.minimum_evidence.matured_events,
+            config.minimum_evidence.resolved_events,
         ),
         projection=projection,
         sensitivity_budget=sensitivity_budget,
@@ -1304,7 +1304,7 @@ def _matured_sequence(
 ) -> tuple[MaturedEvent, ...]:
     events: list[MaturedEvent] = []
     for index, category_index in enumerate(sequence):
-        category = categories[int(category_index)]
+        category = categories[category_index]
         if category.band_index is None:
             matured = MaturedCategory(
                 kind=MaturedCategoryKind.TERMINAL_UNRESOLVED,

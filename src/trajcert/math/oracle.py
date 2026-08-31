@@ -107,16 +107,16 @@ def solve_information_oracle(
     oracle_digits: PositiveInt,
     oracle_bracket_width: ToleranceValue,
 ) -> InformationOracleResult:
-    digits = int(oracle_digits)
+    digits = oracle_digits
     if digits <= 0:
         raise InvalidScientificDataError("oracle precision must be positive")
     previous_digits = mp.dps
     mp.dps = digits
     try:
-        harmful = tuple(mpf(repr(float(value))) for value in summary.harmful_by_band)
-        correct = tuple(mpf(repr(float(value))) for value in summary.correct_by_band)
-        unresolved = mpf(repr(float(summary.unresolved_mass)))
-        rho = mpf(repr(float(sensitivity_budget)))
+        harmful = tuple(mpf(repr(value)) for value in summary.harmful_by_band)
+        correct = tuple(mpf(repr(value)) for value in summary.correct_by_band)
+        unresolved = mpf(repr(summary.unresolved_mass))
+        rho = mpf(repr(sensitivity_budget))
         bracket_width = mpf(repr(float(oracle_bracket_width)))
         return _solve_information_oracle_data(
             summary, harmful, correct, unresolved, rho, digits, bracket_width
@@ -134,16 +134,16 @@ def feasible_projection_lower_oracle(
     refinement_candidates: PositiveInt,
     refinement_steps: PositiveInt,
 ) -> ProjectionFeasibleOracleResult:
-    digits = int(oracle_digits)
+    digits = oracle_digits
     if digits <= 0:
         raise InvalidScientificDataError("oracle precision must be positive")
     previous_precision = ctx.prec
     ctx.prec = max(previous_precision, ceil(digits * log2(10.0)))
     try:
-        sensitivity = _arb_exact_float(float(sensitivity_budget))
-        harmful_lower = sum(float(interval.lower) for interval in oracle_input.harmful_by_band)
-        harmful_upper = sum(float(interval.upper) for interval in oracle_input.harmful_by_band)
-        correct_lower = sum(float(interval.lower) for interval in oracle_input.correct_by_band)
+        sensitivity = _arb_exact_float(sensitivity_budget)
+        harmful_lower = sum(interval.lower for interval in oracle_input.harmful_by_band)
+        harmful_upper = sum(interval.upper for interval in oracle_input.harmful_by_band)
+        correct_lower = sum(interval.lower for interval in oracle_input.correct_by_band)
         correct_upper = sum(float(interval.upper) for interval in oracle_input.correct_by_band)
         checked = 0
         feasible_count = 0
@@ -205,7 +205,7 @@ def direct_mutual_information(
     oracle_digits: PositiveInt,
 ) -> InformationNats:
     previous_digits = mp.dps
-    mp.dps = int(oracle_digits)
+    mp.dps = oracle_digits
     try:
         value = _mutual_information(
             tuple(mpf(repr(item)) for item in harmful),

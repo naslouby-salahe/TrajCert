@@ -36,9 +36,9 @@ def classify_certification(
     minimum_resolved_events: PositiveInt,
     comparison_guard: ToleranceValue,
 ) -> CertificationAssessment:
-    rho = float(sensitivity_budget)
-    beta = float(risk_budget)
-    guard = float(comparison_guard)
+    rho = sensitivity_budget
+    beta = risk_budget
+    guard = comparison_guard
     if rho < 0.0 or beta < 0.0 or beta > 1.0 or guard <= 0.0:
         raise InvalidScientificDataError("invalid certification budget or comparison guard")
     matured = state.matured_count
@@ -55,14 +55,14 @@ def classify_certification(
             compatibility_lower_bound=None,
             intrinsic_risk_lower_bound=None,
         )
-    compatibility_lower = float(projection.compatibility_lower_bound)
+    compatibility_lower = projection.compatibility_lower_bound
     intrinsic_lower = projection.intrinsic_risk_lower_bound
-    upper = float(projection.proven_upper)
+    upper = projection.proven_upper
     if matured < minimum_matured_events or resolved < minimum_resolved_events:
         scientific_state = ScientificState.INSUFFICIENT_EVIDENCE
     elif compatibility_lower > rho + guard:
         scientific_state = ScientificState.MODEL_INCOMPATIBLE
-    elif intrinsic_lower is not None and float(intrinsic_lower) > beta + guard:
+    elif intrinsic_lower is not None and intrinsic_lower > beta + guard:
         scientific_state = ScientificState.INTRINSICALLY_UNCERTIFIABLE
     elif upper <= beta:
         scientific_state = ScientificState.CERTIFIED

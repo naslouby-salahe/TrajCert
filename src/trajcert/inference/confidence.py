@@ -47,7 +47,7 @@ def raw_confidence_region(
     anytime_delta: UnitFloat,
     root_tolerance: ToleranceValue,
 ) -> CategoricalConfidenceRegion:
-    delta = float(anytime_delta)
+    delta = anytime_delta
     if delta <= 0.0 or delta >= 1.0:
         raise InvalidScientificDataError("anytime delta must lie strictly between zero and one")
     counts = state.canonical_count_vector
@@ -88,8 +88,8 @@ def _invert_category_count(
     threshold: float,
     root_tolerance: ToleranceValue,
 ) -> ClosedProbabilityInterval:
-    success_count = int(successes)
-    total = int(matured_count)
+    success_count = successes
+    total = matured_count
     if success_count < 0 or success_count > total:
         raise InvalidScientificDataError("categorical success count is outside [0, n]")
     if total == 0:
@@ -156,7 +156,7 @@ def _log_mixture_likelihood_ratio(successes: int, total: int, probability: float
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:
-        return float(beta_term) if successes == 0 else inf
+        return beta_term if successes == 0 else inf
     if probability == 1.0:
-        return float(beta_term) if failures == 0 else inf
-    return float(beta_term) - successes * log(probability) - failures * log1p(-probability)
+        return beta_term if failures == 0 else inf
+    return beta_term - successes * log(probability) - failures * log1p(-probability)

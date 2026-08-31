@@ -948,7 +948,7 @@ def _dispatch_computational_scaling(cell: PlannedCell, config: TrajCertConfig) -
     bands = cell.identity.coordinates.scaling_band_count
     if bands is None:
         raise ScientificCellDispatchError("scaling cell is missing K")
-    return benchmark_scaling_cell(int(bands), config)
+    return benchmark_scaling_cell(bands, config)
 
 
 def _dispatch_summary_coordinate_experiment(
@@ -1208,9 +1208,9 @@ def _direct_rho(cell: PlannedCell) -> SensitivityBudget:
 
 
 def _variant_index(variant: VariantName | None, prefix: str) -> int:
-    if variant is None or not str(variant).startswith(prefix):
+    if variant is None or not variant.startswith(prefix):
         raise ScientificCellDispatchError("cell is missing its expected variant index")
-    return int(str(variant)[len(prefix) :])
+    return int(variant[len(prefix) :])
 
 
 def _safety_case(
@@ -1292,7 +1292,7 @@ def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> Doma
 def _failure_coordinate(
     coordinate: FailureBoundaryCoordinate,
 ) -> tuple[FailureBoundaryAxis, float | int]:
-    axis_text, separator, value_text = str(coordinate).partition("=")
+    axis_text, separator, value_text = coordinate.partition("=")
     if not separator:
         raise ScientificCellDispatchError("invalid failure-boundary coordinate")
     axis = FailureBoundaryAxis(axis_text)
@@ -1547,7 +1547,7 @@ def _confidence_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
             running,
         )
         running = update.running
-    return running is not None and int(running.matured_count) == _SMOKE_CS_EVENTS
+    return running is not None and running.matured_count == _SMOKE_CS_EVENTS
 
 
 def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool:

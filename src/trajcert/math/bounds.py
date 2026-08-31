@@ -41,19 +41,19 @@ def sharp_risk_set(
     )
     if solved.interval is None:
         return SharpRiskSet(hidden_mass=None, latent_risk=None, solve_result=solved)
-    harmful = float(summary.resolved_harmful_mass)
+    harmful = summary.resolved_harmful_mass
     risk = RiskInterval(
-        lower=harmful + float(solved.interval.lower), upper=harmful + float(solved.interval.upper)
+        lower=harmful + solved.interval.lower, upper=harmful + solved.interval.upper
     )
     return SharpRiskSet(hidden_mass=solved.interval, latent_risk=risk, solve_result=solved)
 
 
 def unresolved_as_harm_upper(summary: ObservableSummary) -> RiskValue:
-    return float(summary.resolved_harmful_mass) + float(summary.unresolved_mass)
+    return summary.resolved_harmful_mass + summary.unresolved_mass
 
 
 def complete_case_arrival_only(summary: ObservableSummary) -> Probability | None:
-    resolved = float(summary.resolved_mass)
+    resolved = summary.resolved_mass
     if resolved <= 0.0:
         return None
-    return float(summary.resolved_harmful_mass) / resolved
+    return summary.resolved_harmful_mass / resolved

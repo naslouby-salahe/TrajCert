@@ -67,7 +67,7 @@ def fit_pattern_mixture(
     clipped = min(1.0 - config.initial_clip, max(config.initial_clip, resolved_rate))
     initial = np.asarray((log(clipped / (1.0 - clipped)), 0.0), dtype=np.float64)
     lower, upper = config.coefficient_bounds
-    bounds = ((float(lower), float(upper)), (float(lower), float(upper)))
+    bounds = ((lower, upper), (lower, upper))
 
     def objective(coefficients: Vector) -> ObjectiveValue:
         intercept, slope = coefficients
@@ -88,9 +88,9 @@ def fit_pattern_mixture(
         method="L-BFGS-B",
         bounds=bounds,
         options={
-            "ftol": float(config.ftol),
-            "gtol": float(config.gtol),
-            "maxiter": int(config.max_iterations),
+            "ftol": config.ftol,
+            "gtol": config.gtol,
+            "maxiter": config.max_iterations,
         },
     )
     coefficients = result.x
@@ -106,7 +106,7 @@ def fit_pattern_mixture(
         and isfinite(final_objective)
         and gradient_norm <= config.gradient_acceptance
         and all(
-            min(coefficient - float(lower), float(upper) - coefficient) > config.boundary_distance
+            min(coefficient - lower, upper - coefficient) > config.boundary_distance
             for coefficient in coefficients
         )
     )
@@ -119,8 +119,8 @@ def fit_pattern_mixture(
             objective=final_objective if isfinite(final_objective) else None,
             points=(),
         )
-    harmful_mass = float(summary.resolved_harmful_mass)
-    unresolved = float(summary.unresolved_mass)
+    harmful_mass = summary.resolved_harmful_mass
+    unresolved = summary.unresolved_mass
     band_count = summary.partition.band_count
     points = tuple(
         PatternMixturePoint(

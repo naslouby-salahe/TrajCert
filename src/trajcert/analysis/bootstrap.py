@@ -36,12 +36,12 @@ def paired_percentile_bootstrap(
     namespace = bootstrap_namespace(semantic_comparison_key)
     rng = generator_for(namespace, 0)
     pair_count = values.size
-    bootstrap_means = np.empty(int(resample_count), dtype=np.float64)
-    for index in range(int(resample_count)):
+    bootstrap_means = np.empty(resample_count, dtype=np.float64)
+    for index in range(resample_count):
         sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)
         bootstrap_means[index] = float(np.mean(values[sampled], dtype=np.float64))
     bootstrap_means.sort()
-    alpha = 1.0 - float(confidence_level)
+    alpha = 1.0 - confidence_level
     return PercentileBootstrapInterval(
         estimate=float(np.mean(values, dtype=np.float64)),
         lower=linear_quantile(bootstrap_means, alpha / 2.0),

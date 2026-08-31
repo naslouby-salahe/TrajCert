@@ -358,7 +358,7 @@ def synthesize_trajectory_operational_gain(
 def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferenceResult:
     method_values = np.asarray(series.method_values, dtype=np.float64)
     baseline_values = np.asarray(series.baseline_values, dtype=np.float64)
-    expected_pairs = int(config.sequential.utility.streams)
+    expected_pairs = config.sequential.utility.streams
     if method_values.shape != baseline_values.shape:
         raise InvalidScientificDataError(
             "paired method and baseline vectors must have identical shape"
@@ -590,8 +590,8 @@ def _dependency_reference(
 
 def _cell_order(cell: PlannedCell) -> tuple[int, int, str]:
     return (
-        int(cell.experiment_order),
-        int(cell.cell_ordinal),
+        cell.experiment_order,
+        cell.cell_ordinal,
         str(cell.identity.semantic_cell_key),
     )
 

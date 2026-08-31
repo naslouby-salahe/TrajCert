@@ -63,7 +63,7 @@ def evaluate_population_materiality(
     observations: Iterable[PopulationMaterialityObservation],
 ) -> PopulationMaterialitySummary:
     config = active_config.get()
-    qualified_by_law: dict[LawName, set[float]] = defaultdict(set)
+    qualified_by_law: dict[LawName, set[SensitivityBudget]] = defaultdict(set)
     encountered_laws: set[LawName] = set()
     for observation in observations:
         encountered_laws.add(observation.law_name)
@@ -76,7 +76,7 @@ def evaluate_population_materiality(
             and observation.relative_unresolved_gain
             >= config.materiality.population.relative_unresolved_gain
         ):
-            qualified_by_law[observation.law_name].add(float(observation.sensitivity_budget))
+            qualified_by_law[observation.law_name].add(observation.sensitivity_budget)
     laws = tuple(
         PopulationLawMateriality(
             law_name=law_name,
@@ -110,7 +110,7 @@ def evaluate_sequential_materiality(
             and observation.bootstrap_lower > 0.0
             and observation.holm_adjusted_p_value < config.confidence.alpha
         ):
-            qualified_by_law[observation.law_name].add(float(observation.sensitivity_budget))
+            qualified_by_law[observation.law_name].add(observation.sensitivity_budget)
     laws = tuple(
         SequentialLawMateriality(
             law_name=law_name,
