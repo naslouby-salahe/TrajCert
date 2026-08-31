@@ -1301,13 +1301,6 @@ def all_publication_source_descriptors() -> tuple[PublicationSourceDescriptor, .
     return (*_TABLE_SOURCES, *_FIGURE_SOURCES)
 
 
-def descriptor_for(name: PublicationSourceName) -> PublicationSourceDescriptor:
-    for source_name, descriptor in _NAMED_SOURCES:
-        if source_name is name:
-            return descriptor
-    raise InvalidScientificDataError(f"unknown publication source: {name}")
-
-
 def read_verified_source_data(
     workspace_root: Path,
     descriptor: PublicationSourceDescriptor,
@@ -1807,6 +1800,3 @@ _FIGURE_SOURCES = (
         "computational-scaling",
     ),
 )
-
-
-_NAMED_SOURCES = tuple(zip(PublicationSourceName, (*_TABLE_SOURCES, *_FIGURE_SOURCES), strict=True))

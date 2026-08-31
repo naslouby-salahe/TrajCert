@@ -53,10 +53,6 @@ def permutation_namespace(semantic_comparison_key: SemanticComparisonKey) -> See
     return _descriptor_namespace(SeedNamespaceRole.PERMUTATION, semantic_comparison_key)
 
 
-def namespace_for_role(role: SeedNamespaceRole) -> SeedNamespace:
-    return SeedNamespace(role.value)
-
-
 def _descriptor_namespace(
     role: SeedNamespaceRole, descriptor: SemanticComparisonKey
 ) -> SeedNamespace:

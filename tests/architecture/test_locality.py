@@ -5,11 +5,11 @@ import pytest
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.runner import (
+    LocalValidityAuditResult,
     LocalValidityTarget,
     RuntimeLineageArtifact,
     ScientificInputClass,
     StaticComponentDependency,
-    audit_local_validity,
     audit_local_validity_targets,
 )
 from trajcert.provenance import ProducerComponentName
@@ -17,6 +17,20 @@ from trajcert.storage import ArtifactKey
 from trajcert.types import ActionChannelId, ClientId, EpochId
 
 _EXPECTED_MULTI_ROOT_AUDITED_ROOT_COUNT = 2
+
+
+def audit_local_validity(
+    target_identity: LedgerIdentity,
+    static_dependencies: tuple[StaticComponentDependency, ...],
+    root_artifact_key: ArtifactKey,
+    lineage_artifacts: tuple[RuntimeLineageArtifact, ...],
+) -> LocalValidityAuditResult:
+    target = LocalValidityTarget(
+        target_identity=target_identity,
+        root_artifact_key=root_artifact_key,
+        lineage_artifacts=lineage_artifacts,
+    )
+    return audit_local_validity_targets(static_dependencies, (target,))
 
 
 def test_local_bound_lineage_accepts_only_target_identity() -> None:

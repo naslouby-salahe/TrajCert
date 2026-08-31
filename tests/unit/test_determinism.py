@@ -10,7 +10,6 @@ from trajcert.determinism import (
     event_stream_namespace,
     generator,
     generator_for,
-    namespace_for_role,
     permutation_namespace,
 )
 from trajcert.exceptions import InvalidScientificDataError
@@ -98,8 +97,7 @@ def test_bootstrap_and_permutation_namespaces_differ() -> None:
 
 
 def test_descriptor_namespace_differs_from_role_only_namespace() -> None:
-    role_only = namespace_for_role(SeedNamespaceRole.BOOTSTRAP)
-    assert role_only == SeedNamespace("Bootstrap")
+    role_only = SeedNamespace(SeedNamespaceRole.BOOTSTRAP.value)
     assert bootstrap_namespace(SemanticComparisonKey("comparison")) != role_only
 
 
@@ -110,21 +108,3 @@ def test_descriptor_namespaces_reject_empty_and_padded(descriptor: str) -> None:
         _ = bootstrap_namespace(key)
     with pytest.raises(InvalidScientificDataError):
         _ = permutation_namespace(key)
-
-
-def test_namespace_for_role_returns_role_value() -> None:
-    expected: dict[SeedNamespaceRole, str] = {
-        SeedNamespaceRole.SYNTHETIC_LAW: "Synthetic law",
-        SeedNamespaceRole.EVENT_STREAM: "Event stream",
-        SeedNamespaceRole.MONTE_CARLO: "Monte Carlo",
-        SeedNamespaceRole.ORACLE: "Oracle",
-        SeedNamespaceRole.BOOTSTRAP: "Bootstrap",
-        SeedNamespaceRole.PERMUTATION: "Permutation",
-        SeedNamespaceRole.RUNTIME: "Runtime",
-    }
-    assert {role: str(namespace_for_role(role)) for role in SeedNamespaceRole} == expected
-
-
-def test_namespace_role_seeds_are_mutually_distinct() -> None:
-    seeds = {derive_seed(namespace_for_role(role), 1) for role in SeedNamespaceRole}
-    assert len(seeds) == len(SeedNamespaceRole)

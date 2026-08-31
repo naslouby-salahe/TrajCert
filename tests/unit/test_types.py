@@ -125,13 +125,9 @@ def test_safety_regime_values() -> None:
 
 def test_seed_namespace_role_values() -> None:
     expected: dict[SeedNamespaceRole, str] = {
-        SeedNamespaceRole.SYNTHETIC_LAW: "Synthetic law",
         SeedNamespaceRole.EVENT_STREAM: "Event stream",
-        SeedNamespaceRole.MONTE_CARLO: "Monte Carlo",
-        SeedNamespaceRole.ORACLE: "Oracle",
         SeedNamespaceRole.BOOTSTRAP: "Bootstrap",
         SeedNamespaceRole.PERMUTATION: "Permutation",
-        SeedNamespaceRole.RUNTIME: "Runtime",
     }
     assert {member: member.value for member in SeedNamespaceRole} == expected
 

@@ -47,7 +47,6 @@ from trajcert.reporting.source_data import (
     all_publication_source_descriptors,
     compatibility_safety_evidence,
     compatibility_safety_rows,
-    descriptor_for,
     figure_source_descriptors,
     partition_coherence_figure_rows,
     partition_timing_rows,
@@ -111,6 +110,11 @@ _ONE_ROW = 1
 _POPULATION_LAW_COUNT = 3
 _TABLE_SOURCE_COUNT = 12
 _FIGURE_SOURCE_COUNT = 8
+
+
+def _descriptor_for(name: PublicationSourceName) -> PublicationSourceDescriptor:
+    by_name = dict(zip(PublicationSourceName, all_publication_source_descriptors(), strict=True))
+    return by_name[name]
 
 
 def test_source_data_parquet_roundtrip_preserves_columns(tmp_path: Path) -> None:
@@ -649,16 +653,16 @@ def test_source_descriptors_enumerate_tables_and_figures() -> None:
 
 
 def test_descriptor_for_returns_registered_source() -> None:
-    figure = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    figure = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     assert figure.source_path.stem == "figure_computational_scaling"
     assert figure.source_role is PublicationSourceRole.FIGURE
-    table = descriptor_for(PublicationSourceName.RHO_UTILITY)
+    table = _descriptor_for(PublicationSourceName.RHO_UTILITY)
     assert table.source_path.stem == "rho_utility"
     assert table.source_role is PublicationSourceRole.TABLE
 
 
 def test_read_verified_source_data_sorts_rows_and_verifies_lineage(tmp_path: Path) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     rows = (
         ComputationalScalingFigureRow(
             K=4,
@@ -699,7 +703,7 @@ def test_read_verified_source_data_sorts_rows_and_verifies_lineage(tmp_path: Pat
 
 
 def test_read_verified_source_data_skips_sort_below_minimum_rows(tmp_path: Path) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     rows = (
         ComputationalScalingFigureRow(
             K=5,
@@ -714,7 +718,7 @@ def test_read_verified_source_data_skips_sort_below_minimum_rows(tmp_path: Path)
 
 
 def test_read_verified_source_data_requires_registered_producer(tmp_path: Path) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     source_path = tmp_path / descriptor.source_path
     source_path.parent.mkdir(parents=True, exist_ok=True)
     row = ComputationalScalingFigureRow(
@@ -729,7 +733,7 @@ def test_read_verified_source_data_requires_registered_producer(tmp_path: Path) 
 
 
 def test_read_verified_source_data_rejects_missing_columns(tmp_path: Path) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     source_path = tmp_path / descriptor.source_path
     source_path.parent.mkdir(parents=True, exist_ok=True)
     _WRITE_PARQUET(pa.Table.from_pydict({"K": [1.0]}), source_path)
@@ -738,7 +742,7 @@ def test_read_verified_source_data_rejects_missing_columns(tmp_path: Path) -> No
 
 
 def test_read_verified_source_data_rejects_table_schema_mismatch(tmp_path: Path) -> None:
-    descriptor = descriptor_for(PublicationSourceName.RHO_UTILITY)
+    descriptor = _descriptor_for(PublicationSourceName.RHO_UTILITY)
     source_path = tmp_path / descriptor.source_path
     source_path.parent.mkdir(parents=True, exist_ok=True)
     row = RhoUtilityRow(
@@ -758,7 +762,7 @@ def test_read_verified_source_data_rejects_table_schema_mismatch(tmp_path: Path)
 
 
 def test_read_verified_source_data_rejects_non_finite_float(tmp_path: Path) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     source_path = tmp_path / descriptor.source_path
     source_path.parent.mkdir(parents=True, exist_ok=True)
     table = pa.Table.from_pydict(
@@ -775,7 +779,7 @@ def test_read_verified_source_data_rejects_non_finite_float(tmp_path: Path) -> N
 
 
 def test_read_verified_source_data_rejects_checksum_mismatch(tmp_path: Path) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     original = (
         ComputationalScalingFigureRow(
             K=1,
@@ -801,7 +805,7 @@ def test_read_verified_source_data_rejects_checksum_mismatch(tmp_path: Path) -> 
 def test_read_verified_source_data_rejects_checksum_absent_from_completion(
     tmp_path: Path,
 ) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     original = (
         ComputationalScalingFigureRow(
             K=1,
@@ -838,7 +842,7 @@ def test_read_verified_source_data_rejects_checksum_absent_from_completion(
 def test_read_verified_source_data_rejects_artifact_absent_from_completion(
     tmp_path: Path,
 ) -> None:
-    descriptor = descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
+    descriptor = _descriptor_for(PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING)
     rows = (
         ComputationalScalingFigureRow(
             K=1,

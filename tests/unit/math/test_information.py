@@ -6,7 +6,6 @@ from tests.unit.conftest import summary
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.math.information import (
     information_profile,
-    information_profile_derivative,
     information_profile_second_derivative,
     latent_risk,
     minimum_information_point,
@@ -16,13 +15,15 @@ from trajcert.math.information import (
     timing_gain,
 )
 
+_CENTRAL_DIFFERENCE_STEP = 1e-6
+
 
 def test_information_guards_reject_invalid_inputs() -> None:
     observed = summary([0.2], [0.4], 0.4)
     with pytest.raises(InvalidScientificDataError, match="finite and positive"):
         _ = timing_gain(observed, observed, 0.0)
     with pytest.raises(InvalidScientificDataError, match="0 < u < c"):
-        _ = information_profile_derivative(observed, 0.0)
+        _ = information_profile_second_derivative(observed, 0.0)
 
 
 def test_information_profile_geometry_and_derivatives() -> None:
@@ -34,15 +35,14 @@ def test_information_profile_geometry_and_derivatives() -> None:
     assert timing_information is not None
     assert timing_information > 0.0
     assert latent_risk(observed, 0.1) == pytest.approx(0.3)
-    assert information_profile(observed, minimum.hidden_terminal_harmful_mass) == pytest.approx(
-        minimum.information_floor
-    )
-    assert information_profile_derivative(
-        observed, minimum.hidden_terminal_harmful_mass
-    ) == pytest.approx(0.0)
-    assert (
-        information_profile_second_derivative(observed, minimum.hidden_terminal_harmful_mass) > 0.0
-    )
+    u_star = float(minimum.hidden_terminal_harmful_mass)
+    assert information_profile(observed, u_star) == pytest.approx(minimum.information_floor)
+    central_difference_derivative = (
+        information_profile(observed, u_star + _CENTRAL_DIFFERENCE_STEP)
+        - information_profile(observed, u_star - _CENTRAL_DIFFERENCE_STEP)
+    ) / (2.0 * _CENTRAL_DIFFERENCE_STEP)
+    assert central_difference_derivative == pytest.approx(0.0, abs=1e-4)
+    assert information_profile_second_derivative(observed, u_star) > 0.0
 
 
 @pytest.mark.parametrize("hidden", [-0.1, 0.5])

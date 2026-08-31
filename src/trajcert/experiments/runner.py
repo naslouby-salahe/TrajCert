@@ -680,20 +680,6 @@ def _module_path(workspace_root: Path, module_name: str) -> Path | None:
     return None
 
 
-def audit_local_validity(
-    target_identity: LedgerIdentity,
-    static_dependencies: tuple[StaticComponentDependency, ...],
-    root_artifact_key: ArtifactKey,
-    lineage_artifacts: tuple[RuntimeLineageArtifact, ...],
-) -> LocalValidityAuditResult:
-    target = LocalValidityTarget(
-        target_identity=target_identity,
-        root_artifact_key=root_artifact_key,
-        lineage_artifacts=lineage_artifacts,
-    )
-    return audit_local_validity_targets(static_dependencies, (target,))
-
-
 def audit_local_validity_targets(
     static_dependencies: tuple[StaticComponentDependency, ...],
     targets: tuple[LocalValidityTarget, ...],

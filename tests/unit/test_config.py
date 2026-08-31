@@ -26,7 +26,6 @@ from trajcert.determinism import (
     derive_seed,
     event_stream_namespace,
     generator_for,
-    namespace_for_role,
     permutation_namespace,
 )
 from trajcert.exceptions import ConfigurationError, InvalidScientificDataError
@@ -279,16 +278,11 @@ def _permutation_seed_namespace() -> SeedNamespace:
     return permutation_namespace(SemanticComparisonKey("comparison"))
 
 
-def _oracle_seed_namespace() -> SeedNamespace:
-    return namespace_for_role(SeedNamespaceRole.ORACLE)
-
-
 @pytest.mark.parametrize(
     ("factory", "role"),
     [
         (_bootstrap_seed_namespace, SeedNamespaceRole.BOOTSTRAP),
         (_permutation_seed_namespace, SeedNamespaceRole.PERMUTATION),
-        (_oracle_seed_namespace, SeedNamespaceRole.ORACLE),
     ],
 )
 def test_seed_namespaces_are_descriptive_and_deterministic(

@@ -2277,13 +2277,9 @@ seed =
 The fixed namespace roles are:
 
 ```text
-Synthetic law
 Event stream
-Monte Carlo
-Oracle
 Bootstrap
 Permutation
-Runtime
 ```
 
 The semantic-descriptor separator is `|`.
@@ -2296,7 +2292,7 @@ Bootstrap|<semantic comparison key>
 Permutation|<semantic comparison key>
 ```
 
-`Synthetic law`, `Monte Carlo`, `Oracle`, and `Runtime` remain reserved namespace roles and are not consumed by a current stochastic producer unless that producer actually uses randomness.
+No other namespace roles exist. A new stochastic producer that needs seed isolation adds its own role and construction rule here when it is implemented, rather than reserving an unused role ahead of need.
 
 Event-stream namespace does not include experiment name, coverage/utility role, requested prefix length, rho, beta, or method. Therefore compatible consumers reuse the same semantic stream and shorter consumers use a validated prefix.
 

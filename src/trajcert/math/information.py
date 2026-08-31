@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import isfinite, log, ulp
+from math import isfinite, ulp
 
 import numpy as np
 
@@ -15,7 +15,6 @@ from trajcert.math.entropy import (
 from trajcert.types import (
     EntropyValue,
     InformationCurvature,
-    InformationDerivative,
     InformationNats,
     Mass,
     MinimumInformationPoint,
@@ -80,18 +79,6 @@ def information_profile(
     terminal_entropy = weighted_binary_entropy(unresolved, harmful_rate)
     value = total_entropy - timing_entropy - terminal_entropy
     return _nonnegative_roundoff_guard(float(value))
-
-
-def information_profile_derivative(
-    summary: ObservableSummary, hidden_terminal_harmful_mass: Mass
-) -> InformationDerivative:
-    hidden = _strictly_interior_hidden_mass(summary, hidden_terminal_harmful_mass)
-    harmful = summary.resolved_harmful_mass
-    correct = summary.resolved_correct_mass
-    unresolved = summary.unresolved_mass
-    numerator = hidden * (correct + unresolved - hidden)
-    denominator = (harmful + hidden) * (unresolved - hidden)
-    return log(numerator / denominator)
 
 
 def information_profile_second_derivative(

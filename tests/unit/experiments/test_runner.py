@@ -519,8 +519,13 @@ def test_audit_local_validity_passes_clean_target() -> None:
             epoch_id=identity.epoch_id,
         ),
     )
-    result = runner.audit_local_validity(
-        identity, _static_dependencies(identity.client_id), root, lineage
+    result = runner.audit_local_validity_targets(
+        _static_dependencies(identity.client_id),
+        (
+            runner.LocalValidityTarget(
+                target_identity=identity, root_artifact_key=root, lineage_artifacts=lineage
+            ),
+        ),
     )
     assert result.passed is True
     assert result.static_dependency_pass is True
@@ -546,8 +551,13 @@ def test_audit_local_validity_reports_runtime_violations() -> None:
             foreign_model_updates=True,
         ),
     )
-    result = runner.audit_local_validity(
-        identity, _static_dependencies(identity.client_id), root, lineage
+    result = runner.audit_local_validity_targets(
+        _static_dependencies(identity.client_id),
+        (
+            runner.LocalValidityTarget(
+                target_identity=identity, root_artifact_key=root, lineage_artifacts=lineage
+            ),
+        ),
     )
     assert result.passed is False
     assert result.static_dependency_pass is True

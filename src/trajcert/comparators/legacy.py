@@ -12,8 +12,6 @@ from trajcert.types import (
     Count,
     DomainModel,
     HiddenMassInterval,
-    Mass,
-    NonNegativeInt,
     RiskInterval,
 )
 
@@ -78,35 +76,6 @@ def legacy_bandwise_odds_ratio(
         ),
         informative_bands=informative,
     )
-
-
-def response_hazard_odds_ratio(
-    summary: ObservableSummary,
-    band_index: NonNegativeInt,
-    hidden_terminal_harmful: Mass,
-) -> float | None:
-    if band_index < 0 or band_index >= summary.partition.band_count:
-        raise InvalidScientificDataError("legacy band index is outside the partition")
-    harmful = tuple(float(value) for value in summary.harmful_by_band)
-    correct = tuple(float(value) for value in summary.correct_by_band)
-    unresolved = float(summary.unresolved_mass)
-    if hidden_terminal_harmful < 0.0 or hidden_terminal_harmful > unresolved:
-        raise InvalidScientificDataError("hidden terminal harmful mass lies outside [0, c]")
-    a = harmful[band_index]
-    b = correct[band_index]
-    if a == 0.0 and b == 0.0:
-        return None
-    if a == 0.0:
-        return 0.0
-    if b == 0.0:
-        return float("inf")
-    harmful_future = sum(harmful[band_index + 1 :])
-    correct_future = sum(correct[band_index + 1 :])
-    numerator = a * (correct_future + unresolved - hidden_terminal_harmful)
-    denominator = b * (harmful_future + hidden_terminal_harmful)
-    if denominator == 0.0:
-        return float("inf")
-    return numerator / denominator
 
 
 def _incompatible(gamma: LegacyGamma, informative: Count) -> LegacySensitivityResult:

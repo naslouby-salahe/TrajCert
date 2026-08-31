@@ -35,7 +35,6 @@ SeedIndex = NonNegativeInt
 SeedValue = NonNegativeInt
 EntropyValue = NonNegativeFloat
 InformationCurvature = FiniteFloat
-InformationDerivative = FiniteFloat
 InformationNats = NonNegativeFloat
 Mass = UnitFloat
 Probability = UnitFloat
@@ -170,13 +169,9 @@ class SafetyRegime(StrEnum):
 
 
 class SeedNamespaceRole(StrEnum):
-    SYNTHETIC_LAW = "Synthetic law"
     EVENT_STREAM = "Event stream"
-    MONTE_CARLO = "Monte Carlo"
-    ORACLE = "Oracle"
     BOOTSTRAP = "Bootstrap"
     PERMUTATION = "Permutation"
-    RUNTIME = "Runtime"
 
 
 class CliCommand(StrEnum):

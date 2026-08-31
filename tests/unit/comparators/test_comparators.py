@@ -17,11 +17,7 @@ from trajcert.comparators.ignorable_delay import (
     IgnorableDelayStatus,
     ignorable_delay_update,
 )
-from trajcert.comparators.legacy import (
-    LegacyApplicability,
-    legacy_bandwise_odds_ratio,
-    response_hazard_odds_ratio,
-)
+from trajcert.comparators.legacy import LegacyApplicability, legacy_bandwise_odds_ratio
 from trajcert.comparators.pattern_mixture import PatternMixtureStatus, fit_pattern_mixture
 from trajcert.comparators.repeated_static import repeated_static_projection, repeated_static_region
 from trajcert.config import active_config
@@ -163,23 +159,6 @@ def test_legacy_bandwise_odds_ratio_symmetric_bands_applicable() -> None:
     assert result.latent_risk_interval.lower == pytest.approx(0.48)
     assert result.latent_risk_interval.upper == pytest.approx(0.52)
     assert result.informative_bands == len(observable.harmful_by_band)
-
-
-def test_response_hazard_odds_ratio_rejects_invalid_inputs() -> None:
-    observable = summary([0.2, 0.3], [0.3, 0.1], 0.1)
-    with pytest.raises(InvalidScientificDataError, match="band index"):
-        _ = response_hazard_odds_ratio(observable, 5, 0.05)
-    with pytest.raises(InvalidScientificDataError, match="outside"):
-        _ = response_hazard_odds_ratio(observable, 0, -0.1)
-
-
-def test_response_hazard_odds_ratio_values_and_edges() -> None:
-    observable = summary([0.2, 0.3], [0.3, 0.1], 0.1)
-    assert response_hazard_odds_ratio(observable, 0, 0.05) == pytest.approx(2 / 7)
-    assert response_hazard_odds_ratio(observable, 0, 0.0) == pytest.approx(4 / 9)
-    assert response_hazard_odds_ratio(summary([0.0, 0.0], [0.0, 0.0], 1.0), 0, 0.5) is None
-    assert response_hazard_odds_ratio(summary([0.0, 0.1], [0.2, 0.1], 0.6), 0, 0.1) == 0.0
-    assert response_hazard_odds_ratio(summary([0.2, 0.1], [0.0, 0.1], 0.6), 0, 0.1) == float("inf")
 
 
 def test_pattern_mixture_requires_two_nonempty_bands() -> None:

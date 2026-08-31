@@ -167,46 +167,6 @@ def project_upper_risk(
     )
 
 
-def finite_sample_compatibility_lower_bound(
-    envelope: ObservableSummaryEnvelope,
-    arbitrary_precision_bits: NonNegativeInt,
-    outer_gap: ToleranceValue,
-    outer_max_nodes: NonNegativeInt,
-) -> InformationNats:
-    previous_precision = ctx.prec
-    ctx.prec = max(previous_precision, int(arbitrary_precision_bits))
-    try:
-        result = _compatibility_search(envelope, float(outer_gap), int(outer_max_nodes))
-    finally:
-        ctx.prec = previous_precision
-    return max(0.0, result.proven_lower)
-
-
-def finite_sample_intrinsic_risk_lower_bound(
-    envelope: ObservableSummaryEnvelope,
-    arbitrary_precision_bits: NonNegativeInt,
-    outer_gap: ToleranceValue,
-    outer_max_nodes: NonNegativeInt,
-    comparison_guard: ToleranceValue,
-    sensitivity_budget: SensitivityBudget = 0.0,
-) -> RiskValue | None:
-    previous_precision = ctx.prec
-    ctx.prec = max(previous_precision, int(arbitrary_precision_bits))
-    try:
-        result = _intrinsic_search(
-            envelope,
-            float(sensitivity_budget),
-            float(outer_gap),
-            int(outer_max_nodes),
-            float(comparison_guard),
-        )
-    finally:
-        ctx.prec = previous_precision
-    if result.zero_resolved_mass_plausible:
-        return None
-    return _unit(result.proven_lower)
-
-
 def _singleton_projection(
     envelope: ObservableSummaryEnvelope,
     rho: SensitivityBudget,
