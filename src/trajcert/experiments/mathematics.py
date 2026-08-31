@@ -28,7 +28,8 @@ from trajcert.math.safety import (
 from trajcert.types import (
     Count,
     DomainModel,
-    FiniteFloat,
+    GammaSensitivity,
+    HazardProbability,
     HiddenMassInterval,
     InformationCurvature,
     InformationNats,
@@ -382,21 +383,21 @@ class EndpointDifferenceDirection(StrEnum):
 
 
 class LegacyPartitionIncoherenceResult(DomainModel):
-    gamma: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    q: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    true_hidden_terminal_harmful: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gamma: GammaSensitivity
+    q: HazardProbability
+    true_hidden_terminal_harmful: Mass
     fine_hidden_mass_interval: HiddenMassInterval
     endpoint_hidden_mass_interval: HiddenMassInterval
     fine_risk_interval: RiskInterval
     endpoint_risk_interval: RiskInterval
     endpoint_difference_direction: EndpointDifferenceDirection
-    endpoint_difference_magnitude: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    endpoint_difference_magnitude: NonNegativeFloat
     passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def evaluate_legacy_partition_incoherence(
-    gamma: FiniteFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    q: FiniteFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gamma: GammaSensitivity,
+    q: HazardProbability,
 ) -> LegacyPartitionIncoherenceResult:
     config = active_config.get()
     if gamma < 1.0:
@@ -476,9 +477,7 @@ def evaluate_legacy_partition_incoherence(
     )
 
 
-def _tilted_probability(q: FiniteFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                        gamma: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                        ) -> Probability:
+def _tilted_probability(q: HazardProbability, gamma: GammaSensitivity) -> Probability:
     return gamma * q / (1.0 - q + gamma * q)
 
 
