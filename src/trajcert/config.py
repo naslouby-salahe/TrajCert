@@ -264,6 +264,8 @@ class NumericsConfig(ConfigModel):
     projection_refinement_candidates: PositiveInt
     projection_refinement_steps: PositiveInt
     resolved_harm_boundary_offset: PositiveFloat
+    compatibility_floor_offset: PositiveFloat
+    sharpness_diagnostic_offset: PositiveFloat
 
 
 class LegacyPatternMixtureConfig(ConfigModel):
@@ -365,6 +367,8 @@ class MaterialityConfig(ConfigModel):
 class BenchmarkConfig(ConfigModel):
     warmup_repetitions: NonNegativeInt
     measured_repetitions: PositiveInt
+    outer_sample_size: PositiveInt
+    minimum_samples_for_standard_deviation: PositiveInt
 
 
 class CoverageSizeOverrides(ConfigModel):

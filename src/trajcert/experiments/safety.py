@@ -25,9 +25,6 @@ from trajcert.types import (
     ToleranceValue,
 )
 
-_COMPATIBILITY_OFFSET = 0.005
-_SHARPNESS_OFFSET = 0.05
-
 
 class CompatibilitySweepStatus(StrEnum):
     APPLICABLE = "APPLICABLE"
@@ -67,13 +64,14 @@ def compatibility_floor_behavior(
     identity_atol: ToleranceValue,
     oracle_digits: PositiveInt,
     oracle_bracket_width: ToleranceValue,
+    compatibility_floor_offset: ToleranceValue,
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
     definitions = (
-        ("below", tau - _COMPATIBILITY_OFFSET),
+        ("below", tau - compatibility_floor_offset),
         ("at", tau),
-        ("above", tau + _COMPATIBILITY_OFFSET),
+        ("above", tau + compatibility_floor_offset),
     )
     points: list[CompatibilitySweepPoint] = []
     for label, rho in definitions:
@@ -113,12 +111,13 @@ def sharpness_against_generic_oracle(
     identity_atol: ToleranceValue,
     oracle_digits: PositiveInt,
     oracle_bracket_width: ToleranceValue,
+    sharpness_diagnostic_offset: ToleranceValue,
 ) -> SolverOracleComparison:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
     return compare_production_solver_to_oracle(
         summary=summary,
-        sensitivity_budget=tau + _SHARPNESS_OFFSET,
+        sensitivity_budget=tau + sharpness_diagnostic_offset,
         root_atol=root_atol,
         identity_atol=identity_atol,
         oracle_digits=oracle_digits,

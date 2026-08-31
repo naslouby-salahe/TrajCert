@@ -39,7 +39,12 @@ def _benchmark_summary() -> ObservableSummary:
 def test_compatibility_floor_marks_below_zero_budget_not_applicable() -> None:
     uniform = summary([0.2, 0.2], [0.2, 0.2], 0.2)
     result = compatibility_floor_behavior(
-        uniform, _ROOT_ATOL, _IDENTITY_ATOL, _ORACLE_DIGITS, _ORACLE_BRACKET_WIDTH
+        uniform,
+        _ROOT_ATOL,
+        _IDENTITY_ATOL,
+        _ORACLE_DIGITS,
+        _ORACLE_BRACKET_WIDTH,
+        _COMPATIBILITY_OFFSET,
     )
     assert result.tau == 0.0
     assert result.passed
@@ -56,7 +61,12 @@ def test_compatibility_floor_marks_below_zero_budget_not_applicable() -> None:
 
 def test_compatibility_floor_below_tau_uses_model_incompatible_solver() -> None:
     result = compatibility_floor_behavior(
-        _benchmark_summary(), _ROOT_ATOL, _IDENTITY_ATOL, _ORACLE_DIGITS, _ORACLE_BRACKET_WIDTH
+        _benchmark_summary(),
+        _ROOT_ATOL,
+        _IDENTITY_ATOL,
+        _ORACLE_DIGITS,
+        _ORACLE_BRACKET_WIDTH,
+        _COMPATIBILITY_OFFSET,
     )
     assert result.tau == pytest.approx(_EXPECTED_TAU)
     below, at, above = result.points
@@ -72,7 +82,12 @@ def test_compatibility_floor_below_tau_uses_model_incompatible_solver() -> None:
 
 def test_compatibility_floor_fails_when_above_tau_solver_mismatches() -> None:
     result = compatibility_floor_behavior(
-        _benchmark_summary(), _ROOT_ATOL, _IDENTITY_ATOL, _ORACLE_DIGITS, _ORACLE_BRACKET_WIDTH
+        _benchmark_summary(),
+        _ROOT_ATOL,
+        _IDENTITY_ATOL,
+        _ORACLE_DIGITS,
+        _ORACLE_BRACKET_WIDTH,
+        _COMPATIBILITY_OFFSET,
     )
     assert not result.passed
     assert len(result.points) == _COMPATIBILITY_SWEEP_POINT_COUNT
@@ -105,7 +120,12 @@ def test_safety_frontier_not_applicable_outside_interior_regime() -> None:
 
 def test_sharpness_against_generic_oracle_uses_tau_offset_budget() -> None:
     comparison = sharpness_against_generic_oracle(
-        _benchmark_summary(), _ROOT_ATOL, _IDENTITY_ATOL, _ORACLE_DIGITS, _ORACLE_BRACKET_WIDTH
+        _benchmark_summary(),
+        _ROOT_ATOL,
+        _IDENTITY_ATOL,
+        _ORACLE_DIGITS,
+        _ORACLE_BRACKET_WIDTH,
+        _SHARPNESS_OFFSET,
     )
     benchmark = _benchmark_summary()
     expected_budget = float(observed_timing_information(benchmark) or 0.0) + _SHARPNESS_OFFSET
@@ -117,7 +137,12 @@ def test_sharpness_against_generic_oracle_uses_tau_offset_budget() -> None:
 
 def test_sharpness_against_generic_oracle_passes_with_exact_boundary_roots() -> None:
     comparison = sharpness_against_generic_oracle(
-        _benchmark_summary(), _ROOT_ATOL, _IDENTITY_ATOL, _ORACLE_DIGITS, _ORACLE_BRACKET_WIDTH
+        _benchmark_summary(),
+        _ROOT_ATOL,
+        _IDENTITY_ATOL,
+        _ORACLE_DIGITS,
+        _ORACLE_BRACKET_WIDTH,
+        _SHARPNESS_OFFSET,
     )
     assert comparison.passed
     assert comparison.max_root_residual == pytest.approx(_SHARPNESS_RESIDUAL)

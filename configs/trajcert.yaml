@@ -78,7 +78,7 @@ study_design:
   sharp_set_offsets: [0.0, 0.005, 0.025, 0.1]
   oracle_offsets: [0.0, 0.0025, 0.01, 0.05, 0.15]
   timing_offsets: [0.005, 0.025, 0.1]
-numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, float_roundoff_ulps: 32.0, profile_grid_points: 1001, sharp_diagnostic_grid_points: 2001, oracle_bracket_width: 1.0e-14, projection_refinement_candidates: 20, projection_refinement_steps: 24, resolved_harm_boundary_offset: 0.005}
+numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, float_roundoff_ulps: 32.0, profile_grid_points: 1001, sharp_diagnostic_grid_points: 2001, oracle_bracket_width: 1.0e-14, projection_refinement_candidates: 20, projection_refinement_steps: 24, resolved_harm_boundary_offset: 0.005, compatibility_floor_offset: 0.005, sharpness_diagnostic_offset: 0.05}
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
   pattern_mixture:
@@ -109,7 +109,7 @@ statistics: {bootstrap_resamples: 10000, sign_flip_randomizations: 20000, minimu
 materiality:
   population: {absolute_tightening: 0.005, relative_unresolved_gain: 0.2, qualifying_laws: 3, compatible_rho_values: 2}
   sequential: {certified_fraction_gain: 0.05, qualifying_laws: 3}
-benchmark: {warmup_repetitions: 5, measured_repetitions: 30}
+benchmark: {warmup_repetitions: 5, measured_repetitions: 30, outer_sample_size: 500, minimum_samples_for_standard_deviation: 2}
 failure_boundary:
   unresolvedness: [0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
   timing_contrast: [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]

@@ -24,8 +24,6 @@ from trajcert.math.oracle import direct_mutual_information
 from trajcert.types import DomainModel, LawKey
 
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
-_OUTER_SAMPLE_SIZE = 500
-_MINIMUM_SAMPLES_FOR_STANDARD_DEVIATION = 2
 
 
 class ScalingTarget(StrEnum):
@@ -116,7 +114,7 @@ def _benchmark_target(
         mean_runtime_seconds=float(mean(runtimes)),
         sample_sd_runtime_seconds=(
             0.0
-            if len(runtimes) < _MINIMUM_SAMPLES_FOR_STANDARD_DEVIATION
+            if len(runtimes) < config.benchmark.minimum_samples_for_standard_deviation
             else float(stdev(float(value) for value in runtimes))
         ),
         peak_rss_mib=max(measurement.peak_rss_mib for measurement in measurements),
@@ -229,7 +227,7 @@ def _execute_target(
         parameters=parameters,
         partition=partition,
         stream_index=0,
-        event_count=_OUTER_SAMPLE_SIZE,
+        event_count=config.benchmark.outer_sample_size,
     )
     full_law = build_full_law(parameters, band_count)
     true_information = direct_mutual_information(
@@ -246,7 +244,7 @@ def _execute_target(
         config=config,
         sensitivity_budget=float(true_information) + 0.01,
         risk_budget=config.budgets.risk,
-        checkpoint_every=_OUTER_SAMPLE_SIZE,
+        checkpoint_every=config.benchmark.outer_sample_size,
     )
     return None, int(trace.checkpoints[-1].projection.visited_nodes)
 

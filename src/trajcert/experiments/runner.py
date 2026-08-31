@@ -907,6 +907,7 @@ def _dispatch_sharpness_against_generic_oracle(
         identity_atol=config.numerics.identity_atol,
         oracle_digits=config.numerics.oracle_digits,
         oracle_bracket_width=config.numerics.oracle_bracket_width,
+        sharpness_diagnostic_offset=config.numerics.sharpness_diagnostic_offset,
     )
 
 
@@ -1054,6 +1055,7 @@ def _summary_compatibility_floor_behavior(
         config.numerics.identity_atol,
         config.numerics.oracle_digits,
         config.numerics.oracle_bracket_width,
+        config.numerics.compatibility_floor_offset,
     )
 
 

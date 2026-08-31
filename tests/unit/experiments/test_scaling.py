@@ -24,7 +24,14 @@ _OUTER_PEAK_MIB = 20.0
 
 def _small_benchmark_config() -> TrajCertConfig:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    benchmark = BenchmarkConfig(warmup_repetitions=0, measured_repetitions=1)
+    benchmark = BenchmarkConfig(
+        warmup_repetitions=0,
+        measured_repetitions=1,
+        outer_sample_size=config.benchmark.outer_sample_size,
+        minimum_samples_for_standard_deviation=(
+            config.benchmark.minimum_samples_for_standard_deviation
+        ),
+    )
     numerics = config.numerics.model_copy(update={"outer_max_nodes": _NODE_BUDGET})
     return config.model_copy(update={"benchmark": benchmark, "numerics": numerics})
 
