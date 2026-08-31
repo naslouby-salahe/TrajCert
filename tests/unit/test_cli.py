@@ -32,7 +32,7 @@ from trajcert.provenance import (
     VariantName,
 )
 from trajcert.reporting.export import ReportExportResult
-from trajcert.reporting.source_data import table_source_descriptors
+from trajcert.reporting.source_data import all_publication_source_descriptors
 from trajcert.schemas import PublicationSourceDescriptor
 from trajcert.storage import (
     ArtifactIndexEntry,
@@ -47,6 +47,7 @@ from trajcert.storage import (
 from trajcert.types import (
     CliCommand,
     EvidenceClass,
+    LawKey,
     PublicExecutionState,
     ReasonCode,
 )
@@ -133,7 +134,10 @@ def _fake_smoke_fail() -> SmokeResult:
     )
 
 
-def _fake_preprocess_target() -> Path:
+def _fake_preprocess_target(
+    dataset_name: str | None = None, *, overwrite: bool = False
+) -> Path:
+    del dataset_name, overwrite
     return Path("outputs/preprocessing/validation/scientific_inventory.json")
 
 
@@ -161,8 +165,12 @@ def _fake_report_rendered(*, experiment_name: str | None, overwrite: bool) -> Re
     )
 
 
-def _invalid_inventory(config: TrajCertConfig) -> InventoryValidationResult:
-    return validate_scientific_inventory(config).model_copy(update={"valid": False})
+def _invalid_inventory(
+    config: TrajCertConfig, *, law_key: LawKey | None = None
+) -> InventoryValidationResult:
+    return validate_scientific_inventory(config, law_key=law_key).model_copy(
+        update={"valid": False}
+    )
 
 
 def _raise_configuration_error() -> ExperimentPlan:
@@ -468,6 +476,7 @@ def _arguments_with_command(command: object) -> CliArguments:
     return CliArguments(
         command=cast(CliCommand, command),
         experiment_name=None,
+        dataset_name=None,
         overwrite=False,
     )
 
@@ -481,6 +490,7 @@ def test_cli_arguments_carries_parsed_values() -> None:
     arguments = CliArguments(
         command=CliCommand.RUN,
         experiment_name="Population Sensitivity Utility",
+        dataset_name=None,
         overwrite=True,
     )
     assert arguments.command is CliCommand.RUN
@@ -554,6 +564,48 @@ def test_preprocess_rejects_invalid_inventory(
     monkeypatch.setattr(cli, "validate_scientific_inventory", _invalid_inventory)
     with pytest.raises(InvalidScientificDataError, match="inventory validation failed"):
         _ = cli.preprocess(workspace_root=workspace)
+
+
+def test_preprocess_reuses_existing_artifact_without_overwrite(tmp_path: Path) -> None:
+    workspace = _configured_workspace(tmp_path)
+    first = cli.preprocess(workspace_root=workspace)
+    written_at = first.stat().st_mtime_ns
+    second = cli.preprocess(workspace_root=workspace)
+    assert second == first
+    assert second.stat().st_mtime_ns == written_at
+
+
+def test_preprocess_overwrite_forces_recompute(tmp_path: Path) -> None:
+    workspace = _configured_workspace(tmp_path)
+    first = cli.preprocess(workspace_root=workspace)
+    _ = first.write_bytes(b"stale")
+    second = cli.preprocess(workspace_root=workspace, overwrite=True)
+    assert second == first
+    inventory = InventoryValidationResult.model_validate_json(second.read_text(encoding="utf-8"))
+    assert inventory.valid is True
+
+
+def test_preprocess_scopes_result_to_named_dataset(tmp_path: Path) -> None:
+    workspace = _configured_workspace(tmp_path)
+    target = cli.preprocess("No outcome-path dependence", workspace_root=workspace)
+    inventory = InventoryValidationResult.model_validate_json(target.read_text(encoding="utf-8"))
+    assert len(inventory.synthetic_laws) == 1
+    assert inventory.synthetic_laws[0].law_name == "No outcome-path dependence"
+
+
+def test_preprocess_rejects_unknown_dataset_name(tmp_path: Path) -> None:
+    workspace = _configured_workspace(tmp_path)
+    with pytest.raises(InvalidScientificDataError, match="unknown dataset name"):
+        _ = cli.preprocess("not a real dataset", workspace_root=workspace)
+
+
+def test_main_preprocess_unknown_dataset_name_exits_with_usage_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["trajcert", "preprocess", "not a real dataset"])
+    with pytest.raises(SystemExit) as raised:
+        cli.main()
+    assert raised.value.code == CliExitCode.USAGE_OR_UNKNOWN_NAME
 
 
 def test_plan_view_matches_registry_cell_count() -> None:
@@ -1024,15 +1076,15 @@ def test_doctor_rejects_file_outputs_path(tmp_path: Path) -> None:
         _ = cli.doctor(workspace_root=workspace)
 
 
-def _truncated_table_sources() -> tuple[PublicationSourceDescriptor, ...]:
-    return table_source_descriptors()[:1]
+def _truncated_publication_sources() -> tuple[PublicationSourceDescriptor, ...]:
+    return all_publication_source_descriptors()[:1]
 
 
 def test_doctor_rejects_incomplete_publication_sources(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _git_workspace(tmp_path)
-    monkeypatch.setattr(cli, "table_source_descriptors", _truncated_table_sources)
+    monkeypatch.setattr(cli, "all_publication_source_descriptors", _truncated_publication_sources)
     with pytest.raises(InvalidScientificDataError, match="publication source contract"):
         _ = cli.doctor(workspace_root=workspace)
 

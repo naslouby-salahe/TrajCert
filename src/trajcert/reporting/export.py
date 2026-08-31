@@ -36,9 +36,8 @@ from trajcert.provenance import EnvironmentDigest, ExperimentNameValue
 from trajcert.reporting.figures import FigureRenderResult, render_figures
 from trajcert.reporting.source_data import (
     VerifiedSourceData,
-    figure_source_descriptors,
+    all_publication_source_descriptors,
     read_verified_source_data,
-    table_source_descriptors,
 )
 from trajcert.reporting.tables import TableRenderResult, render_tables
 from trajcert.schemas import (
@@ -136,7 +135,7 @@ def validate_results_layout(workspace_root: Path) -> None:
 def _selected_descriptors(
     experiment_name: str | None,
 ) -> tuple[PublicationSourceDescriptor, ...]:
-    all_descriptors = (*table_source_descriptors(), *figure_source_descriptors())
+    all_descriptors = all_publication_source_descriptors()
     if experiment_name is None:
         return all_descriptors
     slug = str(semantic_slug(experiment_name))

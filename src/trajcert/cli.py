@@ -62,7 +62,7 @@ from trajcert.provenance import (
     provenance_fingerprint,
 )
 from trajcert.reporting.export import ReportExportResult, export_report, validate_results_layout
-from trajcert.reporting.source_data import figure_source_descriptors, table_source_descriptors
+from trajcert.reporting.source_data import all_publication_source_descriptors
 from trajcert.storage import (
     DigestHex,
     ProvenanceFingerprint,
@@ -77,6 +77,7 @@ from trajcert.types import (
     ClientId,
     DomainModel,
     EpochId,
+    LawKey,
     NonNegativeInt,
     PublicExecutionState,
     ReasonCode,
@@ -94,6 +95,7 @@ class CliExitCode(IntEnum):
 class CliArguments(DomainModel):
     command: CliCommand
     experiment_name: str | None
+    dataset_name: str | None
     overwrite: bool
 
 
@@ -119,9 +121,11 @@ def parse_args(argv: Sequence[str] | None = None) -> CliArguments:
     arguments = parser.parse_args(argv)
     command = CliCommand(cast(str, arguments.command))
     raw_name = getattr(arguments, "experiment_name", None)
+    raw_dataset_name = getattr(arguments, "dataset_name", None)
     return CliArguments(
         command=command,
         experiment_name=None if raw_name is None else cast(str, raw_name),
+        dataset_name=None if raw_dataset_name is None else cast(str, raw_dataset_name),
         overwrite=cast(bool, getattr(arguments, "overwrite", False)),
     )
 
@@ -135,7 +139,9 @@ def _dispatch(arguments: CliArguments) -> None:
         else:
             print("TrajCert doctor: FAIL")
     elif command is CliCommand.PREPROCESS:
-        print(preprocess())
+        name = _dataset_name(arguments)
+        target = preprocess(name, overwrite=arguments.overwrite)
+        print(target)
     elif command is CliCommand.PLAN:
         plan = plan_view()
         print(
@@ -171,8 +177,13 @@ def _dispatch(arguments: CliArguments) -> None:
 def build_parser() -> ArgumentParser:
     parser = ArgumentParser(prog="trajcert")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    for command in (CliCommand.DOCTOR, CliCommand.PREPROCESS, CliCommand.PLAN, CliCommand.SMOKE):
+    for command in (CliCommand.DOCTOR, CliCommand.PLAN):
         _ = subparsers.add_parser(command.value)
+    preprocess_parser = subparsers.add_parser(CliCommand.PREPROCESS.value)
+    _ = preprocess_parser.add_argument("dataset_name", nargs="?")
+    _ = preprocess_parser.add_argument("--overwrite", action="store_true")
+    smoke_parser = subparsers.add_parser(CliCommand.SMOKE.value)
+    _ = smoke_parser.add_argument("--overwrite", action="store_true")
     run_parser = subparsers.add_parser(CliCommand.RUN.value)
     _ = run_parser.add_argument("experiment_name")
     _ = run_parser.add_argument("--overwrite", action="store_true")
@@ -195,6 +206,15 @@ def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None:
     known = {str(item.experiment_name) for item in authoritative_registry()}
     if value not in known:
         build_parser().error(f"unknown experiment name: {value}")
+    return value
+
+
+def _dataset_name(arguments: CliArguments) -> str | None:
+    value = arguments.dataset_name
+    if value is None:
+        return None
+    if not value or value not in {str(name) for name in LAW_DISPLAY_NAMES.values()}:
+        build_parser().error(f"unknown dataset name: {value}")
     return value
 
 
@@ -300,7 +320,7 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         _ = importlib.import_module(module_name)
     _ = _source_commit(workspace_root)
     _assert_workspace_writable(workspace_root)
-    descriptors = (*table_source_descriptors(), *figure_source_descriptors())
+    descriptors = all_publication_source_descriptors()
     if (
         len(descriptors) != _PUBLICATION_SOURCE_COUNT
         or len({item.source_path for item in descriptors}) != _PUBLICATION_SOURCE_COUNT
@@ -321,14 +341,30 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
     )
 
 
-def preprocess(workspace_root: Path | None = None) -> Path:
+def preprocess(
+    dataset_name: str | None = None,
+    *,
+    workspace_root: Path | None = None,
+    overwrite: bool = False,
+) -> Path:
     workspace_root = workspace_root if workspace_root is not None else Path()
-    result = validate_scientific_inventory(_load_config(workspace_root))
+    target = workspace_root / _PREPROCESS_PATH
+    if not overwrite and target.is_file():
+        return target
+    law_key = None if dataset_name is None else _known_law_name(dataset_name)
+    result = validate_scientific_inventory(_load_config(workspace_root), law_key=law_key)
     if not result.valid:
         raise InvalidScientificDataError("scientific preprocessing/inventory validation failed")
-    target = workspace_root / _PREPROCESS_PATH
     _ = atomic_write_model(target, result)
     return target
+
+
+def _known_law_name(value: str) -> LawKey:
+    by_name = {str(name): key for key, name in LAW_DISPLAY_NAMES.items()}
+    key = by_name.get(value)
+    if key is None:
+        raise InvalidScientificDataError(f"unknown dataset name: {value}")
+    return key
 
 
 def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:

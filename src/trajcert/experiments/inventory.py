@@ -118,7 +118,9 @@ class InventoryValidationResult(DomainModel):
     experiment_matrix: tuple[ExperimentMatrixRow, ...]
 
 
-def validate_scientific_inventory(config: TrajCertConfig) -> InventoryValidationResult:
+def validate_scientific_inventory(
+    config: TrajCertConfig, *, law_key: LawKey | None = None
+) -> InventoryValidationResult:
     law_sum_pass = True
     nonnegative_mass_pass = True
     law_rows: list[SyntheticLawRow] = []
@@ -127,7 +129,12 @@ def validate_scientific_inventory(config: TrajCertConfig) -> InventoryValidation
         config.method.finest_bands,
         config.method.terminal_horizon,
     )
-    for key, law_config in config.ordered_laws:
+    selected_laws = (
+        config.ordered_laws
+        if law_key is None
+        else tuple((key, law_config) for key, law_config in config.ordered_laws if key is law_key)
+    )
+    for key, law_config in selected_laws:
         parameters = LawParameters(
             key=key,
             name=LAW_DISPLAY_NAMES[key],
