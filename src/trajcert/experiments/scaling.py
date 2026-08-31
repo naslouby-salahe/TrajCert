@@ -23,7 +23,7 @@ from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.oracle import direct_mutual_information
 from trajcert.types import DomainModel, LawKey
 
-_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
+_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE  # TODO: Move this study-law selection to YAML and access it through config.
 
 
 class ScalingTarget(StrEnum):
@@ -63,7 +63,7 @@ class ComputationalScalingResult(DomainModel):
 
 
 def benchmark_scaling_cell(
-    band_count: int,
+    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> ComputationalScalingResult:
     if band_count <= 0:
@@ -166,7 +166,7 @@ def _worker(
     try:
         config = TrajCertConfig.model_validate_json(config_json)
         _ = active_config.set(config)
-        with threadpool_limits(limits=1):
+        with threadpool_limits(limits=1):  # TODO: this is a magic number that should be from conf
             start = perf_counter_ns()
             root_iterations, outer_nodes = _execute_target(target, band_count, config)
             runtime_ns = perf_counter_ns() - start
@@ -189,20 +189,20 @@ def _worker(
 
 if sys.platform == "win32":
 
-    def _peak_resident_set_mib() -> float:
+    def _peak_resident_set_mib() -> float:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
         peak_wset = cast(int, psutil.Process().memory_info().peak_wset)
         return peak_wset / (1024.0 * 1024.0)
 else:
     import resource
 
-    def _peak_resident_set_mib() -> float:
+    def _peak_resident_set_mib() -> float:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
         return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
 
 
 def _execute_target(
     target: ScalingTarget,
     band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> tuple[int | None, int | None]: #TODO: this should be handled better
     parameters = _parameters(config)
     partition = build_partition(
@@ -230,7 +230,7 @@ def _execute_target(
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=0,
+        stream_index=0,  # TODO: Move this fixed stream selection to YAML and access it through config.
         event_count=config.benchmark.outer_sample_size,
     )
     full_law = build_full_law(parameters, band_count)
@@ -246,7 +246,7 @@ def _execute_target(
         identity=ledger.identity,
         partition=partition,
         config=config,
-        sensitivity_budget=true_information + 0.01,
+        sensitivity_budget=true_information + 0.01,  # TODO: Move this scaling information margin to YAML and access it through config.
         risk_budget=config.budgets.risk,
         checkpoint_every=config.benchmark.outer_sample_size,
     )

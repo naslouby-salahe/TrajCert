@@ -45,7 +45,7 @@ class PatternMixtureResult(DomainModel):
 
 def fit_pattern_mixture(
     summary: ObservableSummary,
-    config: LegacyPatternMixtureConfig,
+    config: LegacyPatternMixtureConfig,  # TODO: do not pass config as input param
 ) -> PatternMixtureResult:
     harmful = np.asarray(summary.harmful_by_band, dtype=np.float64)
     correct = np.asarray(summary.correct_by_band, dtype=np.float64)
@@ -65,9 +65,9 @@ def fit_pattern_mixture(
     rates = harmful[nonempty] / weights
     resolved_rate = float(summary.resolved_harmful_mass / summary.resolved_mass)
     clipped = min(1.0 - config.initial_clip, max(config.initial_clip, resolved_rate))
-    initial = np.asarray((log(clipped / (1.0 - clipped)), 0.0), dtype=np.float64)
+    initial = np.asarray((log(clipped / (1.0 - clipped)), 0.0), dtype=np.float64) # TODO: Move these optimizer initialization constants into the comparator configuration.
     lower, upper = config.coefficient_bounds
-    bounds = ((lower, upper), (lower, upper))
+    bounds = ((lower, upper), (lower, upper)) # TODO: Replace duplicated coefficient bounds with a typed optimizer-parameter specification.
 
     def objective(coefficients: Vector) -> ObjectiveValue:
         intercept, slope = coefficients

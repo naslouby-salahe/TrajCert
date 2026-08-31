@@ -21,9 +21,9 @@ from trajcert.types import (
 class LawParameters(DomainModel):
     key: LawKey
     name: LawName
-    theta: Probability
-    q1: Probability
-    q0: Probability
+    theta: Probability  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    q1: Probability  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    q0: Probability  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     lambda1: SlopeValue
     lambda0: SlopeValue
 
@@ -71,6 +71,7 @@ def resolved_band_weights(band_count: BandCount, slope: SlopeValue) -> Vector:
     if bands <= 0:
         raise InvalidScientificDataError("band count must be positive")
     indices = np.arange(1, bands + 1, dtype=np.float64)
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     center = (bands + 1) / 2.0
     logits = slope * (indices - center)
     shifted_logits = logits - logits.max()
@@ -97,6 +98,7 @@ def build_full_law(parameters: LawParameters, band_count: BandCount) -> FullLawP
     )
 
 
+# TODO: should be in yaml and accessed through config
 LAW_DISPLAY_NAMES: dict[LawKey, LawName] = {
     LawKey.NO_PATH_DEPENDENCE: LawName("No outcome-path dependence"),
     LawKey.TIMING_HARMFUL_LATE: LawName("Timing only: harmful outcomes resolve late"),

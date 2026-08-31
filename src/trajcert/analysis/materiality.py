@@ -29,13 +29,13 @@ class PopulationMaterialityObservation(DomainModel):
 class PopulationLawMateriality(DomainModel):
     law_name: LawName
     qualifying_rho_count: Count
-    qualifies: bool
+    qualifies: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class PopulationMaterialitySummary(DomainModel):
     laws: tuple[PopulationLawMateriality, ...]
     qualifying_law_count: Count
-    support_threshold_met: bool
+    support_threshold_met: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SequentialMaterialityObservation(DomainModel):
@@ -50,13 +50,13 @@ class SequentialMaterialityObservation(DomainModel):
 class SequentialLawMateriality(DomainModel):
     law_name: LawName
     qualifying_rho_count: Count
-    qualifies: bool
+    qualifies: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SequentialMaterialitySummary(DomainModel):
     laws: tuple[SequentialLawMateriality, ...]
     qualifying_law_count: Count
-    support_threshold_met: bool
+    support_threshold_met: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def evaluate_population_materiality(
@@ -107,6 +107,7 @@ def evaluate_sequential_materiality(
         if (
             observation.mean_paired_difference
             >= config.materiality.sequential.certified_fraction_gain
+            # TODO: should be in yaml and accessed through config
             and observation.bootstrap_lower > 0.0
             and observation.holm_adjusted_p_value < config.confidence.alpha
         ):

@@ -132,7 +132,7 @@ def _upper_root(
     maximum_likelihood: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     threshold: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     root_tolerance: ToleranceValue,
-) -> float:
+) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     lower = maximum_likelihood
     upper = 1.0
     if _root_function(successes, total, upper, threshold) <= 0.0:

@@ -24,8 +24,10 @@ ProvenanceFingerprint = NewType("ProvenanceFingerprint", str)
 SpecificationDigest = NewType("SpecificationDigest", str)
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
+# TODO: should be in yaml and accessed through config
 _CHECKSUM_CHUNK_BYTES = 1 << 20
-type JsonScalar = None | bool | int | float | str
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
+type JsonScalar = None | bool | int | float | str  # TODO: this is duplicated and redundant
 type JsonValue = JsonScalar | Sequence["JsonValue"] | Mapping[str, "JsonValue"]
 
 
@@ -162,6 +164,7 @@ def _canonical_json(value: JsonValue) -> str:
     return _canonical_json_array(value)
 
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def _canonical_json_number(value: int | float) -> str:
     if isinstance(value, int):
         return str(value)

@@ -25,7 +25,7 @@ class ScalarEnvelope(DomainModel):
         return self
 
     @property
-    def is_singleton(self) -> bool:
+    def is_singleton(self) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
         return self.lower == self.upper
 
 
@@ -46,7 +46,7 @@ class ObservableSummaryEnvelope(DomainModel):
         return self
 
     @property
-    def is_singleton(self) -> bool:
+    def is_singleton(self) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
         intervals = (
             self.harmful_by_band
             + self.correct_by_band

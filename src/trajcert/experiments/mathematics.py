@@ -45,19 +45,19 @@ from trajcert.types import (
 
 
 class IdentityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     max_absolute_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class ConvexityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     evaluated_points: Count
     minimum_second_derivative: InformationCurvature | None
     max_direct_second_derivative_error: NonNegativeFloat
 
 
 class SharpSetIdentityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     production_lower: RiskValue | None
     production_upper: RiskValue | None
     oracle_lower: RiskValue | None
@@ -67,14 +67,14 @@ class SharpSetIdentityResult(DomainModel):
 
 
 class RefinementIdentityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     timing_gain: InformationNats
     max_profile_order_violation: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     max_profile_difference_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyBoundaryIdentityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     assessment: SafetyAssessment
     frontier_direct_information: InformationNats | None
     frontier_error: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -83,7 +83,7 @@ class SafetyBoundaryIdentityResult(DomainModel):
 class SafetyBoundaryCaseEvaluation(DomainModel):
     case: SafetyBudgetCase
     identity: SafetyBoundaryIdentityResult | None
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def path_information_decomposition(
@@ -391,7 +391,7 @@ class LegacyPartitionIncoherenceResult(DomainModel):
     endpoint_risk_interval: RiskInterval
     endpoint_difference_direction: EndpointDifferenceDirection
     endpoint_difference_magnitude: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def evaluate_legacy_partition_incoherence(

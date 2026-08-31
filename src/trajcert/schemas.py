@@ -29,9 +29,9 @@ class PublicationFormat(StrEnum):
 class PublicationSourceDescriptor(DomainModel):
     source_path: Path
     source_role: PublicationSourceRole
-    columns: tuple[str, ...]
-    sort_columns: tuple[str, ...]
-    owner_experiment: str
+    columns: tuple[str, ...]  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    sort_columns: tuple[str, ...]  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    owner_experiment: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class VerifiedSourceLineage(DomainModel):
@@ -53,14 +53,14 @@ class RenderedPublicationArtifact(DomainModel):
 
 
 class EnvironmentReproducibilityRecord(DomainModel):
-    dependency_authority: str
+    dependency_authority: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     dependency_lock_path: Path
     environment_lock_digest: EnvironmentDigest
     container_image_digest: None = None
 
 
 class PublicationReproducibilityRecord(DomainModel):
-    source_commit: str
+    source_commit: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     configuration_path: Path
     configuration_sha256: DigestHex
     environment: EnvironmentReproducibilityRecord

@@ -9,6 +9,7 @@ from typing import NewType
 
 from trajcert.exceptions import SerializationError
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 _WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
 
 ExperimentSlug = NewType("ExperimentSlug", str)
@@ -69,6 +70,7 @@ def fsync_directory(directory: Path) -> None:
         os.close(descriptor)
 
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def semantic_slug(value: str) -> CoordinateToken:
     lowered = value.lower()
     output: list[str] = []
@@ -87,10 +89,13 @@ def semantic_slug(value: str) -> CoordinateToken:
     return CoordinateToken(rendered)
 
 
+# TODO: should be in yaml and accessed through config
 _MAX_FIXED_NOTATION_EXPONENT = 21
+# TODO: should be in yaml and accessed through config
 _MIN_FIXED_NOTATION_EXPONENT = -6
 
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def canonical_number_token(value: float) -> CoordinateToken:
     if isnan(value) or value in (float("inf"), float("-inf")):
         raise SerializationError("semantic numeric path coordinate must be finite")
@@ -105,7 +110,9 @@ def canonical_number_token(value: float) -> CoordinateToken:
     return CoordinateToken(sign + _format_number_token(digits, n))
 
 
-def _parsed_coefficient(value: float) -> tuple[str, str, int]:
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _parsed_coefficient(value: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                        ) -> tuple[str, str, int]: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     representation = repr(value)
     if representation.startswith("-"):
         sign = "-"
@@ -118,21 +125,26 @@ def _parsed_coefficient(value: float) -> tuple[str, str, int]:
     return sign, representation, 0
 
 
-def _split_coefficient(coefficient: str) -> tuple[str, str]:
+def _split_coefficient(coefficient: str #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                       ) -> tuple[str, str]: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if "." not in coefficient:
         return coefficient, ""
     integer, fractional = coefficient.split(".", maxsplit=1)
     return integer, fractional
 
 
-def _decimal_position(integer: str, fractional: str) -> int:
+def _decimal_position(integer: str, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                      fractional: str #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                      ) -> int: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if integer == "0":
         leading_fraction_zeros = len(fractional) - len(fractional.lstrip("0"))
         return -leading_fraction_zeros
     return len(integer.lstrip("0"))
 
 
-def _format_number_token(digits: str, n: int) -> str:
+def _format_number_token(digits: str, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                         n: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                         ) -> str: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     k = len(digits)
     if k <= n <= _MAX_FIXED_NOTATION_EXPONENT:
         return digits + "0" * (n - k)

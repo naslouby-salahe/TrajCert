@@ -147,7 +147,7 @@ class PairedInferenceResult(DomainModel):
     bootstrap: PercentileBootstrapInterval
     sign_flip: SignFlipResult
     holm_adjusted_p_value: Probability
-    materiality_pass: bool
+    materiality_pass: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     never_certified_fraction_method: Probability | None
     never_certified_fraction_baseline: Probability | None
 
@@ -160,7 +160,7 @@ class TrajectoryOperationalGainSynthesis(DomainModel):
 
 def synthesize_from_sequential_utility(
     evidence: tuple[SequentialUtilityEvidence, ...],
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> TrajectoryOperationalGainSynthesis:
     expected = _expected_sequential_utility_keys(config)
     supplied = tuple((item.law_name, float(item.result.sensitivity_budget)) for item in evidence)
@@ -181,7 +181,7 @@ def synthesize_from_sequential_utility(
 def paired_series_from_sequential_utility(
     law_name: LawName,
     result: SequentialUtilityResult,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> tuple[PairedSeries, ...]:
     rho = result.sensitivity_budget
     max_events = config.sequential.utility.max_events
@@ -233,7 +233,7 @@ def paired_series_from_sequential_utility(
 
 def synthesize_trajectory_operational_gain(
     paired_series: tuple[PairedSeries, ...],
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> TrajectoryOperationalGainSynthesis:
     expected_order = _expected_family_keys(config)
     expected_keys = set(expected_order)
@@ -298,7 +298,7 @@ def synthesize_trajectory_operational_gain(
     )
 
 
-def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferenceResult:
+def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferenceResult: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
     method_values = np.asarray(series.method_values, dtype=np.float64)
     baseline_values = np.asarray(series.baseline_values, dtype=np.float64)
     expected_pairs = config.sequential.utility.streams
@@ -359,7 +359,7 @@ def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferen
 def _apply_adjusted_inference(
     result: PairedInferenceResult,
     adjusted_p_value: Probability,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> PairedInferenceResult:
     material = (
         result.metric_name is PracticalMetric.CERTIFIED_UPDATE_FRACTION
@@ -380,7 +380,7 @@ def _never_certified_fractions(
     metric_name: PracticalMetric,
     method_values: NDArray[np.float64],
     baseline_values: NDArray[np.float64],
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> tuple[Probability | None, Probability | None]:
     if metric_name is not PracticalMetric.TIME_TO_FIRST_CERTIFICATION:
         return None, None
@@ -496,10 +496,10 @@ def _cell_order(cell: PlannedCell) -> tuple[int, int, str]: # TODO: Consider usi
 
 def sequential_rho_utility_rows(
     synthesis: TrajectoryOperationalGainSynthesis,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> tuple[RhoUtilityRow, ...]:
     fine_partition = partition_name(config.method.finest_bands)
-    endpoint_partition = partition_name(1)
+    endpoint_partition = partition_name(1) # TODO: Replace this raw endpoint band count with the configured endpoint partition definition.
     return tuple(
         RhoUtilityRow(
             analysis_type=AnalysisType.SEQUENTIAL,
@@ -541,7 +541,7 @@ class SynthesisEvidenceBundle(DomainModel):
 def build_synthesis_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
 ) -> SynthesisEvidenceBundle:
     population_source = _population_utility_evidence(plan, workspace_root)
     sequential_source = _sequential_utility_evidence(plan, workspace_root)
@@ -602,7 +602,7 @@ def _sequential_utility_evidence(
 def _partition_timing_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[PartitionTimingEvidence, ...]:
     band_counts = {partition_name(value): value for value in config.grids.partitions}
     evidence: list[PartitionTimingEvidence] = []
@@ -610,7 +610,7 @@ def _partition_timing_evidence(
         comparison = cell.identity.coordinates.comparison_pair_name
         if comparison is None:
             raise InvalidScientificDataError("partition-coherence cell lacks its comparison pair")
-        fine_text, separator, coarse_text = str(comparison).partition(" -> ")
+        fine_text, separator, coarse_text = str(comparison).partition(" -> ")  # TODO: this string parsing could have been handled better
         if not separator:
             raise InvalidScientificDataError("partition-coherence comparison pair is malformed")
         fine = PartitionName(fine_text)
@@ -663,7 +663,7 @@ def _sharpness_evidence(
 def _safety_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> tuple[SafetySourceEvidence, ...]:
     finest = partition_name(config.method.finest_bands)
     return tuple(
@@ -678,7 +678,7 @@ def _safety_evidence(
 
 def _population_figure_evidence(
     evidence: tuple[PopulationUtilitySourceEvidence, ...],
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
 ) -> tuple[PopulationFigureEvidence, ...]:
     target_rho = float(config.study_design.partition_coherence_figure_rho)
     band_counts = {partition_name(value): value for value in config.grids.partitions}
@@ -704,7 +704,7 @@ def _population_figure_evidence(
 def _same_endpoint_figure_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[SameEndpointFigureEvidence, ...]:
     target = float(config.study_design.partition_coherence_figure_rho)
     band_counts = {partition_name(value): value for value in config.grids.partitions}
@@ -898,9 +898,9 @@ def _safety_boundary_observations(
 
 
 def _theorem_observation(
-    name: str,
+    name: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     primary: ArtifactKey,
-    passed: bool,
+    passed: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     error: FiniteFloat | None,
     margin: FiniteFloat | None,
 ) -> TheoremValidationObservation:
@@ -918,7 +918,7 @@ def _rho_from_persisted_tau(
     cell: PlannedCell,
 ) -> SensitivityBudget:
     coordinate = cell.identity.coordinates.sensitivity_coordinate
-    prefix = "rho-offset="
+    prefix = "rho-offset="  # TODO: I believe this could have been handled better
     if coordinate is None or not str(coordinate).startswith(prefix):
         raise InvalidScientificDataError("partition-coherence cell lacks its rho-offset coordinate")
     return float(result.fine_tau) + float(str(coordinate).removeprefix(prefix))
@@ -930,7 +930,10 @@ def _family_primary_artifact(cells: tuple[PlannedCell, ...]) -> ArtifactKey:
     return scientific_result_artifact_key(cells[0])
 
 
-def _cells(plan: ExperimentPlan, name: str) -> tuple[PlannedCell, ...]:
+def _cells(
+    plan: ExperimentPlan,
+    name: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> tuple[PlannedCell, ...]:
     cells = cells_for_experiment(plan, ExperimentNameValue(name))
     if not cells:
         raise InvalidScientificDataError(f"required synthesis experiment has no cells: {name}")
@@ -965,7 +968,7 @@ def _band_count(
         ) from exc
 
 
-def _same_endpoint_timed_law(config: TrajCertConfig) -> LawName:
+def _same_endpoint_timed_law(config: TrajCertConfig) -> LawName: # TODO: do not pass config as input param
     if LawKey.SAME_ENDPOINT_WITH_TIMING not in config.laws:
         raise InvalidScientificDataError("same-endpoint timed law is missing from configuration")
     return LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING]
@@ -986,7 +989,7 @@ def local_validity_artifact_key() -> ArtifactKey:
 
 def make_statistical_synthesis_executor(
     plan: ExperimentPlan,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     locality: SynthesisLocalValidityInput,
 ) -> CellExecutor:
     def executor(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
@@ -1133,7 +1136,7 @@ def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
     }
 
 
-def _aggregate(experiment_slug: str, filename: str) -> Path:
+def _aggregate(experiment_slug: str, filename: str) -> Path: # TODO: Replace raw artifact slug/filename primitives with the existing artifact-key/path types.
     return (
         experiment_leaf(ExperimentSlug(experiment_slug), ExperimentLeaf.EVALUATION_AGGREGATES)
         / filename

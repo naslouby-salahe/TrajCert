@@ -198,21 +198,21 @@ class ExecutionContext(DomainModel):
 class CellExecutionResult(DomainModel):
     artifact_index: CellArtifactIndex
     completed_seed_count: NonNegativeInt
-    metrics_complete: bool
-    statistics_complete: bool
-    invariant_validation_pass: bool
-    dependency_validation_pass: bool
-    provenance_record_complete: bool
+    metrics_complete: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    statistics_complete: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    invariant_validation_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    dependency_validation_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    provenance_record_complete: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class RunningRecord(DomainModel):
-    semantic_cell_key: str
+    semantic_cell_key: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     plan_digest: PlanDigest
     dependency_fingerprint: DependencyFingerprint
 
 
 class FailureRecord(DomainModel):
-    semantic_cell_key: str
+    semantic_cell_key: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     plan_digest: PlanDigest
     dependency_fingerprint: DependencyFingerprint
     failure_type: FailureType
@@ -221,7 +221,7 @@ class FailureRecord(DomainModel):
 
 class CellRunOutcome(DomainModel):
     state: PublicExecutionState
-    reused: bool
+    reused: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     completion_path: Path
     failure_path: Path
     reason: ReasonCode | None
@@ -248,9 +248,9 @@ class RuntimeLineageArtifact(DomainModel):
     action_channel_id: ActionChannelId | None = None
     epoch_id: EpochId | None = None
     foreign_client_ids: tuple[ClientId, ...] = ()
-    foreign_client_statistics: bool = False
-    foreign_model_updates: bool = False
-    cross_client_aggregate: bool = False
+    foreign_client_statistics: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    foreign_model_updates: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    cross_client_aggregate: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class LocalValidityTarget(DomainModel):
@@ -260,12 +260,12 @@ class LocalValidityTarget(DomainModel):
 
 
 class LocalValidityAuditResult(DomainModel):
-    static_dependency_pass: bool
-    runtime_lineage_pass: bool
+    static_dependency_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    runtime_lineage_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     audited_root_count: NonNegativeInt
     foreign_scientific_parent_count: NonNegativeInt
     violating_artifact_keys: tuple[ArtifactKey, ...]
-    passed: bool = Field(serialization_alias="pass")
+    passed: bool = Field(serialization_alias="pass")  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class ScientificCellDispatchError(ValueError):
@@ -273,16 +273,16 @@ class ScientificCellDispatchError(ValueError):
 
 
 class SmokeResult(DomainModel):
-    compatible_population_pass: bool
-    incompatible_population_pass: bool
-    endpoint_special_case_pass: bool
-    refinement_pass: bool
-    deterministic_confidence_sequence_pass: bool
-    singleton_projection_pass: bool
+    compatible_population_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    incompatible_population_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    endpoint_special_case_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    refinement_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    deterministic_confidence_sequence_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    singleton_projection_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     passed_fixture_count: NonNegativeInt
 
     @property
-    def passed(self) -> bool:
+    def passed(self) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
         return self.passed_fixture_count == _SMOKE_FIXTURE_COUNT
 
 
@@ -294,7 +294,7 @@ def run_cell(
     context: ExecutionContext,
     dependencies: tuple[DependencyReadiness, ...],
     executor: CellExecutor,
-    overwrite: bool,
+    overwrite: bool,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> CellRunOutcome:
     completion_path = cell_completion_path(cell, context.workspace_root)
     failure_path = cell_failure_path(cell, context.workspace_root)
@@ -389,7 +389,7 @@ def dependency_block_reason(
 
 def completion_is_compatible(
     cell: PlannedCell, context: ExecutionContext, completion_path: Path
-) -> bool:
+) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     try:
         completion = read_model(completion_path, CompletionRecord)
         if not _completion_identity_matches(cell, context, completion):
@@ -436,7 +436,7 @@ def _completion_identity_matches(
     cell: PlannedCell,
     context: ExecutionContext,
     completion: CompletionRecord,
-) -> bool:
+) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     checks = (
         completion.semantic_cell_key == cell.identity.semantic_cell_key,
         completion.cell_plan_digest == _cell_plan_digest(cell),
@@ -542,7 +542,7 @@ def _checksum(entry: ArtifactIndexEntry) -> ArtifactChecksum:
     return ArtifactChecksum(artifact_key=entry.artifact_key, sha256=entry.sha256)
 
 
-def scientific_specification_digest(config: TrajCertConfig) -> SpecificationDigest:
+def scientific_specification_digest(config: TrajCertConfig) -> SpecificationDigest:  # TODO: do not pass config as input param
     return SpecificationDigest(str(model_digest(config)))
 
 
@@ -567,7 +567,7 @@ def producer_component_digest(
 
 def scientific_dependency_digest(
     scientific_specification: SpecificationDigest,
-    semantic_cell_key: str,
+    semantic_cell_key: str,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     component_digest: DigestHex,
 ) -> SpecificationDigest:
     payload = f"{scientific_specification}|{semantic_cell_key}|{component_digest}".encode()
@@ -599,7 +599,7 @@ def cell_dependency_fingerprint(
 
 def expected_seed_count(
     experiment_name: ExperimentNameValue,
-    config: TrajCertConfig,
+    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
 ) -> NonNegativeInt:
     name = str(experiment_name)
     if name == "Anytime Coverage Stress":
@@ -631,7 +631,7 @@ def _first_party_import_closure(workspace_root: Path, root: Path) -> tuple[Path,
     return tuple(sorted(visited, key=lambda path: path.as_posix()))
 
 
-def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:
+def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     modules: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
@@ -641,7 +641,7 @@ def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:
     return tuple(sorted(modules))
 
 
-def _first_party_import_from(node: ast.ImportFrom) -> tuple[str, ...]:
+def _first_party_import_from(node: ast.ImportFrom) -> tuple[str, ...]:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if node.module is None:
         return ()
     if _is_first_party_module(node.module):
@@ -649,22 +649,22 @@ def _first_party_import_from(node: ast.ImportFrom) -> tuple[str, ...]:
     return ()
 
 
-def _first_party_import(node: ast.Import) -> tuple[str, ...]:
+def _first_party_import(node: ast.Import) -> tuple[str, ...]:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     return tuple(alias.name for alias in node.names if _is_first_party_module(alias.name))
 
 
-def _is_first_party_module(module_name: str) -> bool:
+def _is_first_party_module(module_name: str) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     return module_name.startswith("trajcert") and not _non_scientific_module(module_name)
 
 
-def _non_scientific_module(module_name: str) -> bool:
+def _non_scientific_module(module_name: str) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     return any(
         module_name == prefix or module_name.startswith(f"{prefix}.")
         for prefix in _NON_SCIENTIFIC_MODULE_PREFIXES
     )
 
 
-def _module_path(workspace_root: Path, module_name: str) -> Path | None:
+def _module_path(workspace_root: Path, module_name: str) -> Path | None:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     parts = module_name.split(".")
     if not parts or parts[0] != "trajcert":
         return None
@@ -711,7 +711,7 @@ def audit_local_validity_targets(
 def static_dependency_audit(
     target_identity: LedgerIdentity,
     dependencies: tuple[StaticComponentDependency, ...],
-) -> bool:
+) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     expected_components = {
         ProducerComponentName("inference/categorical.py"),
         ProducerComponentName("inference/confidence.py"),
@@ -799,7 +799,7 @@ def execute_scientific_cell(cell: PlannedCell, config: TrajCertConfig) -> Domain
 
 
 def _dispatch_legacy_partition_incoherence(
-    cell: PlannedCell, config: TrajCertConfig
+    cell: PlannedCell, config: TrajCertConfig  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> DomainModel:
     del config
     gamma = cell.identity.coordinates.gamma
@@ -813,7 +813,7 @@ def _dispatch_legacy_partition_incoherence(
 
 
 def _dispatch_refinement_dominance_identity(
-    cell: PlannedCell, config: TrajCertConfig
+    cell: PlannedCell, config: TrajCertConfig  # TODO: do not pass config as input param
 ) -> DomainModel:
     fine, coarse = _refinement_inputs(cell, config)
     return refinement_dominance_identity(
@@ -824,7 +824,7 @@ def _dispatch_refinement_dominance_identity(
     )
 
 
-def _dispatch_strict_timing_gain_identity(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _dispatch_strict_timing_gain_identity(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: access config directly instead of passing it as an argument
     fine, coarse = _refinement_inputs(cell, config)
     return strict_timing_gain_identity(
         fine=fine,
@@ -836,7 +836,7 @@ def _dispatch_strict_timing_gain_identity(cell: PlannedCell, config: TrajCertCon
     )
 
 
-def _dispatch_partition_coherence(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _dispatch_partition_coherence(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: Do not pass the entire config. It can be globally accessed
     fine, coarse = _refinement_inputs(cell, config)
     return evaluate_partition_coherence(
         fine=fine,
@@ -849,7 +849,7 @@ def _dispatch_partition_coherence(cell: PlannedCell, config: TrajCertConfig) -> 
 
 
 def _dispatch_same_endpoint_different_timing(
-    cell: PlannedCell, config: TrajCertConfig
+    cell: PlannedCell, config: TrajCertConfig  # TODO: do not pass config as input param
 ) -> DomainModel:
     partition = _partition_from_coordinates(cell, config)
     rho = _direct_rho(cell)
@@ -872,7 +872,7 @@ def _dispatch_same_endpoint_different_timing(
     )
 
 
-def _dispatch_strict_timing_gain(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _dispatch_strict_timing_gain(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: access config directly instead of passing it as an argument
     fine, coarse = _refinement_inputs(cell, config)
     return evaluate_strict_timing_gain(
         fine=fine,
@@ -884,13 +884,13 @@ def _dispatch_strict_timing_gain(cell: PlannedCell, config: TrajCertConfig) -> D
     )
 
 
-def _dispatch_safety_boundary_identity(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _dispatch_safety_boundary_identity(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: Do not pass the entire config. It can be globally accessed
     summary = _law_level_finest_summary(cell, config)
     return _execute_summary_cell("Safety-Boundary Identity", cell, summary, config)
 
 
 def _dispatch_sharpness_against_generic_oracle(
-    cell: PlannedCell, config: TrajCertConfig
+    cell: PlannedCell, config: TrajCertConfig  # TODO: do not pass config as input param
 ) -> DomainModel:
     return sharpness_against_generic_oracle(
         summary=_summary_from_coordinates(cell, config),
@@ -903,7 +903,7 @@ def _dispatch_sharpness_against_generic_oracle(
 
 
 def _dispatch_population_sensitivity_utility(
-    cell: PlannedCell, config: TrajCertConfig
+    cell: PlannedCell, config: TrajCertConfig  # TODO: access config directly instead of passing it as an argument
 ) -> DomainModel:
     return population_sensitivity_utility(
         summary=_summary_from_coordinates(cell, config),
@@ -913,7 +913,7 @@ def _dispatch_population_sensitivity_utility(
 
 
 def _dispatch_sequential_sensitivity_utility(
-    cell: PlannedCell, config: TrajCertConfig
+    cell: PlannedCell, config: TrajCertConfig  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> DomainModel:
     law = _law_from_name(cell.identity.coordinates.synthetic_law_name, config)
     finest = build_partition(
@@ -929,13 +929,13 @@ def _dispatch_sequential_sensitivity_utility(
     )
 
 
-def _dispatch_anytime_hand_case(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _dispatch_anytime_hand_case(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: do not pass config as input param
     partition = _partition_from_coordinates(cell, config)
     case_index = _variant_index(cell.identity.coordinates.variant_name, "hand-case-")
     return run_anytime_hand_case(case_index, partition, config)
 
 
-def _dispatch_computational_scaling(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _dispatch_computational_scaling(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: access config directly instead of passing it as an argument
     bands = cell.identity.coordinates.scaling_band_count
     if bands is None:
         raise ScientificCellDispatchError("scaling cell is missing K")
@@ -943,7 +943,7 @@ def _dispatch_computational_scaling(cell: PlannedCell, config: TrajCertConfig) -
 
 
 def _dispatch_summary_coordinate_experiment(
-    name: str, cell: PlannedCell, config: TrajCertConfig
+    name: str, cell: PlannedCell, config: TrajCertConfig  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> DomainModel:
     return _execute_summary_cell(name, cell, _summary_from_coordinates(cell, config), config)
 
@@ -972,7 +972,7 @@ _DISPATCH_TABLE: dict[str, Callable[[PlannedCell, TrajCertConfig], DomainModel]]
 
 
 def _summary_path_information_decomposition(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> DomainModel:
     del cell
     return path_information_decomposition(
@@ -983,7 +983,7 @@ def _summary_path_information_decomposition(
 
 
 def _summary_information_profile_convexity(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: do not pass config as input param
 ) -> DomainModel:
     del cell
     return information_profile_convexity(
@@ -994,14 +994,14 @@ def _summary_information_profile_convexity(
 
 
 def _summary_minimum_compatibility_identity(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: access config directly instead of passing it as an argument
 ) -> DomainModel:
     del cell
     return minimum_compatibility_identity(summary, config.numerics.identity_atol)
 
 
 def _summary_sharp_set_constructive_identity(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> DomainModel:
     rho = _rho_from_offset(summary, cell.identity.coordinates.sensitivity_coordinate)
     return sharp_set_constructive_identity(
@@ -1015,14 +1015,14 @@ def _summary_sharp_set_constructive_identity(
 
 
 def _summary_endpoint_special_case_identity(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: do not pass config as input param
 ) -> DomainModel:
     del cell
     return endpoint_special_case_identity(summary, config.numerics.identity_atol)
 
 
 def _summary_production_solver_vs_independent_oracle(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: access config directly instead of passing it as an argument
 ) -> DomainModel:
     rho = _rho_from_offset(summary, cell.identity.coordinates.sensitivity_coordinate)
     return compare_production_solver_to_oracle(
@@ -1036,7 +1036,7 @@ def _summary_production_solver_vs_independent_oracle(
 
 
 def _summary_compatibility_floor_behavior(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> DomainModel:
     del cell
     return compatibility_floor_behavior(
@@ -1050,7 +1050,7 @@ def _summary_compatibility_floor_behavior(
 
 
 def _summary_safety_boundary_identity(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: do not pass config as input param
 ) -> DomainModel:
     case = _safety_case(
         summary,
@@ -1066,7 +1066,7 @@ def _summary_safety_boundary_identity(
 
 
 def _summary_comparator_reduction(
-    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig
+    cell: PlannedCell, summary: ObservableSummary, config: TrajCertConfig  # TODO: access config directly instead of passing it as an argument
 ) -> DomainModel:
     del cell, config
     return evaluate_comparator_reduction(summary)
@@ -1089,10 +1089,10 @@ _SUMMARY_DISPATCH_TABLE: dict[
 
 
 def _execute_summary_cell(
-    name: str,
+    name: str,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     cell: PlannedCell,
     summary: ObservableSummary,
-    config: TrajCertConfig,
+    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> DomainModel:
     handler = _SUMMARY_DISPATCH_TABLE.get(name)
     if handler is None:
@@ -1100,13 +1100,13 @@ def _execute_summary_cell(
     return handler(cell, summary, config)
 
 
-def _summary_from_coordinates(cell: PlannedCell, config: TrajCertConfig) -> ObservableSummary:
+def _summary_from_coordinates(cell: PlannedCell, config: TrajCertConfig) -> ObservableSummary:  # TODO: do not pass config as input param
     law = _law_from_name(cell.identity.coordinates.synthetic_law_name, config)
     partition = _partition_from_coordinates(cell, config)
     return _population_summary(law, partition, config)
 
 
-def _law_level_finest_summary(cell: PlannedCell, config: TrajCertConfig) -> ObservableSummary:
+def _law_level_finest_summary(cell: PlannedCell, config: TrajCertConfig) -> ObservableSummary:  # TODO: access config directly instead of passing it as an argument
     law = _law_from_name(cell.identity.coordinates.synthetic_law_name, config)
     partition = build_partition(
         config.method.finest_bands,
@@ -1118,7 +1118,7 @@ def _law_level_finest_summary(cell: PlannedCell, config: TrajCertConfig) -> Obse
 
 def _refinement_inputs(
     cell: PlannedCell,
-    config: TrajCertConfig,
+    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[ObservableSummary, TrajectoryPartition]:
     comparison = cell.identity.coordinates.comparison_pair_name
     if comparison is None:
@@ -1135,7 +1135,7 @@ def _refinement_inputs(
 def _population_summary(
     law: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig,  # TODO: do not pass config as input param
 ) -> ObservableSummary:
     return summarize_full_law(
         partition,
@@ -1144,7 +1144,7 @@ def _population_summary(
     )
 
 
-def _law_from_name(law_name: LawName | None, config: TrajCertConfig) -> LawParameters:
+def _law_from_name(law_name: LawName | None, config: TrajCertConfig) -> LawParameters:  # TODO: access config directly instead of passing it as an argument
     if law_name is None:
         raise ScientificCellDispatchError("scientific cell is missing its synthetic law")
     for key, law in config.ordered_laws:
@@ -1161,14 +1161,14 @@ def _law_from_name(law_name: LawName | None, config: TrajCertConfig) -> LawParam
     raise ScientificCellDispatchError(f"unknown synthetic law: {law_name}")
 
 
-def _partition_from_coordinates(cell: PlannedCell, config: TrajCertConfig) -> TrajectoryPartition:
+def _partition_from_coordinates(cell: PlannedCell, config: TrajCertConfig) -> TrajectoryPartition:  # TODO: Do not pass the entire config. It can be globally accessed
     requested = cell.identity.coordinates.partition_name
     if requested is None:
         raise ScientificCellDispatchError("scientific cell is missing its partition")
     return _partition_named(requested, config)
 
 
-def _partition_named(name: PartitionName, config: TrajCertConfig) -> TrajectoryPartition:
+def _partition_named(name: PartitionName, config: TrajCertConfig) -> TrajectoryPartition:  # TODO: do not pass config as input param
     for bands in (*config.grids.partitions, *config.grids.scaling_bands):
         if partition_name(bands) == name:
             return build_partition(
@@ -1197,7 +1197,7 @@ def _direct_rho(cell: PlannedCell) -> SensitivityBudget:
     return rho
 
 
-def _variant_index(variant: VariantName | None, prefix: str) -> int:
+def _variant_index(variant: VariantName | None, prefix: str) -> int:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if variant is None or not variant.startswith(prefix):
         raise ScientificCellDispatchError("cell is missing its expected variant index")
     return int(variant[len(prefix) :])
@@ -1216,7 +1216,7 @@ def _safety_case(
     raise ScientificCellDispatchError(f"unknown safety case: {variant}")
 
 
-def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyCaseEvaluation:
+def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyCaseEvaluation:  # TODO: access config directly instead of passing it as an argument
     summary = _law_level_finest_summary(cell, config)
     result = safety_and_intrinsic_impossibility(
         summary=summary,
@@ -1233,7 +1233,7 @@ def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyC
     raise ScientificCellDispatchError(f"unknown safety/impossibility case: {variant}")
 
 
-def _coverage_stress_case(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _coverage_stress_case(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: Do not pass the entire config. It can be globally accessed
     variant = cell.identity.coordinates.variant_name
     if variant is None:
         raise ScientificCellDispatchError(
@@ -1256,7 +1256,7 @@ def _coverage_stress_case(cell: PlannedCell, config: TrajCertConfig) -> DomainMo
     raise ScientificCellDispatchError(f"unknown configured coverage-stress case: {variant}")
 
 
-def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
+def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:  # TODO: do not pass config as input param
     del config
     coordinate = cell.identity.coordinates.failure_boundary_axis_and_level
     if coordinate is None:
@@ -1282,6 +1282,7 @@ def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> Doma
 def _failure_coordinate(
     coordinate: FailureBoundaryCoordinate,
 ) -> tuple[FailureBoundaryAxis, float | int]:
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     axis_text, separator, value_text = coordinate.partition("=")
     if not separator:
         raise ScientificCellDispatchError("invalid failure-boundary coordinate")
@@ -1404,7 +1405,7 @@ def _validate_upstream_artifact_entry(
 def execute_dispatched_cell(
     cell: PlannedCell,
     context: ExecutionContext,
-    config: TrajCertConfig,
+    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
 ) -> CellExecutionResult:
     if str(cell.identity.experiment_name) == "Statistical Synthesis":
         raise InvalidScientificDataError(
@@ -1514,7 +1515,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     )
 
 
-def _confidence_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool:
+def _confidence_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     partition = build_partition(
         config.method.finest_bands,
         _SMOKE_CS_BANDS,
@@ -1540,7 +1541,7 @@ def _confidence_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
     return running is not None and running.matured_count == _SMOKE_CS_EVENTS
 
 
-def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool:
+def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     partition = build_partition(
         config.method.finest_bands,
         _SMOKE_CS_BANDS,
@@ -1571,7 +1572,7 @@ def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
     return error <= config.numerics.identity_atol
 
 
-def _parameters(config: TrajCertConfig, key: LawKey) -> LawParameters:
+def _parameters(config: TrajCertConfig, key: LawKey) -> LawParameters:  # TODO: Do not pass the entire config. It can be globally accessed
     law = config.laws[key]
     return LawParameters(
         key=key,

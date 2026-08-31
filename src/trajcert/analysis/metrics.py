@@ -33,6 +33,7 @@ def numeric_first_certification(
 ) -> Count:
     if first_certified_n is not None:
         return first_certified_n
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     return max_events + 1
 
 
@@ -41,9 +42,11 @@ def population_gain(
     risk_upper: RiskValue,
     unresolved_mass: Mass,
 ) -> PopulationGain:
+    # TODO: should be in yaml and accessed through config
     if unresolved_mass < 0.0:
         raise InvalidScientificDataError("unresolved mass cannot be negative")
     tightening = unresolved_as_harm_upper - risk_upper
+    # TODO: should be in yaml and accessed through config
     relative = None if unresolved_mass == 0.0 else tightening / unresolved_mass
     return PopulationGain(
         absolute_tightening=tightening,

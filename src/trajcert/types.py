@@ -65,7 +65,9 @@ RelativeUnresolvedGain = FiniteFloat
 ResampleCount = PositiveInt
 StandardizedEffectSize = FiniteFloat
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 type LogMixtureRatio = float
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 type TabularCellValue = None | bool | int | float | str
 
 
@@ -86,12 +88,14 @@ class NDArrayFloat64Annotation:
         )
 
     @classmethod
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     def validate(cls, value: object) -> NDArray[np.float64]:
         if not isinstance(value, np.ndarray):
             raise ValueError("scientific vectors must be NumPy arrays")
         return value.astype(np.float64)
 
     @classmethod
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     def serialize(cls, value: Vector) -> list[float]:
         return [float(element) for element in value.tolist()]
 

@@ -59,10 +59,10 @@ from trajcert.storage import (
     read_model,
 )
 
-_LOCK_PATH = Path("uv.lock")
+_LOCK_PATH = Path("uv.lock")  # TODO: this is duplicated and redundant
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
 _SYNTHESIS_OWNER = "statistical-synthesis"
-_GIT_SHA1_HEX_LENGTH = 40
+_GIT_SHA1_HEX_LENGTH = 40  # TODO: this is duplicated and redundant
 _ALLOWED_EXPERIMENT_CHILDREN = frozenset({"figures", "tables", "metrics", "statistics"})
 _ALLOWED_PROJECT_CHILDREN = frozenset(
     {"figures", "tables", "metrics", "statistics", "reproducibility"}
@@ -71,17 +71,18 @@ _ALLOWED_PROJECT_CHILDREN = frozenset(
 
 @dataclass(frozen=True, slots=True)
 class ReportExportResult:
-    rendered_artifact_count: int
-    source_artifact_count: int
+    rendered_artifact_count: int  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    source_artifact_count: int  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     target: Path
-    reused: bool
+    reused: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def export_report(
     workspace_root: Path,
     *,
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     experiment_name: str | None = None,
-    overwrite: bool = False,
+    overwrite: bool = False,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> ReportExportResult:
     config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
     require_synthesis_completion(workspace_root, config)
@@ -129,11 +130,12 @@ def export_report(
     )
 
 
-def validate_results_layout(workspace_root: Path) -> None:
+def validate_results_layout(workspace_root: Path) -> None: #TODO: inline this
     _validate_results_layout(workspace_root / RESULTS_ROOT)
 
 
 def _selected_descriptors(
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     experiment_name: str | None,
 ) -> tuple[PublicationSourceDescriptor, ...]:
     all_descriptors = all_publication_source_descriptors()
@@ -236,7 +238,7 @@ def _write_reproducibility(
     _ = atomic_write_model(staged_path, record)
 
 
-def require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) -> None:
+def require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) -> None:  # TODO: do not pass config as input param
     plan = build_plan(config)
     cells = cells_for_experiment(plan, _SYNTHESIS_NAME)
     if len(cells) != 1:
@@ -285,7 +287,7 @@ def require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) -
 def _validate_upstream_completions(
     workspace_root: Path,
     plan: ExperimentPlan,
-    config: TrajCertConfig,
+    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
     synthesis_cell: PlannedCell,
 ) -> None:
     specification = scientific_specification_digest(config)
@@ -354,7 +356,7 @@ def _require_local_validity_pass(
         raise InvalidScientificDataError("Statistical Synthesis local-validity audit did not pass")
 
 
-def _source_commit(workspace_root: Path) -> str:
+def _source_commit(workspace_root: Path) -> str:  # TODO: this is duplicated and redundant
     try:
         result = subprocess.run(
             ("git", "rev-parse", "HEAD"),
@@ -373,7 +375,7 @@ def _source_commit(workspace_root: Path) -> str:
     return commit
 
 
-def replace_tree(staged: Path, target: Path, *, overwrite: bool) -> bool:
+def replace_tree(staged: Path, target: Path, *, overwrite: bool) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists() and _tree_digest(staged) == _tree_digest(target):
         return True

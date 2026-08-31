@@ -48,7 +48,7 @@ def evaluate_comparator_reduction(
     config = active_config.get()
     if summary.partition.band_count != config.method.finest_bands:
         raise ValueError("comparator reduction requires the configured finest partition")
-    rho_values = tuple(float(value) for value in config.grids.rho)
+    rho_values = tuple(float(value) for value in config.grids.rho) # TODO: Preserve the sensitivity-budget domain type instead of converting configured values to raw floats.
     if BINARY_MAX_INFORMATION_NATS not in rho_values:
         rho_values = (*rho_values, BINARY_MAX_INFORMATION_NATS)
     return ComparatorReductionResult(
@@ -56,7 +56,7 @@ def evaluate_comparator_reduction(
         stable_resistance=stable_resistance_callback(summary, config.numerics.oracle_digits),
         pattern_mixture=fit_pattern_mixture(summary, config.comparators.pattern_mixture),
         legacy=tuple(
-            legacy_bandwise_odds_ratio(summary, float(gamma))
+            legacy_bandwise_odds_ratio(summary, float(gamma)) # TODO: Preserve the configured domain type for gamma instead of converting it to a raw float.
             for gamma in config.comparators.legacy_gamma
         ),
         generic_information=tuple(
@@ -76,7 +76,9 @@ def evaluate_comparator_reduction(
 
 
 def _endpoint_point(
-    summary: ObservableSummary, rho: SensitivityBudget, numerics: NumericsConfig
+    summary: ObservableSummary,
+    rho: SensitivityBudget,
+    numerics: NumericsConfig, # TODO: do not pass config as input param
 ) -> EndpointPoint:
     solved = endpoint_path_information_bound(
         summary,

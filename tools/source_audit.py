@@ -6,13 +6,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import libcst as cst
-from libcst.metadata import MetadataWrapper, PositionProvider
+from libcst.metadata import MetadataWrapper, ParentNodeProvider, PositionProvider
 
 RULE_PRIMITIVE = "TC-PRIMITIVE-001"
 RULE_UNTYPED = "TC-PRIMITIVE-002"
+RULE_BUILDING_BLOCK = "TC-PRIMITIVE-003"
 RULE_CONSTANT = "TC-CONST-001"
 RULE_CONFIG_YAML = "TC-CONFIG-001"
 RULE_CONFIG_ENV = "TC-CONFIG-002"
+RULE_CONFIG_PARAM = "TC-CONFIG-003"
 RULE_COMPATIBILITY = "TC-COMPAT-001"
 RULE_ROADMAP = "TC-ROADMAP-001"
 RULE_CLAIM = "TC-CLAIM-001"
@@ -47,6 +49,19 @@ SUPPRESSIONS = frozenset(
 )
 
 _UNTYPED_BOUNDARY_PATTERN = re.compile(r"\b(?:Any|object)\b")
+_BUILDING_BLOCK_NAMES = frozenset({"StrictFloat", "StrictInt"})
+_ACTIVE_CONFIG_SET_PATTERN = re.compile(r"active_config\.set\(")
+_CONSTANT_NAME_PATTERN = re.compile(r"^_{0,2}[A-Z][A-Z0-9_]*$")
+_CONFIG_ANNOTATION_PATTERN = re.compile(r"Config\b")
+_CONFIG_MODULE_NAME = "config.py"
+
+
+def _is_bare_numeric_literal(value: cst.BaseExpression) -> bool:
+    if isinstance(value, (cst.Integer, cst.Float)):
+        return True
+    if isinstance(value, cst.UnaryOperation) and isinstance(value.operator, cst.Minus):
+        return isinstance(value.expression, (cst.Integer, cst.Float))
+    return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,7 +76,7 @@ class Finding:
 
 
 class _AuditVisitor(cst.CSTVisitor):
-    METADATA_DEPENDENCIES = (PositionProvider,)
+    METADATA_DEPENDENCIES = (PositionProvider, ParentNodeProvider)
 
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -89,6 +104,27 @@ class _AuditVisitor(cst.CSTVisitor):
             token in name for token in ("registry", "state", "manifest", "evaluate")
         ):
             self._add(RULE_CLAIM, node, "runtime claim machinery is forbidden")
+        if node.returns is not None:
+            return_text = _expression_text(node.returns.annotation)
+            if _UNTYPED_BOUNDARY_PATTERN.search(return_text):
+                self._add(
+                    RULE_UNTYPED, node, f"untyped boundary {return_text!r} is forbidden"
+                )
+        self._check_config_param(node)
+
+    def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
+        if self.path.name == "types.py":
+            return
+        if isinstance(node.names, cst.ImportStar):
+            return
+        for alias in node.names:
+            imported_name = _expression_text(alias.name)
+            if imported_name in _BUILDING_BLOCK_NAMES:
+                self._add(
+                    RULE_BUILDING_BLOCK,
+                    node,
+                    f"{imported_name!r} may only be imported by trajcert.types",
+                )
 
     def visit_Assign(self, node: cst.Assign) -> None:
         for target in node.targets:
@@ -100,6 +136,22 @@ class _AuditVisitor(cst.CSTVisitor):
                     self._add(RULE_COMPATIBILITY, node, "old-name alias is forbidden")
                 if name.casefold() in {"claim_registry", "claim_state", "evidence_manifest"}:
                     self._add(RULE_CLAIM, node, "runtime claim machinery is forbidden")
+                self._check_hardcoded_constant(node, name)
+
+    def _check_hardcoded_constant(self, node: cst.Assign, name: str) -> None:
+        if self.path.name == _CONFIG_MODULE_NAME:
+            return
+        if not _CONSTANT_NAME_PATTERN.match(name):
+            return
+        if not _is_bare_numeric_literal(node.value):
+            return
+        if not self._is_module_level(node):
+            return
+        self._add(
+            RULE_CONSTANT,
+            node,
+            f"{name!r} is a hardcoded numeric constant; it must be owned by trajcert.config",
+        )
 
     def visit_SimpleString(self, node: cst.SimpleString) -> None:
         if _contains_roadmap(node):
@@ -143,6 +195,39 @@ class _AuditVisitor(cst.CSTVisitor):
                 RULE_PRIMITIVE, node, f"{name!r} requires a domain type, not {annotation_text!r}"
             )
 
+    def _check_config_param(self, node: cst.FunctionDef) -> None:
+        if self.path.name == _CONFIG_MODULE_NAME:
+            return
+        params = list(node.params.params) + list(node.params.kwonly_params)
+        config_params = [
+            parameter
+            for parameter in params
+            if parameter.name.value == "config"
+            and parameter.annotation is not None
+            and _CONFIG_ANNOTATION_PATTERN.search(
+                _expression_text(parameter.annotation.annotation)
+            )
+        ]
+        if not config_params:
+            return
+        body_text = cst.Module([]).code_for_node(node.body)
+        if _ACTIVE_CONFIG_SET_PATTERN.search(body_text):
+            return
+        self._add(
+            RULE_CONFIG_PARAM,
+            node,
+            "config must not be threaded as a parameter; access it via active_config",
+        )
+
+    def _is_module_level(self, node: cst.CSTNode) -> bool:
+        current: cst.CSTNode = node
+        while not isinstance(current, cst.Module):
+            parent = self.get_metadata(ParentNodeProvider, current)
+            if isinstance(parent, (cst.ClassDef, cst.FunctionDef)):
+                return False
+            current = parent
+        return True
+
     def _add(self, rule_id: str, node: cst.CSTNode, message: str) -> None:
         self.findings.append(
             Finding(
@@ -156,7 +241,7 @@ def audit_path(path: Path, *, production: bool = False) -> tuple[Finding, ...]:
     source = path.read_text(encoding="utf-8")
     visitor = _AuditVisitor(path)
     MetadataWrapper(cst.parse_module(source)).visit(visitor)
-    if production and path.name == "config.py":
+    if production and path.name == _CONFIG_MODULE_NAME:
         visitor.findings = [
             finding for finding in visitor.findings if finding.rule_id != RULE_CONFIG_YAML
         ]

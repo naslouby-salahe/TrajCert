@@ -30,8 +30,8 @@ class SolverOracleComparison(DomainModel):
     theta_dagger: RiskValue | None
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
-    passed: bool
-    state_match: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    state_match: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     abs_u_lower_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     abs_u_upper_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     abs_risk_upper_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -41,11 +41,11 @@ class SolverOracleComparison(DomainModel):
 
 
 class SafetyFrontierOracleComparison(DomainModel):
-    applicable: bool
+    applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     production_rho_star: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     oracle_rho_star: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     absolute_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def compare_production_solver_to_oracle(
@@ -53,7 +53,7 @@ def compare_production_solver_to_oracle(
     sensitivity_budget: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     oracle_bracket_width: ToleranceValue,
 ) -> SolverOracleComparison:
     production = solve_hidden_mass_interval(
@@ -66,10 +66,10 @@ def compare_production_solver_to_oracle(
         summary, sensitivity_budget, oracle_digits, oracle_bracket_width
     )
     state_match = production.compatibility.regime == oracle.regime
-    lower_error: float | None = None
-    upper_error: float | None = None
-    risk_upper_error: float | None = None
-    endpoint_error: float | None = None
+    lower_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    upper_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    risk_upper_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    endpoint_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if production.interval is not None and oracle.hidden_mass_interval is not None:
         lower_error = abs(
             float(production.interval.lower) - float(oracle.hidden_mass_interval.lower)

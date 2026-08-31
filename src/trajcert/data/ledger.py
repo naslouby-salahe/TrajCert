@@ -90,5 +90,6 @@ class EventLedger(DomainModel):
         return self
 
 
+# TODO: what's the point? Inline this
 def build_ledger(identity: LedgerIdentity, events: tuple[LedgerEvent, ...]) -> EventLedger:
     return EventLedger(identity=identity, events=events)

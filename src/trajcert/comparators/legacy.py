@@ -15,7 +15,7 @@ from trajcert.types import (
     RiskInterval,
 )
 
-LegacyGamma = Annotated[StrictFloat, Field(ge=1.0)]
+LegacyGamma = Annotated[StrictFloat, Field(ge=1.0)] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class LegacyApplicability(StrEnum):

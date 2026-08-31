@@ -39,7 +39,7 @@ class _CallbackData:
     unresolved: mpf
 
 
-_CallbackObjective = Callable[[_CallbackData, mpf], mpf]
+_CallbackObjective = Callable[[_CallbackData, mpf], mpf] # TODO: Consider using a proper alias type for the high-precision callback objective inputs/return value.
 
 
 def alho_common_slope_callback(
@@ -83,7 +83,7 @@ def stable_resistance_callback(
         mpf(repr(config.minimum_bracket_width)),
         mpf(repr(config.root_deduplication_tolerance)),
     )
-    return _result(summary, roots, 2)
+    return _result(summary, roots, 2) # TODO: Derive this stable-resistance comparable-band count from the method definition/configuration.
 
 
 def _accepted_roots(
@@ -131,7 +131,7 @@ def _golden_minimize(
 ) -> tuple[mpf, mpf]:
     if left == right:
         return left, objective(data, left)
-    ratio = (sqrt(mpf(5)) - mpf(1)) / mpf(2)
+    ratio = (sqrt(mpf(5)) - mpf(1)) / mpf(2) # TODO: Centralize this numerical-method constant with the optimizer implementation.
     x_left = right - ratio * (right - left)
     x_right = left + ratio * (right - left)
     f_left = objective(data, x_left)
@@ -167,8 +167,8 @@ def _common_slope_objective(data: _CallbackData, hidden: mpf) -> mpf:
 
 
 def _stable_resistance_objective(data: _CallbackData, hidden: mpf) -> mpf:
-    first = _log_odds_ratio(data, 0, hidden)
-    second = _log_odds_ratio(data, 1, hidden)
+    first = _log_odds_ratio(data, 0, hidden) # TODO: Replace raw stable-resistance band indices with named method coordinates.
+    second = _log_odds_ratio(data, 1, hidden) # TODO: Replace raw stable-resistance band indices with named method coordinates.
     if first is None or second is None:
         return mpf("inf")
     return abs(first - second)

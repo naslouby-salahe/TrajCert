@@ -39,11 +39,11 @@ def paired_percentile_bootstrap(
     bootstrap_means = np.empty(resample_count, dtype=np.float64)
     for index in range(resample_count):
         sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)
-        bootstrap_means[index] = float(np.mean(values[sampled], dtype=np.float64))
+        bootstrap_means[index] = float(np.mean(values[sampled], dtype=np.float64))  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     bootstrap_means.sort()
     alpha = 1.0 - confidence_level
     return PercentileBootstrapInterval(
-        estimate=float(np.mean(values, dtype=np.float64)),
+        estimate=float(np.mean(values, dtype=np.float64)),  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
         lower=linear_quantile(bootstrap_means, alpha / 2.0),
         upper=linear_quantile(bootstrap_means, 1.0 - alpha / 2.0),
         confidence_level=confidence_level,
@@ -51,6 +51,7 @@ def paired_percentile_bootstrap(
     )
 
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDifferenceValue:
     values = _validated_vector(sorted_values)
     if np.any(values[:-1] > values[1:]):
@@ -66,7 +67,7 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDi
     return lower_value + weight * (upper_value - lower_value)
 
 
-def _validated_vector(values: Vector) -> NDArray[np.float64]:
+def _validated_vector(values: Vector) -> NDArray[np.float64]:  # TODO: this is duplicated and redundant
     array = np.asarray(values, dtype=np.float64)
     if array.ndim != 1 or array.size == 0:
         raise InvalidScientificDataError(

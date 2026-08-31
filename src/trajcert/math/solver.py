@@ -98,11 +98,12 @@ def solve_hidden_mass_interval(
 
 
 def _solve_lower_branch(
+    # TODO: Consider using proper aliases for hidden mass and tolerances.
     summary: ObservableSummary,
     rho: SensitivityBudget,
-    u_dagger: float,
-    root_atol: float,
-    identity_atol: float,
+    u_dagger: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    root_atol: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    identity_atol: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> RootBracket:
     boundary_value = _profile_residual(summary, 0.0, rho)
     if boundary_value <= 0.0:
@@ -124,12 +125,13 @@ def _solve_lower_branch(
 
 
 def _solve_upper_branch(
+    # TODO: Consider using proper aliases for hidden mass and tolerances.
     summary: ObservableSummary,
     rho: SensitivityBudget,
-    u_dagger: float,
-    unresolved: float,
-    root_atol: float,
-    identity_atol: float,
+    u_dagger: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    unresolved: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    root_atol: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    identity_atol: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> RootBracket:
     boundary_value = _profile_residual(summary, unresolved, rho)
     if boundary_value <= 0.0:
@@ -151,16 +153,17 @@ def _solve_upper_branch(
 
 
 def _bisect(
+    # TODO: Consider using proper aliases for hidden mass and tolerances.
     *,
     summary: ObservableSummary,
     rho: SensitivityBudget,
     branch: RootBranch,
-    lower: float,
-    upper: float,
-    lower_residual: float,
-    upper_residual: float,
-    root_atol: float,
-    identity_atol: float,
+    lower: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    upper: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    lower_residual: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    upper_residual: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    root_atol: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    identity_atol: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> RootBracket:
     validate_initial_signs(branch, lower_residual, upper_residual)
     initial_width = upper - lower
@@ -209,14 +212,16 @@ def _bisect(
 
 
 def _profile_residual(
-    summary: ObservableSummary, hidden_mass: float, rho: SensitivityBudget
-) -> float:
-    return float(information_profile(summary, hidden_mass)) - rho
+    summary: ObservableSummary,
+    hidden_mass: float,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    rho: SensitivityBudget,
+) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    return information_profile(summary, hidden_mass) - rho
 
 
 def _exact_root(
     branch: RootBranch,
-    hidden_mass: float,
+    hidden_mass: float,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     summary: ObservableSummary,
     rho: SensitivityBudget,
     status: RootStatus,
@@ -234,12 +239,15 @@ def _exact_root(
     )
 
 
-def _require_residual(root: RootBracket, identity_atol: float) -> None:
+def _require_residual(
+    root: RootBracket, identity_atol: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> None:
     if float(root.residual) > identity_atol:
         raise RootSolveError("returned root residual exceeds identity_atol")
 
 
 def compute_iteration_cap(initial_width: float, root_atol: float) -> int:
+    # TODO: Consider using proper aliases for the root-bracket width, tolerance, and iteration cap.
     if initial_width <= 0.0:
         return 0
     if initial_width <= root_atol:
@@ -248,6 +256,7 @@ def compute_iteration_cap(initial_width: float, root_atol: float) -> int:
 
 
 def validate_initial_signs(branch: RootBranch, lower: float, upper: float) -> None:
+    # TODO: Consider using a proper alias type for residual values.
     if branch is RootBranch.LOWER:
         if lower <= 0.0 or upper >= 0.0:
             raise RootSolveError("lower branch initial bracket is not sign-valid")
@@ -255,13 +264,18 @@ def validate_initial_signs(branch: RootBranch, lower: float, upper: float) -> No
         raise RootSolveError("upper branch initial bracket is not sign-valid")
 
 
-def validate_final_signs(branch: RootBranch, lower: float, upper: float) -> None:
+def validate_final_signs(branch: RootBranch, lower: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                         upper: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                         ) -> None:
+    # TODO: Consider using a proper alias type for residual values.
     if not lower or not upper:
         return
     validate_initial_signs(branch, lower, upper)
 
 
-def _positive_tolerance(value: ToleranceValue, name: str) -> float:
+def _positive_tolerance(
+    value: ToleranceValue, name: str #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> float:  # TODO: do not use primitives like float directly, consider using proper alias types
     numeric = float(value)
     if not isfinite(numeric) or numeric <= 0.0:
         raise RootSolveError(f"{name} must be finite and positive")

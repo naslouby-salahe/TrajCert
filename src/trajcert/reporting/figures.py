@@ -29,9 +29,9 @@ _MARGIN_RIGHT = 45.0
 _MARGIN_TOP = 85.0
 _MARGIN_BOTTOM = 80.0
 _STROKE = "#202020"
-_MUTED = "#6a6a6a"
-_LIGHT = "#d8d8d8"
-_BACKGROUND = "#ffffff"
+_MUTED = "#6a6a6a" 
+_LIGHT = "#d8d8d8" 
+_BACKGROUND = "#ffffff" 
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,46 +42,47 @@ class FigureRenderResult:
 
 @dataclass(frozen=True, slots=True)
 class Point:
-    x: float
-    y: float
+    x: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    y: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 @dataclass(frozen=True, slots=True)
 class Line:
     start: Point
     end: Point
-    width: float = 1.5
-    dashed: bool = False
+    width: float = 1.5  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    dashed: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 @dataclass(frozen=True, slots=True)
 class Circle:
     center: Point
-    radius: float = 3.5
-    hollow: bool = False
+    radius: float = 3.5  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    hollow: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 @dataclass(frozen=True, slots=True)
 class Cross:
     center: Point
-    radius: float = 4.0
+    radius: float = 4.0  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 @dataclass(frozen=True, slots=True)
 class Text:
     position: Point
-    value: str
-    size: int = 14
+    value: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    size: int = 14  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    # TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
     anchor: str = "start"
 
 
 @dataclass(frozen=True, slots=True)
 class Rectangle:
-    left: float
-    top: float
-    width: float
-    height: float
-    filled: bool = False
+    left: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    top: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    width: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    height: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    filled: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 type DrawCommand = Line | Circle | Cross | Text | Rectangle
@@ -89,7 +90,7 @@ type DrawCommand = Line | Circle | Cross | Text | Rectangle
 
 @dataclass(frozen=True, slots=True)
 class PlotDocument:
-    title: str
+    title: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     commands: tuple[DrawCommand, ...]
 
 
@@ -126,6 +127,7 @@ def render_figures(
     return tuple(render_figure(source, destination_directory) for source in sources)
 
 
+# TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
 def _build_document(name: str, table: pa.Table) -> PlotDocument:
     builders = {
         "figure_partition_coherence": _partition_coherence,
@@ -237,6 +239,7 @@ def _information_profile(table: pa.Table) -> PlotDocument:
 
 
 def _anytime_paths(table: pa.Table) -> PlotDocument:
+    # TODO: should be in yaml and accessed through config
     seeds = _unique_numbers(table, "stream_seed_index")
     if seeds != (0, 1, 2, 3):
         raise InvalidScientificDataError(
@@ -373,6 +376,7 @@ def _rho_sensitivity_marker(
 def _failure_boundaries(table: pa.Table) -> PlotDocument:
     axes = _unique_strings(table, "axis")
     commands = _base_commands("Failure-boundary atlas")
+    # TODO: should be in yaml and accessed through config
     panels = _grid_panels(len(axes), columns=3)
     for axis, panel in zip(axes, panels, strict=True):
         rows = _matching_rows(table, "axis", axis)
@@ -415,10 +419,10 @@ def _computational_scaling(table: pa.Table) -> PlotDocument:
 
 @dataclass(frozen=True, slots=True)
 class Panel:
-    left: float
-    top: float
-    right: float
-    bottom: float
+    left: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    top: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    right: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    bottom: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
     @property
     def width(self) -> float:
@@ -432,10 +436,10 @@ class Panel:
 @dataclass(frozen=True, slots=True)
 class PanelScale:
     panel: Panel
-    x_min: float
-    x_max: float
-    y_min: float
-    y_max: float
+    x_min: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    x_max: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    y_min: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    y_max: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
     def map_x(self, value: float) -> float:
         denominator = self.x_max - self.x_min
@@ -452,9 +456,11 @@ def _single_panel() -> Panel:
     return Panel(_MARGIN_LEFT, _MARGIN_TOP, _WIDTH - _MARGIN_RIGHT, _HEIGHT - _MARGIN_BOTTOM)
 
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def _horizontal_panels(count: int) -> tuple[Panel, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
+    # TODO: should be in yaml and accessed through config
     gap = 28.0
     available = _WIDTH - _MARGIN_LEFT - _MARGIN_RIGHT - gap * (count - 1)
     width = available / count
@@ -469,11 +475,14 @@ def _horizontal_panels(count: int) -> tuple[Panel, ...]:
     )
 
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def _grid_panels(count: int, columns: int) -> tuple[Panel, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
     rows = (count + columns - 1) // columns
+    # TODO: should be in yaml and accessed through config
     gap_x = 24.0
+    # TODO: should be in yaml and accessed through config
     gap_y = 34.0
     available_width = _WIDTH - _MARGIN_LEFT - _MARGIN_RIGHT - gap_x * (columns - 1)
     available_height = _HEIGHT - _MARGIN_TOP - _MARGIN_BOTTOM - gap_y * (rows - 1)
@@ -497,9 +506,11 @@ def _panel_scale(panel: Panel, xs: tuple[float, ...], ys: tuple[float, ...]) -> 
     return PanelScale(panel, x_min, x_max, y_min, y_max)
 
 
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def _expanded_bounds(lower: float, upper: float) -> tuple[float, float]:
     if not isfinite(lower) or not isfinite(upper):
         raise InvalidScientificDataError("figure coordinate must be finite")
+    # TODO: should be in yaml and accessed through config
     pad = max(abs(lower) * 0.05, 0.05) if lower == upper else (upper - lower) * 0.05
     return lower - pad, upper + pad
 
@@ -525,7 +536,7 @@ def _polyline(
     xs: tuple[float, ...],
     ys: tuple[float, ...],
     *,
-    dashed: bool = False,
+    dashed: bool = False,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> list[DrawCommand]:
     if len(xs) != len(ys):
         raise InvalidScientificDataError("polyline x/y coordinates must have identical length")
@@ -668,7 +679,7 @@ def _png_chunk(kind: bytes, payload: bytes) -> bytes:
     return struct.pack(">I", len(payload)) + body + struct.pack(">I", zlib.crc32(body) & 0xFFFFFFFF)
 
 
-def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = False) -> None:
+def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = False) -> None:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     x0, y0 = round(start.x), round(start.y)
     x1, y1 = round(end.x), round(end.y)
     dx = abs(x1 - x0)
@@ -692,7 +703,7 @@ def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = 
         step += 1
 
 
-def _raster_circle(pixels: bytearray, center: Point, radius: float, hollow: bool) -> None:
+def _raster_circle(pixels: bytearray, center: Point, radius: float, hollow: bool) -> None:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     cx, cy = round(center.x), round(center.y)
     r = max(1, round(radius))
     for y in range(cy - r, cy + r + 1):

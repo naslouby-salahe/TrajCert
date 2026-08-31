@@ -9,7 +9,7 @@ from trajcert.types import DomainModel, SensitivityBudget, ToleranceValue
 
 
 class PartitionCoherenceResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     fine_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     coarse_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     timing_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -21,7 +21,7 @@ class PartitionCoherenceResult(DomainModel):
 
 
 class SameEndpointTimingResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     no_timing_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     timing_tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     no_timing_lower: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -137,7 +137,7 @@ def evaluate_same_endpoint_different_timing(
     )
 
 
-def evaluate_strict_timing_gain(
+def evaluate_strict_timing_gain(  # TODO: what's the point? Inline this
     fine: ObservableSummary,
     coarse_partition: TrajectoryPartition,
     sensitivity_budget: SensitivityBudget,

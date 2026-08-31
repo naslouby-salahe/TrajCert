@@ -33,6 +33,7 @@ from trajcert.types import (
     SeedIndex,
 )
 
+# TODO: should be in yaml and accessed through config
 _SYNTHETIC_CLIENT_ID = ClientId("synthetic-client")
 _SYNTHETIC_ACTION_CHANNEL_ID = ActionChannelId("automatic-action")
 
@@ -176,8 +177,8 @@ def _sample_event(
     stream_index: SeedIndex,
     event_index: NonNegativeInt, # TODO: Consider using a proper alias type for event index or whatever already exists with actually fits this
     random: np.random.Generator,
-    harmful_weights: np.ndarray,
-    correct_weights: np.ndarray,
+    harmful_weights: np.ndarray,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    correct_weights: np.ndarray,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> LedgerEvent:
     harmful = bool(random.random() < parameters.theta)
     terminal_probability = parameters.q1 if harmful else parameters.q0
@@ -222,7 +223,7 @@ def _event_from_observable_category(
         event_id=_event_id(law_name, stream_index, event_index),
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
-        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),
+        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),  # TODO: this is duplicated and redundant
         issue_age_unit=issue,
         terminal_horizon=partition.terminal_horizon,
         adjudication_completion_age=completion,
@@ -234,6 +235,7 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
+        # TODO: this is duplicated and redundant
         epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),
     )
 

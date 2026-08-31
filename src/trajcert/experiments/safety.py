@@ -41,7 +41,7 @@ class CompatibilitySweepPoint(DomainModel):
 class CompatibilityFloorBehaviorResult(DomainModel):
     tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     points: tuple[CompatibilitySweepPoint, ...]
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyCaseEvaluation(DomainModel):
@@ -50,12 +50,12 @@ class SafetyCaseEvaluation(DomainModel):
     expected_regime: SafetyRegime | None
     assessment: SafetyAssessment | None
     frontier_oracle: SafetyFrontierOracleComparison | None
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyIntrinsicResult(DomainModel):
     cases: tuple[SafetyCaseEvaluation, ...]
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def compatibility_floor_behavior(
@@ -68,7 +68,7 @@ def compatibility_floor_behavior(
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
-    definitions = (
+    definitions = ( # TODO: Move these scientific sweep labels/offsets into configured study definitions.
         ("below", tau - compatibility_floor_offset),
         ("at", tau),
         ("above", tau + compatibility_floor_offset),
@@ -174,7 +174,7 @@ def safety_and_intrinsic_impossibility(
 def _expected_safety_regime(case: SafetyBudgetCase) -> SafetyRegime | None:
     if not case.valid:
         return None
-    by_name = {
+    by_name = { # TODO: Keep this expected-regime catalog with configured safety case definitions rather than raw display-name strings.
         SafetyCaseName("Below resolved harmful mass"): SafetyRegime.RESOLVED_HARM_EXCEEDS_BUDGET,
         SafetyCaseName(
             "Between resolved mass and intrinsic boundary"

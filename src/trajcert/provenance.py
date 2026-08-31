@@ -35,15 +35,16 @@ from trajcert.types import (
     UnitFloat,
 )
 
-ExperimentNameValue = NewType("ExperimentNameValue", str)
-ComparisonPairName = NewType("ComparisonPairName", str)
-MethodName = NewType("MethodName", str)
-BaselineName = NewType("BaselineName", str)
+#TODO: identify what else needs to become enum
+ExperimentNameValue = NewType("ExperimentNameValue", str) #TODO: should be enum
+ComparisonPairName = NewType("ComparisonPairName", str) #TODO: should be enum
+MethodName = NewType("MethodName", str) #TODO: should be enum
+BaselineName = NewType("BaselineName", str) #TODO: should be enum
 FailureBoundaryCoordinate = NewType("FailureBoundaryCoordinate", str)
 SensitivityCoordinate = NewType("SensitivityCoordinate", str)
-VariantName = NewType("VariantName", str)
+VariantName = NewType("VariantName", str) #TODO: should be enum
 ProducerComponentName = NewType("ProducerComponentName", str)
-ArtifactTypeName = NewType("ArtifactTypeName", str)
+ArtifactTypeName = NewType("ArtifactTypeName", str) #TODO: should be enum
 EnvironmentDigest = NewType("EnvironmentDigest", str)
 SeedManifestDigest = NewType("SeedManifestDigest", str)
 CodeCommit = NewType("CodeCommit", str)
@@ -58,11 +59,11 @@ class SemanticCoordinates(DomainModel):
     baseline_name: BaselineName | None = None
     rho: SensitivityBudget | None = None
     beta: RiskBudget | None = None
-    delta: UnitFloat | None = None
-    gamma: FiniteFloat | None = None
-    pattern_mixture_c: NonNegativeInt | None = None
+    delta: UnitFloat | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gamma: FiniteFloat | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    pattern_mixture_c: NonNegativeInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     failure_boundary_axis_and_level: FailureBoundaryCoordinate | None = None
-    scaling_band_count: PositiveInt | None = None
+    scaling_band_count: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     seed_index: SeedIndex | None = None
     sensitivity_coordinate: SensitivityCoordinate | None = None
     variant_name: VariantName | None = None
@@ -158,7 +159,7 @@ class DependencyMaterial(DomainModel):
 class ProvenanceMaterial(DomainModel):
     scientific_specification_digest: SpecificationDigest
     code_commit: CodeCommit
-    dirty_tree_flag: bool
+    dirty_tree_flag: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     environment_lock_digest: EnvironmentDigest
     container_image_digest: ContainerImageDigest | None = None
     dataset_preprocessing_digests: tuple[DigestHex, ...]

@@ -34,7 +34,7 @@ from trajcert.types import (
     SensitivityBudget,
 )
 
-_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
+_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE  # TODO: Move this study-law selection to YAML and access it through config.
 _NANOSECONDS_PER_MILLISECOND = 1_000_000.0 # TODO: This should be defined in a more central location or configuration
 
 
@@ -114,8 +114,8 @@ def evaluate_failure_boundary(
 
 
 def evaluate_terminal_selection_asymmetry(
-    q1: Probability,
-    q0: Probability,
+    q1: Probability, # TODO: Consider using a typed terminal-selection-asymmetry coordinate rather than separate primitives.
+    q0: Probability, # TODO: Consider using a typed terminal-selection-asymmetry coordinate rather than separate primitives.
 ) -> FailureBoundaryResult:
     config = active_config.get()
     parameters = _base_parameters(config).model_copy(update={"q1": q1, "q0": q0})
@@ -154,7 +154,7 @@ def evaluate_optimizer_node_budget(
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=0,
+        stream_index=0,  # TODO: Move this fixed stream selection to YAML and access it through config.
         event_count=sample_size,
     )
     full_law = build_full_law(parameters, partition.band_count)
@@ -197,7 +197,7 @@ def evaluate_optimizer_node_budget(
     )
 
 
-def _finite_sample_size(sample_size: PositiveInt, config: TrajCertConfig) -> FailureBoundaryResult:
+def _finite_sample_size(sample_size: PositiveInt, config: TrajCertConfig) -> FailureBoundaryResult: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
     if sample_size <= 0:
         raise ValueError("matured sample size must be positive")
     parameters = _base_parameters(config)
@@ -205,7 +205,7 @@ def _finite_sample_size(sample_size: PositiveInt, config: TrajCertConfig) -> Fai
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=0,
+        stream_index=0,  # TODO: Move this fixed stream selection to YAML and access it through config.
         event_count=sample_size,
     )
     truth = _summary(parameters, partition, config)
@@ -268,7 +268,7 @@ def _population_coordinate(
     return parameters, _partition(bands, config), rho, beta
 
 
-def _base_parameters(config: TrajCertConfig) -> LawParameters:
+def _base_parameters(config: TrajCertConfig) -> LawParameters: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
     law = config.laws[_BASE_LAW]
     return LawParameters(
         key=_BASE_LAW,

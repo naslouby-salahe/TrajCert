@@ -136,13 +136,13 @@ class HandCaseResult(DomainModel):
     projection_upper: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
     oracle_feasible_lower: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
     anti_conservatism: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
-    zero_resolved_mass_plausible: bool | None
-    passed: bool
+    zero_resolved_mass_plausible: bool | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class CoverageMethodResult(DomainModel):
     method: SequentialMethod
-    applicable: bool
+    applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     streams: PositiveInt # TODO: Consider using a proper alias type for the number of streams
     anytime_failures: Count
     failure_rate: UnitFloat | None # TODO: Consider using a proper alias type for failure rate or whatever already exists with actually fits this
@@ -150,17 +150,17 @@ class CoverageMethodResult(DomainModel):
 
 class CoverageStressResult(DomainModel):
     methods: tuple[CoverageMethodResult, ...]
-    primary_passed: bool
+    primary_passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class CoverageMethodEvidence(DomainModel):
     method_name: str # TODO: Consider using a proper alias type for the method name or use a predefined enumeration of method names
-    applicable: bool
+    applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     independent_streams: PositiveInt # TODO: Consider using a proper alias type for the number of independent streams
     ever_violations: Count
     violation_rate: UnitFloat | None # TODO: Consider using a proper alias type for violation rate or whatever already exists with actually fits this
     clopper_pearson_upper_95: UnitFloat | None # TODO: Consider using a proper alias type for violation rate or whatever already exists with actually fits this
-    criterion_pass: bool | None
+    criterion_pass: bool | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     median_first_certified_n: NonNegativeFloat | None  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     median_certified_update_fraction: UnitFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
@@ -171,7 +171,7 @@ class AnytimePathEvidence(DomainModel):
     risk_upper_anytime: RiskValue
     true_theta: Probability
     beta: RiskBudget
-    evidence_gate_pass: bool
+    evidence_gate_pass: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     operational_state: AnytimeOperationalState
 
 
@@ -185,7 +185,7 @@ class CoverageEvidenceResult(DomainModel):
     acceptance_upper_limit: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     methods: tuple[CoverageMethodEvidence, ...]
     representative_paths: tuple[AnytimePathEvidence, ...]
-    primary_passed: bool
+    primary_passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class _StreamCertificationSummary(DomainModel):
@@ -325,14 +325,14 @@ def run_coverage_stress(
 def _coverage_stream_failures(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     sensitivity_budget: SensitivityBudget,
-    assumption_valid: bool,
+    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     max_events: PositiveInt, # TODO: consider using a proper alias type for the maximum number of events
     checkpoint_every: PositiveInt, # TODO: consider using a proper alias type for the checkpoint interval
     true_risk: RiskValue,
     stream_index: SeedIndex,
-) -> dict[SequentialMethod, bool]:
+) -> dict[SequentialMethod, bool]: # TODO: Consider replacing this raw mutable status map with a typed result.
     ledger = generate_stochastic_ledger(
         parameters=parameters,
         partition=partition,
@@ -379,14 +379,14 @@ def _coverage_stream_failures(
 
 
 def _record_checkpoint_failures(
-    failed: dict[SequentialMethod, bool],
+    failed: dict[SequentialMethod, bool], # TODO: Consider replacing this raw mutable status map with a typed result.
     state: CategoricalState,
     partition: TrajectoryPartition,
     running: CategoricalConfidenceRegion,
     ignorable: IgnorableDelayResult,
     config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     sensitivity_budget: SensitivityBudget,
-    assumption_valid: bool,
+    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     true_risk: RiskValue,
 ) -> None:
     envelope = summary_envelope_from_confidence(partition, running)
@@ -413,9 +413,9 @@ def _record_checkpoint_failures(
 
 def _coverage_method_result(
     method: SequentialMethod,
-    assumption_valid: bool,
+    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     stream_count: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    failures: dict[SequentialMethod, Count],
+    failures: dict[SequentialMethod, Count], # TODO: Consider replacing this raw mutable count map with a typed result.
 ) -> CoverageMethodResult:
     applicable = method is not SequentialMethod.IGNORABLE_DELAY or assumption_valid
     failure_rate = (
@@ -1279,7 +1279,10 @@ def _population_summary(
     )
 
 
-def _law(config: TrajCertConfig, law_key: LawKey) -> LawParameters:
+def _law(
+    config: TrajCertConfig, # TODO: do not pass config as input param, access it directly
+    law_key: LawKey,
+) -> LawParameters:
     law = config.laws[law_key]
     return LawParameters(
         key=law_key,

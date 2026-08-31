@@ -40,7 +40,7 @@ class PopulationUtilityResult(DomainModel):
     unresolved_as_harm_upper: RiskValue
     absolute_tightening: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     relative_unresolved_gain: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    materially_nonvacuous: bool
+    materially_nonvacuous: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SequentialStreamUtility(DomainModel):
@@ -122,14 +122,14 @@ def population_sensitivity_utility(
 def sequential_sensitivity_utility(
     parameters: LawParameters,
     fine_partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: do not pass config as input param
     sensitivity_budget: SensitivityBudget,
 ) -> SequentialUtilityResult:
     if fine_partition.band_count != config.method.finest_bands:
         raise ValueError("sequential utility requires the configured finest partition")
     endpoint_partition = build_partition(
         finest_band_count=fine_partition.finest_band_count,
-        band_count=1,
+        band_count=1,  # TODO: Replace this endpoint-partition magic number with a named domain constant or config value.
         terminal_horizon=fine_partition.terminal_horizon,
     )
     streams = tuple(
@@ -157,7 +157,7 @@ def _sequential_stream_utility(
     parameters: LawParameters,
     fine_partition: TrajectoryPartition,
     endpoint_partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, # TODO: do not pass config as input param
     sensitivity_budget: SensitivityBudget,
     stream_index: SeedIndex,
 ) -> SequentialStreamUtility:
@@ -212,7 +212,10 @@ def _sequential_stream_utility(
     )
 
 
-def _eligible(checkpoint: SequentialCheckpoint, config: TrajCertConfig) -> bool:
+def _eligible(
+    checkpoint: SequentialCheckpoint,
+    config: TrajCertConfig, # TODO: do not pass config as input param
+) -> bool:
     return (
         checkpoint.matured_count >= config.minimum_evidence.matured_events
         and checkpoint.resolved_count >= config.minimum_evidence.resolved_events

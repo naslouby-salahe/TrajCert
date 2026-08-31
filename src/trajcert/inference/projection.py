@@ -632,7 +632,7 @@ def _initial_box(envelope: ObservableSummaryEnvelope) -> _Box:
     )
 
 
-def _box_possible(box: _Box, envelope: ObservableSummaryEnvelope) -> bool:
+def _box_possible(box: _Box, envelope: ObservableSummaryEnvelope) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     resolved_lower = box.harmful_lower + box.correct_lower
     resolved_upper = box.harmful_upper + box.correct_upper
     required_lower = 1.0 - envelope.unresolved.upper
@@ -1029,7 +1029,7 @@ def _queue_upper(
     return _unit(max(values))
 
 
-def _zero_resolved_plausible(envelope: ObservableSummaryEnvelope) -> bool:
+def _zero_resolved_plausible(envelope: ObservableSummaryEnvelope) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     return (
         envelope.resolved_harmful.lower == 0.0
         and envelope.resolved_correct.lower == 0.0

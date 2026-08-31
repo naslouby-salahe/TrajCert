@@ -96,6 +96,7 @@ def information_profile_second_derivative(
 def timing_gain(
     fine: ObservableSummary, coarse: ObservableSummary, identity_tolerance: ToleranceValue
 ) -> InformationNats:
+    # TODO: Consider using a typed observable-summary field identifier instead of raw display strings.
     tolerance = identity_tolerance
     if not isfinite(tolerance) or tolerance <= 0.0:
         raise InvalidScientificDataError("identity tolerance must be finite and positive")
@@ -125,7 +126,8 @@ def profile_difference(
     )
 
 
-def _hidden_mass(summary: ObservableSummary, value: Mass) -> float:
+def _hidden_mass(summary: ObservableSummary, value: Mass) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    # TODO: Consider using a proper alias type for validated hidden terminal harmful mass.
     hidden = value
     unresolved = summary.unresolved_mass
     if not isfinite(hidden) or hidden < 0.0 or hidden > unresolved:
@@ -134,6 +136,7 @@ def _hidden_mass(summary: ObservableSummary, value: Mass) -> float:
 
 
 def _strictly_interior_hidden_mass(summary: ObservableSummary, value: Mass) -> float:
+    # TODO: Consider using a proper alias type for an interior hidden-mass value.
     hidden = _hidden_mass(summary, value)
     unresolved = summary.unresolved_mass
     if unresolved <= 0.0 or hidden <= 0.0 or hidden >= unresolved:
@@ -141,7 +144,9 @@ def _strictly_interior_hidden_mass(summary: ObservableSummary, value: Mass) -> f
     return hidden
 
 
-def _nonnegative_roundoff_guard(value: float) -> float:
+def _nonnegative_roundoff_guard(value: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+                                ) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    # TODO: Consider using a proper alias type for numerically guarded information values.
     if value >= 0.0:
         return value
     ulps = active_config.get().numerics.float_roundoff_ulps

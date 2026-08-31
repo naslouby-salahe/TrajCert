@@ -29,13 +29,15 @@ class SafetyAssessment:
 
 
 class SafetyBudgetCase(DomainModel):
+    # TODO: Consider using a dedicated validity-state type instead of the raw bool/reason nullable pair.
     name: SafetyCaseName
     risk_budget: RiskBudget | None
-    valid: bool
+    valid: bool #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     invalid_reason: ReasonCode | None
 
 
 def assess_safety_geometry(summary: ObservableSummary, risk_budget: RiskBudget) -> SafetyAssessment:
+    # TODO: Consider extracting the hard-coded safety-regime ordering into an explicit domain policy.
     beta = _risk_budget(risk_budget)
     harmful = summary.resolved_harmful_mass
     assumption_free_upper = harmful + summary.unresolved_mass
@@ -81,6 +83,7 @@ def safety_budget_cases(
     if minimum is None:
         return (
             SafetyBudgetCase(
+                # TODO: should be enum, this is a closed set of safety case names
                 name=SafetyCaseName("Below resolved harmful mass"),
                 risk_budget=max(0.0, harmful - resolved_harm_boundary_offset),
                 valid=True,
@@ -147,7 +150,8 @@ def safety_budget_cases(
     )
 
 
-def _risk_budget(value: RiskBudget) -> float:
+def _risk_budget(value: RiskBudget) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    # TODO: Consider using a proper alias type for the validated numeric risk budget.
     if not isfinite(value) or value < 0.0 or value > 1.0:
         raise InvalidScientificDataError("risk budget must be finite and lie in [0, 1]")
     return value

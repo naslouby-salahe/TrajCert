@@ -34,7 +34,7 @@ def ignorable_delay_update(
     anytime_delta: AnytimeConfidenceDelta,
     root_tolerance: ToleranceValue,
     previous_running: ClosedProbabilityInterval | None,
-    assumption_valid: bool,
+    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> IgnorableDelayResult:
     if not assumption_valid:
         return IgnorableDelayResult(
@@ -90,6 +90,7 @@ def _root(
     upper: Probability,
     threshold: FiniteFloat,
     tolerance: ToleranceValue,
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     lower_branch: bool,
 ) -> Probability:
     while upper - lower > tolerance:
