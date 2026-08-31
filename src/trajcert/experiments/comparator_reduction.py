@@ -5,18 +5,32 @@ from trajcert.comparators.callback import (
     alho_common_slope_callback,
     stable_resistance_callback,
 )
+from trajcert.comparators.endpoint import endpoint_path_information_bound
 from trajcert.comparators.legacy import LegacySensitivityResult, legacy_bandwise_odds_ratio
 from trajcert.comparators.pattern_mixture import PatternMixtureResult, fit_pattern_mixture
-from trajcert.config import active_config
+from trajcert.config import NumericsConfig, active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.oracle import InformationOracleResult, solve_information_oracle
-from trajcert.types import DomainModel, SensitivityBudget
+from trajcert.types import (
+    CompatibilityRegime,
+    DomainModel,
+    HiddenMassInterval,
+    RiskInterval,
+    SensitivityBudget,
+)
 
 
 class GenericInformationPoint(DomainModel):
     rho: SensitivityBudget
     oracle: InformationOracleResult
+
+
+class EndpointPoint(DomainModel):
+    rho: SensitivityBudget
+    compatibility_regime: CompatibilityRegime
+    hidden_mass_interval: HiddenMassInterval | None
+    latent_risk_interval: RiskInterval | None
 
 
 class ComparatorReductionResult(DomainModel):
@@ -25,6 +39,7 @@ class ComparatorReductionResult(DomainModel):
     pattern_mixture: PatternMixtureResult
     legacy: tuple[LegacySensitivityResult, ...]
     generic_information: tuple[GenericInformationPoint, ...]
+    endpoint: tuple[EndpointPoint, ...]
 
 
 def evaluate_comparator_reduction(
@@ -56,4 +71,23 @@ def evaluate_comparator_reduction(
             )
             for rho in rho_values
         ),
+        endpoint=tuple(_endpoint_point(summary, rho, config.numerics) for rho in rho_values),
+    )
+
+
+def _endpoint_point(
+    summary: ObservableSummary, rho: SensitivityBudget, numerics: NumericsConfig
+) -> EndpointPoint:
+    solved = endpoint_path_information_bound(
+        summary,
+        rho,
+        numerics.root_atol,
+        numerics.identity_atol,
+        numerics.comparison_guard,
+    )
+    return EndpointPoint(
+        rho=rho,
+        compatibility_regime=solved.solve_result.compatibility.regime,
+        hidden_mass_interval=solved.hidden_mass,
+        latent_risk_interval=solved.latent_risk,
     )

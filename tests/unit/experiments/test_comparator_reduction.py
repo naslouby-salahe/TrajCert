@@ -114,3 +114,19 @@ def test_comparator_reduction_generic_points_carry_budgets() -> None:
     assert result.generic_information[1].oracle.regime == "NO_UNRESOLVED_MASS"
     assert result.generic_information[2].oracle.regime == "NO_UNRESOLVED_MASS"
     assert result.generic_information[0].oracle.minimum_information == 0.0
+
+
+def test_comparator_reduction_endpoint_points_carry_budgets() -> None:
+    result = _evaluate((0.0, 0.1))
+    assert tuple(float(point.rho) for point in result.endpoint) == (
+        0.0,
+        0.1,
+        BINARY_MAX_INFORMATION_NATS,
+    )
+    assert all(point.compatibility_regime is not None for point in result.endpoint)
+
+
+def test_comparator_reduction_endpoint_uniform_summary_is_compatible() -> None:
+    result = _evaluate((0.0, 0.1))
+    assert result.endpoint[0].hidden_mass_interval is not None
+    assert result.endpoint[0].latent_risk_interval is not None
