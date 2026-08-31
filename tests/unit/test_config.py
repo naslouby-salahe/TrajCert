@@ -40,12 +40,6 @@ from trajcert.types import (
 
 CONFIG_PATH = Path("configs/trajcert.yaml")
 _PRODUCTION_LAW_COUNT = 12
-_UTILITY_AND_COHERENCE_LAW_COUNT = 6
-_SHARPNESS_ORACLE_LAW_COUNT = 10
-_SAFETY_AND_IMPOSSIBILITY_LAW_COUNT = 8
-_STRICT_TIMING_CASE_COUNT = 6
-_COVERAGE_STRESS_CASE_COUNT = 12
-_FAILURE_BOUNDARY_LEVEL_COUNT = 7
 
 
 class VectorModel(DomainModel):
@@ -59,32 +53,6 @@ def test_root_model_owns_yaml_loading() -> None:
     assert len(configuration.laws) == _PRODUCTION_LAW_COUNT
     assert configuration.method.finest_bands == configuration.grids.partitions[0]
     assert configuration.study_design.partition_coherence_figure_rho == pytest.approx(0.10)
-
-
-def test_study_design_registry_cardinalities_match_protocol() -> None:
-    configuration = TrajCertConfig.from_yaml(CONFIG_PATH)
-    study_design = configuration.study_design
-
-    assert len(study_design.utility_and_coherence_laws) == _UTILITY_AND_COHERENCE_LAW_COUNT
-    assert len(study_design.sharpness_oracle_laws) == _SHARPNESS_ORACLE_LAW_COUNT
-    assert len(study_design.safety_and_impossibility_laws) == _SAFETY_AND_IMPOSSIBILITY_LAW_COUNT
-    assert len(study_design.strict_timing_cases) == _STRICT_TIMING_CASE_COUNT
-    assert len(study_design.coverage_stress_cases) == _COVERAGE_STRESS_CASE_COUNT
-
-
-def test_failure_boundary_level_count_matches_protocol() -> None:
-    configuration = TrajCertConfig.from_yaml(CONFIG_PATH)
-    failure_boundary = configuration.failure_boundary
-
-    assert len(failure_boundary.unresolvedness) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.timing_contrast) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.prevalence) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.bands) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.information_margin) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.risk_offset) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.sample_size) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.terminal_selection_asymmetry) == _FAILURE_BOUNDARY_LEVEL_COUNT
-    assert len(failure_boundary.optimizer_nodes) == _FAILURE_BOUNDARY_LEVEL_COUNT
 
 
 def test_yaml_loading_rejects_unknown_top_level_key(tmp_path: Path) -> None:

@@ -69,9 +69,7 @@ from trajcert.math.oracle import (
     solve_information_oracle,
 )
 from trajcert.types import (
-    AcceptanceUpperLimit,
     ActionChannelId,
-    AnytimeConfidenceDelta,
     BandCount,
     CaseIndex,
     CategoryIndex,
@@ -79,13 +77,11 @@ from trajcert.types import (
     Count,
     DomainModel,
     EpochId,
-    EventCount,
     EventId,
     InformationNats,
     LawKey,
     Mass,
     NonNegativeFloat,
-    OuterMaxNodes,
     PositiveInt,
     Probability,
     RiskBudget,
@@ -185,8 +181,8 @@ class CoverageEvidenceResult(DomainModel):
     true_mutual_information: InformationNats
     rho: SensitivityBudget
     beta: RiskBudget
-    delta: AnytimeConfidenceDelta
-    acceptance_upper_limit: AcceptanceUpperLimit
+    delta: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    acceptance_upper_limit: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     methods: tuple[CoverageMethodEvidence, ...]
     representative_paths: tuple[AnytimePathEvidence, ...]
     primary_passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -210,8 +206,8 @@ def run_sequential_trace(
     config: TrajCertConfig,
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
-    checkpoint_every: EventCount,
-    outer_max_nodes: OuterMaxNodes | None = None,
+    checkpoint_every: PositiveInt, # TODO: Consider using a proper alias type for the checkpoint interval
+    outer_max_nodes: PositiveInt | None = None, # TODO: Consider using a proper alias type for the maximum number of outer nodes
 ) -> SequentialTrace:
     _ = active_config.set(config)
     if checkpoint_every <= 0:
@@ -497,8 +493,8 @@ def evaluate_configured_coverage_stress(
         true_mutual_information=true_information,
         rho=float(rho),
         beta=float(beta),
-        delta=config.confidence.anytime_delta,
-        acceptance_upper_limit=config.sequential.coverage.acceptance_upper_limit,
+        delta=float(config.confidence.anytime_delta),
+        acceptance_upper_limit=float(config.sequential.coverage.acceptance_upper_limit),
         methods=methods,
         representative_paths=trajectory_evidence.representative_paths,
         primary_passed=bool(primary.criterion_pass),

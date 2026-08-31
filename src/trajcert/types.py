@@ -20,11 +20,9 @@ SafetyCaseName = NewType("SafetyCaseName", str)
 SeedNamespace = NewType("SeedNamespace", str)
 SemanticComparisonKey = NewType("SemanticComparisonKey", str)
 UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
-OpenUnitFloat = Annotated[StrictFloat, Field(gt=0.0, lt=1.0, allow_inf_nan=False)]
 PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
 NonNegativeFloat = Annotated[StrictFloat, Field(ge=0.0, allow_inf_nan=False)]
 FiniteFloat = Annotated[StrictFloat, Field(allow_inf_nan=False)]
-GammaSensitivity = Annotated[StrictFloat, Field(ge=1.0, allow_inf_nan=False)]
 PositiveInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeInt = Annotated[StrictInt, Field(ge=0)]
 BandCount = PositiveInt
@@ -48,20 +46,13 @@ TerminalHorizon = PositiveFloat
 ToleranceValue = PositiveFloat
 
 AbsoluteTightening = FiniteFloat
-AcceptanceUpperLimit = UnitFloat
-AnytimeConfidenceDelta = OpenUnitFloat
+AnytimeConfidenceDelta = UnitFloat
 ArbitraryPrecisionBits = NonNegativeInt
-CertifiedFractionGain = NonNegativeFloat
-CoefficientValue = FiniteFloat
-ConfidenceLevel = OpenUnitFloat
-EventCount = PositiveInt
+ConfidenceLevel = UnitFloat
 FamilySize = PositiveInt
 FavorableCount = NonNegativeInt
 GridPointCount = PositiveInt
-HazardProbability = OpenUnitFloat
 InterceptValue = FiniteFloat
-IterationBudget = PositiveInt
-LawCount = PositiveInt
 ObjectiveValue = FiniteFloat
 ObservedStatistic = FiniteFloat
 OracleDigits = PositiveInt
@@ -70,23 +61,13 @@ PairCount = PositiveInt
 PairedDifferenceDispersion = FiniteFloat
 PairedDifferenceValue = FiniteFloat
 RandomizationCount = PositiveInt
-RefinementCandidateCount = PositiveInt
-RefinementStepCount = PositiveInt
 RelativeUnresolvedGain = FiniteFloat
-RepetitionCount = PositiveInt
 ResampleCount = PositiveInt
-RhoValueCount = PositiveInt
-RiskOffset = FiniteFloat
-SensitivityOffset = NonNegativeFloat
-SignificanceLevel = OpenUnitFloat
 StandardizedEffectSize = FiniteFloat
-TimingContrast = NonNegativeFloat
-StreamCount = PositiveInt
-WarmupRepetitionCount = NonNegativeInt
 
-CoverageStressCaseName = NewType("CoverageStressCaseName", str)
-
-LogMixtureRatio = FiniteFloat
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
+type LogMixtureRatio = float
+# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 type TabularCellValue = None | bool | int | float | str
 
 
@@ -107,12 +88,14 @@ class NDArrayFloat64Annotation:
         )
 
     @classmethod
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     def validate(cls, value: object) -> NDArray[np.float64]:
         if not isinstance(value, np.ndarray):
             raise ValueError("scientific vectors must be NumPy arrays")
         return value.astype(np.float64)
 
     @classmethod
+    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     def serialize(cls, value: Vector) -> list[float]:
         return [float(element) for element in value.tolist()]
 

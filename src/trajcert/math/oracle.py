@@ -15,12 +15,9 @@ from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.types import (
     CompatibilityRegime,
     DomainModel,
-    GridPointCount,
     HiddenMassInterval,
     InformationNats,
-    OracleDigits,
-    RefinementCandidateCount,
-    RefinementStepCount,
+    PositiveInt,
     RiskInterval,
     RiskValue,
     SensitivityBudget,
@@ -95,7 +92,7 @@ class ProjectionFeasibleOracleResult(DomainModel):
     best_resolved_harmful: UnitFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     best_resolved_correct: UnitFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     best_hidden_terminal_harmful: UnitFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    grid_points_per_axis: GridPointCount
+    grid_points_per_axis: PositiveInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     aggregate_points_checked: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     feasible_points: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     locally_refined_candidates: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -113,7 +110,7 @@ class _ProjectionCandidate:
 def solve_information_oracle(
     summary: ObservableSummary,
     sensitivity_budget: SensitivityBudget,
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     oracle_bracket_width: ToleranceValue,
 ) -> InformationOracleResult:
     # TODO: Consider using a dedicated oracle precision/configuration object instead of separate primitive controls.
@@ -138,11 +135,11 @@ def solve_information_oracle(
 def feasible_projection_lower_oracle(
     oracle_input: ProjectionOracleInput,
     sensitivity_budget: SensitivityBudget,
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     comparison_guard: ToleranceValue,
-    grid_points: GridPointCount,
-    refinement_candidates: RefinementCandidateCount,
-    refinement_steps: RefinementStepCount,
+    grid_points: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    refinement_candidates: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    refinement_steps: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> ProjectionFeasibleOracleResult:
     # TODO: Consider using a dedicated oracle search configuration instead of separate primitive controls.
     digits = oracle_digits
@@ -214,7 +211,7 @@ def direct_mutual_information(
     correct: tuple[float, ...], #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     unresolved: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     hidden_terminal_harmful: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> InformationNats:
     previous_digits = mp.dps
     mp.dps = oracle_digits
@@ -325,8 +322,8 @@ def _refine_projection_candidate(
     comparison_guard: ToleranceValue,
     harmful_span: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     correct_span: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    grid_points: GridPointCount,
-    refinement_steps: RefinementStepCount,
+    grid_points: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    refinement_steps: PositiveInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
 ) -> _ProjectionCandidate:
     # TODO: Consider using a dedicated local-refinement state instead of primitive spans and iteration controls.
     best = initial
@@ -713,7 +710,7 @@ def _allocate_total(
 def _retain_best(
     candidates: list[_ProjectionCandidate],
     candidate: _ProjectionCandidate,
-    limit: RefinementCandidateCount,
+    limit: PositiveInt,
 ) -> None:
     # TODO: Consider using a bounded candidate collection type instead of a mutable list and raw limit.
     candidates.append(candidate)
