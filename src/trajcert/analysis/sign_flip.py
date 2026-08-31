@@ -7,26 +7,26 @@ from trajcert.determinism import generator_for, permutation_namespace
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     DomainModel,
-    FiniteFloat,
-    NonNegativeInt,
-    PositiveInt,
+    FavorableCount,
+    ObservedStatistic,
     Probability,
+    RandomizationCount,
     SemanticComparisonKey,
     Vector,
 )
 
 
 class SignFlipResult(DomainModel):
-    observed_statistic: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    favorable_or_more_extreme_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
-    randomization_count: PositiveInt #TODO: I prefer an alias instead of PositiveInt
+    observed_statistic: ObservedStatistic
+    favorable_or_more_extreme_count: FavorableCount
+    randomization_count: RandomizationCount
     p_value: Probability
 
 
 def one_sided_sign_flip(
     differences: Vector,
     semantic_comparison_key: SemanticComparisonKey,
-    randomization_count: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
+    randomization_count: RandomizationCount,
 ) -> SignFlipResult:
     values = _validated_vector(differences)
     observed = float(np.mean(values, dtype=np.float64))

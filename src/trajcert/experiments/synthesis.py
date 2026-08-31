@@ -19,7 +19,7 @@ from trajcert.analysis.materiality import (
 from trajcert.analysis.metrics import MetricName, PracticalMetric, numeric_first_certification
 from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust
 from trajcert.analysis.sign_flip import SignFlipResult, one_sided_sign_flip
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
@@ -208,7 +208,6 @@ def synthesize_population_utility(
             for key in expected
             if key[1] == primary_partition
         ),
-        config,
     )
     return PopulationUtilitySynthesis(
         evidence_count=len(evidence),
@@ -347,7 +346,6 @@ def synthesize_trajectory_operational_gain(
             )
             for result in final_results
         ),
-        config,
     )
     return TrajectoryOperationalGainSynthesis(
         tests=final_results,
@@ -1182,6 +1180,7 @@ def execute_statistical_synthesis(
     config: TrajCertConfig,
     locality: SynthesisLocalValidityInput,
 ) -> CellExecutionResult:
+    _ = active_config.set(config)
     _validate_synthesis_cell(cell, context, plan)
     upstream_cells = tuple(item for item in plan.cells if item.identity != cell.identity)
     verify_synthesis_dependency_fingerprint(

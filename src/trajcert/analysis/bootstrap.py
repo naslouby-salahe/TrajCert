@@ -8,28 +8,29 @@ from numpy.typing import NDArray
 from trajcert.determinism import bootstrap_namespace, generator_for
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
+    ConfidenceLevel,
     DomainModel,
-    FiniteFloat,
-    PositiveInt,
+    PairedDifferenceValue,
     Probability,
+    ResampleCount,
     SemanticComparisonKey,
     Vector,
 )
 
 
 class PercentileBootstrapInterval(DomainModel):
-    estimate: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    lower: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    upper: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    confidence_level: Probability
-    resample_count: PositiveInt #TODO: I prefer an alias instead of PositiveInt
+    estimate: PairedDifferenceValue
+    lower: PairedDifferenceValue
+    upper: PairedDifferenceValue
+    confidence_level: ConfidenceLevel
+    resample_count: ResampleCount
 
 
 def paired_percentile_bootstrap(
     differences: Vector,
     semantic_comparison_key: SemanticComparisonKey,
-    resample_count: PositiveInt, #TODO: I prefer an alias instead of PositiveInt
-    confidence_level: Probability, #TODO: I prefer an alias instead of Probability
+    resample_count: ResampleCount,
+    confidence_level: ConfidenceLevel,
 ) -> PercentileBootstrapInterval:
     values = _validated_vector(differences)
     namespace = bootstrap_namespace(semantic_comparison_key)
@@ -50,7 +51,7 @@ def paired_percentile_bootstrap(
     )
 
 
-def linear_quantile(sorted_values: Vector, probability: Probability) -> FiniteFloat: #TODO: I prefer an alias instead of FiniteFloat
+def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDifferenceValue:
     values = _validated_vector(sorted_values)
     if np.any(values[:-1] > values[1:]):
         raise InvalidScientificDataError("linear quantile requires sorted values")

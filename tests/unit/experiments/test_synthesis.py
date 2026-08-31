@@ -460,7 +460,11 @@ def _small_synthesis_config() -> TrajCertConfig:
     return config.model_copy(
         update={
             "sequential": SequentialConfig(coverage=config.sequential.coverage, utility=utility),
-            "statistics": StatisticsConfig(bootstrap_resamples=16, sign_flip_randomizations=32),
+            "statistics": StatisticsConfig(
+                bootstrap_resamples=16,
+                sign_flip_randomizations=32,
+                minimum_paired_values=config.statistics.minimum_paired_values,
+            ),
         }
     )
 

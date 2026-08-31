@@ -5,7 +5,7 @@ from typing import NewType
 
 from trajcert.analysis.metrics import MetricName
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.types import DomainModel, PositiveInt, Probability, SemanticComparisonKey
+from trajcert.types import DomainModel, FamilySize, Probability, SemanticComparisonKey
 
 MultiplicityFamilyName = NewType("MultiplicityFamilyName", str)
 
@@ -21,7 +21,7 @@ class HolmAdjustedTest(DomainModel):
     metric_name: MetricName
     raw_p_value: Probability
     adjusted_p_value: Probability
-    family_size: PositiveInt #TODO: I prefer an alias instead of PositiveInt
+    family_size: FamilySize
 
 
 def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ...]:
@@ -63,7 +63,7 @@ def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ..
 
 
 def require_family_size(
-    tests: tuple[HolmAdjustedTest, ...], expected_size: PositiveInt #TODO: I prefer an alias instead of PositiveInt
+    tests: tuple[HolmAdjustedTest, ...], expected_size: FamilySize
 ) -> tuple[HolmAdjustedTest, ...]:
     if len(tests) != int(expected_size):
         raise InvalidScientificDataError(

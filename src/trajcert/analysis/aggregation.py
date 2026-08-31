@@ -4,10 +4,16 @@ from enum import StrEnum
 
 import numpy as np
 
+from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.types import DomainModel, FiniteFloat, PositiveInt, Vector
-
-_MINIMUM_PAIRED_VALUES = 2 #TODO: should be in yaml and accessed through configuration
+from trajcert.types import (
+    DomainModel,
+    PairCount,
+    PairedDifferenceDispersion,
+    PairedDifferenceValue,
+    StandardizedEffectSize,
+    Vector,
+)
 
 
 class StandardizedEffectStatus(StrEnum):
@@ -17,18 +23,19 @@ class StandardizedEffectStatus(StrEnum):
 
 
 class PairedEffectSummary(DomainModel):
-    n_pairs: PositiveInt #TODO: I prefer an alias instead of PositiveInt
-    mean_paired_difference: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    sd_paired_difference: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    standardized_paired_effect: FiniteFloat | None #TODO: I prefer an alias instead of FiniteFloat
+    n_pairs: PairCount
+    mean_paired_difference: PairedDifferenceValue
+    sd_paired_difference: PairedDifferenceDispersion
+    standardized_paired_effect: StandardizedEffectSize | None
     standardized_effect_status: StandardizedEffectStatus
 
 
 def summarize_paired_differences(differences: Vector) -> PairedEffectSummary:
+    minimum_paired_values = active_config.get().statistics.minimum_paired_values
     values = np.asarray(differences, dtype=np.float64)
-    if values.ndim != 1 or values.size < _MINIMUM_PAIRED_VALUES:
+    if values.ndim != 1 or values.size < minimum_paired_values:
         raise InvalidScientificDataError(
-            "paired effect summary requires at least two paired values" # TODO: since this is a configurable value, the message should reflect the actual minimum
+            f"paired effect summary requires at least {minimum_paired_values} paired values"
         )
     if not np.all(np.isfinite(values)):
         raise InvalidScientificDataError("paired effect summary forbids NaN and infinity")

@@ -4,7 +4,14 @@ from enum import StrEnum
 from typing import NewType
 
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.types import DomainModel, FiniteFloat, NonNegativeInt
+from trajcert.types import (
+    AbsoluteTightening,
+    Count,
+    DomainModel,
+    Mass,
+    RelativeUnresolvedGain,
+    RiskValue,
+)
 
 MetricName = NewType("MetricName", str)
 
@@ -16,23 +23,23 @@ class PracticalMetric(StrEnum):
 
 
 class PopulationGain(DomainModel):
-    absolute_tightening: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    relative_unresolved_gain: FiniteFloat | None #TODO: I prefer an alias instead of FiniteFloat
+    absolute_tightening: AbsoluteTightening
+    relative_unresolved_gain: RelativeUnresolvedGain | None
 
 
 def numeric_first_certification(
-    first_certified_n: NonNegativeInt | None,   #TODO: I prefer an alias instead of NonNegativeInt
-    max_events: NonNegativeInt,  #TODO: I prefer an alias instead of NonNegativeInt
-) -> NonNegativeInt: #TODO: I prefer an alias instead of NonNegativeInt
+    first_certified_n: Count | None,
+    max_events: Count,
+) -> Count:
     if first_certified_n is not None:
         return first_certified_n
     return int(max_events) + 1
 
 
 def population_gain(
-    unresolved_as_harm_upper: FiniteFloat, #TODO: I prefer an alias instead of FiniteFloat
-    risk_upper: FiniteFloat, #TODO: I prefer an alias instead of FiniteFloat
-    unresolved_mass: FiniteFloat, #TODO: I prefer an alias instead of FiniteFloat
+    unresolved_as_harm_upper: RiskValue,
+    risk_upper: RiskValue,
+    unresolved_mass: Mass,
 ) -> PopulationGain:
     if unresolved_mass < 0.0:
         raise InvalidScientificDataError("unresolved mass cannot be negative")

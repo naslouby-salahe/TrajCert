@@ -15,7 +15,6 @@ _QUALIFYING_POPULATION_LAW_COUNT = 2
 
 
 def test_sequential_materiality_uses_only_certified_fraction_vote() -> None:
-    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     law = LawName("law")
     observations = (
         SequentialMaterialityObservation(
@@ -35,12 +34,11 @@ def test_sequential_materiality_uses_only_certified_fraction_vote() -> None:
             holm_adjusted_p_value=0.001,
         ),
     )
-    summary = evaluate_sequential_materiality(observations, config)
+    summary = evaluate_sequential_materiality(observations)
     assert summary.qualifying_law_count == 0
 
 
 def test_sequential_materiality_qualifies_strong_evidence() -> None:
-    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     observations = (
         SequentialMaterialityObservation(
             law_name=LawName("low_lower"),
@@ -67,7 +65,7 @@ def test_sequential_materiality_qualifies_strong_evidence() -> None:
             holm_adjusted_p_value=0.001,
         ),
     )
-    summary = evaluate_sequential_materiality(observations, config)
+    summary = evaluate_sequential_materiality(observations)
     by_name = {item.law_name: item for item in summary.laws}
     assert by_name[LawName("low_lower")].qualifying_rho_count == 0
     assert by_name[LawName("high_p")].qualifying_rho_count == 0
@@ -90,13 +88,12 @@ def test_sequential_materiality_reaches_support_threshold() -> None:
         )
         for index in range(3)
     )
-    summary = evaluate_sequential_materiality(observations, config)
+    summary = evaluate_sequential_materiality(observations)
     assert summary.qualifying_law_count == config.materiality.sequential.qualifying_laws
     assert summary.support_threshold_met
 
 
 def test_population_materiality_counts_qualifying_rho_per_law() -> None:
-    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     alpha = LawName("alpha")
     beta = LawName("beta")
     gamma = LawName("gamma")
@@ -146,7 +143,7 @@ def test_population_materiality_counts_qualifying_rho_per_law() -> None:
             for rho in gamma_budgets
         ),
     )
-    summary = evaluate_population_materiality(observations, config)
+    summary = evaluate_population_materiality(observations)
     by_name = {item.law_name: item for item in summary.laws}
     assert by_name[alpha].qualifying_rho_count == len(alpha_budgets)
     assert by_name[alpha].qualifies
@@ -159,7 +156,6 @@ def test_population_materiality_counts_qualifying_rho_per_law() -> None:
 
 
 def test_population_materiality_requires_complete_strong_evidence() -> None:
-    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     observations = (
         PopulationMaterialityObservation(
             law_name=LawName("law"),
@@ -197,7 +193,7 @@ def test_population_materiality_requires_complete_strong_evidence() -> None:
             relative_unresolved_gain=0.1,
         ),
     )
-    summary = evaluate_population_materiality(observations, config)
+    summary = evaluate_population_materiality(observations)
     assert summary.laws[0].qualifying_rho_count == 0
     assert summary.qualifying_law_count == 0
     assert not summary.support_threshold_met
@@ -216,6 +212,6 @@ def test_population_materiality_reaches_support_threshold() -> None:
         for index in range(3)
         for rho in (0.1, 0.2)
     )
-    summary = evaluate_population_materiality(observations, config)
+    summary = evaluate_population_materiality(observations)
     assert summary.qualifying_law_count == config.materiality.population.qualifying_laws
     assert summary.support_threshold_met

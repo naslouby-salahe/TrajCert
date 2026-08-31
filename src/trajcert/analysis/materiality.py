@@ -4,14 +4,16 @@ from collections import defaultdict
 from collections.abc import Iterable
 
 from trajcert.analysis.metrics import PracticalMetric
-from trajcert.config import TrajCertConfig
+from trajcert.config import active_config
 from trajcert.types import (
+    AbsoluteTightening,
     CompatibilityRegime,
+    Count,
     DomainModel,
-    FiniteFloat,
     LawName,
-    NonNegativeInt,
+    PairedDifferenceValue,
     Probability,
+    RelativeUnresolvedGain,
     SensitivityBudget,
 )
 
@@ -20,19 +22,19 @@ class PopulationMaterialityObservation(DomainModel):
     law_name: LawName
     sensitivity_budget: SensitivityBudget
     compatibility_regime: CompatibilityRegime
-    absolute_tightening: FiniteFloat | None #TODO: I prefer an alias instead of FiniteFloat
-    relative_unresolved_gain: FiniteFloat | None #TODO: I prefer an alias instead of FiniteFloat
+    absolute_tightening: AbsoluteTightening | None
+    relative_unresolved_gain: RelativeUnresolvedGain | None
 
 
 class PopulationLawMateriality(DomainModel):
     law_name: LawName
-    qualifying_rho_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
+    qualifying_rho_count: Count
     qualifies: bool
 
 
 class PopulationMaterialitySummary(DomainModel):
     laws: tuple[PopulationLawMateriality, ...]
-    qualifying_law_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
+    qualifying_law_count: Count
     support_threshold_met: bool
 
 
@@ -40,27 +42,27 @@ class SequentialMaterialityObservation(DomainModel):
     law_name: LawName
     sensitivity_budget: SensitivityBudget
     metric_name: PracticalMetric
-    mean_paired_difference: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
-    bootstrap_lower: FiniteFloat #TODO: I prefer an alias instead of FiniteFloat
+    mean_paired_difference: PairedDifferenceValue
+    bootstrap_lower: PairedDifferenceValue
     holm_adjusted_p_value: Probability
 
 
 class SequentialLawMateriality(DomainModel):
     law_name: LawName
-    qualifying_rho_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
+    qualifying_rho_count: Count
     qualifies: bool
 
 
 class SequentialMaterialitySummary(DomainModel):
     laws: tuple[SequentialLawMateriality, ...]
-    qualifying_law_count: NonNegativeInt #TODO: I prefer an alias instead of NonNegativeInt
+    qualifying_law_count: Count
     support_threshold_met: bool
 
 
 def evaluate_population_materiality(
     observations: Iterable[PopulationMaterialityObservation],
-    config: TrajCertConfig, #TODO: Config should be accessed anywhere and whenever through context. It is forbidden to pass it explicitly in functions
 ) -> PopulationMaterialitySummary:
+    config = active_config.get()
     qualified_by_law: dict[LawName, set[float]] = defaultdict(set)
     encountered_laws: set[LawName] = set()
     for observation in observations:
@@ -94,8 +96,8 @@ def evaluate_population_materiality(
 
 def evaluate_sequential_materiality(
     observations: Iterable[SequentialMaterialityObservation],
-    config: TrajCertConfig,
 ) -> SequentialMaterialitySummary:
+    config = active_config.get()
     qualified_by_law: dict[LawName, set[SensitivityBudget]] = defaultdict(set)
     encountered_laws: set[LawName] = set()
     for observation in observations:
