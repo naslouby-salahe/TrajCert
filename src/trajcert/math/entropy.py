@@ -12,7 +12,7 @@ def xlogx(value: Probability | Vector) -> EntropyValue | Vector:
 
 
 def binary_entropy(probability: Probability | Vector) -> EntropyValue | Vector:
-    return entr(probability) + entr(1.0 - probability)
+    return -(xlogx(probability) + xlogx(1.0 - probability))
 
 
 def binary_entropy_from_masses(
@@ -22,7 +22,7 @@ def binary_entropy_from_masses(
     total = harmful_array + np.asarray(correct, dtype=np.float64)
     with np.errstate(divide="ignore", invalid="ignore"):
         p = harmful_array / total
-    entropy = np.where(total > 0, (entr(p) + entr(1.0 - p)) * total, 0.0)
+    entropy = np.where(total > 0, -(xlogx(p) + xlogx(1.0 - p)) * total, 0.0)
     return entropy
 
 

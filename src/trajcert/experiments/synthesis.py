@@ -17,7 +17,7 @@ from trajcert.analysis.materiality import (
     evaluate_sequential_materiality,
 )
 from trajcert.analysis.metrics import MetricName, PracticalMetric, numeric_first_certification
-from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust
+from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust, require_family_size
 from trajcert.analysis.sign_flip import SignFlipResult, one_sided_sign_flip
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
@@ -321,6 +321,7 @@ def synthesize_trajectory_operational_gain(
         )
         for result in raw_results
     )
+    adjusted = require_family_size(adjusted, len(raw_results))
     adjusted_by_key = {
         (item.semantic_comparison_key, str(item.metric_name)): item for item in adjusted
     }

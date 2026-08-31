@@ -7,7 +7,6 @@ from typing import Self
 import numpy as np
 from pydantic import model_validator
 
-from trajcert.config import active_config
 from trajcert.constants import ENDPOINT_PARTITION_NAME
 from trajcert.exceptions import InvalidPartitionError
 from trajcert.types import BandCount, BandIndex, DomainModel, PartitionName, TerminalHorizon, Vector
@@ -92,15 +91,6 @@ def build_partition(
         terminal_horizon=horizon,
         boundaries=boundaries,
         coarsening_map_from_finest=mapping,
-    )
-
-
-def configured_partitions() -> tuple[TrajectoryPartition, ...]:
-    config = active_config.get()
-    finest = config.method.finest_bands
-    horizon = config.method.terminal_horizon
-    return tuple(
-        build_partition(finest, band_count, horizon) for band_count in config.grids.partitions
     )
 
 

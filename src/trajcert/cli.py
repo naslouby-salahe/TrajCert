@@ -10,9 +10,9 @@ from enum import IntEnum
 from pathlib import Path
 from typing import cast
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH, SMOKE_CONFIG_OVERRIDES_PATH
-from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
+from trajcert.data.laws import LAW_DISPLAY_NAMES, build_full_law, configured_laws
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError, TrajCertError
@@ -62,7 +62,7 @@ from trajcert.provenance import (
     provenance_fingerprint,
 )
 from trajcert.reporting.export import ReportExportResult, export_report, validate_results_layout
-from trajcert.reporting.source_data import all_publication_source_descriptors
+from trajcert.reporting.source_data import figure_source_descriptors, table_source_descriptors
 from trajcert.storage import (
     DigestHex,
     ProvenanceFingerprint,
@@ -300,16 +300,8 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
     if plan.registry_total != expected_cells:
         raise InvalidScientificDataError("expanded plan does not match the authoritative registry")
     finest = config.method.finest_bands
-    for key, law in config.ordered_laws:
-        parameters = LawParameters(
-            key=key,
-            name=LAW_DISPLAY_NAMES[key],
-            theta=law.theta,
-            q1=law.q1,
-            q0=law.q0,
-            lambda1=law.lambda1,
-            lambda0=law.lambda0,
-        )
+    _ = active_config.set(config)
+    for parameters in configured_laws():
         _ = build_full_law(parameters, finest)
     for bands in config.grids.partitions:
         _ = build_partition(finest, bands, config.method.terminal_horizon)
@@ -320,9 +312,12 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         _ = importlib.import_module(module_name)
     _ = _source_commit(workspace_root)
     _assert_workspace_writable(workspace_root)
-    descriptors = all_publication_source_descriptors()
+    tables = table_source_descriptors()
+    figures = figure_source_descriptors()
+    descriptors = (*tables, *figures)
     if (
-        len(descriptors) != _PUBLICATION_SOURCE_COUNT
+        len(tables) != _PUBLICATION_TABLE_COUNT
+        or len(figures) != _PUBLICATION_FIGURE_COUNT
         or len({item.source_path for item in descriptors}) != _PUBLICATION_SOURCE_COUNT
     ):
         raise InvalidScientificDataError(

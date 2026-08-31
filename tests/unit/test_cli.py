@@ -32,7 +32,7 @@ from trajcert.provenance import (
     VariantName,
 )
 from trajcert.reporting.export import ReportExportResult
-from trajcert.reporting.source_data import all_publication_source_descriptors
+from trajcert.reporting.source_data import table_source_descriptors
 from trajcert.schemas import PublicationSourceDescriptor
 from trajcert.storage import (
     ArtifactIndexEntry,
@@ -1076,15 +1076,15 @@ def test_doctor_rejects_file_outputs_path(tmp_path: Path) -> None:
         _ = cli.doctor(workspace_root=workspace)
 
 
-def _truncated_publication_sources() -> tuple[PublicationSourceDescriptor, ...]:
-    return all_publication_source_descriptors()[:1]
+def _truncated_table_sources() -> tuple[PublicationSourceDescriptor, ...]:
+    return table_source_descriptors()[:1]
 
 
 def test_doctor_rejects_incomplete_publication_sources(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _git_workspace(tmp_path)
-    monkeypatch.setattr(cli, "all_publication_source_descriptors", _truncated_publication_sources)
+    monkeypatch.setattr(cli, "table_source_descriptors", _truncated_table_sources)
     with pytest.raises(InvalidScientificDataError, match="publication source contract"):
         _ = cli.doctor(workspace_root=workspace)
 

@@ -7,7 +7,11 @@ import numpy as np
 from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.math.entropy import binary_entropy, binary_entropy_from_masses
+from trajcert.math.entropy import (
+    binary_entropy,
+    binary_entropy_from_masses,
+    weighted_binary_entropy,
+)
 from trajcert.types import (
     EntropyValue,
     InformationCurvature,
@@ -72,9 +76,8 @@ def information_profile(
     timing_entropy = resolved_timing_entropy(summary)
     theta = harmful + hidden
     total_entropy = binary_entropy(theta)
-    terminal_entropy = 0.0
-    if unresolved > 0.0:
-        terminal_entropy = unresolved * binary_entropy(hidden / unresolved)
+    harmful_rate = (hidden / unresolved) if unresolved > 0.0 else None
+    terminal_entropy = weighted_binary_entropy(unresolved, harmful_rate)
     value = total_entropy - timing_entropy - terminal_entropy
     return _nonnegative_roundoff_guard(float(value))
 

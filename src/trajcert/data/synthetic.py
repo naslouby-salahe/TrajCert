@@ -11,7 +11,7 @@ from trajcert.data.laws import (
     build_full_law,
     resolved_band_weights,
 )
-from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity
+from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity, build_ledger
 from trajcert.data.partitions import TrajectoryPartition
 from trajcert.determinism import event_stream_namespace, generator_for
 from trajcert.exceptions import InvalidProbabilityError
@@ -142,7 +142,7 @@ def generate_stochastic_ledger(
         )
         for event_index in range(int(event_count))
     )
-    return EventLedger(identity=identity, events=events)
+    return build_ledger(identity, events)
 
 
 def generate_balanced_prefix_ledger(
@@ -165,7 +165,7 @@ def generate_balanced_prefix_ledger(
         )
         for event_index, category_index in enumerate(sequence.categories)
     )
-    return EventLedger(identity=identity, events=events)
+    return build_ledger(identity, events)
 
 
 def _sample_event(
