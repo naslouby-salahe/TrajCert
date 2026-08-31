@@ -2431,7 +2431,11 @@ TrajCert/
 │       │   │   # Production scalar branch/root solver.
 │       │   │
 │       │   └── oracle.py
-│       │       # Independent high-precision numerical oracle.
+│       │       # Independent high-precision numerical oracle. Also the
+│       │       # §7.8 generic information-constrained optimization
+│       │       # comparator's implementation, invoked directly from
+│       │       # experiments/comparator_reduction.py — no separate
+│       │       # comparators/information_optimization.py wrapper exists.
 │       │
 │       ├── inference/
 │       │   ├── __init__.py
@@ -2463,9 +2467,6 @@ TrajCert/
 │       │   │
 │       │   ├── callback.py
 │       │   │   # Repeated-attempt callback-model reduction comparator.
-│       │   │
-│       │   ├── information_optimization.py
-│       │   │   # Generic information-constrained optimization comparator.
 │       │   │
 │       │   ├── pattern_mixture.py
 │       │   │   # Repeated-attempt pattern-mixture optimization.
@@ -3710,7 +3711,7 @@ The following component registrations are authoritative minimum sets. Imports fr
 | legacy comparator             | §7.4               | `comparators/legacy.py`                                                                      | NumPy                              | population summary             |
 | callbacks                     | §§7.5–7.6          | `comparators/callback.py`                                                                    | mpmath                             | population summary             |
 | pattern mixture               | §7.7               | `comparators/pattern_mixture.py`                                                             | NumPy, SciPy                       | population summary             |
-| information oracle            | §7.8               | `comparators/information_optimization.py`                                                    | mpmath                             | prepared law/partition         |
+| information oracle            | §7.8               | `math/oracle.py`, invoked from `experiments/comparator_reduction.py`                         | mpmath, python-flint               | prepared law/partition         |
 | categorical CS                | §9.2               | `inference/confidence.py`                                                                    | NumPy, SciPy                       | count trajectory               |
 | summary envelope              | §9.3               | `inference/envelope.py`                                                                      | NumPy                              | CS artifact                    |
 | outer projection              | §9.4               | `inference/projection.py`                                                                    | python-flint                       | envelope                       |
