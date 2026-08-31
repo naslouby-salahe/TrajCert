@@ -35,7 +35,7 @@ from trajcert.types import (
     InformationNats,
     Mass,
     NonNegativeFloat,
-    OracleDigits,
+    PositiveInt,
     Probability,
     RiskBudget,
     RiskInterval,
@@ -46,50 +46,50 @@ from trajcert.types import (
 
 
 class IdentityResult(DomainModel):
-    passed: bool
-    max_absolute_error: NonNegativeFloat
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_absolute_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class ConvexityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     evaluated_points: Count
     minimum_second_derivative: InformationCurvature | None
     max_direct_second_derivative_error: NonNegativeFloat
 
 
 class SharpSetIdentityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     production_lower: RiskValue | None
     production_upper: RiskValue | None
     oracle_lower: RiskValue | None
     oracle_upper: RiskValue | None
-    max_endpoint_error: NonNegativeFloat | None
+    max_endpoint_error: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     diagnostic_grid_mismatches: Count
 
 
 class RefinementIdentityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     timing_gain: InformationNats
-    max_profile_order_violation: NonNegativeFloat
-    max_profile_difference_error: NonNegativeFloat
+    max_profile_order_violation: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_profile_difference_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyBoundaryIdentityResult(DomainModel):
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     assessment: SafetyAssessment
     frontier_direct_information: InformationNats | None
-    frontier_error: NonNegativeFloat | None
+    frontier_error: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class SafetyBoundaryCaseEvaluation(DomainModel):
     case: SafetyBudgetCase
     identity: SafetyBoundaryIdentityResult | None
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def path_information_decomposition(
     summary: ObservableSummary,
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> IdentityResult:
     tau = observed_timing_information(summary)
@@ -109,7 +109,7 @@ def path_information_decomposition(
 
 def information_profile_convexity(
     summary: ObservableSummary,
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> ConvexityResult:
     del oracle_digits
@@ -179,7 +179,7 @@ def sharp_set_constructive_identity(
     sensitivity_budget: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     oracle_bracket_width: ToleranceValue,
 ) -> SharpSetIdentityResult:
     production = sharp_risk_set(summary, sensitivity_budget, root_atol, identity_atol)
@@ -279,7 +279,7 @@ def strict_timing_gain_identity(
 def safety_boundary_identity(
     summary: ObservableSummary,
     risk_budget: RiskBudget,
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryIdentityResult:
     assessment = assess_safety_geometry(summary, risk_budget)
@@ -310,7 +310,7 @@ def safety_boundary_identity(
 def evaluate_safety_boundary_case(
     summary: ObservableSummary,
     case: SafetyBudgetCase,
-    oracle_digits: OracleDigits,
+    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryCaseEvaluation:
     if not case.valid or case.risk_budget is None:
@@ -392,7 +392,7 @@ class LegacyPartitionIncoherenceResult(DomainModel):
     endpoint_risk_interval: RiskInterval
     endpoint_difference_direction: EndpointDifferenceDirection
     endpoint_difference_magnitude: NonNegativeFloat
-    passed: bool
+    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 def evaluate_legacy_partition_incoherence(
@@ -409,24 +409,24 @@ def evaluate_legacy_partition_incoherence(
     )
     harmful_hazards = (_tilted_probability(q, gamma), _tilted_probability(q, 1.0 / gamma))
     correct_hazards = (q, q)
-    harmful_response = _response_masses(float(p_harmful), harmful_hazards)
-    correct_response = _response_masses(float(p_correct), correct_hazards)
-    unresolved = harmful_response.unresolved + correct_response.unresolved
+    harmful_by_band, harmful_unresolved = _response_masses(float(p_harmful), harmful_hazards)
+    correct_by_band, correct_unresolved = _response_masses(float(p_correct), correct_hazards)
+    unresolved = harmful_unresolved + correct_unresolved
     fine_partition = build_partition(
-        finest_band_count=2,
-        band_count=2,
+        finest_band_count=2, # TODO: these are magic numbers that should be from conf
+        band_count=2, # TODO: these are magic numbers that should be from conf
         terminal_horizon=config.method.terminal_horizon,
     )
     fine = summarize_observable_masses(
         partition=fine_partition,
-        harmful_by_band=np.asarray(harmful_response.by_band, dtype=np.float64),
-        correct_by_band=np.asarray(correct_response.by_band, dtype=np.float64),
+        harmful_by_band=np.asarray(harmful_by_band, dtype=np.float64),
+        correct_by_band=np.asarray(correct_by_band, dtype=np.float64),
         unresolved_mass=unresolved,
         comparison_guard=config.numerics.comparison_guard,
     )
     endpoint_partition = build_partition(
-        finest_band_count=2,
-        band_count=1,
+        finest_band_count=2, # TODO: these are magic numbers that should be from conf
+        band_count=1, # TODO: these are magic numbers that should be from conf
         terminal_horizon=config.method.terminal_horizon,
     )
     endpoint = coarsen_summary(fine, endpoint_partition, config.numerics.comparison_guard)
@@ -443,7 +443,7 @@ def evaluate_legacy_partition_incoherence(
         raise InvalidScientificDataError(
             "authoritative legacy incoherence case unexpectedly became model-incompatible"
         )
-    true_hidden = harmful_response.unresolved
+    true_hidden = harmful_unresolved
     fine_risk = fine_result.latent_risk_interval
     endpoint_risk = endpoint_result.latent_risk_interval
     difference = max(
@@ -481,17 +481,12 @@ def _tilted_probability(q: HazardProbability, gamma: GammaSensitivity) -> Probab
     return gamma * q / (1.0 - q + gamma * q)
 
 
-class _ResponseMasses(DomainModel):
-    by_band: tuple[Mass, Mass]
-    unresolved: Mass
-
-
 def _response_masses(
     prior: Probability,
     hazards: tuple[Probability, Probability],
-) -> _ResponseMasses:
+) -> tuple[tuple[Mass, Mass], Mass]: # TODO:  This output should be better
     first, second = hazards
     first_mass = prior * first
     second_mass = prior * (1.0 - first) * second
     unresolved = prior * (1.0 - first) * (1.0 - second)
-    return _ResponseMasses(by_band=(first_mass, second_mass), unresolved=unresolved)
+    return (first_mass, second_mass), unresolved
