@@ -51,7 +51,7 @@ def inspect_cell_status(
     context: ExecutionContext,
     dependencies: tuple[DependencyReadiness, ...],
 ) -> CellStatus:
-    key = str(cell.identity.semantic_cell_key)
+    key = cell.identity.semantic_cell_key
     if not cell.executable:
         return CellStatus(
             semantic_cell_key=key,

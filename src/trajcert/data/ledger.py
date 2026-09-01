@@ -7,11 +7,11 @@ from pydantic import field_validator, model_validator
 from trajcert.exceptions import DataIntegrityError
 from trajcert.types import (
     ActionChannelId,
+    AgeUnit,
     ClientId,
     DomainModel,
     EpochId,
     EventId,
-    NonNegativeFloat,
     OutcomeLabel,
     TerminalHorizon,
 )
@@ -28,9 +28,9 @@ class LedgerEvent(DomainModel):
     client_id: ClientId
     action_channel_id: ActionChannelId
     epoch_id: EpochId
-    issue_age_unit: NonNegativeFloat # TODO: Consider using a proper alias type for adjudication completion age or whatever already exists with actually fits this
+    issue_age_unit: AgeUnit
     terminal_horizon: TerminalHorizon
-    adjudication_completion_age: NonNegativeFloat | None # TODO: Consider using a proper alias type for adjudication completion age or whatever already exists with actually fits this
+    adjudication_completion_age: AgeUnit | None
     correctness_label: OutcomeLabel | None
 
     @model_validator(mode="after")
@@ -62,7 +62,7 @@ class LedgerEvent(DomainModel):
         )
 
     @property
-    def maturity_age_unit(self) -> NonNegativeFloat: # TODO: Consider using a proper alias type for maturity age unit or whatever already exists with actually fits this
+    def maturity_age_unit(self) -> AgeUnit:
         maturity = self.issue_age_unit + self.terminal_horizon
         if maturity < self.issue_age_unit:
             raise DataIntegrityError("maturity cannot precede issue")
@@ -79,7 +79,7 @@ class EventLedger(DomainModel):
         identifiers = tuple(event.event_id for event in events)
         if len(identifiers) != len(set(identifiers)):
             raise DataIntegrityError("ledger contains duplicate event_id values")
-        return tuple(sorted(events, key=lambda event: str(event.event_id)))
+        return tuple(sorted(events, key=lambda event: event.event_id))
 
     @model_validator(mode="after")
     def validate_identity(self) -> Self:
@@ -89,7 +89,3 @@ class EventLedger(DomainModel):
             )
         return self
 
-
-# TODO: what's the point? Inline this
-def build_ledger(identity: LedgerIdentity, events: tuple[LedgerEvent, ...]) -> EventLedger:
-    return EventLedger(identity=identity, events=events)

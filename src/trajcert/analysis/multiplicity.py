@@ -1,24 +1,21 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import NewType
 
-from trajcert.analysis.metrics import MetricName
+from trajcert.analysis.metrics import PracticalMetric
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import DomainModel, FamilySize, Probability, SemanticComparisonKey
-
-MultiplicityFamilyName = NewType("MultiplicityFamilyName", str)  # TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
 
 
 class MultiplicityTest(DomainModel):
     semantic_comparison_key: SemanticComparisonKey
-    metric_name: MetricName
+    metric_name: PracticalMetric
     raw_p_value: Probability
 
 
 class HolmAdjustedTest(DomainModel):
     semantic_comparison_key: SemanticComparisonKey
-    metric_name: MetricName
+    metric_name: PracticalMetric
     raw_p_value: Probability
     adjusted_p_value: Probability
     family_size: FamilySize
@@ -40,14 +37,14 @@ def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ..
         ),
     )
     family_size = len(ordered)
-    adjusted_by_identity: dict[tuple[SemanticComparisonKey, MetricName], float] = {}  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: should be in yaml and accessed through config
+    adjusted_by_identity: dict[tuple[SemanticComparisonKey, PracticalMetric], Probability] = {}
     running_maximum = 0.0
     for rank, record in enumerate(ordered, start=1):
         scaled = (family_size - rank + 1) * record.raw_p_value
         running_maximum = max(running_maximum, scaled)
-        # TODO: should be in yaml and accessed through config
-        adjusted_by_identity[(record.semantic_comparison_key, record.metric_name)] = min(1.0, running_maximum)
+        adjusted_by_identity[(record.semantic_comparison_key, record.metric_name)] = min(
+            1.0, running_maximum
+        )
     return tuple(
         HolmAdjustedTest(
             semantic_comparison_key=record.semantic_comparison_key,

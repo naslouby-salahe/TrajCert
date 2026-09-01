@@ -23,9 +23,11 @@ from trajcert.types import (
     CertifiedFractionGain,
     CoefficientValue,
     ConfidenceLevel,
+    Count,
     CoverageStressCaseName,
     DomainModel,
     EventCount,
+    EventIndexWidth,
     GammaSensitivity,
     GridPointCount,
     HazardProbability,
@@ -33,11 +35,9 @@ from trajcert.types import (
     IterationBudget,
     LawCount,
     LawKey,
-    NonNegativeFloat,
     OracleDigits,
     OuterMaxNodes,
     PairCount,
-    PositiveInt,
     Probability,
     RandomizationCount,
     RefinementCandidateCount,
@@ -267,7 +267,7 @@ class NumericsConfig(ConfigModel):
 
 
 class LegacyPatternMixtureConfig(ConfigModel):
-    c: tuple[NonNegativeFloat, ...]
+    c: tuple[Count, ...]
     coefficient_bounds: tuple[CoefficientValue, CoefficientValue]
     ftol: ToleranceValue
     gtol: ToleranceValue
@@ -445,7 +445,7 @@ class FailureBoundaryConfig(ConfigModel):
 
 
 class IdentifiersConfig(ConfigModel):
-    event_index_width: PositiveInt
+    event_index_width: EventIndexWidth
 
 
 class TrajCertConfig(ConfigModel):
@@ -574,7 +574,7 @@ def _merge_size_fields(base: dict[str, YamlValue], overrides: ConfigModel) -> di
     return {**base, **{name: value for name, value in override_values.items() if value is not None}}
 
 
-def _validate_nested_partitions(partitions: tuple[PositiveInt, ...]) -> None:
+def _validate_nested_partitions(partitions: tuple[BandCount, ...]) -> None:
     for fine, coarse in pairwise(partitions):
         if fine <= coarse or fine % coarse != 0:
             raise ValueError(

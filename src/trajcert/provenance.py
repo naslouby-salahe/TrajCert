@@ -193,6 +193,6 @@ def implementation_component_digest(
             )
         digest.update(relative_path.as_posix().encode("utf-8"))
         digest.update(b"\0")
-        digest.update(str(file_digest(full_path)).encode("ascii"))
+        digest.update(file_digest(full_path).encode("ascii"))
         digest.update(b"\n")
     return DigestHex(digest.hexdigest())

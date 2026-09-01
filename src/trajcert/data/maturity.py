@@ -9,7 +9,7 @@ from pydantic import model_validator
 from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity
 from trajcert.data.partitions import TrajectoryPartition
 from trajcert.exceptions import DataIntegrityError
-from trajcert.types import BandIndex, DomainModel, EventId, NonNegativeFloat, OutcomeLabel
+from trajcert.types import AgeUnit, BandIndex, DomainModel, EventId, OutcomeLabel
 
 
 class MaturedCategoryKind(StrEnum):
@@ -38,7 +38,7 @@ class MaturedCategory(DomainModel):
 class MaturedEvent(DomainModel):
     event_id: EventId
     identity: LedgerIdentity
-    maturity_age_unit: NonNegativeFloat # TODO: Consider using a proper alias type for maturity age unit or whatever already exists with actually fits this
+    maturity_age_unit: AgeUnit
     category: MaturedCategory
 
 
@@ -75,6 +75,6 @@ def mature_ledger(ledger: EventLedger, partition: TrajectoryPartition) -> tuple[
     return tuple(
         sorted(
             matured,
-            key=lambda event: (event.maturity_age_unit, str(event.event_id)),
+            key=lambda event: (event.maturity_age_unit, event.event_id),
         )
     )

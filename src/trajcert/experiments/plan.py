@@ -135,7 +135,7 @@ def build_plan(config: TrajCertConfig #TODO: access directly not through functio
         executable_cells=executable_count,
         invalid_cells=invalid_count,
         nonapplicable_experiments=nonapplicable,
-        plan_digest=PlanDigest(str(model_digest(material))),
+        plan_digest=PlanDigest(model_digest(material)),
     )
     return plan
 

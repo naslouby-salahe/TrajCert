@@ -11,7 +11,7 @@ from trajcert.data.laws import (
     build_full_law,
     resolved_band_weights,
 )
-from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity, build_ledger
+from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity
 from trajcert.data.partitions import TrajectoryPartition
 from trajcert.determinism import event_stream_namespace, generator_for
 from trajcert.exceptions import InvalidProbabilityError
@@ -24,13 +24,14 @@ from trajcert.types import (
     Count,
     DomainModel,
     EpochId,
+    EventCount,
     EventId,
+    EventIndex,
     LawName,
-    NonNegativeInt,
     OutcomeLabel,
-    PositiveInt,
     Probability,
     SeedIndex,
+    Vector,
 )
 
 # TODO: should be in yaml and accessed through config
@@ -82,8 +83,8 @@ def observable_category_probabilities(
 
 
 def hamilton_apportionment(
-    categories: tuple[ObservableCategoryProbability, ...], 
-    total_count: PositiveInt # TODO: Consider using a proper alias type for total count or whatever already exists with actually fits this
+    categories: tuple[ObservableCategoryProbability, ...],
+    total_count: EventCount,
 ) -> tuple[Count, ...]:
     _validate_probability_vector(tuple(category.probability for category in categories))
     total = total_count
@@ -102,7 +103,7 @@ def hamilton_apportionment(
 
 def balanced_prefix(
     categories: tuple[ObservableCategoryProbability, ...],
-    total_count: PositiveInt, # TODO: Consider using a proper alias type for total count or whatever already exists with actually fits this
+    total_count: EventCount,
 ) -> DeterministicCategorySequence:
     _validate_probability_vector(tuple(category.probability for category in categories))
     probabilities = tuple(Decimal(str(category.probability)) for category in categories)
@@ -126,7 +127,7 @@ def generate_stochastic_ledger(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_count: PositiveInt, # TODO: Consider using a proper alias type for event count or whatever already exists with actually fits this
+    event_count: EventCount,
 ) -> EventLedger:
     namespace = event_stream_namespace(parameters.name, partition.band_count)
     random = generator_for(namespace, stream_index)
@@ -145,14 +146,14 @@ def generate_stochastic_ledger(
         )
         for event_index in range(event_count)
     )
-    return build_ledger(identity, events)
+    return EventLedger(identity=identity, events=events)
 
 
 def generate_balanced_prefix_ledger(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_count: PositiveInt, # TODO: Consider using a proper alias type for event count or whatever already exists with actually fits this
+    event_count: EventCount,
 ) -> EventLedger:
     full_law = build_full_law(parameters, partition.band_count)
     categories = observable_category_probabilities(full_law)
@@ -168,19 +169,19 @@ def generate_balanced_prefix_ledger(
         )
         for event_index, category_index in enumerate(sequence.categories)
     )
-    return build_ledger(identity, events)
+    return EventLedger(identity=identity, events=events)
 
 
 def _sample_event(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: NonNegativeInt, # TODO: Consider using a proper alias type for event index or whatever already exists with actually fits this
+    event_index: EventIndex,
     random: np.random.Generator,
-    harmful_weights: np.ndarray,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct_weights: np.ndarray,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful_weights: Vector,
+    correct_weights: Vector,
 ) -> LedgerEvent:
-    harmful = bool(random.random() < parameters.theta)
+    harmful = random.random() < parameters.theta
     terminal_probability = parameters.q1 if harmful else parameters.q0
     if random.random() < terminal_probability:
         category = ObservableCategoryProbability(
@@ -209,7 +210,7 @@ def _event_from_observable_category(
     law_name: LawName,
     partition: TrajectoryPartition,
     stream_index: SeedIndex,
-    event_index: NonNegativeInt, # TODO: Consider using a proper alias type for event index or whatever already exists with actually fits this
+    event_index: EventIndex,
     category: ObservableCategoryProbability,
 ) -> LedgerEvent:
     issue = event_index
@@ -223,7 +224,7 @@ def _event_from_observable_category(
         event_id=_event_id(law_name, stream_index, event_index),
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
-        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),  # TODO: this is duplicated and redundant
+        epoch_id=_static_epoch_id(law_name),
         issue_age_unit=issue,
         terminal_horizon=partition.terminal_horizon,
         adjudication_completion_age=completion,
@@ -235,14 +236,19 @@ def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=_SYNTHETIC_CLIENT_ID,
         action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
-        # TODO: this is duplicated and redundant
-        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),
+        epoch_id=_static_epoch_id(law_name),
     )
 
 
-def _event_id(law_name: LawName, stream_index: SeedIndex,
-              event_index: NonNegativeInt, # TODO: Consider using a proper alias type for event index or whatever already exists with actually fits this
-              ) -> EventId:
+def _static_epoch_id(law_name: LawName) -> EpochId:
+    return EpochId(f"{semantic_slug(law_name)}::static-epoch")
+
+
+def _event_id(
+    law_name: LawName,
+    stream_index: SeedIndex,
+    event_index: EventIndex,
+) -> EventId:
     width = active_config.get().identifiers.event_index_width
     return EventId(
         f"{semantic_slug(law_name)}::S{stream_index:0{width}d}"

@@ -13,8 +13,8 @@ from trajcert.data.summaries import ObservableSummary
 from trajcert.types import (
     Count,
     DomainModel,
+    GradientNorm,
     InterceptValue,
-    NonNegativeFloat,
     ObjectiveValue,
     RiskValue,
     SlopeValue,
@@ -38,7 +38,7 @@ class PatternMixtureResult(DomainModel):
     status: PatternMixtureStatus
     intercept: InterceptValue | None
     slope: SlopeValue | None
-    gradient_infinity_norm: NonNegativeFloat | None # TODO: Use a proper alias type for this
+    gradient_infinity_norm: GradientNorm | None
     objective: ObjectiveValue | None
     points: tuple[PatternMixturePoint, ...]
 
@@ -124,14 +124,14 @@ def fit_pattern_mixture(
     band_count = summary.partition.band_count
     points = tuple(
         PatternMixturePoint(
-            sensitivity_c=int(sensitivity_c),
+            sensitivity_c=sensitivity_c,
             terminal_harmful_probability=float(
-                expit(intercept + slope * (band_count + int(sensitivity_c)))
+                expit(intercept + slope * (band_count + sensitivity_c))
             ),
             latent_risk=min(
                 1.0,
                 harmful_mass
-                + unresolved * expit(intercept + slope * (band_count + int(sensitivity_c))),
+                + unresolved * expit(intercept + slope * (band_count + sensitivity_c)),
             ),
         )
         for sensitivity_c in config.c

@@ -10,7 +10,7 @@ import pytest
 from _pytest.tmpdir import TempPathFactory
 from pydantic import BaseModel
 
-from trajcert.analysis.metrics import MetricName, PracticalMetric
+from trajcert.analysis.metrics import PracticalMetric
 from trajcert.config import (
     SequentialConfig,
     SequentialUtilityConfig,
@@ -90,7 +90,7 @@ from trajcert.experiments.synthesis import (
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase
 from trajcert.provenance import BaselineName, MethodName
-from trajcert.reporting.source_data import AnalysisType
+from trajcert.reporting.source_data import AnalysisType, RhoUtilityMetricName
 from trajcert.storage import (
     ArtifactChecksum,
     ArtifactIndexEntry,
@@ -251,7 +251,7 @@ def test_sequential_rho_utility_rows_describe_each_test(small_config: TrajCertCo
     rows = sequential_rho_utility_rows(synthesis, small_config)
     assert len(rows) == _SEQUENTIAL_FAMILY_SIZE
     assert all(row.analysis_type is AnalysisType.SEQUENTIAL for row in rows)
-    time_metric = MetricName(PracticalMetric.TIME_TO_FIRST_CERTIFICATION.value)
+    time_metric = RhoUtilityMetricName(PracticalMetric.TIME_TO_FIRST_CERTIFICATION.value)
     for row in rows:
         if row.metric_name == time_metric:
             assert row.never_certified_fraction_method is not None

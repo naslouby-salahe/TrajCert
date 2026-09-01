@@ -8,7 +8,6 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
-from trajcert.analysis.metrics import MetricName
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
@@ -37,6 +36,7 @@ from trajcert.reporting.source_data import (
     PopulationUtilitySourceEvidence,
     PublicationSourceName,
     RegimeName,
+    RhoUtilityMetricName,
     RhoUtilityRow,
     SafetySourceEvidence,
     SameEndpointFigureEvidence,
@@ -123,7 +123,7 @@ def test_source_data_parquet_roundtrip_preserves_columns(tmp_path: Path) -> None
         law_name=LawName("law"),
         rho=0.05,
         partition_name=PartitionName("8-band partition"),
-        metric_name=MetricName("risk upper"),
+        metric_name=RhoUtilityMetricName.ANYTIME_UPPER_RISK,
         metric_value=0.1,
         materiality_pass=True,
     )
@@ -163,7 +163,7 @@ def test_source_data_rejects_mixed_row_schemas(tmp_path: Path) -> None:
         law_name=LawName("law"),
         rho=0.05,
         partition_name=PartitionName("8-band partition"),
-        metric_name=MetricName("risk upper"),
+        metric_name=RhoUtilityMetricName.ANYTIME_UPPER_RISK,
         metric_value=0.1,
         materiality_pass=True,
     )
@@ -211,7 +211,7 @@ def test_write_source_data_raises_serialization_error_on_atomic_failure(
         law_name=LawName("law"),
         rho=0.05,
         partition_name=PartitionName("8-band partition"),
-        metric_name=MetricName("risk upper"),
+        metric_name=RhoUtilityMetricName.ANYTIME_UPPER_RISK,
         metric_value=0.1,
         materiality_pass=True,
     )
@@ -323,7 +323,7 @@ def test_population_rho_utility_rows_maps_population_evidence() -> None:
     assert row.law_name == LawName("law")
     assert row.rho == pytest.approx(0.05)
     assert row.partition_name == PartitionName("8-band partition")
-    assert row.metric_name == MetricName("Population latent-risk upper bound")
+    assert row.metric_name == RhoUtilityMetricName.POPULATION_LATENT_RISK_UPPER_BOUND
     assert row.metric_value == pytest.approx(0.3)
     assert row.compatibility_state is CompatibilityRegime.COMPATIBLE_INTERVAL
     assert row.tau == pytest.approx(0.02)
@@ -746,7 +746,7 @@ def test_read_verified_source_data_rejects_table_schema_mismatch(tmp_path: Path)
         law_name=LawName("law"),
         rho=0.05,
         partition_name=PartitionName("8-band partition"),
-        metric_name=MetricName("risk upper"),
+        metric_name=RhoUtilityMetricName.ANYTIME_UPPER_RISK,
         metric_value=0.1,
         materiality_pass=True,
     )

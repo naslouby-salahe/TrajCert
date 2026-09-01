@@ -11,9 +11,10 @@ from trajcert.types import (
     AnytimeConfidenceDelta,
     Count,
     DomainModel,
-    FiniteFloat,
     LogMixtureRatio,
     Probability,
+    RootBranch,
+    Threshold,
     ToleranceValue,
 )
 
@@ -34,7 +35,7 @@ def ignorable_delay_update(
     anytime_delta: AnytimeConfidenceDelta,
     root_tolerance: ToleranceValue,
     previous_running: ClosedProbabilityInterval | None,
-    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    assumption_valid: bool,
 ) -> IgnorableDelayResult:
     if not assumption_valid:
         return IgnorableDelayResult(
@@ -73,12 +74,16 @@ def _bernoulli_interval(
     lower = (
         0.0
         if successes == 0
-        else _root(successes, total, 0.0, maximum_likelihood, threshold, root_tolerance, True)
+        else _root(
+            successes, total, 0.0, maximum_likelihood, threshold, root_tolerance, RootBranch.LOWER
+        )
     )
     upper = (
         1.0
         if successes == total
-        else _root(successes, total, maximum_likelihood, 1.0, threshold, root_tolerance, False)
+        else _root(
+            successes, total, maximum_likelihood, 1.0, threshold, root_tolerance, RootBranch.UPPER
+        )
     )
     return ClosedProbabilityInterval(lower=lower, upper=upper)
 
@@ -88,15 +93,14 @@ def _root(
     total: Count,
     lower: Probability,
     upper: Probability,
-    threshold: FiniteFloat,
+    threshold: Threshold,
     tolerance: ToleranceValue,
-    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    lower_branch: bool,
+    branch: RootBranch,
 ) -> Probability:
     while upper - lower > tolerance:
         midpoint = (lower + upper) / 2.0
         residual = _log_mixture_ratio(successes, total, midpoint) - threshold
-        if lower_branch:
+        if branch is RootBranch.LOWER:
             if residual > 0.0:
                 lower = midpoint
             else:
@@ -105,7 +109,7 @@ def _root(
             lower = midpoint
         else:
             upper = midpoint
-    return lower if lower_branch else upper
+    return lower if branch is RootBranch.LOWER else upper
 
 
 def _log_mixture_ratio(successes: Count, total: Count, probability: Probability) -> LogMixtureRatio:

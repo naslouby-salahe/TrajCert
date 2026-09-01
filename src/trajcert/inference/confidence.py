@@ -8,12 +8,20 @@ from scipy.special import betaln
 
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.inference.categorical import CategoricalState
-from trajcert.types import Count, DomainModel, ToleranceValue, UnitFloat
+from trajcert.types import (
+    AnytimeConfidenceDelta,
+    Count,
+    DomainModel,
+    LogMixtureRatio,
+    Probability,
+    Threshold,
+    ToleranceValue,
+)
 
 
 class ClosedProbabilityInterval(DomainModel):
-    lower: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    upper: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    lower: Probability
+    upper: Probability
 
     @model_validator(mode="after")
     def validate_order(self) -> Self:
@@ -44,7 +52,7 @@ class ConfidenceSequenceUpdate(DomainModel):
 
 def raw_confidence_region(
     state: CategoricalState,
-    anytime_delta: UnitFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    anytime_delta: AnytimeConfidenceDelta,
     root_tolerance: ToleranceValue,
 ) -> CategoricalConfidenceRegion:
     delta = anytime_delta
@@ -62,7 +70,7 @@ def raw_confidence_region(
 
 def confidence_sequence_update(
     state: CategoricalState,
-    anytime_delta: UnitFloat, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    anytime_delta: AnytimeConfidenceDelta,
     root_tolerance: ToleranceValue,
     previous_running: CategoricalConfidenceRegion | None,
 ) -> ConfidenceSequenceUpdate:
@@ -85,7 +93,7 @@ def confidence_sequence_update(
 def _invert_category_count(
     successes: Count,
     matured_count: Count,
-    threshold: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    threshold: Threshold,
     root_tolerance: ToleranceValue,
 ) -> ClosedProbabilityInterval:
     success_count = successes
@@ -105,12 +113,12 @@ def _invert_category_count(
 
 
 def _lower_root(
-    successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    maximum_likelihood: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    threshold: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    successes: Count,
+    total: Count,
+    maximum_likelihood: Probability,
+    threshold: Threshold,
     root_tolerance: ToleranceValue,
-) -> float:
+) -> Probability:
     lower = 0.0
     upper = maximum_likelihood
     if _root_function(successes, total, lower, threshold) <= 0.0:
@@ -127,12 +135,12 @@ def _lower_root(
 
 
 def _upper_root(
-    successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    maximum_likelihood: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    threshold: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    successes: Count,
+    total: Count,
+    maximum_likelihood: Probability,
+    threshold: Threshold,
     root_tolerance: ToleranceValue,
-) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> Probability:
     lower = maximum_likelihood
     upper = 1.0
     if _root_function(successes, total, upper, threshold) <= 0.0:
@@ -148,18 +156,15 @@ def _upper_root(
     return upper
 
 
-def _root_function(successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                   total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                   probability: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                   threshold: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                   ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _root_function(
+    successes: Count, total: Count, probability: Probability, threshold: Threshold
+) -> float:
     return _log_mixture_likelihood_ratio(successes, total, probability) - threshold
 
 
-def _log_mixture_likelihood_ratio(successes: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                                  total: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                                  probability: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                                  ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _log_mixture_likelihood_ratio(
+    successes: Count, total: Count, probability: Probability
+) -> LogMixtureRatio:
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability == 0.0:

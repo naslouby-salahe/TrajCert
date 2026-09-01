@@ -206,7 +206,7 @@ def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None: 
         return None
     if not value:
         build_parser().error("experiment name must be a non-empty descriptive name")
-    known = {str(item) for item in experiment_names()}
+    known = set(experiment_names())
     if value not in known:
         build_parser().error(f"unknown experiment name: {value}")
     return value
@@ -240,7 +240,7 @@ def _print_status(status: ExperimentStatus) -> None:
 
 def _print_project_status() -> None:
     statuses = tuple(
-        experiment_status(str(item)) for item in experiment_names()
+        experiment_status(item) for item in experiment_names()
     )
     completed = sum(item.state is PublicExecutionState.COMPLETED for item in statuses)
     failed = sum(item.state is PublicExecutionState.FAILED for item in statuses)
@@ -474,7 +474,7 @@ def _current_cell_status(
     workspace_root: Path,
     cache: dict[ExperimentNameValue, ExperimentStatus],
 ) -> CellStatus:
-    key = str(cell.identity.semantic_cell_key)
+    key = cell.identity.semantic_cell_key
     if not cell.executable:
         return CellStatus(
             semantic_cell_key=key,
@@ -540,7 +540,7 @@ def _execution_context(
     component_digest = producer_component_digest(workspace_root, cell.identity.experiment_name)
     dependency_specification = scientific_dependency_digest(
         specification,
-        str(cell.identity.semantic_cell_key),
+        cell.identity.semantic_cell_key,
         component_digest,
     )
     if cell.identity.experiment_name == _SYNTHESIS_NAME:
@@ -562,7 +562,7 @@ def _execution_context(
         scientific_dependency_digest=dependency_specification,
         provenance_fingerprint=_provenance(plan, config, workspace_root),
         dependency_fingerprint=dependency,
-        manifest_digest=DigestHex(str(model_digest(cell))),
+        manifest_digest=model_digest(cell),
         required_artifact_keys=required,
         expected_seed_count=expected_seed_count(cell.identity.experiment_name, config),
     )
@@ -577,15 +577,15 @@ def _provenance(
     if not lock.is_file():
         raise InvalidScientificDataError("uv.lock is required for execution provenance")
     material = ProvenanceMaterial(
-        scientific_specification_digest=SpecificationDigest(str(model_digest(config))),
+        scientific_specification_digest=SpecificationDigest(model_digest(config)),
         code_commit=CodeCommit(_source_commit(workspace_root)),
         dirty_tree_flag=False,
-        environment_lock_digest=EnvironmentDigest(str(file_digest(lock))),
+        environment_lock_digest=EnvironmentDigest(file_digest(lock)),
         container_image_digest=None,
         dataset_preprocessing_digests=(),
         partition_digest=None,
         seed_manifest_digests=(),
-        plan_digest=DigestHex(str(plan.plan_digest)),
+        plan_digest=DigestHex(plan.plan_digest),
     )
     return provenance_fingerprint(material)
 

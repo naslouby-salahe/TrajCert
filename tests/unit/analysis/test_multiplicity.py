@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from trajcert.analysis.metrics import MetricName
+from trajcert.analysis.metrics import PracticalMetric
 from trajcert.analysis.multiplicity import (
     HolmAdjustedTest,
     MultiplicityTest,
@@ -17,17 +17,17 @@ def test_holm_ties_use_semantic_identity_and_are_monotone() -> None:
     tests = (
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("b"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.01,
         ),
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("a"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.01,
         ),
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("c"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.2,
         ),
     )
@@ -47,12 +47,12 @@ def test_holm_adjust_rejects_duplicate_identities() -> None:
     tests = (
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("a"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.01,
         ),
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("a"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.02,
         ),
     )
@@ -64,17 +64,17 @@ def test_require_family_size_accepts_complete_consistent_family() -> None:
     tests = (
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("a"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.01,
         ),
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("b"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.02,
         ),
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("c"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.03,
         ),
     )
@@ -86,7 +86,7 @@ def test_require_family_size_rejects_incomplete_family() -> None:
     tests = (
         MultiplicityTest(
             semantic_comparison_key=SemanticComparisonKey("a"),
-            metric_name=MetricName("m"),
+            metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
             raw_p_value=0.01,
         ),
     )
@@ -98,7 +98,7 @@ def test_require_family_size_rejects_incomplete_family() -> None:
 def test_require_family_size_rejects_inconsistent_family_size() -> None:
     record = HolmAdjustedTest(
         semantic_comparison_key=SemanticComparisonKey("a"),
-        metric_name=MetricName("m"),
+        metric_name=PracticalMetric.ANYTIME_UPPER_RISK,
         raw_p_value=0.01,
         adjusted_p_value=0.01,
         family_size=2,

@@ -108,7 +108,7 @@ def export_report(
                 rendered,
             )
         else:
-            owner = str(semantic_slug(experiment_name))
+            owner = semantic_slug(experiment_name)
             if owner == _SYNTHESIS_OWNER:
                 staged_target = temporary_root / "project_summary"
                 final_target = workspace_root / PROJECT_SUMMARY_ROOT
@@ -141,7 +141,7 @@ def _selected_descriptors(
     all_descriptors = all_publication_source_descriptors()
     if experiment_name is None:
         return all_descriptors
-    slug = str(semantic_slug(experiment_name))
+    slug = semantic_slug(experiment_name)
     selected = tuple(item for item in all_descriptors if item.owner_experiment == slug)
     if not selected:
         raise InvalidScientificDataError(
@@ -229,7 +229,7 @@ def _write_reproducibility(
         environment=EnvironmentReproducibilityRecord(
             dependency_authority="uv.lock",
             dependency_lock_path=_LOCK_PATH,
-            environment_lock_digest=EnvironmentDigest(str(file_digest(lock_path))),
+            environment_lock_digest=EnvironmentDigest(file_digest(lock_path)),
             container_image_digest=None,
         ),
         sources=tuple(source.lineage for source in sources),
@@ -250,14 +250,14 @@ def require_synthesis_completion(workspace_root: Path, config: TrajCertConfig) -
     component = producer_component_digest(workspace_root, cell.identity.experiment_name)
     dependency_specification = scientific_dependency_digest(
         specification,
-        str(cell.identity.semantic_cell_key),
+        cell.identity.semantic_cell_key,
         component,
     )
     upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
     dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
     required = synthesis_artifact_keys(cell)
-    expected_plan_digest = PlanDigest(str(model_digest(cell)))
-    expected_manifest_digest = DigestHex(str(model_digest(cell)))
+    expected_plan_digest = PlanDigest(model_digest(cell))
+    expected_manifest_digest = model_digest(cell)
     checks = (
         completion.semantic_cell_key == cell.identity.semantic_cell_key,
         completion.cell_plan_digest == expected_plan_digest,
@@ -302,7 +302,7 @@ def _validate_upstream_completions(
         component = producer_component_digest(workspace_root, cell.identity.experiment_name)
         dependency_specification = scientific_dependency_digest(
             specification,
-            str(cell.identity.semantic_cell_key),
+            cell.identity.semantic_cell_key,
             component,
         )
         dependency = cell_dependency_fingerprint(
@@ -312,8 +312,8 @@ def _validate_upstream_completions(
             dependency_specification,
         )
         required_key = scientific_result_artifact_key(cell)
-        expected_plan_digest = PlanDigest(str(model_digest(cell)))
-        expected_manifest_digest = DigestHex(str(model_digest(cell)))
+        expected_plan_digest = PlanDigest(model_digest(cell))
+        expected_manifest_digest = model_digest(cell)
         checks = (
             completion.semantic_cell_key == cell.identity.semantic_cell_key,
             completion.cell_plan_digest == expected_plan_digest,
@@ -407,7 +407,7 @@ def _tree_digest(path: Path) -> DigestHex:
         relative = file_path.relative_to(path).as_posix().encode("utf-8")
         digest.update(len(relative).to_bytes(8, "big"))
         digest.update(relative)
-        digest.update(bytes.fromhex(str(file_digest(file_path))))
+        digest.update(bytes.fromhex(file_digest(file_path)))
     return DigestHex(digest.hexdigest())
 
 

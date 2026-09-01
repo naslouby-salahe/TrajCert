@@ -9,11 +9,11 @@ from mpmath import log, mp, mpf, sqrt
 from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import (
+    CategoryIndex,
     Count,
     DomainModel,
     GridPointCount,
     Mass,
-    NonNegativeInt,
     OracleDigits,
     RiskInterval,
 )
@@ -174,7 +174,7 @@ def _stable_resistance_objective(data: _CallbackData, hidden: mpf) -> mpf:
     return abs(first - second)
 
 
-def _log_odds_ratio(data: _CallbackData, index: NonNegativeInt, hidden: mpf) -> mpf | None:
+def _log_odds_ratio(data: _CallbackData, index: CategoryIndex, hidden: mpf) -> mpf | None:
     harmful_band = data.harmful[index]
     correct_band = data.correct[index]
     if harmful_band <= mpf(0) or correct_band <= mpf(0):

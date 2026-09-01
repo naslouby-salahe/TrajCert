@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity, build_ledger
+from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity
 from trajcert.exceptions import DataIntegrityError
 from trajcert.types import (
     ActionChannelId,
@@ -123,9 +123,9 @@ def test_ledger_rejects_foreign_event_identity() -> None:
         _ = EventLedger(identity=_identity(), events=(foreign,))
 
 
-def test_build_ledger_returns_sorted_ledger() -> None:
+def test_event_ledger_construction_returns_sorted_ledger() -> None:
     identity = _identity()
-    ledger = build_ledger(identity, (_event("z"), _event("y")))
+    ledger = EventLedger(identity=identity, events=(_event("z"), _event("y")))
     assert ledger.identity == identity
     assert tuple(event.event_id for event in ledger.events) == ("y", "z")
 

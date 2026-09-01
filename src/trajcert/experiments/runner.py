@@ -331,7 +331,7 @@ def run_cell(
     completion_path.unlink(missing_ok=True)
     failure_path.unlink(missing_ok=True)
     running_record = RunningRecord(
-        semantic_cell_key=str(cell.identity.semantic_cell_key),
+        semantic_cell_key=cell.identity.semantic_cell_key,
         plan_digest=context.plan_digest,
         dependency_fingerprint=context.dependency_fingerprint,
     )
@@ -355,7 +355,7 @@ def run_cell(
         )
     except Exception as exc:
         failure = FailureRecord(
-            semantic_cell_key=str(cell.identity.semantic_cell_key),
+            semantic_cell_key=cell.identity.semantic_cell_key,
             plan_digest=context.plan_digest,
             dependency_fingerprint=context.dependency_fingerprint,
             failure_type=FailureType(type(exc).__name__),
@@ -429,7 +429,7 @@ def cell_failure_path(cell: PlannedCell, workspace_root: Path) -> Path:
 
 
 def _cell_plan_digest(cell: PlannedCell) -> PlanDigest:
-    return PlanDigest(str(model_digest(cell)))
+    return PlanDigest(model_digest(cell))
 
 
 def _completion_identity_matches(
@@ -543,7 +543,7 @@ def _checksum(entry: ArtifactIndexEntry) -> ArtifactChecksum:
 
 
 def scientific_specification_digest(config: TrajCertConfig) -> SpecificationDigest:  # TODO: do not pass config as input param
-    return SpecificationDigest(str(model_digest(config)))
+    return SpecificationDigest(model_digest(config))
 
 
 def producer_component_digest(
@@ -561,7 +561,7 @@ def producer_component_digest(
         encoded = relative.as_posix().encode("utf-8")
         digest.update(len(encoded).to_bytes(8, "big"))
         digest.update(encoded)
-        digest.update(bytes.fromhex(str(file_digest(workspace_root / relative))))
+        digest.update(bytes.fromhex(file_digest(workspace_root / relative)))
     return DigestHex(digest.hexdigest())
 
 
@@ -583,14 +583,14 @@ def cell_dependency_fingerprint(
     required = set(cell.required_experiments)
     parents = tuple(item for item in plan.cells if item.identity.experiment_name in required)
     parent_digests = tuple(
-        str(file_digest(cell_completion_path(parent, workspace_root)))
+        file_digest(cell_completion_path(parent, workspace_root))
         for parent in parents
         if cell_completion_path(parent, workspace_root).is_file()
     )
     payload = "|".join(
         (
-            str(cell.identity.semantic_cell_key),
-            str(scientific_dependency),
+            cell.identity.semantic_cell_key,
+            scientific_dependency,
             *parent_digests,
         )
     )
@@ -784,7 +784,7 @@ def execute_scientific_cell(cell: PlannedCell, config: TrajCertConfig) -> Domain
     if not cell.executable:
         raise ScientificCellDispatchError("planned-invalid cell cannot be scientifically executed")
     _ = active_config.set(config)
-    name = str(cell.identity.experiment_name)
+    name = cell.identity.experiment_name
     if name == "Anytime Projection Proof Check":
         return anytime_projection_proof_check()
     if name == "Population Complexity Proof Check":
@@ -1211,7 +1211,7 @@ def _safety_case(
     if variant is None:
         raise ScientificCellDispatchError("safety cell is missing its case variant")
     for case in safety_budget_cases(summary, resolved_harm_boundary_offset):
-        if str(semantic_slug(str(case.name))) == str(variant):
+        if semantic_slug(case.name) == variant:
             return case
     raise ScientificCellDispatchError(f"unknown safety case: {variant}")
 
@@ -1228,7 +1228,7 @@ def _safety_intrinsic_case(cell: PlannedCell, config: TrajCertConfig) -> SafetyC
     if variant is None:
         raise ScientificCellDispatchError("safety/impossibility cell is missing its case variant")
     for evaluation in result.cases:
-        if str(semantic_slug(str(evaluation.case.name))) == str(variant):
+        if semantic_slug(evaluation.case.name) == variant:
             return evaluation
     raise ScientificCellDispatchError(f"unknown safety/impossibility case: {variant}")
 
@@ -1240,7 +1240,7 @@ def _coverage_stress_case(cell: PlannedCell, config: TrajCertConfig) -> DomainMo
             "coverage-stress cell is missing its configured case name"
         )
     for case in config.study_design.coverage_stress_cases:
-        if case.name != str(variant):
+        if case.name != variant:
             continue
         expected_law = LAW_DISPLAY_NAMES[case.law]
         expected_partition = partition_name(case.band_count)
@@ -1369,7 +1369,7 @@ def _validate_upstream_completion(
 ) -> None:
     if completion.semantic_cell_key != cell.identity.semantic_cell_key:
         raise InvalidScientificDataError("upstream completion semantic identity is stale")
-    expected_plan_digest = PlanDigest(str(model_digest(cell)))
+    expected_plan_digest = PlanDigest(model_digest(cell))
     if completion.cell_plan_digest != expected_plan_digest:
         raise InvalidScientificDataError("upstream completion cell-plan digest is stale")
     if completion.produced_artifact_keys != (expected_key,):
@@ -1407,7 +1407,7 @@ def execute_dispatched_cell(
     context: ExecutionContext,
     config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
 ) -> CellExecutionResult:
-    if str(cell.identity.experiment_name) == "Statistical Synthesis":
+    if cell.identity.experiment_name == "Statistical Synthesis":
         raise InvalidScientificDataError(
             "Statistical Synthesis requires the dedicated cross-experiment executor"
         )

@@ -12,7 +12,7 @@ from trajcert.types import (
     AnytimeConfidenceDelta,
     ArbitraryPrecisionBits,
     Count,
-    FiniteFloat,
+    CriticalZScore,
     OuterMaxNodes,
     SensitivityBudget,
     ToleranceValue,
@@ -61,9 +61,9 @@ def repeated_static_projection(
     )
 
 
-def _wilson_interval(successes: Count, total: Count, 
-                     z: FiniteFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                     ) -> ClosedProbabilityInterval:
+def _wilson_interval(
+    successes: Count, total: Count, z: CriticalZScore
+) -> ClosedProbabilityInterval:
     proportion = successes / total
     z_squared = z * z
     denominator = 1.0 + z_squared / total

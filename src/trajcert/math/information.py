@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from math import isfinite, ulp
 
-import numpy as np
-
 from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
@@ -24,10 +22,7 @@ from trajcert.types import (
 
 
 def resolved_timing_entropy(summary: ObservableSummary) -> EntropyValue:
-    entropy_vector = np.asarray(
-        binary_entropy_from_masses(summary.harmful_by_band, summary.correct_by_band),
-        dtype=np.float64,
-    )
+    entropy_vector = binary_entropy_from_masses(summary.harmful_by_band, summary.correct_by_band)
     return float(entropy_vector.sum())
 
 
@@ -40,7 +35,7 @@ def observed_timing_information(summary: ObservableSummary) -> InformationNats |
     )
     timing_entropy = resolved_timing_entropy(summary)
     value = marginal_entropy - timing_entropy
-    return _nonnegative_roundoff_guard(float(value))
+    return _nonnegative_roundoff_guard(value)
 
 
 def minimum_information_point(summary: ObservableSummary) -> MinimumInformationPoint | None:
@@ -78,7 +73,7 @@ def information_profile(
     harmful_rate = (hidden / unresolved) if unresolved > 0.0 else None
     terminal_entropy = weighted_binary_entropy(unresolved, harmful_rate)
     value = total_entropy - timing_entropy - terminal_entropy
-    return _nonnegative_roundoff_guard(float(value))
+    return _nonnegative_roundoff_guard(value)
 
 
 def information_profile_second_derivative(
@@ -126,8 +121,7 @@ def profile_difference(
     )
 
 
-def _hidden_mass(summary: ObservableSummary, value: Mass) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider using a proper alias type for validated hidden terminal harmful mass.
+def _hidden_mass(summary: ObservableSummary, value: Mass) -> Mass:
     hidden = value
     unresolved = summary.unresolved_mass
     if not isfinite(hidden) or hidden < 0.0 or hidden > unresolved:
@@ -135,8 +129,7 @@ def _hidden_mass(summary: ObservableSummary, value: Mass) -> float: #TODO: Consi
     return hidden
 
 
-def _strictly_interior_hidden_mass(summary: ObservableSummary, value: Mass) -> float:
-    # TODO: Consider using a proper alias type for an interior hidden-mass value.
+def _strictly_interior_hidden_mass(summary: ObservableSummary, value: Mass) -> Mass:
     hidden = _hidden_mass(summary, value)
     unresolved = summary.unresolved_mass
     if unresolved <= 0.0 or hidden <= 0.0 or hidden >= unresolved:
@@ -144,9 +137,7 @@ def _strictly_interior_hidden_mass(summary: ObservableSummary, value: Mass) -> f
     return hidden
 
 
-def _nonnegative_roundoff_guard(value: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                                ) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider using a proper alias type for numerically guarded information values.
+def _nonnegative_roundoff_guard(value: InformationNats) -> InformationNats:
     if value >= 0.0:
         return value
     ulps = active_config.get().numerics.float_roundoff_ulps

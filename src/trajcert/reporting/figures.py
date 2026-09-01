@@ -264,7 +264,7 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
                 scale.map_x(_required_float(row, "n_matured")),
                 scale.map_y(_required_float(row, "risk_upper_anytime")),
             )
-            commands.append(Circle(point, radius=2.5, hollow=not bool(row["evidence_gate_pass"])))
+            commands.append(Circle(point, radius=2.5, hollow=not row["evidence_gate_pass"]))
     first = rows[0]
     for column, label in (
         ("true_theta", "true theta"),
@@ -297,7 +297,7 @@ def _anytime_coverage(table: pa.Table) -> PlotDocument:
             scale.map_x(float(index)),
             scale.map_y(_required_float(row, "clopper_pearson_upper_95")),
         )
-        if bool(row["criterion_pass"]):
+        if row["criterion_pass"]:
             commands.append(Circle(point, radius=4.0))
         else:
             commands.append(Cross(point, radius=5.0))
@@ -369,7 +369,7 @@ def _rho_sensitivity_marker(
         commands.append(Cross(Point(x, panel.bottom - 5.0), radius=4.0))
     else:
         commands.append(Circle(Point(x, scale.map_y(risk)), radius=3.0))
-    if bool(row["rho_is_log2"]):
+    if row["rho_is_log2"]:
         commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
 
 

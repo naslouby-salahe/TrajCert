@@ -17,7 +17,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import Field
 
-from trajcert.analysis.metrics import MetricName
+from trajcert.analysis.metrics import PracticalMetric
 from trajcert.config import TrajCertConfig
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
@@ -74,6 +74,13 @@ from trajcert.types import (
 
 TheoremName = NewType("TheoremName", str)
 RegimeName = NewType("RegimeName", str)
+
+
+class RhoUtilityMetricName(StrEnum):
+    ANYTIME_UPPER_RISK = PracticalMetric.ANYTIME_UPPER_RISK
+    TIME_TO_FIRST_CERTIFICATION = PracticalMetric.TIME_TO_FIRST_CERTIFICATION
+    CERTIFIED_UPDATE_FRACTION = PracticalMetric.CERTIFIED_UPDATE_FRACTION
+    POPULATION_LATENT_RISK_UPPER_BOUND = "Population latent-risk upper bound"
 
 # TODO: should be in yaml and accessed through config
 _LOG2_MATCH_TOLERANCE: Final[float] = 1e-15
@@ -171,7 +178,7 @@ class RhoUtilityRow(DomainModel):
     rho: SensitivityBudget
     partition_name: PartitionName
     baseline_partition_name: PartitionName | None = None
-    metric_name: MetricName
+    metric_name: RhoUtilityMetricName
     metric_value: FiniteFloat | None = None
     compatibility_state: CompatibilityRegime | None = None
     tau: InformationNats | None = None
@@ -312,7 +319,7 @@ class RhoSensitivityFigureRow(DomainModel):
     partition_name: str
     rho: SensitivityBudget
     risk_upper: float | None
-    compatibility_state: RegimeName
+    compatibility_state: CompatibilityRegime
     rho_is_log2: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
@@ -430,7 +437,7 @@ def population_rho_utility_rows(
             law_name=item.law_name,
             rho=item.result.sensitivity_budget,
             partition_name=item.partition_name,
-            metric_name=MetricName("Population latent-risk upper bound"),
+            metric_name=RhoUtilityMetricName.POPULATION_LATENT_RISK_UPPER_BOUND,
             metric_value=item.result.risk_upper,
             compatibility_state=item.result.compatibility_regime,
             tau=item.result.tau,
@@ -817,7 +824,7 @@ def _solver_rows(
     grouped: dict[tuple[str, str], list[SolverOracleComparison]] = defaultdict(list)
     for cell in _cells(plan, "Production Solver vs Independent Oracle"):
         partition = _required_partition(cell)
-        offset = str(cell.identity.coordinates.sensitivity_coordinate or "")
+        offset = cell.identity.coordinates.sensitivity_coordinate or ""
         grouped[(partition, offset)].append(
             read_verified_scientific_result(cell, workspace_root, SolverOracleComparison)
         )
@@ -870,7 +877,7 @@ def _coverage_rows(
 ) -> tuple[AnytimeCoverageRow, ...]:
     rows: list[AnytimeCoverageRow] = []
     for cell, result in evidence:
-        stress = str(cell.identity.coordinates.variant_name or cell.identity.semantic_cell_key)
+        stress = cell.identity.coordinates.variant_name or cell.identity.semantic_cell_key
         for method in result.methods:
             method_name = method.method_name
             if not method.applicable:
@@ -939,7 +946,7 @@ def _anytime_coverage_figure_rows(
 ) -> tuple[AnytimeCoverageFigureRow, ...]:
     rows: list[AnytimeCoverageFigureRow] = []
     for cell, result in evidence:
-        stress = str(cell.identity.coordinates.variant_name or cell.identity.semantic_cell_key)
+        stress = cell.identity.coordinates.variant_name or cell.identity.semantic_cell_key
         rows.extend(
             AnytimeCoverageFigureRow(
                 stress_cell=stress,
@@ -1101,8 +1108,8 @@ def _timing_figure_rows(
             raise InvalidScientificDataError(
                 "Figure 2 requires compatible strict-timing risk bounds"
             )
-        pair = str(cell.identity.coordinates.comparison_pair_name or "")
-        law = str(cell.identity.coordinates.synthetic_law_name or "")
+        pair = cell.identity.coordinates.comparison_pair_name or ""
+        law = cell.identity.coordinates.synthetic_law_name or ""
         offset = _rho_offset(cell)
         rows.append(
             TimingValueFigureRow(
@@ -1132,11 +1139,11 @@ def _rho_sensitivity_rows(
     log2_value = BINARY_MAX_INFORMATION_NATS
     return tuple(
         RhoSensitivityFigureRow(
-            law_name=str(cell.identity.coordinates.synthetic_law_name or ""),
+            law_name=cell.identity.coordinates.synthetic_law_name or "",
             partition_name=_required_partition(cell),
             rho=result.sensitivity_budget,
             risk_upper=None if result.risk_upper is None else result.risk_upper,
-            compatibility_state=RegimeName(result.compatibility_regime.value),
+            compatibility_state=result.compatibility_regime,
             rho_is_log2=abs(result.sensitivity_budget - log2_value) <= _LOG2_MATCH_TOLERANCE,
         )
         for cell, result in evidence
@@ -1221,18 +1228,6 @@ def _information_profile_rows(
     return tuple(rows)
 
 
-def _single_result[ModelT: DomainModel]( #TODO: dead code. Check if needs wiring or deletion
-    plan: ExperimentPlan,
-    workspace_root: Path,
-    experiment_name: str,
-    model_type: type[ModelT],
-) -> ModelT:
-    cells = _cells(plan, experiment_name)
-    if len(cells) != 1:
-        raise InvalidScientificDataError(f"{experiment_name} must contain exactly one cell")
-    return read_verified_scientific_result(cells[0], workspace_root, model_type)
-
-
 def _cells(plan: ExperimentPlan, name: str #TODO: Consider using a proper alias type or whatever already exists with actually fits this. maybe enum
            ) -> tuple[PlannedCell, ...]:
     cells = cells_for_experiment(plan, ExperimentNameValue(name))
@@ -1249,7 +1244,7 @@ def _required_partition(cell: PlannedCell) -> str: #TODO: Consider using a prope
 
 
 def _rho_offset(cell: PlannedCell) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    coordinate = str(cell.identity.coordinates.sensitivity_coordinate or "")
+    coordinate = cell.identity.coordinates.sensitivity_coordinate or ""
     prefix = "rho-offset="
     if not coordinate.startswith(prefix):
         raise InvalidScientificDataError("strict timing figure cell lacks rho-offset coordinate")

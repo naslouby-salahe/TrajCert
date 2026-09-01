@@ -13,7 +13,7 @@ from trajcert.analysis.materiality import (
     SequentialMaterialitySummary,
     evaluate_sequential_materiality,
 )
-from trajcert.analysis.metrics import MetricName, PracticalMetric, numeric_first_certification
+from trajcert.analysis.metrics import PracticalMetric, numeric_first_certification
 from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust, require_family_size
 from trajcert.analysis.sign_flip import SignFlipResult, one_sided_sign_flip
 from trajcert.config import TrajCertConfig, active_config
@@ -56,6 +56,7 @@ from trajcert.reporting.source_data import (
     PartitionTimingRow,
     PopulationFigureEvidence,
     PopulationUtilitySourceEvidence,
+    RhoUtilityMetricName,
     RhoUtilityRow,
     SafetySourceEvidence,
     SameEndpointFigureEvidence,
@@ -259,7 +260,7 @@ def synthesize_trajectory_operational_gain(
     adjusted = holm_adjust(
         MultiplicityTest(
             semantic_comparison_key=result.semantic_comparison_key,
-            metric_name=MetricName(result.metric_name.value),
+            metric_name=result.metric_name,
             raw_p_value=result.sign_flip.p_value,
         )
         for result in raw_results
@@ -272,7 +273,7 @@ def synthesize_trajectory_operational_gain(
         _apply_adjusted_inference(
             result,
             adjusted_by_key[
-                (result.semantic_comparison_key, result.metric_name.value)
+                (result.semantic_comparison_key, result.metric_name)
             ].adjusted_p_value,
             config,
         )
@@ -458,7 +459,7 @@ def synthesis_dependency_fingerprint(
         _dependency_reference(cell, workspace_root)
         for cell in sorted(upstream_cells, key=_cell_order)
     )
-    return DependencyFingerprint(str(models_digest(references)))
+    return DependencyFingerprint(models_digest(references))
 
 
 def verify_synthesis_dependency_fingerprint(
@@ -480,7 +481,7 @@ def _dependency_reference(
 ) -> SynthesisDependencyReference:
     completion, index = verified_upstream_completion_and_index(cell, workspace_root)
     return SynthesisDependencyReference(
-        semantic_cell_key=str(cell.identity.semantic_cell_key),
+        semantic_cell_key=cell.identity.semantic_cell_key,
         completion_digest=model_digest(completion),
         scientific_result_digest=index.artifacts[0].sha256,
     )
@@ -490,7 +491,7 @@ def _cell_order(cell: PlannedCell) -> tuple[int, int, str]: # TODO: Consider usi
     return (
         cell.experiment_order,
         cell.cell_ordinal,
-        str(cell.identity.semantic_cell_key),
+        cell.identity.semantic_cell_key,
     )
 
 
@@ -507,7 +508,7 @@ def sequential_rho_utility_rows(
             rho=result.sensitivity_budget,
             partition_name=fine_partition,
             baseline_partition_name=endpoint_partition,
-            metric_name=MetricName(result.metric_name.value),
+            metric_name=RhoUtilityMetricName(result.metric_name.value),
             method_mean=result.method_mean,
             baseline_mean=result.baseline_mean,
             mean_paired_difference=result.effect.mean_paired_difference,
@@ -1095,7 +1096,7 @@ def execute_statistical_synthesis(
 
 
 def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
-    if str(cell.identity.experiment_name) != _SYNTHESIS_EXPERIMENT_NAME:
+    if cell.identity.experiment_name != _SYNTHESIS_EXPERIMENT_NAME:
         raise InvalidScientificDataError("synthesis artifact paths require the synthesis cell")
     synthesis = experiment_leaf(
         cell.identity.experiment_slug,
@@ -1148,7 +1149,7 @@ def _validate_synthesis_cell(
     context: ExecutionContext,
     plan: ExperimentPlan,
 ) -> None:
-    if str(cell.identity.experiment_name) != _SYNTHESIS_EXPERIMENT_NAME:
+    if cell.identity.experiment_name != _SYNTHESIS_EXPERIMENT_NAME:
         raise InvalidScientificDataError(
             "dedicated synthesis executor received a non-synthesis cell"
         )

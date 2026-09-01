@@ -11,12 +11,12 @@ from trajcert.data.summaries import ObservableSummary, summarize_observable_mass
 from trajcert.exceptions import NumericalError
 from trajcert.inference.confidence import CategoricalConfidenceRegion, ClosedProbabilityInterval
 from trajcert.math.entropy import binary_entropy_from_masses
-from trajcert.types import DomainModel, ToleranceValue, UnitFloat
+from trajcert.types import CategoryIndex, DomainModel, EntropyValue, Mass, ToleranceValue
 
 
 class ScalarEnvelope(DomainModel):
-    lower: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    upper: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    lower: Mass
+    upper: Mass
 
     @model_validator(mode="after")
     def validate_order(self) -> Self:
@@ -25,7 +25,7 @@ class ScalarEnvelope(DomainModel):
         return self
 
     @property
-    def is_singleton(self) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    def is_singleton(self) -> bool:
         return self.lower == self.upper
 
 
@@ -46,7 +46,7 @@ class ObservableSummaryEnvelope(DomainModel):
         return self
 
     @property
-    def is_singleton(self) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    def is_singleton(self) -> bool:
         intervals = (
             self.harmful_by_band
             + self.correct_by_band
@@ -133,7 +133,7 @@ def singleton_summary_envelope(summary: ObservableSummary) -> ObservableSummaryE
 
 def _subset_interval(
     intervals: tuple[ClosedProbabilityInterval, ...],
-    selected: tuple[int, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    selected: tuple[CategoryIndex, ...],
 ) -> ClosedProbabilityInterval:
     selected_set = frozenset(selected)
     direct_lower = sum(intervals[index].lower for index in selected)
@@ -171,9 +171,9 @@ def _resolved_entropy_envelope(
     return ScalarEnvelope(lower=lower, upper=upper)
 
 
-def _resolved_entropy_exact(harmful: tuple[float, ...], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                            correct: tuple[float, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                            ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _resolved_entropy_exact(
+    harmful: tuple[Mass, ...], correct: tuple[Mass, ...]
+) -> EntropyValue:
     return sum(
         binary_entropy_from_masses(left, right)
         for left, right in zip(harmful, correct, strict=True)

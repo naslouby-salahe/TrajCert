@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import NewType
 
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
@@ -12,8 +11,6 @@ from trajcert.types import (
     RelativeUnresolvedGain,
     RiskValue,
 )
-
-MetricName = NewType("MetricName", str)  # TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
 
 
 class PracticalMetric(StrEnum):

@@ -6,8 +6,8 @@ from trajcert.inference.projection import ProjectionResult
 from trajcert.types import (
     Count,
     DomainModel,
+    EventCount,
     NumericStatus,
-    PositiveInt,
     RiskBudget,
     ScientificState,
     SensitivityBudget,
@@ -33,8 +33,8 @@ def classify_certification(
     projection: ProjectionResult | None,
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
-    minimum_matured_events: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    minimum_resolved_events: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    minimum_matured_events: EventCount,
+    minimum_resolved_events: EventCount,
     comparison_guard: ToleranceValue,
 ) -> CertificationAssessment:
     # TODO: Consider moving the hard-coded certification-state decision tree into a domain policy object.

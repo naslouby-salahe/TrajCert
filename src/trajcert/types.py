@@ -49,14 +49,19 @@ ToleranceValue = PositiveFloat
 
 AbsoluteTightening = FiniteFloat
 AcceptanceUpperLimit = UnitFloat
+AgeUnit = NonNegativeFloat
 AnytimeConfidenceDelta = OpenUnitFloat
 ArbitraryPrecisionBits = NonNegativeInt
 CertifiedFractionGain = NonNegativeFloat
 CoefficientValue = FiniteFloat
 ConfidenceLevel = OpenUnitFloat
+CriticalZScore = FiniteFloat
 EventCount = PositiveInt
+EventIndex = NonNegativeInt
+EventIndexWidth = PositiveInt
 FamilySize = PositiveInt
 FavorableCount = NonNegativeInt
+GradientNorm = NonNegativeFloat
 GridPointCount = PositiveInt
 HazardProbability = OpenUnitFloat
 InterceptValue = FiniteFloat
@@ -87,6 +92,7 @@ WarmupRepetitionCount = NonNegativeInt
 CoverageStressCaseName = NewType("CoverageStressCaseName", str)
 
 LogMixtureRatio = FiniteFloat
+Threshold = FiniteFloat
 type TabularCellValue = None | bool | int | float | str
 
 
