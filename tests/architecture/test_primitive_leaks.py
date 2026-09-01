@@ -5,6 +5,7 @@ from pathlib import Path
 from tools.source_audit import (
     RULE_BUILDING_BLOCK,
     RULE_PRIMITIVE,
+    RULE_REDUNDANT_CONVERSION,
     RULE_UNTYPED,
     audit_path,
     audit_tree,
@@ -73,3 +74,35 @@ def test_raw_dict_boundary_fixture_is_rejected_with_untyped_rule() -> None:
         finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "raw_dict_boundary.py")
     }
     assert RULE_UNTYPED in rule_ids
+
+
+def test_production_has_no_redundant_enum_value_conversions() -> None:
+    findings = audit_tree(SOURCE_ROOT)
+    violations = [
+        finding.render() for finding in findings if finding.rule_id == RULE_REDUNDANT_CONVERSION
+    ]
+    assert not violations, "\n".join(violations)
+
+
+def test_redundant_enum_value_str_fixture_is_rejected_with_redundant_conversion_rule() -> None:
+    rule_ids = {
+        finding.rule_id
+        for finding in audit_path(FIXTURES / "invalid" / "redundant_enum_value_str.py")
+    }
+    assert RULE_REDUNDANT_CONVERSION in rule_ids
+
+
+def test_raw_numeric_return_boundary_fixture_is_rejected_with_primitive_rule() -> None:
+    rule_ids = {
+        finding.rule_id
+        for finding in audit_path(FIXTURES / "invalid" / "raw_numeric_return_boundary.py")
+    }
+    assert RULE_PRIMITIVE in rule_ids
+
+
+def test_raw_string_return_boundary_fixture_is_rejected_with_primitive_rule() -> None:
+    rule_ids = {
+        finding.rule_id
+        for finding in audit_path(FIXTURES / "invalid" / "raw_string_return_boundary.py")
+    }
+    assert RULE_PRIMITIVE in rule_ids

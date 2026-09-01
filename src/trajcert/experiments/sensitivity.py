@@ -19,13 +19,14 @@ from trajcert.math.bounds import (
 from trajcert.math.information import observed_timing_information
 from trajcert.types import (
     AbsoluteTightening,
+    CertifiedUpdateFractionGain,
     CompatibilityRegime,
     Count,
     DomainModel,
-    FiniteFloat,
     InformationNats,
     Probability,
     RelativeUnresolvedGain,
+    RiskBoundGain,
     RiskValue,
     ScientificState,
     SeedIndex,
@@ -51,19 +52,19 @@ class SequentialStreamUtility(DomainModel):
     stream_index: SeedIndex
     fine_certified_update_fraction: Probability
     endpoint_certified_update_fraction: Probability
-    certified_update_fraction_gain: FiniteFloat
+    certified_update_fraction_gain: CertifiedUpdateFractionGain
     fine_time_to_first_certification: Count | None
     endpoint_time_to_first_certification: Count | None
     fine_mean_anytime_upper_risk: RiskValue
     endpoint_mean_anytime_upper_risk: RiskValue
-    mean_bound_gain: FiniteFloat
+    mean_bound_gain: RiskBoundGain
 
 
 class SequentialUtilityResult(DomainModel):
     sensitivity_budget: SensitivityBudget
     streams: tuple[SequentialStreamUtility, ...]
-    mean_certified_update_fraction_gain: FiniteFloat
-    mean_bound_gain: FiniteFloat
+    mean_certified_update_fraction_gain: CertifiedUpdateFractionGain
+    mean_bound_gain: RiskBoundGain
 
 
 def population_sensitivity_utility(

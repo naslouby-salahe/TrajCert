@@ -102,6 +102,7 @@ from trajcert.types import (
     SensitivityOffset,
     SerializedConfigJson,
     StreamCount,
+    TableRow,
     TabularCellValue,
 )
 
@@ -715,8 +716,8 @@ def compatibility_safety_evidence(
                 risk_lower=None,
                 risk_upper=None,
                 rho_star=result.assessment.safety_frontier,
-                expected_regime=RegimeName(result.expected_regime.value),
-                observed_regime=RegimeName(result.assessment.regime.value),
+                expected_regime=RegimeName(result.expected_regime),
+                observed_regime=RegimeName(result.assessment.regime),
                 oracle_error=oracle_error,
                 passed=result.passed,
             )
@@ -766,8 +767,8 @@ def _solver_comparison_evidence(
         risk_lower=comparison.risk_lower,
         risk_upper=comparison.risk_upper,
         rho_star=None,
-        expected_regime=RegimeName(comparison.oracle_regime.value),
-        observed_regime=RegimeName(comparison.compatibility_regime.value),
+        expected_regime=RegimeName(comparison.oracle_regime),
+        observed_regime=RegimeName(comparison.compatibility_regime),
         oracle_error=comparison.max_endpoint_error,
         passed=comparison.passed,
     )
@@ -1365,8 +1366,8 @@ def _validate_scientific_values(table: pa.Table, source_path: Path) -> None:
                 )
 
 
-def _table_rows(table: pa.Table) -> tuple[dict[str, TabularCellValue], ...]:
-    return tuple(cast(dict[str, TabularCellValue], row) for row in table.to_pylist())
+def _table_rows(table: pa.Table) -> tuple[TableRow, ...]:
+    return tuple(cast(dict[ColumnName, TabularCellValue], row) for row in table.to_pylist())
 
 
 def _deterministic_order(table: pa.Table, columns: tuple[ColumnName, ...]) -> pa.Table:

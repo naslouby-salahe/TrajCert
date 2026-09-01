@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import struct
 import zlib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from html import escape
@@ -23,11 +23,16 @@ from trajcert.schemas import (
 )
 from trajcert.storage import atomic_write_bytes
 from trajcert.types import (
+    ColumnName,
+    FacetLabel,
     FigureCoordinate,
-    FiniteFloat,
+    GridColumnCount,
+    PanelCount,
     PixelCount,
     PixelIntensity,
+    PlotValue,
     RasterCoordinate,
+    TableRow,
     TabularCellValue,
 )
 
@@ -35,6 +40,40 @@ _STROKE = "#202020"
 _MUTED = "#6a6a6a"
 _LIGHT = "#d8d8d8"
 _BACKGROUND = "#ffffff"
+
+_COL_LAW_NAME = ColumnName("law_name")
+_COL_RHO_OFFSET = ColumnName("rho_offset")
+_COL_RISK_LOWER = ColumnName("risk_lower")
+_COL_RISK_UPPER = ColumnName("risk_upper")
+_COL_PARTITION_BAND_COUNT = ColumnName("partition_band_count")
+_COL_TAU = ColumnName("tau")
+_COL_DELTA_TAU = ColumnName("delta_tau")
+_COL_BOUND_GAIN = ColumnName("bound_gain")
+_COL_U = ColumnName("u")
+_COL_INFORMATION_PROFILE = ColumnName("information_profile")
+_COL_U_DAGGER = ColumnName("u_dagger")
+_COL_U_BETA = ColumnName("u_beta")
+_COL_RHO = ColumnName("rho")
+_COL_RHO_STAR = ColumnName("rho_star")
+_COL_FEASIBLE_LOWER = ColumnName("feasible_lower")
+_COL_FEASIBLE_UPPER = ColumnName("feasible_upper")
+_COL_STREAM_SEED_INDEX = ColumnName("stream_seed_index")
+_COL_N_MATURED = ColumnName("n_matured")
+_COL_RISK_UPPER_ANYTIME = ColumnName("risk_upper_anytime")
+_COL_TRUE_THETA = ColumnName("true_theta")
+_COL_BETA = ColumnName("beta")
+_COL_CLOPPER_PEARSON_UPPER_95 = ColumnName("clopper_pearson_upper_95")
+_COL_DELTA = ColumnName("delta")
+_COL_ACCEPTANCE_UPPER_LIMIT = ColumnName("acceptance_upper_limit")
+_COL_AXIS = ColumnName("axis")
+_COL_K = ColumnName("K")
+_COL_POPULATION_MEDIAN_RUNTIME_MS = ColumnName("population_median_runtime_ms")
+_COL_OUTER_MEDIAN_RUNTIME_MS = ColumnName("outer_median_runtime_ms")
+_COL_MEDIAN_OUTER_NODES = ColumnName("median_outer_nodes")
+_COL_EVIDENCE_GATE_PASS = ColumnName("evidence_gate_pass")
+_COL_CRITERION_PASS = ColumnName("criterion_pass")
+_COL_PARTITION_NAME = ColumnName("partition_name")
+_COL_RHO_IS_LOG2 = ColumnName("rho_is_log2")
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,36 +198,39 @@ def _build_document(name: str, table: pa.Table) -> PlotDocument:
     }
     try:
         figure_name = FigureName(name)
-    except ValueError:
-        raise InvalidScientificDataError(f"no deterministic figure renderer for {name}")
+    except ValueError as exc:
+        raise InvalidScientificDataError(f"no deterministic figure renderer for {name}") from exc
     return builders[figure_name](table)
 
 
 def _partition_coherence(table: pa.Table) -> PlotDocument:
-    laws = _unique_strings(table, "law_name")
+    laws = _unique_strings(table, _COL_LAW_NAME)
     commands = _base_commands("Partition coherence at fixed sensitivity")
     panels = _horizontal_panels(len(laws))
     for law, panel in zip(laws, panels, strict=True):
-        selected = _matching_rows(table, "law_name", law)
+        selected = _matching_rows(table, _COL_LAW_NAME, law)
         x_values = tuple(
             value
             for row in selected
-            for value in (_required_float(row, "risk_lower"), _required_float(row, "risk_upper"))
+            for value in (
+                _required_float(row, _COL_RISK_LOWER),
+                _required_float(row, _COL_RISK_UPPER),
+            )
         )
-        y_values = tuple(_required_float(row, "partition_band_count") for row in selected)
+        y_values = tuple(_required_float(row, _COL_PARTITION_BAND_COUNT) for row in selected)
         scale = _panel_scale(panel, x_values, y_values)
         commands.extend(_panel_frame(panel, law))
         for row in selected:
-            lower = scale.map_x(_required_float(row, "risk_lower"))
-            upper = scale.map_x(_required_float(row, "risk_upper"))
-            y = scale.map_y(_required_float(row, "partition_band_count"))
+            lower = scale.map_x(_required_float(row, _COL_RISK_LOWER))
+            upper = scale.map_x(_required_float(row, _COL_RISK_UPPER))
+            y = scale.map_y(_required_float(row, _COL_PARTITION_BAND_COUNT))
             commands.append(Line(Point(lower, y), Point(upper, y), width=3.0))
             commands.append(Circle(Point(lower, y), radius=4.0))
             commands.append(Circle(Point(upper, y), radius=4.0))
             commands.append(
                 Text(
                     Point((lower + upper) / 2.0, y - 8.0),
-                    f"tau={_required_float(row, 'tau'):.4g}",
+                    f"tau={_required_float(row, _COL_TAU):.4g}",
                     size=11,
                     anchor=TextAnchor.MIDDLE,
                 )
@@ -197,21 +239,21 @@ def _partition_coherence(table: pa.Table) -> PlotDocument:
 
 
 def _timing_value(table: pa.Table) -> PlotDocument:
-    facets = _unique_strings(table, "rho_offset")
+    facets = _unique_strings(table, _COL_RHO_OFFSET)
     commands = _base_commands("Exact timing value")
     panels = _horizontal_panels(len(facets))
     for facet, panel in zip(facets, panels, strict=True):
-        selected = _matching_rows(table, "rho_offset", facet)
-        xs = tuple(_required_float(row, "delta_tau") for row in selected)
-        ys = tuple(_required_float(row, "bound_gain") for row in selected)
+        selected = _matching_rows(table, _COL_RHO_OFFSET, facet)
+        xs = tuple(_required_float(row, _COL_DELTA_TAU) for row in selected)
+        ys = tuple(_required_float(row, _COL_BOUND_GAIN) for row in selected)
         scale = _panel_scale(panel, (*xs, 0.0), ys)
         commands.extend(_panel_frame(panel, f"rho offset {facet}"))
         zero_x = scale.map_x(0.0)
         commands.append(Line(Point(zero_x, panel.top), Point(zero_x, panel.bottom), dashed=True))
         for row in selected:
             point = Point(
-                scale.map_x(_required_float(row, "delta_tau")),
-                scale.map_y(_required_float(row, "bound_gain")),
+                scale.map_x(_required_float(row, _COL_DELTA_TAU)),
+                scale.map_y(_required_float(row, _COL_BOUND_GAIN)),
             )
             commands.append(Circle(point, radius=4.0))
     return PlotDocument(title="Exact timing value", commands=tuple(commands))
@@ -219,8 +261,8 @@ def _timing_value(table: pa.Table) -> PlotDocument:
 
 def _information_profile(table: pa.Table) -> PlotDocument:
     rows = _rows(table)
-    xs = tuple(_required_float(row, "u") for row in rows)
-    ys = tuple(_required_float(row, "information_profile") for row in rows)
+    xs = tuple(_required_float(row, _COL_U) for row in rows)
+    ys = tuple(_required_float(row, _COL_INFORMATION_PROFILE) for row in rows)
     panel = _single_panel()
     scale = _panel_scale(panel, xs, ys)
     commands = _base_commands("Information profile and safety corridor")
@@ -228,8 +270,8 @@ def _information_profile(table: pa.Table) -> PlotDocument:
     commands.extend(_polyline(scale, xs, ys))
     first = rows[0]
     for column, label in (
-        ("u_dagger", "u_dagger"),
-        ("u_beta", "u_beta"),
+        (_COL_U_DAGGER, "u_dagger"),
+        (_COL_U_BETA, "u_beta"),
     ):
         value = _optional_float(first, column)
         if value is not None:
@@ -237,17 +279,17 @@ def _information_profile(table: pa.Table) -> PlotDocument:
             commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
             commands.append(Text(Point(x + 4.0, panel.top + 16.0), label, size=11))
     for column, label in (
-        ("tau", "tau"),
-        ("rho", "rho"),
-        ("rho_star", "rho_star"),
+        (_COL_TAU, "tau"),
+        (_COL_RHO, "rho"),
+        (_COL_RHO_STAR, "rho_star"),
     ):
         value = _optional_float(first, column)
         if value is not None:
             y = scale.map_y(value)
             commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
             commands.append(Text(Point(panel.left + 5.0, y - 5.0), label, size=11))
-    feasible_lower = _optional_float(first, "feasible_lower")
-    feasible_upper = _optional_float(first, "feasible_upper")
+    feasible_lower = _optional_float(first, _COL_FEASIBLE_LOWER)
+    feasible_upper = _optional_float(first, _COL_FEASIBLE_UPPER)
     if feasible_lower is not None and feasible_upper is not None:
         left = scale.map_x(feasible_lower)
         right = scale.map_x(feasible_upper)
@@ -258,7 +300,7 @@ def _information_profile(table: pa.Table) -> PlotDocument:
 
 
 def _anytime_paths(table: pa.Table) -> PlotDocument:
-    seeds = _unique_numbers(table, "stream_seed_index")
+    seeds = _unique_numbers(table, _COL_STREAM_SEED_INDEX)
     expected_seeds = tuple(
         float(index) for index in active_config.get().study_design.representative_stream_indices
     )
@@ -267,29 +309,29 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
             "representative anytime figure source must contain exactly the configured seeds"
         )
     rows = _rows(table)
-    xs = tuple(_required_float(row, "n_matured") for row in rows)
-    ys = tuple(_required_float(row, "risk_upper_anytime") for row in rows)
+    xs = tuple(_required_float(row, _COL_N_MATURED) for row in rows)
+    ys = tuple(_required_float(row, _COL_RISK_UPPER_ANYTIME) for row in rows)
     panel = _single_panel()
     scale = _panel_scale(panel, xs, ys)
     commands = _base_commands("Representative anytime certificates")
     commands.extend(_panel_frame(panel, "Seeds 0-3"))
     for seed in seeds:
         selected = tuple(
-            row for row in rows if _required_float(row, "stream_seed_index") == seed
+            row for row in rows if _required_float(row, _COL_STREAM_SEED_INDEX) == seed
         )
-        seed_xs = tuple(_required_float(row, "n_matured") for row in selected)
-        seed_ys = tuple(_required_float(row, "risk_upper_anytime") for row in selected)
+        seed_xs = tuple(_required_float(row, _COL_N_MATURED) for row in selected)
+        seed_ys = tuple(_required_float(row, _COL_RISK_UPPER_ANYTIME) for row in selected)
         commands.extend(_polyline(scale, seed_xs, seed_ys))
         for row in selected:
             point = Point(
-                scale.map_x(_required_float(row, "n_matured")),
-                scale.map_y(_required_float(row, "risk_upper_anytime")),
+                scale.map_x(_required_float(row, _COL_N_MATURED)),
+                scale.map_y(_required_float(row, _COL_RISK_UPPER_ANYTIME)),
             )
-            commands.append(Circle(point, radius=2.5, hollow=not row["evidence_gate_pass"]))
+            commands.append(Circle(point, radius=2.5, hollow=not row[_COL_EVIDENCE_GATE_PASS]))
     first = rows[0]
     for column, label in (
-        ("true_theta", "true theta"),
-        ("beta", "beta"),
+        (_COL_TRUE_THETA, "true theta"),
+        (_COL_BETA, "beta"),
     ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
@@ -302,13 +344,13 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
 def _anytime_coverage(table: pa.Table) -> PlotDocument:
     rows = _rows(table)
     xs = tuple(float(index) for index in range(len(rows)))
-    ys = tuple(_required_float(row, "clopper_pearson_upper_95") for row in rows)
+    ys = tuple(_required_float(row, _COL_CLOPPER_PEARSON_UPPER_95) for row in rows)
     refs = tuple(
         value
         for row in rows
         for value in (
-            _required_float(row, "delta"),
-            _required_float(row, "acceptance_upper_limit"),
+            _required_float(row, _COL_DELTA),
+            _required_float(row, _COL_ACCEPTANCE_UPPER_LIMIT),
         )
     )
     panel = _single_panel()
@@ -318,16 +360,16 @@ def _anytime_coverage(table: pa.Table) -> PlotDocument:
     for index, row in enumerate(rows):
         point = Point(
             scale.map_x(float(index)),
-            scale.map_y(_required_float(row, "clopper_pearson_upper_95")),
+            scale.map_y(_required_float(row, _COL_CLOPPER_PEARSON_UPPER_95)),
         )
-        if row["criterion_pass"]:
+        if row[_COL_CRITERION_PASS]:
             commands.append(Circle(point, radius=4.0))
         else:
             commands.append(Cross(point, radius=5.0))
     first = rows[0]
     for column, label in (
-        ("delta", "anytime delta"),
-        ("acceptance_upper_limit", "acceptance limit"),
+        (_COL_DELTA, "anytime delta"),
+        (_COL_ACCEPTANCE_UPPER_LIMIT, "acceptance limit"),
     ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
@@ -336,7 +378,7 @@ def _anytime_coverage(table: pa.Table) -> PlotDocument:
 
 
 def _rho_sensitivity(table: pa.Table) -> PlotDocument:
-    laws = _unique_strings(table, "law_name")
+    laws = _unique_strings(table, _COL_LAW_NAME)
     commands = _base_commands("Full rho sensitivity")
     for law, panel in zip(laws, _horizontal_panels(len(laws)), strict=True):
         _rho_sensitivity_law(commands, table, law, panel)
@@ -346,34 +388,38 @@ def _rho_sensitivity(table: pa.Table) -> PlotDocument:
 def _rho_sensitivity_law(
     commands: list[DrawCommand],
     table: pa.Table,
-    law: str,
+    law: FacetLabel,
     panel: Panel,
 ) -> None:
-    rows = _matching_rows(table, "law_name", law)
-    xs = tuple(_required_float(row, "rho") for row in rows)
+    rows = _matching_rows(table, _COL_LAW_NAME, law)
+    xs = tuple(_required_float(row, _COL_RHO) for row in rows)
     finite_ys = tuple(
-        value for row in rows if (value := _optional_float(row, "risk_upper")) is not None
+        value for row in rows if (value := _optional_float(row, _COL_RISK_UPPER)) is not None
     )
     scale = _panel_scale(panel, xs, finite_ys or (0.0, 1.0))
     commands.extend(_panel_frame(panel, law))
-    for partition in sorted({str(row["partition_name"]) for row in rows}):
+    for partition in sorted(
+        {FacetLabel(str(row[_COL_PARTITION_NAME])) for row in rows}
+    ):
         _rho_sensitivity_partition(commands, scale, rows, partition, panel)
 
 
 def _rho_sensitivity_partition(
     commands: list[DrawCommand],
     scale: PanelScale,
-    rows: tuple[dict[str, TabularCellValue], ...],
-    partition: str,
+    rows: tuple[TableRow, ...],
+    partition: FacetLabel,
     panel: Panel,
 ) -> None:
-    selected = tuple(row for row in rows if str(row["partition_name"]) == partition)
-    compatible = tuple(row for row in selected if _optional_float(row, "risk_upper") is not None)
+    selected = tuple(
+        row for row in rows if FacetLabel(str(row[_COL_PARTITION_NAME])) == partition
+    )
+    compatible = tuple(row for row in selected if _optional_float(row, _COL_RISK_UPPER) is not None)
     commands.extend(
         _polyline(
             scale,
-            tuple(_required_float(row, "rho") for row in compatible),
-            tuple(_required_float(row, "risk_upper") for row in compatible),
+            tuple(_required_float(row, _COL_RHO) for row in compatible),
+            tuple(_required_float(row, _COL_RISK_UPPER) for row in compatible),
         )
     )
     for row in selected:
@@ -383,34 +429,34 @@ def _rho_sensitivity_partition(
 def _rho_sensitivity_marker(
     commands: list[DrawCommand],
     scale: PanelScale,
-    row: dict[str, TabularCellValue],
+    row: TableRow,
     panel: Panel,
 ) -> None:
-    x = scale.map_x(_required_float(row, "rho"))
-    risk = _optional_float(row, "risk_upper")
+    x = scale.map_x(_required_float(row, _COL_RHO))
+    risk = _optional_float(row, _COL_RISK_UPPER)
     if risk is None:
         commands.append(Cross(Point(x, panel.bottom - 5.0), radius=4.0))
     else:
         commands.append(Circle(Point(x, scale.map_y(risk)), radius=3.0))
-    if row["rho_is_log2"]:
+    if row[_COL_RHO_IS_LOG2]:
         commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
 
 
 def _failure_boundaries(table: pa.Table) -> PlotDocument:
-    axes = _unique_strings(table, "axis")
+    axes = _unique_strings(table, _COL_AXIS)
     commands = _base_commands("Failure-boundary atlas")
     columns = active_config.get().figure_layout.failure_boundary_grid_columns
     panels = _grid_panels(len(axes), columns=columns)
     for axis, panel in zip(axes, panels, strict=True):
-        rows = _matching_rows(table, "axis", axis)
+        rows = _matching_rows(table, _COL_AXIS, axis)
         xs = tuple(float(index) for index in range(len(rows)))
-        ys = tuple(_required_float(row, "risk_upper") for row in rows)
+        ys = tuple(_required_float(row, _COL_RISK_UPPER) for row in rows)
         scale = _panel_scale(panel, xs, ys)
         commands.extend(_panel_frame(panel, axis))
         commands.extend(_polyline(scale, xs, ys))
         for index, row in enumerate(rows):
             point = Point(
-                scale.map_x(float(index)), scale.map_y(_required_float(row, "risk_upper"))
+                scale.map_x(float(index)), scale.map_y(_required_float(row, _COL_RISK_UPPER))
             )
             commands.append(Circle(point, radius=3.5))
     return PlotDocument(title="Failure-boundary atlas", commands=tuple(commands))
@@ -418,10 +464,10 @@ def _failure_boundaries(table: pa.Table) -> PlotDocument:
 
 def _computational_scaling(table: pa.Table) -> PlotDocument:
     rows = _rows(table)
-    xs = tuple(log2(_required_float(row, "K")) for row in rows)
-    population = tuple(_required_float(row, "population_median_runtime_ms") for row in rows)
-    outer = tuple(_required_float(row, "outer_median_runtime_ms") for row in rows)
-    nodes = tuple(_required_float(row, "median_outer_nodes") for row in rows)
+    xs = tuple(log2(_required_float(row, _COL_K)) for row in rows)
+    population = tuple(_required_float(row, _COL_POPULATION_MEDIAN_RUNTIME_MS) for row in rows)
+    outer = tuple(_required_float(row, _COL_OUTER_MEDIAN_RUNTIME_MS) for row in rows)
+    nodes = tuple(_required_float(row, _COL_MEDIAN_OUTER_NODES) for row in rows)
     commands = _base_commands("Computational scaling")
     left, right = _horizontal_panels(2)
     population_scale = _panel_scale(left, xs, population)
@@ -459,17 +505,17 @@ class Panel:
 @dataclass(frozen=True, slots=True)
 class PanelScale:
     panel: Panel
-    x_min: FiniteFloat
-    x_max: FiniteFloat
-    y_min: FiniteFloat
-    y_max: FiniteFloat
+    x_min: PlotValue
+    x_max: PlotValue
+    y_min: PlotValue
+    y_max: PlotValue
 
-    def map_x(self, value: FiniteFloat) -> FigureCoordinate:
+    def map_x(self, value: PlotValue) -> FigureCoordinate:
         denominator = self.x_max - self.x_min
         fraction = 0.5 if denominator == 0.0 else (value - self.x_min) / denominator
         return self.panel.left + fraction * self.panel.width
 
-    def map_y(self, value: FiniteFloat) -> FigureCoordinate:
+    def map_y(self, value: PlotValue) -> FigureCoordinate:
         denominator = self.y_max - self.y_min
         fraction = 0.5 if denominator == 0.0 else (value - self.y_min) / denominator
         return self.panel.bottom - fraction * self.panel.height
@@ -485,7 +531,7 @@ def _single_panel() -> Panel:
     )
 
 
-def _horizontal_panels(count: int) -> tuple[Panel, ...]:
+def _horizontal_panels(count: PanelCount) -> tuple[Panel, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
     layout = active_config.get().figure_layout
@@ -503,7 +549,7 @@ def _horizontal_panels(count: int) -> tuple[Panel, ...]:
     )
 
 
-def _grid_panels(count: int, columns: int) -> tuple[Panel, ...]:
+def _grid_panels(count: PanelCount, columns: GridColumnCount) -> tuple[Panel, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
     layout = active_config.get().figure_layout
@@ -527,7 +573,7 @@ def _grid_panels(count: int, columns: int) -> tuple[Panel, ...]:
 
 
 def _panel_scale(
-    panel: Panel, xs: tuple[FiniteFloat, ...], ys: tuple[FiniteFloat, ...]
+    panel: Panel, xs: tuple[PlotValue, ...], ys: tuple[PlotValue, ...]
 ) -> PanelScale:
     if not xs or not ys:
         raise InvalidScientificDataError("figure panel source cannot be empty")
@@ -536,7 +582,7 @@ def _panel_scale(
     return PanelScale(panel, x_min, x_max, y_min, y_max)
 
 
-def _expanded_bounds(lower: FiniteFloat, upper: FiniteFloat) -> tuple[FiniteFloat, FiniteFloat]:
+def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, PlotValue]:
     if not isfinite(lower) or not isfinite(upper):
         raise InvalidScientificDataError("figure coordinate must be finite")
     fraction = active_config.get().figure_layout.axis_padding_fraction
@@ -563,8 +609,8 @@ def _base_commands(title: str) -> list[DrawCommand]:
 
 def _polyline(
     scale: PanelScale,
-    xs: tuple[float, ...],
-    ys: tuple[float, ...],
+    xs: tuple[PlotValue, ...],
+    ys: tuple[PlotValue, ...],
     *,
     dashed: bool = False,
 ) -> list[DrawCommand]:
@@ -574,31 +620,33 @@ def _polyline(
     return [Line(left, right, dashed=dashed) for left, right in pairwise(points)]
 
 
-def _rows(table: pa.Table) -> tuple[dict[str, TabularCellValue], ...]:
-    return tuple(cast(dict[str, TabularCellValue], row) for row in table.to_pylist())
+def _rows(table: pa.Table) -> tuple[TableRow, ...]:
+    return tuple(cast(dict[ColumnName, TabularCellValue], row) for row in table.to_pylist())
 
 
-def _column_values(table: pa.Table, column: str) -> tuple[TabularCellValue, ...]:
+def _column_values(table: pa.Table, column: ColumnName) -> tuple[TabularCellValue, ...]:
     return tuple(cast(TabularCellValue, value) for value in table.column(column).to_pylist())
 
 
-def _unique_strings(table: pa.Table, column: str) -> tuple[str, ...]:
-    values = tuple(str(value) for value in _column_values(table, column) if value is not None)
+def _unique_strings(table: pa.Table, column: ColumnName) -> tuple[FacetLabel, ...]:
+    values = tuple(
+        FacetLabel(str(value)) for value in _column_values(table, column) if value is not None
+    )
     return tuple(dict.fromkeys(values))
 
 
-def _unique_numbers(table: pa.Table, column: str) -> tuple[float, ...]:
+def _unique_numbers(table: pa.Table, column: ColumnName) -> tuple[PlotValue, ...]:
     values = tuple(float(value) for value in _column_values(table, column) if value is not None)
     return tuple(dict.fromkeys(values))
 
 
 def _matching_rows(
-    table: pa.Table, column: str, value: str
-) -> tuple[dict[str, TabularCellValue], ...]:
+    table: pa.Table, column: ColumnName, value: FacetLabel
+) -> tuple[TableRow, ...]:
     return tuple(row for row in _rows(table) if str(row[column]) == value)
 
 
-def _required_float(row: Mapping[str, TabularCellValue], column: str) -> float:
+def _required_float(row: TableRow, column: ColumnName) -> PlotValue:
     value = row[column]
     if not isinstance(value, int | float):
         raise InvalidScientificDataError(f"figure requires non-null numeric {column}")
@@ -608,7 +656,7 @@ def _required_float(row: Mapping[str, TabularCellValue], column: str) -> float:
     return numeric
 
 
-def _optional_float(row: Mapping[str, TabularCellValue], column: str) -> float | None:
+def _optional_float(row: TableRow, column: ColumnName) -> PlotValue | None:
     value = row[column]
     if value is None:
         return None

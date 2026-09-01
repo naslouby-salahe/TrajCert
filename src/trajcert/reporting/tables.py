@@ -16,13 +16,13 @@ from trajcert.schemas import (
     RenderedPublicationArtifact,
 )
 from trajcert.storage import atomic_write_bytes
-from trajcert.types import TabularCellValue
+from trajcert.types import ColumnName, TabularCellValue
 
 _P_VALUE_COLUMNS = frozenset(
     {
-        "raw_p_value",
-        "holm_adjusted_p_value",
-        "holm_adjusted_p",
+        ColumnName("raw_p_value"),
+        ColumnName("holm_adjusted_p_value"),
+        ColumnName("holm_adjusted_p"),
     }
 )
 
@@ -72,13 +72,14 @@ def _csv_payload(table: pa.Table) -> bytes:
     for row in table.to_pylist():
         typed_row: dict[str, TabularCellValue] = row
         writer.writerow(
-            _format_csv_value(column, typed_row[column]) for column in table.column_names
+            _format_csv_value(ColumnName(column), typed_row[column])
+            for column in table.column_names
         )
     return stream.getvalue().encode("utf-8")
 
 
 def _tex_payload(table: pa.Table) -> bytes:
-    columns = tuple(table.column_names)
+    columns = tuple(ColumnName(column) for column in table.column_names)
     alignment = "l" * len(columns)
     lines = [f"\\begin{{tabular}}{{{alignment}}}", "\\toprule"]
     lines.append(" & ".join(_escape_tex(column) for column in columns) + r" \\")
@@ -91,19 +92,19 @@ def _tex_payload(table: pa.Table) -> bytes:
     return "\n".join(lines).encode("utf-8")
 
 
-def _format_csv_value(column: str, value: TabularCellValue) -> str:
+def _format_csv_value(column: ColumnName, value: TabularCellValue) -> str:
     if value is None:
         return ""
     return _format_scalar(column, value)
 
 
-def _format_tex_value(column: str, value: TabularCellValue) -> str:
+def _format_tex_value(column: ColumnName, value: TabularCellValue) -> str:
     if value is None:
         return r"\text{null}"
     return _escape_tex(_format_scalar(column, value))
 
 
-def _format_scalar(column: str, value: TabularCellValue) -> str:
+def _format_scalar(column: ColumnName, value: TabularCellValue) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, float):

@@ -19,20 +19,24 @@ from trajcert.types import (
     AcceptanceUpperLimit,
     AnytimeConfidenceDelta,
     ArbitraryPrecisionBits,
+    AxisPaddingFraction,
     BandCount,
     CaseIndex,
     CategoryIndex,
     CertifiedFractionGain,
     CoefficientValue,
     ConfidenceLevel,
+    ConfigFieldPath,
     Count,
     CoverageStressCaseName,
     DomainModel,
     EventCount,
     EventIndexWidth,
+    FigureMargin,
     FixedNotationExponent,
     GammaSensitivity,
     GitSha1HexLength,
+    GridColumnCount,
     GridPointCount,
     HazardProbability,
     InformationNats,
@@ -41,13 +45,12 @@ from trajcert.types import (
     LawKey,
     Mass,
     NanosecondsPerMillisecond,
-    OpenUnitFloat,
     OracleDigits,
+    OrderedConfigValue,
     OuterMaxNodes,
     PairCount,
+    PanelGap,
     PixelCount,
-    PositiveFloat,
-    PositiveInt,
     Probability,
     RandomizationCount,
     RefinementCandidateCount,
@@ -161,10 +164,16 @@ class LegacyPartitionIncoherenceConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_grid(self) -> LegacyPartitionIncoherenceConfig:
-        _require_unique(self.gamma, "study_design.legacy_partition_incoherence.gamma")
-        _require_unique(self.q, "study_design.legacy_partition_incoherence.q")
-        _require_strictly_increasing(self.gamma, "study_design.legacy_partition_incoherence.gamma")
-        _require_strictly_increasing(self.q, "study_design.legacy_partition_incoherence.q")
+        _require_unique(
+            self.gamma, ConfigFieldPath("study_design.legacy_partition_incoherence.gamma")
+        )
+        _require_unique(self.q, ConfigFieldPath("study_design.legacy_partition_incoherence.q"))
+        _require_strictly_increasing(
+            self.gamma, ConfigFieldPath("study_design.legacy_partition_incoherence.gamma")
+        )
+        _require_strictly_increasing(
+            self.q, ConfigFieldPath("study_design.legacy_partition_incoherence.q")
+        )
         if sum(self.latent_outcome_probabilities) != 1.0:
             raise ValueError("legacy latent outcome probabilities must sum exactly to one")
         if any(value <= 0.0 for value in self.latent_outcome_probabilities):
@@ -219,20 +228,21 @@ class StudyDesignConfig(ConfigModel):
             ("sharpness_oracle_laws", self.sharpness_oracle_laws),
             ("safety_and_impossibility_laws", self.safety_and_impossibility_laws),
         ):
-            _require_unique(values, f"study_design.{field_name}")
+            _require_unique(values, ConfigFieldPath(f"study_design.{field_name}"))
         _require_unique(
             tuple(case.name for case in self.coverage_stress_cases),
-            "study_design.coverage_stress_cases.name",
+            ConfigFieldPath("study_design.coverage_stress_cases.name"),
         )
         for field_name, offsets in (
             ("sharp_set_offsets", self.sharp_set_offsets),
             ("oracle_offsets", self.oracle_offsets),
             ("timing_offsets", self.timing_offsets),
         ):
-            _require_unique(offsets, f"study_design.{field_name}")
-            _require_strictly_increasing(offsets, f"study_design.{field_name}")
+            _require_unique(offsets, ConfigFieldPath(f"study_design.{field_name}"))
+            _require_strictly_increasing(offsets, ConfigFieldPath(f"study_design.{field_name}"))
         _require_unique(
-            self.representative_stream_indices, "study_design.representative_stream_indices"
+            self.representative_stream_indices,
+            ConfigFieldPath("study_design.representative_stream_indices"),
         )
         return self
 
@@ -246,16 +256,18 @@ class GridsConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_grids(self) -> GridsConfig:
-        _require_unique(self.partitions, "grids.partitions")
-        _require_unique(self.scaling_bands, "grids.scaling_bands")
-        _require_unique(self.rho, "grids.rho")
-        _require_unique(self.same_endpoint_rho, "grids.same_endpoint_rho")
-        _require_unique(self.beta, "grids.beta")
-        _require_strictly_decreasing(self.partitions, "grids.partitions")
-        _require_strictly_increasing(self.scaling_bands, "grids.scaling_bands")
-        _require_strictly_increasing(self.rho, "grids.rho")
-        _require_strictly_increasing(self.same_endpoint_rho, "grids.same_endpoint_rho")
-        _require_strictly_increasing(self.beta, "grids.beta")
+        _require_unique(self.partitions, ConfigFieldPath("grids.partitions"))
+        _require_unique(self.scaling_bands, ConfigFieldPath("grids.scaling_bands"))
+        _require_unique(self.rho, ConfigFieldPath("grids.rho"))
+        _require_unique(self.same_endpoint_rho, ConfigFieldPath("grids.same_endpoint_rho"))
+        _require_unique(self.beta, ConfigFieldPath("grids.beta"))
+        _require_strictly_decreasing(self.partitions, ConfigFieldPath("grids.partitions"))
+        _require_strictly_increasing(self.scaling_bands, ConfigFieldPath("grids.scaling_bands"))
+        _require_strictly_increasing(self.rho, ConfigFieldPath("grids.rho"))
+        _require_strictly_increasing(
+            self.same_endpoint_rho, ConfigFieldPath("grids.same_endpoint_rho")
+        )
+        _require_strictly_increasing(self.beta, ConfigFieldPath("grids.beta"))
         if self.partitions[-1] != 1:
             raise ValueError("grids.partitions must end with the endpoint-only partition")
         if self.rho[-1] > BINARY_MAX_INFORMATION_NATS:
@@ -332,8 +344,8 @@ class ComparatorsConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_grids(self) -> ComparatorsConfig:
-        _require_unique(self.legacy_gamma, "comparators.legacy_gamma")
-        _require_strictly_increasing(self.legacy_gamma, "comparators.legacy_gamma")
+        _require_unique(self.legacy_gamma, ConfigFieldPath("comparators.legacy_gamma"))
+        _require_strictly_increasing(self.legacy_gamma, ConfigFieldPath("comparators.legacy_gamma"))
         return self
 
 
@@ -358,8 +370,8 @@ class SequentialUtilityConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_rho(self) -> SequentialUtilityConfig:
-        _require_unique(self.rho, "sequential.utility.rho")
-        _require_strictly_increasing(self.rho, "sequential.utility.rho")
+        _require_unique(self.rho, ConfigFieldPath("sequential.utility.rho"))
+        _require_strictly_increasing(self.rho, ConfigFieldPath("sequential.utility.rho"))
         if self.rho[-1] > BINARY_MAX_INFORMATION_NATS:
             raise ValueError("sequential.utility.rho cannot exceed log(2)")
         return self
@@ -464,15 +476,29 @@ class FailureBoundaryConfig(ConfigModel):
         for name, values in axes:
             if len(values) != level_count:
                 raise ValueError(f"failure_boundary.{name} must contain {level_count} levels")
-            _require_unique(values, f"failure_boundary.{name}")
-        _require_strictly_increasing(self.unresolvedness, "failure_boundary.unresolvedness")
-        _require_strictly_increasing(self.timing_contrast, "failure_boundary.timing_contrast")
-        _require_strictly_increasing(self.prevalence, "failure_boundary.prevalence")
-        _require_strictly_increasing(self.bands, "failure_boundary.bands")
-        _require_strictly_increasing(self.information_margin, "failure_boundary.information_margin")
-        _require_strictly_increasing(self.risk_offset, "failure_boundary.risk_offset")
-        _require_strictly_increasing(self.sample_size, "failure_boundary.sample_size")
-        _require_strictly_increasing(self.optimizer_nodes, "failure_boundary.optimizer_nodes")
+            _require_unique(values, ConfigFieldPath(f"failure_boundary.{name}"))
+        _require_strictly_increasing(
+            self.unresolvedness, ConfigFieldPath("failure_boundary.unresolvedness")
+        )
+        _require_strictly_increasing(
+            self.timing_contrast, ConfigFieldPath("failure_boundary.timing_contrast")
+        )
+        _require_strictly_increasing(
+            self.prevalence, ConfigFieldPath("failure_boundary.prevalence")
+        )
+        _require_strictly_increasing(self.bands, ConfigFieldPath("failure_boundary.bands"))
+        _require_strictly_increasing(
+            self.information_margin, ConfigFieldPath("failure_boundary.information_margin")
+        )
+        _require_strictly_increasing(
+            self.risk_offset, ConfigFieldPath("failure_boundary.risk_offset")
+        )
+        _require_strictly_increasing(
+            self.sample_size, ConfigFieldPath("failure_boundary.sample_size")
+        )
+        _require_strictly_increasing(
+            self.optimizer_nodes, ConfigFieldPath("failure_boundary.optimizer_nodes")
+        )
         return self
 
 
@@ -620,15 +646,15 @@ class HandCasesConfig(ConfigModel):
 class FigureLayoutConfig(ConfigModel):
     width: PixelCount
     height: PixelCount
-    margin_left: PositiveFloat
-    margin_right: PositiveFloat
-    margin_top: PositiveFloat
-    margin_bottom: PositiveFloat
-    horizontal_panel_gap: PositiveFloat
-    grid_panel_gap_x: PositiveFloat
-    grid_panel_gap_y: PositiveFloat
-    failure_boundary_grid_columns: PositiveInt
-    axis_padding_fraction: OpenUnitFloat
+    margin_left: FigureMargin
+    margin_right: FigureMargin
+    margin_top: FigureMargin
+    margin_bottom: FigureMargin
+    horizontal_panel_gap: PanelGap
+    grid_panel_gap_x: PanelGap
+    grid_panel_gap_y: PanelGap
+    failure_boundary_grid_columns: GridColumnCount
+    axis_padding_fraction: AxisPaddingFraction
 
     @model_validator(mode="after")
     def validate_margins(self) -> FigureLayoutConfig:
@@ -780,17 +806,21 @@ def _validate_nested_partitions(partitions: tuple[BandCount, ...]) -> None:
             )
 
 
-def _require_unique(values: tuple[Hashable, ...], label: str) -> None:
+def _require_unique(values: tuple[Hashable, ...], label: ConfigFieldPath) -> None:
     if len(values) != len(set(values)):
         raise ValueError(f"{label} must not contain duplicates")
 
 
-def _require_strictly_increasing(values: tuple[float | int, ...], label: str) -> None:
+def _require_strictly_increasing(
+    values: tuple[OrderedConfigValue, ...], label: ConfigFieldPath
+) -> None:
     if any(left >= right for left, right in pairwise(values)):
         raise ValueError(f"{label} must be strictly increasing")
 
 
-def _require_strictly_decreasing(values: tuple[float | int, ...], label: str) -> None:
+def _require_strictly_decreasing(
+    values: tuple[OrderedConfigValue, ...], label: ConfigFieldPath
+) -> None:
     if any(left <= right for left, right in pairwise(values)):
         raise ValueError(f"{label} must be strictly decreasing")
 

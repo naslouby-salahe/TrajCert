@@ -31,6 +31,7 @@ from trajcert.paths import (
     PROJECT_SUMMARY_ROOT,
     RESULTS_EXPERIMENTS_ROOT,
     RESULTS_ROOT,
+    CoordinateToken,
     semantic_slug,
 )
 from trajcert.provenance import CodeCommit, EnvironmentDigest, ExperimentNameValue
@@ -62,7 +63,7 @@ from trajcert.types import Count, DependencyAuthority
 
 LOCK_PATH = Path("uv.lock")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
-_SYNTHESIS_OWNER = "statistical-synthesis"
+_SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
 _ALLOWED_EXPERIMENT_CHILDREN = frozenset({"figures", "tables", "metrics", "statistics"})
 _ALLOWED_PROJECT_CHILDREN = frozenset(
     {"figures", "tables", "metrics", "statistics", "reproducibility"}

@@ -12,9 +12,9 @@ from trajcert.exceptions import SerializationError
 from trajcert.types import (
     DecimalCoefficient,
     DecimalDigits,
-    FiniteFloat,
     FixedNotationExponent,
     NumericSign,
+    PathCoordinateValue,
 )
 
 _WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
@@ -96,7 +96,7 @@ def semantic_slug(value: str) -> CoordinateToken:
     return CoordinateToken(rendered)
 
 
-def canonical_number_token(value: FiniteFloat) -> CoordinateToken:
+def canonical_number_token(value: PathCoordinateValue) -> CoordinateToken:
     if isnan(value) or value in (float("inf"), float("-inf")):
         raise SerializationError("semantic numeric path coordinate must be finite")
     if value == 0.0:
@@ -111,7 +111,7 @@ def canonical_number_token(value: FiniteFloat) -> CoordinateToken:
 
 
 def _parsed_coefficient(
-    value: FiniteFloat,
+    value: PathCoordinateValue,
 ) -> tuple[NumericSign, DecimalCoefficient, FixedNotationExponent]:
     representation = repr(value)
     if representation.startswith("-"):

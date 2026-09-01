@@ -15,20 +15,20 @@ from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelop
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.entropy import binary_entropy_from_masses
 from trajcert.types import (
+    ArbEndpointValue,
     ArbitraryPrecisionBits,
     ConvergenceGap,
     DomainModel,
     HeapSequenceNumber,
     InformationNats,
     Mass,
-    NonNegativeFloat,
     OuterMaxNodes,
+    ProvenSearchBound,
     RiskValue,
     SearchPredicate,
     SensitivityBudget,
     SurvivingBoxCount,
     ToleranceValue,
-    UnitFloat,
     VisitedNodeCount,
 )
 
@@ -87,7 +87,7 @@ class _ProjectionSearch:
 
 @dataclass(frozen=True, slots=True)
 class _MinimumSearch:
-    proven_lower: NonNegativeFloat
+    proven_lower: ProvenSearchBound
     zero_resolved_mass_plausible: SearchPredicate
 
 
@@ -1007,7 +1007,7 @@ def _split_box(box: _Box, initial: _Box) -> tuple[_Box, _Box]:
     )
 
 
-def _box_resolution(box: _Box, initial: _Box) -> NonNegativeFloat:
+def _box_resolution(box: _Box, initial: _Box) -> ConvergenceGap:
     scales = tuple(max(width, nextafter(0.0, inf)) for width in initial.widths)
     return max(width / scale for width, scale in zip(box.widths, scales, strict=True))
 
@@ -1045,7 +1045,7 @@ def _assumption_free_envelope_upper(envelope: ObservableSummaryEnvelope) -> Risk
     )
 
 
-def _arb_exact(value: float) -> arb:
+def _arb_exact(value: ArbEndpointValue) -> arb:
     numerator, denominator = value.as_integer_ratio()
     return arb(f"{numerator}/{denominator}")
 
@@ -1056,17 +1056,17 @@ def _arb_interval(lower: Mass, upper: Mass) -> arb:
     return _arb_exact(lower).union(_arb_exact(upper))
 
 
-def _arb_lower(value: arb) -> float:
+def _arb_lower(value: arb) -> ArbEndpointValue:
     mantissa, exponent = value.lower().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, -inf)
 
 
-def _arb_upper(value: arb) -> float:
+def _arb_upper(value: arb) -> ArbEndpointValue:
     mantissa, exponent = value.upper().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, inf)
 
 
-def _unit(value: NonNegativeFloat) -> UnitFloat:
+def _unit(value: ProvenSearchBound) -> Mass:
     return min(1.0, max(0.0, value))

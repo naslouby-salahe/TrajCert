@@ -21,7 +21,7 @@ from trajcert.types import (
     DomainModel,
     EventCount,
     FailureBoundaryLevel,
-    FiniteFloat,
+    FailureBoundaryProbe,
     InformationNats,
     LawKey,
     Mass,
@@ -68,7 +68,7 @@ class FailureBoundaryResult(DomainModel):
 
 def evaluate_failure_boundary(
     axis: FailureBoundaryAxis,
-    level: FiniteFloat,
+    level: FailureBoundaryProbe,
 ) -> FailureBoundaryResult:
     config = active_config.get()
     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
@@ -238,7 +238,7 @@ def _finite_sample_size(sample_size: EventCount) -> FailureBoundaryResult:
 
 def _population_coordinate(
     axis: FailureBoundaryAxis,
-    level: FiniteFloat,
+    level: FailureBoundaryProbe,
 ) -> tuple[LawParameters, TrajectoryPartition, SensitivityBudget, RiskBudget]:
     config = active_config.get()
     parameters = _base_parameters()

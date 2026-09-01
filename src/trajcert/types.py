@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import IntEnum, StrEnum
 from typing import Annotated, ClassVar, NewType
 
@@ -11,6 +12,8 @@ from pydantic_core import core_schema
 ActionChannelId = NewType("ActionChannelId", str)
 ClientId = NewType("ClientId", str)
 ColumnName = NewType("ColumnName", str)
+ConfigFieldPath = NewType("ConfigFieldPath", str)
+FacetLabel = NewType("FacetLabel", str)
 DecimalCoefficient = NewType("DecimalCoefficient", str)
 DecimalDigits = NewType("DecimalDigits", str)
 DependencyAuthority = NewType("DependencyAuthority", str)
@@ -45,6 +48,7 @@ SeedIndex = NonNegativeInt
 SeedValue = NonNegativeInt
 EntropyValue = NonNegativeFloat
 InformationCurvature = FiniteFloat
+InformationDerivative = Annotated[StrictFloat, Field()]
 InformationNats = NonNegativeFloat
 InformationResidual = FiniteFloat
 Mass = UnitFloat
@@ -61,8 +65,10 @@ AbsoluteTightening = FiniteFloat
 AcceptanceUpperLimit = UnitFloat
 AgeUnit = NonNegativeFloat
 AnytimeConfidenceDelta = OpenUnitFloat
+ArbEndpointValue = FiniteFloat
 ArbitraryPrecisionBits = NonNegativeInt
 CertifiedFractionGain = NonNegativeFloat
+CertifiedUpdateFractionGain = FiniteFloat
 CoefficientValue = FiniteFloat
 ConfidenceLevel = OpenUnitFloat
 ConvergenceGap = NonNegativeFloat
@@ -70,6 +76,7 @@ CriticalZScore = FiniteFloat
 EventCount = PositiveInt
 EventIndex = NonNegativeInt
 EventIndexWidth = PositiveInt
+FailureBoundaryProbe = FiniteFloat | PositiveInt
 FamilySize = PositiveInt
 FavorableCount = NonNegativeInt
 FigureCoordinate = FiniteFloat
@@ -92,13 +99,22 @@ NanosecondsPerMillisecond = PositiveFloat
 ObjectiveValue = FiniteFloat
 ObservedStatistic = FiniteFloat
 OracleDigits = PositiveInt
+OrderedConfigValue = FiniteFloat | PositiveInt
 Ordinal = PositiveInt
 OuterMaxNodes = NonNegativeInt
 PairCount = PositiveInt
 PairedDifferenceDispersion = FiniteFloat
 PairedDifferenceValue = FiniteFloat
+PathCoordinateValue = FiniteFloat
+PlotValue = FiniteFloat
 PixelCount = PositiveInt
 PixelIntensity = Annotated[StrictInt, Field(ge=0, le=255)]
+FigureMargin = PositiveFloat
+PanelCount = PositiveInt
+PanelGap = PositiveFloat
+AxisPaddingFraction = OpenUnitFloat
+GridColumnCount = PositiveInt
+ProvenSearchBound = FiniteFloat
 RandomizationCount = PositiveInt
 RasterCoordinate = Annotated[StrictInt, Field()]
 RefinementCandidateCount = PositiveInt
@@ -107,6 +123,7 @@ RelativeUnresolvedGain = FiniteFloat
 RepetitionCount = PositiveInt
 ResampleCount = PositiveInt
 RhoValueCount = PositiveInt
+RiskBoundGain = FiniteFloat
 RiskOffset = FiniteFloat
 RuntimeMilliseconds = NonNegativeFloat
 RuntimeNanoseconds = NonNegativeInt
@@ -125,6 +142,7 @@ CoverageStressCaseName = NewType("CoverageStressCaseName", str)
 LogMixtureRatio = FiniteFloat
 Threshold = FiniteFloat
 type TabularCellValue = None | bool | int | float | str
+TableRow = Mapping[ColumnName, TabularCellValue]
 
 
 class NDArrayFloat64Annotation:

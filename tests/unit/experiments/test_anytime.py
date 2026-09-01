@@ -20,7 +20,7 @@ from trajcert.data.partitions import TrajectoryPartition, build_partition
 from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments import anytime
-from trajcert.types import LawKey, ScientificState
+from trajcert.types import CoverageStressCaseName, LawKey, ScientificState
 
 _PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 _ASSUMPTION_VIOLATED_LAW = LawKey.TIMING_HARMFUL_LATE
@@ -308,7 +308,7 @@ def test_run_coverage_stress_marks_ignorable_delay_inapplicable_for_violated_ass
 def test_evaluate_configured_coverage_stress_true_information_reference() -> None:
     config = _coverage_config()
     case = CoverageStressCaseConfig(
-        name="independent-resolution-control",
+        name=CoverageStressCaseName("independent-resolution-control"),
         law=LawKey.NO_PATH_DEPENDENCE,
         band_count=_HAND_CASE_BANDS,
         rho_offset=_RHO_OFFSET,
@@ -329,7 +329,7 @@ def test_evaluate_configured_coverage_stress_true_information_reference() -> Non
 def test_evaluate_configured_coverage_stress_compatibility_floor_reference() -> None:
     config = _coverage_config()
     case = CoverageStressCaseConfig(
-        name="minimum-information-completion",
+        name=CoverageStressCaseName("minimum-information-completion"),
         law=_PRINCIPAL_LAW,
         band_count=_HAND_CASE_BANDS,
         rho_offset=_FLOOR_RHO_OFFSET,
@@ -350,7 +350,7 @@ def test_evaluate_configured_coverage_stress_compatibility_floor_reference() -> 
 def test_evaluate_configured_coverage_stress_applies_near_certification_beta_offset() -> None:
     config = _coverage_config()
     case = CoverageStressCaseConfig(
-        name="near-certification",
+        name=CoverageStressCaseName("near-certification"),
         law=_PRINCIPAL_LAW,
         band_count=_HAND_CASE_BANDS,
         rho_offset=_RHO_OFFSET,
@@ -364,7 +364,7 @@ def test_evaluate_configured_coverage_stress_applies_near_certification_beta_off
 def test_evaluate_configured_coverage_stress_rejects_excessive_sensitivity_budget() -> None:
     config = _coverage_config()
     case = CoverageStressCaseConfig(
-        name="excessive-budget",
+        name=CoverageStressCaseName("excessive-budget"),
         law=LawKey.NO_PATH_DEPENDENCE,
         band_count=_HAND_CASE_BANDS,
         rho_offset=_EXCESSIVE_RHO_OFFSET,

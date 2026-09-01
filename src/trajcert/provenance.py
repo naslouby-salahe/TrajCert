@@ -103,7 +103,7 @@ class SemanticCellIdentity(DomainModel):
             ("gamma", coordinates.gamma),
         ):
             if value is not None:
-                values.append((CoordinateName(name), canonical_number_token(float(value))))
+                values.append((CoordinateName(name), canonical_number_token(value)))
         if coordinates.pattern_mixture_c is not None:
             values.append(
                 (

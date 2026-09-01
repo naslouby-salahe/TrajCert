@@ -449,11 +449,11 @@ def test_static_dependency_audit_rejects_foreign_client() -> None:
 
 def test_runtime_lineage_audit_passes_clean_lineage() -> None:
     identity = _target_identity()
-    passed, violations = runner.runtime_lineage_audit(
+    audit = runner.runtime_lineage_audit(
         identity, ArtifactKey("root"), (_clean_lineage_artifact("root"),)
     )
-    assert passed is True
-    assert violations == ()
+    assert audit.passed is True
+    assert audit.violating_artifact_keys == ()
 
 
 def test_runtime_lineage_audit_flags_foreign_client_statistics() -> None:
@@ -462,9 +462,9 @@ def test_runtime_lineage_audit_flags_foreign_client_statistics() -> None:
         artifact_key=ArtifactKey("root"),
         foreign_client_statistics=True,
     )
-    passed, violations = runner.runtime_lineage_audit(identity, ArtifactKey("root"), (artifact,))
-    assert passed is False
-    assert violations == (ArtifactKey("root"),)
+    audit = runner.runtime_lineage_audit(identity, ArtifactKey("root"), (artifact,))
+    assert audit.passed is False
+    assert audit.violating_artifact_keys == (ArtifactKey("root"),)
 
 
 def test_runtime_lineage_audit_flags_missing_parent() -> None:
@@ -473,9 +473,9 @@ def test_runtime_lineage_audit_flags_missing_parent() -> None:
         artifact_key=ArtifactKey("root"),
         parent_artifact_keys=(ArtifactKey("missing"),),
     )
-    passed, violations = runner.runtime_lineage_audit(identity, ArtifactKey("root"), (artifact,))
-    assert passed is False
-    assert violations == (ArtifactKey("missing"),)
+    audit = runner.runtime_lineage_audit(identity, ArtifactKey("root"), (artifact,))
+    assert audit.passed is False
+    assert audit.violating_artifact_keys == (ArtifactKey("missing"),)
 
 
 def test_runtime_lineage_audit_rejects_duplicate_keys() -> None:

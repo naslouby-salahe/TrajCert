@@ -34,7 +34,7 @@ from trajcert.data.synthetic import (
     hamilton_apportionment,
     observable_category_probabilities,
 )
-from trajcert.exceptions import InvalidScientificDataError
+from trajcert.exceptions import InvalidScientificDataError, InvariantViolationError
 from trajcert.inference.categorical import (
     CategoricalState,
     append_matured_event,
@@ -483,6 +483,8 @@ def evaluate_configured_coverage_stress(
         for result in base.methods
     )
     primary = next(item for item in methods if item.method_name == SequentialMethod.TRAJCERT)
+    if primary.criterion_pass is None:
+        raise InvariantViolationError("primary TRAJCERT coverage criterion must be evaluated")
     return CoverageEvidenceResult(
         band_count=partition.band_count,
         true_theta=parameters.theta,
@@ -493,7 +495,7 @@ def evaluate_configured_coverage_stress(
         acceptance_upper_limit=config.sequential.coverage.acceptance_upper_limit,
         methods=methods,
         representative_paths=trajectory_evidence.representative_paths,
-        primary_passed=bool(primary.criterion_pass),
+        primary_passed=primary.criterion_pass,
     )
 
 

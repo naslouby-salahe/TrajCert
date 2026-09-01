@@ -19,6 +19,7 @@ RULE_COMPATIBILITY = "TC-COMPAT-001"
 RULE_ROADMAP = "TC-ROADMAP-001"
 RULE_CLAIM = "TC-CLAIM-001"
 RULE_SUPPRESSION = "TC-SUPPRESS-001"
+RULE_REDUNDANT_CONVERSION = "TC-PRIMITIVE-004"
 
 PRIMITIVE_NAMES = frozenset({"str", "int", "float", "bool", "dict", "list", "set", "tuple"})
 DOMAIN_PARAMETER_NAMES = frozenset(
@@ -56,6 +57,7 @@ SUPPRESSIONS = frozenset(
 )
 
 _UNTYPED_BOUNDARY_PATTERN = re.compile(r"\b(?:Any|object)\b")
+_LEAKED_PRIMITIVE_PATTERN = re.compile(r"\b(?:float|int|str)\b")
 _BUILDING_BLOCK_NAMES = frozenset({"StrictFloat", "StrictInt"})
 _ACTIVE_CONFIG_SET_PATTERN = re.compile(r"active_config\.set\(")
 _CONSTANT_NAME_PATTERN = re.compile(r"^_{0,2}[A-Z][A-Z0-9_]*$")
@@ -63,6 +65,60 @@ _CONFIG_ANNOTATION_PATTERN = re.compile(r"Config\b")
 _CONFIG_MODULE_NAME = "config.py"
 _CONSTANT_NAME_EXEMPTIONS = frozenset(
     {"ENDPOINT_BAND_COUNT", "_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT"}
+)
+_PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
+    {
+        # JSON/YAML serialization boundaries: the external format contract is
+        # str-keyed and str-rendered by definition (matches pydantic JsonValue).
+        "_canonical_json",
+        "_canonical_json_number",
+        "_canonical_json_object",
+        "_canonical_json_array",
+        "_merge_size_fields",
+        # Free-text error/label messages: not domain identifiers.
+        "validated_finite_vector",
+        "_positive_tolerance",
+        "_require_exact_family",
+        # Generic text-processing infrastructure operating on arbitrary strings.
+        "semantic_slug",
+        "_format_number_token",
+        # Python source/module introspection: ast/import machinery, not domain data.
+        "_first_party_imports",
+        "_first_party_import_from",
+        "_first_party_import",
+        "_is_first_party_module",
+        "_non_scientific_module",
+        "_module_path",
+        # Third-party (pyarrow) Protocol call signatures must match verbatim.
+        "__call__",
+        # Literal-registry boundary constructors: convert static registry text
+        # into validated domain types immediately inside the function body.
+        "_aggregate",
+        "_source",
+        # Presentation-only free text (chart titles/labels), not domain data.
+        "_build_document",
+        "_panel_frame",
+        "_base_commands",
+        "_svg_command",
+        "Text.value",
+        "PlotDocument.title",
+        # CLI argument boundary: raw argparse text prior to validation.
+        "parse_args",
+        "_experiment_name",
+        "_dataset_name",
+        "preprocess",
+        "run_experiment",
+        "experiment_status",
+        "report",
+        "_known_experiment_name",
+        "CliArguments.experiment_name",
+        "CliArguments.dataset_name",
+        # CSV/TeX cell formatting: literal output-format text, not domain data.
+        "_format_csv_value",
+        "_format_tex_value",
+        "_format_scalar",
+        "_escape_tex",
+    }
 )
 
 
@@ -101,12 +157,23 @@ class _AuditVisitor(cst.CSTVisitor):
     def visit_AnnAssign(self, node: cst.AnnAssign) -> None:
         if isinstance(node.target, cst.Name):
             self._check_annotation(node.target.value, node.annotation.annotation, node)
+            enclosing_class = self._enclosing_class_name(node)
+            if enclosing_class is not None:
+                self._check_primitive_leak(
+                    node.annotation.annotation,
+                    node,
+                    f"{enclosing_class}.{node.target.value}",
+                )
             if node.value is not None:
                 self._check_hardcoded_constant(node, node.target.value, node.value)
 
     def visit_Param(self, node: cst.Param) -> None:
         if node.annotation is not None:
             self._check_annotation(node.name.value, node.annotation.annotation, node)
+            if node.name.value not in {"self", "cls"}:
+                self._check_primitive_leak(
+                    node.annotation.annotation, node, self._enclosing_function_name(node)
+                )
 
     def visit_FunctionDef(self, node: cst.FunctionDef) -> None:
         name = node.name.value.casefold()
@@ -122,7 +189,43 @@ class _AuditVisitor(cst.CSTVisitor):
                 self._add(
                     RULE_UNTYPED, node, f"untyped boundary {return_text!r} is forbidden"
                 )
+            self._check_primitive_leak(node.returns.annotation, node, node.name.value)
         self._check_config_param(node)
+
+    def _check_primitive_leak(
+        self, annotation: cst.BaseExpression, node: cst.CSTNode, exemption_key: str | None
+    ) -> None:
+        if self.path.name == "types.py":
+            return
+        if exemption_key in _PRIMITIVE_BOUNDARY_EXEMPTIONS:
+            return
+        annotation_text = _expression_text(annotation)
+        if _LEAKED_PRIMITIVE_PATTERN.search(annotation_text):
+            self._add(
+                RULE_PRIMITIVE,
+                node,
+                f"raw primitive {annotation_text!r} requires a domain type",
+            )
+
+    def _enclosing_function_name(self, node: cst.CSTNode) -> str | None:
+        current: cst.CSTNode = node
+        while not isinstance(current, cst.Module):
+            parent = self.get_metadata(ParentNodeProvider, current)
+            if isinstance(parent, cst.FunctionDef):
+                return parent.name.value
+            current = parent
+        return None
+
+    def _enclosing_class_name(self, node: cst.CSTNode) -> str | None:
+        current: cst.CSTNode = node
+        while not isinstance(current, cst.Module):
+            parent = self.get_metadata(ParentNodeProvider, current)
+            if isinstance(parent, cst.FunctionDef):
+                return None
+            if isinstance(parent, cst.ClassDef):
+                return parent.name.value
+            current = parent
+        return None
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
         if self.path.name == "types.py":
@@ -194,6 +297,18 @@ class _AuditVisitor(cst.CSTVisitor):
             and _expression_text(node.args[0].value) == "Any"
         ):
             self._add(RULE_UNTYPED, node, "cast(Any, ...) is forbidden")
+        if (
+            isinstance(node.func, cst.Name)
+            and node.func.value == "str"
+            and len(node.args) == 1
+            and isinstance(node.args[0].value, cst.Attribute)
+            and node.args[0].value.attr.value == "value"
+        ):
+            self._add(
+                RULE_REDUNDANT_CONVERSION,
+                node,
+                "str(enum.value) is redundant; pass the enum/domain type directly",
+            )
 
     def _check_annotation(
         self, name: str, annotation: cst.BaseExpression, node: cst.CSTNode

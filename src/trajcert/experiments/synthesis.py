@@ -89,6 +89,7 @@ from trajcert.storage import (
 )
 from trajcert.types import (
     AbsoluteError,
+    BandCount,
     DomainModel,
     FamilySize,
     InequalityMargin,
@@ -503,7 +504,7 @@ def sequential_rho_utility_rows(
             rho=result.sensitivity_budget,
             partition_name=fine_partition,
             baseline_partition_name=endpoint_partition,
-            metric_name=RhoUtilityMetricName(result.metric_name.value),
+            metric_name=RhoUtilityMetricName(result.metric_name),
             method_mean=result.method_mean,
             baseline_mean=result.baseline_mean,
             mean_paired_difference=result.effect.mean_paired_difference,
@@ -965,8 +966,8 @@ def _required_partition(cell: PlannedCell) -> PartitionName:
 
 def _band_count(
     name: PartitionName,
-    configured: dict[PartitionName, int],
-) -> int:
+    configured: dict[PartitionName, BandCount],
+) -> BandCount:
     try:
         return configured[name]
     except KeyError as exc:

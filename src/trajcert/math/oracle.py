@@ -13,12 +13,13 @@ from trajcert.data.partitions import TrajectoryPartition
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.types import (
+    ArbEndpointValue,
     CompatibilityRegime,
     Count,
     DomainModel,
-    FiniteFloat,
     GridPointCount,
     HiddenMassInterval,
+    InformationDerivative,
     InformationNats,
     Mass,
     OracleDigits,
@@ -519,7 +520,7 @@ def _projection_information_derivative_float(
     harmful_total: Mass,
     unresolved: Mass,
     hidden: Mass,
-) -> FiniteFloat:
+) -> InformationDerivative:
     if hidden <= 0.0 or hidden >= unresolved:
         return inf
     harmful_marginal = harmful_total + hidden
@@ -640,18 +641,18 @@ def _mass_entropy_arb(left: arb, right: arb) -> arb:
     return lower.union(upper)
 
 
-def _arb_exact_float(value: float) -> arb:
+def _arb_exact_float(value: ArbEndpointValue) -> arb:
     numerator, denominator = value.as_integer_ratio()
     return arb(f"{numerator}/{denominator}")
 
 
-def _arb_lower_float(value: arb) -> float:
+def _arb_lower_float(value: arb) -> ArbEndpointValue:
     mantissa, exponent = value.lower().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, -inf)
 
 
-def _arb_upper_float(value: arb) -> float:
+def _arb_upper_float(value: arb) -> ArbEndpointValue:
     mantissa, exponent = value.upper().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, inf)

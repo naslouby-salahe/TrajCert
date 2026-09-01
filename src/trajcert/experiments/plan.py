@@ -11,6 +11,7 @@ from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.failure_boundaries import FailureBoundaryAxis
 from trajcert.provenance import (
     ComparisonPairName,
     ExperimentNameValue,
@@ -25,11 +26,14 @@ from trajcert.types import (
     Count,
     DomainModel,
     EvidenceClass,
+    FailureBoundaryLevel,
+    FailureBoundaryProbe,
     LawName,
     Ordinal,
     PartitionName,
     ReasonCode,
     SensitivityBudget,
+    SensitivityOffset,
 )
 
 
@@ -275,11 +279,11 @@ def _coordinates_endpoint_special_case_identity() -> tuple[SemanticCoordinates, 
 
 
 def _coordinates_anytime_projection_proof_check() -> tuple[SemanticCoordinates, ...]:
-    return (_variant("projection-proof-record"),)
+    return (_variant(VariantName("projection-proof-record")),)
 
 
 def _coordinates_population_complexity_proof_check() -> tuple[SemanticCoordinates, ...]:
-    return (_variant("population-operation-count-record"),)
+    return (_variant(VariantName("population-operation-count-record")),)
 
 
 def _coordinates_production_solver_vs_independent_oracle() -> tuple[SemanticCoordinates, ...]:
@@ -410,7 +414,7 @@ def _coordinates_computational_scaling() -> tuple[SemanticCoordinates, ...]:
 
 
 def _coordinates_statistical_synthesis() -> tuple[SemanticCoordinates, ...]:
-    return (_variant("deterministic-synthesis"),)
+    return (_variant(VariantName("deterministic-synthesis")),)
 
 
 def _law_names() -> tuple[LawName, ...]:
@@ -437,15 +441,26 @@ def _population_rho_values() -> tuple[SensitivityBudget, ...]:
 
 def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
     config = active_config.get()
-    configured_axes: tuple[tuple[str, tuple[float | int, ...]], ...] = (
-        ("terminal-unresolved-severity", tuple(config.failure_boundary.unresolvedness)),
-        ("timing-contrast", tuple(config.failure_boundary.timing_contrast)),
-        ("harmful-prevalence", tuple(config.failure_boundary.prevalence)),
-        ("path-resolution", tuple(config.failure_boundary.bands)),
-        ("information-margin", tuple(config.failure_boundary.information_margin)),
-        ("risk-offset", tuple(config.failure_boundary.risk_offset)),
-        ("matured-sample-size", tuple(config.failure_boundary.sample_size)),
-        ("optimizer-node-budget", tuple(config.failure_boundary.optimizer_nodes)),
+    configured_axes: tuple[
+        tuple[FailureBoundaryAxis, tuple[FailureBoundaryProbe, ...]], ...
+    ] = (
+        (
+            FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY,
+            tuple(config.failure_boundary.unresolvedness),
+        ),
+        (FailureBoundaryAxis.TIMING_CONTRAST, tuple(config.failure_boundary.timing_contrast)),
+        (FailureBoundaryAxis.HARMFUL_PREVALENCE, tuple(config.failure_boundary.prevalence)),
+        (FailureBoundaryAxis.PATH_RESOLUTION, tuple(config.failure_boundary.bands)),
+        (
+            FailureBoundaryAxis.INFORMATION_MARGIN,
+            tuple(config.failure_boundary.information_margin),
+        ),
+        (FailureBoundaryAxis.RISK_OFFSET, tuple(config.failure_boundary.risk_offset)),
+        (FailureBoundaryAxis.MATURED_SAMPLE_SIZE, tuple(config.failure_boundary.sample_size)),
+        (
+            FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET,
+            tuple(config.failure_boundary.optimizer_nodes),
+        ),
     )
     levels_per_axis = len(config.failure_boundary.unresolvedness)
     coordinates: list[SemanticCoordinates] = []
@@ -473,51 +488,83 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
     return tuple(coordinates)
 
 
-_COORDINATE_DISPATCH: dict[str, Callable[[], tuple[SemanticCoordinates, ...]]] = {
-    "Legacy Partition Incoherence Check": _coordinates_legacy_partition_incoherence_check,
-    "Path Information Decomposition": _coordinates_law_and_partition_product,
-    "Information Profile Convexity": _coordinates_law_and_partition_product,
-    "Minimum Compatibility Identity": _coordinates_law_and_partition_product,
-    "Sharp-Set Constructive Identity": _coordinates_sharp_set_constructive_identity,
-    "Refinement Dominance Identity": _coordinates_refinement_dominance_identity,
-    "Strict Timing-Gain Identity": _coordinates_strict_timing_gain,
-    "Strict Timing Gain": _coordinates_strict_timing_gain,
-    "Safety-Boundary Identity": _coordinates_safety_boundary_identity,
-    "Endpoint Special-Case Identity": _coordinates_endpoint_special_case_identity,
-    "Anytime Projection Proof Check": _coordinates_anytime_projection_proof_check,
-    "Population Complexity Proof Check": _coordinates_population_complexity_proof_check,
-    "Production Solver vs Independent Oracle": _coordinates_production_solver_vs_independent_oracle,
-    "Callback-Model Reduction Falsification": _coordinates_comparator_reduction,
-    "Generic Information-Optimization Reduction": _coordinates_comparator_reduction,
-    "Partition Coherence": _coordinates_partition_coherence,
-    "Same Endpoint, Different Timing": _coordinates_same_endpoint_different_timing,
-    "Compatibility Floor Behavior": _coordinates_compatibility_floor_behavior,
-    "Sharpness Against Generic Oracle": _coordinates_sharpness_against_generic_oracle,
-    "Safety and Intrinsic Impossibility": _coordinates_safety_and_intrinsic_impossibility,
-    "Anytime Implementation Hand Cases": _coordinates_anytime_implementation_hand_cases,
-    "Anytime Coverage Stress": _coordinates_anytime_coverage_stress,
-    "Population Sensitivity Utility": _coordinates_population_sensitivity_utility,
-    "Sequential Sensitivity Utility": _coordinates_sequential_sensitivity_utility,
-    "Failure Boundary Atlas": _failure_boundary_coordinates,
-    "Computational Scaling": _coordinates_computational_scaling,
-    "Statistical Synthesis": _coordinates_statistical_synthesis,
+_COORDINATE_DISPATCH: dict[ExperimentNameValue, Callable[[], tuple[SemanticCoordinates, ...]]] = {
+    ExperimentNameValue("Legacy Partition Incoherence Check"): (
+        _coordinates_legacy_partition_incoherence_check
+    ),
+    ExperimentNameValue("Path Information Decomposition"): _coordinates_law_and_partition_product,
+    ExperimentNameValue("Information Profile Convexity"): _coordinates_law_and_partition_product,
+    ExperimentNameValue("Minimum Compatibility Identity"): _coordinates_law_and_partition_product,
+    ExperimentNameValue("Sharp-Set Constructive Identity"): (
+        _coordinates_sharp_set_constructive_identity
+    ),
+    ExperimentNameValue("Refinement Dominance Identity"): (
+        _coordinates_refinement_dominance_identity
+    ),
+    ExperimentNameValue("Strict Timing-Gain Identity"): _coordinates_strict_timing_gain,
+    ExperimentNameValue("Strict Timing Gain"): _coordinates_strict_timing_gain,
+    ExperimentNameValue("Safety-Boundary Identity"): _coordinates_safety_boundary_identity,
+    ExperimentNameValue("Endpoint Special-Case Identity"): (
+        _coordinates_endpoint_special_case_identity
+    ),
+    ExperimentNameValue("Anytime Projection Proof Check"): (
+        _coordinates_anytime_projection_proof_check
+    ),
+    ExperimentNameValue("Population Complexity Proof Check"): (
+        _coordinates_population_complexity_proof_check
+    ),
+    ExperimentNameValue("Production Solver vs Independent Oracle"): (
+        _coordinates_production_solver_vs_independent_oracle
+    ),
+    ExperimentNameValue("Callback-Model Reduction Falsification"): (
+        _coordinates_comparator_reduction
+    ),
+    ExperimentNameValue("Generic Information-Optimization Reduction"): (
+        _coordinates_comparator_reduction
+    ),
+    ExperimentNameValue("Partition Coherence"): _coordinates_partition_coherence,
+    ExperimentNameValue("Same Endpoint, Different Timing"): (
+        _coordinates_same_endpoint_different_timing
+    ),
+    ExperimentNameValue("Compatibility Floor Behavior"): _coordinates_compatibility_floor_behavior,
+    ExperimentNameValue("Sharpness Against Generic Oracle"): (
+        _coordinates_sharpness_against_generic_oracle
+    ),
+    ExperimentNameValue("Safety and Intrinsic Impossibility"): (
+        _coordinates_safety_and_intrinsic_impossibility
+    ),
+    ExperimentNameValue("Anytime Implementation Hand Cases"): (
+        _coordinates_anytime_implementation_hand_cases
+    ),
+    ExperimentNameValue("Anytime Coverage Stress"): _coordinates_anytime_coverage_stress,
+    ExperimentNameValue("Population Sensitivity Utility"): (
+        _coordinates_population_sensitivity_utility
+    ),
+    ExperimentNameValue("Sequential Sensitivity Utility"): (
+        _coordinates_sequential_sensitivity_utility
+    ),
+    ExperimentNameValue("Failure Boundary Atlas"): _failure_boundary_coordinates,
+    ExperimentNameValue("Computational Scaling"): _coordinates_computational_scaling,
+    ExperimentNameValue("Statistical Synthesis"): _coordinates_statistical_synthesis,
 }
 
 
-def _signed_level(axis_name: str, level: float | int) -> str:
-    if axis_name != "risk-offset":
-        return str(level)
+def _signed_level(
+    axis_name: FailureBoundaryAxis, level: FailureBoundaryProbe
+) -> FailureBoundaryLevel:
+    if axis_name is not FailureBoundaryAxis.RISK_OFFSET:
+        return FailureBoundaryLevel(str(level))
     numeric = float(level)
     prefix = "negative" if numeric < 0.0 else "nonnegative"
-    return f"{prefix}-{abs(numeric)}"
+    return FailureBoundaryLevel(f"{prefix}-{abs(numeric)}")
 
 
-def _offset_coordinate(offset: float) -> SensitivityCoordinate:
+def _offset_coordinate(offset: SensitivityOffset) -> SensitivityCoordinate:
     return SensitivityCoordinate(f"rho-offset={offset}")
 
 
-def _variant(name: str) -> SemanticCoordinates:
-    return SemanticCoordinates(variant_name=VariantName(name))
+def _variant(name: VariantName) -> SemanticCoordinates:
+    return SemanticCoordinates(variant_name=name)
 
 
 def _required_experiments(

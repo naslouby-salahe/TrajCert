@@ -158,7 +158,7 @@ def _upper_root(
 
 def _root_function(
     successes: Count, total: Count, probability: Probability, threshold: Threshold
-) -> float:
+) -> LogMixtureRatio:
     return _log_mixture_likelihood_ratio(successes, total, probability) - threshold
 
 
