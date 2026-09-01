@@ -74,9 +74,8 @@ def population_sensitivity_utility(
         root_atol=config.numerics.root_atol,
         identity_atol=config.numerics.identity_atol,
     )
-    tau_value = observed_timing_information(summary)
-    tau = None if tau_value is None else float(tau_value)
-    worst = float(unresolved_as_harm_upper(summary))
+    tau = observed_timing_information(summary)
+    worst = unresolved_as_harm_upper(summary)
     complete_case = complete_case_arrival_only(summary)
     if solved.latent_risk is None:
         return PopulationUtilityResult(
@@ -92,10 +91,10 @@ def population_sensitivity_utility(
             relative_unresolved_gain=None,
             materially_nonvacuous=False,
         )
-    lower = float(solved.latent_risk.lower)
-    upper = float(solved.latent_risk.upper)
-    width = float(solved.latent_risk.width)
-    unresolved = float(summary.unresolved_mass)
+    lower = solved.latent_risk.lower
+    upper = solved.latent_risk.upper
+    width = solved.latent_risk.width
+    unresolved = summary.unresolved_mass
     gain = population_gain(worst, upper, unresolved)
     tightening = gain.absolute_tightening
     relative = gain.relative_unresolved_gain
@@ -238,7 +237,7 @@ def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]
                              ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if not checkpoints:
         return 1.0
-    return mean(float(checkpoint.projection.proven_upper) for checkpoint in checkpoints)
+    return mean(checkpoint.projection.proven_upper for checkpoint in checkpoints)
 
 
 def _time_to_first_certification(

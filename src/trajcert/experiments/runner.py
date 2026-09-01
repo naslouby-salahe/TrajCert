@@ -552,7 +552,7 @@ def producer_component_digest(
     workspace_root: Path,
     experiment_name: ExperimentNameValue,
 ) -> DigestHex:
-    root = _PRODUCER_ROOTS.get(str(experiment_name))
+    root = _PRODUCER_ROOTS.get(experiment_name)
     if root is None:
         raise InvalidScientificDataError(
             f"missing producer-component registration: {experiment_name}"
@@ -806,11 +806,11 @@ def _dispatch_legacy_partition_incoherence(
     del config
     gamma = cell.identity.coordinates.gamma
     variant = cell.identity.coordinates.variant_name
-    if gamma is None or variant is None or not str(variant).startswith("q="):
+    if gamma is None or variant is None or not variant.startswith("q="):
         raise ScientificCellDispatchError("legacy incoherence cell is missing Gamma or q")
     return evaluate_legacy_partition_incoherence(
-        gamma=float(gamma),
-        q=float(str(variant).removeprefix("q=")),
+        gamma=gamma,
+        q=float(variant.removeprefix("q=")),
     )
 
 
@@ -1125,7 +1125,7 @@ def _refinement_inputs(
     comparison = cell.identity.coordinates.comparison_pair_name
     if comparison is None:
         raise ScientificCellDispatchError("refinement cell is missing its comparison pair")
-    fine_text, separator, coarse_text = str(comparison).partition(" -> ")
+    fine_text, separator, coarse_text = comparison.partition(" -> ")
     if not separator:
         raise ScientificCellDispatchError("invalid comparison-pair encoding")
     fine = _partition_named(PartitionName(fine_text), config)
@@ -1186,10 +1186,10 @@ def _rho_from_offset(
     coordinate: SensitivityCoordinate | None,
 ) -> SensitivityBudget:
     prefix = "rho-offset="
-    if coordinate is None or not str(coordinate).startswith(prefix):
+    if coordinate is None or not coordinate.startswith(prefix):
         raise ScientificCellDispatchError("rho-offset cell is missing its sensitivity coordinate")
-    offset = float(str(coordinate)[len(prefix) :])
-    return float(observed_timing_information(summary) or 0.0) + offset
+    offset = float(coordinate[len(prefix) :])
+    return (observed_timing_information(summary) or 0.0) + offset
 
 
 def _direct_rho(cell: PlannedCell) -> SensitivityBudget:
@@ -1263,7 +1263,7 @@ def _execute_failure_boundary(cell: PlannedCell, config: TrajCertConfig) -> Doma
     coordinate = cell.identity.coordinates.failure_boundary_axis_and_level
     if coordinate is None:
         raise ScientificCellDispatchError("failure-boundary cell is missing axis/level")
-    axis_text, separator, value_text = str(coordinate).partition("=")
+    axis_text, separator, value_text = coordinate.partition("=")
     if not separator:
         raise ScientificCellDispatchError("invalid failure-boundary coordinate")
     axis = FailureBoundaryAxis(axis_text)
@@ -1464,7 +1464,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     principal_fine = _population_summary(principal, fine, config)
     timing_fine = _population_summary(timing, fine, config)
 
-    principal_tau = float(observed_timing_information(principal_fine) or 0.0)
+    principal_tau = observed_timing_information(principal_fine) or 0.0
     compatible = sharp_risk_set(
         principal_fine,
         principal_tau + _SMOKE_COMPATIBLE_OFFSET,
@@ -1473,7 +1473,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     )
     compatible_pass = compatible.latent_risk is not None
 
-    timing_tau = float(observed_timing_information(timing_fine) or 0.0)
+    timing_tau = observed_timing_information(timing_fine) or 0.0
     incompatible = sharp_risk_set(
         timing_fine,
         timing_tau / 2.0,
@@ -1483,7 +1483,7 @@ def run_smoke_fixtures(config: TrajCertConfig) -> SmokeResult:
     incompatible_pass = timing_tau > 0.0 and incompatible.latent_risk is None
 
     endpoint_summary = _population_summary(principal, endpoint, config)
-    endpoint_tau = float(observed_timing_information(endpoint_summary) or 0.0)
+    endpoint_tau = observed_timing_information(endpoint_summary) or 0.0
     endpoint_pass = abs(endpoint_tau) <= config.numerics.identity_atol
 
     refinement = evaluate_partition_coherence(
@@ -1550,7 +1550,7 @@ def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
         config.method.terminal_horizon,
     )
     summary = _population_summary(parameters, partition, config)
-    tau = float(observed_timing_information(summary) or 0.0)
+    tau = observed_timing_information(summary) or 0.0
     rho = tau + _SMOKE_COMPATIBLE_OFFSET
     population = sharp_risk_set(
         summary,
@@ -1570,7 +1570,7 @@ def _projection_smoke(parameters: LawParameters, config: TrajCertConfig) -> bool
         config.numerics.outer_gap,
         config.numerics.outer_max_nodes,
     )
-    error = abs(float(projection.proven_upper) - float(population.latent_risk.upper))
+    error = abs(projection.proven_upper - population.latent_risk.upper)
     return error <= config.numerics.identity_atol
 
 

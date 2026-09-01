@@ -42,6 +42,7 @@ from trajcert.types import (
     RiskValue,
     SensitivityBudget,
     ToleranceValue,
+    mass_tuple,
 )
 
 
@@ -97,13 +98,13 @@ def path_information_decomposition(
     if tau is None or minimum is None:
         return IdentityResult(passed=True, max_absolute_error=0.0)
     direct = direct_mutual_information(
-        harmful=tuple(float(value) for value in summary.harmful_by_band),
-        correct=tuple(float(value) for value in summary.correct_by_band),
-        unresolved=float(summary.unresolved_mass),
-        hidden_terminal_harmful=float(minimum.hidden_terminal_harmful_mass),
+        harmful=mass_tuple(summary.harmful_by_band),
+        correct=mass_tuple(summary.correct_by_band),
+        unresolved=summary.unresolved_mass,
+        hidden_terminal_harmful=minimum.hidden_terminal_harmful_mass,
         oracle_digits=oracle_digits,
     )
-    error = abs(float(tau) - float(direct))
+    error = abs(tau - direct)
     return IdentityResult(passed=error <= identity_atol, max_absolute_error=error)
 
 
@@ -114,7 +115,7 @@ def information_profile_convexity(
 ) -> ConvexityResult:
     del oracle_digits
     grid_points = active_config.get().numerics.profile_grid_points
-    unresolved = float(summary.unresolved_mass)
+    unresolved = summary.unresolved_mass
     if unresolved == 0.0:
         return ConvexityResult(
             passed=True,
@@ -128,7 +129,7 @@ def information_profile_convexity(
     for index in range(grid_points):
         hidden = unresolved * index / (grid_points - 1)
         value = information_profile(summary, hidden)
-        if not isfinite(float(value)) or float(value) < 0.0:
+        if not isfinite(value) or value < 0.0:
             return ConvexityResult(
                 passed=False,
                 evaluated_points=index + 1,
@@ -137,7 +138,7 @@ def information_profile_convexity(
             )
         if index in (0, grid_points - 1):
             continue
-        production = float(information_profile_second_derivative(summary, hidden))
+        production = information_profile_second_derivative(summary, hidden)
         direct = _direct_second_derivative(summary, hidden)
         minimum_second = min(minimum_second, production)
         maximum_error = max(maximum_error, abs(production - direct))
@@ -159,16 +160,16 @@ def minimum_compatibility_identity(
     tau = observed_timing_information(summary)
     if minimum is None or tau is None:
         return IdentityResult(passed=True, max_absolute_error=0.0)
-    resolved = float(summary.resolved_mass)
-    harmful = float(summary.resolved_harmful_mass)
-    unresolved = float(summary.unresolved_mass)
+    resolved = summary.resolved_mass
+    harmful = summary.resolved_harmful_mass
+    unresolved = summary.unresolved_mass
     expected_hidden = harmful * unresolved / resolved
     expected_risk = harmful / resolved
     errors = (
-        abs(float(minimum.hidden_terminal_harmful_mass) - expected_hidden),
-        abs(float(minimum.latent_risk) - expected_risk),
-        abs(float(minimum.information_floor) - float(tau)),
-        abs(float(information_profile(summary, expected_hidden)) - float(tau)),
+        abs(minimum.hidden_terminal_harmful_mass - expected_hidden),
+        abs(minimum.latent_risk - expected_risk),
+        abs(minimum.information_floor - tau),
+        abs(information_profile(summary, expected_hidden) - tau),
     )
     maximum = max(errors)
     return IdentityResult(passed=maximum <= identity_atol, max_absolute_error=maximum)
@@ -198,9 +199,9 @@ def sharp_set_constructive_identity(
             diagnostic_grid_mismatches=0,
         )
     production_lower = production.latent_risk.lower
-    production_upper = float(production.latent_risk.upper)
-    oracle_lower = float(oracle.latent_risk_interval.lower)
-    oracle_upper = float(oracle.latent_risk_interval.upper)
+    production_upper = production.latent_risk.upper
+    oracle_lower = oracle.latent_risk_interval.lower
+    oracle_upper = oracle.latent_risk_interval.upper
     endpoint_error = max(
         abs(production_lower - oracle_lower),
         abs(production_upper - oracle_upper),
@@ -226,19 +227,19 @@ def refinement_dominance_identity(
     comparison_guard: ToleranceValue,
 ) -> RefinementIdentityResult:
     coarse = coarsen_summary(fine, coarse_partition, comparison_guard)
-    unresolved = float(fine.unresolved_mass)
-    delta_tau = float(timing_gain(fine, coarse, identity_atol))
+    unresolved = fine.unresolved_mass
+    delta_tau = timing_gain(fine, coarse, identity_atol)
     order_violation = 0.0
     difference_error = 0.0
     grid_points = active_config.get().numerics.profile_grid_points
     for index in range(grid_points):
         hidden = unresolved * index / (grid_points - 1)
-        fine_value = float(information_profile(fine, hidden))
-        coarse_value = float(information_profile(coarse, hidden))
+        fine_value = information_profile(fine, hidden)
+        coarse_value = information_profile(coarse, hidden)
         order_violation = max(order_violation, coarse_value - fine_value)
         difference_error = max(
             difference_error,
-            abs(float(profile_difference(fine, coarse, hidden, identity_atol)) - delta_tau),
+            abs(profile_difference(fine, coarse, hidden, identity_atol) - delta_tau),
         )
     return RefinementIdentityResult(
         passed=order_violation <= identity_atol and difference_error <= identity_atol,
@@ -257,17 +258,17 @@ def strict_timing_gain_identity(
     comparison_guard: ToleranceValue,
 ) -> IdentityResult:
     coarse = coarsen_summary(fine, coarse_partition, comparison_guard)
-    gain = float(timing_gain(fine, coarse, identity_atol))
+    gain = timing_gain(fine, coarse, identity_atol)
     fine_set = sharp_risk_set(fine, sensitivity_budget, root_atol, identity_atol)
     coarse_set = sharp_risk_set(coarse, sensitivity_budget, root_atol, identity_atol)
     if fine_set.latent_risk is None or coarse_set.latent_risk is None:
         return IdentityResult(passed=False, max_absolute_error=1.0)
     subset_violation = max(
         0.0,
-        float(coarse_set.latent_risk.lower) - float(fine_set.latent_risk.lower),
-        float(fine_set.latent_risk.upper) - float(coarse_set.latent_risk.upper),
+        coarse_set.latent_risk.lower - fine_set.latent_risk.lower,
+        fine_set.latent_risk.upper - coarse_set.latent_risk.upper,
     )
-    strict_upper = float(coarse_set.latent_risk.upper) - float(fine_set.latent_risk.upper)
+    strict_upper = coarse_set.latent_risk.upper - fine_set.latent_risk.upper
     theorem_pass = subset_violation <= identity_atol
     if gain <= identity_atol:
         theorem_pass = theorem_pass and abs(strict_upper) <= identity_atol
@@ -292,8 +293,8 @@ def safety_boundary_identity(
         )
     hidden = risk_budget - summary.resolved_harmful_mass
     direct = direct_mutual_information(
-        harmful=tuple(float(value) for value in summary.harmful_by_band),
-        correct=tuple(float(value) for value in summary.correct_by_band),
+        harmful=mass_tuple(summary.harmful_by_band),
+        correct=mass_tuple(summary.correct_by_band),
         unresolved=summary.unresolved_mass,
         hidden_terminal_harmful=hidden,
         oracle_digits=oracle_digits,
@@ -302,7 +303,7 @@ def safety_boundary_identity(
     return SafetyBoundaryIdentityResult(
         passed=error <= identity_atol,
         assessment=assessment,
-        frontier_direct_information=float(direct),
+        frontier_direct_information=direct,
         frontier_error=error,
     )
 
@@ -335,7 +336,7 @@ def endpoint_special_case_identity(
     if summary.partition.band_count != 1:
         return IdentityResult(passed=False, max_absolute_error=1.0)
     tau = observed_timing_information(summary)
-    error = 0.0 if tau is None else abs(float(tau))
+    error = 0.0 if tau is None else abs(tau)
     return IdentityResult(passed=error <= identity_atol, max_absolute_error=error)
 
 
@@ -348,9 +349,9 @@ def population_complexity_proof_check() -> IdentityResult:
 
 
 def _direct_second_derivative(summary: ObservableSummary, hidden: Mass) -> InformationCurvature:
-    harmful = float(summary.resolved_harmful_mass)
-    correct = float(summary.resolved_correct_mass)
-    unresolved = float(summary.unresolved_mass)
+    harmful = summary.resolved_harmful_mass
+    correct = summary.resolved_correct_mass
+    unresolved = summary.unresolved_mass
     return harmful / (hidden * (harmful + hidden)) + correct / (
         (unresolved - hidden) * (correct + unresolved - hidden)
     )
@@ -362,8 +363,8 @@ def _sharp_grid_mismatches(
     lower_risk: RiskValue,
     upper_risk: RiskValue,
 ) -> Count:
-    unresolved = float(summary.unresolved_mass)
-    harmful = float(summary.resolved_harmful_mass)
+    unresolved = summary.unresolved_mass
+    harmful = summary.resolved_harmful_mass
     mismatches = 0
     grid_points = active_config.get().numerics.sharp_diagnostic_grid_points
     for index in range(grid_points):
@@ -409,8 +410,8 @@ def evaluate_legacy_partition_incoherence(
     )
     harmful_hazards = (_tilted_probability(q, gamma), _tilted_probability(q, 1.0 / gamma))
     correct_hazards = (q, q)
-    harmful_by_band, harmful_unresolved = _response_masses(float(p_harmful), harmful_hazards)
-    correct_by_band, correct_unresolved = _response_masses(float(p_correct), correct_hazards)
+    harmful_by_band, harmful_unresolved = _response_masses(p_harmful, harmful_hazards)
+    correct_by_band, correct_unresolved = _response_masses(p_correct, correct_hazards)
     unresolved = harmful_unresolved + correct_unresolved
     fine_partition = build_partition(
         finest_band_count=2, # TODO: these are magic numbers that should be from conf
@@ -461,7 +462,7 @@ def evaluate_legacy_partition_incoherence(
         direction = EndpointDifferenceDirection.SHIFTED
     hidden_interval = fine_result.hidden_mass_interval
     true_hidden_feasible = (
-        float(hidden_interval.lower) - atol <= true_hidden <= float(hidden_interval.upper) + atol
+        hidden_interval.lower - atol <= true_hidden <= hidden_interval.upper + atol
     )
     return LegacyPartitionIncoherenceResult(
         gamma=gamma,

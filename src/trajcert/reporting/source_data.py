@@ -844,7 +844,7 @@ def _solver_rows(
             if oracle.absolute_error is not None:
                 frontier_errors.append(oracle.absolute_error)
             frontier_pass = frontier_pass and oracle.passed
-    finest = str(partition_name(config.method.finest_bands))
+    finest = partition_name(config.method.finest_bands)
     rows: list[SolverOracleValidationRow] = []
     for (partition, offset), results in sorted(grouped.items()):
         attach_frontier = partition == finest
@@ -1093,7 +1093,7 @@ def _scaling_figure_rows(
 def _oracle_error_by_partition(
     plan: ExperimentPlan, workspace_root: Path, config: TrajCertConfig  # TODO: do not pass config as input param
 ) -> dict[int, float]:
-    name_to_k = {str(partition_name(k)): k for k in config.grids.partitions}
+    name_to_k = {partition_name(k): k for k in config.grids.partitions}
     grouped: dict[int, list[float]] = defaultdict(list)
     for cell in _cells(plan, "Production Solver vs Independent Oracle"):
         k = name_to_k.get(_required_partition(cell))
@@ -1163,7 +1163,7 @@ def _information_profile_rows(
 ) -> tuple[InformationProfileFigureRow, ...]:
     target_law_key = LawKey.TIMING_TERMINAL_HARMFUL_LATE
     target_law = LAW_DISPLAY_NAMES[target_law_key]
-    target_partition = str(partition_name(config.method.finest_bands))
+    target_partition = partition_name(config.method.finest_bands)
     target_rho = config.budgets.information_nats
     matches = tuple(
         result
@@ -1243,11 +1243,11 @@ def _cells(plan: ExperimentPlan, name: str #TODO: Consider using a proper alias 
     return cells
 
 
-def _required_partition(cell: PlannedCell) -> str: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _required_partition(cell: PlannedCell) -> PartitionName:
     value = cell.identity.coordinates.partition_name
     if value is None:
         raise InvalidScientificDataError("publication source cell lacks partition identity")
-    return str(value)
+    return value
 
 
 def _rho_offset(cell: PlannedCell) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this

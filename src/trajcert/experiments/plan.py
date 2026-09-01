@@ -180,8 +180,8 @@ def _expand_experiment(
 def _coordinates_for_experiment(
     name: ExperimentNameValue, config: TrajCertConfig  # TODO: access config directly instead of passing it as an argument
 ) -> tuple[SemanticCoordinates, ...]:
-    handler = _COORDINATE_DISPATCH.get(str(name))
-    if handler is None and str(name) in {
+    handler = _COORDINATE_DISPATCH.get(name)
+    if handler is None and name in {
         "Real-Trajectory Validation",
         "Foreign-Information Negative Control",
     }:
@@ -555,7 +555,7 @@ def _required_experiments(
     precondition = _EXPERIMENTS[0][0]
     if name == precondition:
         return ()
-    if str(name) != "Statistical Synthesis":
+    if name != "Statistical Synthesis":
         return (precondition,)
     return tuple(
         experiment_name

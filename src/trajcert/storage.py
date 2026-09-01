@@ -165,7 +165,7 @@ def _canonical_json_number(value: int | float) -> str:
         return str(value)
     if not isfinite(value):
         raise SerializationError("canonical JSON forbids NaN and infinities")
-    return str(canonical_number_token(value))
+    return canonical_number_token(value)
 
 
 def _canonical_json_object(value: Mapping[str, JsonValue]) -> str:

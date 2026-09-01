@@ -3,10 +3,8 @@ from __future__ import annotations
 from enum import StrEnum
 from math import log
 from statistics import median
-from typing import cast
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.stats import beta as beta_distribution
 
 from trajcert.comparators.ignorable_delay import IgnorableDelayResult, ignorable_delay_update
@@ -83,7 +81,6 @@ from trajcert.types import (
     EventId,
     InformationNats,
     LawKey,
-    Mass,
     MedianEventCount,
     OuterMaxNodes,
     Probability,
@@ -93,6 +90,7 @@ from trajcert.types import (
     SeedIndex,
     SensitivityBudget,
     StreamCount,
+    mass_tuple,
 )
 
 _HAND_CASE_STREAM = 0 # TODO:  I believe this could have been handled better
@@ -492,10 +490,10 @@ def evaluate_configured_coverage_stress(
     primary = next(item for item in methods if item.method_name == SequentialMethod.TRAJCERT)
     return CoverageEvidenceResult(
         band_count=partition.band_count,
-        true_theta=float(parameters.theta),
+        true_theta=parameters.theta,
         true_mutual_information=true_information,
-        rho=float(rho),
-        beta=float(beta),
+        rho=rho,
+        beta=beta,
         delta=config.confidence.anytime_delta,
         acceptance_upper_limit=config.sequential.coverage.acceptance_upper_limit,
         methods=methods,
@@ -516,7 +514,7 @@ def _coverage_method_evidence(
     config = active_config.get()
     upper = None if not applicable else _clopper_pearson_upper(failures, streams)
     criterion = (
-        None if upper is None else upper <= float(config.sequential.coverage.acceptance_upper_limit)
+        None if upper is None else upper <= config.sequential.coverage.acceptance_upper_limit
     )
     return CoverageMethodEvidence(
         method_name=method,
@@ -526,9 +524,9 @@ def _coverage_method_evidence(
         violation_rate=failure_rate,
         clopper_pearson_upper_95=upper,
         criterion_pass=criterion,
-        median_first_certified_n=(None if not first_certified else float(median(first_certified))),
+        median_first_certified_n=(None if not first_certified else median(first_certified)),
         median_certified_update_fraction=(
-            None if not certified_fractions else float(median(certified_fractions))
+            None if not certified_fractions else median(certified_fractions)
         ),
     )
 
@@ -658,14 +656,12 @@ def _true_information(
     config = active_config.get()
     full_law = build_full_law(parameters, partition.band_count)
     summary = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
-    return float(
-        direct_mutual_information(
-            _float_tuple(summary.harmful_by_band),
-            _float_tuple(summary.correct_by_band),
-            float(summary.unresolved_mass),
-            float(full_law.terminal_harmful),
-            config.numerics.oracle_digits,
-        )
+    return direct_mutual_information(
+        mass_tuple(summary.harmful_by_band),
+        mass_tuple(summary.correct_by_band),
+        summary.unresolved_mass,
+        full_law.terminal_harmful,
+        config.numerics.oracle_digits,
     )
 
 
@@ -701,9 +697,9 @@ def _minimum_information_completion(
         raise InvalidScientificDataError(
             "minimum-information completion requires a nondegenerate compatibility point"
         )
-    theta = float(minimum.latent_risk)
-    hidden_harmful = float(minimum.hidden_terminal_harmful_mass)
-    unresolved = float(summary.unresolved_mass)
+    theta = minimum.latent_risk
+    hidden_harmful = minimum.hidden_terminal_harmful_mass
+    unresolved = summary.unresolved_mass
     if theta <= 0.0 or theta >= 1.0:
         raise InvalidScientificDataError(
             "minimum-information completion requires interior latent risk"
@@ -732,19 +728,17 @@ def _sensitivity_budget(
             raise InvalidScientificDataError(
                 "compatibility-floor coverage stress requires a nondegenerate minimum"
             )
-        reference = float(minimum.information_floor)
+        reference = minimum.information_floor
     else:
         full_law = build_full_law(parameters, summary.partition.band_count)
-        reference = float(
-            direct_mutual_information(
-                _float_tuple(summary.harmful_by_band),
-                _float_tuple(summary.correct_by_band),
-                float(summary.unresolved_mass),
-                float(full_law.terminal_harmful),
-                config.numerics.oracle_digits,
-            )
+        reference = direct_mutual_information(
+            mass_tuple(summary.harmful_by_band),
+            mass_tuple(summary.correct_by_band),
+            summary.unresolved_mass,
+            full_law.terminal_harmful,
+            config.numerics.oracle_digits,
         )
-    rho = reference + float(case.rho_offset)
+    rho = reference + case.rho_offset
     if rho > BINARY_MAX_INFORMATION_NATS:
         raise InvalidScientificDataError(
             "coverage-stress sensitivity budget exceeds binary-information maximum"
@@ -756,7 +750,7 @@ def _risk_budget(
     case: CoverageStressCaseConfig,
     summary: ObservableSummary,
     rho: SensitivityBudget,
-) -> float: # TODO: Consider adding proper type hint for SensitivityBudget if it's not just a float
+) -> RiskBudget:
     config = active_config.get()
     if case.beta_offset is None:
         return config.budgets.risk
@@ -771,10 +765,6 @@ def _risk_budget(
             "near-certification coverage stress requires a compatible true-law bound"
         )
     return min(1.0, solved.latent_risk.upper + case.beta_offset)
-
-
-def _float_tuple(values: NDArray[np.float64]) -> tuple[Mass, ...]: # TODO: is there a cleaner way? Or is this even necessary? It seems redundant 
-    return tuple(cast(list[float], values.tolist()))
 
 
 _HAND_CASE_INSUFFICIENT_MATURED_INDEX = 1 # TODO: Move this to yml and access it through config
@@ -825,7 +815,7 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
         ObservableCategoryProbability(
             band_index=category.band_index,
             correctness_label=category.correctness_label,
-            probability=float(category.probability) / finite_total,
+            probability=category.probability / finite_total,
         )
         for category in finite
     )
@@ -871,7 +861,7 @@ def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseRes
     tau_value = observed_timing_information(summary)
     if tau_value is None:
         raise ValueError("model-incompatible hand case requires positive resolved mass")
-    tau = float(tau_value)
+    tau = tau_value
     rho = tau - min(_MODEL_INCOMPATIBLE_RHO_MARGIN, tau / 2.0)
     projection = _project(singleton_summary_envelope(summary), rho)
     config = active_config.get()
@@ -891,7 +881,7 @@ _INTRINSIC_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through conf
 
 def _hand_case_intrinsic(partition: TrajectoryPartition) -> HandCaseResult:
     summary = _population_summary(LawKey.INTRINSIC_IMPOSSIBILITY, partition)
-    tau = float(observed_timing_information(summary) or 0.0)
+    tau = observed_timing_information(summary) or 0.0
     rho = tau + _INTRINSIC_RHO_MARGIN
     projection = _project(singleton_summary_envelope(summary), rho)
     config = active_config.get()
@@ -912,10 +902,10 @@ _CERTIFIED_BETA_MARGIN = 0.005 # TODO: Move this to yml and access it through co
 
 def _hand_case_certified(partition: TrajectoryPartition) -> HandCaseResult:
     summary = _population_summary(_PRINCIPAL_LAW, partition)
-    tau = float(observed_timing_information(summary) or 0.0)
+    tau = observed_timing_information(summary) or 0.0
     rho = tau + _CERTIFIED_RHO_MARGIN
     projection = _project(singleton_summary_envelope(summary), rho)
-    beta = min(1.0, float(projection.proven_upper) + _CERTIFIED_BETA_MARGIN)
+    beta = min(1.0, projection.proven_upper + _CERTIFIED_BETA_MARGIN)
     assessment = _singleton_assessment(partition, projection, rho, beta)
     return _state_result(
         _HAND_CASE_CERTIFIED_INDEX,
@@ -1006,7 +996,7 @@ def _hand_case_zero_resolved_plausible(partition: TrajectoryPartition) -> HandCa
         partition_bands=partition.band_count,
         expected_state=expected,
         observed_state=assessment.scientific_state,
-        projection_upper=float(projection.proven_upper),
+        projection_upper=projection.proven_upper,
         oracle_feasible_lower=None,
         anti_conservatism=None,
         zero_resolved_mass_plausible=projection.intrinsic_risk_lower_bound is None,
@@ -1089,29 +1079,29 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
         config.numerics.comparison_guard,
     )
     information_true = direct_mutual_information(
-        tuple(float(value) for value in harmful),
-        tuple(float(value) for value in correct),
+        mass_tuple(harmful),
+        mass_tuple(correct),
         _SIMPLEX_BOUNDARY_UNRESOLVED_MASS,
         _SIMPLEX_BOUNDARY_HIDDEN_TERMINAL_HARMFUL,
         config.numerics.oracle_digits,
     )
-    rho = float(information_true) + _SIMPLEX_BOUNDARY_RHO_MARGIN
+    rho = information_true + _SIMPLEX_BOUNDARY_RHO_MARGIN
     projection = _project(singleton_summary_envelope(summary), rho)
     oracle = solve_information_oracle(
         summary, rho, config.numerics.oracle_digits, config.numerics.oracle_bracket_width
     )
     oracle_upper = (
-        None if oracle.latent_risk_interval is None else float(oracle.latent_risk_interval.upper)
+        None if oracle.latent_risk_interval is None else oracle.latent_risk_interval.upper
     )
     error = (
-        None if oracle_upper is None else max(0.0, oracle_upper - float(projection.proven_upper))
+        None if oracle_upper is None else max(0.0, oracle_upper - projection.proven_upper)
     )
     return HandCaseResult(
         case_index=_HAND_CASE_SIMPLEX_BOUNDARY_INDEX,
         partition_bands=partition.band_count,
         expected_state=None,
         observed_state=None,
-        projection_upper=float(projection.proven_upper),
+        projection_upper=projection.proven_upper,
         oracle_feasible_lower=oracle_upper,
         anti_conservatism=error,
         zero_resolved_mass_plausible=False,
@@ -1145,13 +1135,13 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
         raise ValueError("optimizer fallback fixture produced no confidence region")
     full_law = build_full_law(parameters, partition.band_count)
     information_true = direct_mutual_information(
-        tuple(float(value) for value in full_law.harmful_resolved),
-        tuple(float(value) for value in full_law.correct_resolved),
-        float(full_law.unresolved),
-        float(full_law.terminal_harmful),
+        mass_tuple(full_law.harmful_resolved),
+        mass_tuple(full_law.correct_resolved),
+        full_law.unresolved,
+        full_law.terminal_harmful,
         config.numerics.oracle_digits,
     )
-    rho = float(information_true) + _OPTIMIZER_FALLBACK_RHO_MARGIN
+    rho = information_true + _OPTIMIZER_FALLBACK_RHO_MARGIN
     envelope = summary_envelope_from_confidence(partition, running)
     projection = _project(envelope, rho, outer_max_nodes=_DIAGNOSTIC_NODE_CAP)
     oracle = feasible_projection_lower_oracle(
@@ -1164,7 +1154,7 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
         config.numerics.projection_refinement_steps,
     )
     lower = oracle.best_feasible_risk
-    anti = None if lower is None else max(0.0, float(lower) - float(projection.proven_upper))
+    anti = None if lower is None else max(0.0, lower - projection.proven_upper)
     conservative_reason = projection.termination_reason in {
         ProjectionTerminationReason.NODE_CAP,
         ProjectionTerminationReason.ARITHMETIC_FALLBACK,
@@ -1175,7 +1165,7 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
         partition_bands=partition.band_count,
         expected_state=None,
         observed_state=None,
-        projection_upper=float(projection.proven_upper),
+        projection_upper=projection.proven_upper,
         oracle_feasible_lower=lower,
         anti_conservatism=anti,
         zero_resolved_mass_plausible=projection.intrinsic_risk_lower_bound is None,
@@ -1260,7 +1250,7 @@ def _state_result(
         partition_bands=partition.band_count,
         expected_state=expected,
         observed_state=observed,
-        projection_upper=float(projection.proven_upper),
+        projection_upper=projection.proven_upper,
         oracle_feasible_lower=None,
         anti_conservatism=None,
         zero_resolved_mass_plausible=projection.intrinsic_risk_lower_bound is None,

@@ -20,7 +20,7 @@ from trajcert.types import (
 def derive_seed(namespace: SeedNamespace, index: SeedIndex) -> SeedValue:
     if index < 0:
         raise InvalidScientificDataError("seed index must be zero-based and nonnegative")
-    material = SEED_FIELD_SEPARATOR.join((SEED_PREFIX, str(namespace), str(index))).encode(
+    material = SEED_FIELD_SEPARATOR.join((SEED_PREFIX, namespace, str(index))).encode(
         "utf-8"
     )
     digest_prefix = sha256(material).digest()[:SEED_DIGEST_BYTES]

@@ -166,9 +166,9 @@ def synthesize_from_sequential_utility(
     config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> TrajectoryOperationalGainSynthesis:
     expected = _expected_sequential_utility_keys(config)
-    supplied = tuple((item.law_name, float(item.result.sensitivity_budget)) for item in evidence)
+    supplied = tuple((item.law_name, item.result.sensitivity_budget) for item in evidence)
     _validate_sequential_utility_family(supplied, expected)
-    by_key = {(item.law_name, float(item.result.sensitivity_budget)): item for item in evidence}
+    by_key = {(item.law_name, item.result.sensitivity_budget): item for item in evidence}
     series = tuple(
         paired
         for key in expected
@@ -241,7 +241,7 @@ def synthesize_trajectory_operational_gain(
     expected_order = _expected_family_keys(config)
     expected_keys = set(expected_order)
     supplied_keys = tuple(
-        (series.law_name, float(series.sensitivity_budget), series.metric_name)
+        (series.law_name, series.sensitivity_budget, series.metric_name)
         for series in paired_series
     )
     if len(supplied_keys) != len(set(supplied_keys)):
@@ -255,7 +255,7 @@ def synthesize_trajectory_operational_gain(
         )
         raise InvalidScientificDataError(message)
     series_by_key = {
-        (series.law_name, float(series.sensitivity_budget), series.metric_name): series
+        (series.law_name, series.sensitivity_budget, series.metric_name): series
         for series in paired_series
     }
     raw_results = tuple(_infer_series(series_by_key[key], config) for key in expected_order)
@@ -419,7 +419,7 @@ def _expected_sequential_utility_keys(
     config: TrajCertConfig,
 ) -> tuple[tuple[LawName, float], ...]: # TODO: this output looks horrible
     laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
-    rho_values = tuple(float(value) for value in config.sequential.utility.rho)
+    rho_values = config.sequential.utility.rho
     expected = tuple(product(laws, rho_values))
     return expected
 
@@ -613,7 +613,7 @@ def _partition_timing_evidence(
         comparison = cell.identity.coordinates.comparison_pair_name
         if comparison is None:
             raise InvalidScientificDataError("partition-coherence cell lacks its comparison pair")
-        fine_text, separator, coarse_text = str(comparison).partition(" -> ")  # TODO: this string parsing could have been handled better
+        fine_text, separator, coarse_text = comparison.partition(" -> ")
         if not separator:
             raise InvalidScientificDataError("partition-coherence comparison pair is malformed")
         fine = PartitionName(fine_text)
@@ -683,15 +683,15 @@ def _population_figure_evidence(
     evidence: tuple[PopulationUtilitySourceEvidence, ...],
     config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
 ) -> tuple[PopulationFigureEvidence, ...]:
-    target_rho = float(config.study_design.partition_coherence_figure_rho)
+    target_rho = config.study_design.partition_coherence_figure_rho
     band_counts = {partition_name(value): value for value in config.grids.partitions}
     figure_laws = {LAW_DISPLAY_NAMES[key] for key in PARTITION_COHERENCE_POPULATION_LAWS}
     selected = tuple(
         item
         for item in evidence
         if item.law_name in figure_laws
-        and abs(float(item.result.sensitivity_budget) - target_rho)
-        <= float(config.numerics.comparison_guard)
+        and abs(item.result.sensitivity_budget - target_rho)
+        <= config.numerics.comparison_guard
     )
     return tuple(
         PopulationFigureEvidence(
@@ -709,12 +709,12 @@ def _same_endpoint_figure_evidence(
     workspace_root: Path,
     config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[SameEndpointFigureEvidence, ...]:
-    target = float(config.study_design.partition_coherence_figure_rho)
+    target = config.study_design.partition_coherence_figure_rho
     band_counts = {partition_name(value): value for value in config.grids.partitions}
     evidence: list[SameEndpointFigureEvidence] = []
     for cell in _cells(plan, "Same Endpoint, Different Timing"):
         rho = cell.identity.coordinates.rho
-        if rho is None or abs(float(rho) - target) > float(config.numerics.comparison_guard):
+        if rho is None or abs(rho - target) > config.numerics.comparison_guard:
             continue
         partition = _required_partition(cell)
         evidence.append(
@@ -921,10 +921,10 @@ def _rho_from_persisted_tau(
     cell: PlannedCell,
 ) -> SensitivityBudget:
     coordinate = cell.identity.coordinates.sensitivity_coordinate
-    prefix = "rho-offset="  # TODO: I believe this could have been handled better
-    if coordinate is None or not str(coordinate).startswith(prefix):
+    prefix = "rho-offset="
+    if coordinate is None or not coordinate.startswith(prefix):
         raise InvalidScientificDataError("partition-coherence cell lacks its rho-offset coordinate")
-    return float(result.fine_tau) + float(str(coordinate).removeprefix(prefix))
+    return result.fine_tau + float(coordinate.removeprefix(prefix))
 
 
 def _family_primary_artifact(cells: tuple[PlannedCell, ...]) -> ArtifactKey:

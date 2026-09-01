@@ -81,13 +81,13 @@ def evaluate_failure_boundary(
     summary = _summary(parameters, partition, config)
     tau = _tau(summary)
     if axis is FailureBoundaryAxis.INFORMATION_MARGIN:
-        rho = float(tau or 0.0) + float(level)
+        rho = (tau or 0.0) + level
     if axis is FailureBoundaryAxis.RISK_OFFSET:
         minimum = minimum_information_point(summary)
         if minimum is None:
-            beta = max(0.0, min(1.0, float(level)))
+            beta = max(0.0, min(1.0, level))
         else:
-            beta = max(0.0, min(1.0, float(minimum.latent_risk) + float(level)))
+            beta = max(0.0, min(1.0, minimum.latent_risk + level))
     solved = sharp_risk_set(
         summary=summary,
         sensitivity_budget=rho,
@@ -120,8 +120,8 @@ def evaluate_terminal_selection_asymmetry(
     parameters = _base_parameters(config).model_copy(update={"q1": q1, "q0": q0})
     partition = _partition(config.method.finest_bands, config)
     summary = _summary(parameters, partition, config)
-    rho = float(config.budgets.information_nats)
-    beta = float(config.budgets.risk)
+    rho = config.budgets.information_nats
+    beta = config.budgets.risk
     solved = sharp_risk_set(summary, rho, config.numerics.root_atol, config.numerics.identity_atol)
     state, upper, compatibility, intrinsic = _population_state(solved, rho, beta)
     return FailureBoundaryResult(
@@ -158,7 +158,7 @@ def evaluate_optimizer_node_budget(
     )
     full_law = build_full_law(parameters, partition.band_count)
     truth = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
-    true_information = _true_information(truth, float(full_law.terminal_harmful))
+    true_information = _true_information(truth, full_law.terminal_harmful)
     rho = true_information + config.failure_boundary.optimizer_information_margin
     start = perf_counter_ns()
     trace = run_sequential_trace(
@@ -180,16 +180,12 @@ def evaluate_optimizer_node_budget(
         level=FailureBoundaryLevel(str(node_budget)),
         band_count=partition.band_count,
         sensitivity_budget=rho,
-        risk_budget=float(config.budgets.risk),
+        risk_budget=config.budgets.risk,
         tau=_tau(truth),
         operational_state=state,
-        risk_upper=float(projection.proven_upper),
-        compatibility_lower=float(projection.compatibility_lower_bound),
-        intrinsic_risk_lower=(
-            None
-            if projection.intrinsic_risk_lower_bound is None
-            else float(projection.intrinsic_risk_lower_bound)
-        ),
+        risk_upper=projection.proven_upper,
+        compatibility_lower=projection.compatibility_lower_bound,
+        intrinsic_risk_lower=projection.intrinsic_risk_lower_bound,
         optimizer_gap=projection.final_gap,
         optimizer_nodes=projection.visited_nodes,
         runtime_ms=elapsed_ms,
@@ -225,17 +221,13 @@ def _finite_sample_size(sample_size: EventCount, config: TrajCertConfig) -> Fail
         axis=FailureBoundaryAxis.MATURED_SAMPLE_SIZE,
         level=FailureBoundaryLevel(str(sample_size)),
         band_count=partition.band_count,
-        sensitivity_budget=float(config.budgets.information_nats),
-        risk_budget=float(config.budgets.risk),
+        sensitivity_budget=config.budgets.information_nats,
+        risk_budget=config.budgets.risk,
         tau=_tau(truth),
         operational_state=state,
-        risk_upper=float(checkpoint.projection.proven_upper),
-        compatibility_lower=float(checkpoint.projection.compatibility_lower_bound),
-        intrinsic_risk_lower=(
-            None
-            if checkpoint.projection.intrinsic_risk_lower_bound is None
-            else float(checkpoint.projection.intrinsic_risk_lower_bound)
-        ),
+        risk_upper=checkpoint.projection.proven_upper,
+        compatibility_lower=checkpoint.projection.compatibility_lower_bound,
+        intrinsic_risk_lower=checkpoint.projection.intrinsic_risk_lower_bound,
         optimizer_gap=checkpoint.projection.final_gap,
         optimizer_nodes=checkpoint.projection.visited_nodes,
         runtime_ms=elapsed_ms,
@@ -309,11 +301,11 @@ def _population_state(
 ) -> tuple[ScientificState, RiskValue, InformationNats | None, RiskValue | None]: # TODO:  i'm not sure i like how this output is handled
     compatibility = solved.solve_result.compatibility
     minimum = compatibility.minimum_information_point
-    compatibility_floor = None if minimum is None else float(minimum.information_floor)
-    intrinsic = None if minimum is None else float(minimum.latent_risk)
+    compatibility_floor = None if minimum is None else minimum.information_floor
+    intrinsic = None if minimum is None else minimum.latent_risk
     if solved.latent_risk is None:
         return ScientificState.MODEL_INCOMPATIBLE, 1.0, compatibility_floor, intrinsic
-    upper = float(solved.latent_risk.upper)
+    upper = solved.latent_risk.upper
     if compatibility_floor is not None and compatibility_floor > rho:
         state = ScientificState.MODEL_INCOMPATIBLE
     elif intrinsic is not None and intrinsic > beta:
@@ -332,17 +324,14 @@ def _true_information(
     config = active_config.get()
     harmful = mass_tuple(summary.harmful_by_band)
     correct = mass_tuple(summary.correct_by_band)
-    return float(
-        direct_mutual_information(
-            harmful,
-            correct,
-            float(summary.unresolved_mass),
-            hidden_terminal_harmful,
-            config.numerics.oracle_digits,
-        )
+    return direct_mutual_information(
+        harmful,
+        correct,
+        summary.unresolved_mass,
+        hidden_terminal_harmful,
+        config.numerics.oracle_digits,
     )
 
 
 def _tau(summary: ObservableSummary) -> InformationNats | None:
-    value = observed_timing_information(summary)
-    return None if value is None else float(value)
+    return observed_timing_information(summary)

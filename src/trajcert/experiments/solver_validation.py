@@ -69,12 +69,8 @@ def compare_production_solver_to_oracle(
     risk_upper_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     endpoint_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     if production.interval is not None and oracle.hidden_mass_interval is not None:
-        lower_error = abs(
-            float(production.interval.lower) - float(oracle.hidden_mass_interval.lower)
-        )
-        upper_error = abs(
-            float(production.interval.upper) - float(oracle.hidden_mass_interval.upper)
-        )
+        lower_error = abs(production.interval.lower - oracle.hidden_mass_interval.lower)
+        upper_error = abs(production.interval.upper - oracle.hidden_mass_interval.upper)
         risk_upper_error = upper_error
         endpoint_error = max(lower_error, upper_error)
     elif production.interval is not None or oracle.hidden_mass_interval is not None:
@@ -82,15 +78,15 @@ def compare_production_solver_to_oracle(
     brackets = tuple(
         bracket for bracket in (production.lower_root, production.upper_root) if bracket is not None
     )
-    max_width = max((float(bracket.width) for bracket in brackets), default=None)
-    max_residual = max((float(bracket.residual) for bracket in brackets), default=None)
+    max_width = max((bracket.width for bracket in brackets), default=None)
+    max_residual = max((bracket.residual for bracket in brackets), default=None)
     passed = state_match
     if endpoint_error is not None:
         passed = passed and endpoint_error <= identity_atol
     if max_width is not None:
         passed = passed and max_width <= root_atol
     if any(
-        float(bracket.residual) > identity_atol
+        bracket.residual > identity_atol
         for bracket in brackets
         if bracket.status is not RootStatus.EXACT_BOUNDARY
     ):
@@ -98,17 +94,17 @@ def compare_production_solver_to_oracle(
     risk_lower: RiskValue | None = None
     risk_upper: RiskValue | None = None
     if production.interval is not None:
-        resolved_harmful = float(summary.resolved_harmful_mass)
-        risk_lower = resolved_harmful + float(production.interval.lower)
-        risk_upper = resolved_harmful + float(production.interval.upper)
+        resolved_harmful = summary.resolved_harmful_mass
+        risk_lower = resolved_harmful + production.interval.lower
+        risk_upper = resolved_harmful + production.interval.upper
     minimum = production.compatibility.minimum_information_point
     tau_value = observed_timing_information(summary)
     return SolverOracleComparison(
         sensitivity_budget=sensitivity_budget,
         compatibility_regime=production.compatibility.regime,
         oracle_regime=oracle.regime,
-        tau=None if tau_value is None else float(tau_value),
-        theta_dagger=None if minimum is None else float(minimum.latent_risk),
+        tau=tau_value,
+        theta_dagger=None if minimum is None else minimum.latent_risk,
         risk_lower=risk_lower,
         risk_upper=risk_upper,
         passed=passed,
