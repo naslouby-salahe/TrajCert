@@ -56,16 +56,23 @@ from trajcert.storage import (
     read_model,
 )
 from trajcert.types import (
+    AbsoluteError,
+    AbsoluteTightening,
+    BandCount,
     CompatibilityRegime,
+    Count,
     DomainModel,
-    FiniteFloat,
+    InequalityMargin,
     InformationNats,
     LawKey,
     LawName,
-    NonNegativeInt,
+    ObservedStatistic,
+    PairedDifferenceValue,
     PartitionName,
     Probability,
+    RelativeUnresolvedGain,
     RiskBudget,
+    RiskOffset,
     RiskValue,
     ScientificState,
     SensitivityBudget,
@@ -133,9 +140,9 @@ class PublicationSourceName(StrEnum):
 
 class TheoremValidationSummaryRow(DomainModel):
     theorem_name: TheoremName
-    case_count: NonNegativeInt
-    maximum_absolute_error: FiniteFloat | None
-    minimum_inequality_margin: FiniteFloat | None
+    case_count: Count
+    maximum_absolute_error: AbsoluteError | None
+    minimum_inequality_margin: InequalityMargin | None
     all_cases_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     primary_artifact: ArtifactKey
 
@@ -150,7 +157,7 @@ class PartitionTimingRow(DomainModel):
     delta_tau: InformationNats
     coarse_risk_upper: RiskValue
     fine_risk_upper: RiskValue
-    bound_gain: FiniteFloat
+    bound_gain: RiskOffset
     fine_subset_coarse: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     theorem_condition: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     passed: bool = Field(serialization_alias="pass")  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -168,7 +175,7 @@ class CompatibilitySafetyRow(DomainModel):
     rho_star: InformationNats | None
     expected_regime: RegimeName
     observed_regime: RegimeName
-    oracle_error: FiniteFloat | None
+    oracle_error: AbsoluteError | None
     passed: bool = Field(serialization_alias="pass")  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
@@ -179,20 +186,20 @@ class RhoUtilityRow(DomainModel):
     partition_name: PartitionName
     baseline_partition_name: PartitionName | None = None
     metric_name: RhoUtilityMetricName
-    metric_value: FiniteFloat | None = None
+    metric_value: RiskValue | None = None
     compatibility_state: CompatibilityRegime | None = None
     tau: InformationNats | None = None
     risk_upper: RiskValue | None = None
-    identified_width: FiniteFloat | None = None
+    identified_width: RiskValue | None = None
     complete_case_arrival_only: Probability | None = None
     worst_case_upper: RiskValue | None = None
-    absolute_tightening: FiniteFloat | None = None
-    relative_unresolved_gain: FiniteFloat | None = None
-    method_mean: FiniteFloat | None = None
-    baseline_mean: FiniteFloat | None = None
-    mean_paired_difference: FiniteFloat | None = None
-    bootstrap_lower_95: FiniteFloat | None = None
-    bootstrap_upper_95: FiniteFloat | None = None
+    absolute_tightening: AbsoluteTightening | None = None
+    relative_unresolved_gain: RelativeUnresolvedGain | None = None
+    method_mean: ObservedStatistic | None = None
+    baseline_mean: ObservedStatistic | None = None
+    mean_paired_difference: PairedDifferenceValue | None = None
+    bootstrap_lower_95: PairedDifferenceValue | None = None
+    bootstrap_upper_95: PairedDifferenceValue | None = None
     holm_adjusted_p: Probability | None = None
     materiality_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     never_certified_fraction_method: Probability | None = None
@@ -202,7 +209,7 @@ class RhoUtilityRow(DomainModel):
 class PartitionCoherenceFigureRow(DomainModel):
     law_name: LawName
     partition_name: PartitionName
-    partition_band_count: NonNegativeInt
+    partition_band_count: BandCount
     rho: SensitivityBudget
     tau: InformationNats
     risk_lower: RiskValue
@@ -357,8 +364,8 @@ class PublicationSourceRows(DomainModel):
 class TheoremValidationObservation(DomainModel):
     theorem_name: TheoremName
     passed: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    absolute_error: FiniteFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    inequality_margin: FiniteFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    absolute_error: AbsoluteError | None
+    inequality_margin: InequalityMargin | None
     primary_artifact: ArtifactKey
 
 
@@ -366,8 +373,8 @@ class PartitionTimingEvidence(DomainModel):
     law_name: LawName
     coarse_partition: PartitionName
     fine_partition: PartitionName
-    coarse_band_count: NonNegativeInt
-    fine_band_count: NonNegativeInt
+    coarse_band_count: BandCount
+    fine_band_count: BandCount
     rho: SensitivityBudget
     result: PartitionCoherenceResult
 
@@ -384,7 +391,7 @@ class CompatibilitySafetyEvidence(DomainModel):
     rho_star: InformationNats | None
     expected_regime: RegimeName
     observed_regime: RegimeName
-    oracle_error: FiniteFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_error: AbsoluteError | None
     passed: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
@@ -409,14 +416,14 @@ class SafetySourceEvidence(DomainModel):
 class PopulationFigureEvidence(DomainModel):
     law_name: LawName
     partition_name: PartitionName
-    partition_band_count: NonNegativeInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    partition_band_count: BandCount
     result: PopulationUtilityResult
 
 
 class SameEndpointFigureEvidence(DomainModel):
     law_name: LawName
     partition_name: PartitionName
-    partition_band_count: NonNegativeInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    partition_band_count: BandCount
     rho: SensitivityBudget
     result: SameEndpointTimingResult
 
@@ -567,7 +574,7 @@ def partition_coherence_figure_rows(
 def _population_coherence_values(
     item: PopulationFigureEvidence,
     target_rho: SensitivityBudget,
-    band_count: NonNegativeInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    band_count: BandCount,
 ) -> tuple[InformationNats, RiskValue, RiskValue]:
     if item.result.sensitivity_budget != target_rho:
         raise InvalidScientificDataError(
@@ -587,7 +594,7 @@ def _population_coherence_values(
 def _population_coherence_row(
     law_name: LawName,
     partition_name_value: PartitionName,
-    band_count: NonNegativeInt,
+    band_count: BandCount,
     target_rho: SensitivityBudget,
     tau: InformationNats,
     risk_lower: RiskValue,
@@ -607,7 +614,7 @@ def _population_coherence_row(
 def _same_endpoint_coherence_values(
     item: SameEndpointFigureEvidence,
     target_rho: SensitivityBudget,
-    band_count: NonNegativeInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    band_count: BandCount,
 ) -> tuple[InformationNats, RiskValue, RiskValue]:
     if item.rho != target_rho:
         raise InvalidScientificDataError(
@@ -627,7 +634,7 @@ def _same_endpoint_coherence_values(
 def _same_endpoint_coherence_row(
     timed_law: LawName,
     partition_name_value: PartitionName,
-    band_count: NonNegativeInt, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    band_count: BandCount,
     target_rho: SensitivityBudget,
     tau: InformationNats,
     risk_lower: RiskValue,

@@ -85,12 +85,14 @@ from trajcert.storage import (
     models_digest,
 )
 from trajcert.types import (
+    AbsoluteError,
     DomainModel,
-    FiniteFloat,
+    FamilySize,
+    InequalityMargin,
     LawKey,
     LawName,
+    ObservedStatistic,
     PartitionName,
-    PositiveInt,
     Probability,
     SemanticComparisonKey,
     SensitivityBudget,
@@ -142,8 +144,8 @@ class PairedInferenceResult(DomainModel):
     metric_name: PracticalMetric
     method_name: MethodName
     baseline_name: BaselineName
-    method_mean: FiniteFloat
-    baseline_mean: FiniteFloat
+    method_mean: ObservedStatistic
+    baseline_mean: ObservedStatistic
     effect: PairedEffectSummary
     bootstrap: PercentileBootstrapInterval
     sign_flip: SignFlipResult
@@ -155,7 +157,7 @@ class PairedInferenceResult(DomainModel):
 
 class TrajectoryOperationalGainSynthesis(DomainModel):
     tests: tuple[PairedInferenceResult, ...]
-    family_size: PositiveInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    family_size: FamilySize
     materiality: SequentialMaterialitySummary
 
 
@@ -902,8 +904,8 @@ def _theorem_observation(
     name: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     primary: ArtifactKey,
     passed: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    error: FiniteFloat | None,
-    margin: FiniteFloat | None,
+    error: AbsoluteError | None,
+    margin: InequalityMargin | None,
 ) -> TheoremValidationObservation:
     return TheoremValidationObservation(
         theorem_name=TheoremName(name),

@@ -13,7 +13,7 @@ from pydantic import BaseModel, JsonValue, ValidationError
 
 from trajcert.exceptions import SerializationError
 from trajcert.paths import canonical_number_token, fsync_directory, long_path_safe
-from trajcert.types import DomainModel, NonNegativeInt
+from trajcert.types import Count, DomainModel, SeedCount
 
 ArtifactKey = NewType("ArtifactKey", str)
 DigestHex = NewType("DigestHex", str)
@@ -52,10 +52,10 @@ class CompletionRecord(DomainModel):
     manifest_digest: DigestHex
     required_artifact_keys: tuple[ArtifactKey, ...]
     produced_artifact_keys: tuple[ArtifactKey, ...]
-    expected_artifact_count: NonNegativeInt
+    expected_artifact_count: Count
     artifact_sha256_map: tuple[ArtifactChecksum, ...]
-    completed_seed_count: NonNegativeInt
-    expected_seed_count: NonNegativeInt
+    completed_seed_count: SeedCount
+    expected_seed_count: SeedCount
     metrics_complete: Literal[True]
     statistics_complete: Literal[True]
     schema_validation_pass: Literal[True]

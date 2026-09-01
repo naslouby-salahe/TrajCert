@@ -26,6 +26,7 @@ from trajcert.math.safety import (
     assess_safety_geometry,
 )
 from trajcert.types import (
+    AbsoluteError,
     Count,
     DomainModel,
     GammaSensitivity,
@@ -34,8 +35,7 @@ from trajcert.types import (
     InformationCurvature,
     InformationNats,
     Mass,
-    NonNegativeFloat,
-    PositiveInt,
+    OracleDigits,
     Probability,
     RiskBudget,
     RiskInterval,
@@ -47,14 +47,14 @@ from trajcert.types import (
 
 class IdentityResult(DomainModel):
     passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_absolute_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_absolute_error: AbsoluteError
 
 
 class ConvexityResult(DomainModel):
     passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     evaluated_points: Count
     minimum_second_derivative: InformationCurvature | None
-    max_direct_second_derivative_error: NonNegativeFloat
+    max_direct_second_derivative_error: AbsoluteError
 
 
 class SharpSetIdentityResult(DomainModel):
@@ -63,22 +63,22 @@ class SharpSetIdentityResult(DomainModel):
     production_upper: RiskValue | None
     oracle_lower: RiskValue | None
     oracle_upper: RiskValue | None
-    max_endpoint_error: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_endpoint_error: AbsoluteError | None
     diagnostic_grid_mismatches: Count
 
 
 class RefinementIdentityResult(DomainModel):
     passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     timing_gain: InformationNats
-    max_profile_order_violation: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_profile_difference_error: NonNegativeFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    max_profile_order_violation: AbsoluteError
+    max_profile_difference_error: AbsoluteError
 
 
 class SafetyBoundaryIdentityResult(DomainModel):
     passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     assessment: SafetyAssessment
     frontier_direct_information: InformationNats | None
-    frontier_error: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    frontier_error: AbsoluteError | None
 
 
 class SafetyBoundaryCaseEvaluation(DomainModel):
@@ -89,7 +89,7 @@ class SafetyBoundaryCaseEvaluation(DomainModel):
 
 def path_information_decomposition(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     identity_atol: ToleranceValue,
 ) -> IdentityResult:
     tau = observed_timing_information(summary)
@@ -109,7 +109,7 @@ def path_information_decomposition(
 
 def information_profile_convexity(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     identity_atol: ToleranceValue,
 ) -> ConvexityResult:
     del oracle_digits
@@ -179,7 +179,7 @@ def sharp_set_constructive_identity(
     sensitivity_budget: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
 ) -> SharpSetIdentityResult:
     production = sharp_risk_set(summary, sensitivity_budget, root_atol, identity_atol)
@@ -279,7 +279,7 @@ def strict_timing_gain_identity(
 def safety_boundary_identity(
     summary: ObservableSummary,
     risk_budget: RiskBudget,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryIdentityResult:
     assessment = assess_safety_geometry(summary, risk_budget)
@@ -310,7 +310,7 @@ def safety_boundary_identity(
 def evaluate_safety_boundary_case(
     summary: ObservableSummary,
     case: SafetyBudgetCase,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     identity_atol: ToleranceValue,
 ) -> SafetyBoundaryCaseEvaluation:
     if not case.valid or case.risk_budget is None:
@@ -391,7 +391,7 @@ class LegacyPartitionIncoherenceResult(DomainModel):
     fine_risk_interval: RiskInterval
     endpoint_risk_interval: RiskInterval
     endpoint_difference_direction: EndpointDifferenceDirection
-    endpoint_difference_magnitude: NonNegativeFloat
+    endpoint_difference_magnitude: AbsoluteError
     passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 

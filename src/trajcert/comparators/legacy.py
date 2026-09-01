@@ -2,20 +2,16 @@ from __future__ import annotations
 
 from enum import StrEnum
 from math import isfinite
-from typing import Annotated
-
-from pydantic import Field, StrictFloat
 
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     Count,
     DomainModel,
+    GammaSensitivity,
     HiddenMassInterval,
     RiskInterval,
 )
-
-LegacyGamma = Annotated[StrictFloat, Field(ge=1.0)] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 
 class LegacyApplicability(StrEnum):
@@ -24,7 +20,7 @@ class LegacyApplicability(StrEnum):
 
 
 class LegacySensitivityResult(DomainModel):
-    gamma: LegacyGamma
+    gamma: GammaSensitivity
     applicability: LegacyApplicability
     hidden_mass_interval: HiddenMassInterval | None
     latent_risk_interval: RiskInterval | None
@@ -33,7 +29,7 @@ class LegacySensitivityResult(DomainModel):
 
 def legacy_bandwise_odds_ratio(
     summary: ObservableSummary,
-    gamma: LegacyGamma,
+    gamma: GammaSensitivity,
 ) -> LegacySensitivityResult:
     if not isfinite(gamma) or gamma < 1.0:
         raise InvalidScientificDataError("legacy Gamma must be finite and at least one")
@@ -78,7 +74,7 @@ def legacy_bandwise_odds_ratio(
     )
 
 
-def _incompatible(gamma: LegacyGamma, informative: Count) -> LegacySensitivityResult:
+def _incompatible(gamma: GammaSensitivity, informative: Count) -> LegacySensitivityResult:
     return LegacySensitivityResult(
         gamma=gamma,
         applicability=LegacyApplicability.MODEL_INCOMPATIBLE,

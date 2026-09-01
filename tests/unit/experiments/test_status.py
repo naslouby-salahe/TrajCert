@@ -37,6 +37,7 @@ from trajcert.storage import (
     DigestHex,
     PlanDigest,
     ProvenanceFingerprint,
+    SemanticCellKey,
     SpecificationDigest,
     atomic_write_model,
     model_digest,
@@ -284,7 +285,7 @@ def test_aggregate_experiment_status_not_started_without_ready_cells() -> None:
 
 def _cell_status(state: PublicExecutionState) -> CellStatus:
     return CellStatus(
-        semantic_cell_key="key",
+        semantic_cell_key=SemanticCellKey("key"),
         state=state,
         reason=None,
     )

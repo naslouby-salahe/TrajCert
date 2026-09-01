@@ -84,16 +84,15 @@ from trajcert.types import (
     InformationNats,
     LawKey,
     Mass,
-    NonNegativeFloat,
+    MedianEventCount,
     OuterMaxNodes,
-    PositiveInt,
     Probability,
     RiskBudget,
     RiskValue,
     ScientificState,
     SeedIndex,
     SensitivityBudget,
-    UnitFloat,
+    StreamCount,
 )
 
 _HAND_CASE_STREAM = 0 # TODO:  I believe this could have been handled better
@@ -147,9 +146,9 @@ class HandCaseResult(DomainModel):
 class CoverageMethodResult(DomainModel):
     method: SequentialMethod
     applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    streams: PositiveInt # TODO: Consider using a proper alias type for the number of streams
+    streams: StreamCount
     anytime_failures: Count
-    failure_rate: UnitFloat | None # TODO: Consider using a proper alias type for failure rate or whatever already exists with actually fits this
+    failure_rate: Probability | None
 
 
 class CoverageStressResult(DomainModel):
@@ -160,13 +159,13 @@ class CoverageStressResult(DomainModel):
 class CoverageMethodEvidence(DomainModel):
     method_name: str # TODO: Consider using a proper alias type for the method name or use a predefined enumeration of method names
     applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    independent_streams: PositiveInt # TODO: Consider using a proper alias type for the number of independent streams
+    independent_streams: StreamCount
     ever_violations: Count
-    violation_rate: UnitFloat | None # TODO: Consider using a proper alias type for violation rate or whatever already exists with actually fits this
-    clopper_pearson_upper_95: UnitFloat | None # TODO: Consider using a proper alias type for violation rate or whatever already exists with actually fits this
+    violation_rate: Probability | None
+    clopper_pearson_upper_95: Probability | None
     criterion_pass: bool | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    median_first_certified_n: NonNegativeFloat | None  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    median_certified_update_fraction: UnitFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    median_first_certified_n: MedianEventCount | None
+    median_certified_update_fraction: Probability | None
 
 
 class AnytimePathEvidence(DomainModel):
@@ -194,12 +193,12 @@ class CoverageEvidenceResult(DomainModel):
 
 class _StreamCertificationSummary(DomainModel):
     first_certified_matured_count: Count | None
-    certified_fraction: UnitFloat # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    certified_fraction: Probability
 
 
 class _TrajectoryEvidenceSummary(DomainModel):
-    first_certified: tuple[NonNegativeFloat, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    certified_fractions: tuple[UnitFloat, ...] # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    first_certified: tuple[MedianEventCount, ...]
+    certified_fractions: tuple[Probability, ...]
     representative_paths: tuple[AnytimePathEvidence, ...]
 
 
@@ -263,7 +262,7 @@ def run_sequential_trace(
 
 
 def run_anytime_hand_case(
-    case_index: PositiveInt, # TODO: Should probably use an enum instead of magic numbers
+    case_index: CaseIndex, # TODO: Should probably use an enum instead of magic numbers
     partition: TrajectoryPartition,
     config: TrajCertConfig,
 ) -> HandCaseResult:
@@ -332,8 +331,8 @@ def _coverage_stream_failures(
     config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     sensitivity_budget: SensitivityBudget,
     assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_events: PositiveInt, # TODO: consider using a proper alias type for the maximum number of events
-    checkpoint_every: PositiveInt, # TODO: consider using a proper alias type for the checkpoint interval
+    max_events: EventCount,
+    checkpoint_every: EventCount,
     true_risk: RiskValue,
     stream_index: SeedIndex,
 ) -> dict[SequentialMethod, bool]: # TODO: Consider replacing this raw mutable status map with a typed result.
@@ -418,7 +417,7 @@ def _record_checkpoint_failures(
 def _coverage_method_result(
     method: SequentialMethod,
     assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    stream_count: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    stream_count: StreamCount,
     failures: dict[SequentialMethod, Count], # TODO: Consider replacing this raw mutable count map with a typed result.
 ) -> CoverageMethodResult:
     applicable = method is not SequentialMethod.IGNORABLE_DELAY or assumption_valid
@@ -508,11 +507,11 @@ def evaluate_configured_coverage_stress(
 def _coverage_method_evidence(
     method: SequentialMethod,
     applicable: bool,
-    streams: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    streams: StreamCount,
     failures: Count,
-    failure_rate: UnitFloat | None, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    first_certified: tuple[NonNegativeFloat, ...], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    certified_fractions: tuple[UnitFloat, ...], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    failure_rate: Probability | None,
+    first_certified: tuple[MedianEventCount, ...],
+    certified_fractions: tuple[Probability, ...],
 ) -> CoverageMethodEvidence:
     config = active_config.get()
     upper = None if not applicable else _clopper_pearson_upper(failures, streams)
@@ -534,8 +533,7 @@ def _coverage_method_evidence(
     )
 
 
-def _clopper_pearson_upper(failures: Count, streams: PositiveInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                           ) -> UnitFloat: # TODO: Consider using a proper alias type for the return value as well
+def _clopper_pearson_upper(failures: Count, streams: StreamCount) -> Probability:
     if streams <= 0 or failures < 0 or failures > streams:
         raise InvalidScientificDataError("invalid binomial counts for exact coverage limit")
     if failures == streams:
@@ -1188,7 +1186,7 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
 def _project(
     envelope: ObservableSummaryEnvelope,
     sensitivity_budget: SensitivityBudget,
-    outer_max_nodes: PositiveInt | None = None, # TODO: Consider using a proper alias type for outer max nodes or whatever already exists with actually fits this
+    outer_max_nodes: OuterMaxNodes | None = None,
 ) -> ProjectionResult:
     config = active_config.get()
     return project_upper_risk(
@@ -1251,7 +1249,7 @@ def _gate_state(
 
 
 def _state_result(
-    case_index: PositiveInt, # TODO: Consider using a proper alias type for case index or whatever already exists with actually fits this
+    case_index: CaseIndex,
     partition: TrajectoryPartition,
     expected: ScientificState,
     observed: ScientificState | None,

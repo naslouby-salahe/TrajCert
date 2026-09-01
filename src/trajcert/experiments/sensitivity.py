@@ -17,11 +17,12 @@ from trajcert.math.bounds import (
 )
 from trajcert.math.information import observed_timing_information
 from trajcert.types import (
+    AbsoluteTightening,
     CompatibilityRegime,
     DomainModel,
-    FiniteFloat,
     InformationNats,
     Probability,
+    RelativeUnresolvedGain,
     RiskValue,
     ScientificState,
     SeedIndex,
@@ -35,11 +36,11 @@ class PopulationUtilityResult(DomainModel):
     tau: InformationNats | None
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
-    identified_width: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    identified_width: RiskValue | None
     complete_case_arrival_only: Probability | None
     unresolved_as_harm_upper: RiskValue
-    absolute_tightening: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    relative_unresolved_gain: FiniteFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    absolute_tightening: AbsoluteTightening | None
+    relative_unresolved_gain: RelativeUnresolvedGain | None
     materially_nonvacuous: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
 

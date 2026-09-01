@@ -18,6 +18,7 @@ from trajcert.types import (
     GridPointCount,
     HiddenMassInterval,
     InformationNats,
+    Mass,
     OracleDigits,
     RefinementCandidateCount,
     RefinementStepCount,
@@ -25,23 +26,22 @@ from trajcert.types import (
     RiskValue,
     SensitivityBudget,
     ToleranceValue,
-    UnitFloat,
 )
 
 
 class OracleBracket(DomainModel):
     # TODO: Consider using dedicated aliases for oracle bracket endpoints, residuals, and iteration count.
-    lower: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    upper: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    midpoint: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    width: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    lower: Mass
+    upper: Mass
+    midpoint: Mass
+    width: Mass
 
 
 class InformationOracleResult(DomainModel):
     # TODO: Consider using a dedicated oracle-result variant instead of nullable boundary brackets.
     regime: CompatibilityRegime
     sensitivity_budget: SensitivityBudget
-    minimum_hidden_mass: UnitFloat
+    minimum_hidden_mass: Mass
     minimum_information: InformationNats
     minimum_bracket: OracleBracket
     lower_boundary: OracleBracket | None
@@ -52,8 +52,8 @@ class InformationOracleResult(DomainModel):
 
 class OracleMassInterval(DomainModel):
     # TODO: Consider using a dedicated interval type shared with the non-oracle numerical path.
-    lower: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    upper: UnitFloat #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    lower: Mass
+    upper: Mass
 
     @model_validator(mode="after")
     def validate_order(self) -> Self:
@@ -91,10 +91,10 @@ class ProjectionOracleInput(DomainModel):
 
 class ProjectionFeasibleOracleResult(DomainModel):
     # TODO: Consider using proper aliases for projection-search counters.
-    best_feasible_risk: UnitFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_resolved_harmful: UnitFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_resolved_correct: UnitFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_hidden_terminal_harmful: UnitFloat | None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    best_feasible_risk: RiskValue | None
+    best_resolved_harmful: Mass | None
+    best_resolved_correct: Mass | None
+    best_hidden_terminal_harmful: Mass | None
     grid_points_per_axis: GridPointCount
     aggregate_points_checked: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
     feasible_points: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this

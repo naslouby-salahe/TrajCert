@@ -82,6 +82,7 @@ from trajcert.storage import (
     ArtifactKey,
     CellArtifactIndex,
     CompletionRecord,
+    SemanticCellKey,
     DependencyFingerprint,
     DigestHex,
     PlanDigest,
@@ -96,14 +97,15 @@ from trajcert.storage import (
 from trajcert.types import (
     ActionChannelId,
     ClientId,
+    Count,
     DomainModel,
     EpochId,
     LawKey,
     LawName,
-    NonNegativeInt,
     PartitionName,
     PublicExecutionState,
     ReasonCode,
+    SeedCount,
     SensitivityBudget,
     ToleranceValue,
 )
@@ -192,12 +194,12 @@ class ExecutionContext(DomainModel):
     dependency_fingerprint: DependencyFingerprint
     manifest_digest: DigestHex
     required_artifact_keys: tuple[ArtifactKey, ...]
-    expected_seed_count: NonNegativeInt
+    expected_seed_count: SeedCount
 
 
 class CellExecutionResult(DomainModel):
     artifact_index: CellArtifactIndex
-    completed_seed_count: NonNegativeInt
+    completed_seed_count: SeedCount
     metrics_complete: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     statistics_complete: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     invariant_validation_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -206,13 +208,13 @@ class CellExecutionResult(DomainModel):
 
 
 class RunningRecord(DomainModel):
-    semantic_cell_key: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    semantic_cell_key: SemanticCellKey
     plan_digest: PlanDigest
     dependency_fingerprint: DependencyFingerprint
 
 
 class FailureRecord(DomainModel):
-    semantic_cell_key: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    semantic_cell_key: SemanticCellKey
     plan_digest: PlanDigest
     dependency_fingerprint: DependencyFingerprint
     failure_type: FailureType
@@ -262,8 +264,8 @@ class LocalValidityTarget(DomainModel):
 class LocalValidityAuditResult(DomainModel):
     static_dependency_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     runtime_lineage_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    audited_root_count: NonNegativeInt
-    foreign_scientific_parent_count: NonNegativeInt
+    audited_root_count: Count
+    foreign_scientific_parent_count: Count
     violating_artifact_keys: tuple[ArtifactKey, ...]
     passed: bool = Field(serialization_alias="pass")  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
 
@@ -279,7 +281,7 @@ class SmokeResult(DomainModel):
     refinement_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     deterministic_confidence_sequence_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
     singleton_projection_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    passed_fixture_count: NonNegativeInt
+    passed_fixture_count: Count
 
     @property
     def passed(self) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -600,8 +602,8 @@ def cell_dependency_fingerprint(
 def expected_seed_count(
     experiment_name: ExperimentNameValue,
     config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
-) -> NonNegativeInt:
-    name = str(experiment_name)
+) -> SeedCount:
+    name = experiment_name
     if name == "Anytime Coverage Stress":
         return config.sequential.coverage.streams
     if name == "Sequential Sensitivity Utility":

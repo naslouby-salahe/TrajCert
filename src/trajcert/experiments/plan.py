@@ -21,12 +21,12 @@ from trajcert.provenance import (
 )
 from trajcert.storage import PlanDigest, model_digest
 from trajcert.types import (
+    Count,
     DomainModel,
     EvidenceClass,
     LawName,
-    NonNegativeInt,
+    Ordinal,
     PartitionName,
-    PositiveInt,
     ReasonCode,
     SensitivityBudget,
 )
@@ -74,8 +74,8 @@ _EXPERIMENTS: tuple[tuple[ExperimentNameValue, EvidenceClass], ...] = (
 
 
 class PlannedCell(DomainModel):
-    experiment_order: PositiveInt
-    cell_ordinal: PositiveInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    experiment_order: Ordinal
+    cell_ordinal: Ordinal
     identity: SemanticCellIdentity
     evidence_class: EvidenceClass
     executable: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
@@ -98,9 +98,9 @@ class PlanDigestMaterial(DomainModel):
 
 class ExperimentPlan(DomainModel):
     cells: tuple[PlannedCell, ...]
-    planned_cell_count: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    executable_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    invalid_cells: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    planned_cell_count: Count
+    executable_cells: Count
+    invalid_cells: Count
     nonapplicable_experiments: tuple[ExperimentNameValue, ...]
     plan_digest: PlanDigest
 

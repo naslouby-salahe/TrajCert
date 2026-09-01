@@ -2,10 +2,6 @@ from __future__ import annotations
 
 from enum import StrEnum
 from time import perf_counter_ns
-from typing import cast
-
-import numpy as np
-from numpy.typing import NDArray
 
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
@@ -19,6 +15,7 @@ from trajcert.math.information import minimum_information_point, observed_timing
 from trajcert.math.oracle import direct_mutual_information
 from trajcert.types import (
     BandCount,
+    ConvergenceGap,
     Count,
     DomainModel,
     EventCount,
@@ -26,13 +23,14 @@ from trajcert.types import (
     InformationNats,
     LawKey,
     Mass,
-    NonNegativeFloat,
     OuterMaxNodes,
     Probability,
     RiskBudget,
     RiskValue,
+    RuntimeMilliseconds,
     ScientificState,
     SensitivityBudget,
+    mass_tuple,
 )
 
 _BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE  # TODO: Move this study-law selection to YAML and access it through config.
@@ -62,9 +60,9 @@ class FailureBoundaryResult(DomainModel):
     risk_upper: RiskValue
     compatibility_lower: InformationNats | None
     intrinsic_risk_lower: RiskValue | None
-    optimizer_gap: NonNegativeFloat | None # TODO: Consider using a proper alias type for the optimizer gap or whatever already exists with actually fits this
+    optimizer_gap: ConvergenceGap | None
     optimizer_nodes: Count | None
-    runtime_ms: NonNegativeFloat | None # TODO: Consider using a proper alias type for the runtime in milliseconds or whatever already exists with actually fits this
+    runtime_ms: RuntimeMilliseconds | None
 
 
 def evaluate_failure_boundary(
@@ -332,8 +330,8 @@ def _true_information(
     hidden_terminal_harmful: Mass,
 ) -> InformationNats:
     config = active_config.get()
-    harmful = _float_tuple(summary.harmful_by_band)
-    correct = _float_tuple(summary.correct_by_band)
+    harmful = mass_tuple(summary.harmful_by_band)
+    correct = mass_tuple(summary.correct_by_band)
     return float(
         direct_mutual_information(
             harmful,
@@ -348,7 +346,3 @@ def _true_information(
 def _tau(summary: ObservableSummary) -> InformationNats | None:
     value = observed_timing_information(summary)
     return None if value is None else float(value)
-
-
-def _float_tuple(values: NDArray[np.float64]) -> tuple[Mass, ...]: # TODO: duplicate code and also feels redundant
-    return tuple(cast(list[float], values.tolist()))

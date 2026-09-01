@@ -19,7 +19,7 @@ from trajcert.math.safety import (
 from trajcert.types import (
     DomainModel,
     InformationNats,
-    PositiveInt,
+    OracleDigits,
     SafetyCaseName,
     SafetyRegime,
     ToleranceValue,
@@ -62,7 +62,7 @@ def compatibility_floor_behavior(
     summary: ObservableSummary,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
     compatibility_floor_offset: ToleranceValue,
 ) -> CompatibilityFloorBehaviorResult:
@@ -109,7 +109,7 @@ def sharpness_against_generic_oracle(
     summary: ObservableSummary,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
     sharpness_diagnostic_offset: ToleranceValue,
 ) -> SolverOracleComparison:
@@ -127,7 +127,7 @@ def sharpness_against_generic_oracle(
 
 def safety_and_intrinsic_impossibility(
     summary: ObservableSummary,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     identity_atol: ToleranceValue,
     resolved_harm_boundary_offset: ToleranceValue,
 ) -> SafetyIntrinsicResult:

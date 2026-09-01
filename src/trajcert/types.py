@@ -33,6 +33,7 @@ CaseIndex = NonNegativeInt
 CategoryIndex = NonNegativeInt
 Count = NonNegativeInt
 IterationCount = NonNegativeInt
+SeedCount = NonNegativeInt
 SeedIndex = NonNegativeInt
 SeedValue = NonNegativeInt
 EntropyValue = NonNegativeFloat
@@ -47,6 +48,7 @@ SlopeValue = FiniteFloat
 TerminalHorizon = PositiveFloat
 ToleranceValue = PositiveFloat
 
+AbsoluteError = NonNegativeFloat
 AbsoluteTightening = FiniteFloat
 AcceptanceUpperLimit = UnitFloat
 AgeUnit = NonNegativeFloat
@@ -55,21 +57,26 @@ ArbitraryPrecisionBits = NonNegativeInt
 CertifiedFractionGain = NonNegativeFloat
 CoefficientValue = FiniteFloat
 ConfidenceLevel = OpenUnitFloat
+ConvergenceGap = NonNegativeFloat
 CriticalZScore = FiniteFloat
 EventCount = PositiveInt
 EventIndex = NonNegativeInt
 EventIndexWidth = PositiveInt
 FamilySize = PositiveInt
 FavorableCount = NonNegativeInt
+GammaCoordinate = FiniteFloat
 GradientNorm = NonNegativeFloat
 GridPointCount = PositiveInt
 HazardProbability = OpenUnitFloat
+InequalityMargin = FiniteFloat
 InterceptValue = FiniteFloat
 IterationBudget = PositiveInt
 LawCount = PositiveInt
+MedianEventCount = NonNegativeFloat
 ObjectiveValue = FiniteFloat
 ObservedStatistic = FiniteFloat
 OracleDigits = PositiveInt
+Ordinal = PositiveInt
 OuterMaxNodes = NonNegativeInt
 PairCount = PositiveInt
 PairedDifferenceDispersion = FiniteFloat
@@ -82,10 +89,13 @@ RepetitionCount = PositiveInt
 ResampleCount = PositiveInt
 RhoValueCount = PositiveInt
 RiskOffset = FiniteFloat
+RuntimeMilliseconds = NonNegativeFloat
 SensitivityOffset = NonNegativeFloat
 SignificanceLevel = OpenUnitFloat
 StandardizedEffectSize = FiniteFloat
+SurvivingBoxCount = NonNegativeInt
 TimingContrast = NonNegativeFloat
+VisitedNodeCount = NonNegativeInt
 StreamCount = PositiveInt
 WarmupRepetitionCount = NonNegativeInt
 
@@ -124,6 +134,10 @@ class NDArrayFloat64Annotation:
 
 
 Vector = Annotated[np.ndarray[tuple[int], np.dtype[np.float64]], NDArrayFloat64Annotation]
+
+
+def mass_tuple(values: Vector) -> tuple[Mass, ...]:
+    return tuple(values.tolist())
 
 
 class DomainModel(BaseModel):

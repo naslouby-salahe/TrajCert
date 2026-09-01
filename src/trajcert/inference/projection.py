@@ -14,13 +14,16 @@ from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelop
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.entropy import binary_entropy_from_masses
 from trajcert.types import (
+    ArbitraryPrecisionBits,
+    ConvergenceGap,
     DomainModel,
     InformationNats,
-    NonNegativeFloat,
-    NonNegativeInt,
+    OuterMaxNodes,
     RiskValue,
     SensitivityBudget,
+    SurvivingBoxCount,
     ToleranceValue,
+    VisitedNodeCount,
 )
 
 _ENTROPY_MAXIMIZING_PROBABILITY = 0.5 #TODO: this should be in yaml and accessed through config
@@ -36,12 +39,12 @@ class ProjectionTerminationReason(StrEnum):
 
 class ProjectionResult(DomainModel):
     sensitivity_budget: SensitivityBudget
-    precision_bits: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    visited_nodes: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    surviving_boxes: NonNegativeInt # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    precision_bits: ArbitraryPrecisionBits
+    visited_nodes: VisitedNodeCount
+    surviving_boxes: SurvivingBoxCount
     feasible_incumbent: RiskValue | None
     proven_upper: RiskValue
-    final_gap: NonNegativeFloat | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    final_gap: ConvergenceGap | None
     termination_reason: ProjectionTerminationReason
     compatibility_lower_bound: InformationNats
     intrinsic_risk_lower_bound: RiskValue | None
@@ -111,9 +114,9 @@ def project_upper_risk(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     comparison_guard: ToleranceValue,
-    arbitrary_precision_bits: NonNegativeInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    arbitrary_precision_bits: ArbitraryPrecisionBits,
     outer_gap: ToleranceValue,
-    outer_max_nodes: NonNegativeInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    outer_max_nodes: OuterMaxNodes,
 ) -> ProjectionResult:
     rho = sensitivity_budget
     if rho < 0.0:

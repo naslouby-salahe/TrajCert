@@ -79,9 +79,9 @@ from trajcert.types import (
     ActionChannelId,
     CliCommand,
     ClientId,
+    Count,
     DomainModel,
     EpochId,
-    NonNegativeInt,
     PublicExecutionState,
     ReasonCode,
 )
@@ -274,10 +274,10 @@ _LOCAL_BOUND_EXPERIMENTS = (
 class RunExperimentResult(DomainModel):
     experiment_name: ExperimentNameValue
     state: PublicExecutionState
-    completed_cells: NonNegativeInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    reused_cells: NonNegativeInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    failed_cells: NonNegativeInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    blocked_cells: NonNegativeInt #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    completed_cells: Count
+    reused_cells: Count
+    failed_cells: Count
+    blocked_cells: Count
 
 
 class DoctorResult(DomainModel):

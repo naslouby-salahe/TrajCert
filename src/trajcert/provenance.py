@@ -23,16 +23,16 @@ from trajcert.storage import (
     file_digest,
 )
 from trajcert.types import (
+    AnytimeConfidenceDelta,
+    BandCount,
+    Count,
     DomainModel,
-    FiniteFloat,
+    GammaCoordinate,
     LawName,
-    NonNegativeInt,
     PartitionName,
-    PositiveInt,
     RiskBudget,
     SeedIndex,
     SensitivityBudget,
-    UnitFloat,
 )
 
 #TODO: identify what else needs to become enum
@@ -59,11 +59,11 @@ class SemanticCoordinates(DomainModel):
     baseline_name: BaselineName | None = None
     rho: SensitivityBudget | None = None
     beta: RiskBudget | None = None
-    delta: UnitFloat | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    gamma: FiniteFloat | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    pattern_mixture_c: NonNegativeInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    delta: AnytimeConfidenceDelta | None = None
+    gamma: GammaCoordinate | None = None
+    pattern_mixture_c: Count | None = None
     failure_boundary_axis_and_level: FailureBoundaryCoordinate | None = None
-    scaling_band_count: PositiveInt | None = None #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    scaling_band_count: BandCount | None = None
     seed_index: SeedIndex | None = None
     sensitivity_coordinate: SensitivityCoordinate | None = None
     variant_name: VariantName | None = None

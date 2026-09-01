@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
-
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.information import observed_timing_information
 from trajcert.math.oracle import direct_mutual_information, solve_information_oracle
@@ -11,14 +9,14 @@ from trajcert.types import (
     CompatibilityRegime,
     DomainModel,
     InformationNats,
-    PositiveInt,
+    OracleDigits,
     RiskBudget,
     RiskValue,
     RootStatus,
     SafetyRegime,
     SensitivityBudget,
     ToleranceValue,
-    Vector,
+    mass_tuple,
 )
 
 
@@ -53,7 +51,7 @@ def compare_production_solver_to_oracle(
     sensitivity_budget: SensitivityBudget,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
 ) -> SolverOracleComparison:
     production = solve_hidden_mass_interval(
@@ -127,7 +125,7 @@ def compare_production_solver_to_oracle(
 def compare_safety_frontier_to_oracle(
     summary: ObservableSummary,
     risk_budget: RiskBudget,
-    oracle_digits: PositiveInt, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    oracle_digits: OracleDigits,
     identity_atol: ToleranceValue,
 ) -> SafetyFrontierOracleComparison:
     safety = assess_safety_geometry(summary, risk_budget)
@@ -149,8 +147,8 @@ def compare_safety_frontier_to_oracle(
         )
     hidden = risk_budget - summary.resolved_harmful_mass
     oracle_value = direct_mutual_information(
-        harmful=_float_tuple(summary.harmful_by_band),
-        correct=_float_tuple(summary.correct_by_band),
+        harmful=mass_tuple(summary.harmful_by_band),
+        correct=mass_tuple(summary.correct_by_band),
         unresolved=summary.unresolved_mass,
         hidden_terminal_harmful=hidden,
         oracle_digits=oracle_digits,
@@ -165,8 +163,3 @@ def compare_safety_frontier_to_oracle(
         absolute_error=error,
         passed=error <= identity_atol,
     )
-
-
-def _float_tuple(values: Vector) -> tuple[float, ...]: # TODO: This is duplicated and redundant
-    array = np.asarray(values, dtype=np.float64)
-    return tuple(array.item(index) for index in range(array.size))
