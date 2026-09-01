@@ -846,11 +846,10 @@ def build_publication_source_rows(
     )
 
 
-def _solver_rows(
+def _solver_comparison_groups(
     plan: ExperimentPlan,
     workspace_root: Path,
-) -> tuple[SolverOracleValidationRow, ...]:
-    config = active_config.get()
+) -> dict[tuple[PartitionName, SensitivityCoordinate], list[SolverOracleComparison]]:
     grouped: dict[tuple[PartitionName, SensitivityCoordinate], list[SolverOracleComparison]] = (
         defaultdict(list)
     )
@@ -860,6 +859,19 @@ def _solver_rows(
         grouped[(partition, offset)].append(
             read_verified_scientific_result(cell, workspace_root, SolverOracleComparison)
         )
+    return grouped
+
+
+@dataclass(frozen=True, slots=True)
+class _FrontierOracleEvidence:
+    errors: tuple[AbsoluteError, ...]
+    passed: bool
+
+
+def _frontier_oracle_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> _FrontierOracleEvidence:
     frontier_errors: list[AbsoluteError] = []
     frontier_pass = True
     for cell in _cells(plan, ExperimentNameValue("Safety and Intrinsic Impossibility")):
@@ -869,30 +881,46 @@ def _solver_rows(
             if oracle.absolute_error is not None:
                 frontier_errors.append(oracle.absolute_error)
             frontier_pass = frontier_pass and oracle.passed
+    return _FrontierOracleEvidence(errors=tuple(frontier_errors), passed=frontier_pass)
+
+
+def _solver_oracle_validation_row(
+    partition: PartitionName,
+    offset: SensitivityCoordinate,
+    results: list[SolverOracleComparison],
+    finest: PartitionName,
+    frontier: _FrontierOracleEvidence,
+) -> SolverOracleValidationRow:
+    attach_frontier = partition == finest
+    return SolverOracleValidationRow(
+        partition_name=partition,
+        rho_offset_mode=offset,
+        cell_count=len(results),
+        max_abs_u_lower_error=_max_optional(item.abs_u_lower_error for item in results),
+        max_abs_u_upper_error=_max_optional(item.abs_u_upper_error for item in results),
+        max_abs_risk_upper_error=_max_optional(item.abs_risk_upper_error for item in results),
+        max_abs_rho_star_error=(
+            max(frontier.errors) if attach_frontier and frontier.errors else None
+        ),
+        rho_star_applicable_cell_count=(len(frontier.errors) if attach_frontier else 0),
+        state_mismatch_count=sum(not item.state_match for item in results),
+        passed=all(item.passed for item in results)
+        and (frontier.passed if attach_frontier else True),
+    )
+
+
+def _solver_rows(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[SolverOracleValidationRow, ...]:
+    config = active_config.get()
+    grouped = _solver_comparison_groups(plan, workspace_root)
+    frontier = _frontier_oracle_evidence(plan, workspace_root)
     finest = partition_name(config.method.finest_bands)
-    rows: list[SolverOracleValidationRow] = []
-    for (partition, offset), results in sorted(grouped.items()):
-        attach_frontier = partition == finest
-        rows.append(
-            SolverOracleValidationRow(
-                partition_name=partition,
-                rho_offset_mode=offset,
-                cell_count=len(results),
-                max_abs_u_lower_error=_max_optional(item.abs_u_lower_error for item in results),
-                max_abs_u_upper_error=_max_optional(item.abs_u_upper_error for item in results),
-                max_abs_risk_upper_error=_max_optional(
-                    item.abs_risk_upper_error for item in results
-                ),
-                max_abs_rho_star_error=(
-                    max(frontier_errors) if attach_frontier and frontier_errors else None
-                ),
-                rho_star_applicable_cell_count=(len(frontier_errors) if attach_frontier else 0),
-                state_mismatch_count=sum(not item.state_match for item in results),
-                passed=all(item.passed for item in results)
-                and (frontier_pass if attach_frontier else True),
-            )
-        )
-    return tuple(rows)
+    return tuple(
+        _solver_oracle_validation_row(partition, offset, results, finest, frontier)
+        for (partition, offset), results in sorted(grouped.items())
+    )
 
 
 def _coverage_results(

@@ -112,7 +112,10 @@ def balanced_prefix(
         target = Decimal(prefix_size)
         selected = max(
             range(len(categories)),
-            key=lambda index: (target * probabilities[index] - counts[index], -index),
+            key=lambda index, target=target: (
+                target * probabilities[index] - counts[index],
+                -index,
+            ),
         )
         counts[selected] += 1
         sequence.append(selected)
@@ -250,8 +253,7 @@ def _event_id(
 ) -> EventId:
     width = active_config.get().identifiers.event_index_width
     return EventId(
-        f"{semantic_slug(law_name)}::S{stream_index:0{width}d}"
-        + f"::E{event_index:0{width}d}"
+        f"{semantic_slug(law_name)}::S{stream_index:0{width}d}" + f"::E{event_index:0{width}d}"
     )
 
 

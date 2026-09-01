@@ -250,7 +250,7 @@ def _projection_search(
             if completed is not None:
                 return completed
             active = None
-    except (ArithmeticError, ValueError, OverflowError, NumericalError):
+    except (ArithmeticError, ValueError, NumericalError):
         return _projection_fallback(queue, incumbent, visited, active)
     return _final_projection(queue, incumbent, visited, active)
 
@@ -398,7 +398,7 @@ def _compatibility_search(
             if completed is not None:
                 return completed
             active = None
-    except (ArithmeticError, ValueError, OverflowError, NumericalError):
+    except (ArithmeticError, ValueError, NumericalError):
         pass
     return _compatibility_final(queue, best_upper, active, envelope)
 
@@ -519,7 +519,7 @@ def _intrinsic_search(
             if completed is not None:
                 return completed
             active = None
-    except (ArithmeticError, ValueError, OverflowError, NumericalError):
+    except (ArithmeticError, ValueError, NumericalError):
         pass
     return _intrinsic_final(queue, best_upper, active)
 
@@ -819,9 +819,7 @@ def _summary_at_aggregates(
         return None
 
 
-def _allocate_total(
-    intervals: tuple[ScalarEnvelope, ...], target: Mass
-) -> tuple[Mass, ...] | None:
+def _allocate_total(intervals: tuple[ScalarEnvelope, ...], target: Mass) -> tuple[Mass, ...] | None:
     values = [interval.lower for interval in intervals]
     remaining = target - sum(values)
     if remaining < 0.0:
@@ -872,9 +870,7 @@ def _minimum_profile_point(summary: ObservableSummary) -> tuple[RiskValue, Infor
 
 def _timing_information(summary: ObservableSummary) -> InformationNats:
     resolved = float(
-        binary_entropy_from_masses(
-            summary.resolved_harmful_mass, summary.resolved_correct_mass
-        )
+        binary_entropy_from_masses(summary.resolved_harmful_mass, summary.resolved_correct_mass)
     )
     bandwise = sum(
         binary_entropy_from_masses(left, right)
@@ -1029,9 +1025,9 @@ def _queue_upper(
 
 def _zero_resolved_plausible(envelope: ObservableSummaryEnvelope) -> SearchPredicate:
     return (
-        envelope.resolved_harmful.lower == 0.0
-        and envelope.resolved_correct.lower == 0.0
-        and envelope.unresolved.upper == 1.0
+        envelope.resolved_harmful.lower <= 0.0
+        and envelope.resolved_correct.lower <= 0.0
+        and envelope.unresolved.upper >= 1.0
     )
 
 

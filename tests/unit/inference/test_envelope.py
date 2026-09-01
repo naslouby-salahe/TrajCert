@@ -43,18 +43,25 @@ def test_scalar_envelope_validates_order() -> None:
 
 
 def test_summary_envelope_validates_shape() -> None:
+    partition = _partition()
+    harmful_by_band = (ScalarEnvelope(lower=0.1, upper=0.2),)
+    correct_by_band = (
+        ScalarEnvelope(lower=0.1, upper=0.2),
+        ScalarEnvelope(lower=0.1, upper=0.2),
+    )
+    unresolved = ScalarEnvelope(lower=0.6, upper=0.8)
+    resolved_harmful = ScalarEnvelope(lower=0.1, upper=0.2)
+    resolved_correct = ScalarEnvelope(lower=0.1, upper=0.2)
+    resolved_entropy = ScalarEnvelope(lower=0.1, upper=0.2)
     with pytest.raises(NumericalError, match="match the partition"):
         _ = ObservableSummaryEnvelope(
-            partition=_partition(),
-            harmful_by_band=(ScalarEnvelope(lower=0.1, upper=0.2),),
-            correct_by_band=(
-                ScalarEnvelope(lower=0.1, upper=0.2),
-                ScalarEnvelope(lower=0.1, upper=0.2),
-            ),
-            unresolved=ScalarEnvelope(lower=0.6, upper=0.8),
-            resolved_harmful=ScalarEnvelope(lower=0.1, upper=0.2),
-            resolved_correct=ScalarEnvelope(lower=0.1, upper=0.2),
-            resolved_entropy=ScalarEnvelope(lower=0.1, upper=0.2),
+            partition=partition,
+            harmful_by_band=harmful_by_band,
+            correct_by_band=correct_by_band,
+            unresolved=unresolved,
+            resolved_harmful=resolved_harmful,
+            resolved_correct=resolved_correct,
+            resolved_entropy=resolved_entropy,
         )
 
 
@@ -67,8 +74,9 @@ def test_summary_envelope_from_confidence_rejects_dimension_mismatch() -> None:
             ClosedProbabilityInterval(lower=0.0, upper=1.0),
         ),
     )
+    partition = _partition()
     with pytest.raises(NumericalError, match="dimension"):
-        _ = summary_envelope_from_confidence(_partition(), region)
+        _ = summary_envelope_from_confidence(partition, region)
 
 
 def test_summary_envelope_from_confidence_maps_bands_and_aggregates() -> None:

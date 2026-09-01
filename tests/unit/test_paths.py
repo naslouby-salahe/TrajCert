@@ -41,7 +41,9 @@ def test_semantic_slug_lowercases_and_hyphenates(source: str, expected: str) -> 
 
 
 def test_semantic_slug_is_deterministic() -> None:
-    assert semantic_slug("Trajectory A") == semantic_slug("Trajectory A")
+    first = semantic_slug("Trajectory A")
+    second = semantic_slug("Trajectory A")
+    assert first == second
 
 
 @pytest.mark.parametrize("source", ["", "---", "αβ", "   "])

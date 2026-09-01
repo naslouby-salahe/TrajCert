@@ -32,25 +32,21 @@ def test_environment_scientific_value_fixture_is_rejected_with_config_env_rule()
 
 def test_config_param_threaded_fixture_is_rejected_with_config_param_rule() -> None:
     rule_ids = {
-        finding.rule_id
-        for finding in audit_path(FIXTURES / "invalid" / "config_param_threaded.py")
+        finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "config_param_threaded.py")
     }
     assert RULE_CONFIG_PARAM in rule_ids
 
 
 def test_config_entry_point_fixture_is_not_rejected_with_config_param_rule() -> None:
     rule_ids = {
-        finding.rule_id
-        for finding in audit_path(FIXTURES / "valid" / "config_entry_point.py")
+        finding.rule_id for finding in audit_path(FIXTURES / "valid" / "config_entry_point.py")
     }
     assert RULE_CONFIG_PARAM not in rule_ids
 
 
 def test_production_has_no_config_threaded_as_a_parameter() -> None:
     findings = audit_tree(SOURCE_ROOT)
-    violations = [
-        finding.render() for finding in findings if finding.rule_id == RULE_CONFIG_PARAM
-    ]
+    violations = [finding.render() for finding in findings if finding.rule_id == RULE_CONFIG_PARAM]
     assert not violations, "\n".join(violations)
 
 

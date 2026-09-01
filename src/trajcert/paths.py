@@ -77,7 +77,6 @@ def fsync_directory(directory: Path) -> None:
         os.close(descriptor)
 
 
-
 def semantic_slug(value: str) -> CoordinateToken:
     lowered = value.lower()
     output: list[str] = []
@@ -99,7 +98,7 @@ def semantic_slug(value: str) -> CoordinateToken:
 def canonical_number_token(value: PathCoordinateValue) -> CoordinateToken:
     if isnan(value) or value in (float("inf"), float("-inf")):
         raise SerializationError("semantic numeric path coordinate must be finite")
-    if value == 0.0:
+    if not value:
         return CoordinateToken("0")
     sign, coefficient, exponent = _parsed_coefficient(value)
     integer, fractional = _split_coefficient(coefficient)

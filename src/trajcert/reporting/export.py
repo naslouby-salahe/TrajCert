@@ -34,7 +34,7 @@ from trajcert.paths import (
     CoordinateToken,
     semantic_slug,
 )
-from trajcert.provenance import CodeCommit, EnvironmentDigest, ExperimentNameValue
+from trajcert.provenance import CodeCommit, EnvironmentDigest
 from trajcert.reporting.figures import FigureRenderResult, render_figures
 from trajcert.reporting.source_data import (
     VerifiedSourceData,
@@ -59,10 +59,11 @@ from trajcert.storage import (
     model_digest,
     read_model,
 )
+from trajcert.types import ExperimentName
 from trajcert.types import Count, DependencyAuthority
 
 LOCK_PATH = Path("uv.lock")
-_SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
+_SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
 _ALLOWED_EXPERIMENT_CHILDREN = frozenset({"figures", "tables", "metrics", "statistics"})
 _ALLOWED_PROJECT_CHILDREN = frozenset(
@@ -81,7 +82,7 @@ class ReportExportResult:
 def export_report(
     workspace_root: Path,
     *,
-    experiment_name: ExperimentNameValue | None = None,
+    experiment_name: ExperimentName | None = None,
     overwrite: bool = False,
 ) -> ReportExportResult:
     config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
@@ -132,7 +133,7 @@ def export_report(
 
 
 def _selected_descriptors(
-    experiment_name: ExperimentNameValue | None,
+    experiment_name: ExperimentName | None,
 ) -> tuple[PublicationSourceDescriptor, ...]:
     all_descriptors = all_publication_source_descriptors()
     if experiment_name is None:
@@ -320,8 +321,7 @@ def _validate_upstream_completions(
             completion.required_artifact_keys == (required_key,),
             completion.produced_artifact_keys == (required_key,),
             completion.expected_artifact_count == 1,
-            completion.expected_seed_count
-            == expected_seed_count(cell.identity.experiment_name),
+            completion.expected_seed_count == expected_seed_count(cell.identity.experiment_name),
             completion.completed_seed_count == completion.expected_seed_count,
             completion.metrics_complete,
             completion.statistics_complete,

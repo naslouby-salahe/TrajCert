@@ -116,7 +116,7 @@ def information_profile_convexity(
     del oracle_digits
     grid_points = active_config.get().numerics.profile_grid_points
     unresolved = summary.unresolved_mass
-    if unresolved == 0.0:
+    if unresolved <= 0.0:
         return ConvexityResult(
             passed=True,
             evaluated_points=grid_points,

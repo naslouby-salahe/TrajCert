@@ -206,8 +206,8 @@ def test_require_synthesis_completion_is_blocked_without_completed_evidence(
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     with pytest.raises(SerializationError, match="cannot read artifact"):
-        _ = active_config.set(config)
         _ = require_synthesis_completion(workspace)
 
 
@@ -377,10 +377,9 @@ def test_export_report_rejects_ownerless_experiment(
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
     monkeypatch.setattr(export, "require_synthesis_completion", _noop_synthesis_completion)
+    experiment_name = ExperimentNameValue("Sequential Sensitivity Utility")
     with pytest.raises(InvalidScientificDataError, match="no roadmap publication artifacts"):
-        _ = export_report(
-            workspace, experiment_name=ExperimentNameValue("Sequential Sensitivity Utility")
-        )
+        _ = export_report(workspace, experiment_name=experiment_name)
 
 
 def test_export_report_rejects_missing_reproducibility_input(
@@ -414,8 +413,8 @@ def test_require_synthesis_completion_rejects_multiple_cells(
 ) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     monkeypatch.setattr(export, "cells_for_experiment", _duplicate_synthesis_cells)
+    _ = active_config.set(config)
     with pytest.raises(InvalidScientificDataError, match="must contain exactly one cell"):
-        _ = active_config.set(config)
         export.require_synthesis_completion(tmp_path)
 
 
@@ -543,8 +542,8 @@ def test_require_synthesis_completion_rejects_stale_upstream(
     monkeypatch.setattr(export, "producer_component_digest", _fixed_component_digest)
     monkeypatch.setattr(export, "cell_dependency_fingerprint", _fixed_dependency_fingerprint)
     monkeypatch.setattr(export, "read_model", _stale_completion)
+    _ = active_config.set(config)
     with pytest.raises(InvalidScientificDataError, match="upstream completion is stale"):
-        _ = active_config.set(config)
         export.require_synthesis_completion(tmp_path)
 
 

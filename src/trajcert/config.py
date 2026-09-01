@@ -174,7 +174,7 @@ class LegacyPartitionIncoherenceConfig(ConfigModel):
         _require_strictly_increasing(
             self.q, ConfigFieldPath("study_design.legacy_partition_incoherence.q")
         )
-        if sum(self.latent_outcome_probabilities) != 1.0:
+        if not isclose(sum(self.latent_outcome_probabilities), 1.0, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError("legacy latent outcome probabilities must sum exactly to one")
         if any(value <= 0.0 for value in self.latent_outcome_probabilities):
             raise ValueError("legacy latent outcome probabilities must be positive")

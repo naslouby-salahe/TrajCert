@@ -165,15 +165,14 @@ def test_environment_reproducibility_record_container_digest_defaults_none() -> 
 
 
 def test_environment_reproducibility_record_rejects_non_none_container_digest() -> None:
+    payload = {
+        "dependency_authority": "pypi",
+        "dependency_lock_path": Path("lock.json"),
+        "environment_lock_digest": EnvironmentDigest(_HEX_A),
+        "container_image_digest": "sha256:abc",
+    }
     with pytest.raises(ValidationError):
-        _ = EnvironmentReproducibilityRecord.model_validate(
-            {
-                "dependency_authority": "pypi",
-                "dependency_lock_path": Path("lock.json"),
-                "environment_lock_digest": EnvironmentDigest(_HEX_A),
-                "container_image_digest": "sha256:abc",
-            }
-        )
+        _ = EnvironmentReproducibilityRecord.model_validate(payload)
 
 
 def test_publication_reproducibility_record_constructs() -> None:

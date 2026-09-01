@@ -14,7 +14,6 @@ from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis
 from trajcert.provenance import (
     ComparisonPairName,
-    ExperimentNameValue,
     FailureBoundaryCoordinate,
     SemanticCellIdentity,
     SemanticCoordinates,
@@ -26,6 +25,7 @@ from trajcert.types import (
     Count,
     DomainModel,
     EvidenceClass,
+    ExperimentName,
     FailureBoundaryLevel,
     FailureBoundaryProbe,
     LawName,
@@ -47,36 +47,36 @@ class _SafetyCaseVariant(StrEnum):
 
 _SAFETY_CASES = tuple(_SafetyCaseVariant)
 
-_EXPERIMENTS: tuple[tuple[ExperimentNameValue, EvidenceClass], ...] = (
-    (ExperimentNameValue("Legacy Partition Incoherence Check"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Path Information Decomposition"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Information Profile Convexity"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Minimum Compatibility Identity"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Sharp-Set Constructive Identity"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Refinement Dominance Identity"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Strict Timing-Gain Identity"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Safety-Boundary Identity"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Endpoint Special-Case Identity"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Anytime Projection Proof Check"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Population Complexity Proof Check"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Production Solver vs Independent Oracle"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Callback-Model Reduction Falsification"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Generic Information-Optimization Reduction"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Partition Coherence"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Same Endpoint, Different Timing"), EvidenceClass.ABLATION),
-    (ExperimentNameValue("Strict Timing Gain"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Compatibility Floor Behavior"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Sharpness Against Generic Oracle"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Safety and Intrinsic Impossibility"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Anytime Implementation Hand Cases"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Anytime Coverage Stress"), EvidenceClass.CONFIRMATORY),
-    (ExperimentNameValue("Population Sensitivity Utility"), EvidenceClass.ROBUSTNESS),
-    (ExperimentNameValue("Sequential Sensitivity Utility"), EvidenceClass.ROBUSTNESS),
-    (ExperimentNameValue("Failure Boundary Atlas"), EvidenceClass.FAILURE_BOUNDARY),
-    (ExperimentNameValue("Real-Trajectory Validation"), EvidenceClass.GENERALIZATION),
-    (ExperimentNameValue("Foreign-Information Negative Control"), EvidenceClass.DIAGNOSTIC),
-    (ExperimentNameValue("Computational Scaling"), EvidenceClass.VALIDATION),
-    (ExperimentNameValue("Statistical Synthesis"), EvidenceClass.VALIDATION),
+_EXPERIMENTS: tuple[tuple[ExperimentName, EvidenceClass], ...] = (
+    (ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK, EvidenceClass.VALIDATION),
+    (ExperimentName.PATH_INFORMATION_DECOMPOSITION, EvidenceClass.VALIDATION),
+    (ExperimentName.INFORMATION_PROFILE_CONVEXITY, EvidenceClass.VALIDATION),
+    (ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY, EvidenceClass.VALIDATION),
+    (ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY, EvidenceClass.VALIDATION),
+    (ExperimentName.REFINEMENT_DOMINANCE_IDENTITY, EvidenceClass.VALIDATION),
+    (ExperimentName.STRICT_TIMING_GAIN_IDENTITY, EvidenceClass.VALIDATION),
+    (ExperimentName.SAFETY_BOUNDARY_IDENTITY, EvidenceClass.VALIDATION),
+    (ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY, EvidenceClass.VALIDATION),
+    (ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK, EvidenceClass.VALIDATION),
+    (ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK, EvidenceClass.VALIDATION),
+    (ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE, EvidenceClass.VALIDATION),
+    (ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.PARTITION_COHERENCE, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING, EvidenceClass.ABLATION),
+    (ExperimentName.STRICT_TIMING_GAIN, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES, EvidenceClass.VALIDATION),
+    (ExperimentName.ANYTIME_COVERAGE_STRESS, EvidenceClass.CONFIRMATORY),
+    (ExperimentName.POPULATION_SENSITIVITY_UTILITY, EvidenceClass.ROBUSTNESS),
+    (ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY, EvidenceClass.ROBUSTNESS),
+    (ExperimentName.FAILURE_BOUNDARY_ATLAS, EvidenceClass.FAILURE_BOUNDARY),
+    (ExperimentName.REAL_TRAJECTORY_VALIDATION, EvidenceClass.GENERALIZATION),
+    (ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL, EvidenceClass.DIAGNOSTIC),
+    (ExperimentName.COMPUTATIONAL_SCALING, EvidenceClass.VALIDATION),
+    (ExperimentName.STATISTICAL_SYNTHESIS, EvidenceClass.VALIDATION),
 )
 
 
@@ -87,7 +87,7 @@ class PlannedCell(DomainModel):
     evidence_class: EvidenceClass
     executable: bool
     invalid_reason: ReasonCode | None
-    required_experiments: tuple[ExperimentNameValue, ...]
+    required_experiments: tuple[ExperimentName, ...]
 
     @model_validator(mode="after")
     def validate_execution_contract(self) -> PlannedCell:
@@ -100,7 +100,7 @@ class PlannedCell(DomainModel):
 
 class PlanDigestMaterial(DomainModel):
     cells: tuple[PlannedCell, ...]
-    nonapplicable_experiments: tuple[ExperimentNameValue, ...]
+    nonapplicable_experiments: tuple[ExperimentName, ...]
 
 
 class ExperimentPlan(DomainModel):
@@ -108,7 +108,7 @@ class ExperimentPlan(DomainModel):
     planned_cell_count: Count
     executable_cells: Count
     invalid_cells: Count
-    nonapplicable_experiments: tuple[ExperimentNameValue, ...]
+    nonapplicable_experiments: tuple[ExperimentName, ...]
     plan_digest: PlanDigest
 
     @model_validator(mode="after")
@@ -130,9 +130,7 @@ def build_plan(config: TrajCertConfig) -> ExperimentPlan:
         for order, (name, evidence_class) in enumerate(_EXPERIMENTS, start=1)
         for cell in _expand_experiment(order, name, evidence_class)
     )
-    nonapplicable = tuple(
-        name for name, _ in _EXPERIMENTS if not _coordinates_for_experiment(name)
-    )
+    nonapplicable = tuple(name for name, _ in _EXPERIMENTS if not _coordinates_for_experiment(name))
     executable_count = sum(cell.executable for cell in cells)
     invalid_count = len(cells) - executable_count
     material = PlanDigestMaterial(cells=cells, nonapplicable_experiments=nonapplicable)
@@ -147,19 +145,19 @@ def build_plan(config: TrajCertConfig) -> ExperimentPlan:
     return plan
 
 
-def experiment_names() -> tuple[ExperimentNameValue, ...]:
+def experiment_names() -> tuple[ExperimentName, ...]:
     return tuple(name for name, _ in _EXPERIMENTS)
 
 
 def cells_for_experiment(
-    plan: ExperimentPlan, experiment_name: ExperimentNameValue
+    plan: ExperimentPlan, experiment_name: ExperimentName
 ) -> tuple[PlannedCell, ...]:
     return tuple(cell for cell in plan.cells if cell.identity.experiment_name == experiment_name)
 
 
 def _expand_experiment(
     order: Ordinal,
-    name: ExperimentNameValue,
+    name: ExperimentName,
     evidence_class: EvidenceClass,
 ) -> tuple[PlannedCell, ...]:
     dependencies = _required_experiments(name)
@@ -184,25 +182,22 @@ def _expand_experiment(
 
 
 def _coordinates_for_experiment(
-    name: ExperimentNameValue,
+    name: ExperimentName,
 ) -> tuple[SemanticCoordinates, ...]:
     handler = _COORDINATE_DISPATCH.get(name)
     if handler is None and name in {
-        "Real-Trajectory Validation",
-        "Foreign-Information Negative Control",
+        ExperimentName.REAL_TRAJECTORY_VALIDATION,
+        ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
     }:
         return ()
     if handler is None:
-        raise InvalidScientificDataError(
-            f"no plan expansion implementation for experiment: {name}"
-        )
+        raise InvalidScientificDataError(f"no plan expansion implementation for experiment: {name}")
     return handler()
 
 
 def _adjacent_partition_pairs() -> tuple[ComparisonPairName, ...]:
     return tuple(
-        ComparisonPairName(f"{fine} -> {coarse}")
-        for fine, coarse in pairwise(_partition_names())
+        ComparisonPairName(f"{fine} -> {coarse}") for fine, coarse in pairwise(_partition_names())
     )
 
 
@@ -273,8 +268,7 @@ def _coordinates_safety_boundary_identity() -> tuple[SemanticCoordinates, ...]:
 def _coordinates_endpoint_special_case_identity() -> tuple[SemanticCoordinates, ...]:
     endpoint = _partition_names()[-1]
     return tuple(
-        SemanticCoordinates(synthetic_law_name=law, partition_name=endpoint)
-        for law in _law_names()
+        SemanticCoordinates(synthetic_law_name=law, partition_name=endpoint) for law in _law_names()
     )
 
 
@@ -303,8 +297,7 @@ def _coordinates_production_solver_vs_independent_oracle() -> tuple[SemanticCoor
 def _coordinates_comparator_reduction() -> tuple[SemanticCoordinates, ...]:
     finest = _partition_names()[0]
     return tuple(
-        SemanticCoordinates(synthetic_law_name=law, partition_name=finest)
-        for law in _law_names()
+        SemanticCoordinates(synthetic_law_name=law, partition_name=finest) for law in _law_names()
     )
 
 
@@ -441,9 +434,7 @@ def _population_rho_values() -> tuple[SensitivityBudget, ...]:
 
 def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
     config = active_config.get()
-    configured_axes: tuple[
-        tuple[FailureBoundaryAxis, tuple[FailureBoundaryProbe, ...]], ...
-    ] = (
+    configured_axes: tuple[tuple[FailureBoundaryAxis, tuple[FailureBoundaryProbe, ...]], ...] = (
         (
             FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY,
             tuple(config.failure_boundary.unresolvedness),
@@ -488,64 +479,64 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
     return tuple(coordinates)
 
 
-_COORDINATE_DISPATCH: dict[ExperimentNameValue, Callable[[], tuple[SemanticCoordinates, ...]]] = {
-    ExperimentNameValue("Legacy Partition Incoherence Check"): (
+_COORDINATE_DISPATCH: dict[ExperimentName, Callable[[], tuple[SemanticCoordinates, ...]]] = {
+    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: (
         _coordinates_legacy_partition_incoherence_check
     ),
-    ExperimentNameValue("Path Information Decomposition"): _coordinates_law_and_partition_product,
-    ExperimentNameValue("Information Profile Convexity"): _coordinates_law_and_partition_product,
-    ExperimentNameValue("Minimum Compatibility Identity"): _coordinates_law_and_partition_product,
-    ExperimentNameValue("Sharp-Set Constructive Identity"): (
+    ExperimentName.PATH_INFORMATION_DECOMPOSITION: _coordinates_law_and_partition_product,
+    ExperimentName.INFORMATION_PROFILE_CONVEXITY: _coordinates_law_and_partition_product,
+    ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY: _coordinates_law_and_partition_product,
+    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: (
         _coordinates_sharp_set_constructive_identity
     ),
-    ExperimentNameValue("Refinement Dominance Identity"): (
+    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: (
         _coordinates_refinement_dominance_identity
     ),
-    ExperimentNameValue("Strict Timing-Gain Identity"): _coordinates_strict_timing_gain,
-    ExperimentNameValue("Strict Timing Gain"): _coordinates_strict_timing_gain,
-    ExperimentNameValue("Safety-Boundary Identity"): _coordinates_safety_boundary_identity,
-    ExperimentNameValue("Endpoint Special-Case Identity"): (
+    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _coordinates_strict_timing_gain,
+    ExperimentName.STRICT_TIMING_GAIN: _coordinates_strict_timing_gain,
+    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _coordinates_safety_boundary_identity,
+    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: (
         _coordinates_endpoint_special_case_identity
     ),
-    ExperimentNameValue("Anytime Projection Proof Check"): (
+    ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK: (
         _coordinates_anytime_projection_proof_check
     ),
-    ExperimentNameValue("Population Complexity Proof Check"): (
+    ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK: (
         _coordinates_population_complexity_proof_check
     ),
-    ExperimentNameValue("Production Solver vs Independent Oracle"): (
+    ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: (
         _coordinates_production_solver_vs_independent_oracle
     ),
-    ExperimentNameValue("Callback-Model Reduction Falsification"): (
+    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: (
         _coordinates_comparator_reduction
     ),
-    ExperimentNameValue("Generic Information-Optimization Reduction"): (
+    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: (
         _coordinates_comparator_reduction
     ),
-    ExperimentNameValue("Partition Coherence"): _coordinates_partition_coherence,
-    ExperimentNameValue("Same Endpoint, Different Timing"): (
+    ExperimentName.PARTITION_COHERENCE: _coordinates_partition_coherence,
+    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (
         _coordinates_same_endpoint_different_timing
     ),
-    ExperimentNameValue("Compatibility Floor Behavior"): _coordinates_compatibility_floor_behavior,
-    ExperimentNameValue("Sharpness Against Generic Oracle"): (
+    ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _coordinates_compatibility_floor_behavior,
+    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: (
         _coordinates_sharpness_against_generic_oracle
     ),
-    ExperimentNameValue("Safety and Intrinsic Impossibility"): (
+    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: (
         _coordinates_safety_and_intrinsic_impossibility
     ),
-    ExperimentNameValue("Anytime Implementation Hand Cases"): (
+    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: (
         _coordinates_anytime_implementation_hand_cases
     ),
-    ExperimentNameValue("Anytime Coverage Stress"): _coordinates_anytime_coverage_stress,
-    ExperimentNameValue("Population Sensitivity Utility"): (
+    ExperimentName.ANYTIME_COVERAGE_STRESS: _coordinates_anytime_coverage_stress,
+    ExperimentName.POPULATION_SENSITIVITY_UTILITY: (
         _coordinates_population_sensitivity_utility
     ),
-    ExperimentNameValue("Sequential Sensitivity Utility"): (
+    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: (
         _coordinates_sequential_sensitivity_utility
     ),
-    ExperimentNameValue("Failure Boundary Atlas"): _failure_boundary_coordinates,
-    ExperimentNameValue("Computational Scaling"): _coordinates_computational_scaling,
-    ExperimentNameValue("Statistical Synthesis"): _coordinates_statistical_synthesis,
+    ExperimentName.FAILURE_BOUNDARY_ATLAS: _failure_boundary_coordinates,
+    ExperimentName.COMPUTATIONAL_SCALING: _coordinates_computational_scaling,
+    ExperimentName.STATISTICAL_SYNTHESIS: _coordinates_statistical_synthesis,
 }
 
 
@@ -568,20 +559,22 @@ def _variant(name: VariantName) -> SemanticCoordinates:
 
 
 def _required_experiments(
-    name: ExperimentNameValue,
-) -> tuple[ExperimentNameValue, ...]:
+    name: ExperimentName,
+) -> tuple[ExperimentName, ...]:
     precondition = _EXPERIMENTS[0][0]
     if name == precondition:
-        return ()
-    if name != "Statistical Synthesis":
-        return (precondition,)
-    return tuple(
-        experiment_name
-        for experiment_name, _ in _EXPERIMENTS
-        if experiment_name != name
-        and experiment_name
-        not in {
-            ExperimentNameValue("Real-Trajectory Validation"),
-            ExperimentNameValue("Foreign-Information Negative Control"),
+        dependencies: tuple[ExperimentName, ...] = ()
+    elif name == ExperimentName.STATISTICAL_SYNTHESIS:
+        excluded = {
+            name,
+            ExperimentName.REAL_TRAJECTORY_VALIDATION,
+            ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
         }
-    )
+        dependencies = tuple(
+            experiment_name
+            for experiment_name, _ in _EXPERIMENTS
+            if experiment_name not in excluded
+        )
+    else:
+        dependencies = (precondition,)
+    return dependencies

@@ -104,7 +104,6 @@ def partition_name(band_count: BandCount) -> PartitionName:
     return PartitionName(f"{bands}-band partition")
 
 
-
 def _is_refinement(fine: TrajectoryPartition, coarse: TrajectoryPartition) -> bool:
     return (
         fine.finest_band_count == coarse.finest_band_count

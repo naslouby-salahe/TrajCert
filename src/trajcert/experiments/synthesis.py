@@ -47,7 +47,7 @@ from trajcert.experiments.sensitivity import PopulationUtilityResult, Sequential
 from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.paths import ExperimentLeaf, ExperimentSlug, experiment_leaf
-from trajcert.provenance import BaselineName, ExperimentNameValue, MethodName
+from trajcert.provenance import BaselineName, MethodName
 from trajcert.reporting.source_data import (
     PARTITION_COHERENCE_POPULATION_LAWS,
     AnalysisType,
@@ -87,6 +87,7 @@ from trajcert.storage import (
     model_digest,
     models_digest,
 )
+from trajcert.types import ExperimentName
 from trajcert.types import (
     AbsoluteError,
     BandCount,
@@ -242,8 +243,7 @@ def synthesize_trajectory_operational_gain(
     expected_order = _expected_family_keys()
     expected_keys = set(expected_order)
     supplied_keys = tuple(
-        (series.law_name, series.sensitivity_budget, series.metric_name)
-        for series in paired_series
+        (series.law_name, series.sensitivity_budget, series.metric_name) for series in paired_series
     )
     if len(supplied_keys) != len(set(supplied_keys)):
         raise InvalidScientificDataError("trajectory operational gain family contains duplicates")
@@ -269,15 +269,11 @@ def synthesize_trajectory_operational_gain(
         for result in raw_results
     )
     adjusted = require_family_size(adjusted, len(raw_results))
-    adjusted_by_key = {
-        (item.semantic_comparison_key, item.metric_name): item for item in adjusted
-    }
+    adjusted_by_key = {(item.semantic_comparison_key, item.metric_name): item for item in adjusted}
     final_results = tuple(
         _apply_adjusted_inference(
             result,
-            adjusted_by_key[
-                (result.semantic_comparison_key, result.metric_name)
-            ].adjusted_p_value,
+            adjusted_by_key[(result.semantic_comparison_key, result.metric_name)].adjusted_p_value,
         )
         for result in raw_results
     )
@@ -435,8 +431,7 @@ def _comparison_key(
     metric: PracticalMetric,
 ) -> SemanticComparisonKey:
     return SemanticComparisonKey(
-        f"Sequential Sensitivity Utility|{law_name}|"
-        + f"rho={sensitivity_budget:.17g}|{metric}"
+        f"Sequential Sensitivity Utility|{law_name}|" + f"rho={sensitivity_budget:.17g}|{metric}"
     )
 
 
@@ -576,7 +571,7 @@ def _population_utility_evidence(
             partition_name=_required_partition(cell),
             result=read_verified_scientific_result(cell, workspace_root, PopulationUtilityResult),
         )
-        for cell in _cells(plan, ExperimentNameValue("Population Sensitivity Utility"))
+        for cell in _cells(plan, ExperimentName.POPULATION_SENSITIVITY_UTILITY)
     )
 
 
@@ -589,7 +584,7 @@ def _sequential_utility_evidence(
             law_name=_required_law(cell),
             result=read_verified_scientific_result(cell, workspace_root, SequentialUtilityResult),
         )
-        for cell in _cells(plan, ExperimentNameValue("Sequential Sensitivity Utility"))
+        for cell in _cells(plan, ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY)
     )
 
 
@@ -597,11 +592,9 @@ def _partition_timing_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[PartitionTimingEvidence, ...]:
-    band_counts = {
-        partition_name(value): value for value in active_config.get().grids.partitions
-    }
+    band_counts = {partition_name(value): value for value in active_config.get().grids.partitions}
     evidence: list[PartitionTimingEvidence] = []
-    for cell in _cells(plan, ExperimentNameValue("Partition Coherence")):
+    for cell in _cells(plan, ExperimentName.PARTITION_COHERENCE):
         comparison = cell.identity.coordinates.comparison_pair_name
         if comparison is None:
             raise InvalidScientificDataError("partition-coherence cell lacks its comparison pair")
@@ -637,7 +630,7 @@ def _compatibility_floor_evidence(
                 cell, workspace_root, CompatibilityFloorBehaviorResult
             ),
         )
-        for cell in _cells(plan, ExperimentNameValue("Compatibility Floor Behavior"))
+        for cell in _cells(plan, ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR)
     )
 
 
@@ -651,7 +644,7 @@ def _sharpness_evidence(
             partition_name=_required_partition(cell),
             result=read_verified_scientific_result(cell, workspace_root, SolverOracleComparison),
         )
-        for cell in _cells(plan, ExperimentNameValue("Sharpness Against Generic Oracle"))
+        for cell in _cells(plan, ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE)
     )
 
 
@@ -666,7 +659,7 @@ def _safety_evidence(
             partition_name=finest,
             result=read_verified_scientific_result(cell, workspace_root, SafetyCaseEvaluation),
         )
-        for cell in _cells(plan, ExperimentNameValue("Safety and Intrinsic Impossibility"))
+        for cell in _cells(plan, ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY)
     )
 
 
@@ -681,8 +674,7 @@ def _population_figure_evidence(
         item
         for item in evidence
         if item.law_name in figure_laws
-        and abs(item.result.sensitivity_budget - target_rho)
-        <= config.numerics.comparison_guard
+        and abs(item.result.sensitivity_budget - target_rho) <= config.numerics.comparison_guard
     )
     return tuple(
         PopulationFigureEvidence(
@@ -703,7 +695,7 @@ def _same_endpoint_figure_evidence(
     target = config.study_design.partition_coherence_figure_rho
     band_counts = {partition_name(value): value for value in config.grids.partitions}
     evidence: list[SameEndpointFigureEvidence] = []
-    for cell in _cells(plan, ExperimentNameValue("Same Endpoint, Different Timing")):
+    for cell in _cells(plan, ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING):
         rho = cell.identity.coordinates.rho
         if rho is None or abs(rho - target) > config.numerics.comparison_guard:
             continue
@@ -730,36 +722,36 @@ def _theorem_validation_observations(
     observations.extend(_legacy_observations(plan, workspace_root))
     observations.extend(
         _identity_observations(
-            plan, workspace_root, ExperimentNameValue("Path Information Decomposition")
+            plan, workspace_root, ExperimentName.PATH_INFORMATION_DECOMPOSITION
         )
     )
     observations.extend(_convexity_observations(plan, workspace_root))
     observations.extend(
         _identity_observations(
-            plan, workspace_root, ExperimentNameValue("Minimum Compatibility Identity")
+            plan, workspace_root, ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY
         )
     )
     observations.extend(_sharp_set_observations(plan, workspace_root))
     observations.extend(_refinement_observations(plan, workspace_root))
     observations.extend(
         _identity_observations(
-            plan, workspace_root, ExperimentNameValue("Strict Timing-Gain Identity")
+            plan, workspace_root, ExperimentName.STRICT_TIMING_GAIN_IDENTITY
         )
     )
     observations.extend(_safety_boundary_observations(plan, workspace_root))
     observations.extend(
         _identity_observations(
-            plan, workspace_root, ExperimentNameValue("Endpoint Special-Case Identity")
+            plan, workspace_root, ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY
         )
     )
     observations.extend(
         _identity_observations(
-            plan, workspace_root, ExperimentNameValue("Anytime Projection Proof Check")
+            plan, workspace_root, ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK
         )
     )
     observations.extend(
         _identity_observations(
-            plan, workspace_root, ExperimentNameValue("Population Complexity Proof Check")
+            plan, workspace_root, ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK
         )
     )
     return tuple(observations)
@@ -769,7 +761,7 @@ def _legacy_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = ExperimentNameValue("Legacy Partition Incoherence Check")
+    name = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -792,7 +784,7 @@ def _legacy_observations(
 def _identity_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
-    name: ExperimentNameValue,
+    name: ExperimentName,
 ) -> tuple[TheoremValidationObservation, ...]:
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
@@ -815,7 +807,7 @@ def _convexity_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = ExperimentNameValue("Information Profile Convexity")
+    name = ExperimentName.INFORMATION_PROFILE_CONVEXITY
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     return tuple(_convexity_observation(cell, workspace_root, name, primary) for cell in cells)
@@ -824,7 +816,7 @@ def _convexity_observations(
 def _convexity_observation(
     cell: PlannedCell,
     workspace_root: Path,
-    name: ExperimentNameValue,
+    name: ExperimentName,
     primary: ArtifactKey,
 ) -> TheoremValidationObservation:
     result = read_verified_scientific_result(cell, workspace_root, ConvexityResult)
@@ -841,7 +833,7 @@ def _sharp_set_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = ExperimentNameValue("Sharp-Set Constructive Identity")
+    name = ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -863,7 +855,7 @@ def _refinement_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = ExperimentNameValue("Refinement Dominance Identity")
+    name = ExperimentName.REFINEMENT_DOMINANCE_IDENTITY
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -886,7 +878,7 @@ def _safety_boundary_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = ExperimentNameValue("Safety-Boundary Identity")
+    name = ExperimentName.SAFETY_BOUNDARY_IDENTITY
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -906,7 +898,7 @@ def _safety_boundary_observations(
 
 
 def _theorem_observation(
-    name: ExperimentNameValue,
+    name: ExperimentName,
     primary: ArtifactKey,
     passed: bool,
     error: AbsoluteError | None,
@@ -940,7 +932,7 @@ def _family_primary_artifact(cells: tuple[PlannedCell, ...]) -> ArtifactKey:
 
 def _cells(
     plan: ExperimentPlan,
-    name: ExperimentNameValue,
+    name: ExperimentName,
 ) -> tuple[PlannedCell, ...]:
     cells = cells_for_experiment(plan, name)
     if not cells:
@@ -1118,56 +1110,55 @@ def synthesis_artifact_paths(cell: PlannedCell) -> SynthesisArtifactPaths:
         cell.identity.experiment_slug,
         ExperimentLeaf.EVALUATION_AGGREGATES,
     )
-    return SynthesisArtifactPaths(by_key={
-        _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet",
-        _SOLVER_ORACLE_KEY: _aggregate(
-            ExperimentSlug("production-solver-vs-independent-oracle"),
-            "solver_oracle_validation.parquet",
-        ),
-        _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",
-        _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",
-        _ANYTIME_COVERAGE_KEY: _aggregate(
-            ExperimentSlug("anytime-coverage-stress"), "anytime_coverage.parquet"
-        ),
-        _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",
-        _FAILURE_BOUNDARIES_KEY: _aggregate(
-            ExperimentSlug("failure-boundary-atlas"), "failure_boundaries.parquet"
-        ),
-        _COMPUTATIONAL_SCALING_KEY: _aggregate(
-            ExperimentSlug("computational-scaling"), "computational_scaling.parquet"
-        ),
-        _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",
-        _FIGURE_TIMING_KEY: _aggregate(
-            ExperimentSlug("strict-timing-gain"), "figure_timing_value.parquet"
-        ),
-        _FIGURE_PROFILE_KEY: _aggregate(
-            ExperimentSlug("safety-and-intrinsic-impossibility"),
-            "figure_information_profile.parquet",
-        ),
-        _FIGURE_PATHS_KEY: _aggregate(
-            ExperimentSlug("anytime-coverage-stress"), "figure_anytime_paths.parquet"
-        ),
-        _FIGURE_COVERAGE_KEY: _aggregate(
-            ExperimentSlug("anytime-coverage-stress"), "figure_anytime_coverage.parquet"
-        ),
-        _FIGURE_RHO_KEY: _aggregate(
-            ExperimentSlug("population-sensitivity-utility"), "figure_rho_sensitivity.parquet"
-        ),
-        _FIGURE_FAILURE_KEY: _aggregate(
-            ExperimentSlug("failure-boundary-atlas"), "figure_failure_boundaries.parquet"
-        ),
-        _FIGURE_SCALING_KEY: _aggregate(
-            ExperimentSlug("computational-scaling"), "figure_computational_scaling.parquet"
-        ),
-        _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",
-    })
+    return SynthesisArtifactPaths(
+        by_key={
+            _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet",
+            _SOLVER_ORACLE_KEY: _aggregate(
+                ExperimentSlug("production-solver-vs-independent-oracle"),
+                "solver_oracle_validation.parquet",
+            ),
+            _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",
+            _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",
+            _ANYTIME_COVERAGE_KEY: _aggregate(
+                ExperimentSlug("anytime-coverage-stress"), "anytime_coverage.parquet"
+            ),
+            _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",
+            _FAILURE_BOUNDARIES_KEY: _aggregate(
+                ExperimentSlug("failure-boundary-atlas"), "failure_boundaries.parquet"
+            ),
+            _COMPUTATIONAL_SCALING_KEY: _aggregate(
+                ExperimentSlug("computational-scaling"), "computational_scaling.parquet"
+            ),
+            _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",
+            _FIGURE_TIMING_KEY: _aggregate(
+                ExperimentSlug("strict-timing-gain"), "figure_timing_value.parquet"
+            ),
+            _FIGURE_PROFILE_KEY: _aggregate(
+                ExperimentSlug("safety-and-intrinsic-impossibility"),
+                "figure_information_profile.parquet",
+            ),
+            _FIGURE_PATHS_KEY: _aggregate(
+                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_paths.parquet"
+            ),
+            _FIGURE_COVERAGE_KEY: _aggregate(
+                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_coverage.parquet"
+            ),
+            _FIGURE_RHO_KEY: _aggregate(
+                ExperimentSlug("population-sensitivity-utility"), "figure_rho_sensitivity.parquet"
+            ),
+            _FIGURE_FAILURE_KEY: _aggregate(
+                ExperimentSlug("failure-boundary-atlas"), "figure_failure_boundaries.parquet"
+            ),
+            _FIGURE_SCALING_KEY: _aggregate(
+                ExperimentSlug("computational-scaling"), "figure_computational_scaling.parquet"
+            ),
+            _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",
+        }
+    )
 
 
 def _aggregate(experiment_slug: ExperimentSlug, filename: str) -> Path:
-    return (
-        experiment_leaf(experiment_slug, ExperimentLeaf.EVALUATION_AGGREGATES)
-        / filename
-    )
+    return experiment_leaf(experiment_slug, ExperimentLeaf.EVALUATION_AGGREGATES) / filename
 
 
 def _validate_synthesis_cell(

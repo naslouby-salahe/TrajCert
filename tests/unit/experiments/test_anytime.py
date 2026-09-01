@@ -123,11 +123,12 @@ def _trace_events() -> tuple[tuple[MaturedEvent, ...], LedgerIdentity]:
 def test_run_sequential_trace_requires_positive_checkpoint_interval() -> None:
     config = _hand_case_config()
     events, identity = _trace_events()
+    partition = _partition(_HAND_CASE_BANDS)
     with pytest.raises(ValueError, match="positive"):
         _ = anytime.run_sequential_trace(
             events,
             identity,
-            _partition(_HAND_CASE_BANDS),
+            partition,
             config,
             _SENSITIVITY_BUDGET,
             _SENSITIVITY_BUDGET,

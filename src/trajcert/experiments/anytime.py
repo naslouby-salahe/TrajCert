@@ -292,7 +292,7 @@ def run_coverage_stress(
     checkpoint_every = config.sequential.coverage.checkpoint_every
     true_risk = parameters.theta
     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
-    failures = {method: 0 for method in SequentialMethod}
+    failures = dict.fromkeys(SequentialMethod, 0)
     for stream_index in range(stream_count):
         for method, did_fail in _coverage_stream_failures(
             parameters,
@@ -341,7 +341,7 @@ def _coverage_stream_failures(
     state = initialize_categorical_state(ledger.identity, partition)
     running: CategoricalConfidenceRegion | None = None
     ignorable_running: ClosedProbabilityInterval | None = None
-    failed = {method: False for method in SequentialMethod}
+    failed = dict.fromkeys(SequentialMethod, False)
     for position, event in enumerate(events, start=1):
         state = append_matured_event(state, event)
         update = confidence_sequence_update(
@@ -1050,9 +1050,7 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
     oracle_upper = (
         None if oracle.latent_risk_interval is None else oracle.latent_risk_interval.upper
     )
-    error = (
-        None if oracle_upper is None else max(0.0, oracle_upper - projection.proven_upper)
-    )
+    error = None if oracle_upper is None else max(0.0, oracle_upper - projection.proven_upper)
     return HandCaseResult(
         case_index=case.case_index,
         partition_bands=partition.band_count,

@@ -49,22 +49,30 @@ def test_oracle_mass_interval_rejects_reversed_order() -> None:
 
 
 def test_projection_oracle_input_rejects_dimension_mismatch() -> None:
+    partition = build_partition(1, 1, 8.0)
+    harmful_by_band = (_interval(0.4, 0.6), _interval(0.0, 0.1))
+    correct_by_band = (_interval(0.0, 0.0),)
+    unresolved = _interval(0.4, 0.6)
     with pytest.raises(ValidationError, match="partition dimension"):
         _ = ProjectionOracleInput(
-            partition=build_partition(1, 1, 8.0),
-            harmful_by_band=(_interval(0.4, 0.6), _interval(0.0, 0.1)),
-            correct_by_band=(_interval(0.0, 0.0),),
-            unresolved=_interval(0.4, 0.6),
+            partition=partition,
+            harmful_by_band=harmful_by_band,
+            correct_by_band=correct_by_band,
+            unresolved=unresolved,
         )
 
 
 def test_projection_oracle_input_rejects_empty_simplex() -> None:
+    partition = build_partition(1, 1, 8.0)
+    harmful_by_band = (_interval(0.9, 1.0),)
+    correct_by_band = (_interval(0.0, 0.0),)
+    unresolved = _interval(0.4, 0.6)
     with pytest.raises(ValidationError, match="empty simplex"):
         _ = ProjectionOracleInput(
-            partition=build_partition(1, 1, 8.0),
-            harmful_by_band=(_interval(0.9, 1.0),),
-            correct_by_band=(_interval(0.0, 0.0),),
-            unresolved=_interval(0.4, 0.6),
+            partition=partition,
+            harmful_by_band=harmful_by_band,
+            correct_by_band=correct_by_band,
+            unresolved=unresolved,
         )
 
 
@@ -93,9 +101,10 @@ def test_solve_information_oracle_reports_minimum_information_singleton() -> Non
 
 
 def test_feasible_projection_lower_oracle_rejects_nonpositive_digits() -> None:
+    oracle_input = _oracle_input()
     with pytest.raises(InvalidScientificDataError, match="oracle precision"):
         _ = feasible_projection_lower_oracle(
-            _oracle_input(), 0.05, 0, 1e-12, _GRID_POINTS, _REFINEMENT_CANDIDATES, _REFINEMENT_STEPS
+            oracle_input, 0.05, 0, 1e-12, _GRID_POINTS, _REFINEMENT_CANDIDATES, _REFINEMENT_STEPS
         )
 
 

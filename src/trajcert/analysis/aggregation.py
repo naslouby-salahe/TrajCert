@@ -44,15 +44,15 @@ def summarize_paired_differences(differences: Vector) -> PairedEffectSummary:
     if standard_deviation > 0.0:
         effect = estimate / standard_deviation
         status = StandardizedEffectStatus.FINITE
-    elif estimate == 0.0:
-        effect = 0.0
-        status = StandardizedEffectStatus.FINITE
     elif estimate > 0.0:
         effect = None
         status = StandardizedEffectStatus.POSITIVE_INFINITY
-    else:
+    elif estimate < 0.0:
         effect = None
         status = StandardizedEffectStatus.NEGATIVE_INFINITY
+    else:
+        effect = 0.0
+        status = StandardizedEffectStatus.FINITE
     return PairedEffectSummary(
         n_pairs=values.size,
         mean_paired_difference=estimate,

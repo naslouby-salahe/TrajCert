@@ -14,9 +14,8 @@ from trajcert.experiments.runner import (
     completion_is_compatible,
     dependency_block_reason,
 )
-from trajcert.provenance import ExperimentNameValue
 from trajcert.storage import SemanticCellKey, read_model
-from trajcert.types import Count, DomainModel, PublicExecutionState, ReasonCode
+from trajcert.types import Count, DomainModel, ExperimentName, PublicExecutionState, ReasonCode
 
 
 class CellStatus(DomainModel):
@@ -26,7 +25,7 @@ class CellStatus(DomainModel):
 
 
 class ExperimentStatus(DomainModel):
-    experiment_name: ExperimentNameValue
+    experiment_name: ExperimentName
     state: PublicExecutionState
     total_cells: Count
     completed_cells: Count
@@ -106,7 +105,7 @@ def _completion_status(
 
 
 def aggregate_experiment_status(
-    experiment_name: ExperimentNameValue,
+    experiment_name: ExperimentName,
     statuses: tuple[CellStatus, ...],
     declared_cells: Count,
 ) -> ExperimentStatus:

@@ -63,9 +63,7 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
     rates = harmful[nonempty] / weights
     resolved_rate = summary.resolved_harmful_mass / summary.resolved_mass
     clipped = min(1.0 - config.initial_clip, max(config.initial_clip, resolved_rate))
-    initial = np.asarray(
-        (log(clipped / (1.0 - clipped)), config.initial_slope), dtype=np.float64
-    )
+    initial = np.asarray((log(clipped / (1.0 - clipped)), config.initial_slope), dtype=np.float64)
     lower, upper = config.coefficient_bounds
     bounds = ((lower, upper), (lower, upper))
 
@@ -130,8 +128,7 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             ),
             latent_risk=min(
                 1.0,
-                harmful_mass
-                + unresolved * expit(intercept + slope * (band_count + sensitivity_c)),
+                harmful_mass + unresolved * expit(intercept + slope * (band_count + sensitivity_c)),
             ),
         )
         for sensitivity_c in config.c

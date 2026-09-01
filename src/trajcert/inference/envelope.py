@@ -173,9 +173,7 @@ def _resolved_entropy_envelope(
     return ScalarEnvelope(lower=lower, upper=upper)
 
 
-def _resolved_entropy_exact(
-    harmful: tuple[Mass, ...], correct: tuple[Mass, ...]
-) -> EntropyValue:
+def _resolved_entropy_exact(harmful: tuple[Mass, ...], correct: tuple[Mass, ...]) -> EntropyValue:
     return sum(
         binary_entropy_from_masses(left, right)
         for left, right in zip(harmful, correct, strict=True)

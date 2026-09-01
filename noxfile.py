@@ -4,6 +4,8 @@ import nox
 
 nox.options.default_venv_backend = "uv"
 
+_SRC_TRAJCERT = "src/trajcert"
+
 
 @nox.session(reuse_venv=True)
 def quality(session: nox.Session) -> None:
@@ -13,15 +15,15 @@ def quality(session: nox.Session) -> None:
     )
     session.run("uv", "run", "ruff", "check", "src", "tools", "noxfile.py", external=True)
     session.run("uv", "run", "basedpyright", external=True)
-    session.run("uv", "run", "semgrep", "--config", "semgrep", "src/trajcert", external=True)
+    session.run("uv", "run", "semgrep", "--config", "semgrep", _SRC_TRAJCERT, external=True)
     session.run("uv", "run", "lint-imports", external=True)
-    session.run("uv", "run", "python", "tools/source_audit.py", "src/trajcert", external=True)
-    session.run("uv", "run", "complexipy", "src/trajcert", external=True)
+    session.run("uv", "run", "python", "tools/source_audit.py", _SRC_TRAJCERT, external=True)
+    session.run("uv", "run", "complexipy", _SRC_TRAJCERT, external=True)
     session.run(
         "uv",
         "run",
         "vulture",
-        "src/trajcert",
+        _SRC_TRAJCERT,
         "--min-confidence",
         "100",
         "--ignore-names",

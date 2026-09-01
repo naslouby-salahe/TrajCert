@@ -10,6 +10,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from tests.unit.conftest import write_artifact_executor
 from trajcert import cli
 from trajcert.cli import CliArguments, CliExitCode, DoctorResult, RunExperimentResult
 from trajcert.config import TrajCertConfig
@@ -39,14 +40,11 @@ from trajcert.reporting.export import ReportExportResult
 from trajcert.reporting.source_data import table_source_descriptors
 from trajcert.schemas import PublicationSourceDescriptor
 from trajcert.storage import (
-    ArtifactIndexEntry,
-    CellArtifactIndex,
     DependencyFingerprint,
     DigestHex,
     PlanDigest,
     ProvenanceFingerprint,
     SpecificationDigest,
-    file_digest,
 )
 from trajcert.types import (
     CliCommand,
@@ -412,32 +410,6 @@ def _outcome_sequence_run_cell(
         return _cell_outcome(states[int(_cell.cell_ordinal) - 1], reused=False)
 
     return _run_cell
-
-
-def _write_artifact_executor(
-    cell: PlannedCell, context: runner.ExecutionContext
-) -> runner.CellExecutionResult:
-    relative_path = runner.scientific_result_path(cell)
-    path = context.workspace_root / relative_path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    _ = path.write_text("artifact-payload", encoding="utf-8")
-    return runner.CellExecutionResult(
-        artifact_index=CellArtifactIndex(
-            artifacts=(
-                ArtifactIndexEntry(
-                    artifact_key=runner.scientific_result_artifact_key(cell),
-                    relative_path=relative_path,
-                    sha256=file_digest(path),
-                ),
-            )
-        ),
-        completed_seed_count=context.expected_seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-    )
 
 
 def _real_cell_count(experiment_name: str) -> int:
@@ -935,7 +907,7 @@ def test_executor_dispatches_ordinary_cell_through_run_cell(
         cell: PlannedCell,
         context: runner.ExecutionContext,
     ) -> runner.CellExecutionResult:
-        return _write_artifact_executor(cell, context)
+        return write_artifact_executor(cell, context)
 
     workspace = _configured_workspace(tmp_path)
     monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)

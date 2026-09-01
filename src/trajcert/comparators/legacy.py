@@ -41,12 +41,12 @@ def legacy_bandwise_odds_ratio(
     upper = unresolved
     informative = 0
     for index, (harmful_band, correct_band) in enumerate(zip(harmful, correct, strict=True)):
-        if harmful_band == 0.0 and correct_band == 0.0:
+        if harmful_band <= 0.0 and correct_band <= 0.0:
             continue
         informative += 1
         harmful_future = sum(harmful[index + 1 :])
         correct_future = sum(correct[index + 1 :])
-        if harmful_band == 0.0 or correct_band == 0.0:
+        if harmful_band <= 0.0 or correct_band <= 0.0:
             return _incompatible(gamma, informative)
         lower_bound = (
             harmful_band * (correct_future + unresolved) - gamma * correct_band * harmful_future

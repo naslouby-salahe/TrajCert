@@ -88,4 +88,3 @@ class EventLedger(DomainModel):
                 "every ledger event must belong to the ledger client/channel/epoch identity"
             )
         return self
-

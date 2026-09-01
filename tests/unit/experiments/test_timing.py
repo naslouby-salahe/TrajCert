@@ -86,10 +86,11 @@ def test_partition_coherence_below_tau_has_no_latent_risk() -> None:
 
 def test_partition_coherence_rejects_zero_resolved_mass() -> None:
     fine = summary([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 1.0)
+    coarse = _coarse_partition()
     with pytest.raises(InvalidScientificDataError, match="timing gain is undefined"):
         _ = evaluate_partition_coherence(
             fine,
-            _coarse_partition(),
+            coarse,
             _SENSITIVITY_BUDGET,
             _ROOT_ATOL,
             _IDENTITY_ATOL,

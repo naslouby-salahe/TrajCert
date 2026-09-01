@@ -27,6 +27,7 @@ from trajcert.types import (
     BandCount,
     Count,
     DomainModel,
+    ExperimentName,
     GammaCoordinate,
     LawName,
     PartitionName,
@@ -35,7 +36,6 @@ from trajcert.types import (
     SensitivityBudget,
 )
 
-ExperimentNameValue = NewType("ExperimentNameValue", str)
 ComparisonPairName = NewType("ComparisonPairName", str)
 MethodName = NewType("MethodName", str)
 BaselineName = NewType("BaselineName", str)
@@ -69,7 +69,7 @@ class SemanticCoordinates(DomainModel):
 
 
 class SemanticCellIdentity(DomainModel):
-    experiment_name: ExperimentNameValue
+    experiment_name: ExperimentName
     coordinates: SemanticCoordinates
 
     @property

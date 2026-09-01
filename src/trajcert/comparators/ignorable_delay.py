@@ -115,8 +115,8 @@ def _root(
 def _log_mixture_ratio(successes: Count, total: Count, probability: Probability) -> LogMixtureRatio:
     failures = total - successes
     beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
-    if probability == 0.0:
+    if probability <= 0.0:
         return beta_term if successes == 0 else inf
-    if probability == 1.0:
+    if probability >= 1.0:
         return beta_term if failures == 0 else inf
     return beta_term - successes * log(probability) - failures * log1p(-probability)

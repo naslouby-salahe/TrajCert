@@ -21,9 +21,7 @@ from trajcert.types import (
 def derive_seed(namespace: SeedNamespace, index: SeedIndex) -> SeedValue:
     if index < 0:
         raise InvalidScientificDataError("seed index must be zero-based and nonnegative")
-    material = SEED_FIELD_SEPARATOR.join((SEED_PREFIX, namespace, str(index))).encode(
-        "utf-8"
-    )
+    material = SEED_FIELD_SEPARATOR.join((SEED_PREFIX, namespace, str(index))).encode("utf-8")
     digest_prefix = sha256(material).digest()[: active_config.get().determinism.seed_digest_bytes]
     seed = int.from_bytes(digest_prefix, byteorder="big", signed=False) % SEED_MODULUS
     return seed

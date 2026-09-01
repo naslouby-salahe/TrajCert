@@ -3,11 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from trajcert.data.ledger import LedgerIdentity
+from tests.unit.conftest import categorical_state
 from trajcert.data.partitions import build_partition
-from trajcert.data.summaries import ObservableCounts, summarize_observable_masses
+from trajcert.data.summaries import summarize_observable_masses
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import raw_confidence_region
 from trajcert.inference.envelope import (
     ObservableSummaryEnvelope,
@@ -20,30 +19,6 @@ from trajcert.inference.projection import (
     ProjectionTerminationReason,
     project_upper_risk,
 )
-from trajcert.types import ActionChannelId, ClientId, EpochId
-
-
-def _identity() -> LedgerIdentity:
-    return LedgerIdentity(
-        client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
-        epoch_id=EpochId("epoch"),
-    )
-
-
-def _state(counts: tuple[int, ...], band_count: int = 2) -> CategoricalState:
-    partition = build_partition(band_count, band_count, 8.0)
-    harmful = tuple(counts[index] for index in range(0, len(counts) - 1, 2))
-    correct = tuple(counts[index] for index in range(1, len(counts) - 1, 2))
-    return CategoricalState(
-        identity=_identity(),
-        partition=partition,
-        counts=ObservableCounts(
-            harmful_by_band=harmful,
-            correct_by_band=correct,
-            unresolved=counts[-1],
-        ),
-    )
 
 
 def _singleton_envelope() -> ObservableSummaryEnvelope:
@@ -99,7 +74,7 @@ def test_project_upper_risk_validates_arguments() -> None:
 
 def test_project_upper_risk_non_singleton_terminates_at_node_cap() -> None:
     partition = build_partition(2, 2, 8.0)
-    state = _state((3, 0, 0, 2, 1), 2)
+    state = categorical_state((3, 0, 0, 2, 1), 2)
     confidence = raw_confidence_region(state, 0.05, 1e-6)
     envelope = summary_envelope_from_confidence(partition, confidence)
     result = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)

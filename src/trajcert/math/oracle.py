@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import ceil, floor, inf, isfinite, ldexp, log2, nextafter
+from math import ceil, floor, inf, isclose, isfinite, ldexp, log2, nextafter
 from math import log as float_log
 from typing import Self
 
@@ -297,7 +297,9 @@ def _projection_candidate(
     correct = _allocate_total(oracle_input.correct_by_band, correct_total, comparison_guard)
     if harmful is None or correct is None:
         return None
-    hidden = _max_verified_projection_hidden(harmful, correct, unresolved, sensitivity)
+    hidden = _max_verified_projection_hidden(
+        harmful, correct, unresolved, sensitivity, comparison_guard
+    )
     if hidden is None:
         return None
     return _ProjectionCandidate(
@@ -347,6 +349,7 @@ def _max_verified_projection_hidden(
     correct: tuple[Mass, ...],
     unresolved: Mass,
     sensitivity: arb,
+    comparison_guard: ToleranceValue,
 ) -> Mass | None:
     harmful_arb = tuple(_arb_exact_float(value) for value in harmful)
     correct_arb = tuple(_arb_exact_float(value) for value in correct)
@@ -355,7 +358,7 @@ def _max_verified_projection_hidden(
     correct_total = sum(correct_arb, arb(0))
     resolved_total = harmful_total + correct_total
     sensitivity_floor = _arb_lower_float(sensitivity)
-    if unresolved == 0.0:
+    if isclose(unresolved, 0.0, rel_tol=0.0, abs_tol=comparison_guard):
         information = _projection_direct_information_arb(
             harmful_arb, correct_arb, unresolved_arb, arb(0)
         )

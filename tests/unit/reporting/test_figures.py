@@ -53,26 +53,30 @@ def test_figure_render_requires_figure_source_role(tmp_path: Path) -> None:
 
 
 def test_figure_render_rejects_unregistered_renderer(tmp_path: Path) -> None:
+    source = _source("figure_unknown", pa.Table.from_pydict({"a": [1.0]}))
     with pytest.raises(InvalidScientificDataError, match="no deterministic figure renderer"):
-        _ = render_figure(_source("figure_unknown", pa.Table.from_pydict({"a": [1.0]})), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_figure_render_requires_at_least_one_panel(tmp_path: Path) -> None:
     table = pa.Table.from_pydict({"rho_offset": [], "delta_tau": [], "bound_gain": []})
+    source = _source("figure_timing_value", table)
     with pytest.raises(InvalidScientificDataError, match="at least one panel"):
-        _ = render_figure(_source("figure_timing_value", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_figure_render_rejects_empty_panel_source(tmp_path: Path) -> None:
     table = pa.Table.from_pydict({})
+    source = _source("figure_information_profile", table)
     with pytest.raises(InvalidScientificDataError, match="panel source cannot be empty"):
-        _ = render_figure(_source("figure_information_profile", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_figure_render_rejects_empty_failure_boundaries(tmp_path: Path) -> None:
     table = pa.Table.from_pydict({"axis": [], "risk_upper": []})
+    source = _source("figure_failure_boundaries", table)
     with pytest.raises(InvalidScientificDataError, match="at least one panel"):
-        _ = render_figure(_source("figure_failure_boundaries", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_figure_render_rejects_non_numeric_required_value(tmp_path: Path) -> None:
@@ -84,8 +88,9 @@ def test_figure_render_rejects_non_numeric_required_value(tmp_path: Path) -> Non
             "median_outer_nodes": [1.0],
         }
     )
+    source = _source("figure_computational_scaling", table)
     with pytest.raises(InvalidScientificDataError, match="non-null numeric K"):
-        _ = render_figure(_source("figure_computational_scaling", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_figure_render_rejects_non_finite_coordinate(tmp_path: Path) -> None:
@@ -97,8 +102,9 @@ def test_figure_render_rejects_non_finite_coordinate(tmp_path: Path) -> None:
             "median_outer_nodes": [1.0],
         }
     )
+    source = _source("figure_computational_scaling", table)
     with pytest.raises(InvalidScientificDataError, match="finite population_median_runtime_ms"):
-        _ = render_figure(_source("figure_computational_scaling", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_figure_render_rejects_non_numeric_optional_value(tmp_path: Path) -> None:
@@ -115,8 +121,9 @@ def test_figure_render_rejects_non_numeric_optional_value(tmp_path: Path) -> Non
             "feasible_upper": [None],
         }
     )
+    source = _source("figure_information_profile", table)
     with pytest.raises(InvalidScientificDataError, match="numeric u_dagger when present"):
-        _ = render_figure(_source("figure_information_profile", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_figure_render_rejects_non_finite_optional_value(tmp_path: Path) -> None:
@@ -133,8 +140,9 @@ def test_figure_render_rejects_non_finite_optional_value(tmp_path: Path) -> None
             "feasible_upper": [None],
         }
     )
+    source = _source("figure_information_profile", table)
     with pytest.raises(InvalidScientificDataError, match="finite u_dagger when present"):
-        _ = render_figure(_source("figure_information_profile", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_anytime_paths_requires_all_four_seed_indices(tmp_path: Path) -> None:
@@ -148,8 +156,9 @@ def test_anytime_paths_requires_all_four_seed_indices(tmp_path: Path) -> None:
             "beta": [0.05, 0.05],
         }
     )
+    source = _source("figure_anytime_paths", table)
     with pytest.raises(InvalidScientificDataError, match="exactly the configured seeds"):
-        _ = render_figure(_source("figure_anytime_paths", table), tmp_path)
+        _ = render_figure(source, tmp_path)
 
 
 def test_partition_coherence_renderer_emits_svg_and_png(tmp_path: Path) -> None:

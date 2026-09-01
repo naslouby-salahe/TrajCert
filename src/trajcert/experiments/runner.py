@@ -6,7 +6,7 @@ from enum import StrEnum
 from functools import partial
 from hashlib import sha256
 from pathlib import Path
-from typing import NewType
+from typing import Final, NewType
 
 from pydantic import BaseModel, Field
 
@@ -69,7 +69,6 @@ from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyBudgetCase, safety_budget_cases
 from trajcert.paths import ExperimentLeaf, long_path_safe, semantic_cell_path, semantic_slug
 from trajcert.provenance import (
-    ExperimentNameValue,
     FailureBoundaryCoordinate,
     ProducerComponentName,
     SensitivityCoordinate,
@@ -99,6 +98,7 @@ from trajcert.types import (
     ClientId,
     Count,
     DomainModel,
+    ExperimentName,
     EpochId,
     FailureBoundaryProbe,
     FailureMessage,
@@ -123,95 +123,69 @@ _NON_SCIENTIFIC_MODULE_PREFIXES = (
     "trajcert.reporting.tables",
 )
 
-_PRODUCER_ROOTS: dict[ExperimentNameValue, Path] = {
-    ExperimentNameValue("Legacy Partition Incoherence Check"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Path Information Decomposition"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Information Profile Convexity"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Minimum Compatibility Identity"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Sharp-Set Constructive Identity"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Refinement Dominance Identity"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Strict Timing-Gain Identity"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Safety-Boundary Identity"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Endpoint Special-Case Identity"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Anytime Projection Proof Check"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Population Complexity Proof Check"): (
-        Path("src/trajcert/experiments/mathematics.py")
-    ),
-    ExperimentNameValue("Production Solver vs Independent Oracle"): Path(
+_MATHEMATICS_PRODUCER_ROOT: Final[Path] = Path("src/trajcert/experiments/mathematics.py")
+_TIMING_PRODUCER_ROOT: Final[Path] = Path("src/trajcert/experiments/timing.py")
+_SAFETY_PRODUCER_ROOT: Final[Path] = Path("src/trajcert/experiments/safety.py")
+
+_PRODUCER_ROOTS: dict[ExperimentName, Path] = {
+    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.PATH_INFORMATION_DECOMPOSITION: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.INFORMATION_PROFILE_CONVEXITY: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK: _MATHEMATICS_PRODUCER_ROOT,
+    ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: Path(
         "src/trajcert/experiments/solver_validation.py"
     ),
-    ExperimentNameValue("Callback-Model Reduction Falsification"): Path(
+    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: Path(
         "src/trajcert/experiments/comparator_reduction.py"
     ),
-    ExperimentNameValue("Generic Information-Optimization Reduction"): Path(
+    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: Path(
         "src/trajcert/experiments/comparator_reduction.py"
     ),
-    ExperimentNameValue("Partition Coherence"): Path("src/trajcert/experiments/timing.py"),
-    ExperimentNameValue("Same Endpoint, Different Timing"): (
-        Path("src/trajcert/experiments/timing.py")
-    ),
-    ExperimentNameValue("Strict Timing Gain"): Path("src/trajcert/experiments/timing.py"),
-    ExperimentNameValue("Compatibility Floor Behavior"): Path("src/trajcert/experiments/safety.py"),
-    ExperimentNameValue("Sharpness Against Generic Oracle"): (
-        Path("src/trajcert/experiments/safety.py")
-    ),
-    ExperimentNameValue("Safety and Intrinsic Impossibility"): (
-        Path("src/trajcert/experiments/safety.py")
-    ),
-    ExperimentNameValue("Anytime Implementation Hand Cases"): (
+    ExperimentName.PARTITION_COHERENCE: _TIMING_PRODUCER_ROOT,
+    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: _TIMING_PRODUCER_ROOT,
+    ExperimentName.STRICT_TIMING_GAIN: _TIMING_PRODUCER_ROOT,
+    ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _SAFETY_PRODUCER_ROOT,
+    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: _SAFETY_PRODUCER_ROOT,
+    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: _SAFETY_PRODUCER_ROOT,
+    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: (
         Path("src/trajcert/experiments/anytime.py")
     ),
-    ExperimentNameValue("Anytime Coverage Stress"): Path("src/trajcert/experiments/anytime.py"),
-    ExperimentNameValue("Population Sensitivity Utility"): (
+    ExperimentName.ANYTIME_COVERAGE_STRESS: Path("src/trajcert/experiments/anytime.py"),
+    ExperimentName.POPULATION_SENSITIVITY_UTILITY: (
         Path("src/trajcert/experiments/sensitivity.py")
     ),
-    ExperimentNameValue("Sequential Sensitivity Utility"): (
-        Path("src/trajcert/experiments/sensitivity.py")
-    ),
-    ExperimentNameValue("Failure Boundary Atlas"): (
+    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: Path("src/trajcert/experiments/sensitivity.py"),
+    ExperimentName.FAILURE_BOUNDARY_ATLAS: (
         Path("src/trajcert/experiments/failure_boundaries.py")
     ),
-    ExperimentNameValue("Computational Scaling"): Path("src/trajcert/experiments/scaling.py"),
-    ExperimentNameValue("Statistical Synthesis"): Path("src/trajcert/experiments/synthesis.py"),
+    ExperimentName.COMPUTATIONAL_SCALING: Path("src/trajcert/experiments/scaling.py"),
+    ExperimentName.STATISTICAL_SYNTHESIS: Path("src/trajcert/experiments/synthesis.py"),
 }
 
 _SUMMARY_COORDINATE_EXPERIMENTS = frozenset(
     {
-        ExperimentNameValue("Path Information Decomposition"),
-        ExperimentNameValue("Information Profile Convexity"),
-        ExperimentNameValue("Minimum Compatibility Identity"),
-        ExperimentNameValue("Sharp-Set Constructive Identity"),
-        ExperimentNameValue("Endpoint Special-Case Identity"),
-        ExperimentNameValue("Production Solver vs Independent Oracle"),
-        ExperimentNameValue("Compatibility Floor Behavior"),
-        ExperimentNameValue("Callback-Model Reduction Falsification"),
-        ExperimentNameValue("Generic Information-Optimization Reduction"),
+        ExperimentName.PATH_INFORMATION_DECOMPOSITION,
+        ExperimentName.INFORMATION_PROFILE_CONVEXITY,
+        ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY,
+        ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY,
+        ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY,
+        ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE,
+        ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR,
+        ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION,
+        ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION,
     }
 )
 
 
 class DependencyReadiness(DomainModel):
-    experiment_name: ExperimentNameValue
+    experiment_name: ExperimentName
     state: PublicExecutionState
 
 
@@ -585,7 +559,7 @@ def scientific_specification_digest() -> SpecificationDigest:
 
 def producer_component_digest(
     workspace_root: Path,
-    experiment_name: ExperimentNameValue,
+    experiment_name: ExperimentName,
 ) -> DigestHex:
     root = _PRODUCER_ROOTS.get(experiment_name)
     if root is None:
@@ -634,12 +608,12 @@ def cell_dependency_fingerprint(
     return DependencyFingerprint(sha256(payload.encode("utf-8")).hexdigest())
 
 
-def expected_seed_count(experiment_name: ExperimentNameValue) -> SeedCount:
+def expected_seed_count(experiment_name: ExperimentName) -> SeedCount:
     config = active_config.get()
     name = experiment_name
-    if name == "Anytime Coverage Stress":
+    if name == ExperimentName.ANYTIME_COVERAGE_STRESS:
         return config.sequential.coverage.streams
-    if name == "Sequential Sensitivity Utility":
+    if name == ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY:
         return config.sequential.utility.streams
     return 0
 
@@ -677,11 +651,9 @@ def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:
 
 
 def _first_party_import_from(node: ast.ImportFrom) -> tuple[str, ...]:
-    if node.module is None:
-        return ()
-    if _is_first_party_module(node.module):
-        return (node.module,)
-    return ()
+    return tuple(
+        module for module in (node.module,) if module is not None and _is_first_party_module(module)
+    )
 
 
 def _first_party_import(node: ast.Import) -> tuple[str, ...]:
@@ -917,7 +889,7 @@ def _dispatch_strict_timing_gain(cell: PlannedCell) -> DomainModel:
 
 def _dispatch_safety_boundary_identity(cell: PlannedCell) -> DomainModel:
     summary = _law_level_finest_summary(cell)
-    return _execute_summary_cell(ExperimentNameValue("Safety-Boundary Identity"), cell, summary)
+    return _execute_summary_cell(ExperimentName.SAFETY_BOUNDARY_IDENTITY, cell, summary)
 
 
 def _dispatch_sharpness_against_generic_oracle(cell: PlannedCell) -> DomainModel:
@@ -968,35 +940,33 @@ def _dispatch_computational_scaling(cell: PlannedCell) -> DomainModel:
 
 
 def _dispatch_summary_coordinate_experiment(
-    name: ExperimentNameValue, cell: PlannedCell
+    name: ExperimentName, cell: PlannedCell
 ) -> DomainModel:
     return _execute_summary_cell(name, cell, _summary_from_coordinates(cell))
 
 
-_DISPATCH_TABLE: dict[ExperimentNameValue, Callable[[PlannedCell], DomainModel]] = {
-    ExperimentNameValue("Legacy Partition Incoherence Check"): (
+_DISPATCH_TABLE: dict[ExperimentName, Callable[[PlannedCell], DomainModel]] = {
+    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: (
         _dispatch_legacy_partition_incoherence
     ),
-    ExperimentNameValue("Refinement Dominance Identity"): _dispatch_refinement_dominance_identity,
-    ExperimentNameValue("Strict Timing-Gain Identity"): _dispatch_strict_timing_gain_identity,
-    ExperimentNameValue("Partition Coherence"): _dispatch_partition_coherence,
-    ExperimentNameValue("Same Endpoint, Different Timing"): (
+    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: _dispatch_refinement_dominance_identity,
+    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _dispatch_strict_timing_gain_identity,
+    ExperimentName.PARTITION_COHERENCE: _dispatch_partition_coherence,
+    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (
         _dispatch_same_endpoint_different_timing
     ),
-    ExperimentNameValue("Strict Timing Gain"): _dispatch_strict_timing_gain,
-    ExperimentNameValue("Safety-Boundary Identity"): _dispatch_safety_boundary_identity,
-    ExperimentNameValue("Sharpness Against Generic Oracle"): (
+    ExperimentName.STRICT_TIMING_GAIN: _dispatch_strict_timing_gain,
+    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _dispatch_safety_boundary_identity,
+    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: (
         _dispatch_sharpness_against_generic_oracle
     ),
-    ExperimentNameValue("Safety and Intrinsic Impossibility"): (
-        lambda cell: _safety_intrinsic_case(cell)
-    ),
-    ExperimentNameValue("Anytime Coverage Stress"): lambda cell: _coverage_stress_case(cell),
-    ExperimentNameValue("Population Sensitivity Utility"): _dispatch_population_sensitivity_utility,
-    ExperimentNameValue("Sequential Sensitivity Utility"): _dispatch_sequential_sensitivity_utility,
-    ExperimentNameValue("Anytime Implementation Hand Cases"): _dispatch_anytime_hand_case,
-    ExperimentNameValue("Failure Boundary Atlas"): lambda cell: _execute_failure_boundary(cell),
-    ExperimentNameValue("Computational Scaling"): _dispatch_computational_scaling,
+    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: _safety_intrinsic_case,
+    ExperimentName.ANYTIME_COVERAGE_STRESS: _coverage_stress_case,
+    ExperimentName.POPULATION_SENSITIVITY_UTILITY: _dispatch_population_sensitivity_utility,
+    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: _dispatch_sequential_sensitivity_utility,
+    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: _dispatch_anytime_hand_case,
+    ExperimentName.FAILURE_BOUNDARY_ATLAS: _execute_failure_boundary,
+    ExperimentName.COMPUTATIONAL_SCALING: _dispatch_computational_scaling,
     **{
         name: partial(_dispatch_summary_coordinate_experiment, name)
         for name in _SUMMARY_COORDINATE_EXPERIMENTS
@@ -1087,9 +1057,7 @@ def _summary_compatibility_floor_behavior(
     )
 
 
-def _summary_safety_boundary_identity(
-    cell: PlannedCell, summary: ObservableSummary
-) -> DomainModel:
+def _summary_safety_boundary_identity(cell: PlannedCell, summary: ObservableSummary) -> DomainModel:
     config = active_config.get()
     case = _safety_case(
         summary,
@@ -1110,29 +1078,25 @@ def _summary_comparator_reduction(cell: PlannedCell, summary: ObservableSummary)
 
 
 _SUMMARY_DISPATCH_TABLE: dict[
-    ExperimentNameValue, Callable[[PlannedCell, ObservableSummary], DomainModel]
+    ExperimentName, Callable[[PlannedCell, ObservableSummary], DomainModel]
 ] = {
-    ExperimentNameValue("Path Information Decomposition"): _summary_path_information_decomposition,
-    ExperimentNameValue("Information Profile Convexity"): _summary_information_profile_convexity,
-    ExperimentNameValue("Minimum Compatibility Identity"): _summary_minimum_compatibility_identity,
-    ExperimentNameValue("Sharp-Set Constructive Identity"): (
-        _summary_sharp_set_constructive_identity
-    ),
-    ExperimentNameValue("Endpoint Special-Case Identity"): _summary_endpoint_special_case_identity,
-    ExperimentNameValue("Production Solver vs Independent Oracle"): (
+    ExperimentName.PATH_INFORMATION_DECOMPOSITION: _summary_path_information_decomposition,
+    ExperimentName.INFORMATION_PROFILE_CONVEXITY: _summary_information_profile_convexity,
+    ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY: _summary_minimum_compatibility_identity,
+    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: _summary_sharp_set_constructive_identity,
+    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: _summary_endpoint_special_case_identity,
+    ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: (
         _summary_production_solver_vs_independent_oracle
     ),
-    ExperimentNameValue("Compatibility Floor Behavior"): _summary_compatibility_floor_behavior,
-    ExperimentNameValue("Safety-Boundary Identity"): _summary_safety_boundary_identity,
-    ExperimentNameValue("Callback-Model Reduction Falsification"): _summary_comparator_reduction,
-    ExperimentNameValue("Generic Information-Optimization Reduction"): (
-        _summary_comparator_reduction
-    ),
+    ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _summary_compatibility_floor_behavior,
+    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _summary_safety_boundary_identity,
+    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: _summary_comparator_reduction,
+    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: _summary_comparator_reduction,
 }
 
 
 def _execute_summary_cell(
-    name: ExperimentNameValue,
+    name: ExperimentName,
     cell: PlannedCell,
     summary: ObservableSummary,
 ) -> DomainModel:
@@ -1326,7 +1290,6 @@ def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
 def _failure_coordinate(
     coordinate: FailureBoundaryCoordinate,
 ) -> tuple[FailureBoundaryAxis, FailureBoundaryProbe]:
-
     axis_text, separator, value_text = coordinate.partition("=")
     if not separator:
         raise ScientificCellDispatchError("invalid failure-boundary coordinate")
@@ -1450,7 +1413,7 @@ def execute_dispatched_cell(
     cell: PlannedCell,
     context: ExecutionContext,
 ) -> CellExecutionResult:
-    if cell.identity.experiment_name == "Statistical Synthesis":
+    if cell.identity.experiment_name == ExperimentName.STATISTICAL_SYNTHESIS:
         raise InvalidScientificDataError(
             "Statistical Synthesis requires the dedicated cross-experiment executor"
         )

@@ -277,25 +277,24 @@ def test_theorem_validation_summary_rows_rejects_empty_observations() -> None:
 
 
 def test_theorem_validation_summary_rows_rejects_multiple_artifacts_per_theorem() -> None:
+    observations = (
+        TheoremValidationObservation(
+            theorem_name=TheoremName("T1"),
+            passed=True,
+            absolute_error=0.1,
+            inequality_margin=0.2,
+            primary_artifact=ArtifactKey("a"),
+        ),
+        TheoremValidationObservation(
+            theorem_name=TheoremName("T1"),
+            passed=True,
+            absolute_error=0.1,
+            inequality_margin=0.2,
+            primary_artifact=ArtifactKey("b"),
+        ),
+    )
     with pytest.raises(InvalidScientificDataError, match="one primary artifact"):
-        _ = theorem_validation_summary_rows(
-            (
-                TheoremValidationObservation(
-                    theorem_name=TheoremName("T1"),
-                    passed=True,
-                    absolute_error=0.1,
-                    inequality_margin=0.2,
-                    primary_artifact=ArtifactKey("a"),
-                ),
-                TheoremValidationObservation(
-                    theorem_name=TheoremName("T1"),
-                    passed=True,
-                    absolute_error=0.1,
-                    inequality_margin=0.2,
-                    primary_artifact=ArtifactKey("b"),
-                ),
-            )
-        )
+        _ = theorem_validation_summary_rows(observations)
 
 
 def test_population_rho_utility_rows_maps_population_evidence() -> None:
@@ -582,9 +581,7 @@ def test_partition_coherence_figure_rows_rejects_missing_family_member() -> None
 def test_partition_coherence_figure_rows_rejects_duplicate_evidence() -> None:
     population, same_endpoint = _coherence_family()
     with pytest.raises(InvalidScientificDataError, match="contains duplicates"):
-        _ = partition_coherence_figure_rows(
-            tuple((*population, population[0])), same_endpoint
-        )
+        _ = partition_coherence_figure_rows(tuple((*population, population[0])), same_endpoint)
 
 
 def test_partition_coherence_figure_rows_rejects_off_config_sensitivity() -> None:
@@ -606,9 +603,7 @@ def test_partition_coherence_figure_rows_rejects_incompatible_risk_intervals() -
         update={"result": same_endpoint[0].result.model_copy(update={"timing_lower": None})}
     )
     with pytest.raises(InvalidScientificDataError, match="compatible timed risk interval"):
-        _ = partition_coherence_figure_rows(
-            population, tuple((*same_endpoint[1:], no_timing))
-        )
+        _ = partition_coherence_figure_rows(population, tuple((*same_endpoint[1:], no_timing)))
 
 
 def test_partition_coherence_figure_rows_rejects_mismatched_same_endpoint_bands() -> None:
@@ -878,9 +873,9 @@ def _same_endpoint_result() -> SameEndpointTimingResult:
     )
 
 
-def _coherence_family() -> (
-    tuple[tuple[PopulationFigureEvidence, ...], tuple[SameEndpointFigureEvidence, ...]]
-):
+def _coherence_family() -> tuple[
+    tuple[PopulationFigureEvidence, ...], tuple[SameEndpointFigureEvidence, ...]
+]:
     config = active_config.get()
     target_rho = config.study_design.partition_coherence_figure_rho
     population_laws = (

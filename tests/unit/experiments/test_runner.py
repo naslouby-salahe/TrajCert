@@ -5,6 +5,7 @@ from typing import cast
 
 import pytest
 
+from tests.unit.conftest import write_artifact_executor
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.ledger import LedgerIdentity
@@ -31,7 +32,6 @@ from trajcert.storage import (
     ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
-    file_digest,
     read_model,
 )
 from trajcert.types import (
@@ -104,32 +104,6 @@ def _context(workspace_root: Path, cell: PlannedCell) -> runner.ExecutionContext
     )
 
 
-def _write_artifact_executor(
-    cell: PlannedCell, context: runner.ExecutionContext
-) -> runner.CellExecutionResult:
-    relative_path = runner.scientific_result_path(cell)
-    path = context.workspace_root / relative_path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    _ = path.write_text("artifact-payload", encoding="utf-8")
-    return runner.CellExecutionResult(
-        artifact_index=CellArtifactIndex(
-            artifacts=(
-                ArtifactIndexEntry(
-                    artifact_key=runner.scientific_result_artifact_key(cell),
-                    relative_path=relative_path,
-                    sha256=file_digest(path),
-                ),
-            )
-        ),
-        completed_seed_count=context.expected_seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-    )
-
-
 def _missing_artifact_executor(
     cell: PlannedCell, context: runner.ExecutionContext
 ) -> runner.CellExecutionResult:
@@ -198,7 +172,7 @@ def _static_dependencies(client_id: ClientId) -> tuple[runner.StaticComponentDep
 
 def test_run_cell_rejects_planned_invalid_cell(tmp_path: Path) -> None:
     cell = _invalid_cell()
-    outcome = runner.run_cell(cell, _context(tmp_path, cell), (), _write_artifact_executor, False)
+    outcome = runner.run_cell(cell, _context(tmp_path, cell), (), write_artifact_executor, False)
     assert outcome.state is PublicExecutionState.INVALID
     assert outcome.reused is False
     assert outcome.reason == cell.invalid_reason
@@ -206,7 +180,7 @@ def test_run_cell_rejects_planned_invalid_cell(tmp_path: Path) -> None:
 
 def test_run_cell_blocks_on_missing_dependency_status(tmp_path: Path) -> None:
     cell = _cell(required=(_INVENTORY,))
-    outcome = runner.run_cell(cell, _context(tmp_path, cell), (), _write_artifact_executor, False)
+    outcome = runner.run_cell(cell, _context(tmp_path, cell), (), write_artifact_executor, False)
     assert outcome.state is PublicExecutionState.BLOCKED
     assert outcome.reason == ReasonCode("MISSING_DEPENDENCY_STATUS")
 
@@ -217,7 +191,7 @@ def test_run_cell_blocks_on_uncompleted_dependency(tmp_path: Path) -> None:
         runner.DependencyReadiness(experiment_name=_INVENTORY, state=PublicExecutionState.READY),
     )
     outcome = runner.run_cell(
-        cell, _context(tmp_path, cell), dependencies, _write_artifact_executor, False
+        cell, _context(tmp_path, cell), dependencies, write_artifact_executor, False
     )
     assert outcome.state is PublicExecutionState.BLOCKED
     assert outcome.reason == ReasonCode("UPSTREAM_EXPERIMENT_NOT_COMPLETED")
@@ -226,7 +200,7 @@ def test_run_cell_blocks_on_uncompleted_dependency(tmp_path: Path) -> None:
 def test_run_cell_executes_and_writes_completion_record(tmp_path: Path) -> None:
     cell = _cell()
     context = _context(tmp_path, cell)
-    outcome = runner.run_cell(cell, context, (), _write_artifact_executor, False)
+    outcome = runner.run_cell(cell, context, (), write_artifact_executor, False)
     assert outcome.state is PublicExecutionState.COMPLETED
     assert outcome.reused is False
     assert outcome.reason is None
@@ -240,8 +214,8 @@ def test_run_cell_executes_and_writes_completion_record(tmp_path: Path) -> None:
 def test_run_cell_reuses_compatible_completion(tmp_path: Path) -> None:
     cell = _cell()
     context = _context(tmp_path, cell)
-    _ = runner.run_cell(cell, context, (), _write_artifact_executor, False)
-    outcome = runner.run_cell(cell, context, (), _write_artifact_executor, False)
+    _ = runner.run_cell(cell, context, (), write_artifact_executor, False)
+    outcome = runner.run_cell(cell, context, (), write_artifact_executor, False)
     assert outcome.state is PublicExecutionState.COMPLETED
     assert outcome.reused is True
     assert outcome.reason is None
@@ -250,8 +224,8 @@ def test_run_cell_reuses_compatible_completion(tmp_path: Path) -> None:
 def test_run_cell_overwrite_reruns_execution(tmp_path: Path) -> None:
     cell = _cell()
     context = _context(tmp_path, cell)
-    _ = runner.run_cell(cell, context, (), _write_artifact_executor, False)
-    outcome = runner.run_cell(cell, context, (), _write_artifact_executor, True)
+    _ = runner.run_cell(cell, context, (), write_artifact_executor, False)
+    outcome = runner.run_cell(cell, context, (), write_artifact_executor, True)
     assert outcome.state is PublicExecutionState.COMPLETED
     assert outcome.reused is False
 
@@ -304,7 +278,7 @@ def test_dependency_block_reason_requires_completion() -> None:
 def test_completion_is_compatible_true_after_valid_run(tmp_path: Path) -> None:
     cell = _cell()
     context = _context(tmp_path, cell)
-    _ = runner.run_cell(cell, context, (), _write_artifact_executor, False)
+    _ = runner.run_cell(cell, context, (), write_artifact_executor, False)
     completion_path = runner.cell_completion_path(cell, tmp_path)
     assert runner.completion_is_compatible(cell, context, completion_path) is True
 
@@ -312,7 +286,7 @@ def test_completion_is_compatible_true_after_valid_run(tmp_path: Path) -> None:
 def test_completion_is_compatible_false_after_artifact_tamper(tmp_path: Path) -> None:
     cell = _cell()
     context = _context(tmp_path, cell)
-    _ = runner.run_cell(cell, context, (), _write_artifact_executor, False)
+    _ = runner.run_cell(cell, context, (), write_artifact_executor, False)
     artifact_path = tmp_path / runner.scientific_result_path(cell)
     _ = artifact_path.write_text("tampered", encoding="utf-8")
     completion_path = runner.cell_completion_path(cell, tmp_path)
@@ -322,7 +296,7 @@ def test_completion_is_compatible_false_after_artifact_tamper(tmp_path: Path) ->
 def test_completion_is_compatible_false_on_context_mismatch(tmp_path: Path) -> None:
     cell = _cell()
     context = _context(tmp_path, cell)
-    _ = runner.run_cell(cell, context, (), _write_artifact_executor, False)
+    _ = runner.run_cell(cell, context, (), write_artifact_executor, False)
     mismatched = context.model_copy(update={"manifest_digest": DigestHex("1" * _SHA256_HEX_LENGTH)})
     completion_path = runner.cell_completion_path(cell, tmp_path)
     assert runner.completion_is_compatible(cell, mismatched, completion_path) is False
@@ -331,7 +305,7 @@ def test_completion_is_compatible_false_on_context_mismatch(tmp_path: Path) -> N
 def test_completion_is_compatible_false_when_index_missing(tmp_path: Path) -> None:
     cell = _cell()
     context = _context(tmp_path, cell)
-    _ = runner.run_cell(cell, context, (), _write_artifact_executor, False)
+    _ = runner.run_cell(cell, context, (), write_artifact_executor, False)
     runner.cell_artifact_index_path(cell, tmp_path).unlink()
     completion_path = runner.cell_completion_path(cell, tmp_path)
     assert runner.completion_is_compatible(cell, context, completion_path) is False
@@ -361,10 +335,9 @@ def test_producer_component_digest_is_deterministic() -> None:
 
 
 def test_producer_component_digest_rejects_unregistered_experiment(tmp_path: Path) -> None:
+    experiment_name = ExperimentNameValue("Unregistered Experiment")
     with pytest.raises(InvalidScientificDataError, match="missing producer-component registration"):
-        _ = runner.producer_component_digest(
-            tmp_path, ExperimentNameValue("Unregistered Experiment")
-        )
+        _ = runner.producer_component_digest(tmp_path, experiment_name)
 
 
 def test_scientific_dependency_digest_is_deterministic() -> None:
@@ -481,8 +454,9 @@ def test_runtime_lineage_audit_flags_missing_parent() -> None:
 def test_runtime_lineage_audit_rejects_duplicate_keys() -> None:
     identity = _target_identity()
     artifact = _clean_lineage_artifact("root")
+    root_key = ArtifactKey("root")
     with pytest.raises(InvalidScientificDataError, match="duplicate artifact keys"):
-        _ = runner.runtime_lineage_audit(identity, ArtifactKey("root"), (artifact, artifact))
+        _ = runner.runtime_lineage_audit(identity, root_key, (artifact, artifact))
 
 
 def test_runtime_lineage_audit_rejects_cycle() -> None:
@@ -493,8 +467,9 @@ def test_runtime_lineage_audit_rejects_cycle() -> None:
     second = runner.RuntimeLineageArtifact(
         artifact_key=ArtifactKey("b"), parent_artifact_keys=(ArtifactKey("a"),)
     )
+    root_key = ArtifactKey("a")
     with pytest.raises(InvalidScientificDataError, match="cycle"):
-        _ = runner.runtime_lineage_audit(identity, ArtifactKey("a"), (first, second))
+        _ = runner.runtime_lineage_audit(identity, root_key, (first, second))
 
 
 def test_audit_local_validity_targets_requires_targets() -> None:
@@ -583,8 +558,9 @@ def test_execute_scientific_cell_dispatches_proof_checks() -> None:
 
 def test_execute_scientific_cell_rejects_planned_invalid_cell() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    cell = _invalid_cell()
     with pytest.raises(runner.ScientificCellDispatchError, match="planned-invalid"):
-        _ = runner.execute_scientific_cell(_invalid_cell(), config)
+        _ = runner.execute_scientific_cell(cell, config)
 
 
 def test_execute_scientific_cell_rejects_unregistered_experiment() -> None:
@@ -610,8 +586,9 @@ def test_execute_dispatched_cell_rejects_statistical_synthesis(tmp_path: Path) -
     _ = active_config.set(config)
     plan = build_plan(config)
     cell = cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
+    context = _context(tmp_path, cell)
     with pytest.raises(InvalidScientificDataError, match="dedicated cross-experiment executor"):
-        _ = runner.execute_dispatched_cell(cell, _context(tmp_path, cell))
+        _ = runner.execute_dispatched_cell(cell, context)
 
 
 def test_execute_dispatched_cell_requires_exact_result_artifact(tmp_path: Path) -> None:
@@ -643,13 +620,15 @@ def test_dispatched_cell_round_trip_through_run_cell(tmp_path: Path) -> None:
 
 
 def test_verified_upstream_completion_rejects_planned_invalid_cell(tmp_path: Path) -> None:
+    cell = _invalid_cell()
     with pytest.raises(InvalidScientificDataError, match="planned-invalid"):
-        _ = runner.verified_upstream_completion_and_index(_invalid_cell(), tmp_path)
+        _ = runner.verified_upstream_completion_and_index(cell, tmp_path)
 
 
 def test_verified_upstream_completion_rejects_missing_files(tmp_path: Path) -> None:
+    cell = _cell()
     with pytest.raises(SerializationError):
-        _ = runner.verified_upstream_completion_and_index(_cell(), tmp_path)
+        _ = runner.verified_upstream_completion_and_index(cell, tmp_path)
 
 
 def test_verified_upstream_completion_rejects_stale_artifact_checksum(tmp_path: Path) -> None:

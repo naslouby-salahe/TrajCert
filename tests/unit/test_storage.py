@@ -97,8 +97,9 @@ def test_canonical_model_bytes_canonicalizes_floats() -> None:
 
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
 def test_canonical_model_bytes_rejects_non_finite(value: float) -> None:
+    loose = Loose(value=value)
     with pytest.raises(SerializationError):
-        _ = canonical_model_bytes(Loose(value=value))
+        _ = canonical_model_bytes(loose)
 
 
 def test_model_digest_equals_sha256_of_canonical_bytes() -> None:

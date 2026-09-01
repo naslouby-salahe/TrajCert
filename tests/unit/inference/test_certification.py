@@ -64,14 +64,15 @@ def _projection(
 
 def test_classify_certification_rejects_invalid_budget_or_guard() -> None:
     state = _state(3, 2)
+    projection = _projection(0.05, 0.0, None)
     with pytest.raises(InvalidScientificDataError, match="certification budget"):
-        _ = classify_certification(state, _projection(0.05, 0.0, None), -0.1, 0.5, 5, 1, 1e-12)
+        _ = classify_certification(state, projection, -0.1, 0.5, 5, 1, 1e-12)
     with pytest.raises(InvalidScientificDataError, match="certification budget"):
-        _ = classify_certification(state, _projection(0.05, 0.0, None), 0.05, 1.5, 5, 1, 1e-12)
+        _ = classify_certification(state, projection, 0.05, 1.5, 5, 1, 1e-12)
     with pytest.raises(InvalidScientificDataError, match="certification budget"):
-        _ = classify_certification(state, _projection(0.05, 0.0, None), 0.05, -0.2, 5, 1, 1e-12)
+        _ = classify_certification(state, projection, 0.05, -0.2, 5, 1, 1e-12)
     with pytest.raises(InvalidScientificDataError, match="comparison guard"):
-        _ = classify_certification(state, _projection(0.05, 0.0, None), 0.05, 0.5, 5, 1, 0.0)
+        _ = classify_certification(state, projection, 0.05, 0.5, 5, 1, 0.0)
 
 
 def test_classify_certification_marks_technical_failure_without_projection() -> None:

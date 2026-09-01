@@ -59,7 +59,6 @@ from trajcert.experiments.synthesis import (
 from trajcert.paths import RESULTS_ROOT, semantic_slug
 from trajcert.provenance import (
     EnvironmentDigest,
-    ExperimentNameValue,
     ProducerComponentName,
     ProvenanceMaterial,
     provenance_fingerprint,
@@ -87,6 +86,7 @@ from trajcert.types import (
     Count,
     DomainModel,
     EpochId,
+    ExperimentName,
     PublicExecutionState,
     ReasonCode,
 )
@@ -244,9 +244,7 @@ def _print_status(status: ExperimentStatus) -> None:
 
 
 def _print_project_status() -> None:
-    statuses = tuple(
-        experiment_status(item) for item in experiment_names()
-    )
+    statuses = tuple(experiment_status(item) for item in experiment_names())
     completed = sum(item.state is PublicExecutionState.COMPLETED for item in statuses)
     failed = sum(item.state is PublicExecutionState.FAILED for item in statuses)
     blocked = sum(item.state is PublicExecutionState.BLOCKED for item in statuses)
@@ -263,16 +261,16 @@ def _print_smoke(result: SmokeResult) -> None:
 
 
 _PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json")
-_SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
+_SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
 _LOCAL_BOUND_EXPERIMENTS = (
-    ExperimentNameValue("Anytime Coverage Stress"),
-    ExperimentNameValue("Sequential Sensitivity Utility"),
+    ExperimentName.ANYTIME_COVERAGE_STRESS,
+    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY,
 )
 
 
 class RunExperimentResult(DomainModel):
-    experiment_name: ExperimentNameValue
+    experiment_name: ExperimentName
     state: PublicExecutionState
     completed_cells: Count
     reused_cells: Count
@@ -388,7 +386,7 @@ def run_experiment(
             failed_cells=0,
             blocked_cells=0,
         )
-    status_cache: dict[ExperimentNameValue, ExperimentStatus] = {}
+    status_cache: dict[ExperimentName, ExperimentStatus] = {}
     dependencies = _dependency_readiness(plan, workspace_root, cells[0], status_cache)
     executor = _executor(name, plan)
     completed = reused = failed = blocked = 0
@@ -431,9 +429,7 @@ def report(
     overwrite: bool = False,
 ) -> ReportExportResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
-    validated_name = (
-        None if experiment_name is None else _known_experiment_name(experiment_name)
-    )
+    validated_name = None if experiment_name is None else _known_experiment_name(experiment_name)
     return export_report(workspace_root, experiment_name=validated_name, overwrite=overwrite)
 
 
@@ -443,27 +439,25 @@ def _load_config(workspace_root: Path) -> TrajCertConfig:
     return config
 
 
-def _known_experiment_name(value: str) -> ExperimentNameValue:
-    names = experiment_names()
-    requested = ExperimentNameValue(value)
-    if requested not in names:
+def _known_experiment_name(value: str) -> ExperimentName:
+    try:
+        return ExperimentName(value)
+    except ValueError as error:
         raise InvalidScientificDataError(f"unknown experiment family: {value}")
-    return requested
+    from error
 
 
 def _experiment_status(
-    name: ExperimentNameValue,
+    name: ExperimentName,
     plan: ExperimentPlan,
     workspace_root: Path,
-    cache: dict[ExperimentNameValue, ExperimentStatus],
+    cache: dict[ExperimentName, ExperimentStatus],
 ) -> ExperimentStatus:
     cached = cache.get(name)
     if cached is not None:
         return cached
     cells = cells_for_experiment(plan, name)
-    statuses = tuple(
-        _current_cell_status(cell, plan, workspace_root, cache) for cell in cells
-    )
+    statuses = tuple(_current_cell_status(cell, plan, workspace_root, cache) for cell in cells)
     declared_cells = len(cells)
     result = aggregate_experiment_status(name, statuses, declared_cells)
     cache[name] = result
@@ -474,7 +468,7 @@ def _current_cell_status(
     cell: PlannedCell,
     plan: ExperimentPlan,
     workspace_root: Path,
-    cache: dict[ExperimentNameValue, ExperimentStatus],
+    cache: dict[ExperimentName, ExperimentStatus],
 ) -> CellStatus:
     key = cell.identity.semantic_cell_key
     if not cell.executable:
@@ -506,7 +500,7 @@ def _dependency_readiness(
     plan: ExperimentPlan,
     workspace_root: Path,
     cell: PlannedCell,
-    cache: dict[ExperimentNameValue, ExperimentStatus],
+    cache: dict[ExperimentName, ExperimentStatus],
 ) -> tuple[DependencyReadiness, ...]:
     return tuple(
         DependencyReadiness(
@@ -517,7 +511,7 @@ def _dependency_readiness(
     )
 
 
-def _executor(name: ExperimentNameValue, plan: ExperimentPlan) -> CellExecutor:
+def _executor(name: ExperimentName, plan: ExperimentPlan) -> CellExecutor:
     if name == _SYNTHESIS_NAME:
         return make_statistical_synthesis_executor(plan, _locality_input(plan))
 

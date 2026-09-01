@@ -3,47 +3,15 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from tests.unit.conftest import ledger_event, ledger_identity
 from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity
 from trajcert.exceptions import DataIntegrityError
-from trajcert.types import (
-    ActionChannelId,
-    ClientId,
-    EpochId,
-    EventId,
-    OutcomeLabel,
-)
-
-
-def _identity() -> LedgerIdentity:
-    return LedgerIdentity(
-        client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
-        epoch_id=EpochId("epoch"),
-    )
-
-
-def _event(
-    event_id: str,
-    issue: float = 0.0,
-    completion: float | None = 2.0,
-    label: OutcomeLabel | None = OutcomeLabel.CORRECT,
-    horizon: float = 8.0,
-) -> LedgerEvent:
-    return LedgerEvent(
-        event_id=EventId(event_id),
-        client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
-        epoch_id=EpochId("epoch"),
-        issue_age_unit=issue,
-        terminal_horizon=horizon,
-        adjudication_completion_age=completion,
-        correctness_label=label,
-    )
+from trajcert.types import ActionChannelId, ClientId, EpochId, EventId, OutcomeLabel
 
 
 def test_event_identity_matches_ledger_identity() -> None:
-    event = _event("e1")
-    assert event.identity == _identity()
+    event = ledger_event("e1")
+    assert event.identity == ledger_identity()
     assert event.identity == LedgerIdentity(
         client_id=event.client_id,
         action_channel_id=event.action_channel_id,
@@ -54,7 +22,7 @@ def test_event_identity_matches_ledger_identity() -> None:
 def test_maturity_age_unit_is_issue_plus_horizon() -> None:
     issue = 1.5
     horizon = 8.0
-    assert _event("e1", issue=issue).maturity_age_unit == issue + horizon
+    assert ledger_event("e1", issue=issue).maturity_age_unit == issue + horizon
 
 
 def test_maturity_guard_rejects_negative_horizon() -> None:
@@ -93,19 +61,20 @@ def test_adjudication_validation(
 ) -> None:
     if raises:
         with pytest.raises(DataIntegrityError, match=message):
-            _ = _event("e1", issue=issue, completion=completion, label=label)
+            _ = ledger_event("e1", issue=issue, completion=completion, label=label)
     else:
-        event = _event("e1", issue=issue, completion=completion, label=label)
+        event = ledger_event("e1", issue=issue, completion=completion, label=label)
         assert event.adjudication_completion_age == completion
         assert event.correctness_label == label
 
 
 def test_ledger_sorts_and_deduplicates_event_ids() -> None:
-    identity = _identity()
-    ledger = EventLedger(identity=identity, events=(_event("b"), _event("a")))
+    identity = ledger_identity()
+    ledger = EventLedger(identity=identity, events=(ledger_event("b"), ledger_event("a")))
     assert tuple(event.event_id for event in ledger.events) == ("a", "b")
+    events = (ledger_event("x"), ledger_event("x"))
     with pytest.raises(DataIntegrityError, match="duplicate"):
-        _ = EventLedger(identity=identity, events=(_event("x"), _event("x")))
+        _ = EventLedger(identity=identity, events=events)
 
 
 def test_ledger_rejects_foreign_event_identity() -> None:
@@ -119,13 +88,14 @@ def test_ledger_rejects_foreign_event_identity() -> None:
         adjudication_completion_age=2.0,
         correctness_label=OutcomeLabel.CORRECT,
     )
+    identity = ledger_identity()
     with pytest.raises(DataIntegrityError, match="identity"):
-        _ = EventLedger(identity=_identity(), events=(foreign,))
+        _ = EventLedger(identity=identity, events=(foreign,))
 
 
 def test_event_ledger_construction_returns_sorted_ledger() -> None:
-    identity = _identity()
-    ledger = EventLedger(identity=identity, events=(_event("z"), _event("y")))
+    identity = ledger_identity()
+    ledger = EventLedger(identity=identity, events=(ledger_event("z"), ledger_event("y")))
     assert ledger.identity == identity
     assert tuple(event.event_id for event in ledger.events) == ("y", "z")
 

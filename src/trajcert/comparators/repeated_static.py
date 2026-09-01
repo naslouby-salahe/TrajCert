@@ -30,9 +30,7 @@ def repeated_static_region(
         return CategoricalConfidenceRegion(matured_count=0, intervals=intervals)
     delta = anytime_delta
     z = float(norm.ppf(1.0 - delta / (2.0 * dimension)))
-    intervals = tuple(
-        _wilson_interval(count, total, z) for count in state.canonical_count_vector
-    )
+    intervals = tuple(_wilson_interval(count, total, z) for count in state.canonical_count_vector)
     return CategoricalConfidenceRegion(matured_count=state.matured_count, intervals=intervals)
 
 

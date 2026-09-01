@@ -71,7 +71,7 @@ def mature_event(event: LedgerEvent, partition: TrajectoryPartition) -> MaturedE
 
 
 def mature_ledger(ledger: EventLedger, partition: TrajectoryPartition) -> tuple[MaturedEvent, ...]:
-    matured = tuple(mature_event(event, partition) for event in ledger.events)
+    matured = (mature_event(event, partition) for event in ledger.events)
     return tuple(
         sorted(
             matured,

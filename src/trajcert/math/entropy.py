@@ -47,9 +47,7 @@ def binary_entropy_from_masses(
 
 
 @overload
-def weighted_binary_entropy(
-    total_mass: Mass, harmful_rate: Probability | None
-) -> EntropyValue: ...
+def weighted_binary_entropy(total_mass: Mass, harmful_rate: Probability | None) -> EntropyValue: ...
 @overload
 def weighted_binary_entropy(total_mass: Vector, harmful_rate: Vector | None) -> Vector: ...
 def weighted_binary_entropy(

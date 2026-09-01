@@ -43,7 +43,7 @@ def one_sided_sign_flip(
         multipliers -= 1.0
         signed: NDArray[np.float64] = values * multipliers
         statistic = float(np.mean(signed, dtype=np.float64))
-        favorable_or_more_extreme += (statistic >= observed)
+        favorable_or_more_extreme += statistic >= observed
     p_value = (1.0 + favorable_or_more_extreme) / (1.0 + randomization_count)
     return SignFlipResult(
         observed_statistic=observed,

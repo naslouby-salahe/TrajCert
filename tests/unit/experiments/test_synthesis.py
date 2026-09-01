@@ -234,10 +234,9 @@ def test_verify_dependency_fingerprint_rejects_stale(
     synthesis_plan: ExperimentPlan, synthesis_workspace: Path
 ) -> None:
     upstream = _upstream_cells(synthesis_plan)
+    fingerprint = DependencyFingerprint("stale")
     with pytest.raises(InvalidScientificDataError, match="does not match persisted"):
-        verify_synthesis_dependency_fingerprint(
-            upstream, synthesis_workspace, DependencyFingerprint("stale")
-        )
+        verify_synthesis_dependency_fingerprint(upstream, synthesis_workspace, fingerprint)
 
 
 def test_synthesis_artifact_paths_require_synthesis_cell(synthesis_plan: ExperimentPlan) -> None:
@@ -369,10 +368,9 @@ def test_execute_statistical_synthesis_rejects_non_synthesis_cell(
 ) -> None:
     cell = _experiment_cell(synthesis_plan, "Population Sensitivity Utility")
     context = _execution_context(synthesis_plan, Path("/tmp"), DependencyFingerprint("unused"))
+    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="non-synthesis cell"):
-        _ = execute_statistical_synthesis(
-            cell, context, synthesis_plan, small_config, _synthesis_locality()
-        )
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
 
 
 def test_execute_statistical_synthesis_rejects_planned_invalid_cell(
@@ -380,10 +378,9 @@ def test_execute_statistical_synthesis_rejects_planned_invalid_cell(
 ) -> None:
     cell = _synthesis_cell(synthesis_plan).model_copy(update={"executable": False})
     context = _execution_context(synthesis_plan, Path("/tmp"), DependencyFingerprint("unused"))
+    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="planned invalid"):
-        _ = execute_statistical_synthesis(
-            cell, context, synthesis_plan, small_config, _synthesis_locality()
-        )
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
 
 
 def test_execute_statistical_synthesis_rejects_stale_plan_digest(
@@ -393,10 +390,9 @@ def test_execute_statistical_synthesis_rejects_stale_plan_digest(
     context = _execution_context(
         synthesis_plan, Path("/tmp"), DependencyFingerprint("unused")
     ).model_copy(update={"plan_digest": PlanDigest("stale")})
+    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="plan digest is stale"):
-        _ = execute_statistical_synthesis(
-            cell, context, synthesis_plan, small_config, _synthesis_locality()
-        )
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
 
 
 def test_execute_statistical_synthesis_rejects_seeded_context(
@@ -406,10 +402,9 @@ def test_execute_statistical_synthesis_rejects_seeded_context(
     context = _execution_context(
         synthesis_plan, Path("/tmp"), DependencyFingerprint("unused")
     ).model_copy(update={"expected_seed_count": 1})
+    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="zero seeds"):
-        _ = execute_statistical_synthesis(
-            cell, context, synthesis_plan, small_config, _synthesis_locality()
-        )
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
 
 
 def test_execute_statistical_synthesis_rejects_incomplete_artifact_contract(
@@ -419,10 +414,9 @@ def test_execute_statistical_synthesis_rejects_incomplete_artifact_contract(
     context = _execution_context(
         synthesis_plan, Path("/tmp"), DependencyFingerprint("unused")
     ).model_copy(update={"required_artifact_keys": (ArtifactKey("wrong"),)})
+    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="required artifact contract"):
-        _ = execute_statistical_synthesis(
-            cell, context, synthesis_plan, small_config, _synthesis_locality()
-        )
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
 
 
 def _small_synthesis_config() -> TrajCertConfig:

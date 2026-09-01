@@ -45,8 +45,9 @@ def _cell(executable: bool, invalid_reason: ReasonCode | None) -> PlannedCell:
 
 
 def test_planned_cell_rejects_executable_with_invalid_reason() -> None:
+    invalid_reason = ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
     with pytest.raises(ValidationError, match="cannot carry an invalid reason"):
-        _ = _cell(executable=True, invalid_reason=ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION"))
+        _ = _cell(executable=True, invalid_reason=invalid_reason)
 
 
 def test_planned_cell_rejects_nonexecutable_without_reason() -> None:

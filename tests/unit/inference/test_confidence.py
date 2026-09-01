@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from trajcert.data.ledger import LedgerIdentity
-from trajcert.data.partitions import build_partition
-from trajcert.data.summaries import ObservableCounts
+from tests.unit.conftest import categorical_state
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
-from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import (
     CategoricalConfidenceRegion,
     ClosedProbabilityInterval,
@@ -14,30 +11,6 @@ from trajcert.inference.confidence import (
     confidence_sequence_update,
     raw_confidence_region,
 )
-from trajcert.types import ActionChannelId, ClientId, EpochId
-
-
-def _identity() -> LedgerIdentity:
-    return LedgerIdentity(
-        client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
-        epoch_id=EpochId("epoch"),
-    )
-
-
-def _state(counts: tuple[int, ...], band_count: int = 2) -> CategoricalState:
-    partition = build_partition(band_count, band_count, 8.0)
-    harmful = tuple(counts[index] for index in range(0, len(counts) - 1, 2))
-    correct = tuple(counts[index] for index in range(1, len(counts) - 1, 2))
-    return CategoricalState(
-        identity=_identity(),
-        partition=partition,
-        counts=ObservableCounts(
-            harmful_by_band=harmful,
-            correct_by_band=correct,
-            unresolved=counts[-1],
-        ),
-    )
 
 
 @pytest.mark.parametrize(
@@ -88,13 +61,13 @@ def test_confidence_region_accepts_nonempty_simplex_intersection() -> None:
 
 @pytest.mark.parametrize("delta", [0.0, 1.0])
 def test_raw_confidence_region_rejects_boundary_delta(delta: float) -> None:
-    state = _state((1, 0, 0, 0, 0))
+    state = categorical_state((1, 0, 0, 0, 0))
     with pytest.raises(InvalidScientificDataError, match="strictly between"):
         _ = raw_confidence_region(state, delta, 1e-6)
 
 
 def test_raw_confidence_region_on_empty_state() -> None:
-    state = _state((0, 0, 0, 0, 0))
+    state = categorical_state((0, 0, 0, 0, 0))
     region = raw_confidence_region(state, 0.05, 1e-6)
     category_count = len(state.canonical_count_vector)
     assert len(region.intervals) == category_count
@@ -102,7 +75,7 @@ def test_raw_confidence_region_on_empty_state() -> None:
 
 
 def test_raw_confidence_region_contains_maximum_likelihood() -> None:
-    state = _state((1, 0, 0, 0, 0))
+    state = categorical_state((1, 0, 0, 0, 0))
     region = raw_confidence_region(state, 0.05, 1e-6)
     assert region.matured_count == state.matured_count
     category_count = len(state.canonical_count_vector)
@@ -113,14 +86,14 @@ def test_raw_confidence_region_contains_maximum_likelihood() -> None:
 
 
 def test_confidence_sequence_update_initializes_running_from_raw() -> None:
-    state = _state((1, 0, 0, 0, 0))
+    state = categorical_state((1, 0, 0, 0, 0))
     update = confidence_sequence_update(state, 0.05, 1e-6, None)
     assert isinstance(update, ConfidenceSequenceUpdate)
     assert update.running == update.raw
 
 
 def test_confidence_sequence_update_rejects_dimension_change() -> None:
-    state = _state((1, 0, 0, 0, 0))
+    state = categorical_state((1, 0, 0, 0, 0))
     previous = CategoricalConfidenceRegion(
         matured_count=1,
         intervals=(ClosedProbabilityInterval(lower=0.0, upper=1.0),) * 4,
@@ -130,8 +103,8 @@ def test_confidence_sequence_update_rejects_dimension_change() -> None:
 
 
 def test_confidence_sequence_update_narrows_running_region() -> None:
-    first_state = _state((1, 0, 0, 0, 0))
-    second_state = _state((2, 0, 0, 0, 0))
+    first_state = categorical_state((1, 0, 0, 0, 0))
+    second_state = categorical_state((2, 0, 0, 0, 0))
     first = confidence_sequence_update(first_state, 0.05, 1e-6, None)
     second = confidence_sequence_update(second_state, 0.05, 1e-6, first.running)
     for running_interval, raw_interval in zip(

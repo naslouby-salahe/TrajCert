@@ -63,6 +63,7 @@ _ACTIVE_CONFIG_SET_PATTERN = re.compile(r"active_config\.set\(")
 _CONSTANT_NAME_PATTERN = re.compile(r"^_{0,2}[A-Z][A-Z0-9_]*$")
 _CONFIG_ANNOTATION_PATTERN = re.compile(r"Config\b")
 _CONFIG_MODULE_NAME = "config.py"
+_TYPES_MODULE_NAME = "types.py"
 _CONSTANT_NAME_EXEMPTIONS = frozenset(
     {"ENDPOINT_BAND_COUNT", "_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT"}
 )
@@ -186,16 +187,14 @@ class _AuditVisitor(cst.CSTVisitor):
         if node.returns is not None:
             return_text = _expression_text(node.returns.annotation)
             if _UNTYPED_BOUNDARY_PATTERN.search(return_text):
-                self._add(
-                    RULE_UNTYPED, node, f"untyped boundary {return_text!r} is forbidden"
-                )
+                self._add(RULE_UNTYPED, node, f"untyped boundary {return_text!r} is forbidden")
             self._check_primitive_leak(node.returns.annotation, node, node.name.value)
         self._check_config_param(node)
 
     def _check_primitive_leak(
         self, annotation: cst.BaseExpression, node: cst.CSTNode, exemption_key: str | None
     ) -> None:
-        if self.path.name == "types.py":
+        if self.path.name == _TYPES_MODULE_NAME:
             return
         if exemption_key in _PRIMITIVE_BOUNDARY_EXEMPTIONS:
             return
@@ -228,7 +227,7 @@ class _AuditVisitor(cst.CSTVisitor):
         return None
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
-        if self.path.name == "types.py":
+        if self.path.name == _TYPES_MODULE_NAME:
             return
         if isinstance(node.names, cst.ImportStar):
             return
@@ -335,9 +334,7 @@ class _AuditVisitor(cst.CSTVisitor):
             for parameter in params
             if parameter.name.value == "config"
             and parameter.annotation is not None
-            and _CONFIG_ANNOTATION_PATTERN.search(
-                _expression_text(parameter.annotation.annotation)
-            )
+            and _CONFIG_ANNOTATION_PATTERN.search(_expression_text(parameter.annotation.annotation))
         ]
         if not config_params:
             return
@@ -379,7 +376,7 @@ def audit_path(path: Path, *, production: bool = False) -> tuple[Finding, ...]:
         visitor.findings = [
             finding for finding in visitor.findings if finding.rule_id != RULE_CONFIG_YAML
         ]
-    if path.name == "types.py":
+    if path.name == _TYPES_MODULE_NAME:
         visitor.findings = [
             finding for finding in visitor.findings if finding.rule_id != RULE_UNTYPED
         ]

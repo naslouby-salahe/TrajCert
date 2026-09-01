@@ -398,9 +398,7 @@ def _rho_sensitivity_law(
     )
     scale = _panel_scale(panel, xs, finite_ys or (0.0, 1.0))
     commands.extend(_panel_frame(panel, law))
-    for partition in sorted(
-        {FacetLabel(str(row[_COL_PARTITION_NAME])) for row in rows}
-    ):
+    for partition in sorted({FacetLabel(str(row[_COL_PARTITION_NAME])) for row in rows}):
         _rho_sensitivity_partition(commands, scale, rows, partition, panel)
 
 
@@ -411,9 +409,7 @@ def _rho_sensitivity_partition(
     partition: FacetLabel,
     panel: Panel,
 ) -> None:
-    selected = tuple(
-        row for row in rows if FacetLabel(str(row[_COL_PARTITION_NAME])) == partition
-    )
+    selected = tuple(row for row in rows if FacetLabel(str(row[_COL_PARTITION_NAME])) == partition)
     compatible = tuple(row for row in selected if _optional_float(row, _COL_RISK_UPPER) is not None)
     commands.extend(
         _polyline(
@@ -512,12 +508,12 @@ class PanelScale:
 
     def map_x(self, value: PlotValue) -> FigureCoordinate:
         denominator = self.x_max - self.x_min
-        fraction = 0.5 if denominator == 0.0 else (value - self.x_min) / denominator
+        fraction = 0.5 if not denominator else (value - self.x_min) / denominator
         return self.panel.left + fraction * self.panel.width
 
     def map_y(self, value: PlotValue) -> FigureCoordinate:
         denominator = self.y_max - self.y_min
-        fraction = 0.5 if denominator == 0.0 else (value - self.y_min) / denominator
+        fraction = 0.5 if not denominator else (value - self.y_min) / denominator
         return self.panel.bottom - fraction * self.panel.height
 
 
@@ -572,9 +568,7 @@ def _grid_panels(count: PanelCount, columns: GridColumnCount) -> tuple[Panel, ..
     return tuple(panels)
 
 
-def _panel_scale(
-    panel: Panel, xs: tuple[PlotValue, ...], ys: tuple[PlotValue, ...]
-) -> PanelScale:
+def _panel_scale(panel: Panel, xs: tuple[PlotValue, ...], ys: tuple[PlotValue, ...]) -> PanelScale:
     if not xs or not ys:
         raise InvalidScientificDataError("figure panel source cannot be empty")
     x_min, x_max = _expanded_bounds(min(xs), max(xs))
@@ -640,9 +634,7 @@ def _unique_numbers(table: pa.Table, column: ColumnName) -> tuple[PlotValue, ...
     return tuple(dict.fromkeys(values))
 
 
-def _matching_rows(
-    table: pa.Table, column: ColumnName, value: FacetLabel
-) -> tuple[TableRow, ...]:
+def _matching_rows(table: pa.Table, column: ColumnName, value: FacetLabel) -> tuple[TableRow, ...]:
     return tuple(row for row in _rows(table) if str(row[column]) == value)
 
 

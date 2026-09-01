@@ -121,8 +121,9 @@ def test_multi_root_audit_aggregates_all_bound_roots_and_violations() -> None:
 
 
 def test_multi_root_audit_rejects_empty_target_set() -> None:
+    dependencies = _static_dependencies(ClientId("target-client"))
     with pytest.raises(InvalidScientificDataError, match="at least one bound root"):
-        _ = audit_local_validity_targets(_static_dependencies(ClientId("target-client")), ())
+        _ = audit_local_validity_targets(dependencies, ())
 
 
 def test_static_dependency_audit_rejects_foreign_client_input() -> None:
@@ -167,10 +168,11 @@ def test_runtime_lineage_rejects_cycle() -> None:
         artifact_key=ArtifactKey("second"),
         parent_artifact_keys=(first.artifact_key,),
     )
+    dependencies = _static_dependencies(identity.client_id)
     with pytest.raises(InvalidScientificDataError, match="cycle"):
         _ = audit_local_validity(
             identity,
-            _static_dependencies(identity.client_id),
+            dependencies,
             first.artifact_key,
             (first, second),
         )
@@ -180,10 +182,11 @@ def test_runtime_lineage_rejects_duplicate_artifact_key() -> None:
     identity = _identity()
     root = RuntimeLineageArtifact(artifact_key=ArtifactKey("duplicate"))
     duplicate = root.model_copy()
+    dependencies = _static_dependencies(identity.client_id)
     with pytest.raises(InvalidScientificDataError, match="duplicate artifact keys"):
         _ = audit_local_validity(
             identity,
-            _static_dependencies(identity.client_id),
+            dependencies,
             root.artifact_key,
             (root, duplicate),
         )

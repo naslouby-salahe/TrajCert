@@ -79,8 +79,9 @@ def test_event_stream_namespace_layout() -> None:
 
 @pytest.mark.parametrize("band_count", [0, -1])
 def test_event_stream_namespace_rejects_nonpositive_band_count(band_count: int) -> None:
+    law_name = LawName("law")
     with pytest.raises(InvalidScientificDataError):
-        _ = event_stream_namespace(LawName("law"), band_count)
+        _ = event_stream_namespace(law_name, band_count)
 
 
 def test_bootstrap_namespace_layout() -> None:

@@ -191,8 +191,9 @@ def test_producer_component_digest_is_sensitive_to_real_file_content(tmp_path: P
 
 def test_producer_component_digest_rejects_unknown_experiment_name(tmp_path: Path) -> None:
     _symlink_or_skip(tmp_path / "src", (_REPO_ROOT / "src").resolve())
+    experiment_name = ExperimentNameValue("Not A Real Experiment")
     with pytest.raises(InvalidScientificDataError):
-        _ = producer_component_digest(tmp_path, ExperimentNameValue("Not A Real Experiment"))
+        _ = producer_component_digest(tmp_path, experiment_name)
 
 
 def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: Path) -> None:

@@ -193,9 +193,7 @@ def _sequential_stream_utility(
     if len(fine_trace.checkpoints) != len(endpoint_trace.checkpoints):
         raise ValueError("paired sequential utility traces have different checkpoint counts")
     pairs = tuple(zip(fine_trace.checkpoints, endpoint_trace.checkpoints, strict=True))
-    eligible_pairs = tuple(
-        pair for pair in pairs if _eligible(pair[0]) and _eligible(pair[1])
-    )
+    eligible_pairs = tuple(pair for pair in pairs if _eligible(pair[0]) and _eligible(pair[1]))
     fine_checkpoints = tuple(pair[0] for pair in eligible_pairs)
     endpoint_checkpoints = tuple(pair[1] for pair in eligible_pairs)
     fine_fraction = _certified_fraction(fine_checkpoints)
