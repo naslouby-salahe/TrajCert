@@ -6,6 +6,7 @@ from trajcert.config import (
     CoverageConfig,
     CoverageStressCaseConfig,
     CoverageStressSensitivityReference,
+    LawConfig,
     MinimumEvidenceConfig,
     SequentialConfig,
     SequentialUtilityConfig,
@@ -44,8 +45,7 @@ _BETA_OFFSET = 0.002
 _EXCESSIVE_RHO_OFFSET = 1000.0
 
 
-def _parameters(config: TrajCertConfig, key: LawKey) -> LawParameters:
-    law = config.laws[key]
+def _parameters(law: LawConfig, key: LawKey) -> LawParameters:
     return LawParameters(
         key=key,
         name=LAW_DISPLAY_NAMES[key],
@@ -113,7 +113,7 @@ def _coverage_config() -> TrajCertConfig:
 
 def _trace_events() -> tuple[tuple[MaturedEvent, ...], LedgerIdentity]:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    parameters = _parameters(config, _PRINCIPAL_LAW)
+    parameters = _parameters(config.laws[_PRINCIPAL_LAW], _PRINCIPAL_LAW)
     ledger = generate_balanced_prefix_ledger(
         parameters, _partition(_HAND_CASE_BANDS), 0, _TRACE_EVENT_COUNT
     )
@@ -282,7 +282,7 @@ def test_run_anytime_hand_case_simplex_boundary_within_identity_tolerance() -> N
 
 def test_run_coverage_stress_reports_all_methods_for_assumption_valid_law() -> None:
     config = _coverage_config()
-    parameters = _parameters(config, LawKey.NO_PATH_DEPENDENCE)
+    parameters = _parameters(config.laws[LawKey.NO_PATH_DEPENDENCE], LawKey.NO_PATH_DEPENDENCE)
     result = anytime.run_coverage_stress(
         parameters, _partition(_HAND_CASE_BANDS), config, _SENSITIVITY_BUDGET
     )
@@ -294,7 +294,7 @@ def test_run_coverage_stress_reports_all_methods_for_assumption_valid_law() -> N
 
 def test_run_coverage_stress_marks_ignorable_delay_inapplicable_for_violated_assumption() -> None:
     config = _coverage_config()
-    parameters = _parameters(config, _ASSUMPTION_VIOLATED_LAW)
+    parameters = _parameters(config.laws[_ASSUMPTION_VIOLATED_LAW], _ASSUMPTION_VIOLATED_LAW)
     result = anytime.run_coverage_stress(
         parameters, _partition(_HAND_CASE_BANDS), config, _SENSITIVITY_BUDGET
     )

@@ -5,6 +5,7 @@ from math import ceil, floor
 import numpy as np
 from numpy.typing import NDArray
 
+from trajcert.analysis.vectors import validated_finite_vector
 from trajcert.determinism import bootstrap_namespace, generator_for
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
@@ -32,18 +33,22 @@ def paired_percentile_bootstrap(
     resample_count: ResampleCount,
     confidence_level: ConfidenceLevel,
 ) -> PercentileBootstrapInterval:
-    values = _validated_vector(differences)
+    values = validated_finite_vector(
+        differences,
+        "paired statistics require a nonempty one-dimensional vector",
+        "paired statistics forbid NaN and infinity",
+    )
     namespace = bootstrap_namespace(semantic_comparison_key)
     rng = generator_for(namespace, 0)
     pair_count = values.size
     bootstrap_means = np.empty(resample_count, dtype=np.float64)
     for index in range(resample_count):
         sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)
-        bootstrap_means[index] = float(np.mean(values[sampled], dtype=np.float64))  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+        bootstrap_means[index] = np.mean(values[sampled], dtype=np.float64)
     bootstrap_means.sort()
     alpha = 1.0 - confidence_level
     return PercentileBootstrapInterval(
-        estimate=float(np.mean(values, dtype=np.float64)),  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+        estimate=float(np.mean(values, dtype=np.float64)),
         lower=linear_quantile(bootstrap_means, alpha / 2.0),
         upper=linear_quantile(bootstrap_means, 1.0 - alpha / 2.0),
         confidence_level=confidence_level,
@@ -51,9 +56,12 @@ def paired_percentile_bootstrap(
     )
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDifferenceValue:
-    values = _validated_vector(sorted_values)
+    values = validated_finite_vector(
+        sorted_values,
+        "paired statistics require a nonempty one-dimensional vector",
+        "paired statistics forbid NaN and infinity",
+    )
     if np.any(values[:-1] > values[1:]):
         raise InvalidScientificDataError("linear quantile requires sorted values")
     position = (values.size - 1) * probability
@@ -65,14 +73,3 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDi
     upper_value = values.item(upper_index)
     weight = position - lower_index
     return lower_value + weight * (upper_value - lower_value)
-
-
-def _validated_vector(values: Vector) -> NDArray[np.float64]:  # TODO: this is duplicated and redundant
-    array = np.asarray(values, dtype=np.float64)
-    if array.ndim != 1 or array.size == 0:
-        raise InvalidScientificDataError(
-            "paired statistics require a nonempty one-dimensional vector"
-        )
-    if not np.all(np.isfinite(array)):
-        raise InvalidScientificDataError("paired statistics forbid NaN and infinity")
-    return array

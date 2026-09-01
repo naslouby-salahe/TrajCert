@@ -11,7 +11,14 @@ from trajcert.data.summaries import ObservableSummary, summarize_observable_mass
 from trajcert.exceptions import NumericalError
 from trajcert.inference.confidence import CategoricalConfidenceRegion, ClosedProbabilityInterval
 from trajcert.math.entropy import binary_entropy_from_masses
-from trajcert.types import CategoryIndex, DomainModel, EntropyValue, Mass, ToleranceValue
+from trajcert.types import (
+    CategoryIndex,
+    DomainModel,
+    EntropyValue,
+    Mass,
+    ToleranceValue,
+    mass_tuple,
+)
 
 
 class ScalarEnvelope(DomainModel):
@@ -104,16 +111,11 @@ def summary_envelope_from_confidence(
 
 
 def singleton_summary_envelope(summary: ObservableSummary) -> ObservableSummaryEnvelope:
-    harmful = tuple(
-        ScalarEnvelope(lower=float(value), upper=float(value)) for value in summary.harmful_by_band
-    )
-    correct = tuple(
-        ScalarEnvelope(lower=float(value), upper=float(value)) for value in summary.correct_by_band
-    )
-    entropy = _resolved_entropy_exact(
-        tuple(float(value) for value in summary.harmful_by_band),
-        tuple(float(value) for value in summary.correct_by_band),
-    )
+    harmful_masses = mass_tuple(summary.harmful_by_band)
+    correct_masses = mass_tuple(summary.correct_by_band)
+    harmful = tuple(ScalarEnvelope(lower=value, upper=value) for value in harmful_masses)
+    correct = tuple(ScalarEnvelope(lower=value, upper=value) for value in correct_masses)
+    entropy = _resolved_entropy_exact(harmful_masses, correct_masses)
     return ObservableSummaryEnvelope(
         partition=summary.partition,
         harmful_by_band=harmful,

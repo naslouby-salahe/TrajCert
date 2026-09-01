@@ -7,7 +7,7 @@ from typing import Self
 import numpy as np
 from pydantic import model_validator
 
-from trajcert.constants import ENDPOINT_PARTITION_NAME
+from trajcert.constants import ENDPOINT_BAND_COUNT, ENDPOINT_PARTITION_NAME
 from trajcert.exceptions import InvalidPartitionError
 from trajcert.types import BandCount, BandIndex, DomainModel, PartitionName, TerminalHorizon, Vector
 
@@ -82,7 +82,7 @@ def build_partition(
         raise InvalidPartitionError("invalid finest/coarse partition relationship")
     if not isfinite(horizon) or horizon <= 0.0:
         raise InvalidPartitionError("terminal horizon must be finite and positive")
-    # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+
     boundaries = tuple(horizon * band_index / bands for band_index in range(1, bands + 1))
     mapping = _coarsening_map_values(finest, bands)
     return TrajectoryPartition(
@@ -99,13 +99,12 @@ def partition_name(band_count: BandCount) -> PartitionName:
     bands = band_count
     if bands <= 0:
         raise InvalidPartitionError("partition band count must be positive")
-    # TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
-    if bands == 1:
+    if bands == ENDPOINT_BAND_COUNT:
         return PartitionName(ENDPOINT_PARTITION_NAME)
     return PartitionName(f"{bands}-band partition")
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
+
 def _is_refinement(fine: TrajectoryPartition, coarse: TrajectoryPartition) -> bool:
     return (
         fine.finest_band_count == coarse.finest_band_count
@@ -124,7 +123,7 @@ def coarsen_mass_vector(
         raise InvalidPartitionError("target partition is not a deterministic coarsening")
     if fine.band_count == coarse.band_count:
         return values
-    ratio = fine.band_count // coarse.band_count  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    ratio = fine.band_count // coarse.band_count
     return np.sum(values.reshape(-1, ratio), axis=1)
 
 

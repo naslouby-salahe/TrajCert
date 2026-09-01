@@ -6,6 +6,7 @@ import pyarrow as pa
 import pytest
 
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.paths import ExperimentSlug
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.reporting.tables import TableRenderResult, render_table, render_tables
 from trajcert.schemas import (
@@ -22,6 +23,7 @@ from trajcert.storage import (
     SpecificationDigest,
     file_digest,
 )
+from trajcert.types import ColumnName
 
 _DIGEST = "0" * 64
 _SOURCE_COUNT = 2
@@ -84,9 +86,9 @@ def _table_source(
             + f"{stem}.parquet"
         ),
         source_role=source_role,
-        columns=columns,
-        sort_columns=columns,
-        owner_experiment="statistical-synthesis",
+        columns=tuple(ColumnName(column) for column in columns),
+        sort_columns=tuple(ColumnName(column) for column in columns),
+        owner_experiment=ExperimentSlug("statistical-synthesis"),
     )
     lineage = VerifiedSourceLineage(
         source_path=descriptor.source_path,

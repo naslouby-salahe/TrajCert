@@ -162,20 +162,19 @@ def test_legacy_bandwise_odds_ratio_symmetric_bands_applicable() -> None:
 
 
 def test_pattern_mixture_requires_two_nonempty_bands() -> None:
-    config = active_config.get().comparators.pattern_mixture
     assert (
-        fit_pattern_mixture(summary([0.0, 0.0], [0.0, 0.0], 1.0), config).status
+        fit_pattern_mixture(summary([0.0, 0.0], [0.0, 0.0], 1.0)).status
         is PatternMixtureStatus.NOT_APPLICABLE
     )
     assert (
-        fit_pattern_mixture(summary([0.0, 0.3], [0.0, 0.1], 0.6), config).status
+        fit_pattern_mixture(summary([0.0, 0.3], [0.0, 0.1], 0.6)).status
         is PatternMixtureStatus.NOT_APPLICABLE
     )
 
 
 def test_pattern_mixture_fits_applicable_model() -> None:
     config = active_config.get().comparators.pattern_mixture
-    result = fit_pattern_mixture(summary([0.2, 0.3], [0.3, 0.1], 0.1), config)
+    result = fit_pattern_mixture(summary([0.2, 0.3], [0.3, 0.1], 0.1))
     assert result.status is PatternMixtureStatus.APPLICABLE
     assert result.intercept is not None
     assert result.slope is not None

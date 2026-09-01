@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 from pathlib import Path
 
 import pytest
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
@@ -56,6 +55,7 @@ def config() -> TrajCertConfig:
 
 @pytest.fixture(scope="module")
 def plan(config: TrajCertConfig) -> ExperimentPlan:
+    _ = active_config.set(config)
     return build_plan(config)
 
 
@@ -71,15 +71,14 @@ def legacy_cell(plan: ExperimentPlan) -> PlannedCell:
 
 def _build_context(
     tmp_path: Path,
-    config: TrajCertConfig,
     plan: ExperimentPlan,
     cell: PlannedCell,
 ) -> ExecutionContext:
-    specification = scientific_specification_digest(config)
+    specification = scientific_specification_digest()
     component_digest = producer_component_digest(_REPO_ROOT, cell.identity.experiment_name)
     dependency_specification = scientific_dependency_digest(
         specification,
-        str(cell.identity.semantic_cell_key),
+        cell.identity.semantic_cell_key,
         component_digest,
     )
     dependency = cell_dependency_fingerprint(tmp_path, plan, cell, dependency_specification)
@@ -92,17 +91,16 @@ def _build_context(
         dependency_fingerprint=dependency,
         manifest_digest=DigestHex(str(model_digest(cell))),
         required_artifact_keys=(scientific_result_artifact_key(cell),),
-        expected_seed_count=expected_seed_count(cell.identity.experiment_name, config),
+        expected_seed_count=expected_seed_count(cell.identity.experiment_name),
     )
 
 
 def _counting_dispatch_executor(
-    config: TrajCertConfig,
     calls: list[int],
 ) -> Callable[[PlannedCell, ExecutionContext], CellExecutionResult]:
     def executor(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
         calls.append(1)
-        return execute_dispatched_cell(cell, context, config)
+        return execute_dispatched_cell(cell, context)
 
     return executor
 
@@ -113,10 +111,10 @@ def _raising_executor(cell: PlannedCell, context: ExecutionContext) -> CellExecu
 
 
 def test_run_cell_first_execution_persists_all_artifacts(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
-    executor = partial(execute_dispatched_cell, config=config)
+    context = _build_context(tmp_path, plan, inventory_cell)
+    executor = execute_dispatched_cell
     outcome = run_cell(inventory_cell, context, (), executor, False)
     assert outcome.state is PublicExecutionState.COMPLETED
     assert outcome.reused is False
@@ -127,11 +125,11 @@ def test_run_cell_first_execution_persists_all_artifacts(
 
 
 def test_run_cell_second_call_reuses_without_invoking_executor(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
+    context = _build_context(tmp_path, plan, inventory_cell)
     calls: list[int] = []
-    executor = _counting_dispatch_executor(config, calls)
+    executor = _counting_dispatch_executor(calls)
     first = run_cell(inventory_cell, context, (), executor, False)
     assert first.state is PublicExecutionState.COMPLETED
     assert len(calls) == 1
@@ -142,11 +140,11 @@ def test_run_cell_second_call_reuses_without_invoking_executor(
 
 
 def test_run_cell_overwrite_forces_recompute(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
+    context = _build_context(tmp_path, plan, inventory_cell)
     calls: list[int] = []
-    executor = _counting_dispatch_executor(config, calls)
+    executor = _counting_dispatch_executor(calls)
     _ = run_cell(inventory_cell, context, (), executor, False)
     assert len(calls) == 1
     outcome = run_cell(inventory_cell, context, (), executor, True)
@@ -156,10 +154,10 @@ def test_run_cell_overwrite_forces_recompute(
 
 
 def test_run_cell_recomputes_when_context_field_changes(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
-    executor = partial(execute_dispatched_cell, config=config)
+    context = _build_context(tmp_path, plan, inventory_cell)
+    executor = execute_dispatched_cell
     _ = run_cell(inventory_cell, context, (), executor, False)
     changed_context = context.model_copy(
         update={"dependency_fingerprint": DependencyFingerprint("f" * _SHA256_HEX_LENGTH)}
@@ -174,10 +172,10 @@ def test_run_cell_recomputes_when_context_field_changes(
 
 
 def test_run_cell_rebuilds_after_artifact_index_corruption(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
-    executor = partial(execute_dispatched_cell, config=config)
+    context = _build_context(tmp_path, plan, inventory_cell)
+    executor = execute_dispatched_cell
     _ = run_cell(inventory_cell, context, (), executor, False)
     artifact_path = tmp_path / scientific_result_path(inventory_cell)
     artifact_path.unlink()
@@ -190,10 +188,10 @@ def test_run_cell_rebuilds_after_artifact_index_corruption(
 
 
 def test_run_cell_rebuilds_after_completion_record_corruption(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
-    executor = partial(execute_dispatched_cell, config=config)
+    context = _build_context(tmp_path, plan, inventory_cell)
+    executor = execute_dispatched_cell
     _ = run_cell(inventory_cell, context, (), executor, False)
     completion_path = cell_completion_path(inventory_cell, tmp_path)
     _ = completion_path.write_text("not valid json {{{", encoding="utf-8")
@@ -206,9 +204,9 @@ def test_run_cell_rebuilds_after_completion_record_corruption(
 
 
 def test_run_cell_blocked_on_missing_dependency_status(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, legacy_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, legacy_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, legacy_cell)
+    context = _build_context(tmp_path, plan, legacy_cell)
     outcome = run_cell(legacy_cell, context, (), _raising_executor, False)
     assert outcome.state is PublicExecutionState.BLOCKED
     assert outcome.reused is False
@@ -219,9 +217,9 @@ def test_run_cell_blocked_on_missing_dependency_status(
 
 
 def test_run_cell_blocked_on_upstream_not_completed(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, legacy_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, legacy_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, legacy_cell)
+    context = _build_context(tmp_path, plan, legacy_cell)
     dependencies = (
         DependencyReadiness(experiment_name=_INVENTORY_NAME, state=PublicExecutionState.FAILED),
     )
@@ -233,13 +231,13 @@ def test_run_cell_blocked_on_upstream_not_completed(
 
 
 def test_run_cell_invalid_cell_short_circuits(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
     invalid_reason = ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
     invalid_cell = inventory_cell.model_copy(
         update={"executable": False, "invalid_reason": invalid_reason}
     )
-    context = _build_context(tmp_path, config, plan, inventory_cell)
+    context = _build_context(tmp_path, plan, inventory_cell)
     outcome = run_cell(invalid_cell, context, (), _raising_executor, False)
     assert outcome.state is PublicExecutionState.INVALID
     assert outcome.reused is False
@@ -250,9 +248,9 @@ def test_run_cell_invalid_cell_short_circuits(
 
 
 def test_run_cell_failure_and_recovery(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
+    context = _build_context(tmp_path, plan, inventory_cell)
 
     def raise_boom(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
         del cell, context
@@ -270,7 +268,7 @@ def test_run_cell_failure_and_recovery(
     completion_path = cell_completion_path(inventory_cell, tmp_path)
     assert not completion_path.exists()
 
-    executor = partial(execute_dispatched_cell, config=config)
+    executor = execute_dispatched_cell
     recovered = run_cell(inventory_cell, context, (), executor, False)
     assert recovered.state is PublicExecutionState.COMPLETED
     assert recovered.reused is False
@@ -279,22 +277,21 @@ def test_run_cell_failure_and_recovery(
 
 def test_cell_dependency_fingerprint_reflects_upstream_completion(
     tmp_path: Path,
-    config: TrajCertConfig,
     plan: ExperimentPlan,
     legacy_cell: PlannedCell,
     inventory_cell: PlannedCell,
 ) -> None:
-    specification = scientific_specification_digest(config)
+    specification = scientific_specification_digest()
     component_digest = producer_component_digest(_REPO_ROOT, legacy_cell.identity.experiment_name)
     dependency_specification = scientific_dependency_digest(
         specification,
-        str(legacy_cell.identity.semantic_cell_key),
+        legacy_cell.identity.semantic_cell_key,
         component_digest,
     )
     before = cell_dependency_fingerprint(tmp_path, plan, legacy_cell, dependency_specification)
 
-    inventory_context = _build_context(tmp_path, config, plan, inventory_cell)
-    executor = partial(execute_dispatched_cell, config=config)
+    inventory_context = _build_context(tmp_path, plan, inventory_cell)
+    executor = execute_dispatched_cell
     outcome = run_cell(inventory_cell, inventory_context, (), executor, False)
     assert outcome.state is PublicExecutionState.COMPLETED
 
@@ -303,10 +300,10 @@ def test_cell_dependency_fingerprint_reflects_upstream_completion(
 
 
 def test_completion_is_compatible_true_immediately_after_a_valid_run(
-    tmp_path: Path, config: TrajCertConfig, plan: ExperimentPlan, inventory_cell: PlannedCell
+    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    context = _build_context(tmp_path, config, plan, inventory_cell)
-    executor = partial(execute_dispatched_cell, config=config)
+    context = _build_context(tmp_path, plan, inventory_cell)
+    executor = execute_dispatched_cell
     _ = run_cell(inventory_cell, context, (), executor, False)
     completion_path = cell_completion_path(inventory_cell, tmp_path)
     assert completion_is_compatible(inventory_cell, context, completion_path) is True

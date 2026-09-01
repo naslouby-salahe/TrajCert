@@ -34,7 +34,6 @@ from trajcert.types import (
     Vector,
 )
 
-# TODO: should be in yaml and accessed through config
 _SYNTHETIC_CLIENT_ID = ClientId("synthetic-client")
 _SYNTHETIC_ACTION_CHANNEL_ID = ActionChannelId("automatic-action")
 

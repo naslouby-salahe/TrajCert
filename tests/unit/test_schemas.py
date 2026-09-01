@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from trajcert.provenance import EnvironmentDigest
+from trajcert.paths import ExperimentSlug
+from trajcert.provenance import CodeCommit, EnvironmentDigest
 from trajcert.schemas import (
     EnvironmentReproducibilityRecord,
     PublicationFormat,
@@ -22,6 +23,7 @@ from trajcert.storage import (
     ProvenanceFingerprint,
     SpecificationDigest,
 )
+from trajcert.types import ColumnName, DependencyAuthority
 
 _HEX_LENGTH = 64
 _HEX_A = "a" * _HEX_LENGTH
@@ -53,9 +55,9 @@ def _descriptor() -> PublicationSourceDescriptor:
     return PublicationSourceDescriptor(
         source_path=Path("a.csv"),
         source_role=PublicationSourceRole.TABLE,
-        columns=("timestamp", "risk"),
-        sort_columns=("timestamp",),
-        owner_experiment="E",
+        columns=(ColumnName("timestamp"), ColumnName("risk")),
+        sort_columns=(ColumnName("timestamp"),),
+        owner_experiment=ExperimentSlug("E"),
     )
 
 
@@ -153,7 +155,7 @@ def test_rendered_publication_artifact_constructs() -> None:
 
 def test_environment_reproducibility_record_container_digest_defaults_none() -> None:
     record = EnvironmentReproducibilityRecord(
-        dependency_authority="pypi",
+        dependency_authority=DependencyAuthority("pypi"),
         dependency_lock_path=Path("lock.json"),
         environment_lock_digest=EnvironmentDigest(_HEX_A),
     )
@@ -176,11 +178,11 @@ def test_environment_reproducibility_record_rejects_non_none_container_digest() 
 
 def test_publication_reproducibility_record_constructs() -> None:
     record = PublicationReproducibilityRecord(
-        source_commit="abc123",
+        source_commit=CodeCommit("abc123"),
         configuration_path=Path("configs/trajcert.yaml"),
         configuration_sha256=DigestHex(_HEX_A),
         environment=EnvironmentReproducibilityRecord(
-            dependency_authority="pypi",
+            dependency_authority=DependencyAuthority("pypi"),
             dependency_lock_path=Path("lock.json"),
             environment_lock_digest=EnvironmentDigest(_HEX_B),
         ),

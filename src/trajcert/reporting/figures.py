@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import struct
 import zlib
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from html import escape
 from itertools import pairwise
 from math import isfinite, log2
@@ -12,6 +13,7 @@ from typing import cast
 
 import pyarrow as pa
 
+from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
@@ -20,18 +22,19 @@ from trajcert.schemas import (
     RenderedPublicationArtifact,
 )
 from trajcert.storage import atomic_write_bytes
-from trajcert.types import TabularCellValue
+from trajcert.types import (
+    FigureCoordinate,
+    FiniteFloat,
+    PixelCount,
+    PixelIntensity,
+    RasterCoordinate,
+    TabularCellValue,
+)
 
-_WIDTH = 1400
-_HEIGHT = 900
-_MARGIN_LEFT = 90.0
-_MARGIN_RIGHT = 45.0
-_MARGIN_TOP = 85.0
-_MARGIN_BOTTOM = 80.0
 _STROKE = "#202020"
-_MUTED = "#6a6a6a" 
-_LIGHT = "#d8d8d8" 
-_BACKGROUND = "#ffffff" 
+_MUTED = "#6a6a6a"
+_LIGHT = "#d8d8d8"
+_BACKGROUND = "#ffffff"
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,49 +43,65 @@ class FigureRenderResult:
     png: RenderedPublicationArtifact
 
 
+class TextAnchor(StrEnum):
+    START = "start"
+    MIDDLE = "middle"
+    END = "end"
+
+
+class FigureName(StrEnum):
+    PARTITION_COHERENCE = "figure_partition_coherence"
+    TIMING_VALUE = "figure_timing_value"
+    INFORMATION_PROFILE = "figure_information_profile"
+    ANYTIME_PATHS = "figure_anytime_paths"
+    ANYTIME_COVERAGE = "figure_anytime_coverage"
+    RHO_SENSITIVITY = "figure_rho_sensitivity"
+    FAILURE_BOUNDARIES = "figure_failure_boundaries"
+    COMPUTATIONAL_SCALING = "figure_computational_scaling"
+
+
 @dataclass(frozen=True, slots=True)
 class Point:
-    x: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    y: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    x: FigureCoordinate
+    y: FigureCoordinate
 
 
 @dataclass(frozen=True, slots=True)
 class Line:
     start: Point
     end: Point
-    width: float = 1.5  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    dashed: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    width: FigureCoordinate = 1.5
+    dashed: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class Circle:
     center: Point
-    radius: float = 3.5  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hollow: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    radius: FigureCoordinate = 3.5
+    hollow: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class Cross:
     center: Point
-    radius: float = 4.0  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    radius: FigureCoordinate = 4.0
 
 
 @dataclass(frozen=True, slots=True)
 class Text:
     position: Point
-    value: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    size: int = 14  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
-    anchor: str = "start"
+    value: str
+    size: PixelCount = 14
+    anchor: TextAnchor = TextAnchor.START
 
 
 @dataclass(frozen=True, slots=True)
 class Rectangle:
-    left: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    top: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    width: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    height: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    filled: bool = False  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    left: FigureCoordinate
+    top: FigureCoordinate
+    width: FigureCoordinate
+    height: FigureCoordinate
+    filled: bool = False
 
 
 type DrawCommand = Line | Circle | Cross | Text | Rectangle
@@ -90,7 +109,7 @@ type DrawCommand = Line | Circle | Cross | Text | Rectangle
 
 @dataclass(frozen=True, slots=True)
 class PlotDocument:
-    title: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    title: str
     commands: tuple[DrawCommand, ...]
 
 
@@ -127,22 +146,22 @@ def render_figures(
     return tuple(render_figure(source, destination_directory) for source in sources)
 
 
-# TODO: Consider replacing with an Enum for better type safety. And no backwards compatibility issues.
 def _build_document(name: str, table: pa.Table) -> PlotDocument:
-    builders = {
-        "figure_partition_coherence": _partition_coherence,
-        "figure_timing_value": _timing_value,
-        "figure_information_profile": _information_profile,
-        "figure_anytime_paths": _anytime_paths,
-        "figure_anytime_coverage": _anytime_coverage,
-        "figure_rho_sensitivity": _rho_sensitivity,
-        "figure_failure_boundaries": _failure_boundaries,
-        "figure_computational_scaling": _computational_scaling,
+    builders: dict[FigureName, Callable[[pa.Table], PlotDocument]] = {
+        FigureName.PARTITION_COHERENCE: _partition_coherence,
+        FigureName.TIMING_VALUE: _timing_value,
+        FigureName.INFORMATION_PROFILE: _information_profile,
+        FigureName.ANYTIME_PATHS: _anytime_paths,
+        FigureName.ANYTIME_COVERAGE: _anytime_coverage,
+        FigureName.RHO_SENSITIVITY: _rho_sensitivity,
+        FigureName.FAILURE_BOUNDARIES: _failure_boundaries,
+        FigureName.COMPUTATIONAL_SCALING: _computational_scaling,
     }
-    builder = builders.get(name)
-    if builder is None:
+    try:
+        figure_name = FigureName(name)
+    except ValueError:
         raise InvalidScientificDataError(f"no deterministic figure renderer for {name}")
-    return builder(table)
+    return builders[figure_name](table)
 
 
 def _partition_coherence(table: pa.Table) -> PlotDocument:
@@ -171,7 +190,7 @@ def _partition_coherence(table: pa.Table) -> PlotDocument:
                     Point((lower + upper) / 2.0, y - 8.0),
                     f"tau={_required_float(row, 'tau'):.4g}",
                     size=11,
-                    anchor="middle",
+                    anchor=TextAnchor.MIDDLE,
                 )
             )
     return PlotDocument(title="Partition coherence at fixed sensitivity", commands=tuple(commands))
@@ -239,11 +258,13 @@ def _information_profile(table: pa.Table) -> PlotDocument:
 
 
 def _anytime_paths(table: pa.Table) -> PlotDocument:
-    # TODO: should be in yaml and accessed through config
     seeds = _unique_numbers(table, "stream_seed_index")
-    if seeds != (0, 1, 2, 3):
+    expected_seeds = tuple(
+        float(index) for index in active_config.get().study_design.representative_stream_indices
+    )
+    if seeds != expected_seeds:
         raise InvalidScientificDataError(
-            "representative anytime figure source must contain exactly seed indices [0,1,2,3]"
+            "representative anytime figure source must contain exactly the configured seeds"
         )
     rows = _rows(table)
     xs = tuple(_required_float(row, "n_matured") for row in rows)
@@ -272,7 +293,9 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
     ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
-        commands.append(Text(Point(panel.right - 4.0, y - 6.0), label, size=11, anchor="end"))
+        commands.append(
+            Text(Point(panel.right - 4.0, y - 6.0), label, size=11, anchor=TextAnchor.END)
+        )
     return PlotDocument(title="Representative anytime certificates", commands=tuple(commands))
 
 
@@ -376,8 +399,8 @@ def _rho_sensitivity_marker(
 def _failure_boundaries(table: pa.Table) -> PlotDocument:
     axes = _unique_strings(table, "axis")
     commands = _base_commands("Failure-boundary atlas")
-    # TODO: should be in yaml and accessed through config
-    panels = _grid_panels(len(axes), columns=3)
+    columns = active_config.get().figure_layout.failure_boundary_grid_columns
+    panels = _grid_panels(len(axes), columns=columns)
     for axis, panel in zip(axes, panels, strict=True):
         rows = _matching_rows(table, "axis", axis)
         xs = tuple(float(index) for index in range(len(rows)))
@@ -419,86 +442,93 @@ def _computational_scaling(table: pa.Table) -> PlotDocument:
 
 @dataclass(frozen=True, slots=True)
 class Panel:
-    left: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    top: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    right: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    bottom: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    left: FigureCoordinate
+    top: FigureCoordinate
+    right: FigureCoordinate
+    bottom: FigureCoordinate
 
     @property
-    def width(self) -> float:
+    def width(self) -> FigureCoordinate:
         return self.right - self.left
 
     @property
-    def height(self) -> float:
+    def height(self) -> FigureCoordinate:
         return self.bottom - self.top
 
 
 @dataclass(frozen=True, slots=True)
 class PanelScale:
     panel: Panel
-    x_min: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    x_max: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    y_min: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    y_max: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    x_min: FiniteFloat
+    x_max: FiniteFloat
+    y_min: FiniteFloat
+    y_max: FiniteFloat
 
-    def map_x(self, value: float) -> float:
+    def map_x(self, value: FiniteFloat) -> FigureCoordinate:
         denominator = self.x_max - self.x_min
         fraction = 0.5 if denominator == 0.0 else (value - self.x_min) / denominator
         return self.panel.left + fraction * self.panel.width
 
-    def map_y(self, value: float) -> float:
+    def map_y(self, value: FiniteFloat) -> FigureCoordinate:
         denominator = self.y_max - self.y_min
         fraction = 0.5 if denominator == 0.0 else (value - self.y_min) / denominator
         return self.panel.bottom - fraction * self.panel.height
 
 
 def _single_panel() -> Panel:
-    return Panel(_MARGIN_LEFT, _MARGIN_TOP, _WIDTH - _MARGIN_RIGHT, _HEIGHT - _MARGIN_BOTTOM)
+    layout = active_config.get().figure_layout
+    return Panel(
+        layout.margin_left,
+        layout.margin_top,
+        layout.width - layout.margin_right,
+        layout.height - layout.margin_bottom,
+    )
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def _horizontal_panels(count: int) -> tuple[Panel, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
-    # TODO: should be in yaml and accessed through config
-    gap = 28.0
-    available = _WIDTH - _MARGIN_LEFT - _MARGIN_RIGHT - gap * (count - 1)
+    layout = active_config.get().figure_layout
+    gap = layout.horizontal_panel_gap
+    available = layout.width - layout.margin_left - layout.margin_right - gap * (count - 1)
     width = available / count
     return tuple(
         Panel(
-            _MARGIN_LEFT + index * (width + gap),
-            _MARGIN_TOP,
-            _MARGIN_LEFT + index * (width + gap) + width,
-            _HEIGHT - _MARGIN_BOTTOM,
+            layout.margin_left + index * (width + gap),
+            layout.margin_top,
+            layout.margin_left + index * (width + gap) + width,
+            layout.height - layout.margin_bottom,
         )
         for index in range(count)
     )
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 def _grid_panels(count: int, columns: int) -> tuple[Panel, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
+    layout = active_config.get().figure_layout
     rows = (count + columns - 1) // columns
-    # TODO: should be in yaml and accessed through config
-    gap_x = 24.0
-    # TODO: should be in yaml and accessed through config
-    gap_y = 34.0
-    available_width = _WIDTH - _MARGIN_LEFT - _MARGIN_RIGHT - gap_x * (columns - 1)
-    available_height = _HEIGHT - _MARGIN_TOP - _MARGIN_BOTTOM - gap_y * (rows - 1)
+    gap_x = layout.grid_panel_gap_x
+    gap_y = layout.grid_panel_gap_y
+    horizontal_margin = layout.margin_left + layout.margin_right
+    vertical_margin = layout.margin_top + layout.margin_bottom
+    available_width = layout.width - horizontal_margin - gap_x * (columns - 1)
+    available_height = layout.height - vertical_margin - gap_y * (rows - 1)
     width = available_width / columns
     height = available_height / rows
     panels: list[Panel] = []
     for index in range(count):
         row = index // columns
         column = index % columns
-        left = _MARGIN_LEFT + column * (width + gap_x)
-        top = _MARGIN_TOP + row * (height + gap_y)
+        left = layout.margin_left + column * (width + gap_x)
+        top = layout.margin_top + row * (height + gap_y)
         panels.append(Panel(left, top, left + width, top + height))
     return tuple(panels)
 
 
-def _panel_scale(panel: Panel, xs: tuple[float, ...], ys: tuple[float, ...]) -> PanelScale:
+def _panel_scale(
+    panel: Panel, xs: tuple[FiniteFloat, ...], ys: tuple[FiniteFloat, ...]
+) -> PanelScale:
     if not xs or not ys:
         raise InvalidScientificDataError("figure panel source cannot be empty")
     x_min, x_max = _expanded_bounds(min(xs), max(xs))
@@ -506,12 +536,11 @@ def _panel_scale(panel: Panel, xs: tuple[float, ...], ys: tuple[float, ...]) -> 
     return PanelScale(panel, x_min, x_max, y_min, y_max)
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
-def _expanded_bounds(lower: float, upper: float) -> tuple[float, float]:
+def _expanded_bounds(lower: FiniteFloat, upper: FiniteFloat) -> tuple[FiniteFloat, FiniteFloat]:
     if not isfinite(lower) or not isfinite(upper):
         raise InvalidScientificDataError("figure coordinate must be finite")
-    # TODO: should be in yaml and accessed through config
-    pad = max(abs(lower) * 0.05, 0.05) if lower == upper else (upper - lower) * 0.05
+    fraction = active_config.get().figure_layout.axis_padding_fraction
+    pad = max(abs(lower) * fraction, fraction) if lower == upper else (upper - lower) * fraction
     return lower - pad, upper + pad
 
 
@@ -522,13 +551,14 @@ def _panel_frame(panel: Panel, title: str) -> list[DrawCommand]:
             Point(panel.left + panel.width / 2.0, panel.top - 18.0),
             title,
             size=13,
-            anchor="middle",
+            anchor=TextAnchor.MIDDLE,
         ),
     ]
 
 
 def _base_commands(title: str) -> list[DrawCommand]:
-    return [Text(Point(_WIDTH / 2.0, 38.0), title, size=22, anchor="middle")]
+    width = active_config.get().figure_layout.width
+    return [Text(Point(width / 2.0, 38.0), title, size=22, anchor=TextAnchor.MIDDLE)]
 
 
 def _polyline(
@@ -536,7 +566,7 @@ def _polyline(
     xs: tuple[float, ...],
     ys: tuple[float, ...],
     *,
-    dashed: bool = False,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    dashed: bool = False,
 ) -> list[DrawCommand]:
     if len(xs) != len(ys):
         raise InvalidScientificDataError("polyline x/y coordinates must have identical length")
@@ -591,10 +621,11 @@ def _optional_float(row: Mapping[str, TabularCellValue], column: str) -> float |
 
 
 def _svg_bytes(document: PlotDocument) -> bytes:
+    layout = active_config.get().figure_layout
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{_WIDTH}" height="{_HEIGHT}" '
-        + f'viewBox="0 0 {_WIDTH} {_HEIGHT}">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{layout.width}" height="{layout.height}" '
+        + f'viewBox="0 0 {layout.width} {layout.height}">',
         f'<rect width="100%" height="100%" fill="{_BACKGROUND}"/>',
     ]
     lines.extend(_svg_command(command) for command in document.commands)
@@ -638,7 +669,8 @@ def _svg_command(command: DrawCommand) -> str:
 
 
 def _png_bytes(document: PlotDocument) -> bytes:
-    pixels = bytearray([255] * (_WIDTH * _HEIGHT * 3))
+    layout = active_config.get().figure_layout
+    pixels = bytearray([255] * (layout.width * layout.height * 3))
     for command in document.commands:
         if isinstance(command, Line):
             _raster_line(pixels, command.start, command.end, dashed=command.dashed)
@@ -659,13 +691,13 @@ def _png_bytes(document: PlotDocument) -> bytes:
         elif isinstance(command, Rectangle):
             _raster_rectangle(pixels, command)
     raw = bytearray()
-    stride = _WIDTH * 3
-    for row in range(_HEIGHT):
+    stride = layout.width * 3
+    for row in range(layout.height):
         raw.append(0)
         start = row * stride
         raw.extend(pixels[start : start + stride])
     signature = b"\x89PNG\r\n\x1a\n"
-    ihdr = struct.pack(">IIBBBBB", _WIDTH, _HEIGHT, 8, 2, 0, 0, 0)
+    ihdr = struct.pack(">IIBBBBB", layout.width, layout.height, 8, 2, 0, 0, 0)
     return (
         signature
         + _png_chunk(b"IHDR", ihdr)
@@ -679,9 +711,11 @@ def _png_chunk(kind: bytes, payload: bytes) -> bytes:
     return struct.pack(">I", len(payload)) + body + struct.pack(">I", zlib.crc32(body) & 0xFFFFFFFF)
 
 
-def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = False) -> None:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    x0, y0 = round(start.x), round(start.y)
-    x1, y1 = round(end.x), round(end.y)
+def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = False) -> None:
+    x0: RasterCoordinate = round(start.x)
+    y0: RasterCoordinate = round(start.y)
+    x1: RasterCoordinate = round(end.x)
+    y1: RasterCoordinate = round(end.y)
     dx = abs(x1 - x0)
     sx = 1 if x0 < x1 else -1
     dy = -abs(y1 - y0)
@@ -703,9 +737,12 @@ def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = 
         step += 1
 
 
-def _raster_circle(pixels: bytearray, center: Point, radius: float, hollow: bool) -> None:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    cx, cy = round(center.x), round(center.y)
-    r = max(1, round(radius))
+def _raster_circle(
+    pixels: bytearray, center: Point, radius: FigureCoordinate, hollow: bool
+) -> None:
+    cx: RasterCoordinate = round(center.x)
+    cy: RasterCoordinate = round(center.y)
+    r: PixelCount = max(1, round(radius))
     for y in range(cy - r, cy + r + 1):
         for x in range(cx - r, cx + r + 1):
             distance = (x - cx) ** 2 + (y - cy) ** 2
@@ -717,10 +754,10 @@ def _raster_circle(pixels: bytearray, center: Point, radius: float, hollow: bool
 
 
 def _raster_rectangle(pixels: bytearray, rectangle: Rectangle) -> None:
-    left = round(rectangle.left)
-    top = round(rectangle.top)
-    right = round(rectangle.left + rectangle.width)
-    bottom = round(rectangle.top + rectangle.height)
+    left: RasterCoordinate = round(rectangle.left)
+    top: RasterCoordinate = round(rectangle.top)
+    right: RasterCoordinate = round(rectangle.left + rectangle.width)
+    bottom: RasterCoordinate = round(rectangle.top + rectangle.height)
     if rectangle.filled:
         for y in range(top, bottom + 1):
             for x in range(left, right + 1):
@@ -731,8 +768,14 @@ def _raster_rectangle(pixels: bytearray, rectangle: Rectangle) -> None:
     _raster_line(pixels, Point(left, bottom), Point(left, top))
 
 
-def _set_pixel(pixels: bytearray, x: int, y: int, value: int = 32) -> None:
-    if not (0 <= x < _WIDTH and 0 <= y < _HEIGHT):
+def _set_pixel(
+    pixels: bytearray,
+    x: RasterCoordinate,
+    y: RasterCoordinate,
+    value: PixelIntensity = 32,
+) -> None:
+    layout = active_config.get().figure_layout
+    if not (0 <= x < layout.width and 0 <= y < layout.height):
         return
-    offset = (y * _WIDTH + x) * 3
+    offset = (y * layout.width + x) * 3
     pixels[offset : offset + 3] = bytes((value, value, value))

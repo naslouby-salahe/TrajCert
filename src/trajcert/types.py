@@ -10,15 +10,21 @@ from pydantic_core import core_schema
 
 ActionChannelId = NewType("ActionChannelId", str)
 ClientId = NewType("ClientId", str)
+ColumnName = NewType("ColumnName", str)
+DecimalCoefficient = NewType("DecimalCoefficient", str)
+DecimalDigits = NewType("DecimalDigits", str)
+DependencyAuthority = NewType("DependencyAuthority", str)
 EpochId = NewType("EpochId", str)
 EventId = NewType("EventId", str)
 FailureBoundaryLevel = NewType("FailureBoundaryLevel", str)
+FailureMessage = NewType("FailureMessage", str)
 LawName = NewType("LawName", str)
+NumericSign = NewType("NumericSign", str)
 PartitionName = NewType("PartitionName", str)
 ReasonCode = NewType("ReasonCode", str)
-SafetyCaseName = NewType("SafetyCaseName", str)
 SeedNamespace = NewType("SeedNamespace", str)
 SemanticComparisonKey = NewType("SemanticComparisonKey", str)
+SerializedConfigJson = NewType("SerializedConfigJson", str)
 UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
 OpenUnitFloat = Annotated[StrictFloat, Field(gt=0.0, lt=1.0, allow_inf_nan=False)]
 PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
@@ -34,11 +40,13 @@ CategoryIndex = NonNegativeInt
 Count = NonNegativeInt
 IterationCount = NonNegativeInt
 SeedCount = NonNegativeInt
+SeedDigestBytes = PositiveInt
 SeedIndex = NonNegativeInt
 SeedValue = NonNegativeInt
 EntropyValue = NonNegativeFloat
 InformationCurvature = FiniteFloat
 InformationNats = NonNegativeFloat
+InformationResidual = FiniteFloat
 Mass = UnitFloat
 Probability = UnitFloat
 RiskBudget = UnitFloat
@@ -64,15 +72,23 @@ EventIndex = NonNegativeInt
 EventIndexWidth = PositiveInt
 FamilySize = PositiveInt
 FavorableCount = NonNegativeInt
+FigureCoordinate = FiniteFloat
+FixedNotationExponent = Annotated[StrictInt, Field()]
 GammaCoordinate = FiniteFloat
+GitSha1HexLength = PositiveInt
 GradientNorm = NonNegativeFloat
 GridPointCount = PositiveInt
+HeapSequenceNumber = NonNegativeInt
+SearchPredicate = bool
 HazardProbability = OpenUnitFloat
 InequalityMargin = FiniteFloat
 InterceptValue = FiniteFloat
 IterationBudget = PositiveInt
 LawCount = PositiveInt
+MedianCount = NonNegativeFloat
 MedianEventCount = NonNegativeFloat
+MemoryMebibytes = NonNegativeFloat
+NanosecondsPerMillisecond = PositiveFloat
 ObjectiveValue = FiniteFloat
 ObservedStatistic = FiniteFloat
 OracleDigits = PositiveInt
@@ -81,7 +97,10 @@ OuterMaxNodes = NonNegativeInt
 PairCount = PositiveInt
 PairedDifferenceDispersion = FiniteFloat
 PairedDifferenceValue = FiniteFloat
+PixelCount = PositiveInt
+PixelIntensity = Annotated[StrictInt, Field(ge=0, le=255)]
 RandomizationCount = PositiveInt
+RasterCoordinate = Annotated[StrictInt, Field()]
 RefinementCandidateCount = PositiveInt
 RefinementStepCount = PositiveInt
 RelativeUnresolvedGain = FiniteFloat
@@ -90,6 +109,8 @@ ResampleCount = PositiveInt
 RhoValueCount = PositiveInt
 RiskOffset = FiniteFloat
 RuntimeMilliseconds = NonNegativeFloat
+RuntimeNanoseconds = NonNegativeInt
+RuntimeSeconds = NonNegativeFloat
 SensitivityOffset = NonNegativeFloat
 SignificanceLevel = OpenUnitFloat
 StandardizedEffectSize = FiniteFloat
@@ -207,6 +228,14 @@ class SafetyRegime(StrEnum):
     INTRINSICALLY_UNCERTIFIABLE = "INTRINSICALLY_UNCERTIFIABLE"
     INTERIOR_SAFETY_FRONTIER = "INTERIOR_SAFETY_FRONTIER"
     ASSUMPTION_FREE_SAFE = "ASSUMPTION_FREE_SAFE"
+
+
+class SafetyCaseName(StrEnum):
+    BELOW_RESOLVED_HARMFUL_MASS = "Below resolved harmful mass"
+    BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY = "Between resolved mass and intrinsic boundary"
+    AT_INTRINSIC_BOUNDARY = "At intrinsic boundary"
+    INTERIOR_SAFETY_FRONTIER = "Interior safety frontier"
+    ASSUMPTION_FREE_BOUNDARY = "Assumption-free boundary"
 
 
 class SeedNamespaceRole(StrEnum):

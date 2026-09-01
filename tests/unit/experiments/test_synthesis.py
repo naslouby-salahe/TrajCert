@@ -16,6 +16,7 @@ from trajcert.config import (
     SequentialUtilityConfig,
     StatisticsConfig,
     TrajCertConfig,
+    active_config,
 )
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
@@ -26,6 +27,7 @@ from trajcert.experiments.anytime import (
     AnytimePathEvidence,
     CoverageEvidenceResult,
     CoverageMethodEvidence,
+    SequentialMethod,
 )
 from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
@@ -53,6 +55,7 @@ from trajcert.experiments.runner import (
 )
 from trajcert.experiments.safety import (
     CompatibilityFloorBehaviorResult,
+    CompatibilitySweepLabel,
     CompatibilitySweepPoint,
     CompatibilitySweepStatus,
     SafetyCaseEvaluation,
@@ -77,6 +80,7 @@ from trajcert.experiments.synthesis import (
     SynthesisLocalValidityInput,
     build_synthesis_evidence,
     execute_statistical_synthesis,
+    local_validity_artifact_key,
     make_statistical_synthesis_executor,
     paired_series_from_sequential_utility,
     sequential_rho_utility_rows,
@@ -141,11 +145,10 @@ def synthesis_plan(small_config: TrajCertConfig) -> ExperimentPlan:
 @pytest.fixture(scope="session")
 def synthesis_workspace(
     synthesis_plan: ExperimentPlan,
-    small_config: TrajCertConfig,
     tmp_path_factory: TempPathFactory,
 ) -> Path:
     root = tmp_path_factory.mktemp("synthesis_workspace")
-    _write_upstream_artifacts(synthesis_plan, small_config, root)
+    _write_upstream_artifacts(synthesis_plan, root)
     return root
 
 
@@ -159,8 +162,9 @@ def synthesis_fingerprint(
 
 def test_full_synthesis_requires_and_retains_complete_family() -> None:
     config = _small_synthesis_config()
-    series = _sequential_series_family(config)
-    result = synthesize_trajectory_operational_gain(series, config)
+    _ = active_config.set(config)
+    series = _sequential_series_family()
+    result = synthesize_trajectory_operational_gain(series)
     expected_family_size = (
         len(config.study_design.utility_and_coherence_laws)
         * len(config.sequential.utility.rho)
@@ -171,28 +175,32 @@ def test_full_synthesis_requires_and_retains_complete_family() -> None:
 
 
 def test_trajectory_gain_rejects_duplicate_series(small_config: TrajCertConfig) -> None:
-    family = _sequential_series_family(small_config)
+    _ = active_config.set(small_config)
+    family = _sequential_series_family()
     duplicated = (family[0], family[0])
     with pytest.raises(InvalidScientificDataError, match="contains duplicates"):
-        _ = synthesize_trajectory_operational_gain(duplicated, small_config)
+        _ = synthesize_trajectory_operational_gain(duplicated)
 
 
 def test_trajectory_gain_rejects_incomplete_family(small_config: TrajCertConfig) -> None:
+    _ = active_config.set(small_config)
     with pytest.raises(InvalidScientificDataError, match="family mismatch"):
-        _ = synthesize_trajectory_operational_gain((), small_config)
+        _ = synthesize_trajectory_operational_gain(())
 
 
 def test_trajectory_gain_rejects_shape_mismatch(small_config: TrajCertConfig) -> None:
-    family = _sequential_series_family(small_config)
+    _ = active_config.set(small_config)
+    family = _sequential_series_family()
     bad = family[0].model_copy(
         update={"baseline_values": np.array([0.5, 0.6, 0.7], dtype=np.float64)}
     )
     with pytest.raises(InvalidScientificDataError, match="identical shape"):
-        _ = synthesize_trajectory_operational_gain((bad, *family[1:]), small_config)
+        _ = synthesize_trajectory_operational_gain((bad, *family[1:]))
 
 
 def test_trajectory_gain_rejects_wrong_stream_count(small_config: TrajCertConfig) -> None:
-    family = _sequential_series_family(small_config)
+    _ = active_config.set(small_config)
+    family = _sequential_series_family()
     bad = family[0].model_copy(
         update={
             "method_values": np.array([0.4], dtype=np.float64),
@@ -200,19 +208,21 @@ def test_trajectory_gain_rejects_wrong_stream_count(small_config: TrajCertConfig
         }
     )
     with pytest.raises(InvalidScientificDataError, match="independent streams"):
-        _ = synthesize_trajectory_operational_gain((bad, *family[1:]), small_config)
+        _ = synthesize_trajectory_operational_gain((bad, *family[1:]))
 
 
 def test_trajectory_gain_rejects_nonfinite_stream(small_config: TrajCertConfig) -> None:
-    family = _sequential_series_family(small_config)
+    _ = active_config.set(small_config)
+    family = _sequential_series_family()
     bad = family[0].model_copy(update={"method_values": np.array([0.4, np.nan], dtype=np.float64)})
     with pytest.raises(InvalidScientificDataError, match="forbids failed/undefined"):
-        _ = synthesize_trajectory_operational_gain((bad, *family[1:]), small_config)
+        _ = synthesize_trajectory_operational_gain((bad, *family[1:]))
 
 
 def test_sequential_utility_rejects_incomplete_evidence(small_config: TrajCertConfig) -> None:
+    _ = active_config.set(small_config)
     with pytest.raises(InvalidScientificDataError, match="sequential utility synthesis input"):
-        _ = synthesize_from_sequential_utility((), small_config)
+        _ = synthesize_from_sequential_utility(())
 
 
 def test_dependency_fingerprint_requires_upstream(synthesis_workspace: Path) -> None:
@@ -239,16 +249,18 @@ def test_synthesis_artifact_paths_require_synthesis_cell(synthesis_plan: Experim
 def test_synthesize_from_sequential_utility_reports_complete_family(
     small_config: TrajCertConfig,
 ) -> None:
-    evidence = _sequential_evidence(small_config)
-    synthesis = synthesize_from_sequential_utility(evidence, small_config)
+    _ = active_config.set(small_config)
+    evidence = _sequential_evidence()
+    synthesis = synthesize_from_sequential_utility(evidence)
     assert synthesis.family_size == _SEQUENTIAL_FAMILY_SIZE
     assert len(synthesis.tests) == _SEQUENTIAL_FAMILY_SIZE
 
 
 def test_sequential_rho_utility_rows_describe_each_test(small_config: TrajCertConfig) -> None:
-    evidence = _sequential_evidence(small_config)
-    synthesis = synthesize_from_sequential_utility(evidence, small_config)
-    rows = sequential_rho_utility_rows(synthesis, small_config)
+    _ = active_config.set(small_config)
+    evidence = _sequential_evidence()
+    synthesis = synthesize_from_sequential_utility(evidence)
+    rows = sequential_rho_utility_rows(synthesis)
     assert len(rows) == _SEQUENTIAL_FAMILY_SIZE
     assert all(row.analysis_type is AnalysisType.SEQUENTIAL for row in rows)
     time_metric = RhoUtilityMetricName(PracticalMetric.TIME_TO_FIRST_CERTIFICATION.value)
@@ -262,9 +274,10 @@ def test_sequential_rho_utility_rows_describe_each_test(small_config: TrajCertCo
 def test_paired_series_from_sequential_utility_orders_paired_metrics(
     small_config: TrajCertConfig,
 ) -> None:
+    _ = active_config.set(small_config)
     law = LAW_DISPLAY_NAMES[small_config.study_design.utility_and_coherence_laws[0]]
     result = _sequential_result(float(small_config.sequential.utility.rho[0]))
-    series = paired_series_from_sequential_utility(law, result, small_config)
+    series = paired_series_from_sequential_utility(law, result)
     assert len(series) == _PAIRED_METRIC_COUNT
     by_metric = {item.metric_name: item for item in series}
     risk = by_metric[PracticalMetric.ANYTIME_UPPER_RISK]
@@ -282,8 +295,8 @@ def test_synthesis_artifact_keys_are_stable_and_unique(synthesis_plan: Experimen
 def test_synthesis_artifact_paths_cover_all_keys(synthesis_plan: ExperimentPlan) -> None:
     cell = _synthesis_cell(synthesis_plan)
     paths = synthesis_artifact_paths(cell)
-    assert tuple(paths) == synthesis_artifact_keys(cell)
-    assert str(paths[next(reversed(paths))]).endswith("local_validity_audit.json")
+    assert tuple(paths.keys()) == synthesis_artifact_keys(cell)
+    assert str(paths[local_validity_artifact_key()]).endswith("local_validity_audit.json")
 
 
 def test_make_statistical_synthesis_executor_forwards_call(
@@ -291,9 +304,8 @@ def test_make_statistical_synthesis_executor_forwards_call(
 ) -> None:
     cell = _experiment_cell(synthesis_plan, "Population Sensitivity Utility")
     context = _execution_context(synthesis_plan, Path("/tmp"), DependencyFingerprint("unused"))
-    executor = make_statistical_synthesis_executor(
-        synthesis_plan, small_config, _synthesis_locality()
-    )
+    _ = active_config.set(small_config)
+    executor = make_statistical_synthesis_executor(synthesis_plan, _synthesis_locality())
     with pytest.raises(InvalidScientificDataError, match="non-synthesis cell"):
         _ = executor(cell, context)
 
@@ -314,7 +326,8 @@ def test_build_synthesis_evidence_filters_figure_laws(
     synthesis_workspace: Path,
     small_config: TrajCertConfig,
 ) -> None:
-    bundle = build_synthesis_evidence(synthesis_plan, synthesis_workspace, small_config)
+    _ = active_config.set(small_config)
+    bundle = build_synthesis_evidence(synthesis_plan, synthesis_workspace)
     assert len(bundle.partition_coherence_figure) == _FIGURE_COHERENCE_ROW_COUNT
 
 
@@ -323,7 +336,8 @@ def test_build_synthesis_evidence_assembles_complete_bundle(
     synthesis_workspace: Path,
     small_config: TrajCertConfig,
 ) -> None:
-    bundle = build_synthesis_evidence(synthesis_plan, synthesis_workspace, small_config)
+    _ = active_config.set(small_config)
+    bundle = build_synthesis_evidence(synthesis_plan, synthesis_workspace)
     assert bundle.rho_utility
     assert len(bundle.theorem_validation) == _THEOREM_EXPERIMENTS
     assert len(bundle.partition_timing) == _SEQUENTIAL_FAMILY_SIZE
@@ -452,9 +466,9 @@ def _long_path_safe(path: Path) -> Path:
     return resolved if str(resolved).startswith(prefix) else Path(f"{prefix}{resolved}")
 
 
-def _write_upstream_artifacts(plan: ExperimentPlan, config: TrajCertConfig, root: Path) -> None:
+def _write_upstream_artifacts(plan: ExperimentPlan, root: Path) -> None:
     for cell in _upstream_cells(plan):
-        payload = _result_payload(cell, config)
+        payload = _result_payload(cell)
         result_path = _long_path_safe(root / scientific_result_path(cell))
         result_path.parent.mkdir(parents=True, exist_ok=True)
         _ = result_path.write_bytes(payload)
@@ -472,7 +486,7 @@ def _write_upstream_artifacts(plan: ExperimentPlan, config: TrajCertConfig, root
         index_path = _long_path_safe(cell_artifact_index_path(cell, root))
         index_path.parent.mkdir(parents=True, exist_ok=True)
         _ = index_path.write_bytes(canonical_model_bytes(index))
-        completion = _completion_record(cell, config, result_key, digest)
+        completion = _completion_record(cell, active_config.get(), result_key, digest)
         completion_path = _long_path_safe(cell_completion_path(cell, root))
         completion_path.parent.mkdir(parents=True, exist_ok=True)
         _ = completion_path.write_bytes(canonical_model_bytes(completion))
@@ -484,7 +498,8 @@ def _completion_record(
     result_key: ArtifactKey,
     result_digest: DigestHex,
 ) -> CompletionRecord:
-    seed_count = expected_seed_count(cell.identity.experiment_name, config)
+    _ = active_config.set(config)
+    seed_count = expected_seed_count(cell.identity.experiment_name)
     return CompletionRecord(
         semantic_cell_key=cell.identity.semantic_cell_key,
         cell_plan_digest=PlanDigest(str(model_digest(cell))),
@@ -509,42 +524,42 @@ def _completion_record(
     )
 
 
-def _result_payload(cell: PlannedCell, config: TrajCertConfig) -> bytes:
+def _result_payload(cell: PlannedCell) -> bytes:
     factory = _result_factories().get(str(cell.identity.experiment_name))
     if factory is None:
         return b"unused-artifact"
-    model = factory(cell, config)
+    model = factory(cell)
     if model is None:
         return b"unused-artifact"
     return canonical_model_bytes(model)
 
 
-def _result_factories() -> dict[str, Callable[[PlannedCell, TrajCertConfig], BaseModel | None]]:
+def _result_factories() -> dict[str, Callable[[PlannedCell], BaseModel | None]]:
     return {
-        "Population Sensitivity Utility": lambda cell, _config: _population_result(_rho_of(cell)),
-        "Sequential Sensitivity Utility": lambda cell, _config: _sequential_result(_rho_of(cell)),
-        "Partition Coherence": lambda _cell, _config: _partition_coherence_result(),
-        "Strict Timing Gain": lambda _cell, _config: _partition_coherence_result(),
-        "Compatibility Floor Behavior": lambda _cell, _config: _compatibility_floor_result(),
-        "Sharpness Against Generic Oracle": lambda _cell, _config: _solver_result(),
-        "Production Solver vs Independent Oracle": lambda _cell, _config: _solver_result(),
-        "Safety and Intrinsic Impossibility": lambda _cell, _config: _safety_result(),
+        "Population Sensitivity Utility": lambda cell: _population_result(_rho_of(cell)),
+        "Sequential Sensitivity Utility": lambda cell: _sequential_result(_rho_of(cell)),
+        "Partition Coherence": lambda _cell: _partition_coherence_result(),
+        "Strict Timing Gain": lambda _cell: _partition_coherence_result(),
+        "Compatibility Floor Behavior": lambda _cell: _compatibility_floor_result(),
+        "Sharpness Against Generic Oracle": lambda _cell: _solver_result(),
+        "Production Solver vs Independent Oracle": lambda _cell: _solver_result(),
+        "Safety and Intrinsic Impossibility": lambda _cell: _safety_result(),
         "Same Endpoint, Different Timing": _same_endpoint_result_for,
-        "Legacy Partition Incoherence Check": lambda _cell, _config: _legacy_incoherence_result(),
-        "Path Information Decomposition": lambda _cell, _config: _identity_result(),
-        "Minimum Compatibility Identity": lambda _cell, _config: _identity_result(),
-        "Strict Timing-Gain Identity": lambda _cell, _config: _identity_result(),
-        "Endpoint Special-Case Identity": lambda _cell, _config: _identity_result(),
-        "Anytime Projection Proof Check": lambda _cell, _config: _identity_result(),
-        "Population Complexity Proof Check": lambda _cell, _config: _identity_result(),
-        "Information Profile Convexity": lambda _cell, _config: _convexity_result(),
-        "Sharp-Set Constructive Identity": lambda _cell, _config: _sharp_set_result(),
-        "Refinement Dominance Identity": lambda _cell, _config: _refinement_result(),
-        "Safety-Boundary Identity": lambda _cell, _config: _safety_boundary_result(),
-        "Anytime Coverage Stress": lambda cell, config: _coverage_result(cell, config),
-        "Failure Boundary Atlas": lambda _cell, _config: _failure_result(),
-        "Computational Scaling": lambda cell, config: _scaling_result(
-            int(config.grids.scaling_bands[cell.cell_ordinal - 1])
+        "Legacy Partition Incoherence Check": lambda _cell: _legacy_incoherence_result(),
+        "Path Information Decomposition": lambda _cell: _identity_result(),
+        "Minimum Compatibility Identity": lambda _cell: _identity_result(),
+        "Strict Timing-Gain Identity": lambda _cell: _identity_result(),
+        "Endpoint Special-Case Identity": lambda _cell: _identity_result(),
+        "Anytime Projection Proof Check": lambda _cell: _identity_result(),
+        "Population Complexity Proof Check": lambda _cell: _identity_result(),
+        "Information Profile Convexity": lambda _cell: _convexity_result(),
+        "Sharp-Set Constructive Identity": lambda _cell: _sharp_set_result(),
+        "Refinement Dominance Identity": lambda _cell: _refinement_result(),
+        "Safety-Boundary Identity": lambda _cell: _safety_boundary_result(),
+        "Anytime Coverage Stress": _coverage_result,
+        "Failure Boundary Atlas": lambda _cell: _failure_result(),
+        "Computational Scaling": lambda cell: _scaling_result(
+            int(active_config.get().grids.scaling_bands[cell.cell_ordinal - 1])
         ),
     }
 
@@ -556,7 +571,8 @@ def _rho_of(cell: PlannedCell) -> float:
     return float(rho)
 
 
-def _same_endpoint_result_for(cell: PlannedCell, config: TrajCertConfig) -> BaseModel | None:
+def _same_endpoint_result_for(cell: PlannedCell) -> BaseModel | None:
+    config = active_config.get()
     rho = cell.identity.coordinates.rho
     target = float(config.study_design.partition_coherence_figure_rho)
     if rho is not None and abs(float(rho) - target) <= float(config.numerics.comparison_guard):
@@ -599,7 +615,8 @@ def _synthesis_locality() -> SynthesisLocalValidityInput:
     )
 
 
-def _sequential_series_family(config: TrajCertConfig) -> tuple[PairedSeries, ...]:
+def _sequential_series_family() -> tuple[PairedSeries, ...]:
+    config = active_config.get()
     laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
     return tuple(
         PairedSeries(
@@ -620,7 +637,8 @@ def _sequential_series_family(config: TrajCertConfig) -> tuple[PairedSeries, ...
     )
 
 
-def _sequential_evidence(config: TrajCertConfig) -> tuple[SequentialUtilityEvidence, ...]:
+def _sequential_evidence() -> tuple[SequentialUtilityEvidence, ...]:
+    config = active_config.get()
     laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
     return tuple(
         SequentialUtilityEvidence(law_name=law, result=_sequential_result(float(rho)))
@@ -709,7 +727,7 @@ def _compatibility_floor_result() -> CompatibilityFloorBehaviorResult:
         tau=0.05,
         points=(
             CompatibilitySweepPoint(
-                label="at",
+                label=CompatibilitySweepLabel.AT,
                 rho=0.05,
                 status=CompatibilitySweepStatus.APPLICABLE,
                 comparison=_solver_result(),
@@ -761,7 +779,7 @@ def _safety_result() -> SafetyCaseEvaluation:
 
 def _safety_budget_case() -> SafetyBudgetCase:
     return SafetyBudgetCase(
-        name=SafetyCaseName("Interior safety frontier"),
+        name=SafetyCaseName.INTERIOR_SAFETY_FRONTIER,
         risk_budget=0.05,
         valid=True,
         invalid_reason=None,
@@ -842,7 +860,8 @@ def _safety_boundary_result() -> SafetyBoundaryCaseEvaluation:
     )
 
 
-def _coverage_result(cell: PlannedCell, config: TrajCertConfig) -> CoverageEvidenceResult:
+def _coverage_result(cell: PlannedCell) -> CoverageEvidenceResult:
+    config = active_config.get()
     variant = str(cell.identity.coordinates.variant_name or "")
     principal = variant == "Timing-and-terminal harmful-late stress"
     if "Thirty-two-band" in variant:
@@ -853,7 +872,7 @@ def _coverage_result(cell: PlannedCell, config: TrajCertConfig) -> CoverageEvide
         band_count = config.method.finest_bands
     methods = (
         CoverageMethodEvidence(
-            method_name="TrajCert anytime bound",
+            method_name=SequentialMethod.TRAJCERT,
             applicable=True,
             independent_streams=int(config.sequential.coverage.streams),
             ever_violations=0,

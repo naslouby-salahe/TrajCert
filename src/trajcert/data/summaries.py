@@ -16,7 +16,7 @@ class ObservableSummary(DomainModel):
     resolved_harmful_mass: Mass
     resolved_correct_mass: Mass
     finite_band_mass: Vector
-    harmful_rate_by_band: tuple[Probability | None, ...]  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful_rate_by_band: tuple[Probability | None, ...]
 
     @property
     def resolved_mass(self) -> Mass:

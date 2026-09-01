@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
+from trajcert.analysis.vectors import validated_finite_vector
 from trajcert.determinism import generator_for, permutation_namespace
-from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     DomainModel,
     FavorableCount,
@@ -28,8 +28,12 @@ def one_sided_sign_flip(
     semantic_comparison_key: SemanticComparisonKey,
     randomization_count: RandomizationCount,
 ) -> SignFlipResult:
-    values = _validated_vector(differences)
-    observed = float(np.mean(values, dtype=np.float64))  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    values = validated_finite_vector(
+        differences,
+        "sign-flip inference requires a nonempty vector",
+        "sign-flip inference forbids NaN and infinity",
+    )
+    observed = float(np.mean(values, dtype=np.float64))
     rng = generator_for(permutation_namespace(semantic_comparison_key), 0)
     favorable_or_more_extreme = 0
     for _ in range(randomization_count):
@@ -38,7 +42,7 @@ def one_sided_sign_flip(
         multipliers *= 2.0
         multipliers -= 1.0
         signed: NDArray[np.float64] = values * multipliers
-        statistic = float(np.mean(signed, dtype=np.float64))  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+        statistic = float(np.mean(signed, dtype=np.float64))
         favorable_or_more_extreme += (statistic >= observed)
     p_value = (1.0 + favorable_or_more_extreme) / (1.0 + randomization_count)
     return SignFlipResult(
@@ -47,12 +51,3 @@ def one_sided_sign_flip(
         randomization_count=randomization_count,
         p_value=p_value,
     )
-
-
-def _validated_vector(values: Vector) -> NDArray[np.float64]:  # TODO: duplicate code and also feels redundant
-    array = np.asarray(values, dtype=np.float64)
-    if array.ndim != 1 or array.size == 0:
-        raise InvalidScientificDataError("sign-flip inference requires a nonempty vector")
-    if not np.all(np.isfinite(array)):
-        raise InvalidScientificDataError("sign-flip inference forbids NaN and infinity")
-    return array

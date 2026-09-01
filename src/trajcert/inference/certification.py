@@ -16,7 +16,6 @@ from trajcert.types import (
 
 
 class CertificationAssessment(DomainModel):
-    # TODO: Consider using a dedicated assessment type rather than a nullable projection result boundary.
     numeric_status: NumericStatus
     scientific_state: ScientificState | None
     matured_count: Count
@@ -37,7 +36,6 @@ def classify_certification(
     minimum_resolved_events: EventCount,
     comparison_guard: ToleranceValue,
 ) -> CertificationAssessment:
-    # TODO: Consider moving the hard-coded certification-state decision tree into a domain policy object.
     rho = sensitivity_budget
     beta = risk_budget
     guard = comparison_guard

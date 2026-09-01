@@ -18,14 +18,18 @@ import pyarrow.parquet as pq
 from pydantic import Field
 
 from trajcert.analysis.metrics import PracticalMetric
-from trajcert.config import TrajCertConfig
+from trajcert.config import active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition, partition_name
 from trajcert.data.summaries import summarize_full_law
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
-from trajcert.experiments.anytime import CoverageEvidenceResult
-from trajcert.experiments.failure_boundaries import FailureBoundaryResult
+from trajcert.experiments.anytime import (
+    AnytimeOperationalState,
+    CoverageEvidenceResult,
+    SequentialMethod,
+)
+from trajcert.experiments.failure_boundaries import FailureBoundaryAxis, FailureBoundaryResult
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
 from trajcert.experiments.runner import read_verified_scientific_result
 from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
@@ -39,8 +43,12 @@ from trajcert.math.information import (
     observed_timing_information,
 )
 from trajcert.math.safety import assess_safety_geometry
-from trajcert.paths import fsync_directory
-from trajcert.provenance import ExperimentNameValue
+from trajcert.paths import ExperimentSlug, fsync_directory
+from trajcert.provenance import (
+    ExperimentNameValue,
+    SensitivityCoordinate,
+    VariantName,
+)
 from trajcert.schemas import (
     PublicationSourceDescriptor,
     PublicationSourceRole,
@@ -52,20 +60,31 @@ from trajcert.storage import (
     CellArtifactIndex,
     CompletionRecord,
     DigestHex,
+    SemanticCellKey,
     file_digest,
     read_model,
 )
 from trajcert.types import (
     AbsoluteError,
     AbsoluteTightening,
+    AcceptanceUpperLimit,
+    AnytimeConfidenceDelta,
     BandCount,
+    ColumnName,
     CompatibilityRegime,
+    ConvergenceGap,
     Count,
     DomainModel,
+    FailureBoundaryLevel,
+    FailureMessage,
     InequalityMargin,
     InformationNats,
     LawKey,
     LawName,
+    Mass,
+    MedianCount,
+    MedianEventCount,
+    MemoryMebibytes,
     ObservedStatistic,
     PairedDifferenceValue,
     PartitionName,
@@ -74,13 +93,21 @@ from trajcert.types import (
     RiskBudget,
     RiskOffset,
     RiskValue,
+    RuntimeMilliseconds,
     ScientificState,
+    SearchPredicate,
+    SeedIndex,
+    SemanticComparisonKey,
     SensitivityBudget,
+    SensitivityOffset,
+    SerializedConfigJson,
+    StreamCount,
     TabularCellValue,
 )
 
 TheoremName = NewType("TheoremName", str)
 RegimeName = NewType("RegimeName", str)
+MethodDisplayName = NewType("MethodDisplayName", str)
 
 
 class RhoUtilityMetricName(StrEnum):
@@ -89,8 +116,7 @@ class RhoUtilityMetricName(StrEnum):
     CERTIFIED_UPDATE_FRACTION = PracticalMetric.CERTIFIED_UPDATE_FRACTION
     POPULATION_LATENT_RISK_UPPER_BOUND = "Population latent-risk upper bound"
 
-# TODO: should be in yaml and accessed through config
-_LOG2_MATCH_TOLERANCE: Final[float] = 1e-15
+
 _MINIMUM_ROWS_FOR_DETERMINISTIC_SORT: Final[int] = 2
 
 
@@ -105,8 +131,8 @@ class _WriteParquet(Protocol):
         where: Path,
         *,
         compression: str,
-        use_dictionary: bool,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-        write_statistics: bool,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+        use_dictionary: bool,
+        write_statistics: bool,
     ) -> None: ...
 
 
@@ -143,7 +169,7 @@ class TheoremValidationSummaryRow(DomainModel):
     case_count: Count
     maximum_absolute_error: AbsoluteError | None
     minimum_inequality_margin: InequalityMargin | None
-    all_cases_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    all_cases_pass: SearchPredicate
     primary_artifact: ArtifactKey
 
 
@@ -158,9 +184,9 @@ class PartitionTimingRow(DomainModel):
     coarse_risk_upper: RiskValue
     fine_risk_upper: RiskValue
     bound_gain: RiskOffset
-    fine_subset_coarse: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    theorem_condition: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    passed: bool = Field(serialization_alias="pass")  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    fine_subset_coarse: SearchPredicate
+    theorem_condition: SearchPredicate
+    passed: SearchPredicate = Field(serialization_alias="pass")
 
 
 class CompatibilitySafetyRow(DomainModel):
@@ -176,7 +202,7 @@ class CompatibilitySafetyRow(DomainModel):
     expected_regime: RegimeName
     observed_regime: RegimeName
     oracle_error: AbsoluteError | None
-    passed: bool = Field(serialization_alias="pass")  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: SearchPredicate = Field(serialization_alias="pass")
 
 
 class RhoUtilityRow(DomainModel):
@@ -201,7 +227,7 @@ class RhoUtilityRow(DomainModel):
     bootstrap_lower_95: PairedDifferenceValue | None = None
     bootstrap_upper_95: PairedDifferenceValue | None = None
     holm_adjusted_p: Probability | None = None
-    materiality_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    materiality_pass: SearchPredicate
     never_certified_fraction_method: Probability | None = None
     never_certified_fraction_baseline: Probability | None = None
 
@@ -223,128 +249,128 @@ class PopulationUtilitySourceEvidence(DomainModel):
 
 
 class SolverOracleValidationRow(DomainModel):
-    partition_name: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    rho_offset_mode: str
-    cell_count: int
-    max_abs_u_lower_error: float | None
-    max_abs_u_upper_error: float | None
-    max_abs_risk_upper_error: float | None
-    max_abs_rho_star_error: float | None
-    rho_star_applicable_cell_count: int
-    state_mismatch_count: int
-    passed: bool = Field(serialization_alias="pass")  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    partition_name: PartitionName
+    rho_offset_mode: SensitivityCoordinate
+    cell_count: Count
+    max_abs_u_lower_error: AbsoluteError | None
+    max_abs_u_upper_error: AbsoluteError | None
+    max_abs_risk_upper_error: AbsoluteError | None
+    max_abs_rho_star_error: AbsoluteError | None
+    rho_star_applicable_cell_count: Count
+    state_mismatch_count: Count
+    passed: SearchPredicate = Field(serialization_alias="pass")
 
 
 class AnytimeCoverageRow(DomainModel):
-    stress_cell: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    method_name: str
-    K: int
-    true_theta: float
-    true_mutual_information: float
+    stress_cell: VariantName | SemanticCellKey
+    method_name: MethodDisplayName
+    K: BandCount
+    true_theta: Probability
+    true_mutual_information: InformationNats
     rho: SensitivityBudget
-    beta: float
-    delta: float
-    independent_streams: int
-    ever_violations: int
-    violation_rate: float | None
-    clopper_pearson_upper_95: float | None
-    criterion_pass: bool | None  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    median_first_certified_n: float | None
-    median_certified_update_fraction: float | None
+    beta: RiskBudget
+    delta: AnytimeConfidenceDelta
+    independent_streams: StreamCount
+    ever_violations: Count
+    violation_rate: Probability | None
+    clopper_pearson_upper_95: Probability | None
+    criterion_pass: SearchPredicate | None
+    median_first_certified_n: MedianEventCount | None
+    median_certified_update_fraction: Probability | None
 
 
 class FailureBoundaryRow(DomainModel):
-    axis: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    level: str
-    controlled_value_json: str
+    axis: FailureBoundaryAxis
+    level: FailureBoundaryLevel
+    controlled_value_json: SerializedConfigJson
     rho: SensitivityBudget
-    beta: float
-    tau: float | None
-    risk_upper: float
-    operational_state: str
-    optimizer_gap: float | None
-    runtime_ms: float | None
-    scientific_interpretation: str
+    beta: RiskBudget
+    tau: InformationNats | None
+    risk_upper: RiskValue
+    operational_state: ScientificState
+    optimizer_gap: ConvergenceGap | None
+    runtime_ms: RuntimeMilliseconds | None
+    scientific_interpretation: FailureMessage
 
 
 class ComputationalScalingRow(DomainModel):
-    K: int  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    population_median_runtime_ms: float
-    population_iqr_runtime_ms: float
-    outer_median_runtime_ms: float
-    outer_iqr_runtime_ms: float
-    peak_memory_mib: float
-    median_root_iterations: float | None
-    median_outer_nodes: float | None
-    max_oracle_error: float | None
+    K: BandCount
+    population_median_runtime_ms: RuntimeMilliseconds
+    population_iqr_runtime_ms: RuntimeMilliseconds
+    outer_median_runtime_ms: RuntimeMilliseconds
+    outer_iqr_runtime_ms: RuntimeMilliseconds
+    peak_memory_mib: MemoryMebibytes
+    median_root_iterations: MedianCount | None
+    median_outer_nodes: MedianCount | None
+    max_oracle_error: AbsoluteError | None
 
 
 class TimingValueFigureRow(DomainModel):
-    semantic_timing_case: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    rho_offset: float
-    delta_tau: float
-    bound_gain: float
-    coarse_risk_upper: float
-    fine_risk_upper: float
+    semantic_timing_case: SemanticComparisonKey
+    rho_offset: SensitivityOffset
+    delta_tau: InformationNats
+    bound_gain: RiskOffset
+    coarse_risk_upper: RiskValue
+    fine_risk_upper: RiskValue
 
 
 class InformationProfileFigureRow(DomainModel):
-    u: float  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    information_profile: float
-    u_dagger: float | None
-    tau: float | None
+    u: Mass
+    information_profile: InformationNats
+    u_dagger: Mass | None
+    tau: InformationNats | None
     rho: SensitivityBudget
-    u_beta: float | None
-    rho_star: float | None
-    feasible_lower: float | None
-    feasible_upper: float | None
+    u_beta: Mass | None
+    rho_star: InformationNats | None
+    feasible_lower: RiskOffset | None
+    feasible_upper: RiskOffset | None
 
 
 class AnytimePathFigureRow(DomainModel):
-    stream_seed_index: int  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    n_matured: int
-    risk_upper_anytime: float
-    true_theta: float
-    beta: float
-    evidence_gate_pass: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    operational_state: str
+    stream_seed_index: SeedIndex
+    n_matured: Count
+    risk_upper_anytime: RiskValue
+    true_theta: Probability
+    beta: RiskBudget
+    evidence_gate_pass: SearchPredicate
+    operational_state: AnytimeOperationalState
 
 
 class AnytimeCoverageFigureRow(DomainModel):
-    stress_cell: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    method_name: str
-    K: int
-    clopper_pearson_upper_95: float | None
-    delta: float
-    acceptance_upper_limit: float
-    criterion_pass: bool | None  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    applicable: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    stress_cell: VariantName | SemanticCellKey
+    method_name: SequentialMethod
+    K: BandCount
+    clopper_pearson_upper_95: Probability | None
+    delta: AnytimeConfidenceDelta
+    acceptance_upper_limit: AcceptanceUpperLimit
+    criterion_pass: SearchPredicate | None
+    applicable: SearchPredicate
 
 
 class RhoSensitivityFigureRow(DomainModel):
-    law_name: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    partition_name: str
+    law_name: LawName
+    partition_name: PartitionName
     rho: SensitivityBudget
-    risk_upper: float | None
+    risk_upper: RiskValue | None
     compatibility_state: CompatibilityRegime
-    rho_is_log2: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    rho_is_log2: SearchPredicate
 
 
 class FailureBoundaryFigureRow(DomainModel):
-    axis: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    level: str
-    controlled_value_json: str
-    risk_upper: float
-    operational_state: str
-    optimizer_gap: float | None
-    runtime_ms: float | None
+    axis: FailureBoundaryAxis
+    level: FailureBoundaryLevel
+    controlled_value_json: SerializedConfigJson
+    risk_upper: RiskValue
+    operational_state: ScientificState
+    optimizer_gap: ConvergenceGap | None
+    runtime_ms: RuntimeMilliseconds | None
 
 
 class ComputationalScalingFigureRow(DomainModel):
-    K: int  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    population_median_runtime_ms: float
-    outer_median_runtime_ms: float
-    median_outer_nodes: float | None
+    K: BandCount
+    population_median_runtime_ms: RuntimeMilliseconds
+    outer_median_runtime_ms: RuntimeMilliseconds
+    median_outer_nodes: MedianCount | None
 
 
 class PublicationSourceRows(DomainModel):
@@ -363,7 +389,7 @@ class PublicationSourceRows(DomainModel):
 
 class TheoremValidationObservation(DomainModel):
     theorem_name: TheoremName
-    passed: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: SearchPredicate
     absolute_error: AbsoluteError | None
     inequality_margin: InequalityMargin | None
     primary_artifact: ArtifactKey
@@ -392,7 +418,7 @@ class CompatibilitySafetyEvidence(DomainModel):
     expected_regime: RegimeName
     observed_regime: RegimeName
     oracle_error: AbsoluteError | None
-    passed: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: SearchPredicate
 
 
 class CompatibilityFloorSourceEvidence(DomainModel):
@@ -493,9 +519,8 @@ def theorem_validation_summary_rows(
 
 def partition_timing_rows(
     evidence: tuple[PartitionTimingEvidence, ...],
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
 ) -> tuple[PartitionTimingRow, ...]:
-    return tuple(_partition_timing_row(item, config) for item in evidence)
+    return tuple(_partition_timing_row(item) for item in evidence)
 
 
 PARTITION_COHERENCE_POPULATION_LAWS: tuple[LawKey, ...] = (
@@ -508,8 +533,8 @@ PARTITION_COHERENCE_POPULATION_LAWS: tuple[LawKey, ...] = (
 def partition_coherence_figure_rows(
     population_evidence: tuple[PopulationFigureEvidence, ...],
     same_endpoint_evidence: tuple[SameEndpointFigureEvidence, ...],
-    config: TrajCertConfig,  # TODO: do not pass config as input param
 ) -> tuple[PartitionCoherenceFigureRow, ...]:
+    config = active_config.get()
     target_rho = config.study_design.partition_coherence_figure_rho
     partition_pairs = tuple(
         (partition_name(band_count), band_count) for band_count in config.grids.partitions
@@ -748,10 +773,8 @@ def _solver_comparison_evidence(
     )
 
 
-def _partition_timing_row(
-    item: PartitionTimingEvidence,
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
-) -> PartitionTimingRow:
+def _partition_timing_row(item: PartitionTimingEvidence) -> PartitionTimingRow:
+    config = active_config.get()
     result = item.result
     if (
         result.coarse_lower is None
@@ -801,9 +824,8 @@ def _require_exact_family[KeyT: Hashable](
 def build_publication_source_rows(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> PublicationSourceRows:
-    solver_rows = _solver_rows(plan, workspace_root, config)
+    solver_rows = _solver_rows(plan, workspace_root)
     coverage_results = _coverage_results(plan, workspace_root)
     failure_results = _failure_results(plan, workspace_root)
     scaling_results = _scaling_results(plan, workspace_root)
@@ -812,10 +834,10 @@ def build_publication_source_rows(
         solver_oracle_validation=solver_rows,
         anytime_coverage=_coverage_rows(coverage_results),
         failure_boundaries=_failure_rows(failure_results),
-        computational_scaling=_scaling_rows(scaling_results, plan, workspace_root, config),
+        computational_scaling=_scaling_rows(scaling_results, plan, workspace_root),
         figure_timing_value=_timing_figure_rows(plan, workspace_root),
-        figure_information_profile=_information_profile_rows(population, config),
-        figure_anytime_paths=_anytime_path_rows(coverage_results, config),
+        figure_information_profile=_information_profile_rows(population),
+        figure_anytime_paths=_anytime_path_rows(coverage_results),
         figure_anytime_coverage=_anytime_coverage_figure_rows(coverage_results),
         figure_rho_sensitivity=_rho_sensitivity_rows(population),
         figure_failure_boundaries=_failure_figure_rows(failure_results),
@@ -826,18 +848,20 @@ def build_publication_source_rows(
 def _solver_rows(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig,  # TODO: do not pass config as input param
 ) -> tuple[SolverOracleValidationRow, ...]:
-    grouped: dict[tuple[str, str], list[SolverOracleComparison]] = defaultdict(list)
-    for cell in _cells(plan, "Production Solver vs Independent Oracle"):
+    config = active_config.get()
+    grouped: dict[tuple[PartitionName, SensitivityCoordinate], list[SolverOracleComparison]] = (
+        defaultdict(list)
+    )
+    for cell in _cells(plan, ExperimentNameValue("Production Solver vs Independent Oracle")):
         partition = _required_partition(cell)
-        offset = cell.identity.coordinates.sensitivity_coordinate or ""
+        offset = cell.identity.coordinates.sensitivity_coordinate or SensitivityCoordinate("")
         grouped[(partition, offset)].append(
             read_verified_scientific_result(cell, workspace_root, SolverOracleComparison)
         )
-    frontier_errors: list[float] = []
+    frontier_errors: list[AbsoluteError] = []
     frontier_pass = True
-    for cell in _cells(plan, "Safety and Intrinsic Impossibility"):
+    for cell in _cells(plan, ExperimentNameValue("Safety and Intrinsic Impossibility")):
         result = read_verified_scientific_result(cell, workspace_root, SafetyCaseEvaluation)
         oracle = result.frontier_oracle
         if oracle is not None and oracle.applicable:
@@ -875,7 +899,7 @@ def _coverage_results(
 ) -> tuple[tuple[PlannedCell, CoverageEvidenceResult], ...]:
     return tuple(
         (cell, read_verified_scientific_result(cell, workspace_root, CoverageEvidenceResult))
-        for cell in _cells(plan, "Anytime Coverage Stress")
+        for cell in _cells(plan, ExperimentNameValue("Anytime Coverage Stress"))
     )
 
 
@@ -886,9 +910,11 @@ def _coverage_rows(
     for cell, result in evidence:
         stress = cell.identity.coordinates.variant_name or cell.identity.semantic_cell_key
         for method in result.methods:
-            method_name = method.method_name
-            if not method.applicable:
-                method_name = f"{method_name} [ASSUMPTION_VIOLATED]"
+            method_name = MethodDisplayName(
+                method.method_name
+                if method.applicable
+                else f"{method.method_name} [ASSUMPTION_VIOLATED]"
+            )
             rows.append(
                 AnytimeCoverageRow(
                     stress_cell=stress,
@@ -913,8 +939,8 @@ def _coverage_rows(
 
 def _anytime_path_rows(
     evidence: tuple[tuple[PlannedCell, CoverageEvidenceResult], ...],
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
 ) -> tuple[AnytimePathFigureRow, ...]:
+    config = active_config.get()
     target_law = LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE]
     matches: list[CoverageEvidenceResult] = []
     for cell, result in evidence:
@@ -975,7 +1001,7 @@ def _failure_results(
 ) -> tuple[tuple[PlannedCell, FailureBoundaryResult], ...]:
     return tuple(
         (cell, read_verified_scientific_result(cell, workspace_root, FailureBoundaryResult))
-        for cell in _cells(plan, "Failure Boundary Atlas")
+        for cell in _cells(plan, ExperimentNameValue("Failure Boundary Atlas"))
     )
 
 
@@ -1017,19 +1043,21 @@ def _failure_figure_rows(
     )
 
 
-def _controlled_value_json(result: FailureBoundaryResult) -> str: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    return json.dumps(
-        {
-            "axis": result.axis,
-            "band_count": result.band_count,
-            "level": result.level,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
+def _controlled_value_json(result: FailureBoundaryResult) -> SerializedConfigJson:
+    return SerializedConfigJson(
+        json.dumps(
+            {
+                "axis": result.axis,
+                "band_count": result.band_count,
+                "level": result.level,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
     )
 
 
-def _state_interpretation(state: ScientificState) -> str: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _state_interpretation(state: ScientificState) -> FailureMessage:
     interpretations = {
         ScientificState.CERTIFIED: "risk upper is within the configured budget",
         ScientificState.UNCERTIFIED: "valid evidence does not certify the configured budget",
@@ -1041,7 +1069,7 @@ def _state_interpretation(state: ScientificState) -> str: #TODO: Consider using 
         ),
         ScientificState.INSUFFICIENT_EVIDENCE: "evidence-count gates are not satisfied",
     }
-    return interpretations[state]
+    return FailureMessage(interpretations[state])
 
 
 def _scaling_results(
@@ -1049,7 +1077,7 @@ def _scaling_results(
 ) -> tuple[ComputationalScalingResult, ...]:
     return tuple(
         read_verified_scientific_result(cell, workspace_root, ComputationalScalingResult)
-        for cell in _cells(plan, "Computational Scaling")
+        for cell in _cells(plan, ExperimentNameValue("Computational Scaling"))
     )
 
 
@@ -1057,9 +1085,8 @@ def _scaling_rows(
     results: tuple[ComputationalScalingResult, ...],
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[ComputationalScalingRow, ...]:
-    oracle_error_by_k = _oracle_error_by_partition(plan, workspace_root, config)
+    oracle_error_by_k = _oracle_error_by_partition(plan, workspace_root)
     return tuple(
         ComputationalScalingRow(
             K=result.band_count,
@@ -1091,17 +1118,17 @@ def _scaling_figure_rows(
 
 
 def _oracle_error_by_partition(
-    plan: ExperimentPlan, workspace_root: Path, config: TrajCertConfig  # TODO: do not pass config as input param
-) -> dict[int, float]:
-    name_to_k = {partition_name(k): k for k in config.grids.partitions}
-    grouped: dict[int, list[float]] = defaultdict(list)
-    for cell in _cells(plan, "Production Solver vs Independent Oracle"):
+    plan: ExperimentPlan, workspace_root: Path
+) -> dict[BandCount, AbsoluteError]:
+    name_to_k = {partition_name(k): k for k in active_config.get().grids.partitions}
+    grouped: dict[BandCount, list[AbsoluteError]] = defaultdict(list)
+    for cell in _cells(plan, ExperimentNameValue("Production Solver vs Independent Oracle")):
         k = name_to_k.get(_required_partition(cell))
         if k is None:
             continue
         result = read_verified_scientific_result(cell, workspace_root, SolverOracleComparison)
         if result.max_endpoint_error is not None:
-            grouped[k].append(float(result.max_endpoint_error))
+            grouped[k].append(result.max_endpoint_error)
     return {k: max(values) for k, values in grouped.items() if values}
 
 
@@ -1109,7 +1136,7 @@ def _timing_figure_rows(
     plan: ExperimentPlan, workspace_root: Path
 ) -> tuple[TimingValueFigureRow, ...]:
     rows: list[TimingValueFigureRow] = []
-    for cell in _cells(plan, "Strict Timing Gain"):
+    for cell in _cells(plan, ExperimentNameValue("Strict Timing Gain")):
         result = read_verified_scientific_result(cell, workspace_root, PartitionCoherenceResult)
         if result.coarse_upper is None or result.fine_upper is None:
             raise InvalidScientificDataError(
@@ -1120,7 +1147,7 @@ def _timing_figure_rows(
         offset = _rho_offset(cell)
         rows.append(
             TimingValueFigureRow(
-                semantic_timing_case=f"{law} | {pair}",
+                semantic_timing_case=SemanticComparisonKey(f"{law} | {pair}"),
                 rho_offset=offset,
                 delta_tau=result.timing_gain,
                 bound_gain=result.coarse_upper - result.fine_upper,
@@ -1136,7 +1163,7 @@ def _population_results(
 ) -> tuple[tuple[PlannedCell, PopulationUtilityResult], ...]:
     return tuple(
         (cell, read_verified_scientific_result(cell, workspace_root, PopulationUtilityResult))
-        for cell in _cells(plan, "Population Sensitivity Utility")
+        for cell in _cells(plan, ExperimentNameValue("Population Sensitivity Utility"))
     )
 
 
@@ -1146,12 +1173,13 @@ def _rho_sensitivity_rows(
     log2_value = BINARY_MAX_INFORMATION_NATS
     return tuple(
         RhoSensitivityFigureRow(
-            law_name=cell.identity.coordinates.synthetic_law_name or "",
+            law_name=cell.identity.coordinates.synthetic_law_name or LawName(""),
             partition_name=_required_partition(cell),
             rho=result.sensitivity_budget,
             risk_upper=None if result.risk_upper is None else result.risk_upper,
             compatibility_state=result.compatibility_regime,
-            rho_is_log2=abs(result.sensitivity_budget - log2_value) <= _LOG2_MATCH_TOLERANCE,
+            rho_is_log2=abs(result.sensitivity_budget - log2_value)
+            <= active_config.get().numerics.log2_match_tolerance,
         )
         for cell, result in evidence
     )
@@ -1159,8 +1187,8 @@ def _rho_sensitivity_rows(
 
 def _information_profile_rows(
     population: tuple[tuple[PlannedCell, PopulationUtilityResult], ...],
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
 ) -> tuple[InformationProfileFigureRow, ...]:
+    config = active_config.get()
     target_law_key = LawKey.TIMING_TERMINAL_HARMFUL_LATE
     target_law = LAW_DISPLAY_NAMES[target_law_key]
     target_partition = partition_name(config.method.finest_bands)
@@ -1235,9 +1263,8 @@ def _information_profile_rows(
     return tuple(rows)
 
 
-def _cells(plan: ExperimentPlan, name: str #TODO: Consider using a proper alias type or whatever already exists with actually fits this. maybe enum
-           ) -> tuple[PlannedCell, ...]:
-    cells = cells_for_experiment(plan, ExperimentNameValue(name))
+def _cells(plan: ExperimentPlan, name: ExperimentNameValue) -> tuple[PlannedCell, ...]:
+    cells = cells_for_experiment(plan, name)
     if not cells:
         raise InvalidScientificDataError(f"publication source requires experiment: {name}")
     return cells
@@ -1250,16 +1277,15 @@ def _required_partition(cell: PlannedCell) -> PartitionName:
     return value
 
 
-def _rho_offset(cell: PlannedCell) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    coordinate = cell.identity.coordinates.sensitivity_coordinate or ""
+def _rho_offset(cell: PlannedCell) -> SensitivityOffset:
+    coordinate = cell.identity.coordinates.sensitivity_coordinate or SensitivityCoordinate("")
     prefix = "rho-offset="
     if not coordinate.startswith(prefix):
         raise InvalidScientificDataError("strict timing figure cell lacks rho-offset coordinate")
     return float(coordinate[len(prefix) :])
 
 
-def _max_optional(values: Iterable[float | None] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                  ) -> float | None: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _max_optional(values: Iterable[AbsoluteError | None]) -> AbsoluteError | None:
     finite = tuple(value for value in values if value is not None)
     return max(finite, default=None)
 
@@ -1343,8 +1369,7 @@ def _table_rows(table: pa.Table) -> tuple[dict[str, TabularCellValue], ...]:
     return tuple(cast(dict[str, TabularCellValue], row) for row in table.to_pylist())
 
 
-def _deterministic_order(table: pa.Table, columns: tuple[str, ...] #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                         ) -> pa.Table:
+def _deterministic_order(table: pa.Table, columns: tuple[ColumnName, ...]) -> pa.Table:
     if not columns or table.num_rows < _MINIMUM_ROWS_FOR_DETERMINISTIC_SORT:
         return table
     missing = tuple(column for column in columns if column not in table.column_names)
@@ -1444,9 +1469,9 @@ def _source(
     return PublicationSourceDescriptor(
         source_path=Path(path),
         source_role=role,
-        columns=columns,
-        sort_columns=sort_columns,
-        owner_experiment=owner,
+        columns=tuple(ColumnName(column) for column in columns),
+        sort_columns=tuple(ColumnName(column) for column in sort_columns),
+        owner_experiment=ExperimentSlug(owner),
     )
 
 

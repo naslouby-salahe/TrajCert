@@ -3,7 +3,8 @@ from __future__ import annotations
 from statistics import mean
 
 from trajcert.analysis.metrics import population_gain
-from trajcert.config import TrajCertConfig
+from trajcert.config import active_config
+from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LawParameters
 from trajcert.data.maturity import mature_ledger
 from trajcert.data.partitions import TrajectoryPartition, build_partition
@@ -19,7 +20,9 @@ from trajcert.math.information import observed_timing_information
 from trajcert.types import (
     AbsoluteTightening,
     CompatibilityRegime,
+    Count,
     DomainModel,
+    FiniteFloat,
     InformationNats,
     Probability,
     RelativeUnresolvedGain,
@@ -41,33 +44,33 @@ class PopulationUtilityResult(DomainModel):
     unresolved_as_harm_upper: RiskValue
     absolute_tightening: AbsoluteTightening | None
     relative_unresolved_gain: RelativeUnresolvedGain | None
-    materially_nonvacuous: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    materially_nonvacuous: bool
 
 
 class SequentialStreamUtility(DomainModel):
     stream_index: SeedIndex
-    fine_certified_update_fraction: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    endpoint_certified_update_fraction: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    certified_update_fraction_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    fine_time_to_first_certification: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    endpoint_time_to_first_certification: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    fine_mean_anytime_upper_risk: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    endpoint_mean_anytime_upper_risk: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    mean_bound_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    fine_certified_update_fraction: Probability
+    endpoint_certified_update_fraction: Probability
+    certified_update_fraction_gain: FiniteFloat
+    fine_time_to_first_certification: Count | None
+    endpoint_time_to_first_certification: Count | None
+    fine_mean_anytime_upper_risk: RiskValue
+    endpoint_mean_anytime_upper_risk: RiskValue
+    mean_bound_gain: FiniteFloat
 
 
 class SequentialUtilityResult(DomainModel):
     sensitivity_budget: SensitivityBudget
     streams: tuple[SequentialStreamUtility, ...]
-    mean_certified_update_fraction_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    mean_bound_gain: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    mean_certified_update_fraction_gain: FiniteFloat
+    mean_bound_gain: FiniteFloat
 
 
 def population_sensitivity_utility(
     summary: ObservableSummary,
     sensitivity_budget: SensitivityBudget,
-    config: TrajCertConfig, #TODO: make sure to add tests that identify any usage of config as input param
 ) -> PopulationUtilityResult:
+    config = active_config.get()
     solved = sharp_risk_set(
         summary=summary,
         sensitivity_budget=sensitivity_budget,
@@ -122,14 +125,14 @@ def population_sensitivity_utility(
 def sequential_sensitivity_utility(
     parameters: LawParameters,
     fine_partition: TrajectoryPartition,
-    config: TrajCertConfig, # TODO: do not pass config as input param
     sensitivity_budget: SensitivityBudget,
 ) -> SequentialUtilityResult:
+    config = active_config.get()
     if fine_partition.band_count != config.method.finest_bands:
         raise ValueError("sequential utility requires the configured finest partition")
     endpoint_partition = build_partition(
         finest_band_count=fine_partition.finest_band_count,
-        band_count=1,  # TODO: Replace this endpoint-partition magic number with a named domain constant or config value.
+        band_count=ENDPOINT_BAND_COUNT,
         terminal_horizon=fine_partition.terminal_horizon,
     )
     streams = tuple(
@@ -137,7 +140,6 @@ def sequential_sensitivity_utility(
             parameters=parameters,
             fine_partition=fine_partition,
             endpoint_partition=endpoint_partition,
-            config=config,
             sensitivity_budget=sensitivity_budget,
             stream_index=stream_index,
         )
@@ -157,10 +159,10 @@ def _sequential_stream_utility(
     parameters: LawParameters,
     fine_partition: TrajectoryPartition,
     endpoint_partition: TrajectoryPartition,
-    config: TrajCertConfig, # TODO: do not pass config as input param
     sensitivity_budget: SensitivityBudget,
     stream_index: SeedIndex,
 ) -> SequentialStreamUtility:
+    config = active_config.get()
     ledger = generate_stochastic_ledger(
         parameters=parameters,
         partition=fine_partition,
@@ -191,7 +193,7 @@ def _sequential_stream_utility(
         raise ValueError("paired sequential utility traces have different checkpoint counts")
     pairs = tuple(zip(fine_trace.checkpoints, endpoint_trace.checkpoints, strict=True))
     eligible_pairs = tuple(
-        pair for pair in pairs if _eligible(pair[0], config) and _eligible(pair[1], config)
+        pair for pair in pairs if _eligible(pair[0]) and _eligible(pair[1])
     )
     fine_checkpoints = tuple(pair[0] for pair in eligible_pairs)
     endpoint_checkpoints = tuple(pair[1] for pair in eligible_pairs)
@@ -212,18 +214,15 @@ def _sequential_stream_utility(
     )
 
 
-def _eligible(
-    checkpoint: SequentialCheckpoint,
-    config: TrajCertConfig, # TODO: do not pass config as input param
-) -> bool:
+def _eligible(checkpoint: SequentialCheckpoint) -> bool:
+    config = active_config.get()
     return (
         checkpoint.matured_count >= config.minimum_evidence.matured_events
         and checkpoint.resolved_count >= config.minimum_evidence.resolved_events
     )
 
 
-def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]
-                        ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]) -> Probability:
     if not checkpoints:
         return 0.0
     certified = sum(
@@ -233,8 +232,7 @@ def _certified_fraction(checkpoints: tuple[SequentialCheckpoint, ...]
     return certified / len(checkpoints)
 
 
-def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]
-                             ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]) -> RiskValue:
     if not checkpoints:
         return 1.0
     return mean(checkpoint.projection.proven_upper for checkpoint in checkpoints)
@@ -242,7 +240,7 @@ def _mean_anytime_upper_risk(checkpoints: tuple[SequentialCheckpoint, ...]
 
 def _time_to_first_certification(
     checkpoints: tuple[SequentialCheckpoint, ...],
-) -> int | None: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> Count | None:
     for checkpoint in checkpoints:
         if checkpoint.assessment.scientific_state is ScientificState.CERTIFIED:
             return checkpoint.matured_count

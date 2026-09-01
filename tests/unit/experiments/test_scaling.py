@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from trajcert.config import BenchmarkConfig, TrajCertConfig
+from trajcert.config import BenchmarkConfig, TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.scaling import (
     ComputationalScalingResult,
@@ -31,6 +31,7 @@ def _small_benchmark_config() -> TrajCertConfig:
         minimum_samples_for_standard_deviation=(
             config.benchmark.minimum_samples_for_standard_deviation
         ),
+        scaling_information_margin=config.benchmark.scaling_information_margin,
     )
     numerics = config.numerics.model_copy(update={"outer_max_nodes": _NODE_BUDGET})
     return config.model_copy(update={"benchmark": benchmark, "numerics": numerics})
@@ -64,15 +65,17 @@ def _outer_summary() -> ScalingTargetSummary:
 
 def test_benchmark_scaling_cell_rejects_nonpositive_band_count() -> None:
     config = _small_benchmark_config()
+    _ = active_config.set(config)
     with pytest.raises(ValueError, match="positive"):
-        _ = benchmark_scaling_cell(0, config)
+        _ = benchmark_scaling_cell(0)
     with pytest.raises(ValueError, match="positive"):
-        _ = benchmark_scaling_cell(-2, config)
+        _ = benchmark_scaling_cell(-2)
 
 
 def test_benchmark_scaling_cell_small_run() -> None:
     config = _small_benchmark_config()
-    result = benchmark_scaling_cell(1, config)
+    _ = active_config.set(config)
+    result = benchmark_scaling_cell(1)
     assert result.band_count == 1
     assert result.population.target is ScalingTarget.POPULATION_SOLVER
     assert result.outer_projection.target is ScalingTarget.OUTER_PROJECTION

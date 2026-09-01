@@ -4,6 +4,7 @@ import pytest
 
 from tests.unit.conftest import summary
 from trajcert.config import (
+    LawConfig,
     MinimumEvidenceConfig,
     SequentialConfig,
     SequentialUtilityConfig,
@@ -54,8 +55,7 @@ def _small_config() -> TrajCertConfig:
     )
 
 
-def _law_parameters(config: TrajCertConfig) -> LawParameters:
-    law = config.laws[LawKey.TIMING_TERMINAL_HARMFUL_LATE]
+def _law_parameters(law: LawConfig) -> LawParameters:
     return LawParameters(
         key=LawKey.TIMING_TERMINAL_HARMFUL_LATE,
         name=LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE],
@@ -68,8 +68,7 @@ def _law_parameters(config: TrajCertConfig) -> LawParameters:
 
 
 def test_population_utility_model_incompatible() -> None:
-    config = active_config.get()
-    result = population_sensitivity_utility(summary([0.2, 0.0], [0.0, 0.4], 0.4), 0.0, config)
+    result = population_sensitivity_utility(summary([0.2, 0.0], [0.0, 0.4], 0.4), 0.0)
     assert isinstance(result, PopulationUtilityResult)
     assert result.compatibility_regime is CompatibilityRegime.MODEL_INCOMPATIBLE
     assert result.tau is not None
@@ -83,8 +82,7 @@ def test_population_utility_model_incompatible() -> None:
 
 
 def test_population_utility_minimum_information_singleton() -> None:
-    config = active_config.get()
-    result = population_sensitivity_utility(summary([0.2], [0.4], 0.4), 0.0, config)
+    result = population_sensitivity_utility(summary([0.2], [0.4], 0.4), 0.0)
     assert result.compatibility_regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
     assert result.risk_lower is not None
     assert result.risk_upper is not None
@@ -100,8 +98,7 @@ def test_population_utility_minimum_information_singleton() -> None:
 
 
 def test_population_utility_compatible_interval() -> None:
-    config = active_config.get()
-    result = population_sensitivity_utility(summary([0.2], [0.4], 0.4), _SENSITIVITY_BUDGET, config)
+    result = population_sensitivity_utility(summary([0.2], [0.4], 0.4), _SENSITIVITY_BUDGET)
     assert result.compatibility_regime is CompatibilityRegime.COMPATIBLE_INTERVAL
     assert result.risk_lower is not None
     assert result.risk_upper is not None
@@ -116,8 +113,7 @@ def test_population_utility_compatible_interval() -> None:
 
 
 def test_population_utility_without_unresolved_mass_has_no_relative_gain() -> None:
-    config = active_config.get()
-    result = population_sensitivity_utility(summary([0.2], [0.8], 0.0), 0.0, config)
+    result = population_sensitivity_utility(summary([0.2], [0.8], 0.0), 0.0)
     assert result.compatibility_regime is CompatibilityRegime.NO_UNRESOLVED_MASS
     assert result.relative_unresolved_gain is None
     assert result.absolute_tightening is not None
@@ -127,19 +123,21 @@ def test_population_utility_without_unresolved_mass_has_no_relative_gain() -> No
 
 def test_sequential_utility_rejects_mismatched_fine_partition() -> None:
     config = _small_config()
-    parameters = _law_parameters(config)
+    parameters = _law_parameters(config.laws[LawKey.TIMING_TERMINAL_HARMFUL_LATE])
     wrong = build_partition(4, 4, config.method.terminal_horizon)
+    _ = active_config.set(config)
     with pytest.raises(ValueError, match="finest partition"):
-        _ = sequential_sensitivity_utility(parameters, wrong, config, _SENSITIVITY_BUDGET)
+        _ = sequential_sensitivity_utility(parameters, wrong, _SENSITIVITY_BUDGET)
 
 
 def test_sequential_sensitivity_utility_small_run() -> None:
     config = _small_config()
-    parameters = _law_parameters(config)
+    parameters = _law_parameters(config.laws[LawKey.TIMING_TERMINAL_HARMFUL_LATE])
     fine_partition = build_partition(
         config.method.finest_bands, config.method.finest_bands, config.method.terminal_horizon
     )
-    result = sequential_sensitivity_utility(parameters, fine_partition, config, _SENSITIVITY_BUDGET)
+    _ = active_config.set(config)
+    result = sequential_sensitivity_utility(parameters, fine_partition, _SENSITIVITY_BUDGET)
     assert isinstance(result, SequentialUtilityResult)
     assert result.sensitivity_budget == pytest.approx(_SENSITIVITY_BUDGET)
     assert len(result.streams) == _STREAMS

@@ -20,6 +20,8 @@ from trajcert.types import (
     AnytimeConfidenceDelta,
     ArbitraryPrecisionBits,
     BandCount,
+    CaseIndex,
+    CategoryIndex,
     CertifiedFractionGain,
     CoefficientValue,
     ConfidenceLevel,
@@ -28,16 +30,24 @@ from trajcert.types import (
     DomainModel,
     EventCount,
     EventIndexWidth,
+    FixedNotationExponent,
     GammaSensitivity,
+    GitSha1HexLength,
     GridPointCount,
     HazardProbability,
     InformationNats,
     IterationBudget,
     LawCount,
     LawKey,
+    Mass,
+    NanosecondsPerMillisecond,
+    OpenUnitFloat,
     OracleDigits,
     OuterMaxNodes,
     PairCount,
+    PixelCount,
+    PositiveFloat,
+    PositiveInt,
     Probability,
     RandomizationCount,
     RefinementCandidateCount,
@@ -48,6 +58,8 @@ from trajcert.types import (
     RhoValueCount,
     RiskBudget,
     RiskOffset,
+    SeedDigestBytes,
+    SeedIndex,
     SensitivityBudget,
     SensitivityOffset,
     SignificanceLevel,
@@ -144,6 +156,8 @@ class LegacyPartitionIncoherenceConfig(ConfigModel):
     gamma: tuple[GammaSensitivity, ...]
     q: tuple[HazardProbability, ...]
     latent_outcome_probabilities: tuple[Probability, Probability]
+    fine_band_count: BandCount
+    endpoint_band_count: BandCount
 
     @model_validator(mode="after")
     def validate_grid(self) -> LegacyPartitionIncoherenceConfig:
@@ -195,6 +209,8 @@ class StudyDesignConfig(ConfigModel):
     sharp_set_offsets: tuple[SensitivityOffset, ...]
     oracle_offsets: tuple[SensitivityOffset, ...]
     timing_offsets: tuple[SensitivityOffset, ...]
+    population_rho_value_count: RhoValueCount
+    representative_stream_indices: tuple[SeedIndex, ...]
 
     @model_validator(mode="after")
     def validate_registry_cardinalities(self) -> StudyDesignConfig:
@@ -215,6 +231,9 @@ class StudyDesignConfig(ConfigModel):
         ):
             _require_unique(offsets, f"study_design.{field_name}")
             _require_strictly_increasing(offsets, f"study_design.{field_name}")
+        _require_unique(
+            self.representative_stream_indices, "study_design.representative_stream_indices"
+        )
         return self
 
 
@@ -264,6 +283,9 @@ class NumericsConfig(ConfigModel):
     resolved_harm_boundary_offset: ToleranceValue
     compatibility_floor_offset: ToleranceValue
     sharpness_diagnostic_offset: ToleranceValue
+    entropy_maximizing_probability: Probability
+    bisection_iterations_past_float64_precision: IterationBudget
+    log2_match_tolerance: ToleranceValue
 
 
 class LegacyPatternMixtureConfig(ConfigModel):
@@ -276,6 +298,7 @@ class LegacyPatternMixtureConfig(ConfigModel):
     gradient_acceptance: ToleranceValue
     boundary_distance: ToleranceValue
     minimum_nonempty_bands: BandCount
+    initial_slope: SlopeValue
 
     @model_validator(mode="after")
     def validate_bounds(self) -> LegacyPatternMixtureConfig:
@@ -292,6 +315,14 @@ class CallbackConfig(ConfigModel):
     stable_equality_tolerance: ToleranceValue
     root_deduplication_tolerance: ToleranceValue
     minimum_comparable_bands: BandCount
+    stable_resistance_first_band: CategoryIndex
+    stable_resistance_second_band: CategoryIndex
+
+    @model_validator(mode="after")
+    def validate_stable_resistance_bands(self) -> CallbackConfig:
+        if self.stable_resistance_first_band == self.stable_resistance_second_band:
+            raise ValueError("stable-resistance bands must be distinct")
+        return self
 
 
 class ComparatorsConfig(ConfigModel):
@@ -367,6 +398,7 @@ class BenchmarkConfig(ConfigModel):
     measured_repetitions: RepetitionCount
     outer_sample_size: EventCount
     minimum_samples_for_standard_deviation: RepetitionCount
+    scaling_information_margin: InformationNats
 
 
 class CoverageSizeOverrides(ConfigModel):
@@ -446,6 +478,165 @@ class FailureBoundaryConfig(ConfigModel):
 
 class IdentifiersConfig(ConfigModel):
     event_index_width: EventIndexWidth
+    git_sha1_hex_length: GitSha1HexLength
+
+
+class SerializationConfig(ConfigModel):
+    max_fixed_notation_exponent: FixedNotationExponent
+    min_fixed_notation_exponent: FixedNotationExponent
+
+    @model_validator(mode="after")
+    def validate_exponent_bounds(self) -> SerializationConfig:
+        if self.min_fixed_notation_exponent >= self.max_fixed_notation_exponent:
+            raise ValueError("serialization exponent bounds must be strictly increasing")
+        return self
+
+
+class DeterminismConfig(ConfigModel):
+    seed_digest_bytes: SeedDigestBytes
+    fixture_stream_index: SeedIndex
+
+
+class UnitsConfig(ConfigModel):
+    nanoseconds_per_millisecond: NanosecondsPerMillisecond
+
+
+class PublicationConfig(ConfigModel):
+    table_count: Count
+    figure_count: Count
+    p_value_display_threshold: SignificanceLevel
+
+
+class SmokeConfig(ConfigModel):
+    compatible_offset: SensitivityOffset
+    refinement_offset: SensitivityOffset
+    coverage_stress_events: EventCount
+    coarse_bands: BandCount
+    coverage_stress_bands: BandCount
+    fixture_count: Count
+
+
+class HandCaseInsufficientMaturedConfig(ConfigModel):
+    case_index: CaseIndex
+    event_count: EventCount
+
+
+class HandCaseInsufficientResolvedConfig(ConfigModel):
+    case_index: CaseIndex
+    finite_count: EventCount
+    unresolved_count: EventCount
+    total_count: EventCount
+
+    @model_validator(mode="after")
+    def validate_counts(self) -> HandCaseInsufficientResolvedConfig:
+        if self.finite_count + self.unresolved_count != self.total_count:
+            raise ValueError("hand_cases.insufficient_resolved counts must sum to total_count")
+        return self
+
+
+class HandCaseModelIncompatibleConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+
+
+class HandCaseIntrinsicConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+
+
+class HandCaseCertifiedConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+    beta_margin: SensitivityOffset
+
+
+class HandCaseUncertifiedConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+
+
+class HandCaseZeroResolvedPlausibleConfig(ConfigModel):
+    case_index: CaseIndex
+    band_mass_scale: Mass
+    unresolved_lower: Mass
+    resolved_mass_upper: Mass
+    entropy_scale: Mass
+    gate_matured: EventCount
+    gate_resolved: EventCount
+
+
+class HandCaseNoUnresolvedConfig(ConfigModel):
+    case_index: CaseIndex
+
+
+class HandCaseSimplexBoundaryConfig(ConfigModel):
+    case_index: CaseIndex
+    harmful_mass_scale: Mass
+    correct_mass_scale: Mass
+    unresolved_mass: Mass
+    hidden_terminal_harmful: Mass
+    rho_margin: SensitivityOffset
+
+
+class HandCaseOptimizerFallbackConfig(ConfigModel):
+    case_index: CaseIndex
+    event_count: EventCount
+    rho_margin: SensitivityOffset
+
+
+class HandCasesConfig(ConfigModel):
+    stream: SeedIndex
+    diagnostic_node_cap: OuterMaxNodes
+    insufficient_matured: HandCaseInsufficientMaturedConfig
+    insufficient_resolved: HandCaseInsufficientResolvedConfig
+    model_incompatible: HandCaseModelIncompatibleConfig
+    intrinsic: HandCaseIntrinsicConfig
+    certified: HandCaseCertifiedConfig
+    uncertified: HandCaseUncertifiedConfig
+    zero_resolved_plausible: HandCaseZeroResolvedPlausibleConfig
+    no_unresolved: HandCaseNoUnresolvedConfig
+    simplex_boundary: HandCaseSimplexBoundaryConfig
+    optimizer_fallback: HandCaseOptimizerFallbackConfig
+
+    @model_validator(mode="after")
+    def validate_case_indices(self) -> HandCasesConfig:
+        indices = (
+            self.insufficient_matured.case_index,
+            self.insufficient_resolved.case_index,
+            self.model_incompatible.case_index,
+            self.intrinsic.case_index,
+            self.certified.case_index,
+            self.uncertified.case_index,
+            self.zero_resolved_plausible.case_index,
+            self.no_unresolved.case_index,
+            self.simplex_boundary.case_index,
+            self.optimizer_fallback.case_index,
+        )
+        if indices != tuple(range(1, len(indices) + 1)):
+            raise ValueError("hand_cases case indices must be exactly 1..10 in declared order")
+        return self
+
+
+class FigureLayoutConfig(ConfigModel):
+    width: PixelCount
+    height: PixelCount
+    margin_left: PositiveFloat
+    margin_right: PositiveFloat
+    margin_top: PositiveFloat
+    margin_bottom: PositiveFloat
+    horizontal_panel_gap: PositiveFloat
+    grid_panel_gap_x: PositiveFloat
+    grid_panel_gap_y: PositiveFloat
+    failure_boundary_grid_columns: PositiveInt
+    axis_padding_fraction: OpenUnitFloat
+
+    @model_validator(mode="after")
+    def validate_margins(self) -> FigureLayoutConfig:
+        if self.margin_left + self.margin_right >= self.width:
+            raise ValueError("figure margins must leave a positive plottable width")
+        if self.margin_top + self.margin_bottom >= self.height:
+            raise ValueError("figure margins must leave a positive plottable height")
+        return self
 
 
 class TrajCertConfig(ConfigModel):
@@ -465,6 +656,13 @@ class TrajCertConfig(ConfigModel):
     benchmark: BenchmarkConfig
     failure_boundary: FailureBoundaryConfig
     identifiers: IdentifiersConfig
+    serialization: SerializationConfig
+    determinism: DeterminismConfig
+    units: UnitsConfig
+    smoke: SmokeConfig
+    publication: PublicationConfig
+    hand_cases: HandCasesConfig
+    figure_layout: FigureLayoutConfig
 
     @field_validator("laws")
     @classmethod

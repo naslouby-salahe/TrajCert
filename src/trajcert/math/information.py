@@ -91,7 +91,6 @@ def information_profile_second_derivative(
 def timing_gain(
     fine: ObservableSummary, coarse: ObservableSummary, identity_tolerance: ToleranceValue
 ) -> InformationNats:
-    # TODO: Consider using a typed observable-summary field identifier instead of raw display strings.
     tolerance = identity_tolerance
     if not isfinite(tolerance) or tolerance <= 0.0:
         raise InvalidScientificDataError("identity tolerance must be finite and positive")

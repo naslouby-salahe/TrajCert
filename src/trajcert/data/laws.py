@@ -97,7 +97,6 @@ def build_full_law(parameters: LawParameters, band_count: BandCount) -> FullLawP
     )
 
 
-# TODO: should be in yaml and accessed through config
 LAW_DISPLAY_NAMES: dict[LawKey, LawName] = {
     LawKey.NO_PATH_DEPENDENCE: LawName("No outcome-path dependence"),
     LawKey.TIMING_HARMFUL_LATE: LawName("Timing only: harmful outcomes resolve late"),

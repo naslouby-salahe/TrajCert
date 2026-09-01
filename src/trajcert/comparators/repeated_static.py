@@ -29,7 +29,7 @@ def repeated_static_region(
         intervals = tuple(ClosedProbabilityInterval(lower=0.0, upper=1.0) for _ in range(dimension))
         return CategoricalConfidenceRegion(matured_count=0, intervals=intervals)
     delta = anytime_delta
-    z = float(norm.ppf(1.0 - delta / (2.0 * dimension))) # TODO: Centralize this multiple-comparison allocation instead of embedding the raw two-sided formula.
+    z = float(norm.ppf(1.0 - delta / (2.0 * dimension)))
     intervals = tuple(
         _wilson_interval(count, total, z) for count in state.canonical_count_vector
     )

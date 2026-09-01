@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import StrEnum
 from itertools import pairwise, product
 
 from pydantic import model_validator
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
@@ -31,14 +32,16 @@ from trajcert.types import (
     SensitivityBudget,
 )
 
-_POPULATION_RHO_VALUE_COUNT = 15 #TODO: should be in yml and accessed through conf
-_SAFETY_CASES = ( # TODO: should be enum
-    "below-resolved-harmful-mass",
-    "between-resolved-mass-and-intrinsic-boundary",
-    "at-intrinsic-boundary",
-    "interior-safety-frontier",
-    "assumption-free-boundary",
-)
+
+class _SafetyCaseVariant(StrEnum):
+    BELOW_RESOLVED_HARMFUL_MASS = "below-resolved-harmful-mass"
+    BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY = "between-resolved-mass-and-intrinsic-boundary"
+    AT_INTRINSIC_BOUNDARY = "at-intrinsic-boundary"
+    INTERIOR_SAFETY_FRONTIER = "interior-safety-frontier"
+    ASSUMPTION_FREE_BOUNDARY = "assumption-free-boundary"
+
+
+_SAFETY_CASES = tuple(_SafetyCaseVariant)
 
 _EXPERIMENTS: tuple[tuple[ExperimentNameValue, EvidenceClass], ...] = (
     (ExperimentNameValue("Legacy Partition Incoherence Check"), EvidenceClass.VALIDATION),
@@ -78,7 +81,7 @@ class PlannedCell(DomainModel):
     cell_ordinal: Ordinal
     identity: SemanticCellIdentity
     evidence_class: EvidenceClass
-    executable: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    executable: bool
     invalid_reason: ReasonCode | None
     required_experiments: tuple[ExperimentNameValue, ...]
 
@@ -116,15 +119,15 @@ class ExperimentPlan(DomainModel):
         return self
 
 
-def build_plan(config: TrajCertConfig #TODO: access directly not through function arguments
-               ) -> ExperimentPlan:
+def build_plan(config: TrajCertConfig) -> ExperimentPlan:
+    _ = active_config.set(config)
     cells = tuple(
         cell
         for order, (name, evidence_class) in enumerate(_EXPERIMENTS, start=1)
-        for cell in _expand_experiment(order, name, evidence_class, config)
+        for cell in _expand_experiment(order, name, evidence_class)
     )
     nonapplicable = tuple(
-        name for name, _ in _EXPERIMENTS if not _coordinates_for_experiment(name, config)
+        name for name, _ in _EXPERIMENTS if not _coordinates_for_experiment(name)
     )
     executable_count = sum(cell.executable for cell in cells)
     invalid_count = len(cells) - executable_count
@@ -151,13 +154,12 @@ def cells_for_experiment(
 
 
 def _expand_experiment(
-    order: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    order: Ordinal,
     name: ExperimentNameValue,
     evidence_class: EvidenceClass,
-    config: TrajCertConfig,  # TODO: do not pass config as input param
 ) -> tuple[PlannedCell, ...]:
     dependencies = _required_experiments(name)
-    coordinates = _coordinates_for_experiment(name, config)
+    coordinates = _coordinates_for_experiment(name)
     cells: list[PlannedCell] = []
     for ordinal, coordinate in enumerate(coordinates, start=1):
         cells.append(
@@ -178,7 +180,7 @@ def _expand_experiment(
 
 
 def _coordinates_for_experiment(
-    name: ExperimentNameValue, config: TrajCertConfig  # TODO: access config directly instead of passing it as an argument
+    name: ExperimentNameValue,
 ) -> tuple[SemanticCoordinates, ...]:
     handler = _COORDINATE_DISPATCH.get(name)
     if handler is None and name in {
@@ -190,42 +192,38 @@ def _coordinates_for_experiment(
         raise InvalidScientificDataError(
             f"no plan expansion implementation for experiment: {name}"
         )
-    return handler(config)
+    return handler()
 
 
-def _adjacent_partition_pairs(config: TrajCertConfig) -> tuple[ComparisonPairName, ...]:  # TODO: Do not pass the entire config. It can be globally accessed
+def _adjacent_partition_pairs() -> tuple[ComparisonPairName, ...]:
     return tuple(
         ComparisonPairName(f"{fine} -> {coarse}")
-        for fine, coarse in pairwise(_partition_names(config))
+        for fine, coarse in pairwise(_partition_names())
     )
 
 
-def _utility_and_coherence_laws(config: TrajCertConfig) -> tuple[LawName, ...]:  # TODO: do not pass config as input param
+def _utility_and_coherence_laws() -> tuple[LawName, ...]:
+    config = active_config.get()
     return tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
 
 
-def _coordinates_legacy_partition_incoherence_check(
-    config: TrajCertConfig, #TODO: config should be accessed directly. No need to pass it around as an argument. Fix in this whole file
-) -> tuple[SemanticCoordinates, ...]:
-    legacy = config.study_design.legacy_partition_incoherence
+def _coordinates_legacy_partition_incoherence_check() -> tuple[SemanticCoordinates, ...]:
+    legacy = active_config.get().study_design.legacy_partition_incoherence
     return tuple(
         SemanticCoordinates(gamma=gamma, variant_name=VariantName(f"q={q}"))
         for gamma, q in product(legacy.gamma, legacy.q)
     )
 
 
-def _coordinates_law_and_partition_product(
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_law_and_partition_product() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
-        for law, partition in product(_law_names(config), _partition_names(config))
+        for law, partition in product(_law_names(), _partition_names())
     )
 
 
-def _coordinates_sharp_set_constructive_identity(
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_sharp_set_constructive_identity() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     return tuple(
         SemanticCoordinates(
             synthetic_law_name=law,
@@ -233,21 +231,20 @@ def _coordinates_sharp_set_constructive_identity(
             sensitivity_coordinate=_offset_coordinate(offset),
         )
         for law, partition, offset in product(
-            _law_names(config), _partition_names(config), config.study_design.sharp_set_offsets
+            _law_names(), _partition_names(), config.study_design.sharp_set_offsets
         )
     )
 
 
-def _coordinates_refinement_dominance_identity(
-    config: TrajCertConfig,  # TODO: do not pass config as input param
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_refinement_dominance_identity() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, comparison_pair_name=pair)
-        for law, pair in product(_law_names(config), _adjacent_partition_pairs(config))
+        for law, pair in product(_law_names(), _adjacent_partition_pairs())
     )
 
 
-def _coordinates_strict_timing_gain(config: TrajCertConfig) -> tuple[SemanticCoordinates, ...]:  # TODO: access config directly instead of passing it as an argument
+def _coordinates_strict_timing_gain() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     return tuple(
         SemanticCoordinates(
             synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
@@ -262,42 +259,31 @@ def _coordinates_strict_timing_gain(config: TrajCertConfig) -> tuple[SemanticCoo
     )
 
 
-def _coordinates_safety_boundary_identity(
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_safety_boundary_identity() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, variant_name=VariantName(safety_case))
-        for law, safety_case in product(_law_names(config), _SAFETY_CASES)
+        for law, safety_case in product(_law_names(), _SAFETY_CASES)
     )
 
 
-def _coordinates_endpoint_special_case_identity(
-    config: TrajCertConfig,  # TODO: do not pass config as input param
-) -> tuple[SemanticCoordinates, ...]:
-    endpoint = _partition_names(config)[-1]
+def _coordinates_endpoint_special_case_identity() -> tuple[SemanticCoordinates, ...]:
+    endpoint = _partition_names()[-1]
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, partition_name=endpoint)
-        for law in _law_names(config)
+        for law in _law_names()
     )
 
 
-def _coordinates_anytime_projection_proof_check(
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
-) -> tuple[SemanticCoordinates, ...]:
-    del config
+def _coordinates_anytime_projection_proof_check() -> tuple[SemanticCoordinates, ...]:
     return (_variant("projection-proof-record"),)
 
 
-def _coordinates_population_complexity_proof_check(
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
-) -> tuple[SemanticCoordinates, ...]:
-    del config
+def _coordinates_population_complexity_proof_check() -> tuple[SemanticCoordinates, ...]:
     return (_variant("population-operation-count-record"),)
 
 
-def _coordinates_production_solver_vs_independent_oracle(
-    config: TrajCertConfig,  # TODO: do not pass config as input param
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_production_solver_vs_independent_oracle() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     return tuple(
         SemanticCoordinates(
             synthetic_law_name=law,
@@ -305,20 +291,21 @@ def _coordinates_production_solver_vs_independent_oracle(
             sensitivity_coordinate=_offset_coordinate(offset),
         )
         for law, partition, offset in product(
-            _law_names(config), _partition_names(config), config.study_design.oracle_offsets
+            _law_names(), _partition_names(), config.study_design.oracle_offsets
         )
     )
 
 
-def _coordinates_comparator_reduction(config: TrajCertConfig) -> tuple[SemanticCoordinates, ...]:  # TODO: access config directly instead of passing it as an argument
-    finest = _partition_names(config)[0]
+def _coordinates_comparator_reduction() -> tuple[SemanticCoordinates, ...]:
+    finest = _partition_names()[0]
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, partition_name=finest)
-        for law in _law_names(config)
+        for law in _law_names()
     )
 
 
-def _coordinates_partition_coherence(config: TrajCertConfig) -> tuple[SemanticCoordinates, ...]:  # TODO: Do not pass the entire config. It can be globally accessed
+def _coordinates_partition_coherence() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     return tuple(
         SemanticCoordinates(
             synthetic_law_name=law,
@@ -326,51 +313,46 @@ def _coordinates_partition_coherence(config: TrajCertConfig) -> tuple[SemanticCo
             sensitivity_coordinate=_offset_coordinate(offset),
         )
         for law, pair, offset in product(
-            _utility_and_coherence_laws(config),
-            _adjacent_partition_pairs(config),
+            _utility_and_coherence_laws(),
+            _adjacent_partition_pairs(),
             config.study_design.timing_offsets,
         )
     )
 
 
-def _coordinates_same_endpoint_different_timing(
-    config: TrajCertConfig,  # TODO: do not pass config as input param
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_same_endpoint_different_timing() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     comparison = ComparisonPairName(
         "Same endpoint without timing information|Same endpoint with timing information"
     )
     return tuple(
         SemanticCoordinates(comparison_pair_name=comparison, partition_name=partition, rho=rho)
-        for partition, rho in product(_partition_names(config), config.grids.same_endpoint_rho)
+        for partition, rho in product(_partition_names(), config.grids.same_endpoint_rho)
     )
 
 
-def _coordinates_compatibility_floor_behavior(
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
-) -> tuple[SemanticCoordinates, ...]:
-    partitions = _partition_names(config)
+def _coordinates_compatibility_floor_behavior() -> tuple[SemanticCoordinates, ...]:
+    partitions = _partition_names()
     selected_partitions = (partitions[0], partitions[-1])
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
-        for law, partition in product(_law_names(config), selected_partitions)
+        for law, partition in product(_law_names(), selected_partitions)
     )
 
 
-def _coordinates_sharpness_against_generic_oracle(
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_sharpness_against_generic_oracle() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     selected_laws = tuple(
         LAW_DISPLAY_NAMES[key] for key in config.study_design.sharpness_oracle_laws
     )
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, partition_name=partition)
-        for law, partition in product(selected_laws, _partition_names(config))
+        for law, partition in product(selected_laws, _partition_names())
     )
 
 
-def _coordinates_safety_and_intrinsic_impossibility(
-    config: TrajCertConfig,  # TODO: do not pass config as input param
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_safety_and_intrinsic_impossibility() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     selected_laws = tuple(
         LAW_DISPLAY_NAMES[key] for key in config.study_design.safety_and_impossibility_laws
     )
@@ -380,22 +362,18 @@ def _coordinates_safety_and_intrinsic_impossibility(
     )
 
 
-def _coordinates_anytime_implementation_hand_cases(
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_anytime_implementation_hand_cases() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(
             variant_name=VariantName(f"hand-case-{case_index:02d}"),
             partition_name=partition,
         )
-        # TODO: Derive hand-case identifiers and selected partitions from their configured case definitions instead of hardcoding this range/slice.
-        for case_index, partition in product(range(1, 11), _partition_names(config)[:3])
+        for case_index, partition in product(range(1, 11), _partition_names()[:3])
     )
 
 
-def _coordinates_anytime_coverage_stress(
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_anytime_coverage_stress() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     return tuple(
         SemanticCoordinates(
             synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
@@ -406,66 +384,59 @@ def _coordinates_anytime_coverage_stress(
     )
 
 
-def _coordinates_population_sensitivity_utility(
-    config: TrajCertConfig,  # TODO: do not pass config as input param
-) -> tuple[SemanticCoordinates, ...]:
-    rho_values = _population_rho_values(config)
+def _coordinates_population_sensitivity_utility() -> tuple[SemanticCoordinates, ...]:
+    rho_values = _population_rho_values()
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, partition_name=partition, rho=rho)
         for law, partition, rho in product(
-            _utility_and_coherence_laws(config), _partition_names(config), rho_values
+            _utility_and_coherence_laws(), _partition_names(), rho_values
         )
     )
 
 
-def _coordinates_sequential_sensitivity_utility(
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_sequential_sensitivity_utility() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     return tuple(
         SemanticCoordinates(synthetic_law_name=law, rho=rho)
-        for law, rho in product(_utility_and_coherence_laws(config), config.sequential.utility.rho)
+        for law, rho in product(_utility_and_coherence_laws(), config.sequential.utility.rho)
     )
 
 
-def _coordinates_computational_scaling(
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
-) -> tuple[SemanticCoordinates, ...]:
+def _coordinates_computational_scaling() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(scaling_band_count=band_count)
-        for band_count in config.grids.scaling_bands
+        for band_count in active_config.get().grids.scaling_bands
     )
 
 
-def _coordinates_statistical_synthesis(
-    config: TrajCertConfig,  # TODO: do not pass config as input param
-) -> tuple[SemanticCoordinates, ...]:
-    del config
+def _coordinates_statistical_synthesis() -> tuple[SemanticCoordinates, ...]:
     return (_variant("deterministic-synthesis"),)
 
 
-def _law_names(config: TrajCertConfig) -> tuple[LawName, ...]:  # TODO: access config directly instead of passing it as an argument
-    return tuple(LAW_DISPLAY_NAMES[key] for key, _ in config.ordered_laws)
+def _law_names() -> tuple[LawName, ...]:
+    return tuple(LAW_DISPLAY_NAMES[key] for key, _ in active_config.get().ordered_laws)
 
 
-def _partition_names(config: TrajCertConfig) -> tuple[PartitionName, ...]:  # TODO: Do not pass the entire config. It can be globally accessed
-    return tuple(partition_name(band_count) for band_count in config.grids.partitions)
+def _partition_names() -> tuple[PartitionName, ...]:
+    return tuple(partition_name(band_count) for band_count in active_config.get().grids.partitions)
 
 
-def _population_rho_values(config: TrajCertConfig) -> tuple[SensitivityBudget, ...]:  # TODO: do not pass config as input param
-    values = tuple(config.grids.rho)
+def _population_rho_values() -> tuple[SensitivityBudget, ...]:
+    values = tuple(active_config.get().grids.rho)
     binary_endpoint = float(BINARY_MAX_INFORMATION_NATS)
     if any(float(value) == binary_endpoint for value in values):
         rho_values = values
     else:
         rho_values = (*values, binary_endpoint)
-    if len(rho_values) != _POPULATION_RHO_VALUE_COUNT:
+    if len(rho_values) != active_config.get().study_design.population_rho_value_count:
         raise InvalidScientificDataError(
             "Population Sensitivity Utility requires exactly 15 rho values"
         )
     return rho_values
 
 
-def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoordinates, ...]:  # TODO: access config directly instead of passing it as an argument
+def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
     configured_axes: tuple[tuple[str, tuple[float | int, ...]], ...] = (
         ("terminal-unresolved-severity", tuple(config.failure_boundary.unresolvedness)),
         ("timing-contrast", tuple(config.failure_boundary.timing_contrast)),
@@ -502,7 +473,7 @@ def _failure_boundary_coordinates(config: TrajCertConfig) -> tuple[SemanticCoord
     return tuple(coordinates)
 
 
-_COORDINATE_DISPATCH: dict[str, Callable[[TrajCertConfig], tuple[SemanticCoordinates, ...]]] = {
+_COORDINATE_DISPATCH: dict[str, Callable[[], tuple[SemanticCoordinates, ...]]] = {
     "Legacy Partition Incoherence Check": _coordinates_legacy_partition_incoherence_check,
     "Path Information Decomposition": _coordinates_law_and_partition_product,
     "Information Profile Convexity": _coordinates_law_and_partition_product,

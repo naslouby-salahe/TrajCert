@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from itertools import product
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from trajcert.analysis.metrics import PracticalMetric, numeric_first_certificati
 from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust, require_family_size
 from trajcert.analysis.sign_flip import SignFlipResult, one_sided_sign_flip
 from trajcert.config import TrajCertConfig, active_config
+from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
@@ -79,6 +81,7 @@ from trajcert.storage import (
     CellArtifactIndex,
     DependencyFingerprint,
     DigestHex,
+    SemanticCellKey,
     atomic_write_model,
     file_digest,
     model_digest,
@@ -92,6 +95,7 @@ from trajcert.types import (
     LawKey,
     LawName,
     ObservedStatistic,
+    Ordinal,
     PartitionName,
     Probability,
     SemanticComparisonKey,
@@ -150,7 +154,7 @@ class PairedInferenceResult(DomainModel):
     bootstrap: PercentileBootstrapInterval
     sign_flip: SignFlipResult
     holm_adjusted_p_value: Probability
-    materiality_pass: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    materiality_pass: bool
     never_certified_fraction_method: Probability | None
     never_certified_fraction_baseline: Probability | None
 
@@ -163,9 +167,8 @@ class TrajectoryOperationalGainSynthesis(DomainModel):
 
 def synthesize_from_sequential_utility(
     evidence: tuple[SequentialUtilityEvidence, ...],
-    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> TrajectoryOperationalGainSynthesis:
-    expected = _expected_sequential_utility_keys(config)
+    expected = _expected_sequential_utility_keys()
     supplied = tuple((item.law_name, item.result.sensitivity_budget) for item in evidence)
     _validate_sequential_utility_family(supplied, expected)
     by_key = {(item.law_name, item.result.sensitivity_budget): item for item in evidence}
@@ -175,19 +178,17 @@ def synthesize_from_sequential_utility(
         for paired in paired_series_from_sequential_utility(
             law_name=by_key[key].law_name,
             result=by_key[key].result,
-            config=config,
         )
     )
-    return synthesize_trajectory_operational_gain(series, config)
+    return synthesize_trajectory_operational_gain(series)
 
 
 def paired_series_from_sequential_utility(
     law_name: LawName,
     result: SequentialUtilityResult,
-    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> tuple[PairedSeries, ...]:
     rho = result.sensitivity_budget
-    max_events = config.sequential.utility.max_events
+    max_events = active_config.get().sequential.utility.max_events
     risk_method = np.asarray(
         [stream.fine_mean_anytime_upper_risk for stream in result.streams], dtype=np.float64
     )
@@ -236,9 +237,8 @@ def paired_series_from_sequential_utility(
 
 def synthesize_trajectory_operational_gain(
     paired_series: tuple[PairedSeries, ...],
-    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> TrajectoryOperationalGainSynthesis:
-    expected_order = _expected_family_keys(config)
+    expected_order = _expected_family_keys()
     expected_keys = set(expected_order)
     supplied_keys = tuple(
         (series.law_name, series.sensitivity_budget, series.metric_name)
@@ -258,7 +258,7 @@ def synthesize_trajectory_operational_gain(
         (series.law_name, series.sensitivity_budget, series.metric_name): series
         for series in paired_series
     }
-    raw_results = tuple(_infer_series(series_by_key[key], config) for key in expected_order)
+    raw_results = tuple(_infer_series(series_by_key[key]) for key in expected_order)
     adjusted = holm_adjust(
         MultiplicityTest(
             semantic_comparison_key=result.semantic_comparison_key,
@@ -277,7 +277,6 @@ def synthesize_trajectory_operational_gain(
             adjusted_by_key[
                 (result.semantic_comparison_key, result.metric_name)
             ].adjusted_p_value,
-            config,
         )
         for result in raw_results
     )
@@ -301,7 +300,8 @@ def synthesize_trajectory_operational_gain(
     )
 
 
-def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferenceResult: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
+def _infer_series(series: PairedSeries) -> PairedInferenceResult:
+    config = active_config.get()
     method_values = np.asarray(series.method_values, dtype=np.float64)
     baseline_values = np.asarray(series.baseline_values, dtype=np.float64)
     expected_pairs = config.sequential.utility.streams
@@ -338,7 +338,7 @@ def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferen
         randomization_count=config.statistics.sign_flip_randomizations,
     )
     never_method, never_baseline = _never_certified_fractions(
-        series.metric_name, method_values, baseline_values, config
+        series.metric_name, method_values, baseline_values
     )
     return PairedInferenceResult(
         semantic_comparison_key=semantic_key,
@@ -362,8 +362,8 @@ def _infer_series(series: PairedSeries, config: TrajCertConfig) -> PairedInferen
 def _apply_adjusted_inference(
     result: PairedInferenceResult,
     adjusted_p_value: Probability,
-    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> PairedInferenceResult:
+    config = active_config.get()
     material = (
         result.metric_name is PracticalMetric.CERTIFIED_UPDATE_FRACTION
         and result.effect.mean_paired_difference
@@ -383,11 +383,10 @@ def _never_certified_fractions(
     metric_name: PracticalMetric,
     method_values: NDArray[np.float64],
     baseline_values: NDArray[np.float64],
-    config: TrajCertConfig, # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
 ) -> tuple[Probability | None, Probability | None]:
     if metric_name is not PracticalMetric.TIME_TO_FIRST_CERTIFICATION:
         return None, None
-    sentinel = float(config.sequential.utility.max_events + 1)
+    sentinel = float(active_config.get().sequential.utility.max_events + 1)
     method_count = sum(method_values.item(index) == sentinel for index in range(method_values.size))
     baseline_count = sum(
         baseline_values.item(index) == sentinel for index in range(baseline_values.size)
@@ -398,10 +397,8 @@ def _never_certified_fractions(
 
 
 def _validate_sequential_utility_family(
-    supplied: tuple[tuple[LawName, 
-                          float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                          ], ...],
-    expected: tuple[tuple[LawName, float], ...], #TODO also consider using an alias for this input
+    supplied: tuple[tuple[LawName, SensitivityBudget], ...],
+    expected: tuple[tuple[LawName, SensitivityBudget], ...],
 ) -> None:
     if len(supplied) != len(set(supplied)):
         raise InvalidScientificDataError("sequential utility synthesis input contains duplicates")
@@ -415,21 +412,18 @@ def _validate_sequential_utility_family(
         raise InvalidScientificDataError(message)
 
 
-def _expected_sequential_utility_keys(
-    config: TrajCertConfig,
-) -> tuple[tuple[LawName, float], ...]: # TODO: this output looks horrible
+def _expected_sequential_utility_keys() -> tuple[tuple[LawName, SensitivityBudget], ...]:
+    config = active_config.get()
     laws = tuple(LAW_DISPLAY_NAMES[key] for key in config.study_design.utility_and_coherence_laws)
     rho_values = config.sequential.utility.rho
     expected = tuple(product(laws, rho_values))
     return expected
 
 
-def _expected_family_keys(
-    config: TrajCertConfig,
-) -> tuple[tuple[LawName, float, PracticalMetric], ...]: # TODO: this output looks horrible
+def _expected_family_keys() -> tuple[tuple[LawName, SensitivityBudget, PracticalMetric], ...]:
     return tuple(
         (law_name, rho, metric)
-        for law_name, rho in _expected_sequential_utility_keys(config)
+        for law_name, rho in _expected_sequential_utility_keys()
         for metric in PracticalMetric
     )
 
@@ -446,7 +440,7 @@ def _comparison_key(
 
 
 class SynthesisDependencyReference(DomainModel):
-    semantic_cell_key: str # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    semantic_cell_key: SemanticCellKey
     completion_digest: DigestHex
     scientific_result_digest: DigestHex
 
@@ -489,7 +483,7 @@ def _dependency_reference(
     )
 
 
-def _cell_order(cell: PlannedCell) -> tuple[int, int, str]: # TODO: Consider using a proper alias type or whatever already exists with actually fits this. No primitives
+def _cell_order(cell: PlannedCell) -> tuple[Ordinal, Ordinal, SemanticCellKey]:
     return (
         cell.experiment_order,
         cell.cell_ordinal,
@@ -499,10 +493,9 @@ def _cell_order(cell: PlannedCell) -> tuple[int, int, str]: # TODO: Consider usi
 
 def sequential_rho_utility_rows(
     synthesis: TrajectoryOperationalGainSynthesis,
-    config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> tuple[RhoUtilityRow, ...]:
-    fine_partition = partition_name(config.method.finest_bands)
-    endpoint_partition = partition_name(1) # TODO: Replace this raw endpoint band count with the configured endpoint partition definition.
+    fine_partition = partition_name(active_config.get().method.finest_bands)
+    endpoint_partition = partition_name(ENDPOINT_BAND_COUNT)
     return tuple(
         RhoUtilityRow(
             analysis_type=AnalysisType.SEQUENTIAL,
@@ -544,33 +537,30 @@ class SynthesisEvidenceBundle(DomainModel):
 def build_synthesis_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
 ) -> SynthesisEvidenceBundle:
     population_source = _population_utility_evidence(plan, workspace_root)
     sequential_source = _sequential_utility_evidence(plan, workspace_root)
-    sequential_synthesis = synthesize_from_sequential_utility(sequential_source, config)
+    sequential_synthesis = synthesize_from_sequential_utility(sequential_source)
     population_rows = population_rho_utility_rows(population_source)
-    sequential_rows = sequential_rho_utility_rows(sequential_synthesis, config)
+    sequential_rows = sequential_rho_utility_rows(sequential_synthesis)
     return SynthesisEvidenceBundle(
         theorem_validation=theorem_validation_summary_rows(
             _theorem_validation_observations(plan, workspace_root)
         ),
         partition_timing=partition_timing_rows(
-            _partition_timing_evidence(plan, workspace_root, config),
-            config,
+            _partition_timing_evidence(plan, workspace_root),
         ),
         compatibility_safety=compatibility_safety_rows(
             compatibility_safety_evidence(
                 _compatibility_floor_evidence(plan, workspace_root),
                 _sharpness_evidence(plan, workspace_root),
-                _safety_evidence(plan, workspace_root, config),
+                _safety_evidence(plan, workspace_root),
             )
         ),
         rho_utility=(*population_rows, *sequential_rows),
         partition_coherence_figure=partition_coherence_figure_rows(
-            _population_figure_evidence(population_source, config),
-            _same_endpoint_figure_evidence(plan, workspace_root, config),
-            config,
+            _population_figure_evidence(population_source),
+            _same_endpoint_figure_evidence(plan, workspace_root),
         ),
     )
 
@@ -585,7 +575,7 @@ def _population_utility_evidence(
             partition_name=_required_partition(cell),
             result=read_verified_scientific_result(cell, workspace_root, PopulationUtilityResult),
         )
-        for cell in _cells(plan, "Population Sensitivity Utility")
+        for cell in _cells(plan, ExperimentNameValue("Population Sensitivity Utility"))
     )
 
 
@@ -598,18 +588,19 @@ def _sequential_utility_evidence(
             law_name=_required_law(cell),
             result=read_verified_scientific_result(cell, workspace_root, SequentialUtilityResult),
         )
-        for cell in _cells(plan, "Sequential Sensitivity Utility")
+        for cell in _cells(plan, ExperimentNameValue("Sequential Sensitivity Utility"))
     )
 
 
 def _partition_timing_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[PartitionTimingEvidence, ...]:
-    band_counts = {partition_name(value): value for value in config.grids.partitions}
+    band_counts = {
+        partition_name(value): value for value in active_config.get().grids.partitions
+    }
     evidence: list[PartitionTimingEvidence] = []
-    for cell in _cells(plan, "Partition Coherence"):
+    for cell in _cells(plan, ExperimentNameValue("Partition Coherence")):
         comparison = cell.identity.coordinates.comparison_pair_name
         if comparison is None:
             raise InvalidScientificDataError("partition-coherence cell lacks its comparison pair")
@@ -645,7 +636,7 @@ def _compatibility_floor_evidence(
                 cell, workspace_root, CompatibilityFloorBehaviorResult
             ),
         )
-        for cell in _cells(plan, "Compatibility Floor Behavior")
+        for cell in _cells(plan, ExperimentNameValue("Compatibility Floor Behavior"))
     )
 
 
@@ -659,30 +650,29 @@ def _sharpness_evidence(
             partition_name=_required_partition(cell),
             result=read_verified_scientific_result(cell, workspace_root, SolverOracleComparison),
         )
-        for cell in _cells(plan, "Sharpness Against Generic Oracle")
+        for cell in _cells(plan, ExperimentNameValue("Sharpness Against Generic Oracle"))
     )
 
 
 def _safety_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig, # TODO: do not pass config as input param
 ) -> tuple[SafetySourceEvidence, ...]:
-    finest = partition_name(config.method.finest_bands)
+    finest = partition_name(active_config.get().method.finest_bands)
     return tuple(
         SafetySourceEvidence(
             law_name=_required_law(cell),
             partition_name=finest,
             result=read_verified_scientific_result(cell, workspace_root, SafetyCaseEvaluation),
         )
-        for cell in _cells(plan, "Safety and Intrinsic Impossibility")
+        for cell in _cells(plan, ExperimentNameValue("Safety and Intrinsic Impossibility"))
     )
 
 
 def _population_figure_evidence(
     evidence: tuple[PopulationUtilitySourceEvidence, ...],
-    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
 ) -> tuple[PopulationFigureEvidence, ...]:
+    config = active_config.get()
     target_rho = config.study_design.partition_coherence_figure_rho
     band_counts = {partition_name(value): value for value in config.grids.partitions}
     figure_laws = {LAW_DISPLAY_NAMES[key] for key in PARTITION_COHERENCE_POPULATION_LAWS}
@@ -707,19 +697,19 @@ def _population_figure_evidence(
 def _same_endpoint_figure_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
-    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
 ) -> tuple[SameEndpointFigureEvidence, ...]:
+    config = active_config.get()
     target = config.study_design.partition_coherence_figure_rho
     band_counts = {partition_name(value): value for value in config.grids.partitions}
     evidence: list[SameEndpointFigureEvidence] = []
-    for cell in _cells(plan, "Same Endpoint, Different Timing"):
+    for cell in _cells(plan, ExperimentNameValue("Same Endpoint, Different Timing")):
         rho = cell.identity.coordinates.rho
         if rho is None or abs(rho - target) > config.numerics.comparison_guard:
             continue
         partition = _required_partition(cell)
         evidence.append(
             SameEndpointFigureEvidence(
-                law_name=_same_endpoint_timed_law(config),
+                law_name=_same_endpoint_timed_law(),
                 partition_name=partition,
                 partition_band_count=_band_count(partition, band_counts),
                 rho=rho,
@@ -738,24 +728,38 @@ def _theorem_validation_observations(
     observations: list[TheoremValidationObservation] = []
     observations.extend(_legacy_observations(plan, workspace_root))
     observations.extend(
-        _identity_observations(plan, workspace_root, "Path Information Decomposition")
+        _identity_observations(
+            plan, workspace_root, ExperimentNameValue("Path Information Decomposition")
+        )
     )
     observations.extend(_convexity_observations(plan, workspace_root))
     observations.extend(
-        _identity_observations(plan, workspace_root, "Minimum Compatibility Identity")
+        _identity_observations(
+            plan, workspace_root, ExperimentNameValue("Minimum Compatibility Identity")
+        )
     )
     observations.extend(_sharp_set_observations(plan, workspace_root))
     observations.extend(_refinement_observations(plan, workspace_root))
-    observations.extend(_identity_observations(plan, workspace_root, "Strict Timing-Gain Identity"))
+    observations.extend(
+        _identity_observations(
+            plan, workspace_root, ExperimentNameValue("Strict Timing-Gain Identity")
+        )
+    )
     observations.extend(_safety_boundary_observations(plan, workspace_root))
     observations.extend(
-        _identity_observations(plan, workspace_root, "Endpoint Special-Case Identity")
+        _identity_observations(
+            plan, workspace_root, ExperimentNameValue("Endpoint Special-Case Identity")
+        )
     )
     observations.extend(
-        _identity_observations(plan, workspace_root, "Anytime Projection Proof Check")
+        _identity_observations(
+            plan, workspace_root, ExperimentNameValue("Anytime Projection Proof Check")
+        )
     )
     observations.extend(
-        _identity_observations(plan, workspace_root, "Population Complexity Proof Check")
+        _identity_observations(
+            plan, workspace_root, ExperimentNameValue("Population Complexity Proof Check")
+        )
     )
     return tuple(observations)
 
@@ -764,7 +768,7 @@ def _legacy_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = "Legacy Partition Incoherence Check"
+    name = ExperimentNameValue("Legacy Partition Incoherence Check")
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -787,7 +791,7 @@ def _legacy_observations(
 def _identity_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
-    name: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    name: ExperimentNameValue,
 ) -> tuple[TheoremValidationObservation, ...]:
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
@@ -810,7 +814,7 @@ def _convexity_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = "Information Profile Convexity"
+    name = ExperimentNameValue("Information Profile Convexity")
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     return tuple(_convexity_observation(cell, workspace_root, name, primary) for cell in cells)
@@ -819,7 +823,7 @@ def _convexity_observations(
 def _convexity_observation(
     cell: PlannedCell,
     workspace_root: Path,
-    name: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    name: ExperimentNameValue,
     primary: ArtifactKey,
 ) -> TheoremValidationObservation:
     result = read_verified_scientific_result(cell, workspace_root, ConvexityResult)
@@ -836,7 +840,7 @@ def _sharp_set_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = "Sharp-Set Constructive Identity"
+    name = ExperimentNameValue("Sharp-Set Constructive Identity")
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -858,7 +862,7 @@ def _refinement_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = "Refinement Dominance Identity"
+    name = ExperimentNameValue("Refinement Dominance Identity")
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -881,7 +885,7 @@ def _safety_boundary_observations(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> tuple[TheoremValidationObservation, ...]:
-    name = "Safety-Boundary Identity"
+    name = ExperimentNameValue("Safety-Boundary Identity")
     cells = _cells(plan, name)
     primary = _family_primary_artifact(cells)
     observations: list[TheoremValidationObservation] = []
@@ -901,9 +905,9 @@ def _safety_boundary_observations(
 
 
 def _theorem_observation(
-    name: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    name: ExperimentNameValue,
     primary: ArtifactKey,
-    passed: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool,
     error: AbsoluteError | None,
     margin: InequalityMargin | None,
 ) -> TheoremValidationObservation:
@@ -935,9 +939,9 @@ def _family_primary_artifact(cells: tuple[PlannedCell, ...]) -> ArtifactKey:
 
 def _cells(
     plan: ExperimentPlan,
-    name: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    name: ExperimentNameValue,
 ) -> tuple[PlannedCell, ...]:
-    cells = cells_for_experiment(plan, ExperimentNameValue(name))
+    cells = cells_for_experiment(plan, name)
     if not cells:
         raise InvalidScientificDataError(f"required synthesis experiment has no cells: {name}")
     return cells
@@ -971,8 +975,8 @@ def _band_count(
         ) from exc
 
 
-def _same_endpoint_timed_law(config: TrajCertConfig) -> LawName: # TODO: do not pass config as input param
-    if LawKey.SAME_ENDPOINT_WITH_TIMING not in config.laws:
+def _same_endpoint_timed_law() -> LawName:
+    if LawKey.SAME_ENDPOINT_WITH_TIMING not in active_config.get().laws:
         raise InvalidScientificDataError("same-endpoint timed law is missing from configuration")
     return LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING]
 
@@ -982,8 +986,18 @@ class SynthesisLocalValidityInput(DomainModel):
     targets: tuple[LocalValidityTarget, ...]
 
 
+class SynthesisArtifactPaths(DomainModel):
+    by_key: Mapping[ArtifactKey, Path]
+
+    def __getitem__(self, key: ArtifactKey) -> Path:
+        return self.by_key[key]
+
+    def keys(self) -> Iterator[ArtifactKey]:
+        return iter(self.by_key)
+
+
 def synthesis_artifact_keys(cell: PlannedCell) -> tuple[ArtifactKey, ...]:
-    return tuple(synthesis_artifact_paths(cell))
+    return tuple(synthesis_artifact_paths(cell).keys())
 
 
 def local_validity_artifact_key() -> ArtifactKey:
@@ -992,11 +1006,10 @@ def local_validity_artifact_key() -> ArtifactKey:
 
 def make_statistical_synthesis_executor(
     plan: ExperimentPlan,
-    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     locality: SynthesisLocalValidityInput,
 ) -> CellExecutor:
     def executor(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
-        return execute_statistical_synthesis(cell, context, plan, config, locality)
+        return execute_statistical_synthesis(cell, context, plan, active_config.get(), locality)
 
     return executor
 
@@ -1016,8 +1029,8 @@ def execute_statistical_synthesis(
         context.workspace_root,
         context.dependency_fingerprint,
     )
-    evidence = build_synthesis_evidence(plan, context.workspace_root, config)
-    publication = build_publication_source_rows(plan, context.workspace_root, config)
+    evidence = build_synthesis_evidence(plan, context.workspace_root)
+    publication = build_publication_source_rows(plan, context.workspace_root)
     local_validity = audit_local_validity_targets(
         locality.static_dependencies,
         locality.targets,
@@ -1097,51 +1110,61 @@ def execute_statistical_synthesis(
     )
 
 
-def synthesis_artifact_paths(cell: PlannedCell) -> dict[ArtifactKey, Path]:
+def synthesis_artifact_paths(cell: PlannedCell) -> SynthesisArtifactPaths:
     if cell.identity.experiment_name != _SYNTHESIS_EXPERIMENT_NAME:
         raise InvalidScientificDataError("synthesis artifact paths require the synthesis cell")
     synthesis = experiment_leaf(
         cell.identity.experiment_slug,
         ExperimentLeaf.EVALUATION_AGGREGATES,
     )
-    return {
+    return SynthesisArtifactPaths(by_key={
         _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet",
         _SOLVER_ORACLE_KEY: _aggregate(
-            "production-solver-vs-independent-oracle", "solver_oracle_validation.parquet"
+            ExperimentSlug("production-solver-vs-independent-oracle"),
+            "solver_oracle_validation.parquet",
         ),
         _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",
         _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",
-        _ANYTIME_COVERAGE_KEY: _aggregate("anytime-coverage-stress", "anytime_coverage.parquet"),
+        _ANYTIME_COVERAGE_KEY: _aggregate(
+            ExperimentSlug("anytime-coverage-stress"), "anytime_coverage.parquet"
+        ),
         _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",
-        _FAILURE_BOUNDARIES_KEY: _aggregate("failure-boundary-atlas", "failure_boundaries.parquet"),
+        _FAILURE_BOUNDARIES_KEY: _aggregate(
+            ExperimentSlug("failure-boundary-atlas"), "failure_boundaries.parquet"
+        ),
         _COMPUTATIONAL_SCALING_KEY: _aggregate(
-            "computational-scaling", "computational_scaling.parquet"
+            ExperimentSlug("computational-scaling"), "computational_scaling.parquet"
         ),
         _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",
-        _FIGURE_TIMING_KEY: _aggregate("strict-timing-gain", "figure_timing_value.parquet"),
-        _FIGURE_PROFILE_KEY: _aggregate(
-            "safety-and-intrinsic-impossibility", "figure_information_profile.parquet"
+        _FIGURE_TIMING_KEY: _aggregate(
+            ExperimentSlug("strict-timing-gain"), "figure_timing_value.parquet"
         ),
-        _FIGURE_PATHS_KEY: _aggregate("anytime-coverage-stress", "figure_anytime_paths.parquet"),
+        _FIGURE_PROFILE_KEY: _aggregate(
+            ExperimentSlug("safety-and-intrinsic-impossibility"),
+            "figure_information_profile.parquet",
+        ),
+        _FIGURE_PATHS_KEY: _aggregate(
+            ExperimentSlug("anytime-coverage-stress"), "figure_anytime_paths.parquet"
+        ),
         _FIGURE_COVERAGE_KEY: _aggregate(
-            "anytime-coverage-stress", "figure_anytime_coverage.parquet"
+            ExperimentSlug("anytime-coverage-stress"), "figure_anytime_coverage.parquet"
         ),
         _FIGURE_RHO_KEY: _aggregate(
-            "population-sensitivity-utility", "figure_rho_sensitivity.parquet"
+            ExperimentSlug("population-sensitivity-utility"), "figure_rho_sensitivity.parquet"
         ),
         _FIGURE_FAILURE_KEY: _aggregate(
-            "failure-boundary-atlas", "figure_failure_boundaries.parquet"
+            ExperimentSlug("failure-boundary-atlas"), "figure_failure_boundaries.parquet"
         ),
         _FIGURE_SCALING_KEY: _aggregate(
-            "computational-scaling", "figure_computational_scaling.parquet"
+            ExperimentSlug("computational-scaling"), "figure_computational_scaling.parquet"
         ),
         _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",
-    }
+    })
 
 
-def _aggregate(experiment_slug: str, filename: str) -> Path: # TODO: Replace raw artifact slug/filename primitives with the existing artifact-key/path types.
+def _aggregate(experiment_slug: ExperimentSlug, filename: str) -> Path:
     return (
-        experiment_leaf(ExperimentSlug(experiment_slug), ExperimentLeaf.EVALUATION_AGGREGATES)
+        experiment_leaf(experiment_slug, ExperimentLeaf.EVALUATION_AGGREGATES)
         / filename
     )
 

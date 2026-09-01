@@ -35,16 +35,15 @@ from trajcert.types import (
     SensitivityBudget,
 )
 
-#TODO: identify what else needs to become enum
-ExperimentNameValue = NewType("ExperimentNameValue", str) #TODO: should be enum
-ComparisonPairName = NewType("ComparisonPairName", str) #TODO: should be enum
-MethodName = NewType("MethodName", str) #TODO: should be enum
-BaselineName = NewType("BaselineName", str) #TODO: should be enum
+ExperimentNameValue = NewType("ExperimentNameValue", str)
+ComparisonPairName = NewType("ComparisonPairName", str)
+MethodName = NewType("MethodName", str)
+BaselineName = NewType("BaselineName", str)
 FailureBoundaryCoordinate = NewType("FailureBoundaryCoordinate", str)
 SensitivityCoordinate = NewType("SensitivityCoordinate", str)
-VariantName = NewType("VariantName", str) #TODO: should be enum
+VariantName = NewType("VariantName", str)
 ProducerComponentName = NewType("ProducerComponentName", str)
-ArtifactTypeName = NewType("ArtifactTypeName", str) #TODO: should be enum
+ArtifactTypeName = NewType("ArtifactTypeName", str)
 EnvironmentDigest = NewType("EnvironmentDigest", str)
 SeedManifestDigest = NewType("SeedManifestDigest", str)
 CodeCommit = NewType("CodeCommit", str)
@@ -159,7 +158,7 @@ class DependencyMaterial(DomainModel):
 class ProvenanceMaterial(DomainModel):
     scientific_specification_digest: SpecificationDigest
     code_commit: CodeCommit
-    dirty_tree_flag: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    dirty_tree_flag: bool
     environment_lock_digest: EnvironmentDigest
     container_image_digest: ContainerImageDigest | None = None
     dataset_preprocessing_digests: tuple[DigestHex, ...]

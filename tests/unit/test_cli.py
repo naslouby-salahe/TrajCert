@@ -327,7 +327,6 @@ def _single_hand_case_cell(
 
 def _no_dependencies(
     _plan: ExperimentPlan,
-    _config: TrajCertConfig,
     _root: Path,
     _cell: PlannedCell,
     _cache: dict[ExperimentNameValue, ExperimentStatus],
@@ -337,7 +336,6 @@ def _no_dependencies(
 
 def _completed_upstream_dependencies(
     _plan: ExperimentPlan,
-    _config: TrajCertConfig,
     _root: Path,
     cell: PlannedCell,
     _cache: dict[ExperimentNameValue, ExperimentStatus],
@@ -350,7 +348,6 @@ def _completed_upstream_dependencies(
 
 def _ready_upstream_dependencies(
     _plan: ExperimentPlan,
-    _config: TrajCertConfig,
     _root: Path,
     cell: PlannedCell,
     _cache: dict[ExperimentNameValue, ExperimentStatus],
@@ -364,7 +361,6 @@ def _ready_upstream_dependencies(
 def _context_for(
     cell: PlannedCell,
     _plan: ExperimentPlan,
-    _config: TrajCertConfig,
     root: Path,
 ) -> runner.ExecutionContext:
     return _tmp_context(cell, root)
@@ -373,7 +369,6 @@ def _context_for(
 def _raise_context(
     _cell: PlannedCell,
     _plan: ExperimentPlan,
-    _config: TrajCertConfig,
     _root: Path,
 ) -> runner.ExecutionContext:
     raise InvalidScientificDataError("context unavailable")
@@ -939,7 +934,6 @@ def test_executor_dispatches_ordinary_cell_through_run_cell(
     def _dispatched_cell(
         cell: PlannedCell,
         context: runner.ExecutionContext,
-        _config: TrajCertConfig,
     ) -> runner.CellExecutionResult:
         return _write_artifact_executor(cell, context)
 

@@ -22,6 +22,7 @@ from trajcert.types import (
     OracleDigits,
     SafetyCaseName,
     SafetyRegime,
+    SensitivityBudget,
     ToleranceValue,
 )
 
@@ -31,17 +32,23 @@ class CompatibilitySweepStatus(StrEnum):
     NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET = "NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET"
 
 
+class CompatibilitySweepLabel(StrEnum):
+    BELOW = "below"
+    AT = "at"
+    ABOVE = "above"
+
+
 class CompatibilitySweepPoint(DomainModel):
-    label: str # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    rho: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    label: CompatibilitySweepLabel
+    rho: SensitivityBudget | None
     status: CompatibilitySweepStatus
     comparison: SolverOracleComparison | None
 
 
 class CompatibilityFloorBehaviorResult(DomainModel):
-    tau: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    tau: InformationNats
     points: tuple[CompatibilitySweepPoint, ...]
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
 
 
 class SafetyCaseEvaluation(DomainModel):
@@ -50,12 +57,12 @@ class SafetyCaseEvaluation(DomainModel):
     expected_regime: SafetyRegime | None
     assessment: SafetyAssessment | None
     frontier_oracle: SafetyFrontierOracleComparison | None
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
 
 
 class SafetyIntrinsicResult(DomainModel):
     cases: tuple[SafetyCaseEvaluation, ...]
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
 
 
 def compatibility_floor_behavior(
@@ -68,10 +75,10 @@ def compatibility_floor_behavior(
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
-    definitions = ( # TODO: Move these scientific sweep labels/offsets into configured study definitions.
-        ("below", tau - compatibility_floor_offset),
-        ("at", tau),
-        ("above", tau + compatibility_floor_offset),
+    definitions: tuple[tuple[CompatibilitySweepLabel, float], ...] = (
+        (CompatibilitySweepLabel.BELOW, tau - compatibility_floor_offset),
+        (CompatibilitySweepLabel.AT, tau),
+        (CompatibilitySweepLabel.ABOVE, tau + compatibility_floor_offset),
     )
     points: list[CompatibilitySweepPoint] = []
     for label, rho in definitions:
@@ -174,13 +181,13 @@ def safety_and_intrinsic_impossibility(
 def _expected_safety_regime(case: SafetyBudgetCase) -> SafetyRegime | None:
     if not case.valid:
         return None
-    by_name = { # TODO: Keep this expected-regime catalog with configured safety case definitions rather than raw display-name strings.
-        SafetyCaseName("Below resolved harmful mass"): SafetyRegime.RESOLVED_HARM_EXCEEDS_BUDGET,
-        SafetyCaseName(
-            "Between resolved mass and intrinsic boundary"
-        ): SafetyRegime.INTRINSICALLY_UNCERTIFIABLE,
-        SafetyCaseName("At intrinsic boundary"): SafetyRegime.INTERIOR_SAFETY_FRONTIER,
-        SafetyCaseName("Interior safety frontier"): SafetyRegime.INTERIOR_SAFETY_FRONTIER,
-        SafetyCaseName("Assumption-free boundary"): SafetyRegime.ASSUMPTION_FREE_SAFE,
+    by_name = {
+        SafetyCaseName.BELOW_RESOLVED_HARMFUL_MASS: SafetyRegime.RESOLVED_HARM_EXCEEDS_BUDGET,
+        SafetyCaseName.BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY: (
+            SafetyRegime.INTRINSICALLY_UNCERTIFIABLE
+        ),
+        SafetyCaseName.AT_INTRINSIC_BOUNDARY: SafetyRegime.INTERIOR_SAFETY_FRONTIER,
+        SafetyCaseName.INTERIOR_SAFETY_FRONTIER: SafetyRegime.INTERIOR_SAFETY_FRONTIER,
+        SafetyCaseName.ASSUMPTION_FREE_BOUNDARY: SafetyRegime.ASSUMPTION_FREE_SAFE,
     }
     return by_name[case.name]

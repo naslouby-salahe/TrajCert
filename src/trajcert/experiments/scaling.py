@@ -21,9 +21,22 @@ from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.experiments.anytime import run_sequential_trace
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.oracle import direct_mutual_information
-from trajcert.types import DomainModel, LawKey
+from trajcert.types import (
+    BandCount,
+    DomainModel,
+    FailureMessage,
+    IterationCount,
+    LawKey,
+    MedianCount,
+    MemoryMebibytes,
+    RuntimeNanoseconds,
+    RuntimeSeconds,
+    SerializedConfigJson,
+    VisitedNodeCount,
+    mass_tuple,
+)
 
-_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE  # TODO: Move this study-law selection to YAML and access it through config.
+_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 
 
 class ScalingTarget(StrEnum):
@@ -33,43 +46,40 @@ class ScalingTarget(StrEnum):
 
 class ScalingMeasurement(DomainModel):
     target: ScalingTarget
-    runtime_ns: int # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    peak_rss_mib: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    root_iterations: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    outer_nodes: int | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    runtime_ns: RuntimeNanoseconds
+    peak_rss_mib: MemoryMebibytes
+    root_iterations: IterationCount | None
+    outer_nodes: VisitedNodeCount | None
 
 
 class ScalingWorkerEnvelope(DomainModel):
     measurement: ScalingMeasurement | None
-    failure: str | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    failure: FailureMessage | None
 
 
 class ScalingTargetSummary(DomainModel):
     target: ScalingTarget
-    median_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    iqr_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    mean_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sample_sd_runtime_seconds: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    peak_rss_mib: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    median_root_iterations: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    median_outer_nodes: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    median_runtime_seconds: RuntimeSeconds
+    iqr_runtime_seconds: RuntimeSeconds
+    mean_runtime_seconds: RuntimeSeconds
+    sample_sd_runtime_seconds: RuntimeSeconds
+    peak_rss_mib: MemoryMebibytes
+    median_root_iterations: MedianCount | None
+    median_outer_nodes: MedianCount | None
 
 
 class ComputationalScalingResult(DomainModel):
-    band_count: int # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    band_count: BandCount
     population: ScalingTargetSummary
     outer_projection: ScalingTargetSummary
-    peak_memory_mib: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    peak_memory_mib: MemoryMebibytes
 
 
-def benchmark_scaling_cell(
-    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    config: TrajCertConfig, # TODO: do not pass config as input param
-) -> ComputationalScalingResult:
+def benchmark_scaling_cell(band_count: BandCount) -> ComputationalScalingResult:
     if band_count <= 0:
         raise ValueError("scaling band count must be positive")
     summaries = tuple(
-        _benchmark_target(target, band_count, config)
+        _benchmark_target(target, band_count)
         for target in (ScalingTarget.POPULATION_SOLVER, ScalingTarget.OUTER_PROJECTION)
     )
     population, outer = summaries
@@ -81,25 +91,19 @@ def benchmark_scaling_cell(
     )
 
 
-def _benchmark_target(
-    target: ScalingTarget,
-    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    config: TrajCertConfig, #TODO: do not pass config as input param
-) -> ScalingTargetSummary:
+def _benchmark_target(target: ScalingTarget, band_count: BandCount) -> ScalingTargetSummary:
+    config = active_config.get()
     for _ in range(config.benchmark.warmup_repetitions):
-        _ = _isolated_measurement(target, band_count, config)
+        _ = _isolated_measurement(target, band_count)
     measurements = tuple(
-        _isolated_measurement(target, band_count, config)
+        _isolated_measurement(target, band_count)
         for _ in range(config.benchmark.measured_repetitions)
     )
     runtimes = np.asarray(
-        tuple(measurement.runtime_ns / 1_000_000_000.0 # TODO: This should have been in a more centralized alias type for runtime in seconds or whatever already exists with actually fits this
-              for measurement in measurements),
+        tuple(measurement.runtime_ns / 1_000_000_000.0 for measurement in measurements),
         dtype=np.float64,
     )
-    quartiles = np.asarray(np.quantile(runtimes, 
-                                       (0.25, 0.75) # TODO: Do not use magic numbers like this. THis should be in yml and accessed through config
-                                       ), dtype=np.float64)
+    quartiles = np.asarray(np.quantile(runtimes, (0.25, 0.75)), dtype=np.float64)
     root_iterations = tuple(
         measurement.root_iterations
         for measurement in measurements
@@ -113,12 +117,12 @@ def _benchmark_target(
     return ScalingTargetSummary(
         target=target,
         median_runtime_seconds=float(median(runtimes)),
-        iqr_runtime_seconds=float(quartiles.item(1) - quartiles.item(0)),
+        iqr_runtime_seconds=quartiles.item(1) - quartiles.item(0),
         mean_runtime_seconds=float(mean(runtimes)),
         sample_sd_runtime_seconds=(
             0.0
             if len(runtimes) < config.benchmark.minimum_samples_for_standard_deviation
-            else float(stdev(float(value) for value in runtimes))
+            else stdev(float(value) for value in runtimes)
         ),
         peak_rss_mib=max(measurement.peak_rss_mib for measurement in measurements),
         median_root_iterations=(None if not root_iterations else float(median(root_iterations))),
@@ -126,16 +130,12 @@ def _benchmark_target(
     )
 
 
-def _isolated_measurement(
-    target: ScalingTarget,
-    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    config: TrajCertConfig, # TODO: do not pass config as input param
-) -> ScalingMeasurement:
+def _isolated_measurement(target: ScalingTarget, band_count: BandCount) -> ScalingMeasurement:
     context = get_context("spawn")
     parent_connection, child_connection = context.Pipe(duplex=False)
     process = context.Process(
         target=_worker,
-        args=(child_connection, target, band_count, _worker_config_json(config)),
+        args=(child_connection, target, band_count, _worker_config_json()),
     )
     process.start()
     child_connection.close()
@@ -151,24 +151,24 @@ def _isolated_measurement(
     return envelope.measurement
 
 
-def _worker_config_json(config: TrajCertConfig #TODO: do not pass config as input param
-                        ) -> str: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _worker_config_json() -> SerializedConfigJson:
+    config = active_config.get()
     serializable = config.model_copy(update={"laws": dict(config.laws)})
-    return serializable.model_dump_json()
+    return SerializedConfigJson(serializable.model_dump_json())
 
 
 def _worker(
     connection: Connection,
     target: ScalingTarget,
-    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    config_json: str, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    band_count: BandCount,
+    config_json: SerializedConfigJson,
 ) -> None:
     try:
         config = TrajCertConfig.model_validate_json(config_json)
         _ = active_config.set(config)
-        with threadpool_limits(limits=1):  # TODO: this is a magic number that should be from conf
+        with threadpool_limits(limits=1):
             start = perf_counter_ns()
-            root_iterations, outer_nodes = _execute_target(target, band_count, config)
+            root_iterations, outer_nodes = _execute_target(target, band_count)
             runtime_ns = perf_counter_ns() - start
             peak_rss_mib = _peak_resident_set_mib()
         envelope = ScalingWorkerEnvelope(
@@ -182,29 +182,31 @@ def _worker(
             failure=None,
         )
     except Exception as exc:
-        envelope = ScalingWorkerEnvelope(measurement=None, failure=f"{type(exc).__name__}: {exc}")
+        envelope = ScalingWorkerEnvelope(
+            measurement=None, failure=FailureMessage(f"{type(exc).__name__}: {exc}")
+        )
     connection.send(envelope.model_dump_json())
     connection.close()
 
 
 if sys.platform == "win32":
 
-    def _peak_resident_set_mib() -> float:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    def _peak_resident_set_mib() -> MemoryMebibytes:
         peak_wset = cast(int, psutil.Process().memory_info().peak_wset)
         return peak_wset / (1024.0 * 1024.0)
 else:
     import resource
 
-    def _peak_resident_set_mib() -> float:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    def _peak_resident_set_mib() -> MemoryMebibytes:
         return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
 
 
 def _execute_target(
     target: ScalingTarget,
-    band_count: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    config: TrajCertConfig, # TODO: do not pass config as input param
-) -> tuple[int | None, int | None]: #TODO: this should be handled better
-    parameters = _parameters(config)
+    band_count: BandCount,
+) -> tuple[IterationCount | None, VisitedNodeCount | None]:
+    config = active_config.get()
+    parameters = _parameters()
     partition = build_partition(
         finest_band_count=band_count,
         band_count=band_count,
@@ -230,15 +232,15 @@ def _execute_target(
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=0,  # TODO: Move this fixed stream selection to YAML and access it through config.
+        stream_index=config.determinism.fixture_stream_index,
         event_count=config.benchmark.outer_sample_size,
     )
     full_law = build_full_law(parameters, band_count)
     true_information = direct_mutual_information(
-        tuple(float(value) for value in full_law.harmful_resolved),
-        tuple(float(value) for value in full_law.correct_resolved),
-        float(full_law.unresolved),
-        float(full_law.terminal_harmful),
+        mass_tuple(full_law.harmful_resolved),
+        mass_tuple(full_law.correct_resolved),
+        full_law.unresolved,
+        full_law.terminal_harmful,
         config.numerics.oracle_digits,
     )
     trace = run_sequential_trace(
@@ -246,15 +248,15 @@ def _execute_target(
         identity=ledger.identity,
         partition=partition,
         config=config,
-        sensitivity_budget=true_information + 0.01,  # TODO: Move this scaling information margin to YAML and access it through config.
+        sensitivity_budget=true_information + config.benchmark.scaling_information_margin,
         risk_budget=config.budgets.risk,
         checkpoint_every=config.benchmark.outer_sample_size,
     )
     return None, trace.checkpoints[-1].projection.visited_nodes
 
 
-def _parameters(config: TrajCertConfig) -> LawParameters: #TODO: should have been handled better
-    law = config.laws[_BASE_LAW]
+def _parameters() -> LawParameters:
+    law = active_config.get().laws[_BASE_LAW]
     return LawParameters(
         key=_BASE_LAW,
         name=LAW_DISPLAY_NAMES[_BASE_LAW],

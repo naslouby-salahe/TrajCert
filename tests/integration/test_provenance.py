@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from trajcert import cli
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.plan import build_plan, cells_for_experiment
@@ -153,13 +153,15 @@ def test_doctor_rejects_disallowed_results_layout(tmp_path: Path) -> None:
 
 def test_scientific_specification_digest_is_config_content_sensitive() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    first = scientific_specification_digest(config)
-    repeated = scientific_specification_digest(config)
+    _ = active_config.set(config)
+    first = scientific_specification_digest()
+    repeated = scientific_specification_digest()
     assert first == repeated
     mutated = config.model_copy(
         update={"numerics": config.numerics.model_copy(update={"root_atol": _ALTERNATE_ROOT_ATOL})}
     )
-    mutated_digest = scientific_specification_digest(mutated)
+    _ = active_config.set(mutated)
+    mutated_digest = scientific_specification_digest()
     assert mutated_digest != first
 
 
@@ -196,6 +198,7 @@ def test_producer_component_digest_rejects_unknown_experiment_name(tmp_path: Pat
 def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: Path) -> None:
     workspace_root = _valid_workspace(tmp_path)
     config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     plan = build_plan(config)
     child_cell = next(
         cell
@@ -205,13 +208,13 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
     parent_cell = next(
         cell for cell in cells_for_experiment(plan, _INVENTORY_NAME) if cell.executable
     )
-    specification = scientific_specification_digest(config)
+    specification = scientific_specification_digest()
     child_component_digest = producer_component_digest(
         workspace_root, child_cell.identity.experiment_name
     )
     scientific_dependency = scientific_dependency_digest(
         specification,
-        str(child_cell.identity.semantic_cell_key),
+        child_cell.identity.semantic_cell_key,
         child_component_digest,
     )
     fingerprint_before = cell_dependency_fingerprint(
@@ -223,7 +226,7 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
     )
     parent_dependency_specification = scientific_dependency_digest(
         specification,
-        str(parent_cell.identity.semantic_cell_key),
+        parent_cell.identity.semantic_cell_key,
         parent_component_digest,
     )
     parent_dependency_fingerprint = cell_dependency_fingerprint(
@@ -238,13 +241,13 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
         dependency_fingerprint=parent_dependency_fingerprint,
         manifest_digest=DigestHex(str(specification)),
         required_artifact_keys=(scientific_result_artifact_key(parent_cell),),
-        expected_seed_count=expected_seed_count(parent_cell.identity.experiment_name, config),
+        expected_seed_count=expected_seed_count(parent_cell.identity.experiment_name),
     )
     outcome = run_cell(
         parent_cell,
         parent_context,
         (),
-        lambda cell, context: execute_dispatched_cell(cell, context, config),
+        lambda cell, context: execute_dispatched_cell(cell, context),
         overwrite=False,
     )
     assert outcome.state is PublicExecutionState.COMPLETED

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from functools import partial
 from pathlib import Path
 from typing import cast
 
 import pytest
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
@@ -30,6 +29,7 @@ from trajcert.storage import (
     DigestHex,
     PlanDigest,
     ProvenanceFingerprint,
+    SemanticCellKey,
     SpecificationDigest,
     file_digest,
     read_model,
@@ -369,11 +369,12 @@ def test_producer_component_digest_rejects_unregistered_experiment(tmp_path: Pat
 
 def test_scientific_dependency_digest_is_deterministic() -> None:
     component = DigestHex("a" * _SHA256_HEX_LENGTH)
-    first = runner.scientific_dependency_digest(SpecificationDigest("spec"), "cell", component)
-    second = runner.scientific_dependency_digest(SpecificationDigest("spec"), "cell", component)
+    cell_key = SemanticCellKey("cell")
+    first = runner.scientific_dependency_digest(SpecificationDigest("spec"), cell_key, component)
+    second = runner.scientific_dependency_digest(SpecificationDigest("spec"), cell_key, component)
     assert first == second
     assert first != runner.scientific_dependency_digest(
-        SpecificationDigest("other"), "cell", component
+        SpecificationDigest("other"), cell_key, component
     )
 
 
@@ -389,15 +390,16 @@ def test_cell_dependency_fingerprint_is_deterministic_without_parents(tmp_path: 
 
 def test_expected_seed_count_reflects_stream_configuration() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     assert (
-        runner.expected_seed_count(ExperimentNameValue("Anytime Coverage Stress"), config)
+        runner.expected_seed_count(ExperimentNameValue("Anytime Coverage Stress"))
         == config.sequential.coverage.streams
     )
     assert (
-        runner.expected_seed_count(ExperimentNameValue("Sequential Sensitivity Utility"), config)
+        runner.expected_seed_count(ExperimentNameValue("Sequential Sensitivity Utility"))
         == config.sequential.utility.streams
     )
-    assert runner.expected_seed_count(_HAND_CASE_EXPERIMENT, config) == 0
+    assert runner.expected_seed_count(_HAND_CASE_EXPERIMENT) == 0
 
 
 def test_scientific_result_artifact_key_and_path_are_consistent() -> None:
@@ -605,27 +607,30 @@ def test_execute_scientific_cell_rejects_unregistered_experiment() -> None:
 
 def test_execute_dispatched_cell_rejects_statistical_synthesis(tmp_path: Path) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     plan = build_plan(config)
     cell = cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
     with pytest.raises(InvalidScientificDataError, match="dedicated cross-experiment executor"):
-        _ = runner.execute_dispatched_cell(cell, _context(tmp_path, cell), config)
+        _ = runner.execute_dispatched_cell(cell, _context(tmp_path, cell))
 
 
 def test_execute_dispatched_cell_requires_exact_result_artifact(tmp_path: Path) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     cell = _cell()
     context = _context(tmp_path, cell).model_copy(
         update={"required_artifact_keys": (ArtifactKey("scientific-result|other"),)}
     )
     with pytest.raises(InvalidScientificDataError, match="exactly its scientific-result artifact"):
-        _ = runner.execute_dispatched_cell(cell, context, config)
+        _ = runner.execute_dispatched_cell(cell, context)
 
 
 def test_dispatched_cell_round_trip_through_run_cell(tmp_path: Path) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     cell = _cell()
     context = _context(tmp_path, cell)
-    executor = partial(runner.execute_dispatched_cell, config=config)
+    executor = runner.execute_dispatched_cell
     outcome = runner.run_cell(cell, context, (), executor, False)
     assert outcome.state is PublicExecutionState.COMPLETED
     assert outcome.reused is False
@@ -649,9 +654,10 @@ def test_verified_upstream_completion_rejects_missing_files(tmp_path: Path) -> N
 
 def test_verified_upstream_completion_rejects_stale_artifact_checksum(tmp_path: Path) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     cell = _cell()
     context = _context(tmp_path, cell)
-    executor = partial(runner.execute_dispatched_cell, config=config)
+    executor = runner.execute_dispatched_cell
     _ = runner.run_cell(cell, context, (), executor, False)
     artifact_path = tmp_path / runner.scientific_result_path(cell)
     _ = artifact_path.write_text("tampered", encoding="utf-8")

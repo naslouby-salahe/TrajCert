@@ -6,9 +6,11 @@ from trajcert.math.oracle import direct_mutual_information, solve_information_or
 from trajcert.math.safety import assess_safety_geometry
 from trajcert.math.solver import solve_hidden_mass_interval
 from trajcert.types import (
+    AbsoluteError,
     CompatibilityRegime,
     DomainModel,
     InformationNats,
+    Mass,
     OracleDigits,
     RiskBudget,
     RiskValue,
@@ -28,22 +30,22 @@ class SolverOracleComparison(DomainModel):
     theta_dagger: RiskValue | None
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    state_match: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    abs_u_lower_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    abs_u_upper_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    abs_risk_upper_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_endpoint_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_root_bracket_width: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    max_root_residual: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
+    state_match: bool
+    abs_u_lower_error: AbsoluteError | None
+    abs_u_upper_error: AbsoluteError | None
+    abs_risk_upper_error: AbsoluteError | None
+    max_endpoint_error: AbsoluteError | None
+    max_root_bracket_width: Mass | None
+    max_root_residual: InformationNats | None
 
 
 class SafetyFrontierOracleComparison(DomainModel):
-    applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    production_rho_star: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    oracle_rho_star: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    absolute_error: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    applicable: bool
+    production_rho_star: InformationNats | None
+    oracle_rho_star: InformationNats | None
+    absolute_error: AbsoluteError | None
+    passed: bool
 
 
 def compare_production_solver_to_oracle(
@@ -64,10 +66,10 @@ def compare_production_solver_to_oracle(
         summary, sensitivity_budget, oracle_digits, oracle_bracket_width
     )
     state_match = production.compatibility.regime == oracle.regime
-    lower_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    upper_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    risk_upper_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    endpoint_error: float | None = None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    lower_error: AbsoluteError | None = None
+    upper_error: AbsoluteError | None = None
+    risk_upper_error: AbsoluteError | None = None
+    endpoint_error: AbsoluteError | None = None
     if production.interval is not None and oracle.hidden_mass_interval is not None:
         lower_error = abs(production.interval.lower - oracle.hidden_mass_interval.lower)
         upper_error = abs(production.interval.upper - oracle.hidden_mass_interval.upper)

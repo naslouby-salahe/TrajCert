@@ -9,7 +9,6 @@ from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.runner import (
     DependencyReadiness,
     ExecutionContext,
-    FailureMessage,
     FailureRecord,
     FailureType,
     cell_artifact_index_path,
@@ -42,7 +41,7 @@ from trajcert.storage import (
     atomic_write_model,
     model_digest,
 )
-from trajcert.types import EvidenceClass, PublicExecutionState, ReasonCode
+from trajcert.types import EvidenceClass, FailureMessage, PublicExecutionState, ReasonCode
 
 _EXPERIMENT_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
 _MIXED_STATUS_CELL_COUNT = 4

@@ -58,14 +58,19 @@ from trajcert.experiments.synthesis import (
 )
 from trajcert.paths import RESULTS_ROOT, semantic_slug
 from trajcert.provenance import (
-    CodeCommit,
     EnvironmentDigest,
     ExperimentNameValue,
     ProducerComponentName,
     ProvenanceMaterial,
     provenance_fingerprint,
 )
-from trajcert.reporting.export import ReportExportResult, export_report, validate_results_layout
+from trajcert.reporting.export import (
+    LOCK_PATH,
+    ReportExportResult,
+    export_report,
+    source_commit,
+    validate_results_layout,
+)
 from trajcert.reporting.source_data import figure_source_descriptors, table_source_descriptors
 from trajcert.storage import (
     DigestHex,
@@ -97,9 +102,9 @@ class CliExitCode(IntEnum):
 
 class CliArguments(DomainModel):
     command: CliCommand
-    experiment_name: str | None  # TODO: Consider using a proper alias type or whatever already exists with actually fits this. Enum
-    dataset_name: str | None  # TODO: Consider using a proper alias type or whatever already exists with actually fits this. Enum
-    overwrite: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    experiment_name: str | None
+    dataset_name: str | None
+    overwrite: bool
 
 
 def main() -> None:
@@ -198,7 +203,7 @@ def build_parser() -> ArgumentParser:
     return parser
 
 
-def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None:
     value = arguments.experiment_name
     if value is None:
         if required:
@@ -212,7 +217,7 @@ def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None: 
     return value
 
 
-def _dataset_name(arguments: CliArguments) -> str | None:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _dataset_name(arguments: CliArguments) -> str | None:
     value = arguments.dataset_name
     if value is None:
         return None
@@ -257,14 +262,9 @@ def _print_smoke(result: SmokeResult) -> None:
     print(f"TrajCert smoke: {state} ({result.passed_fixture_count}/6 fixtures passed)")
 
 
-_LOCK_PATH = Path("uv.lock")  # TODO: this is duplicated and redundant
-_PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json") #TODO: why is this hardcoded like this
+_PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json")
 _SYNTHESIS_NAME = ExperimentNameValue("Statistical Synthesis")
-_REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml") #TODO: delete this
-_PUBLICATION_TABLE_COUNT = 8  # TODO: should be in yaml and accessed through config
-_PUBLICATION_FIGURE_COUNT = 8  # TODO: should be in yaml and accessed through config
-_PUBLICATION_SOURCE_COUNT = _PUBLICATION_TABLE_COUNT + _PUBLICATION_FIGURE_COUNT
-_GIT_SHA1_LENGTH = 40  # TODO: this is duplicated and redundant
+_REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
 _LOCAL_BOUND_EXPERIMENTS = (
     ExperimentNameValue("Anytime Coverage Stress"),
     ExperimentNameValue("Sequential Sensitivity Utility"),
@@ -281,21 +281,20 @@ class RunExperimentResult(DomainModel):
 
 
 class DoctorResult(DomainModel):
-    configuration_valid: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    plan_valid: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    dependency_lock_valid: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    imports_valid: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    source_control_valid: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    workspace_writable: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    publication_contract_valid: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    results_layout_valid: bool  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    configuration_valid: bool
+    plan_valid: bool
+    dependency_lock_valid: bool
+    imports_valid: bool
+    source_control_valid: bool
+    workspace_writable: bool
+    publication_contract_valid: bool
+    results_layout_valid: bool
 
     @property
-    def passed(self) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    def passed(self) -> bool:
         return all(self.model_dump().values())
 
 
-# TODO: this doesn't belong in the CLI layer, move it to the appropriate module
 def doctor(workspace_root: Path | None = None) -> DoctorResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
@@ -306,20 +305,21 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         _ = build_full_law(parameters, finest)
     for bands in config.grids.partitions:
         _ = build_partition(finest, bands, config.method.terminal_horizon)
-    lock_path = workspace_root / _LOCK_PATH
+    lock_path = workspace_root / LOCK_PATH
     if not lock_path.is_file() or lock_path.stat().st_size == 0:
         raise InvalidScientificDataError("uv.lock is missing or empty")
     for module_name in _REQUIRED_IMPORTS:
         _ = importlib.import_module(module_name)
-    _ = _source_commit(workspace_root)
+    _ = source_commit(workspace_root)
     _assert_workspace_writable(workspace_root)
     tables = table_source_descriptors()
     figures = figure_source_descriptors()
     descriptors = (*tables, *figures)
     if (
-        len(tables) != _PUBLICATION_TABLE_COUNT
-        or len(figures) != _PUBLICATION_FIGURE_COUNT
-        or len({item.source_path for item in descriptors}) != _PUBLICATION_SOURCE_COUNT
+        len(tables) != config.publication.table_count
+        or len(figures) != config.publication.figure_count
+        or len({item.source_path for item in descriptors})
+        != config.publication.table_count + config.publication.figure_count
     ):
         raise InvalidScientificDataError(
             "publication source contract must contain 8 tables and 8 figures"
@@ -338,10 +338,10 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
 
 
 def preprocess(
-    dataset_name: str | None = None,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    dataset_name: str | None = None,
     *,
     workspace_root: Path | None = None,
-    overwrite: bool = False,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    overwrite: bool = False,
 ) -> Path:
     workspace_root = workspace_root if workspace_root is not None else Path()
     target = workspace_root / _PREPROCESS_PATH
@@ -362,14 +362,15 @@ def smoke(workspace_root: Path | None = None) -> SmokeResult:
     config = TrajCertConfig.from_yaml_with_overrides(
         workspace_root / PRODUCTION_CONFIG_PATH, workspace_root / SMOKE_CONFIG_OVERRIDES_PATH
     )
+    _ = active_config.set(config)
     return run_smoke_fixtures(config)
 
 
 def run_experiment(
-    experiment_name: str,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    experiment_name: str,
     *,
     workspace_root: Path | None = None,
-    overwrite: bool = False,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    overwrite: bool = False,
 ) -> RunExperimentResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
     if _dirty_tree(workspace_root):
@@ -388,11 +389,11 @@ def run_experiment(
             blocked_cells=0,
         )
     status_cache: dict[ExperimentNameValue, ExperimentStatus] = {}
-    dependencies = _dependency_readiness(plan, config, workspace_root, cells[0], status_cache)
-    executor = _executor(name, plan, config)
+    dependencies = _dependency_readiness(plan, workspace_root, cells[0], status_cache)
+    executor = _executor(name, plan)
     completed = reused = failed = blocked = 0
     for cell in cells:
-        context = _execution_context(cell, plan, config, workspace_root)
+        context = _execution_context(cell, plan, workspace_root)
         outcome = run_cell(cell, context, dependencies, executor, overwrite)
         if outcome.state is PublicExecutionState.COMPLETED:
             completed += 1
@@ -412,7 +413,7 @@ def run_experiment(
 
 
 def experiment_status(
-    experiment_name: str,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    experiment_name: str,
     *,
     workspace_root: Path | None = None,
 ) -> ExperimentStatus:
@@ -420,26 +421,29 @@ def experiment_status(
     config = _load_config(workspace_root)
     plan = build_plan(config)
     name = _known_experiment_name(experiment_name)
-    return _experiment_status(name, plan, config, workspace_root, {})
+    return _experiment_status(name, plan, workspace_root, {})
 
 
 def report(
     *,
     workspace_root: Path | None = None,
-    experiment_name: str | None = None,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    overwrite: bool = False,  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    experiment_name: str | None = None,
+    overwrite: bool = False,
 ) -> ReportExportResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
-    if experiment_name is not None:
-        _ = _known_experiment_name(experiment_name)
-    return export_report(workspace_root, experiment_name=experiment_name, overwrite=overwrite)
+    validated_name = (
+        None if experiment_name is None else _known_experiment_name(experiment_name)
+    )
+    return export_report(workspace_root, experiment_name=validated_name, overwrite=overwrite)
 
 
 def _load_config(workspace_root: Path) -> TrajCertConfig:
-    return TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
+    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
+    return config
 
 
-def _known_experiment_name(value: str) -> ExperimentNameValue:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _known_experiment_name(value: str) -> ExperimentNameValue:
     names = experiment_names()
     requested = ExperimentNameValue(value)
     if requested not in names:
@@ -450,7 +454,6 @@ def _known_experiment_name(value: str) -> ExperimentNameValue:  # TODO: Consider
 def _experiment_status(
     name: ExperimentNameValue,
     plan: ExperimentPlan,
-    config: TrajCertConfig,  # TODO: config should be accessed directly. No need to pass it around as an argument. Fix in this whole file
     workspace_root: Path,
     cache: dict[ExperimentNameValue, ExperimentStatus],
 ) -> ExperimentStatus:
@@ -459,7 +462,7 @@ def _experiment_status(
         return cached
     cells = cells_for_experiment(plan, name)
     statuses = tuple(
-        _current_cell_status(cell, plan, config, workspace_root, cache) for cell in cells
+        _current_cell_status(cell, plan, workspace_root, cache) for cell in cells
     )
     declared_cells = len(cells)
     result = aggregate_experiment_status(name, statuses, declared_cells)
@@ -470,7 +473,6 @@ def _experiment_status(
 def _current_cell_status(
     cell: PlannedCell,
     plan: ExperimentPlan,
-    config: TrajCertConfig,  # TODO: do not pass config as input param
     workspace_root: Path,
     cache: dict[ExperimentNameValue, ExperimentStatus],
 ) -> CellStatus:
@@ -481,7 +483,7 @@ def _current_cell_status(
             state=PublicExecutionState.INVALID,
             reason=cell.invalid_reason,
         )
-    dependencies = _dependency_readiness(plan, config, workspace_root, cell, cache)
+    dependencies = _dependency_readiness(plan, workspace_root, cell, cache)
     reason = dependency_block_reason(cell, dependencies)
     if reason is not None:
         return CellStatus(
@@ -490,7 +492,7 @@ def _current_cell_status(
             reason=reason,
         )
     try:
-        context = _execution_context(cell, plan, config, workspace_root)
+        context = _execution_context(cell, plan, workspace_root)
     except InvalidScientificDataError:
         return CellStatus(
             semantic_cell_key=key,
@@ -502,7 +504,6 @@ def _current_cell_status(
 
 def _dependency_readiness(
     plan: ExperimentPlan,
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
     workspace_root: Path,
     cell: PlannedCell,
     cache: dict[ExperimentNameValue, ExperimentStatus],
@@ -510,22 +511,18 @@ def _dependency_readiness(
     return tuple(
         DependencyReadiness(
             experiment_name=name,
-            state=_experiment_status(name, plan, config, workspace_root, cache).state,
+            state=_experiment_status(name, plan, workspace_root, cache).state,
         )
         for name in cell.required_experiments
     )
 
 
-def _executor(
-    name: ExperimentNameValue,
-    plan: ExperimentPlan,
-    config: TrajCertConfig,  # TODO: Do not pass the entire config. It can be globally accessed
-) -> CellExecutor:
+def _executor(name: ExperimentNameValue, plan: ExperimentPlan) -> CellExecutor:
     if name == _SYNTHESIS_NAME:
-        return make_statistical_synthesis_executor(plan, config, _locality_input(plan))
+        return make_statistical_synthesis_executor(plan, _locality_input(plan))
 
     def execute(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
-        return execute_dispatched_cell(cell, context, config)
+        return execute_dispatched_cell(cell, context)
 
     return execute
 
@@ -533,10 +530,9 @@ def _executor(
 def _execution_context(
     cell: PlannedCell,
     plan: ExperimentPlan,
-    config: TrajCertConfig,  # TODO: do not pass config as input param
     workspace_root: Path,
 ) -> ExecutionContext:
-    specification = scientific_specification_digest(config)
+    specification = scientific_specification_digest()
     component_digest = producer_component_digest(workspace_root, cell.identity.experiment_name)
     dependency_specification = scientific_dependency_digest(
         specification,
@@ -560,25 +556,24 @@ def _execution_context(
         plan_digest=plan.plan_digest,
         scientific_specification_digest=specification,
         scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=_provenance(plan, config, workspace_root),
+        provenance_fingerprint=_provenance(plan, workspace_root),
         dependency_fingerprint=dependency,
         manifest_digest=model_digest(cell),
         required_artifact_keys=required,
-        expected_seed_count=expected_seed_count(cell.identity.experiment_name, config),
+        expected_seed_count=expected_seed_count(cell.identity.experiment_name),
     )
 
 
 def _provenance(
     plan: ExperimentPlan,
-    config: TrajCertConfig,  # TODO: access config directly instead of passing it as an argument
     workspace_root: Path,
 ) -> ProvenanceFingerprint:
-    lock = workspace_root / _LOCK_PATH
+    lock = workspace_root / LOCK_PATH
     if not lock.is_file():
         raise InvalidScientificDataError("uv.lock is required for execution provenance")
     material = ProvenanceMaterial(
-        scientific_specification_digest=SpecificationDigest(model_digest(config)),
-        code_commit=CodeCommit(_source_commit(workspace_root)),
+        scientific_specification_digest=SpecificationDigest(model_digest(active_config.get())),
+        code_commit=source_commit(workspace_root),
         dirty_tree_flag=False,
         environment_lock_digest=EnvironmentDigest(file_digest(lock)),
         container_image_digest=None,
@@ -590,24 +585,7 @@ def _provenance(
     return provenance_fingerprint(material)
 
 
-def _source_commit(workspace_root: Path) -> str:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    try:
-        result = subprocess.run(
-            ("git", "rev-parse", "HEAD"),
-            cwd=workspace_root,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise InvalidScientificDataError("cannot resolve source commit") from exc
-    commit = result.stdout.strip()
-    if len(commit) != _GIT_SHA1_LENGTH:
-        raise InvalidScientificDataError("source commit must be a full Git SHA-1")
-    return commit
-
-
-def _dirty_tree(workspace_root: Path) -> bool:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _dirty_tree(workspace_root: Path) -> bool:
     try:
         result = subprocess.run(
             ("git", "status", "--porcelain=v1", "--untracked-files=all"),
@@ -645,7 +623,7 @@ def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:
     )
 
 
-def _local_static_dependencies( #TODO: delete this
+def _local_static_dependencies(
     client_id: ClientId,
 ) -> tuple[StaticComponentDependency, ...]:
     contracts = (
@@ -731,7 +709,9 @@ def _assert_workspace_writable(workspace_root: Path) -> None:
             raise InvalidScientificDataError(f"workspace path is not writable: {directory}")
 
 
-def _run_state(total: int, completed: int, failed: int, blocked: int) -> PublicExecutionState:  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _run_state(
+    total: Count, completed: Count, failed: Count, blocked: Count
+) -> PublicExecutionState:
     if failed:
         return PublicExecutionState.FAILED
     if blocked:

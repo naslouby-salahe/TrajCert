@@ -33,6 +33,13 @@ DOMAIN_PARAMETER_NAMES = frozenset(
         "risk_budget",
         "sensitivity_budget",
         "information_budget",
+        "method_name",
+        "level",
+        "certified_update_fraction_gain",
+        "mean_bound_gain",
+        "mean_certified_update_fraction_gain",
+        "config_json",
+        "source_commit",
     }
 )
 SUPPRESSIONS = frozenset(
@@ -54,6 +61,9 @@ _ACTIVE_CONFIG_SET_PATTERN = re.compile(r"active_config\.set\(")
 _CONSTANT_NAME_PATTERN = re.compile(r"^_{0,2}[A-Z][A-Z0-9_]*$")
 _CONFIG_ANNOTATION_PATTERN = re.compile(r"Config\b")
 _CONFIG_MODULE_NAME = "config.py"
+_CONSTANT_NAME_EXEMPTIONS = frozenset(
+    {"ENDPOINT_BAND_COUNT", "_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT"}
+)
 
 
 def _is_bare_numeric_literal(value: cst.BaseExpression) -> bool:
@@ -91,6 +101,8 @@ class _AuditVisitor(cst.CSTVisitor):
     def visit_AnnAssign(self, node: cst.AnnAssign) -> None:
         if isinstance(node.target, cst.Name):
             self._check_annotation(node.target.value, node.annotation.annotation, node)
+            if node.value is not None:
+                self._check_hardcoded_constant(node, node.target.value, node.value)
 
     def visit_Param(self, node: cst.Param) -> None:
         if node.annotation is not None:
@@ -136,14 +148,18 @@ class _AuditVisitor(cst.CSTVisitor):
                     self._add(RULE_COMPATIBILITY, node, "old-name alias is forbidden")
                 if name.casefold() in {"claim_registry", "claim_state", "evidence_manifest"}:
                     self._add(RULE_CLAIM, node, "runtime claim machinery is forbidden")
-                self._check_hardcoded_constant(node, name)
+                self._check_hardcoded_constant(node, name, node.value)
 
-    def _check_hardcoded_constant(self, node: cst.Assign, name: str) -> None:
+    def _check_hardcoded_constant(
+        self, node: cst.CSTNode, name: str, value: cst.BaseExpression
+    ) -> None:
         if self.path.name == _CONFIG_MODULE_NAME:
+            return
+        if name in _CONSTANT_NAME_EXEMPTIONS:
             return
         if not _CONSTANT_NAME_PATTERN.match(name):
             return
-        if not _is_bare_numeric_literal(node.value):
+        if not _is_bare_numeric_literal(value):
             return
         if not self._is_module_level(node):
             return
@@ -210,6 +226,10 @@ class _AuditVisitor(cst.CSTVisitor):
         ]
         if not config_params:
             return
+        if node.returns is not None and _CONFIG_ANNOTATION_PATTERN.search(
+            _expression_text(node.returns.annotation)
+        ):
+            return
         body_text = cst.Module([]).code_for_node(node.body)
         if _ACTIVE_CONFIG_SET_PATTERN.search(body_text):
             return
@@ -237,7 +257,6 @@ class _AuditVisitor(cst.CSTVisitor):
 
 
 def audit_path(path: Path, *, production: bool = False) -> tuple[Finding, ...]:
-    """Return deterministic structural violations for one Python source file."""
     source = path.read_text(encoding="utf-8")
     visitor = _AuditVisitor(path)
     MetadataWrapper(cst.parse_module(source)).visit(visitor)

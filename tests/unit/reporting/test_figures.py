@@ -6,6 +6,7 @@ import pyarrow as pa
 import pytest
 
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.paths import ExperimentSlug
 from trajcert.reporting.figures import (
     FigureRenderResult,
     Panel,
@@ -28,6 +29,7 @@ from trajcert.storage import (
     SpecificationDigest,
     file_digest,
 )
+from trajcert.types import ColumnName
 
 _DIGEST = "0" * 64
 _TWO_SOURCES = 2
@@ -37,9 +39,9 @@ def test_figure_render_requires_figure_source_role(tmp_path: Path) -> None:
     descriptor = PublicationSourceDescriptor(
         source_path=Path("outputs/figure_x.parquet"),
         source_role=PublicationSourceRole.TABLE,
-        columns=("a",),
-        sort_columns=("a",),
-        owner_experiment="test",
+        columns=(ColumnName("a"),),
+        sort_columns=(ColumnName("a"),),
+        owner_experiment=ExperimentSlug("test"),
     )
     source = VerifiedSourceData(
         descriptor=descriptor,
@@ -146,7 +148,7 @@ def test_anytime_paths_requires_all_four_seed_indices(tmp_path: Path) -> None:
             "beta": [0.05, 0.05],
         }
     )
-    with pytest.raises(InvalidScientificDataError, match="exactly seed indices"):
+    with pytest.raises(InvalidScientificDataError, match="exactly the configured seeds"):
         _ = render_figure(_source("figure_anytime_paths", table), tmp_path)
 
 
@@ -404,9 +406,9 @@ def _source(name: str, table: pa.Table) -> VerifiedSourceData:
         descriptor=PublicationSourceDescriptor(
             source_path=source_path,
             source_role=PublicationSourceRole.FIGURE,
-            columns=tuple(table.column_names),
+            columns=tuple(ColumnName(name) for name in table.column_names),
             sort_columns=(),
-            owner_experiment="test",
+            owner_experiment=ExperimentSlug("test"),
         ),
         table=table,
         lineage=_lineage(source_path),

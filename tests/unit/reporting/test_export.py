@@ -7,7 +7,7 @@ from pathlib import Path
 import pyarrow as pa
 import pytest
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
@@ -207,7 +207,8 @@ def test_require_synthesis_completion_is_blocked_without_completed_evidence(
     workspace = _workspace_with_config(tmp_path)
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     with pytest.raises(SerializationError, match="cannot read artifact"):
-        _ = require_synthesis_completion(workspace, config)
+        _ = active_config.set(config)
+        _ = require_synthesis_completion(workspace)
 
 
 def test_export_report_is_blocked_without_synthesis_completion(tmp_path: Path) -> None:
@@ -253,14 +254,13 @@ def _completed_workspace(tmp_path: Path) -> Path:
     return workspace
 
 
-def _noop_synthesis_completion(_workspace_root: Path, _config: TrajCertConfig) -> None:
+def _noop_synthesis_completion(_workspace_root: Path) -> None:
     pass
 
 
 def _noop_upstream_completions(
     _workspace_root: Path,
     _plan: ExperimentPlan,
-    _config: TrajCertConfig,
     _synthesis_cell: PlannedCell,
 ) -> None:
     pass
@@ -355,7 +355,9 @@ def test_export_report_renders_named_experiment_tree(
 ) -> None:
     workspace = _completed_workspace(tmp_path)
     _export_harness(monkeypatch)
-    result = export_report(workspace, experiment_name="Anytime Coverage Stress")
+    result = export_report(
+        workspace, experiment_name=ExperimentNameValue("Anytime Coverage Stress")
+    )
     assert result.target == workspace / "results" / "experiments" / "anytime-coverage-stress"
     assert result.reused is False
 
@@ -365,7 +367,7 @@ def test_export_report_renders_synthesis_project_summary(
 ) -> None:
     workspace = _completed_workspace(tmp_path)
     _export_harness(monkeypatch)
-    result = export_report(workspace, experiment_name="Statistical Synthesis")
+    result = export_report(workspace, experiment_name=ExperimentNameValue("Statistical Synthesis"))
     assert result.target == workspace / "results" / "project_summary"
     assert result.reused is False
 
@@ -376,7 +378,9 @@ def test_export_report_rejects_ownerless_experiment(
     workspace = _workspace_with_config(tmp_path)
     monkeypatch.setattr(export, "require_synthesis_completion", _noop_synthesis_completion)
     with pytest.raises(InvalidScientificDataError, match="no roadmap publication artifacts"):
-        _ = export_report(workspace, experiment_name="Sequential Sensitivity Utility")
+        _ = export_report(
+            workspace, experiment_name=ExperimentNameValue("Sequential Sensitivity Utility")
+        )
 
 
 def test_export_report_rejects_missing_reproducibility_input(
@@ -411,7 +415,8 @@ def test_require_synthesis_completion_rejects_multiple_cells(
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     monkeypatch.setattr(export, "cells_for_experiment", _duplicate_synthesis_cells)
     with pytest.raises(InvalidScientificDataError, match="must contain exactly one cell"):
-        export.require_synthesis_completion(tmp_path, config)
+        _ = active_config.set(config)
+        export.require_synthesis_completion(tmp_path)
 
 
 def _fixed_component_digest(
@@ -437,15 +442,14 @@ def _synthesis_fingerprint(
 
 def _matching_completion(
     cell: PlannedCell,
-    config: TrajCertConfig,
     *,
     artifact_sha256_map: tuple[ArtifactChecksum, ...],
     dependency_fingerprint: DependencyFingerprint = _SYNTHESIS_FINGERPRINT,
 ) -> CompletionRecord:
-    specification = scientific_specification_digest(config)
+    specification = scientific_specification_digest()
     dependency_specification = scientific_dependency_digest(
         specification,
-        str(cell.identity.semantic_cell_key),
+        cell.identity.semantic_cell_key,
         _COMPONENT_DIGEST,
     )
     return CompletionRecord(
@@ -473,6 +477,7 @@ def _matching_completion(
 
 
 def _synthesis_cell(config: TrajCertConfig) -> PlannedCell:
+    _ = active_config.set(config)
     plan = build_plan(config)
     return cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
 
@@ -482,19 +487,19 @@ def test_require_synthesis_completion_rejects_stale_completion(
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     cell = _synthesis_cell(config)
     monkeypatch.setattr(export, "_validate_upstream_completions", _noop_upstream_completions)
     monkeypatch.setattr(export, "producer_component_digest", _fixed_component_digest)
     monkeypatch.setattr(export, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
     stale = _matching_completion(
         cell,
-        config,
         artifact_sha256_map=(),
         dependency_fingerprint=DependencyFingerprint("stale-fingerprint"),
     )
     _ = write_completion_last(cell_completion_path(cell, workspace).parent, stale)
     with pytest.raises(InvalidScientificDataError, match="stale, incomplete"):
-        export.require_synthesis_completion(workspace, config)
+        export.require_synthesis_completion(workspace)
 
 
 def _stale_completion(_path: Path, _model_type: type[CompletionRecord]) -> CompletionRecord:
@@ -523,6 +528,7 @@ def _stale_completion(_path: Path, _model_type: type[CompletionRecord]) -> Compl
 
 
 def _reordered_plan(config: TrajCertConfig) -> ExperimentPlan:
+    _ = active_config.set(config)
     plan = build_plan(config)
     synthesis = cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
     others = tuple(cell for cell in plan.cells if cell.identity != synthesis.identity)
@@ -538,7 +544,8 @@ def test_require_synthesis_completion_rejects_stale_upstream(
     monkeypatch.setattr(export, "cell_dependency_fingerprint", _fixed_dependency_fingerprint)
     monkeypatch.setattr(export, "read_model", _stale_completion)
     with pytest.raises(InvalidScientificDataError, match="upstream completion is stale"):
-        export.require_synthesis_completion(tmp_path, config)
+        _ = active_config.set(config)
+        export.require_synthesis_completion(tmp_path)
 
 
 def test_export_report_rejects_short_source_commit(
@@ -562,6 +569,7 @@ def test_require_synthesis_completion_verifies_record_checksum(
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     cell = _synthesis_cell(config)
     monkeypatch.setattr(export, "_validate_upstream_completions", _noop_upstream_completions)
     monkeypatch.setattr(export, "producer_component_digest", _fixed_component_digest)
@@ -570,10 +578,10 @@ def test_require_synthesis_completion_verifies_record_checksum(
     audit_path = workspace / synthesis_artifact_paths(cell)[audit_key]
     audit_path.parent.mkdir(parents=True, exist_ok=True)
     _ = audit_path.write_bytes(b"dummy-audit")
-    completion = _matching_completion(cell, config, artifact_sha256_map=())
+    completion = _matching_completion(cell, artifact_sha256_map=())
     _ = write_completion_last(cell_completion_path(cell, workspace).parent, completion)
     with pytest.raises(InvalidScientificDataError, match="record checksum is stale"):
-        export.require_synthesis_completion(workspace, config)
+        export.require_synthesis_completion(workspace)
 
 
 def test_validate_results_layout_accepts_missing_project_summary(tmp_path: Path) -> None:

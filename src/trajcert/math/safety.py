@@ -29,15 +29,13 @@ class SafetyAssessment:
 
 
 class SafetyBudgetCase(DomainModel):
-    # TODO: Consider using a dedicated validity-state type instead of the raw bool/reason nullable pair.
     name: SafetyCaseName
     risk_budget: RiskBudget | None
-    valid: bool #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    valid: bool
     invalid_reason: ReasonCode | None
 
 
 def assess_safety_geometry(summary: ObservableSummary, risk_budget: RiskBudget) -> SafetyAssessment:
-    # TODO: Consider extracting the hard-coded safety-regime ordering into an explicit domain policy.
     beta = _risk_budget(risk_budget)
     harmful = summary.resolved_harmful_mass
     assumption_free_upper = harmful + summary.unresolved_mass
@@ -83,66 +81,65 @@ def safety_budget_cases(
     if minimum is None:
         return (
             SafetyBudgetCase(
-                # TODO: should be enum, this is a closed set of safety case names
-                name=SafetyCaseName("Below resolved harmful mass"),
+                name=SafetyCaseName.BELOW_RESOLVED_HARMFUL_MASS,
                 risk_budget=max(0.0, harmful - resolved_harm_boundary_offset),
                 valid=True,
                 invalid_reason=None,
             ),
             SafetyBudgetCase(
-                name=SafetyCaseName("Between resolved mass and intrinsic boundary"),
+                name=SafetyCaseName.BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY,
                 risk_budget=None,
                 valid=False,
                 invalid_reason=ReasonCode("DEGENERATE_SAFETY_INTERVAL"),
             ),
             SafetyBudgetCase(
-                name=SafetyCaseName("At intrinsic boundary"),
+                name=SafetyCaseName.AT_INTRINSIC_BOUNDARY,
                 risk_budget=None,
                 valid=False,
                 invalid_reason=ReasonCode("NO_RESOLVED_MASS"),
             ),
             SafetyBudgetCase(
-                name=SafetyCaseName("Interior safety frontier"),
+                name=SafetyCaseName.INTERIOR_SAFETY_FRONTIER,
                 risk_budget=None,
                 valid=False,
                 invalid_reason=ReasonCode("NO_RESOLVED_MASS"),
             ),
             SafetyBudgetCase(
-                name=SafetyCaseName("Assumption-free boundary"),
+                name=SafetyCaseName.ASSUMPTION_FREE_BOUNDARY,
                 risk_budget=theta_max,
                 valid=True,
                 invalid_reason=None,
             ),
         )
-    theta_dagger = float(minimum.latent_risk)
+    theta_dagger = minimum.latent_risk
     between_is_valid = harmful != theta_dagger
     return (
         SafetyBudgetCase(
-            name=SafetyCaseName("Below resolved harmful mass"),
-            risk_budget=max(0.0, harmful - float(resolved_harm_boundary_offset)),
+            name=SafetyCaseName.BELOW_RESOLVED_HARMFUL_MASS,
+            risk_budget=max(0.0, harmful - resolved_harm_boundary_offset),
             valid=True,
             invalid_reason=None,
         ),
         SafetyBudgetCase(
-            name=SafetyCaseName("Between resolved mass and intrinsic boundary"),
+            name=SafetyCaseName.BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY,
             risk_budget=((harmful + theta_dagger) / 2.0) if between_is_valid else None,
             valid=between_is_valid,
             invalid_reason=None if between_is_valid else ReasonCode("DEGENERATE_SAFETY_INTERVAL"),
         ),
         SafetyBudgetCase(
-            name=SafetyCaseName("At intrinsic boundary"),
+            name=SafetyCaseName.AT_INTRINSIC_BOUNDARY,
             risk_budget=theta_dagger,
             valid=True,
             invalid_reason=None,
         ),
         SafetyBudgetCase(
-            name=SafetyCaseName("Interior safety frontier"),
+            name=SafetyCaseName.INTERIOR_SAFETY_FRONTIER,
             risk_budget=(theta_dagger + theta_max) / 2.0,
             valid=True,
             invalid_reason=None,
         ),
         SafetyBudgetCase(
-            name=SafetyCaseName("Assumption-free boundary"),
+            name=SafetyCaseName.ASSUMPTION_FREE_BOUNDARY,
             risk_budget=theta_max,
             valid=True,
             invalid_reason=None,
@@ -150,8 +147,7 @@ def safety_budget_cases(
     )
 
 
-def _risk_budget(value: RiskBudget) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider using a proper alias type for the validated numeric risk budget.
+def _risk_budget(value: RiskBudget) -> RiskBudget:
     if not isfinite(value) or value < 0.0 or value > 1.0:
         raise InvalidScientificDataError("risk budget must be finite and lie in [0, 1]")
     return value

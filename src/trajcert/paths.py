@@ -7,9 +7,16 @@ from math import isnan
 from pathlib import Path
 from typing import NewType
 
+from trajcert.config import active_config
 from trajcert.exceptions import SerializationError
+from trajcert.types import (
+    DecimalCoefficient,
+    DecimalDigits,
+    FiniteFloat,
+    FixedNotationExponent,
+    NumericSign,
+)
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
 _WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
 
 ExperimentSlug = NewType("ExperimentSlug", str)
@@ -70,7 +77,7 @@ def fsync_directory(directory: Path) -> None:
         os.close(descriptor)
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
+
 def semantic_slug(value: str) -> CoordinateToken:
     lowered = value.lower()
     output: list[str] = []
@@ -89,68 +96,59 @@ def semantic_slug(value: str) -> CoordinateToken:
     return CoordinateToken(rendered)
 
 
-# TODO: should be in yaml and accessed through config
-_MAX_FIXED_NOTATION_EXPONENT = 21
-# TODO: should be in yaml and accessed through config
-_MIN_FIXED_NOTATION_EXPONENT = -6
-
-
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
-def canonical_number_token(value: float) -> CoordinateToken:
+def canonical_number_token(value: FiniteFloat) -> CoordinateToken:
     if isnan(value) or value in (float("inf"), float("-inf")):
         raise SerializationError("semantic numeric path coordinate must be finite")
     if value == 0.0:
         return CoordinateToken("0")
     sign, coefficient, exponent = _parsed_coefficient(value)
     integer, fractional = _split_coefficient(coefficient)
-    digits = (integer + fractional).lstrip("0") or "0"
+    digits = DecimalDigits((integer + fractional).lstrip("0") or "0")
     decimal_position = _decimal_position(integer, fractional)
     n = decimal_position + exponent
-    digits = digits.rstrip("0") or "0"
+    digits = DecimalDigits(digits.rstrip("0") or "0")
     return CoordinateToken(sign + _format_number_token(digits, n))
 
 
-# TODO: Consider using a proper alias type or whatever already exists with actually fits this
-def _parsed_coefficient(value: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                        ) -> tuple[str, str, int]: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _parsed_coefficient(
+    value: FiniteFloat,
+) -> tuple[NumericSign, DecimalCoefficient, FixedNotationExponent]:
     representation = repr(value)
     if representation.startswith("-"):
-        sign = "-"
+        sign = NumericSign("-")
         representation = representation[1:]
     else:
-        sign = ""
+        sign = NumericSign("")
     if "e" in representation or "E" in representation:
         coefficient, exponent_text = representation.lower().split("e", maxsplit=1)
-        return sign, coefficient, int(exponent_text)
-    return sign, representation, 0
+        return sign, DecimalCoefficient(coefficient), int(exponent_text)
+    return sign, DecimalCoefficient(representation), 0
 
 
-def _split_coefficient(coefficient: str #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                       ) -> tuple[str, str]: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _split_coefficient(coefficient: DecimalCoefficient) -> tuple[DecimalDigits, DecimalDigits]:
     if "." not in coefficient:
-        return coefficient, ""
+        return DecimalDigits(coefficient), DecimalDigits("")
     integer, fractional = coefficient.split(".", maxsplit=1)
-    return integer, fractional
+    return DecimalDigits(integer), DecimalDigits(fractional)
 
 
-def _decimal_position(integer: str, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                      fractional: str #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                      ) -> int: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _decimal_position(integer: DecimalDigits, fractional: DecimalDigits) -> FixedNotationExponent:
     if integer == "0":
         leading_fraction_zeros = len(fractional) - len(fractional.lstrip("0"))
         return -leading_fraction_zeros
     return len(integer.lstrip("0"))
 
 
-def _format_number_token(digits: str, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                         n: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                         ) -> str: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _format_number_token(digits: DecimalDigits, n: FixedNotationExponent) -> str:
     k = len(digits)
-    if k <= n <= _MAX_FIXED_NOTATION_EXPONENT:
+    serialization = active_config.get().serialization
+    max_exponent = serialization.max_fixed_notation_exponent
+    min_exponent = serialization.min_fixed_notation_exponent
+    if k <= n <= max_exponent:
         return digits + "0" * (n - k)
-    if 0 < n <= _MAX_FIXED_NOTATION_EXPONENT:
+    if 0 < n <= max_exponent:
         return digits[:n] + "." + digits[n:]
-    if _MIN_FIXED_NOTATION_EXPONENT < n <= 0:
+    if min_exponent < n <= 0:
         return "0." + "0" * (-n) + digits
     mantissa = digits[0] if k == 1 else f"{digits[0]}.{digits[1:]}"
     exponent_sign = "+" if n - 1 >= 0 else ""

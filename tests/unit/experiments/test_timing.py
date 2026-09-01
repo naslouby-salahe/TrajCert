@@ -11,7 +11,6 @@ from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.timing import (
     evaluate_partition_coherence,
     evaluate_same_endpoint_different_timing,
-    evaluate_strict_timing_gain,
 )
 from trajcert.math.information import observed_timing_information
 from trajcert.types import LawKey
@@ -96,19 +95,6 @@ def test_partition_coherence_rejects_zero_resolved_mass() -> None:
             _IDENTITY_ATOL,
             _COMPARISON_GUARD,
         )
-
-
-def test_strict_timing_gain_matches_partition_coherence() -> None:
-    fine = _coherent_fine_summary()
-    coarse = _coarse_partition()
-    strict = evaluate_strict_timing_gain(
-        fine, coarse, _SENSITIVITY_BUDGET, _ROOT_ATOL, _IDENTITY_ATOL, _COMPARISON_GUARD
-    )
-    direct = evaluate_partition_coherence(
-        fine, coarse, _SENSITIVITY_BUDGET, _ROOT_ATOL, _IDENTITY_ATOL, _COMPARISON_GUARD
-    )
-    assert strict == direct
-    assert strict.passed
 
 
 def test_same_endpoint_identical_summaries_pass() -> None:

@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from scipy.optimize import minimize
 from scipy.special import expit
 
-from trajcert.config import LegacyPatternMixtureConfig
+from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import (
     Count,
@@ -43,10 +43,8 @@ class PatternMixtureResult(DomainModel):
     points: tuple[PatternMixturePoint, ...]
 
 
-def fit_pattern_mixture(
-    summary: ObservableSummary,
-    config: LegacyPatternMixtureConfig,  # TODO: do not pass config as input param
-) -> PatternMixtureResult:
+def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
+    config = active_config.get().comparators.pattern_mixture
     harmful = np.asarray(summary.harmful_by_band, dtype=np.float64)
     correct = np.asarray(summary.correct_by_band, dtype=np.float64)
     masses = harmful + correct
@@ -63,11 +61,13 @@ def fit_pattern_mixture(
     indices = nonempty.astype(np.float64) + 1.0
     weights = masses[nonempty]
     rates = harmful[nonempty] / weights
-    resolved_rate = float(summary.resolved_harmful_mass / summary.resolved_mass)
+    resolved_rate = summary.resolved_harmful_mass / summary.resolved_mass
     clipped = min(1.0 - config.initial_clip, max(config.initial_clip, resolved_rate))
-    initial = np.asarray((log(clipped / (1.0 - clipped)), 0.0), dtype=np.float64) # TODO: Move these optimizer initialization constants into the comparator configuration.
+    initial = np.asarray(
+        (log(clipped / (1.0 - clipped)), config.initial_slope), dtype=np.float64
+    )
     lower, upper = config.coefficient_bounds
-    bounds = ((lower, upper), (lower, upper)) # TODO: Replace duplicated coefficient bounds with a typed optimizer-parameter specification.
+    bounds = ((lower, upper), (lower, upper))
 
     def objective(coefficients: Vector) -> ObjectiveValue:
         intercept, slope = coefficients

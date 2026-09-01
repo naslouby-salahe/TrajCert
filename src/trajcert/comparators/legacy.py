@@ -11,6 +11,7 @@ from trajcert.types import (
     GammaSensitivity,
     HiddenMassInterval,
     RiskInterval,
+    mass_tuple,
 )
 
 
@@ -33,9 +34,9 @@ def legacy_bandwise_odds_ratio(
 ) -> LegacySensitivityResult:
     if not isfinite(gamma) or gamma < 1.0:
         raise InvalidScientificDataError("legacy Gamma must be finite and at least one")
-    harmful = tuple(float(value) for value in summary.harmful_by_band)
-    correct = tuple(float(value) for value in summary.correct_by_band)
-    unresolved = float(summary.unresolved_mass)
+    harmful = mass_tuple(summary.harmful_by_band)
+    correct = mass_tuple(summary.correct_by_band)
+    unresolved = summary.unresolved_mass
     lower = 0.0
     upper = unresolved
     informative = 0
@@ -61,7 +62,7 @@ def legacy_bandwise_odds_ratio(
     upper = min(unresolved, upper)
     if lower > upper:
         return _incompatible(gamma, informative)
-    harmful_total = float(summary.resolved_harmful_mass)
+    harmful_total = summary.resolved_harmful_mass
     return LegacySensitivityResult(
         gamma=gamma,
         applicability=LegacyApplicability.APPLICABLE,

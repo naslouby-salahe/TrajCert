@@ -11,6 +11,7 @@ from tools.source_audit import (
 )
 
 SOURCE_ROOT = Path(__file__).parents[2] / "src" / "trajcert"
+TESTS_ROOT = Path(__file__).parents[1]
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
@@ -49,5 +50,15 @@ def test_production_has_no_config_threaded_as_a_parameter() -> None:
     findings = audit_tree(SOURCE_ROOT)
     violations = [
         finding.render() for finding in findings if finding.rule_id == RULE_CONFIG_PARAM
+    ]
+    assert not violations, "\n".join(violations)
+
+
+def test_tests_have_no_config_threaded_as_a_parameter() -> None:
+    findings = audit_tree(TESTS_ROOT)
+    violations = [
+        finding.render()
+        for finding in findings
+        if finding.rule_id == RULE_CONFIG_PARAM and "fixtures" not in finding.path.parts
     ]
     assert not violations, "\n".join(violations)

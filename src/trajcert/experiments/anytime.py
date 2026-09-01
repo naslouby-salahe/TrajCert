@@ -67,6 +67,7 @@ from trajcert.math.oracle import (
     solve_information_oracle,
 )
 from trajcert.types import (
+    AbsoluteError,
     AcceptanceUpperLimit,
     ActionChannelId,
     AnytimeConfidenceDelta,
@@ -93,10 +94,7 @@ from trajcert.types import (
     mass_tuple,
 )
 
-_HAND_CASE_STREAM = 0 # TODO:  I believe this could have been handled better
-_PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE # TODO:  I believe this could have been handled better
-_DIAGNOSTIC_NODE_CAP = 1 # TODO: Consider using a proper alias type for the diagnostic node cap or whatever already exists with actually fits this
-_REPRESENTATIVE_STREAM_SEED_INDICES = (0, 1, 2, 3) # TODO: should be in yaml and accessed through config
+_PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 
 
 class SequentialMethod(StrEnum):
@@ -134,16 +132,16 @@ class HandCaseResult(DomainModel):
     partition_bands: BandCount
     expected_state: ScientificState | None
     observed_state: ScientificState | None
-    projection_upper: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
-    oracle_feasible_lower: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
-    anti_conservatism: float | None # TODO: Consider using a proper alias type for anti-conservatism or whatever already exists with actually fits this
-    zero_resolved_mass_plausible: bool | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    projection_upper: RiskValue | None
+    oracle_feasible_lower: RiskValue | None
+    anti_conservatism: AbsoluteError | None
+    zero_resolved_mass_plausible: bool | None
+    passed: bool
 
 
 class CoverageMethodResult(DomainModel):
     method: SequentialMethod
-    applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    applicable: bool
     streams: StreamCount
     anytime_failures: Count
     failure_rate: Probability | None
@@ -151,17 +149,17 @@ class CoverageMethodResult(DomainModel):
 
 class CoverageStressResult(DomainModel):
     methods: tuple[CoverageMethodResult, ...]
-    primary_passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    primary_passed: bool
 
 
 class CoverageMethodEvidence(DomainModel):
-    method_name: str # TODO: Consider using a proper alias type for the method name or use a predefined enumeration of method names
-    applicable: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    method_name: SequentialMethod
+    applicable: bool
     independent_streams: StreamCount
     ever_violations: Count
     violation_rate: Probability | None
     clopper_pearson_upper_95: Probability | None
-    criterion_pass: bool | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    criterion_pass: bool | None
     median_first_certified_n: MedianEventCount | None
     median_certified_update_fraction: Probability | None
 
@@ -172,7 +170,7 @@ class AnytimePathEvidence(DomainModel):
     risk_upper_anytime: RiskValue
     true_theta: Probability
     beta: RiskBudget
-    evidence_gate_pass: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    evidence_gate_pass: bool
     operational_state: AnytimeOperationalState
 
 
@@ -186,7 +184,7 @@ class CoverageEvidenceResult(DomainModel):
     acceptance_upper_limit: AcceptanceUpperLimit
     methods: tuple[CoverageMethodEvidence, ...]
     representative_paths: tuple[AnytimePathEvidence, ...]
-    primary_passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    primary_passed: bool
 
 
 class _StreamCertificationSummary(DomainModel):
@@ -260,12 +258,12 @@ def run_sequential_trace(
 
 
 def run_anytime_hand_case(
-    case_index: CaseIndex, # TODO: Should probably use an enum instead of magic numbers
+    case_index: CaseIndex,
     partition: TrajectoryPartition,
     config: TrajCertConfig,
 ) -> HandCaseResult:
     _ = active_config.set(config)
-    handlers = ( # TODO: i believe there should be a more systematic way to manage hand cases rather than hardcoding them here
+    handlers = (
         _hand_case_insufficient_matured,
         _hand_case_insufficient_resolved,
         _hand_case_model_incompatible,
@@ -278,7 +276,7 @@ def run_anytime_hand_case(
         _hand_case_optimizer_fallback,
     )
     if case_index < 1 or case_index > len(handlers):
-        raise ValueError("hand case index must lie in [1, 10]") # TODO: Should probably validate against the enum instead of hardcoding the range
+        raise ValueError("hand case index must lie in [1, 10]")
     return handlers[case_index - 1](partition)
 
 
@@ -299,7 +297,6 @@ def run_coverage_stress(
         for method, did_fail in _coverage_stream_failures(
             parameters,
             partition,
-            config,
             sensitivity_budget,
             assumption_valid,
             max_events,
@@ -326,14 +323,14 @@ def run_coverage_stress(
 def _coverage_stream_failures(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     sensitivity_budget: SensitivityBudget,
-    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    assumption_valid: bool,
     max_events: EventCount,
     checkpoint_every: EventCount,
     true_risk: RiskValue,
     stream_index: SeedIndex,
-) -> dict[SequentialMethod, bool]: # TODO: Consider replacing this raw mutable status map with a typed result.
+) -> dict[SequentialMethod, bool]:
+    config = active_config.get()
     ledger = generate_stochastic_ledger(
         parameters=parameters,
         partition=partition,
@@ -371,7 +368,6 @@ def _coverage_stream_failures(
             partition,
             running,
             ignorable,
-            config,
             sensitivity_budget,
             assumption_valid,
             true_risk,
@@ -380,16 +376,16 @@ def _coverage_stream_failures(
 
 
 def _record_checkpoint_failures(
-    failed: dict[SequentialMethod, bool], # TODO: Consider replacing this raw mutable status map with a typed result.
+    failed: dict[SequentialMethod, bool],
     state: CategoricalState,
     partition: TrajectoryPartition,
     running: CategoricalConfidenceRegion,
     ignorable: IgnorableDelayResult,
-    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     sensitivity_budget: SensitivityBudget,
-    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    assumption_valid: bool,
     true_risk: RiskValue,
 ) -> None:
+    config = active_config.get()
     envelope = summary_envelope_from_confidence(partition, running)
     projection = _project(envelope, sensitivity_budget)
     if projection.proven_upper < true_risk:
@@ -414,9 +410,9 @@ def _record_checkpoint_failures(
 
 def _coverage_method_result(
     method: SequentialMethod,
-    assumption_valid: bool, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    assumption_valid: bool,
     stream_count: StreamCount,
-    failures: dict[SequentialMethod, Count], # TODO: Consider replacing this raw mutable count map with a typed result.
+    failures: dict[SequentialMethod, Count],
 ) -> CoverageMethodResult:
     applicable = method is not SequentialMethod.IGNORABLE_DELAY or assumption_valid
     failure_rate = (
@@ -438,7 +434,7 @@ def evaluate_configured_coverage_stress(
     config: TrajCertConfig,
 ) -> CoverageEvidenceResult:
     _ = active_config.set(config)
-    parameters = _parameters(case, config)
+    parameters = _parameters(case)
     partition = build_partition(
         finest_band_count=case.band_count,
         band_count=case.band_count,
@@ -463,7 +459,6 @@ def evaluate_configured_coverage_stress(
     trajectory_evidence = _trajcert_trajectory_evidence(
         parameters,
         partition,
-        config,
         rho,
         beta,
     )
@@ -549,10 +544,10 @@ def _clopper_pearson_upper(failures: Count, streams: StreamCount) -> Probability
 def _trajcert_trajectory_evidence(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig, # TODO: access config directly instead of passing it as an argument
     rho: SensitivityBudget,
     beta: RiskBudget,
 ) -> _TrajectoryEvidenceSummary:
+    config = active_config.get()
     stream_count = config.sequential.coverage.streams
     max_events = config.sequential.coverage.max_events
     checkpoint_every = config.sequential.coverage.checkpoint_every
@@ -584,7 +579,7 @@ def _trajcert_trajectory_evidence(
             )
         )
         certified_fractions.append(summary.certified_fraction)
-        if stream_index in _REPRESENTATIVE_STREAM_SEED_INDICES:
+        if stream_index in config.study_design.representative_stream_indices:
             representative.extend(
                 _representative_path_evidence(parameters, beta, trace, stream_index)
             )
@@ -665,10 +660,8 @@ def _true_information(
     )
 
 
-def _parameters(case: CoverageStressCaseConfig,
-                config: TrajCertConfig # TODO: acceess config directly. Do not pass it as an argument. check in tests why this wasn't identified. If no tests exist then add it
-                ) -> LawParameters:
-    law = config.laws[case.law]
+def _parameters(case: CoverageStressCaseConfig) -> LawParameters:
+    law = active_config.get().laws[case.law]
     return LawParameters(
         key=case.law,
         name=LAW_DISPLAY_NAMES[case.law],
@@ -767,15 +760,12 @@ def _risk_budget(
     return min(1.0, solved.latent_risk.upper + case.beta_offset)
 
 
-_HAND_CASE_INSUFFICIENT_MATURED_INDEX = 1 # TODO: Move this to yml and access it through config
-_INSUFFICIENT_MATURED_EVENT_COUNT = 199 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
-    parameters = _law(config, _PRINCIPAL_LAW)
+    case = config.hand_cases.insufficient_matured
+    parameters = _law(_PRINCIPAL_LAW)
     ledger = generate_balanced_prefix_ledger(
-        parameters, partition, _HAND_CASE_STREAM, _INSUFFICIENT_MATURED_EVENT_COUNT
+        parameters, partition, config.hand_cases.stream, case.event_count
     )
     events = mature_ledger(ledger, partition)
     trace = run_sequential_trace(
@@ -785,12 +775,12 @@ def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseR
         config,
         config.budgets.information_nats,
         config.budgets.risk,
-        _INSUFFICIENT_MATURED_EVENT_COUNT,
-        outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
+        case.event_count,
+        outer_max_nodes=config.hand_cases.diagnostic_node_cap,
     )
     observed = trace.checkpoints[-1].assessment.scientific_state
     return _state_result(
-        _HAND_CASE_INSUFFICIENT_MATURED_INDEX,
+        case.case_index,
         partition,
         ScientificState.INSUFFICIENT_EVIDENCE,
         observed,
@@ -798,15 +788,10 @@ def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseR
     )
 
 
-_HAND_CASE_INSUFFICIENT_RESOLVED_INDEX = 2 # TODO: Move this to yml and access it through config
-_INSUFFICIENT_RESOLVED_FINITE_COUNT = 49 # TODO: Move this to yml and access it through config
-_INSUFFICIENT_RESOLVED_UNRESOLVED_COUNT = 151 # TODO: Move this to yml and access it through config
-_INSUFFICIENT_RESOLVED_TOTAL_COUNT = 200 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
-    parameters = _law(config, _PRINCIPAL_LAW)
+    case = config.hand_cases.insufficient_resolved
+    parameters = _law(_PRINCIPAL_LAW)
     full_law = build_full_law(parameters, partition.band_count)
     categories = observable_category_probabilities(full_law)
     finite = categories[:-1]
@@ -819,18 +804,18 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
         )
         for category in finite
     )
-    finite_counts = hamilton_apportionment(conditional, _INSUFFICIENT_RESOLVED_FINITE_COUNT)
-    final_counts = (*finite_counts, _INSUFFICIENT_RESOLVED_UNRESOLVED_COUNT)
+    finite_counts = hamilton_apportionment(conditional, case.finite_count)
+    final_counts = (*finite_counts, case.unresolved_count)
     empirical = tuple(
         ObservableCategoryProbability(
             band_index=category.band_index,
             correctness_label=category.correctness_label,
-            probability=count / _INSUFFICIENT_RESOLVED_TOTAL_COUNT,
+            probability=count / case.total_count,
         )
         for category, count in zip(categories, final_counts, strict=True)
     )
-    sequence = balanced_prefix(empirical, _INSUFFICIENT_RESOLVED_TOTAL_COUNT)
-    identity = _hand_identity(2) # TODO: what's this magic number 2 represent? Consider moving it to config or making it more descriptive or use enum. Identify and fix in the whole project
+    sequence = balanced_prefix(empirical, case.total_count)
+    identity = _hand_identity(case.case_index)
     events = _matured_sequence(identity, empirical, sequence.categories)
     trace = run_sequential_trace(
         events,
@@ -839,12 +824,12 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
         config,
         config.budgets.information_nats,
         config.budgets.risk,
-        _INSUFFICIENT_RESOLVED_TOTAL_COUNT,
-        outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
+        case.total_count,
+        outer_max_nodes=config.hand_cases.diagnostic_node_cap,
     )
     observed = trace.checkpoints[-1].assessment.scientific_state
     return _state_result(
-        _HAND_CASE_INSUFFICIENT_RESOLVED_INDEX,
+        case.case_index,
         partition,
         ScientificState.INSUFFICIENT_EVIDENCE,
         observed,
@@ -852,22 +837,19 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
     )
 
 
-_HAND_CASE_MODEL_INCOMPATIBLE_INDEX = 3 # TODO: Move this to yml and access it through config
-_MODEL_INCOMPATIBLE_RHO_MARGIN = 0.005 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseResult:
+    config = active_config.get()
+    case = config.hand_cases.model_incompatible
     summary = _population_summary(LawKey.TIMING_HARMFUL_LATE, partition)
     tau_value = observed_timing_information(summary)
     if tau_value is None:
         raise ValueError("model-incompatible hand case requires positive resolved mass")
     tau = tau_value
-    rho = tau - min(_MODEL_INCOMPATIBLE_RHO_MARGIN, tau / 2.0)
+    rho = tau - min(case.rho_margin, tau / 2.0)
     projection = _project(singleton_summary_envelope(summary), rho)
-    config = active_config.get()
     assessment = _singleton_assessment(partition, projection, rho, config.budgets.risk)
     return _state_result(
-        _HAND_CASE_MODEL_INCOMPATIBLE_INDEX,
+        case.case_index,
         partition,
         ScientificState.MODEL_INCOMPATIBLE,
         assessment.scientific_state,
@@ -875,19 +857,16 @@ def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseRes
     )
 
 
-_HAND_CASE_INTRINSIC_INDEX = 4 # TODO: Move this to yml and access it through config
-_INTRINSIC_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_intrinsic(partition: TrajectoryPartition) -> HandCaseResult:
+    config = active_config.get()
+    case = config.hand_cases.intrinsic
     summary = _population_summary(LawKey.INTRINSIC_IMPOSSIBILITY, partition)
     tau = observed_timing_information(summary) or 0.0
-    rho = tau + _INTRINSIC_RHO_MARGIN
+    rho = tau + case.rho_margin
     projection = _project(singleton_summary_envelope(summary), rho)
-    config = active_config.get()
     assessment = _singleton_assessment(partition, projection, rho, config.budgets.risk)
     return _state_result(
-        _HAND_CASE_INTRINSIC_INDEX,
+        case.case_index,
         partition,
         ScientificState.INTRINSICALLY_UNCERTIFIABLE,
         assessment.scientific_state,
@@ -895,20 +874,16 @@ def _hand_case_intrinsic(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_CERTIFIED_INDEX = 5 # TODO: Move this to yml and access it through config
-_CERTIFIED_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
-_CERTIFIED_BETA_MARGIN = 0.005 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_certified(partition: TrajectoryPartition) -> HandCaseResult:
+    case = active_config.get().hand_cases.certified
     summary = _population_summary(_PRINCIPAL_LAW, partition)
     tau = observed_timing_information(summary) or 0.0
-    rho = tau + _CERTIFIED_RHO_MARGIN
+    rho = tau + case.rho_margin
     projection = _project(singleton_summary_envelope(summary), rho)
-    beta = min(1.0, projection.proven_upper + _CERTIFIED_BETA_MARGIN)
+    beta = min(1.0, projection.proven_upper + case.beta_margin)
     assessment = _singleton_assessment(partition, projection, rho, beta)
     return _state_result(
-        _HAND_CASE_CERTIFIED_INDEX,
+        case.case_index,
         partition,
         ScientificState.CERTIFIED,
         assessment.scientific_state,
@@ -916,17 +891,14 @@ def _hand_case_certified(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_UNCERTIFIED_INDEX = 6 # TODO: Move this to yml and access it through config
-_UNCERTIFIED_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_uncertified(partition: TrajectoryPartition) -> HandCaseResult:
+    case = active_config.get().hand_cases.uncertified
     summary = _population_summary(_PRINCIPAL_LAW, partition)
     tau = observed_timing_information(summary) or 0.0
     minimum = minimum_information_point(summary)
     if minimum is None:
         raise ValueError("uncertified hand case requires a nondegenerate minimum")
-    rho = tau + _UNCERTIFIED_RHO_MARGIN
+    rho = tau + case.rho_margin
     projection = _project(singleton_summary_envelope(summary), rho)
     assessment = _singleton_assessment(
         partition,
@@ -935,7 +907,7 @@ def _hand_case_uncertified(partition: TrajectoryPartition) -> HandCaseResult:
         minimum.latent_risk,
     )
     return _state_result(
-        _HAND_CASE_UNCERTIFIED_INDEX,
+        case.case_index,
         partition,
         ScientificState.UNCERTIFIED,
         assessment.scientific_state,
@@ -943,18 +915,10 @@ def _hand_case_uncertified(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_ZERO_RESOLVED_PLAUSIBLE_INDEX = 7 # TODO: Move this to yml and access it through config
-_ZERO_RESOLVED_BAND_MASS_SCALE = 0.2 # TODO: Move this to yml and access it through config
-_ZERO_RESOLVED_UNRESOLVED_LOWER = 0.8 # TODO: Move this to yml and access it through config
-_ZERO_RESOLVED_RESOLVED_MASS_UPPER = 0.1 # TODO: Move this to yml and access it through config
-_ZERO_RESOLVED_ENTROPY_SCALE = 0.2 # TODO: Move this to yml and access it through config
-_ZERO_RESOLVED_GATE_MATURED = 200 # TODO: Move this to yml and access it through config
-_ZERO_RESOLVED_GATE_RESOLVED = 50 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_zero_resolved_plausible(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
-    band_upper = _ZERO_RESOLVED_BAND_MASS_SCALE / (2.0 * partition.band_count)
+    case = config.hand_cases.zero_resolved_plausible
+    band_upper = case.band_mass_scale / (2.0 * partition.band_count)
     harmful = tuple(
         ScalarEnvelope(lower=0.0, upper=band_upper) for _ in range(partition.band_count)
     )
@@ -965,17 +929,17 @@ def _hand_case_zero_resolved_plausible(partition: TrajectoryPartition) -> HandCa
         partition=partition,
         harmful_by_band=harmful,
         correct_by_band=correct,
-        unresolved=ScalarEnvelope(lower=_ZERO_RESOLVED_UNRESOLVED_LOWER, upper=1.0),
-        resolved_harmful=ScalarEnvelope(lower=0.0, upper=_ZERO_RESOLVED_RESOLVED_MASS_UPPER),
-        resolved_correct=ScalarEnvelope(lower=0.0, upper=_ZERO_RESOLVED_RESOLVED_MASS_UPPER),
-        resolved_entropy=ScalarEnvelope(lower=0.0, upper=_ZERO_RESOLVED_ENTROPY_SCALE * log(2.0)),
+        unresolved=ScalarEnvelope(lower=case.unresolved_lower, upper=1.0),
+        resolved_harmful=ScalarEnvelope(lower=0.0, upper=case.resolved_mass_upper),
+        resolved_correct=ScalarEnvelope(lower=0.0, upper=case.resolved_mass_upper),
+        resolved_entropy=ScalarEnvelope(lower=0.0, upper=case.entropy_scale * log(2.0)),
     )
     projection = _project(
         envelope,
         config.budgets.information_nats,
-        outer_max_nodes=_DIAGNOSTIC_NODE_CAP,
+        outer_max_nodes=config.hand_cases.diagnostic_node_cap,
     )
-    state = _gate_state(partition, _ZERO_RESOLVED_GATE_MATURED, _ZERO_RESOLVED_GATE_RESOLVED)
+    state = _gate_state(partition, case.gate_matured, case.gate_resolved)
     assessment = classify_certification(
         state=state,
         projection=projection,
@@ -992,7 +956,7 @@ def _hand_case_zero_resolved_plausible(partition: TrajectoryPartition) -> HandCa
         else ScientificState.UNCERTIFIED
     )
     return HandCaseResult(
-        case_index=_HAND_CASE_ZERO_RESOLVED_PLAUSIBLE_INDEX,
+        case_index=case.case_index,
         partition_bands=partition.band_count,
         expected_state=expected,
         observed_state=assessment.scientific_state,
@@ -1004,11 +968,9 @@ def _hand_case_zero_resolved_plausible(partition: TrajectoryPartition) -> HandCa
     )
 
 
-_HAND_CASE_NO_UNRESOLVED_INDEX = 8 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_no_unresolved(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
+    case_index = config.hand_cases.no_unresolved.case_index
     harmful_total = config.budgets.risk
     harmful = np.full(
         partition.band_count,
@@ -1042,7 +1004,7 @@ def _hand_case_no_unresolved(partition: TrajectoryPartition) -> HandCaseResult:
         and abs(projection.proven_upper - harmful_total) <= config.numerics.identity_atol
     )
     return HandCaseResult(
-        case_index=_HAND_CASE_NO_UNRESOLVED_INDEX,
+        case_index=case_index,
         partition_bands=partition.band_count,
         expected_state=ScientificState.CERTIFIED,
         observed_state=assessment.scientific_state,
@@ -1054,38 +1016,31 @@ def _hand_case_no_unresolved(partition: TrajectoryPartition) -> HandCaseResult:
     )
 
 
-_HAND_CASE_SIMPLEX_BOUNDARY_INDEX = 9 # TODO: Move this to yml and access it through config
-_SIMPLEX_BOUNDARY_HARMFUL_MASS_SCALE = 0.1 # TODO: Move this to yml and access it through config
-_SIMPLEX_BOUNDARY_CORRECT_MASS_SCALE = 0.7 # TODO: Move this to yml and access it through config
-_SIMPLEX_BOUNDARY_UNRESOLVED_MASS = 0.2 # TODO: Move this to yml and access it through config
-_SIMPLEX_BOUNDARY_HIDDEN_TERMINAL_HARMFUL = 0.05 # TODO: Move this to yml and access it through config
-_SIMPLEX_BOUNDARY_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
+    case = config.hand_cases.simplex_boundary
     harmful = np.zeros(partition.band_count, dtype=np.float64)
-    harmful[1:] = _SIMPLEX_BOUNDARY_HARMFUL_MASS_SCALE / (partition.band_count - 1)
+    harmful[1:] = case.harmful_mass_scale / (partition.band_count - 1)
     correct = np.full(
         partition.band_count,
-        _SIMPLEX_BOUNDARY_CORRECT_MASS_SCALE / partition.band_count,
+        case.correct_mass_scale / partition.band_count,
         dtype=np.float64,
     )
     summary = summarize_observable_masses(
         partition,
         harmful,
         correct,
-        _SIMPLEX_BOUNDARY_UNRESOLVED_MASS,
+        case.unresolved_mass,
         config.numerics.comparison_guard,
     )
     information_true = direct_mutual_information(
         mass_tuple(harmful),
         mass_tuple(correct),
-        _SIMPLEX_BOUNDARY_UNRESOLVED_MASS,
-        _SIMPLEX_BOUNDARY_HIDDEN_TERMINAL_HARMFUL,
+        case.unresolved_mass,
+        case.hidden_terminal_harmful,
         config.numerics.oracle_digits,
     )
-    rho = information_true + _SIMPLEX_BOUNDARY_RHO_MARGIN
+    rho = information_true + case.rho_margin
     projection = _project(singleton_summary_envelope(summary), rho)
     oracle = solve_information_oracle(
         summary, rho, config.numerics.oracle_digits, config.numerics.oracle_bracket_width
@@ -1097,7 +1052,7 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
         None if oracle_upper is None else max(0.0, oracle_upper - projection.proven_upper)
     )
     return HandCaseResult(
-        case_index=_HAND_CASE_SIMPLEX_BOUNDARY_INDEX,
+        case_index=case.case_index,
         partition_bands=partition.band_count,
         expected_state=None,
         observed_state=None,
@@ -1109,16 +1064,12 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
     )
 
 
-_HAND_CASE_OPTIMIZER_FALLBACK_INDEX = 10 # TODO: Move this to yml and access it through config
-_OPTIMIZER_FALLBACK_EVENT_COUNT = 500 # TODO: Move this to yml and access it through config
-_OPTIMIZER_FALLBACK_RHO_MARGIN = 0.01 # TODO: Move this to yml and access it through config
-
-
 def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
-    parameters = _law(config, _PRINCIPAL_LAW)
+    case = config.hand_cases.optimizer_fallback
+    parameters = _law(_PRINCIPAL_LAW)
     ledger = generate_balanced_prefix_ledger(
-        parameters, partition, _HAND_CASE_STREAM, _OPTIMIZER_FALLBACK_EVENT_COUNT
+        parameters, partition, config.hand_cases.stream, case.event_count
     )
     events = mature_ledger(ledger, partition)
     state = initialize_categorical_state(ledger.identity, partition)
@@ -1141,9 +1092,9 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
         full_law.terminal_harmful,
         config.numerics.oracle_digits,
     )
-    rho = information_true + _OPTIMIZER_FALLBACK_RHO_MARGIN
+    rho = information_true + case.rho_margin
     envelope = summary_envelope_from_confidence(partition, running)
-    projection = _project(envelope, rho, outer_max_nodes=_DIAGNOSTIC_NODE_CAP)
+    projection = _project(envelope, rho, outer_max_nodes=config.hand_cases.diagnostic_node_cap)
     oracle = feasible_projection_lower_oracle(
         _oracle_input(envelope),
         rho,
@@ -1161,7 +1112,7 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
         ProjectionTerminationReason.CONVERGED,
     }
     return HandCaseResult(
-        case_index=_HAND_CASE_OPTIMIZER_FALLBACK_INDEX,
+        case_index=case.case_index,
         partition_bands=partition.band_count,
         expected_state=None,
         observed_state=None,
@@ -1263,7 +1214,7 @@ def _population_summary(
     partition: TrajectoryPartition,
 ) -> ObservableSummary:
     config = active_config.get()
-    parameters = _law(config, law_key)
+    parameters = _law(law_key)
     return summarize_full_law(
         partition,
         build_full_law(parameters, partition.band_count),
@@ -1271,11 +1222,8 @@ def _population_summary(
     )
 
 
-def _law(
-    config: TrajCertConfig, # TODO: do not pass config as input param, access it directly
-    law_key: LawKey,
-) -> LawParameters:
-    law = config.laws[law_key]
+def _law(law_key: LawKey) -> LawParameters:
+    law = active_config.get().laws[law_key]
     return LawParameters(
         key=law_key,
         name=LAW_DISPLAY_NAMES[law_key],

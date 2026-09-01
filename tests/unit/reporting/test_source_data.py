@@ -14,6 +14,7 @@ from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.safety import (
     CompatibilityFloorBehaviorResult,
+    CompatibilitySweepLabel,
     CompatibilitySweepPoint,
     CompatibilitySweepStatus,
     SafetyCaseEvaluation,
@@ -337,7 +338,6 @@ def test_population_rho_utility_rows_maps_population_evidence() -> None:
 
 
 def test_partition_timing_rows_marks_fine_subset_and_theorem_condition() -> None:
-    config = _config()
     result = PartitionCoherenceResult(
         passed=True,
         fine_tau=0.1,
@@ -358,7 +358,7 @@ def test_partition_timing_rows_marks_fine_subset_and_theorem_condition() -> None
         rho=0.05,
         result=result,
     )
-    row = partition_timing_rows((evidence,), config)[0]
+    row = partition_timing_rows((evidence,))[0]
     assert row.fine_subset_coarse is True
     assert row.theorem_condition is True
     assert row.passed is True
@@ -367,7 +367,6 @@ def test_partition_timing_rows_marks_fine_subset_and_theorem_condition() -> None
 
 
 def test_partition_timing_rows_fails_when_fine_interval_escapes_coarse() -> None:
-    config = _config()
     result = PartitionCoherenceResult(
         passed=True,
         fine_tau=0.1,
@@ -388,13 +387,12 @@ def test_partition_timing_rows_fails_when_fine_interval_escapes_coarse() -> None
         rho=0.05,
         result=result,
     )
-    row = partition_timing_rows((evidence,), config)[0]
+    row = partition_timing_rows((evidence,))[0]
     assert row.fine_subset_coarse is False
     assert row.passed is False
 
 
 def test_partition_timing_rows_zero_gain_fails_theorem_condition() -> None:
-    config = _config()
     result = PartitionCoherenceResult(
         passed=True,
         fine_tau=0.1,
@@ -415,13 +413,12 @@ def test_partition_timing_rows_zero_gain_fails_theorem_condition() -> None:
         rho=0.05,
         result=result,
     )
-    row = partition_timing_rows((evidence,), config)[0]
+    row = partition_timing_rows((evidence,))[0]
     assert row.theorem_condition is False
     assert row.passed is True
 
 
 def test_partition_timing_rows_rejects_incompatible_risk_intervals() -> None:
-    config = _config()
     result = PartitionCoherenceResult(
         passed=True,
         fine_tau=0.1,
@@ -445,7 +442,7 @@ def test_partition_timing_rows_rejects_incompatible_risk_intervals() -> None:
     with pytest.raises(
         InvalidScientificDataError, match="compatible fine and coarse risk intervals"
     ):
-        _ = partition_timing_rows((evidence,), config)
+        _ = partition_timing_rows((evidence,))
 
 
 def test_compatibility_safety_evidence_combines_sharpness_and_safety() -> None:
@@ -481,13 +478,13 @@ def test_compatibility_safety_evidence_skips_points_without_comparison() -> None
         tau=0.02,
         points=(
             CompatibilitySweepPoint(
-                label="below",
+                label=CompatibilitySweepLabel.BELOW,
                 rho=None,
                 status=CompatibilitySweepStatus.NOT_APPLICABLE_BELOW_ZERO_INFORMATION_BUDGET,
                 comparison=None,
             ),
             CompatibilitySweepPoint(
-                label="at",
+                label=CompatibilitySweepLabel.AT,
                 rho=0.05,
                 status=CompatibilitySweepStatus.APPLICABLE,
                 comparison=_solver_comparison(),
@@ -515,7 +512,7 @@ def test_compatibility_safety_evidence_rejects_empty_inputs() -> None:
 def test_compatibility_safety_evidence_skips_degenerate_safety_cases() -> None:
     invalid = SafetyCaseEvaluation(
         case=SafetyBudgetCase(
-            name=SafetyCaseName("Between resolved mass and intrinsic boundary"),
+            name=SafetyCaseName.BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY,
             risk_budget=None,
             valid=False,
             invalid_reason=ReasonCode("DEGENERATE_SAFETY_INTERVAL"),
@@ -564,8 +561,8 @@ def test_compatibility_safety_rows_maps_evidence_fields() -> None:
 
 def test_partition_coherence_figure_rows_builds_exact_family() -> None:
     config = _config()
-    population, same_endpoint = _coherence_family(config)
-    rows = partition_coherence_figure_rows(population, same_endpoint, config)
+    population, same_endpoint = _coherence_family()
+    rows = partition_coherence_figure_rows(population, same_endpoint)
     expected_count = _POPULATION_LAW_COUNT * len(config.grids.partitions) + len(
         config.grids.partitions
     )
@@ -577,69 +574,62 @@ def test_partition_coherence_figure_rows_builds_exact_family() -> None:
 
 
 def test_partition_coherence_figure_rows_rejects_missing_family_member() -> None:
-    config = _config()
-    population, same_endpoint = _coherence_family(config)
+    population, same_endpoint = _coherence_family()
     with pytest.raises(InvalidScientificDataError, match="evidence mismatch"):
-        _ = partition_coherence_figure_rows(population[:-1], same_endpoint, config)
+        _ = partition_coherence_figure_rows(population[:-1], same_endpoint)
 
 
 def test_partition_coherence_figure_rows_rejects_duplicate_evidence() -> None:
-    config = _config()
-    population, same_endpoint = _coherence_family(config)
+    population, same_endpoint = _coherence_family()
     with pytest.raises(InvalidScientificDataError, match="contains duplicates"):
         _ = partition_coherence_figure_rows(
-            tuple((*population, population[0])), same_endpoint, config
+            tuple((*population, population[0])), same_endpoint
         )
 
 
 def test_partition_coherence_figure_rows_rejects_off_config_sensitivity() -> None:
-    config = _config()
-    population, same_endpoint = _coherence_family(config)
+    population, same_endpoint = _coherence_family()
     bad_result = population[0].result.model_copy(update={"sensitivity_budget": 0.2})
     bad = population[0].model_copy(update={"result": bad_result})
     with pytest.raises(InvalidScientificDataError, match="configured fixed sensitivity"):
-        _ = partition_coherence_figure_rows(tuple((*population[1:], bad)), same_endpoint, config)
+        _ = partition_coherence_figure_rows(tuple((*population[1:], bad)), same_endpoint)
 
 
 def test_partition_coherence_figure_rows_rejects_incompatible_risk_intervals() -> None:
-    config = _config()
-    population, same_endpoint = _coherence_family(config)
+    population, same_endpoint = _coherence_family()
     no_tau = population[0].model_copy(
         update={"result": population[0].result.model_copy(update={"tau": None})}
     )
     with pytest.raises(InvalidScientificDataError, match="requires compatible risk intervals"):
-        _ = partition_coherence_figure_rows(tuple((*population[1:], no_tau)), same_endpoint, config)
+        _ = partition_coherence_figure_rows(tuple((*population[1:], no_tau)), same_endpoint)
     no_timing = same_endpoint[0].model_copy(
         update={"result": same_endpoint[0].result.model_copy(update={"timing_lower": None})}
     )
     with pytest.raises(InvalidScientificDataError, match="compatible timed risk interval"):
         _ = partition_coherence_figure_rows(
-            population, tuple((*same_endpoint[1:], no_timing)), config
+            population, tuple((*same_endpoint[1:], no_timing))
         )
 
 
 def test_partition_coherence_figure_rows_rejects_mismatched_same_endpoint_bands() -> None:
-    config = _config()
-    population, same_endpoint = _coherence_family(config)
+    population, same_endpoint = _coherence_family()
     bad = same_endpoint[0].model_copy(update={"partition_band_count": 3})
     with pytest.raises(InvalidScientificDataError, match="same-endpoint partition band count"):
-        _ = partition_coherence_figure_rows(population, tuple((*same_endpoint[1:], bad)), config)
+        _ = partition_coherence_figure_rows(population, tuple((*same_endpoint[1:], bad)))
 
 
 def test_partition_coherence_figure_rows_rejects_mismatched_population_bands() -> None:
-    config = _config()
-    population, same_endpoint = _coherence_family(config)
+    population, same_endpoint = _coherence_family()
     bad = population[0].model_copy(update={"partition_band_count": 3})
     with pytest.raises(InvalidScientificDataError, match="population partition band count"):
-        _ = partition_coherence_figure_rows(tuple((*population[1:], bad)), same_endpoint, config)
+        _ = partition_coherence_figure_rows(tuple((*population[1:], bad)), same_endpoint)
 
 
 def test_partition_coherence_figure_rows_rejects_mismatched_same_endpoint_sensitivity() -> None:
-    config = _config()
-    population, same_endpoint = _coherence_family(config)
+    population, same_endpoint = _coherence_family()
     bad = same_endpoint[0].model_copy(update={"rho": 0.2})
     with pytest.raises(InvalidScientificDataError, match="same-endpoint evidence must use"):
-        _ = partition_coherence_figure_rows(population, tuple((*same_endpoint[1:], bad)), config)
+        _ = partition_coherence_figure_rows(population, tuple((*same_endpoint[1:], bad)))
 
 
 def test_source_descriptors_enumerate_tables_and_figures() -> None:
@@ -888,9 +878,10 @@ def _same_endpoint_result() -> SameEndpointTimingResult:
     )
 
 
-def _coherence_family(
-    config: TrajCertConfig,
-) -> tuple[tuple[PopulationFigureEvidence, ...], tuple[SameEndpointFigureEvidence, ...]]:
+def _coherence_family() -> (
+    tuple[tuple[PopulationFigureEvidence, ...], tuple[SameEndpointFigureEvidence, ...]]
+):
+    config = active_config.get()
     target_rho = config.study_design.partition_coherence_figure_rho
     population_laws = (
         LAW_DISPLAY_NAMES[LawKey.TIMING_HARMFUL_LATE],
@@ -947,7 +938,7 @@ def _solver_comparison() -> SolverOracleComparison:
 def _safety_case_evaluation() -> SafetyCaseEvaluation:
     return SafetyCaseEvaluation(
         case=SafetyBudgetCase(
-            name=SafetyCaseName("Interior safety frontier"),
+            name=SafetyCaseName.INTERIOR_SAFETY_FRONTIER,
             risk_budget=0.05,
             valid=True,
             invalid_reason=None,

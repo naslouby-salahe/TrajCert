@@ -5,7 +5,7 @@ from pathlib import Path
 import pyarrow as pa
 import pytest
 
-from trajcert.config import TrajCertConfig
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.reporting.export import (
@@ -67,8 +67,9 @@ def test_publication_contract_has_exact_eight_tables_and_eight_figures() -> None
 
 def test_report_is_blocked_without_statistical_synthesis_completion(tmp_path: Path) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
     with pytest.raises((InvalidScientificDataError, SerializationError)):
-        _ = require_synthesis_completion(tmp_path, config)
+        _ = require_synthesis_completion(tmp_path)
 
 
 def test_results_allowlist_rejects_debug_or_cache_artifacts(tmp_path: Path) -> None:
@@ -103,6 +104,7 @@ def test_different_report_tree_requires_explicit_overwrite(tmp_path: Path) -> No
 
 
 def test_computational_scaling_renderer_emits_svg_and_png(tmp_path: Path) -> None:
+    _ = active_config.set(TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH))
     source = _scaling_source()
     rendered = render_figure(source, tmp_path)
     assert rendered.svg.destination_path.read_text(encoding="utf-8").startswith("<?xml")
@@ -110,6 +112,7 @@ def test_computational_scaling_renderer_emits_svg_and_png(tmp_path: Path) -> Non
 
 
 def test_figure_renderer_is_byte_deterministic(tmp_path: Path) -> None:
+    _ = active_config.set(TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH))
     source = _scaling_source()
     first = render_figure(source, tmp_path / "first")
     second = render_figure(source, tmp_path / "second")
@@ -120,6 +123,7 @@ def test_figure_renderer_is_byte_deterministic(tmp_path: Path) -> None:
 
 
 def test_table_renderer_preserves_nulls_and_p_value_display_rule(tmp_path: Path) -> None:
+    _ = active_config.set(TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH))
     descriptor = next(
         item for item in table_source_descriptors() if item.source_path.stem == "rho_utility"
     )

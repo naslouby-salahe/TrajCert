@@ -8,6 +8,7 @@ from math import inf, ldexp, nextafter
 import numpy as np
 from flint import arb, ctx
 
+from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelope
@@ -17,17 +18,19 @@ from trajcert.types import (
     ArbitraryPrecisionBits,
     ConvergenceGap,
     DomainModel,
+    HeapSequenceNumber,
     InformationNats,
+    Mass,
+    NonNegativeFloat,
     OuterMaxNodes,
     RiskValue,
+    SearchPredicate,
     SensitivityBudget,
     SurvivingBoxCount,
     ToleranceValue,
+    UnitFloat,
     VisitedNodeCount,
 )
-
-_ENTROPY_MAXIMIZING_PROBABILITY = 0.5 #TODO: this should be in yaml and accessed through config
-_BISECTION_ITERATIONS_PAST_FLOAT64_PRECISION = 80 #TODO: this should be in yaml and accessed through config
 
 
 class ProjectionTerminationReason(StrEnum):
@@ -52,15 +55,15 @@ class ProjectionResult(DomainModel):
 
 @dataclass(frozen=True, slots=True)
 class _Box:
-    harmful_lower: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    harmful_upper: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct_lower: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct_upper: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hidden_lower: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hidden_upper: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful_lower: Mass
+    harmful_upper: Mass
+    correct_lower: Mass
+    correct_upper: Mass
+    hidden_lower: Mass
+    hidden_upper: Mass
 
     @property
-    def widths(self) -> tuple[float, float, float]: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    def widths(self) -> tuple[Mass, Mass, Mass]:
         return (
             self.harmful_upper - self.harmful_lower,
             self.correct_upper - self.correct_lower,
@@ -68,24 +71,24 @@ class _Box:
         )
 
     @property
-    def objective_upper(self) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    def objective_upper(self) -> RiskValue:
         return min(1.0, self.harmful_upper + self.hidden_upper)
 
 
 @dataclass(frozen=True, slots=True)
 class _ProjectionSearch:
-    proven_upper: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    incumbent: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    visited_nodes: int # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    surviving_boxes: int # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    final_gap: float | None # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    proven_upper: RiskValue
+    incumbent: RiskValue | None
+    visited_nodes: VisitedNodeCount
+    surviving_boxes: SurvivingBoxCount
+    final_gap: ConvergenceGap | None
     termination_reason: ProjectionTerminationReason
 
 
 @dataclass(frozen=True, slots=True)
 class _MinimumSearch:
-    proven_lower: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    zero_resolved_mass_plausible: bool
+    proven_lower: NonNegativeFloat
+    zero_resolved_mass_plausible: SearchPredicate
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,7 +96,7 @@ class _ProjectionSearchContext:
     initial: _Box
     envelope: ObservableSummaryEnvelope
     rho: SensitivityBudget
-    gap: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gap: ToleranceValue
     root_atol: ToleranceValue
     identity_atol: ToleranceValue
     comparison_guard: ToleranceValue
@@ -104,7 +107,7 @@ class _IntrinsicSearchContext:
     initial: _Box
     envelope: ObservableSummaryEnvelope
     rho: SensitivityBudget
-    gap: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gap: ToleranceValue
     comparison_guard: ToleranceValue
 
 
@@ -176,7 +179,7 @@ def _singleton_projection(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     comparison_guard: ToleranceValue,
-    precision_bits: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    precision_bits: ArbitraryPrecisionBits,
 ) -> ProjectionResult:
     summary = envelope.exact_summary(comparison_guard)
     risk_set = sharp_risk_set(summary, rho, root_atol, identity_atol)
@@ -207,14 +210,14 @@ def _singleton_projection(
 def _projection_search(
     envelope: ObservableSummaryEnvelope,
     rho: SensitivityBudget,
-    gap: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    node_cap: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gap: ToleranceValue,
+    node_cap: OuterMaxNodes,
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     comparison_guard: ToleranceValue,
 ) -> _ProjectionSearch:
     initial = _initial_box(envelope)
-    queue: list[tuple[float, int, _Box]] = []
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]] = []
     counter = 0
     if _box_possible(initial, envelope):
         heappush(queue, (-initial.objective_upper, counter, initial))
@@ -253,13 +256,13 @@ def _projection_search(
 
 
 def _projection_step(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this and used throughout the code
-    counter: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    incumbent: float | None, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    counter: HeapSequenceNumber,
+    incumbent: RiskValue | None,
     active: _Box,
     context: _ProjectionSearchContext,
-    visited: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> tuple[int, float | None, _ProjectionSearch | None]: # TODO: Do no use primitives like int and float. FOllow the same architecture as the whole project
+    visited: VisitedNodeCount,
+) -> tuple[HeapSequenceNumber, RiskValue | None, _ProjectionSearch | None]:
     if _projection_pruned(active, context.envelope, context.rho, incumbent, context.gap):
         return counter, incumbent, None
     candidate = _verified_incumbent(
@@ -279,7 +282,7 @@ def _projection_step(
     counter = _enqueue_projection_children(
         queue, counter, active, context.initial, context.envelope, context.rho
     )
-    if incumbent is not None and _projection_converged(queue, incumbent, context.gap):
+    if incumbent is not None and _queue_upper(queue, incumbent) - incumbent <= context.gap:
         proven = _queue_upper(queue, incumbent)
         return (
             counter,
@@ -300,26 +303,18 @@ def _projection_pruned(
     active: _Box,
     envelope: ObservableSummaryEnvelope,
     rho: SensitivityBudget,
-    incumbent: float | None, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    gap: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> bool:
+    incumbent: RiskValue | None,
+    gap: ToleranceValue,
+) -> SearchPredicate:
     if _sensitivity_lower(active, envelope) > rho:
         return True
     return incumbent is not None and active.objective_upper - incumbent <= gap
 
 
-def _projection_converged( #TODO: what's the point? Inline this
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this and do not use primitive like int, float
-    incumbent: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    gap: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> bool:
-    return _queue_upper(queue, incumbent) - incumbent <= gap
-
-
 def _final_projection(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    incumbent: float | None,
-    visited: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    incumbent: RiskValue | None,
+    visited: VisitedNodeCount,
     active: _Box | None,
 ) -> _ProjectionSearch:
     proven = _queue_upper(queue, incumbent, active)
@@ -337,9 +332,9 @@ def _final_projection(
 
 
 def _projection_fallback(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    incumbent: float | None,
-    visited: int,
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    incumbent: RiskValue | None,
+    visited: VisitedNodeCount,
     active: _Box | None,
 ) -> _ProjectionSearch:
     proven = _queue_upper(queue, incumbent, active)
@@ -354,13 +349,13 @@ def _projection_fallback(
 
 
 def _enqueue_projection_children(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    counter: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    counter: HeapSequenceNumber,
     box: _Box,
     initial: _Box,
     envelope: ObservableSummaryEnvelope,
     rho: SensitivityBudget,
-) -> int:
+) -> HeapSequenceNumber:
     left, right = _split_box(box, initial)
     for child in (left, right):
         if not _box_possible(child, envelope):
@@ -374,11 +369,11 @@ def _enqueue_projection_children(
 
 def _compatibility_search(
     envelope: ObservableSummaryEnvelope,
-    gap: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    node_cap: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    gap: ToleranceValue,
+    node_cap: OuterMaxNodes,
 ) -> _MinimumSearch:
     initial = _initial_box(envelope)
-    queue: list[tuple[float, int, _Box]] = []
+    queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]] = []
     counter = 0
     initial_lower = _compatibility_box_lower(initial, envelope)
     if _box_possible(initial, envelope):
@@ -409,15 +404,15 @@ def _compatibility_search(
 
 
 def _compatibility_step(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    counter: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]],
+    counter: HeapSequenceNumber,
+    best_upper: InformationNats,
+    lower: InformationNats,
     active: _Box,
     initial: _Box,
     envelope: ObservableSummaryEnvelope,
-    gap: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> tuple[int, float, _MinimumSearch | None]: #TODO: do not use primitives like int and float directly, consider using proper alias types
+    gap: ToleranceValue,
+) -> tuple[HeapSequenceNumber, InformationNats, _MinimumSearch | None]:
     if lower >= best_upper:
         return counter, best_upper, None
     point_upper = _verified_compatibility_point(active, envelope)
@@ -439,11 +434,11 @@ def _compatibility_step(
 
 
 def _compatibility_converged(
-    lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    gap: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> bool:
+    lower: InformationNats,
+    queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]],
+    best_upper: InformationNats,
+    gap: ToleranceValue,
+) -> SearchPredicate:
     if best_upper == inf:
         return False
     global_lower = min(lower, queue[0][0] if queue else lower)
@@ -451,8 +446,8 @@ def _compatibility_converged(
 
 
 def _compatibility_final(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]],
+    best_upper: InformationNats,
     active: _Box | None,
     envelope: ObservableSummaryEnvelope,
 ) -> _MinimumSearch:
@@ -466,13 +461,13 @@ def _compatibility_final(
 
 
 def _enqueue_compatibility_children(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    counter: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]],
+    counter: HeapSequenceNumber,
     box: _Box,
     initial: _Box,
     envelope: ObservableSummaryEnvelope,
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> int: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    best_upper: InformationNats,
+) -> HeapSequenceNumber:
     left, right = _split_box(box, initial)
     for child in (left, right):
         if not _box_possible(child, envelope):
@@ -488,14 +483,14 @@ def _enqueue_compatibility_children(
 def _intrinsic_search(
     envelope: ObservableSummaryEnvelope,
     rho: SensitivityBudget,
-    gap: float,
-    node_cap: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    comparison_guard: float | ToleranceValue, #TODO: do not use primitives like float directly, consider using proper alias types
+    gap: ToleranceValue,
+    node_cap: OuterMaxNodes,
+    comparison_guard: ToleranceValue,
 ) -> _MinimumSearch:
     if _zero_resolved_plausible(envelope):
         return _MinimumSearch(0.0, True)
     initial = _initial_box(envelope)
-    queue: list[tuple[float, int, _Box]] = []
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]] = []
     counter = 0
     if _box_possible(initial, envelope) and _sensitivity_lower(initial, envelope) <= rho:
         heappush(queue, (_intrinsic_box_lower(initial), counter, initial))
@@ -530,13 +525,13 @@ def _intrinsic_search(
 
 
 def _intrinsic_step(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    counter: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    counter: HeapSequenceNumber,
+    best_upper: RiskValue,
+    lower: RiskValue,
     active: _Box,
     context: _IntrinsicSearchContext,
-) -> tuple[int, float, _MinimumSearch | None]:
+) -> tuple[HeapSequenceNumber, RiskValue, _MinimumSearch | None]:
     if lower >= best_upper or _sensitivity_lower(active, context.envelope) > context.rho:
         return counter, best_upper, None
     best_upper = _update_intrinsic_best_upper(
@@ -556,11 +551,11 @@ def _intrinsic_step(
 
 
 def _intrinsic_converged(
-    lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    gap: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> bool:
+    lower: RiskValue,
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    best_upper: RiskValue,
+    gap: ToleranceValue,
+) -> SearchPredicate:
     if best_upper == inf:
         return False
     global_lower = min(lower, queue[0][0] if queue else lower)
@@ -568,8 +563,8 @@ def _intrinsic_converged(
 
 
 def _intrinsic_final(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    best_upper: RiskValue,
     active: _Box | None,
 ) -> _MinimumSearch:
     lower_candidates = [item[0] for item in queue]
@@ -585,9 +580,9 @@ def _update_intrinsic_best_upper(
     box: _Box,
     envelope: ObservableSummaryEnvelope,
     rho: SensitivityBudget,
-    comparison_guard: float | ToleranceValue, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    comparison_guard: ToleranceValue,
+    best_upper: RiskValue,
+) -> RiskValue:
     point = _aggregate_midpoint(box, envelope)
     if point is None:
         return best_upper
@@ -602,14 +597,14 @@ def _update_intrinsic_best_upper(
 
 
 def _enqueue_intrinsic_children(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    counter: int, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    counter: HeapSequenceNumber,
     box: _Box,
     initial: _Box,
     envelope: ObservableSummaryEnvelope,
     rho: SensitivityBudget,
-    best_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> int: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    best_upper: RiskValue,
+) -> HeapSequenceNumber:
     left, right = _split_box(box, initial)
     for child in (left, right):
         if not _box_possible(child, envelope):
@@ -635,7 +630,7 @@ def _initial_box(envelope: ObservableSummaryEnvelope) -> _Box:
     )
 
 
-def _box_possible(box: _Box, envelope: ObservableSummaryEnvelope) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _box_possible(box: _Box, envelope: ObservableSummaryEnvelope) -> SearchPredicate:
     resolved_lower = box.harmful_lower + box.correct_lower
     resolved_upper = box.harmful_upper + box.correct_upper
     required_lower = 1.0 - envelope.unresolved.upper
@@ -646,7 +641,7 @@ def _box_possible(box: _Box, envelope: ObservableSummaryEnvelope) -> bool: # TOD
     return box.hidden_lower <= min(box.hidden_upper, unresolved_upper)
 
 
-def _sensitivity_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _sensitivity_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> InformationNats:
     unresolved_lower = max(
         envelope.unresolved.lower,
         1.0 - box.harmful_upper - box.correct_upper,
@@ -679,7 +674,7 @@ def _sensitivity_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> float:
     )
 
 
-def _compatibility_box_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _compatibility_box_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> InformationNats:
     entropy_lower, _ = _mass_entropy_bounds(
         box.harmful_lower,
         box.harmful_upper,
@@ -689,7 +684,7 @@ def _compatibility_box_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> 
     return max(0.0, entropy_lower - envelope.resolved_entropy.upper)
 
 
-def _intrinsic_box_lower(box: _Box) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _intrinsic_box_lower(box: _Box) -> RiskValue:
     denominator = box.harmful_lower + box.correct_upper
     if denominator <= 0.0:
         return 0.0
@@ -698,7 +693,7 @@ def _intrinsic_box_lower(box: _Box) -> float: # TODO: Consider using a proper al
 
 def _aggregate_midpoint(
     box: _Box, envelope: ObservableSummaryEnvelope
-) -> tuple[float, float, float] | None: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> tuple[Mass, Mass, Mass] | None:
     harmful = (box.harmful_lower + box.harmful_upper) / 2.0
     correct = (box.correct_lower + box.correct_upper) / 2.0
     resolved_target_lower = max(
@@ -727,7 +722,9 @@ def _aggregate_midpoint(
     return harmful, correct, unresolved
 
 
-def _verified_compatibility_point(box: _Box, envelope: ObservableSummaryEnvelope) -> float | None: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _verified_compatibility_point(
+    box: _Box, envelope: ObservableSummaryEnvelope
+) -> InformationNats | None:
     point = _aggregate_midpoint(box, envelope)
     if point is None:
         return None
@@ -751,7 +748,7 @@ def _verified_incumbent(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
     comparison_guard: ToleranceValue,
-) -> float | None: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> RiskValue | None:
     point = _aggregate_midpoint(box, envelope)
     if point is None:
         return None
@@ -776,10 +773,10 @@ def _verified_incumbent(
 
 def _bisected_hidden_mass(
     summary: ObservableSummary,
-    hidden_lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hidden_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    hidden_lower: Mass,
+    hidden_upper: Mass,
     rho: SensitivityBudget,
-) -> float | None: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> Mass | None:
     minimum = _minimum_profile_point(summary)
     if minimum is None:
         return None
@@ -788,7 +785,7 @@ def _bisected_hidden_mass(
         return None
     lower = max(hidden_lower, minimum_hidden)
     upper = hidden_upper
-    for _ in range(_BISECTION_ITERATIONS_PAST_FLOAT64_PRECISION):
+    for _ in range(active_config.get().numerics.bisection_iterations_past_float64_precision):
         candidate = (lower + upper) / 2.0
         if _verified_information_feasible(summary, candidate, rho):
             lower = candidate
@@ -801,10 +798,10 @@ def _bisected_hidden_mass(
 
 def _summary_at_aggregates(
     envelope: ObservableSummaryEnvelope,
-    harmful_total: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct_total: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    unresolved: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    comparison_guard: float | ToleranceValue, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful_total: Mass,
+    correct_total: Mass,
+    unresolved: Mass,
+    comparison_guard: ToleranceValue,
 ) -> ObservableSummary | None:
     harmful = _allocate_total(envelope.harmful_by_band, harmful_total)
     correct = _allocate_total(envelope.correct_by_band, correct_total)
@@ -823,8 +820,8 @@ def _summary_at_aggregates(
 
 
 def _allocate_total(
-    intervals: tuple[ScalarEnvelope, ...], target: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> tuple[float, ...] | None:
+    intervals: tuple[ScalarEnvelope, ...], target: Mass
+) -> tuple[Mass, ...] | None:
     values = [interval.lower for interval in intervals]
     remaining = target - sum(values)
     if remaining < 0.0:
@@ -841,14 +838,14 @@ def _allocate_total(
 
 def _verified_information_feasible(
     summary: ObservableSummary,
-    hidden: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    hidden: Mass,
     rho: SensitivityBudget,
-) -> bool:
+) -> SearchPredicate:
     information = _information_point_arb(summary, hidden)
     return _arb_upper(information) <= rho
 
 
-def _information_point_arb(summary: ObservableSummary, hidden: float) -> arb:
+def _information_point_arb(summary: ObservableSummary, hidden: Mass) -> arb:
     harmful = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
     theta_entropy = _binary_entropy_arb(_arb_exact(harmful + hidden))
@@ -862,7 +859,7 @@ def _information_point_arb(summary: ObservableSummary, hidden: float) -> arb:
     return value
 
 
-def _minimum_profile_point(summary: ObservableSummary) -> tuple[float, float] | None: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _minimum_profile_point(summary: ObservableSummary) -> tuple[RiskValue, InformationNats] | None:
     resolved = summary.resolved_mass
     if resolved <= 0.0:
         return None
@@ -873,7 +870,7 @@ def _minimum_profile_point(summary: ObservableSummary) -> tuple[float, float] | 
     return harmful / resolved, max(0.0, information)
 
 
-def _timing_information(summary: ObservableSummary) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _timing_information(summary: ObservableSummary) -> InformationNats:
     resolved = float(
         binary_entropy_from_masses(
             summary.resolved_harmful_mass, summary.resolved_correct_mass
@@ -886,9 +883,7 @@ def _timing_information(summary: ObservableSummary) -> float: # TODO: Consider u
     return max(0.0, resolved - bandwise)
 
 
-def _binary_entropy_bounds(lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                           upper: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                           ) -> tuple[float, float]: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _binary_entropy_bounds(lower: Mass, upper: Mass) -> tuple[InformationNats, InformationNats]:
     lower = _unit(lower)
     upper = _unit(upper)
     if lower > upper:
@@ -897,17 +892,17 @@ def _binary_entropy_bounds(lower: float, # TODO: Consider using a proper alias t
     right = _binary_entropy_point_arb(upper)
     minimum = min(_arb_lower(left), _arb_lower(right))
     maximum = max(_arb_upper(left), _arb_upper(right))
-    if lower <= _ENTROPY_MAXIMIZING_PROBABILITY <= upper:
+    if lower <= active_config.get().numerics.entropy_maximizing_probability <= upper:
         maximum = max(maximum, _arb_upper(arb(2).log()))
     return max(0.0, minimum), max(0.0, maximum)
 
 
 def _mass_entropy_bounds(
-    left_lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    left_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    right_lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    right_upper: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> tuple[float, float]: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    left_lower: Mass,
+    left_upper: Mass,
+    right_lower: Mass,
+    right_upper: Mass,
+) -> tuple[InformationNats, InformationNats]:
     corners = tuple(
         _mass_entropy_arb(_arb_exact(left), _arb_exact(right))
         for left in (left_lower, left_upper)
@@ -925,7 +920,7 @@ def _mass_entropy_bounds(
     return max(0.0, lower), max(0.0, upper)
 
 
-def _binary_entropy_point_arb(value: float) -> arb:
+def _binary_entropy_point_arb(value: Mass) -> arb:
     return _binary_entropy_arb(_arb_exact(value))
 
 
@@ -1012,16 +1007,16 @@ def _split_box(box: _Box, initial: _Box) -> tuple[_Box, _Box]:
     )
 
 
-def _box_resolution(box: _Box, initial: _Box) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _box_resolution(box: _Box, initial: _Box) -> NonNegativeFloat:
     scales = tuple(max(width, nextafter(0.0, inf)) for width in initial.widths)
     return max(width / scale for width, scale in zip(box.widths, scales, strict=True))
 
 
 def _queue_upper(
-    queue: list[tuple[float, int, _Box]], # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    incumbent: float | None, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    incumbent: RiskValue | None,
     active: _Box | None = None,
-) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+) -> RiskValue:
     values = [item[2].objective_upper for item in queue]
     if active is not None:
         values.append(active.objective_upper)
@@ -1032,7 +1027,7 @@ def _queue_upper(
     return _unit(max(values))
 
 
-def _zero_resolved_plausible(envelope: ObservableSummaryEnvelope) -> bool: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _zero_resolved_plausible(envelope: ObservableSummaryEnvelope) -> SearchPredicate:
     return (
         envelope.resolved_harmful.lower == 0.0
         and envelope.resolved_correct.lower == 0.0
@@ -1040,7 +1035,7 @@ def _zero_resolved_plausible(envelope: ObservableSummaryEnvelope) -> bool: # TOD
     )
 
 
-def _assumption_free_envelope_upper(envelope: ObservableSummaryEnvelope) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _assumption_free_envelope_upper(envelope: ObservableSummaryEnvelope) -> RiskValue:
     return _unit(
         min(
             1.0,
@@ -1050,32 +1045,28 @@ def _assumption_free_envelope_upper(envelope: ObservableSummaryEnvelope) -> floa
     )
 
 
-def _arb_exact(value: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-               ) -> arb:
+def _arb_exact(value: float) -> arb:
     numerator, denominator = value.as_integer_ratio()
     return arb(f"{numerator}/{denominator}")
 
 
-def _arb_interval(lower: float, # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                  upper: float # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                  ) -> arb:
+def _arb_interval(lower: Mass, upper: Mass) -> arb:
     if lower > upper:
         raise NumericalError("invalid Arb interval")
     return _arb_exact(lower).union(_arb_exact(upper))
 
 
-def _arb_lower(value: arb) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _arb_lower(value: arb) -> float:
     mantissa, exponent = value.lower().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, -inf)
 
 
-def _arb_upper(value: arb) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _arb_upper(value: arb) -> float:
     mantissa, exponent = value.upper().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, inf)
 
 
-def _unit(value: float# TODO: Consider using a proper alias type or whatever already exists with actually fits this
-          ) -> float: # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _unit(value: NonNegativeFloat) -> UnitFloat:
     return min(1.0, max(0.0, value))

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 from time import perf_counter_ns
 
-from trajcert.config import TrajCertConfig, active_config
+from trajcert.config import active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.maturity import mature_ledger
 from trajcert.data.partitions import TrajectoryPartition, build_partition
@@ -20,6 +21,7 @@ from trajcert.types import (
     DomainModel,
     EventCount,
     FailureBoundaryLevel,
+    FiniteFloat,
     InformationNats,
     LawKey,
     Mass,
@@ -33,8 +35,7 @@ from trajcert.types import (
     mass_tuple,
 )
 
-_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE  # TODO: Move this study-law selection to YAML and access it through config.
-_NANOSECONDS_PER_MILLISECOND = 1_000_000.0 # TODO: This should be defined in a more central location or configuration
+_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
 
 
 class FailureBoundaryAxis(StrEnum):
@@ -67,18 +68,18 @@ class FailureBoundaryResult(DomainModel):
 
 def evaluate_failure_boundary(
     axis: FailureBoundaryAxis,
-    level: float, # TODO: Consider using a proper alias type for the level or whatever already exists with actually fits this
+    level: FiniteFloat,
 ) -> FailureBoundaryResult:
     config = active_config.get()
     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
-        return _finite_sample_size(int(level), config)
+        return _finite_sample_size(int(level))
     if axis in {
         FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
         FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET,
     }:
         raise ValueError(f"{axis} requires its dedicated evaluator")
-    parameters, partition, rho, beta = _population_coordinate(axis, level, config)
-    summary = _summary(parameters, partition, config)
+    parameters, partition, rho, beta = _population_coordinate(axis, level)
+    summary = _summary(parameters, partition)
     tau = _tau(summary)
     if axis is FailureBoundaryAxis.INFORMATION_MARGIN:
         rho = (tau or 0.0) + level
@@ -94,7 +95,7 @@ def evaluate_failure_boundary(
         root_atol=config.numerics.root_atol,
         identity_atol=config.numerics.identity_atol,
     )
-    state, upper, compatibility, intrinsic = _population_state(solved, rho, beta)
+    population_state = _population_state(solved, rho, beta)
     return FailureBoundaryResult(
         axis=axis,
         level=FailureBoundaryLevel(str(level)),
@@ -102,10 +103,10 @@ def evaluate_failure_boundary(
         sensitivity_budget=rho,
         risk_budget=beta,
         tau=tau,
-        operational_state=state,
-        risk_upper=upper,
-        compatibility_lower=compatibility,
-        intrinsic_risk_lower=intrinsic,
+        operational_state=population_state.operational_state,
+        risk_upper=population_state.risk_upper,
+        compatibility_lower=population_state.compatibility_lower,
+        intrinsic_risk_lower=population_state.intrinsic_risk_lower,
         optimizer_gap=None,
         optimizer_nodes=None,
         runtime_ms=None,
@@ -113,17 +114,17 @@ def evaluate_failure_boundary(
 
 
 def evaluate_terminal_selection_asymmetry(
-    q1: Probability, # TODO: Consider using a typed terminal-selection-asymmetry coordinate rather than separate primitives.
-    q0: Probability, # TODO: Consider using a typed terminal-selection-asymmetry coordinate rather than separate primitives.
+    q1: Probability,
+    q0: Probability,
 ) -> FailureBoundaryResult:
     config = active_config.get()
-    parameters = _base_parameters(config).model_copy(update={"q1": q1, "q0": q0})
-    partition = _partition(config.method.finest_bands, config)
-    summary = _summary(parameters, partition, config)
+    parameters = _base_parameters().model_copy(update={"q1": q1, "q0": q0})
+    partition = _partition(config.method.finest_bands)
+    summary = _summary(parameters, partition)
     rho = config.budgets.information_nats
     beta = config.budgets.risk
     solved = sharp_risk_set(summary, rho, config.numerics.root_atol, config.numerics.identity_atol)
-    state, upper, compatibility, intrinsic = _population_state(solved, rho, beta)
+    population_state = _population_state(solved, rho, beta)
     return FailureBoundaryResult(
         axis=FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
         level=FailureBoundaryLevel(f"q1={q1},q0={q0}"),
@@ -131,10 +132,10 @@ def evaluate_terminal_selection_asymmetry(
         sensitivity_budget=rho,
         risk_budget=beta,
         tau=_tau(summary),
-        operational_state=state,
-        risk_upper=upper,
-        compatibility_lower=compatibility,
-        intrinsic_risk_lower=intrinsic,
+        operational_state=population_state.operational_state,
+        risk_upper=population_state.risk_upper,
+        compatibility_lower=population_state.compatibility_lower,
+        intrinsic_risk_lower=population_state.intrinsic_risk_lower,
         optimizer_gap=None,
         optimizer_nodes=None,
         runtime_ms=None,
@@ -147,13 +148,13 @@ def evaluate_optimizer_node_budget(
     config = active_config.get()
     if node_budget <= 0:
         raise ValueError("optimizer node budget must be positive")
-    parameters = _base_parameters(config)
-    partition = _partition(config.method.finest_bands, config)
+    parameters = _base_parameters()
+    partition = _partition(config.method.finest_bands)
     sample_size = config.failure_boundary.optimizer_sample_size
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=0,  # TODO: Move this fixed stream selection to YAML and access it through config.
+        stream_index=config.determinism.fixture_stream_index,
         event_count=sample_size,
     )
     full_law = build_full_law(parameters, partition.band_count)
@@ -171,7 +172,7 @@ def evaluate_optimizer_node_budget(
         checkpoint_every=sample_size,
         outer_max_nodes=node_budget,
     )
-    elapsed_ms = (perf_counter_ns() - start) / _NANOSECONDS_PER_MILLISECOND
+    elapsed_ms = (perf_counter_ns() - start) / active_config.get().units.nanoseconds_per_millisecond
     checkpoint = trace.checkpoints[-1]
     projection = checkpoint.projection
     state = checkpoint.assessment.scientific_state or ScientificState.UNCERTIFIED
@@ -192,18 +193,19 @@ def evaluate_optimizer_node_budget(
     )
 
 
-def _finite_sample_size(sample_size: EventCount, config: TrajCertConfig) -> FailureBoundaryResult: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
+def _finite_sample_size(sample_size: EventCount) -> FailureBoundaryResult:
     if sample_size <= 0:
         raise ValueError("matured sample size must be positive")
-    parameters = _base_parameters(config)
-    partition = _partition(config.method.finest_bands, config)
+    config = active_config.get()
+    parameters = _base_parameters()
+    partition = _partition(config.method.finest_bands)
     ledger = generate_balanced_prefix_ledger(
         parameters=parameters,
         partition=partition,
-        stream_index=0,  # TODO: Move this fixed stream selection to YAML and access it through config.
+        stream_index=config.determinism.fixture_stream_index,
         event_count=sample_size,
     )
-    truth = _summary(parameters, partition, config)
+    truth = _summary(parameters, partition)
     start = perf_counter_ns()
     trace = run_sequential_trace(
         events=mature_ledger(ledger, partition),
@@ -214,7 +216,7 @@ def _finite_sample_size(sample_size: EventCount, config: TrajCertConfig) -> Fail
         risk_budget=config.budgets.risk,
         checkpoint_every=sample_size,
     )
-    elapsed_ms = (perf_counter_ns() - start) / _NANOSECONDS_PER_MILLISECOND
+    elapsed_ms = (perf_counter_ns() - start) / active_config.get().units.nanoseconds_per_millisecond
     checkpoint = trace.checkpoints[-1]
     state = checkpoint.assessment.scientific_state or ScientificState.UNCERTIFIED
     return FailureBoundaryResult(
@@ -236,10 +238,10 @@ def _finite_sample_size(sample_size: EventCount, config: TrajCertConfig) -> Fail
 
 def _population_coordinate(
     axis: FailureBoundaryAxis,
-    level: float, # TODO: Consider using a proper alias type for the level or whatever already exists with actually fits this
-    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
+    level: FiniteFloat,
 ) -> tuple[LawParameters, TrajectoryPartition, SensitivityBudget, RiskBudget]:
-    parameters = _base_parameters(config)
+    config = active_config.get()
+    parameters = _base_parameters()
     bands = config.method.finest_bands
     rho = config.budgets.information_nats
     beta = config.budgets.risk
@@ -256,11 +258,11 @@ def _population_coordinate(
         bands = int(level)
     elif axis not in {FailureBoundaryAxis.INFORMATION_MARGIN, FailureBoundaryAxis.RISK_OFFSET}:
         raise ValueError(f"unsupported population failure-boundary axis: {axis}")
-    return parameters, _partition(bands, config), rho, beta
+    return parameters, _partition(bands), rho, beta
 
 
-def _base_parameters(config: TrajCertConfig) -> LawParameters: # TODO: Consider accessing configuration through a narrower dependency instead of passing the full config.
-    law = config.laws[_BASE_LAW]
+def _base_parameters() -> LawParameters:
+    law = active_config.get().laws[_BASE_LAW]
     return LawParameters(
         key=_BASE_LAW,
         name=LAW_DISPLAY_NAMES[_BASE_LAW],
@@ -272,39 +274,43 @@ def _base_parameters(config: TrajCertConfig) -> LawParameters: # TODO: Consider 
     )
 
 
-def _partition(bands: int # TODO: Consider using a proper alias type for the number of bands or whatever already exists with actually fits this
-               , config: TrajCertConfig # TODO: Do not pass the entire config. It can be globally accessed
-               ) -> TrajectoryPartition:
+def _partition(bands: BandCount) -> TrajectoryPartition:
     return build_partition(
         finest_band_count=bands,
         band_count=bands,
-        terminal_horizon=config.method.terminal_horizon,
+        terminal_horizon=active_config.get().method.terminal_horizon,
     )
 
 
-def _summary(
-    parameters: LawParameters,
-    partition: TrajectoryPartition,
-    config: TrajCertConfig, # TODO: Do not pass the entire config. It can be globally accessed
-) -> ObservableSummary:
+def _summary(parameters: LawParameters, partition: TrajectoryPartition) -> ObservableSummary:
     return summarize_full_law(
         partition,
         build_full_law(parameters, partition.band_count),
-        config.numerics.comparison_guard,
+        active_config.get().numerics.comparison_guard,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class _PopulationState:
+    operational_state: ScientificState
+    risk_upper: RiskValue
+    compatibility_lower: InformationNats | None
+    intrinsic_risk_lower: RiskValue | None
 
 
 def _population_state(
     solved: SharpRiskSet,
     rho: SensitivityBudget,
     beta: RiskBudget,
-) -> tuple[ScientificState, RiskValue, InformationNats | None, RiskValue | None]: # TODO:  i'm not sure i like how this output is handled
+) -> _PopulationState:
     compatibility = solved.solve_result.compatibility
     minimum = compatibility.minimum_information_point
     compatibility_floor = None if minimum is None else minimum.information_floor
     intrinsic = None if minimum is None else minimum.latent_risk
     if solved.latent_risk is None:
-        return ScientificState.MODEL_INCOMPATIBLE, 1.0, compatibility_floor, intrinsic
+        return _PopulationState(
+            ScientificState.MODEL_INCOMPATIBLE, 1.0, compatibility_floor, intrinsic
+        )
     upper = solved.latent_risk.upper
     if compatibility_floor is not None and compatibility_floor > rho:
         state = ScientificState.MODEL_INCOMPATIBLE
@@ -314,7 +320,7 @@ def _population_state(
         state = ScientificState.CERTIFIED
     else:
         state = ScientificState.UNCERTIFIED
-    return state, upper, compatibility_floor, intrinsic
+    return _PopulationState(state, upper, compatibility_floor, intrinsic)
 
 
 def _true_information(

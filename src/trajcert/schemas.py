@@ -3,7 +3,8 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from trajcert.provenance import EnvironmentDigest
+from trajcert.paths import ExperimentSlug
+from trajcert.provenance import CodeCommit, EnvironmentDigest
 from trajcert.storage import (
     ArtifactKey,
     DependencyFingerprint,
@@ -11,7 +12,7 @@ from trajcert.storage import (
     ProvenanceFingerprint,
     SpecificationDigest,
 )
-from trajcert.types import DomainModel
+from trajcert.types import ColumnName, DependencyAuthority, DomainModel
 
 
 class PublicationSourceRole(StrEnum):
@@ -29,9 +30,9 @@ class PublicationFormat(StrEnum):
 class PublicationSourceDescriptor(DomainModel):
     source_path: Path
     source_role: PublicationSourceRole
-    columns: tuple[str, ...]  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sort_columns: tuple[str, ...]  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    owner_experiment: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    columns: tuple[ColumnName, ...]
+    sort_columns: tuple[ColumnName, ...]
+    owner_experiment: ExperimentSlug
 
 
 class VerifiedSourceLineage(DomainModel):
@@ -53,14 +54,14 @@ class RenderedPublicationArtifact(DomainModel):
 
 
 class EnvironmentReproducibilityRecord(DomainModel):
-    dependency_authority: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    dependency_authority: DependencyAuthority
     dependency_lock_path: Path
     environment_lock_digest: EnvironmentDigest
     container_image_digest: None = None
 
 
 class PublicationReproducibilityRecord(DomainModel):
-    source_commit: str  # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    source_commit: CodeCommit
     configuration_path: Path
     configuration_sha256: DigestHex
     environment: EnvironmentReproducibilityRecord

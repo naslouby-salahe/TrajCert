@@ -14,7 +14,9 @@ from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.types import (
     CompatibilityRegime,
+    Count,
     DomainModel,
+    FiniteFloat,
     GridPointCount,
     HiddenMassInterval,
     InformationNats,
@@ -30,7 +32,6 @@ from trajcert.types import (
 
 
 class OracleBracket(DomainModel):
-    # TODO: Consider using dedicated aliases for oracle bracket endpoints, residuals, and iteration count.
     lower: Mass
     upper: Mass
     midpoint: Mass
@@ -38,7 +39,6 @@ class OracleBracket(DomainModel):
 
 
 class InformationOracleResult(DomainModel):
-    # TODO: Consider using a dedicated oracle-result variant instead of nullable boundary brackets.
     regime: CompatibilityRegime
     sensitivity_budget: SensitivityBudget
     minimum_hidden_mass: Mass
@@ -51,7 +51,6 @@ class InformationOracleResult(DomainModel):
 
 
 class OracleMassInterval(DomainModel):
-    # TODO: Consider using a dedicated interval type shared with the non-oracle numerical path.
     lower: Mass
     upper: Mass
 
@@ -63,7 +62,6 @@ class OracleMassInterval(DomainModel):
 
 
 class ProjectionOracleInput(DomainModel):
-    # TODO: Consider using proper aliases for the paired bandwise oracle interval vectors.
     partition: TrajectoryPartition
     harmful_by_band: tuple[OracleMassInterval, ...]
     correct_by_band: tuple[OracleMassInterval, ...]
@@ -90,24 +88,22 @@ class ProjectionOracleInput(DomainModel):
 
 
 class ProjectionFeasibleOracleResult(DomainModel):
-    # TODO: Consider using proper aliases for projection-search counters.
     best_feasible_risk: RiskValue | None
     best_resolved_harmful: Mass | None
     best_resolved_correct: Mass | None
     best_hidden_terminal_harmful: Mass | None
     grid_points_per_axis: GridPointCount
-    aggregate_points_checked: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    feasible_points: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    locally_refined_candidates: int #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    aggregate_points_checked: Count
+    feasible_points: Count
+    locally_refined_candidates: Count
 
 
 @dataclass(frozen=True, slots=True)
 class _ProjectionCandidate:
-    # TODO: Consider using proper aliases for projection mass values.
     risk: RiskValue
-    harmful: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hidden: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful: Mass
+    correct: Mass
+    hidden: Mass
 
 
 def solve_information_oracle(
@@ -116,7 +112,6 @@ def solve_information_oracle(
     oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
 ) -> InformationOracleResult:
-    # TODO: Consider using a dedicated oracle precision/configuration object instead of separate primitive controls.
     digits = oracle_digits
     if digits <= 0:
         raise InvalidScientificDataError("oracle precision must be positive")
@@ -127,7 +122,7 @@ def solve_information_oracle(
         correct = tuple(mpf(repr(float(value))) for value in summary.correct_by_band)
         unresolved = mpf(repr(summary.unresolved_mass))
         rho = mpf(repr(sensitivity_budget))
-        bracket_width = mpf(repr(float(oracle_bracket_width)))
+        bracket_width = mpf(repr(oracle_bracket_width))
         return _solve_information_oracle_data(
             summary, harmful, correct, unresolved, rho, digits, bracket_width
         )
@@ -144,7 +139,6 @@ def feasible_projection_lower_oracle(
     refinement_candidates: RefinementCandidateCount,
     refinement_steps: RefinementStepCount,
 ) -> ProjectionFeasibleOracleResult:
-    # TODO: Consider using a dedicated oracle search configuration instead of separate primitive controls.
     digits = oracle_digits
     if digits <= 0:
         raise InvalidScientificDataError("oracle precision must be positive")
@@ -155,7 +149,7 @@ def feasible_projection_lower_oracle(
         harmful_lower = sum(interval.lower for interval in oracle_input.harmful_by_band)
         harmful_upper = sum(interval.upper for interval in oracle_input.harmful_by_band)
         correct_lower = sum(interval.lower for interval in oracle_input.correct_by_band)
-        correct_upper = sum(float(interval.upper) for interval in oracle_input.correct_by_band)
+        correct_upper = sum(interval.upper for interval in oracle_input.correct_by_band)
         checked = 0
         feasible_count = 0
         candidates: list[_ProjectionCandidate] = []
@@ -209,11 +203,10 @@ def feasible_projection_lower_oracle(
 
 
 def direct_mutual_information(
-    # TODO: Consider using proper aliases for the oracle mass inputs.
-    harmful: tuple[float, ...], #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct: tuple[float, ...], #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    unresolved: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hidden_terminal_harmful: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful: tuple[Mass, ...],
+    correct: tuple[Mass, ...],
+    unresolved: Mass,
+    hidden_terminal_harmful: Mass,
     oracle_digits: OracleDigits,
 ) -> InformationNats:
     previous_digits = mp.dps
@@ -236,10 +229,9 @@ def _solve_information_oracle_data(
     correct: tuple[mpf, ...],
     unresolved: mpf,
     rho: mpf,
-    digits: int,
+    digits: OracleDigits,
     bracket_width: mpf,
 ) -> InformationOracleResult:
-    # TODO: Consider using a dedicated arbitrary-precision oracle input instead of parallel mass tuples and digits.
     minimum_bracket = _golden_minimum(harmful, correct, unresolved, bracket_width)
     minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
     minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
@@ -292,16 +284,13 @@ def _solve_information_oracle_data(
 
 def _projection_candidate(
     oracle_input: ProjectionOracleInput,
-    harmful_total: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct_total: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful_total: Mass,
+    correct_total: Mass,
     sensitivity: arb,
     comparison_guard: ToleranceValue,
 ) -> _ProjectionCandidate | None:
-    # TODO: Consider using a proper alias type for aggregate projection masses and totals.
     unresolved = 1.0 - harmful_total - correct_total
-    if unresolved < float(oracle_input.unresolved.lower) or unresolved > float(
-        oracle_input.unresolved.upper
-    ):
+    if unresolved < oracle_input.unresolved.lower or unresolved > oracle_input.unresolved.upper:
         return None
     harmful = _allocate_total(oracle_input.harmful_by_band, harmful_total, comparison_guard)
     correct = _allocate_total(oracle_input.correct_by_band, correct_total, comparison_guard)
@@ -323,12 +312,11 @@ def _refine_projection_candidate(
     initial: _ProjectionCandidate,
     sensitivity: arb,
     comparison_guard: ToleranceValue,
-    harmful_span: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct_span: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful_span: Mass,
+    correct_span: Mass,
     grid_points: GridPointCount,
     refinement_steps: RefinementStepCount,
 ) -> _ProjectionCandidate:
-    # TODO: Consider using a dedicated local-refinement state instead of primitive spans and iteration controls.
     best = initial
     harmful_step = harmful_span / (grid_points - 1)
     correct_step = correct_span / (grid_points - 1)
@@ -354,12 +342,11 @@ def _refine_projection_candidate(
 
 
 def _max_verified_projection_hidden(
-    harmful: tuple[float, ...], #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct: tuple[float, ...], #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    unresolved: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful: tuple[Mass, ...],
+    correct: tuple[Mass, ...],
+    unresolved: Mass,
     sensitivity: arb,
-) -> float | None: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider using a proper alias type for oracle mass vectors, unresolved mass, and hidden-mass result.
+) -> Mass | None:
     harmful_arb = tuple(_arb_exact_float(value) for value in harmful)
     correct_arb = tuple(_arb_exact_float(value) for value in correct)
     unresolved_arb = _arb_exact_float(unresolved)
@@ -430,12 +417,11 @@ def _max_verified_projection_hidden(
 
 
 def _projection_root_bracket_float(
-    harmful: tuple[float, ...], #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    correct: tuple[float, ...], #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    unresolved: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    sensitivity: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> tuple[float, float]: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider using a named projection root bracket instead of a raw float tuple.
+    harmful: tuple[Mass, ...],
+    correct: tuple[Mass, ...],
+    unresolved: Mass,
+    sensitivity: SensitivityBudget,
+) -> tuple[Mass, Mass]:
     harmful_total = sum(harmful)
     correct_total = sum(correct)
     resolved_total = harmful_total + correct_total
@@ -483,11 +469,10 @@ def _select_verified_hidden_float(
     harmful: tuple[arb, ...],
     correct: tuple[arb, ...],
     unresolved: arb,
-    sensitivity: float,
-    left: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    right: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> float | None: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider using a named verified-hidden selection instead of primitive sensitivity and endpoint values.
+    sensitivity: SensitivityBudget,
+    left: Mass,
+    right: Mass,
+) -> Mass | None:
     minimum_hidden = _arb_lower_float(
         sum(harmful, arb(0)) * unresolved / (sum(harmful, arb(0)) + sum(correct, arb(0)))
     )
@@ -518,12 +503,11 @@ def _select_verified_hidden_float(
 
 
 def _projection_information_float(
-    harmful_total: float,#TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    unresolved: float,#TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    resolved_entropy: float,#TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hidden: float,#TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    # TODO: Consider using a proper alias type for projection information inputs and result.
+    harmful_total: Mass,
+    unresolved: Mass,
+    resolved_entropy: InformationNats,
+    hidden: Mass,
+) -> InformationNats:
     return (
         _binary_entropy_float(harmful_total + hidden)
         - resolved_entropy
@@ -532,10 +516,10 @@ def _projection_information_float(
 
 
 def _projection_information_derivative_float(
-    harmful_total: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    unresolved: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-    hidden: float, #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    harmful_total: Mass,
+    unresolved: Mass,
+    hidden: Mass,
+) -> FiniteFloat:
     if hidden <= 0.0 or hidden >= unresolved:
         return inf
     harmful_marginal = harmful_total + hidden
@@ -546,16 +530,13 @@ def _projection_information_derivative_float(
     return float_log(hidden * correct_marginal / (harmful_marginal * terminal_correct))
 
 
-def _binary_entropy_float(value: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                          ) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _binary_entropy_float(value: Mass) -> InformationNats:
     if value <= 0.0 or value >= 1.0:
         return 0.0
     return -value * float_log(value) - (1.0 - value) * float_log(1.0 - value)
 
 
-def _mass_entropy_float(left: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                       , right: float #TODO: Consider using a proper alias type or whatever already exists with actually fits this
-                       ) -> float: #TODO: Consider using a proper alias type or whatever already exists with actually fits this
+def _mass_entropy_float(left: Mass, right: Mass) -> InformationNats:
     total = left + right
     if total <= 0.0:
         return 0.0
@@ -573,7 +554,6 @@ def _projection_information_arb(
     resolved_entropy: arb,
     hidden: arb,
 ) -> arb:
-    # TODO: Consider using a named arbitrary-precision projection state instead of parallel arb values.
     return (
         _binary_entropy_arb(harmful_total + hidden)
         - resolved_entropy
@@ -587,7 +567,6 @@ def _projection_direct_information_arb(
     unresolved: arb,
     hidden: arb,
 ) -> arb:
-    # TODO: Consider using a named arbitrary-precision contingency table instead of parallel rows.
     harmful_row = (*harmful, hidden)
     correct_row = (*correct, unresolved - hidden)
     harmful_total = sum(harmful_row, arb(0))
@@ -603,7 +582,6 @@ def _projection_direct_information_arb(
 
 
 def _binary_entropy_arb(value: arb) -> arb:
-    # TODO: Consider using a proper alias type for arbitrary-precision probability and entropy values.
     if value.is_zero() or (arb(1) - value).is_zero():
         return arb(0)
     lower = value.lower().max(arb(0))
@@ -617,7 +595,6 @@ def _binary_entropy_arb(value: arb) -> arb:
 
 
 def _binary_entropy_point_arb(value: arb) -> arb:
-    # TODO: Consider using a proper alias type for arbitrary-precision point probability and entropy values.
     if value.is_zero() or (arb(1) - value).is_zero():
         return arb(0)
     if value > arb(0.5):
@@ -633,7 +610,6 @@ def _binary_entropy_point_arb(value: arb) -> arb:
 
 
 def _mass_entropy_point_arb(left: arb, right: arb) -> arb:
-    # TODO: Consider using a named arbitrary-precision mass pair rather than positional arguments.
     total = left + right
     if total.is_zero():
         return arb(0)
@@ -646,7 +622,6 @@ def _mass_entropy_point_arb(left: arb, right: arb) -> arb:
 
 
 def _mass_entropy_arb(left: arb, right: arb) -> arb:
-    # TODO: Consider using a named arbitrary-precision mass interval pair rather than positional arguments.
     left_lower = left.lower().max(arb(0))
     left_upper = left.upper().max(arb(0))
     right_lower = right.lower().max(arb(0))
@@ -666,20 +641,17 @@ def _mass_entropy_arb(left: arb, right: arb) -> arb:
 
 
 def _arb_exact_float(value: float) -> arb:
-    # TODO: Consider using a proper alias type for the binary64 value converted into Arb.
     numerator, denominator = value.as_integer_ratio()
     return arb(f"{numerator}/{denominator}")
 
 
 def _arb_lower_float(value: arb) -> float:
-    # TODO: Consider using a proper alias type for the outward-rounded binary64 lower endpoint.
     mantissa, exponent = value.lower().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, -inf)
 
 
 def _arb_upper_float(value: arb) -> float:
-    # TODO: Consider using a proper alias type for the outward-rounded binary64 upper endpoint.
     mantissa, exponent = value.upper().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, inf)
@@ -687,21 +659,20 @@ def _arb_upper_float(value: arb) -> float:
 
 def _allocate_total(
     intervals: tuple[OracleMassInterval, ...],
-    target: float,
+    target: Mass,
     comparison_guard: ToleranceValue,
-) -> tuple[float, ...] | None:
-    # TODO: Consider using a named mass allocation result instead of a nullable raw float tuple.
-    lower_sum = sum(float(interval.lower) for interval in intervals)
-    upper_sum = sum(float(interval.upper) for interval in intervals)
-    guard = float(comparison_guard)
+) -> tuple[Mass, ...] | None:
+    lower_sum = sum(interval.lower for interval in intervals)
+    upper_sum = sum(interval.upper for interval in intervals)
+    guard = comparison_guard
     if target < lower_sum - guard or target > upper_sum + guard:
         return None
-    values = [float(interval.lower) for interval in intervals]
+    values = [interval.lower for interval in intervals]
     remaining = target - lower_sum
     for index, interval in enumerate(intervals):
         if remaining <= 0.0:
             break
-        capacity = float(interval.upper) - values[index]
+        capacity = interval.upper - values[index]
         increment = min(remaining, capacity)
         values[index] += increment
         remaining -= increment
@@ -715,7 +686,6 @@ def _retain_best(
     candidate: _ProjectionCandidate,
     limit: RefinementCandidateCount,
 ) -> None:
-    # TODO: Consider using a bounded candidate collection type instead of a mutable list and raw limit.
     candidates.append(candidate)
     candidates.sort(key=lambda item: item.risk, reverse=True)
     del candidates[limit:]
@@ -727,7 +697,6 @@ def _golden_minimum(
     unresolved: mpf,
     bracket_width: mpf,
 ) -> tuple[mpf, mpf]:
-    # TODO: Consider using a dedicated golden-search configuration/result rather than positional values.
     if unresolved == mpf(0):
         return mpf(0), mpf(0)
     left = mpf(0)
@@ -761,7 +730,6 @@ def _left_boundary(
     minimum_hidden: mpf,
     bracket_width: mpf,
 ) -> tuple[mpf, mpf]:
-    # TODO: Consider using a named oracle boundary result instead of a positional mpf tuple.
     if _mutual_information(harmful, correct, unresolved, mpf(0)) <= rho:
         return mpf(0), mpf(0)
     left = mpf(0)
@@ -783,7 +751,6 @@ def _right_boundary(
     minimum_hidden: mpf,
     bracket_width: mpf,
 ) -> tuple[mpf, mpf]:
-    # TODO: Consider using a named oracle boundary result instead of a positional mpf tuple.
     if _mutual_information(harmful, correct, unresolved, unresolved) <= rho:
         return unresolved, unresolved
     left = minimum_hidden
@@ -803,7 +770,6 @@ def _mutual_information(
     unresolved: mpf,
     hidden_terminal_harmful: mpf,
 ) -> mpf:
-    # TODO: Consider using a dedicated arbitrary-precision observable summary instead of parallel tuples.
     if hidden_terminal_harmful < mpf(0) or hidden_terminal_harmful > unresolved:
         raise NumericalError("oracle hidden terminal mass lies outside [0, c]")
     harmful_row = (*harmful, hidden_terminal_harmful)
@@ -834,14 +800,13 @@ def _result(
     lower_boundary: tuple[mpf, mpf] | None,
     upper_boundary: tuple[mpf, mpf] | None,
 ) -> InformationOracleResult:
-    # TODO: Consider using a named oracle solve state instead of raw bracket tuples and scalar values.
     lower = None if lower_boundary is None else _bracket(lower_boundary)
     upper = None if upper_boundary is None else _bracket(upper_boundary)
     hidden_interval = None
     risk_interval = None
     if lower is not None and upper is not None:
         hidden_interval = HiddenMassInterval(lower=lower.midpoint, upper=upper.midpoint)
-        harmful = float(summary.resolved_harmful_mass)
+        harmful = summary.resolved_harmful_mass
         risk_interval = RiskInterval(
             lower=harmful + lower.midpoint,
             upper=harmful + upper.midpoint,
@@ -860,7 +825,6 @@ def _result(
 
 
 def _bracket(values: tuple[mpf, mpf]) -> OracleBracket:
-    # TODO: Consider using a named arbitrary-precision interval instead of a positional mpf tuple.
     lower, upper = values
     midpoint = (lower + upper) / mpf(2)
     return OracleBracket(

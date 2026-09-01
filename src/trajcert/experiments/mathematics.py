@@ -47,19 +47,19 @@ from trajcert.types import (
 
 
 class IdentityResult(DomainModel):
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
     max_absolute_error: AbsoluteError
 
 
 class ConvexityResult(DomainModel):
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
     evaluated_points: Count
     minimum_second_derivative: InformationCurvature | None
     max_direct_second_derivative_error: AbsoluteError
 
 
 class SharpSetIdentityResult(DomainModel):
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
     production_lower: RiskValue | None
     production_upper: RiskValue | None
     oracle_lower: RiskValue | None
@@ -69,14 +69,14 @@ class SharpSetIdentityResult(DomainModel):
 
 
 class RefinementIdentityResult(DomainModel):
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
     timing_gain: InformationNats
     max_profile_order_violation: AbsoluteError
     max_profile_difference_error: AbsoluteError
 
 
 class SafetyBoundaryIdentityResult(DomainModel):
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
     assessment: SafetyAssessment
     frontier_direct_information: InformationNats | None
     frontier_error: AbsoluteError | None
@@ -85,7 +85,7 @@ class SafetyBoundaryIdentityResult(DomainModel):
 class SafetyBoundaryCaseEvaluation(DomainModel):
     case: SafetyBudgetCase
     identity: SafetyBoundaryIdentityResult | None
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
 
 
 def path_information_decomposition(
@@ -393,7 +393,7 @@ class LegacyPartitionIncoherenceResult(DomainModel):
     endpoint_risk_interval: RiskInterval
     endpoint_difference_direction: EndpointDifferenceDirection
     endpoint_difference_magnitude: AbsoluteError
-    passed: bool # TODO: Consider using a proper alias type or whatever already exists with actually fits this
+    passed: bool
 
 
 def evaluate_legacy_partition_incoherence(
@@ -405,17 +405,16 @@ def evaluate_legacy_partition_incoherence(
         raise InvalidScientificDataError("legacy incoherence Gamma must be at least one")
     if not 0.0 < q < 1.0:
         raise InvalidScientificDataError("legacy incoherence q must lie strictly inside (0, 1)")
-    p_correct, p_harmful = (
-        config.study_design.legacy_partition_incoherence.latent_outcome_probabilities
-    )
+    legacy = config.study_design.legacy_partition_incoherence
+    p_correct, p_harmful = legacy.latent_outcome_probabilities
     harmful_hazards = (_tilted_probability(q, gamma), _tilted_probability(q, 1.0 / gamma))
     correct_hazards = (q, q)
     harmful_by_band, harmful_unresolved = _response_masses(p_harmful, harmful_hazards)
     correct_by_band, correct_unresolved = _response_masses(p_correct, correct_hazards)
     unresolved = harmful_unresolved + correct_unresolved
     fine_partition = build_partition(
-        finest_band_count=2, # TODO: these are magic numbers that should be from conf
-        band_count=2, # TODO: these are magic numbers that should be from conf
+        finest_band_count=legacy.fine_band_count,
+        band_count=legacy.fine_band_count,
         terminal_horizon=config.method.terminal_horizon,
     )
     fine = summarize_observable_masses(
@@ -426,8 +425,8 @@ def evaluate_legacy_partition_incoherence(
         comparison_guard=config.numerics.comparison_guard,
     )
     endpoint_partition = build_partition(
-        finest_band_count=2, # TODO: these are magic numbers that should be from conf
-        band_count=1, # TODO: these are magic numbers that should be from conf
+        finest_band_count=legacy.fine_band_count,
+        band_count=legacy.endpoint_band_count,
         terminal_horizon=config.method.terminal_horizon,
     )
     endpoint = coarsen_summary(fine, endpoint_partition, config.numerics.comparison_guard)
@@ -485,7 +484,7 @@ def _tilted_probability(q: HazardProbability, gamma: GammaSensitivity) -> Probab
 def _response_masses(
     prior: Probability,
     hazards: tuple[Probability, Probability],
-) -> tuple[tuple[Mass, Mass], Mass]: # TODO:  This output should be better
+) -> tuple[tuple[Mass, Mass], Mass]:
     first, second = hazards
     first_mass = prior * first
     second_mass = prior * (1.0 - first) * second

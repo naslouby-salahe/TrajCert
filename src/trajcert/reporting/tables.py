@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pyarrow as pa
 
+from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
@@ -17,7 +18,6 @@ from trajcert.schemas import (
 from trajcert.storage import atomic_write_bytes
 from trajcert.types import TabularCellValue
 
-_P_VALUE_THRESHOLD = 0.0001
 _P_VALUE_COLUMNS = frozenset(
     {
         "raw_p_value",
@@ -107,8 +107,9 @@ def _format_scalar(column: str, value: TabularCellValue) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, float):
-        if column in _P_VALUE_COLUMNS and 0.0 <= value < _P_VALUE_THRESHOLD:
-            return "<0.0001"
+        threshold = active_config.get().publication.p_value_display_threshold
+        if column in _P_VALUE_COLUMNS and 0.0 <= value < threshold:
+            return f"<{threshold!r}"
         return repr(value)
     return str(value)
 

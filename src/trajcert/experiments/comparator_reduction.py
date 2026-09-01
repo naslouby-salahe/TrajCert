@@ -8,7 +8,7 @@ from trajcert.comparators.callback import (
 from trajcert.comparators.endpoint import endpoint_path_information_bound
 from trajcert.comparators.legacy import LegacySensitivityResult, legacy_bandwise_odds_ratio
 from trajcert.comparators.pattern_mixture import PatternMixtureResult, fit_pattern_mixture
-from trajcert.config import NumericsConfig, active_config
+from trajcert.config import active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.oracle import InformationOracleResult, solve_information_oracle
@@ -48,13 +48,13 @@ def evaluate_comparator_reduction(
     config = active_config.get()
     if summary.partition.band_count != config.method.finest_bands:
         raise ValueError("comparator reduction requires the configured finest partition")
-    rho_values = tuple(float(value) for value in config.grids.rho) # TODO: Preserve the sensitivity-budget domain type instead of converting configured values to raw floats.
+    rho_values = config.grids.rho
     if BINARY_MAX_INFORMATION_NATS not in rho_values:
         rho_values = (*rho_values, BINARY_MAX_INFORMATION_NATS)
     return ComparatorReductionResult(
         alho_common_slope=alho_common_slope_callback(summary, config.numerics.oracle_digits),
         stable_resistance=stable_resistance_callback(summary, config.numerics.oracle_digits),
-        pattern_mixture=fit_pattern_mixture(summary, config.comparators.pattern_mixture),
+        pattern_mixture=fit_pattern_mixture(summary),
         legacy=tuple(
             legacy_bandwise_odds_ratio(summary, gamma)
             for gamma in config.comparators.legacy_gamma
@@ -71,15 +71,12 @@ def evaluate_comparator_reduction(
             )
             for rho in rho_values
         ),
-        endpoint=tuple(_endpoint_point(summary, rho, config.numerics) for rho in rho_values),
+        endpoint=tuple(_endpoint_point(summary, rho) for rho in rho_values),
     )
 
 
-def _endpoint_point(
-    summary: ObservableSummary,
-    rho: SensitivityBudget,
-    numerics: NumericsConfig, # TODO: do not pass config as input param
-) -> EndpointPoint:
+def _endpoint_point(summary: ObservableSummary, rho: SensitivityBudget) -> EndpointPoint:
+    numerics = active_config.get().numerics
     solved = endpoint_path_information_bound(
         summary,
         rho,
