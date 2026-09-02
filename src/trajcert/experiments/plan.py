@@ -486,37 +486,23 @@ _COORDINATE_DISPATCH: dict[ExperimentName, Callable[[], tuple[SemanticCoordinate
     ExperimentName.PATH_INFORMATION_DECOMPOSITION: _coordinates_law_and_partition_product,
     ExperimentName.INFORMATION_PROFILE_CONVEXITY: _coordinates_law_and_partition_product,
     ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY: _coordinates_law_and_partition_product,
-    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: (
-        _coordinates_sharp_set_constructive_identity
-    ),
-    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: (
-        _coordinates_refinement_dominance_identity
-    ),
+    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: (_coordinates_sharp_set_constructive_identity),
+    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: (_coordinates_refinement_dominance_identity),
     ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _coordinates_strict_timing_gain,
     ExperimentName.STRICT_TIMING_GAIN: _coordinates_strict_timing_gain,
     ExperimentName.SAFETY_BOUNDARY_IDENTITY: _coordinates_safety_boundary_identity,
-    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: (
-        _coordinates_endpoint_special_case_identity
-    ),
-    ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK: (
-        _coordinates_anytime_projection_proof_check
-    ),
+    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: (_coordinates_endpoint_special_case_identity),
+    ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK: (_coordinates_anytime_projection_proof_check),
     ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK: (
         _coordinates_population_complexity_proof_check
     ),
     ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: (
         _coordinates_production_solver_vs_independent_oracle
     ),
-    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: (
-        _coordinates_comparator_reduction
-    ),
-    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: (
-        _coordinates_comparator_reduction
-    ),
+    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: (_coordinates_comparator_reduction),
+    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: (_coordinates_comparator_reduction),
     ExperimentName.PARTITION_COHERENCE: _coordinates_partition_coherence,
-    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (
-        _coordinates_same_endpoint_different_timing
-    ),
+    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (_coordinates_same_endpoint_different_timing),
     ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _coordinates_compatibility_floor_behavior,
     ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: (
         _coordinates_sharpness_against_generic_oracle
@@ -528,12 +514,8 @@ _COORDINATE_DISPATCH: dict[ExperimentName, Callable[[], tuple[SemanticCoordinate
         _coordinates_anytime_implementation_hand_cases
     ),
     ExperimentName.ANYTIME_COVERAGE_STRESS: _coordinates_anytime_coverage_stress,
-    ExperimentName.POPULATION_SENSITIVITY_UTILITY: (
-        _coordinates_population_sensitivity_utility
-    ),
-    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: (
-        _coordinates_sequential_sensitivity_utility
-    ),
+    ExperimentName.POPULATION_SENSITIVITY_UTILITY: (_coordinates_population_sensitivity_utility),
+    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: (_coordinates_sequential_sensitivity_utility),
     ExperimentName.FAILURE_BOUNDARY_ATLAS: _failure_boundary_coordinates,
     ExperimentName.COMPUTATIONAL_SCALING: _coordinates_computational_scaling,
     ExperimentName.STATISTICAL_SYNTHESIS: _coordinates_statistical_synthesis,

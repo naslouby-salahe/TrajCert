@@ -66,6 +66,7 @@ from trajcert.math.oracle import (
     feasible_projection_lower_oracle,
     solve_information_oracle,
 )
+from trajcert.telemetry import StreamProgress
 from trajcert.types import (
     AbsoluteError,
     AcceptanceUpperLimit,
@@ -293,6 +294,7 @@ def run_coverage_stress(
     true_risk = parameters.theta
     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
     failures = dict.fromkeys(SequentialMethod, 0)
+    stream_progress = StreamProgress("coverage_stress", stream_count)
     for stream_index in range(stream_count):
         for method, did_fail in _coverage_stream_failures(
             parameters,
@@ -306,6 +308,7 @@ def run_coverage_stress(
         ).items():
             if did_fail:
                 failures[method] += 1
+        stream_progress.maybe_log(stream_index + 1)
     results = tuple(
         _coverage_method_result(method, assumption_valid, stream_count, failures)
         for method in SequentialMethod
@@ -556,6 +559,7 @@ def _trajcert_trajectory_evidence(
     first_certified: list[float] = []
     certified_fractions: list[float] = []
     representative: list[AnytimePathEvidence] = []
+    stream_progress = StreamProgress("trajectory_evidence", stream_count)
     for stream_index in range(stream_count):
         ledger = generate_stochastic_ledger(
             parameters=parameters,
@@ -585,6 +589,7 @@ def _trajcert_trajectory_evidence(
             representative.extend(
                 _representative_path_evidence(parameters, beta, trace, stream_index)
             )
+        stream_progress.maybe_log(stream_index + 1)
     return _TrajectoryEvidenceSummary(
         first_certified=tuple(first_certified),
         certified_fractions=tuple(certified_fractions),
@@ -1045,7 +1050,11 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
     rho = information_true + case.rho_margin
     projection = _project(singleton_summary_envelope(summary), rho)
     oracle = solve_information_oracle(
-        summary, rho, config.numerics.oracle_digits, config.numerics.oracle_bracket_width
+        summary,
+        rho,
+        config.numerics.oracle_digits,
+        config.numerics.oracle_bracket_width,
+        config.numerics.comparison_guard,
     )
     oracle_upper = (
         None if oracle.latent_risk_interval is None else oracle.latent_risk_interval.upper

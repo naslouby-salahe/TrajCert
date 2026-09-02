@@ -9,7 +9,7 @@ from trajcert.config import (
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.experiments.runner import execute_scientific_cell
-from trajcert.provenance import ExperimentNameValue
+from trajcert.types import ExperimentName
 
 _RUNTIME_STREAMS = 2
 _RUNTIME_EVENTS = 200
@@ -21,17 +21,17 @@ def test_recovered_scientific_families_dispatch() -> None:
     runtime = _small_runtime_config(production)
     plan = build_plan(production)
     names = (
-        "Legacy Partition Incoherence Check",
-        "Strict Timing-Gain Identity",
-        "Partition Coherence",
-        "Same Endpoint, Different Timing",
-        "Strict Timing Gain",
-        "Sharpness Against Generic Oracle",
-        "Safety and Intrinsic Impossibility",
-        "Population Sensitivity Utility",
+        ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
+        ExperimentName.STRICT_TIMING_GAIN_IDENTITY,
+        ExperimentName.PARTITION_COHERENCE,
+        ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING,
+        ExperimentName.STRICT_TIMING_GAIN,
+        ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE,
+        ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY,
+        ExperimentName.POPULATION_SENSITIVITY_UTILITY,
     )
     for name in names:
-        cell = cells_for_experiment(plan, ExperimentNameValue(name))[0]
+        cell = cells_for_experiment(plan, name)[0]
         result = execute_scientific_cell(cell, runtime)
         assert result is not None
 
@@ -39,7 +39,7 @@ def test_recovered_scientific_families_dispatch() -> None:
 def test_terminal_selection_failure_boundary_dispatches() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     plan = build_plan(config)
-    cells = cells_for_experiment(plan, ExperimentNameValue("Failure Boundary Atlas"))
+    cells = cells_for_experiment(plan, ExperimentName.FAILURE_BOUNDARY_ATLAS)
     cell = next(
         item
         for item in cells

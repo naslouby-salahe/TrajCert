@@ -16,12 +16,13 @@ _ORACLE_DIGITS = 20
 _ORACLE_BRACKET_WIDTH = 1e-14
 _ROOT_ATOL = 1e-8
 _IDENTITY_ATOL = 1e-8
+_COMPARISON_GUARD = 1e-12
 _TAU = 0.01834500701737518
 _THETA_DAGGER = 0.6666666666666666
 _RISK_LOWER_AT_0_05 = 0.62550843556722
 _RISK_UPPER_AT_0_05 = 0.6985523780186971
-_LOWER_ERROR_AT_0_05 = 3.210302596673431e-09
-_UPPER_ERROR_AT_0_05 = 2.529551887398007e-09
+_LOWER_ERROR_AT_0_05 = 7.633403874274247e-10
+_UPPER_ERROR_AT_0_05 = 1.4440910967028486e-09
 _ENDPOINT_ERROR_AT_TAU = 6.1267518836061186e-12
 _RESIDUAL_AT_0_07 = 0.01365344239306282
 
@@ -40,6 +41,7 @@ def _compare(
         _IDENTITY_ATOL,
         oracle_digits,
         _ORACLE_BRACKET_WIDTH,
+        _COMPARISON_GUARD,
     )
 
 
@@ -60,12 +62,13 @@ def test_compare_solver_above_tau_endpoint_errors_within_tolerance() -> None:
     comparison = _compare(_benchmark_summary(), 0.05)
     assert comparison.abs_u_lower_error == pytest.approx(_LOWER_ERROR_AT_0_05)
     assert comparison.abs_u_upper_error == pytest.approx(_UPPER_ERROR_AT_0_05)
-    assert comparison.max_endpoint_error == pytest.approx(_LOWER_ERROR_AT_0_05)
+    assert comparison.max_endpoint_error == pytest.approx(_UPPER_ERROR_AT_0_05)
     assert comparison.abs_u_lower_error is not None
     assert comparison.abs_u_lower_error <= _IDENTITY_ATOL
     assert comparison.abs_u_upper_error is not None
     assert comparison.abs_u_upper_error <= _IDENTITY_ATOL
-    assert comparison.max_root_bracket_width == 0.0
+    assert comparison.max_root_bracket_width is not None
+    assert comparison.max_root_bracket_width <= _ROOT_ATOL
     assert comparison.max_root_residual is not None
     assert comparison.max_root_residual <= _IDENTITY_ATOL
 

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import importlib
+import multiprocessing
 import os
 import subprocess
 import sys
 from argparse import ArgumentParser
 from collections.abc import Sequence
+from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from enum import IntEnum
 from pathlib import Path
 from typing import cast
@@ -26,6 +28,7 @@ from trajcert.experiments.plan import (
 from trajcert.experiments.runner import (
     CellExecutionResult,
     CellExecutor,
+    CellRunOutcome,
     DependencyReadiness,
     ExecutionContext,
     LocalValidityTarget,
@@ -74,11 +77,13 @@ from trajcert.reporting.source_data import figure_source_descriptors, table_sour
 from trajcert.storage import (
     DigestHex,
     ProvenanceFingerprint,
+    SemanticCellKey,
     SpecificationDigest,
     atomic_write_model,
     file_digest,
     model_digest,
 )
+from trajcert.telemetry import ExperimentProgress, configure_logging
 from trajcert.types import (
     ActionChannelId,
     CliCommand,
@@ -108,6 +113,7 @@ class CliArguments(DomainModel):
 
 
 def main() -> None:
+    configure_logging()
     arguments = parse_args()
     try:
         _dispatch(arguments)
@@ -369,6 +375,7 @@ def run_experiment(
     *,
     workspace_root: Path | None = None,
     overwrite: bool = False,
+    max_workers: int | None = None,
 ) -> RunExperimentResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
     if _dirty_tree(workspace_root):
@@ -388,26 +395,109 @@ def run_experiment(
         )
     status_cache: dict[ExperimentName, ExperimentStatus] = {}
     dependencies = _dependency_readiness(plan, workspace_root, cells[0], status_cache)
-    executor = _executor(name, plan)
-    completed = reused = failed = blocked = 0
-    for cell in cells:
-        context = _execution_context(cell, plan, workspace_root)
-        outcome = run_cell(cell, context, dependencies, executor, overwrite)
-        if outcome.state is PublicExecutionState.COMPLETED:
-            completed += 1
-            reused += outcome.reused
-        elif outcome.state is PublicExecutionState.FAILED:
-            failed += 1
-        elif outcome.state is PublicExecutionState.BLOCKED:
-            blocked += 1
+    progress = ExperimentProgress(name, len(cells))
+    if name == _SYNTHESIS_NAME or max_workers == 1:
+        completed, reused, failed, blocked = _run_cells_sequentially(
+            cells, plan, workspace_root, dependencies, _executor(name, plan), overwrite, progress
+        )
+    else:
+        completed, reused, failed, blocked = _run_cells_in_parallel(
+            cells, plan, workspace_root, dependencies, overwrite, progress, max_workers
+        )
+    state = _run_state(len(cells), completed, failed, blocked)
+    progress.experiment_finished(state, completed, reused, failed, blocked)
     return RunExperimentResult(
         experiment_name=name,
-        state=_run_state(len(cells), completed, failed, blocked),
+        state=state,
         completed_cells=completed,
         reused_cells=reused,
         failed_cells=failed,
         blocked_cells=blocked,
     )
+
+
+def _run_cells_sequentially(
+    cells: tuple[PlannedCell, ...],
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    dependencies: tuple[DependencyReadiness, ...],
+    executor: CellExecutor,
+    overwrite: bool,
+    progress: ExperimentProgress,
+) -> tuple[Count, Count, Count, Count]:
+    completed = reused = failed = blocked = 0
+    for cell in cells:
+        context = _execution_context(cell, plan, workspace_root)
+        semantic_cell_key = cell.identity.semantic_cell_key
+        started_at = progress.cell_started(semantic_cell_key)
+        outcome = run_cell(cell, context, dependencies, executor, overwrite)
+        progress.cell_finished(semantic_cell_key, outcome.state, outcome.reused, started_at)
+        completed, reused, failed, blocked = _tally_outcome(
+            outcome, completed, reused, failed, blocked
+        )
+    return completed, reused, failed, blocked
+
+
+def _run_cells_in_parallel(
+    cells: tuple[PlannedCell, ...],
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    dependencies: tuple[DependencyReadiness, ...],
+    overwrite: bool,
+    progress: ExperimentProgress,
+    max_workers: int | None,
+) -> tuple[Count, Count, Count, Count]:
+    completed = reused = failed = blocked = 0
+    available_workers = max_workers if max_workers is not None else (os.cpu_count() or 1)
+    worker_count = min(len(cells), available_workers)
+    spawn_context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=worker_count, mp_context=spawn_context) as pool:
+        futures: dict[Future[CellRunOutcome], tuple[SemanticCellKey, float]] = {}
+        for cell in cells:
+            context = _execution_context(cell, plan, workspace_root)
+            semantic_cell_key = cell.identity.semantic_cell_key
+            started_at = progress.cell_started(semantic_cell_key)
+            future = pool.submit(
+                _run_cell_worker, cell, context, dependencies, overwrite, workspace_root
+            )
+            futures[future] = (semantic_cell_key, started_at)
+        for future in as_completed(futures):
+            semantic_cell_key, started_at = futures[future]
+            outcome = future.result()
+            progress.cell_finished(semantic_cell_key, outcome.state, outcome.reused, started_at)
+            completed, reused, failed, blocked = _tally_outcome(
+                outcome, completed, reused, failed, blocked
+            )
+    return completed, reused, failed, blocked
+
+
+def _run_cell_worker(
+    cell: PlannedCell,
+    context: ExecutionContext,
+    dependencies: tuple[DependencyReadiness, ...],
+    overwrite: bool,
+    workspace_root: Path,
+) -> CellRunOutcome:
+    _ = _load_config(workspace_root)
+    configure_logging()
+    return run_cell(cell, context, dependencies, execute_dispatched_cell, overwrite)
+
+
+def _tally_outcome(
+    outcome: CellRunOutcome,
+    completed: Count,
+    reused: Count,
+    failed: Count,
+    blocked: Count,
+) -> tuple[Count, Count, Count, Count]:
+    if outcome.state is PublicExecutionState.COMPLETED:
+        completed += 1
+        reused += outcome.reused
+    elif outcome.state is PublicExecutionState.FAILED:
+        failed += 1
+    elif outcome.state is PublicExecutionState.BLOCKED:
+        blocked += 1
+    return completed, reused, failed, blocked
 
 
 def experiment_status(
@@ -443,8 +533,7 @@ def _known_experiment_name(value: str) -> ExperimentName:
     try:
         return ExperimentName(value)
     except ValueError as error:
-        raise InvalidScientificDataError(f"unknown experiment family: {value}")
-    from error
+        raise InvalidScientificDataError(f"unknown experiment family: {value}") from error
 
 
 def _experiment_status(
@@ -533,6 +622,7 @@ def _execution_context(
         cell.identity.semantic_cell_key,
         component_digest,
     )
+    environment_digest = _environment_digest(workspace_root)
     if cell.identity.experiment_name == _SYNTHESIS_NAME:
         upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
         dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
@@ -543,6 +633,8 @@ def _execution_context(
             plan,
             cell,
             dependency_specification,
+            component_digest,
+            environment_digest,
         )
         required = (scientific_result_artifact_key(cell),)
     return ExecutionContext(
@@ -550,7 +642,7 @@ def _execution_context(
         plan_digest=plan.plan_digest,
         scientific_specification_digest=specification,
         scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=_provenance(plan, workspace_root),
+        provenance_fingerprint=_provenance(plan, workspace_root, environment_digest),
         dependency_fingerprint=dependency,
         manifest_digest=model_digest(cell),
         required_artifact_keys=required,
@@ -558,18 +650,23 @@ def _execution_context(
     )
 
 
-def _provenance(
-    plan: ExperimentPlan,
-    workspace_root: Path,
-) -> ProvenanceFingerprint:
+def _environment_digest(workspace_root: Path) -> EnvironmentDigest:
     lock = workspace_root / LOCK_PATH
     if not lock.is_file():
         raise InvalidScientificDataError("uv.lock is required for execution provenance")
+    return EnvironmentDigest(file_digest(lock))
+
+
+def _provenance(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+    environment_digest: EnvironmentDigest,
+) -> ProvenanceFingerprint:
     material = ProvenanceMaterial(
         scientific_specification_digest=SpecificationDigest(model_digest(active_config.get())),
         code_commit=source_commit(workspace_root),
         dirty_tree_flag=False,
-        environment_lock_digest=EnvironmentDigest(file_digest(lock)),
+        environment_lock_digest=environment_digest,
         container_image_digest=None,
         dataset_preprocessing_digests=(),
         partition_digest=None,

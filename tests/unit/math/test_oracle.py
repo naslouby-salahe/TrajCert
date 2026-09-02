@@ -36,6 +36,7 @@ _REFINEMENT_CANDIDATES = 2
 _REFINEMENT_STEPS = 3
 _GRID_POINTS_CHECKED = _GRID_POINTS * _GRID_POINTS
 _ORACLE_BRACKET_WIDTH = 1e-14
+_COMPARISON_GUARD = 1e-12
 
 
 def test_oracle_mass_interval_rejects_reversed_order() -> None:
@@ -79,21 +80,28 @@ def test_projection_oracle_input_rejects_empty_simplex() -> None:
 def test_solve_information_oracle_rejects_nonpositive_digits() -> None:
     observable = summary([0.5], [0.0], 0.5)
     with pytest.raises(InvalidScientificDataError, match="oracle precision"):
-        _ = solve_information_oracle(observable, 0.0, 0, _ORACLE_BRACKET_WIDTH)
+        _ = solve_information_oracle(observable, 0.0, 0, _ORACLE_BRACKET_WIDTH, _COMPARISON_GUARD)
 
 
 def test_solve_information_oracle_reports_model_incompatible_regime() -> None:
-    observable = summary([0.5], [0.0], 0.5)
-    result = solve_information_oracle(observable, 0.0, 50, _ORACLE_BRACKET_WIDTH)
+    observable = summary([0.3, 0.2], [0.1, 0.3], 0.1)
+    result = solve_information_oracle(observable, 0.0, 50, _ORACLE_BRACKET_WIDTH, _COMPARISON_GUARD)
     assert result.regime is CompatibilityRegime.MODEL_INCOMPATIBLE
-    assert result.minimum_hidden_mass == pytest.approx(0.5, abs=1e-9)
     assert result.hidden_mass_interval is None
     assert result.latent_risk_interval is None
 
 
+def test_solve_information_oracle_reports_singleton_for_zero_timing_information() -> None:
+    observable = summary([0.5], [0.0], 0.5)
+    result = solve_information_oracle(observable, 0.0, 50, _ORACLE_BRACKET_WIDTH, _COMPARISON_GUARD)
+    assert result.regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
+    assert result.minimum_hidden_mass == pytest.approx(0.5, abs=1e-9)
+    assert result.minimum_information == pytest.approx(0.0, abs=1e-9)
+
+
 def test_solve_information_oracle_reports_minimum_information_singleton() -> None:
     observable = summary([0.5], [0.2], 0.3)
-    result = solve_information_oracle(observable, 0.0, 50, _ORACLE_BRACKET_WIDTH)
+    result = solve_information_oracle(observable, 0.0, 50, _ORACLE_BRACKET_WIDTH, _COMPARISON_GUARD)
     assert result.regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON
     assert result.minimum_hidden_mass == pytest.approx(3 / 14, abs=1e-9)
     assert result.hidden_mass_interval is not None

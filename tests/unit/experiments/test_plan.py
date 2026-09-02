@@ -12,13 +12,12 @@ from trajcert.experiments.plan import (
     cells_for_experiment,
 )
 from trajcert.provenance import (
-    ExperimentNameValue,
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
 )
 from trajcert.storage import PlanDigest
-from trajcert.types import EvidenceClass, ReasonCode
+from trajcert.types import EvidenceClass, ExperimentName, ReasonCode
 
 _EXPECTED_REGISTRY_TOTAL = 1423
 _EXPECTED_SCALING_CELL_COUNT = 2
@@ -34,7 +33,7 @@ def _cell(executable: bool, invalid_reason: ReasonCode | None) -> PlannedCell:
         experiment_order=1,
         cell_ordinal=1,
         identity=SemanticCellIdentity(
-            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
+            experiment_name=ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
             coordinates=SemanticCoordinates(variant_name=VariantName("protocol-inventory-gate")),
         ),
         evidence_class=EvidenceClass.VALIDATION,
@@ -82,15 +81,15 @@ def test_build_plan_marks_nonapplicable_experiments() -> None:
     names = tuple(item.identity.semantic_cell_key for item in plan.cells)
     assert len(names) == len(set(names))
     assert plan.nonapplicable_experiments == (
-        ExperimentNameValue("Real-Trajectory Validation"),
-        ExperimentNameValue("Foreign-Information Negative Control"),
+        ExperimentName.REAL_TRAJECTORY_VALIDATION,
+        ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
     )
 
 
 def test_cells_for_experiment_filters_by_name() -> None:
     config = _production_config()
     plan = build_plan(config)
-    cells = cells_for_experiment(plan, ExperimentNameValue("Sequential Sensitivity Utility"))
+    cells = cells_for_experiment(plan, ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY)
     expected_count = len(config.study_design.utility_and_coherence_laws) * len(
         config.sequential.utility.rho
     )
@@ -98,9 +97,9 @@ def test_cells_for_experiment_filters_by_name() -> None:
     assert all(cell.executable for cell in cells)
 
 
-def test_cells_for_experiment_unknown_name_is_empty() -> None:
+def test_cells_for_experiment_nonapplicable_name_is_empty() -> None:
     plan = build_plan(_production_config())
-    assert cells_for_experiment(plan, ExperimentNameValue("Unknown Experiment")) == ()
+    assert cells_for_experiment(plan, ExperimentName.REAL_TRAJECTORY_VALIDATION) == ()
 
 
 def test_build_plan_adapts_to_configured_scaling_bands() -> None:
@@ -114,7 +113,7 @@ def test_build_plan_adapts_to_configured_scaling_bands() -> None:
     )
     plan = build_plan(config.model_copy(update={"grids": grids}))
     assert (
-        len(cells_for_experiment(plan, ExperimentNameValue("Computational Scaling")))
+        len(cells_for_experiment(plan, ExperimentName.COMPUTATIONAL_SCALING))
         == _EXPECTED_SCALING_CELL_COUNT
     )
 

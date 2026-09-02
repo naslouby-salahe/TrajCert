@@ -56,7 +56,8 @@ def evaluate_comparator_reduction(
         stable_resistance=stable_resistance_callback(summary, config.numerics.oracle_digits),
         pattern_mixture=fit_pattern_mixture(summary),
         legacy=tuple(
-            legacy_bandwise_odds_ratio(summary, gamma) for gamma in config.comparators.legacy_gamma
+            legacy_bandwise_odds_ratio(summary, gamma, config.numerics.comparison_guard)
+            for gamma in config.comparators.legacy_gamma
         ),
         generic_information=tuple(
             GenericInformationPoint(
@@ -66,6 +67,7 @@ def evaluate_comparator_reduction(
                     rho,
                     config.numerics.oracle_digits,
                     config.numerics.oracle_bracket_width,
+                    config.numerics.comparison_guard,
                 ),
             )
             for rho in rho_values

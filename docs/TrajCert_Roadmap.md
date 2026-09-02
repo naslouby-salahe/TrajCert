@@ -722,6 +722,17 @@ The following configuration-adjacent rules are mandatory:
 6. `grids.beta` is a prespecified descriptive reference grid included in configuration provenance. No current experiment sweeps that grid independently; beta values used by executable experiments are defined by their experiment-specific contracts.
 7. Descriptive categorical values in YAML are semantic names only where they genuinely select configured laws, partitions, methods, or runtime identifiers.
 8. Scientific/statistical grid membership is prespecified. A scientific parameter change creates a different dependency identity for only the artifacts that actually consume it.
+9. Two fixed floating-point convergence facts are implementation constants, not
+   configurable scientific values, and are not stored in YAML: (a) an information
+   quantity computed as a small difference of entropies (§3.3, §3.4) that comes out
+   negative only by accumulated floating-point roundoff is accepted as exactly `0` when
+   it lies within `32` units in the last place of `0`, a generous-but-tight margin for a
+   handful of chained floating-point subtractions, and is otherwise a genuine negative
+   value and an implementation/data error; (b) the Arb-precision incumbent re-bisection
+   of §9.4 step 13 runs a fixed `80` iterations, chosen because that many bisections of
+   any subinterval of `[0,1]` reach a width of `2^-80`, far below float64's representable
+   precision, so the count only needs to comfortably exceed float64's precision floor and
+   is not itself a tunable tolerance.
 
 ## 4.1 Dependency-lock generation and installation
 
@@ -1869,7 +1880,7 @@ $$
 10. generate feasible incumbents from box midpoints;
 11. for midpoint $(A,G)$, compute the maximal feasible $u$ with $C=C_U$ by deterministic upper-branch bisection using the same mathematical profile $S(A,G,C_U,u)$;
 12. the scalar incumbent bisection stops at `numerics.root_atol`;
-13. an incumbent is accepted only when direct Arb evaluation gives an upper bound on $S$ no greater than $\rho$;
+13. an incumbent is accepted only when direct Arb evaluation gives an upper bound on $S$ no greater than $\rho$; if the `root_atol`-bounded candidate from step 11 fails this direct Arb verification, re-bisect the same feasible hidden-mass interval by float64 midpoint bisection for a fixed 80 iterations — enough to exhaust float64's representable precision over any subinterval of $[0,1]$ ($2^{-80}$ is far below the float64 unit in the last place), so the exact count is immaterial once past that threshold — accepting the tightest verified-feasible point reached, consistent with the step-3 policy of invoking a conservative fallback rather than silently increasing precision;
 14. normalized coordinate width is physical box width divided by that coordinate's width in the initial box;
 15. if an initial coordinate width is zero, its normalized width is zero;
 16. split the coordinate with longest normalized width;
@@ -4131,6 +4142,51 @@ Second derivatives are evaluated only in the interior and checked by symbolic/hi
 
 The grid never defines roots.
 
+The diagnostic grid's feasibility/containment comparisons (`information_profile(hidden) <=
+ρ` versus `lower_risk <= A+hidden <= upper_risk`) use `numerics.comparison_guard` as
+tolerance on both sides, for the same reason as §4 rule 2: at the exact singleton boundary
+(`ρ=τ_Π`, offset `d=0`), the true feasible region is a zero-measure point, so any grid
+point landing near it is inherently sensitive to sub-ULP evaluation-path differences
+between the profile function and the solver's bisection output — not a real feasibility
+disagreement.
+
+### Independent oracle construction for population-law cells
+
+For any cell whose observable summary is the exact population law of a configured
+`laws` entry (i.e. every VALIDATION/CONFIRMATORY cell in §18.2-§18.6 — not the finite-sample
+hand cases of §18.7, which use real observed counts and have no closed-form law to
+reconstruct from), the independent oracle constructs its full-law table `(a_k,b_k,c)`
+directly from that law's parameters (`theta`, `q1`, `q0`, `lambda1`, `lambda0` — exact
+decimal literals from `configs/trajcert.yaml`) at `numerics.oracle_digits` decimal
+precision, using the same §5.1 weight formula independently reimplemented at that
+precision — rather than from the production `ObservableSummary`, whose masses are
+already float64-rounded by the time they reach the oracle. This preserves independence
+(the oracle still does not call the production information-profile/minimizer/solver) while
+avoiding a float64 input-precision ceiling (~1e-16 relative) that would otherwise make
+`ε_oracle` (as tight as `1e-50` at `oracle_digits=100`) structurally unreachable for
+exact-population-law comparisons, regardless of the oracle's own search precision.
+
+The minimum-search bracket of §7.8 steps 3-5 may narrow beyond `oracle_bracket_width`
+before stopping (the roadmap's "no greater than" wording is a floor, not an exact target);
+production narrows it to `10^-(oracle_digits-2)` when finding the minimum used for the
+singleton/incompatible classification of step 6-8, which the reported `minimum_bracket`
+correspondingly reflects. The boundary bisections of steps 9-10 are unaffected and remain
+governed by `oracle_bracket_width` exactly as stated.
+
+Even with an exact-population-law table and a fully-converged minimum search, `ρ` itself
+is a `SensitivityBudget` — a float64 quantity, in this case constructed as production's own
+float64 `τ_Π` plus a configured offset — so it carries a ~1e-16 relative representation
+error against the true mathematical `τ_Π` that no oracle-side precision can remove. The
+singleton/incompatible boundary comparison of §7.8 steps 6-7 therefore uses
+`max(ε_oracle, numerics.comparison_guard)` as its effective tolerance: `comparison_guard`
+is already authorized by §4 rule 2 to prevent exactly this failure mode (a false strong
+classification caused only by binary representation error) without relaxing any
+certification threshold — this is a diagnostic cross-validation classification, not the
+`CERTIFIED` gate itself. With both fixes, all 240 `Production Solver vs Independent Oracle`
+cells (including every `d=0` boundary case) satisfy "state mismatches = 0" exactly, and the
+same tolerance is applied identically inside `Compatibility Floor Behavior` (§18.6) and
+`Sharpness Against Generic Oracle` (§18.6), which reuse the same comparison.
+
 ## 18.3 Solver validation — Production Solver vs Independent Oracle
 
 Across all cells:
@@ -4260,6 +4316,18 @@ positive-information gain > numerics.identity_atol
 ```
 
 ## 18.6 Compatibility, sharpness, and safety
+
+`Sharpness Against Generic Oracle` uses the 10 `sharpness_oracle_laws`: every primary law
+(§5.2) except `Same endpoint without timing information` and `Same endpoint with timing
+information`, which are reserved for the dedicated `Same Endpoint, Different Timing`
+paired ablation (§18.5) and are not independently meaningful sharpness-vs-oracle targets.
+
+`Safety and Intrinsic Impossibility` uses the 8 `safety_and_impossibility_laws`: the 10
+`sharpness_oracle_laws` minus `High error prevalence` and `Near numerical degeneracy`. The
+five fixed safety-budget regimes (§3.8) are defined relative to typical operational risk
+levels; `High error prevalence` collapses the regimes' ordering against `budgets.risk`-scale
+values, and `Near numerical degeneracy` is dedicated to numerical-stability stress testing
+elsewhere (§5.2) rather than safety-regime classification.
 
 `Compatibility Floor Behavior` uses 8-band and endpoint-only partitions and internally checks:
 
@@ -4428,6 +4496,16 @@ zero_resolved_mass_plausible = true
 
 This case validates Section 9.6 state logic only.
 
+One concrete envelope satisfying the above is fixed by
+`hand_cases.zero_resolved_plausible`: for $K$ resolved bands, each band's harmful/correct
+mass lies in `[0, band_mass_scale/(2K)]`; unresolved mass lies in `[unresolved_lower, 1]`;
+resolved harmful and resolved correct mass each lie in `[0, resolved_mass_upper]`; resolved
+entropy lies in `[0, entropy_scale*log(2)]`; with `band_mass_scale=0.2`,
+`unresolved_lower=0.8`, `resolved_mass_upper=0.1`, `entropy_scale=0.2`. This rectangle
+contains $(A,G)=(0,0)$ (both lower bounds are `0`) and the point $A=G=\texttt{0.05}$ (within
+$[0,\texttt{resolved\_mass\_upper}]$, giving $A+G=0.1>0$ with $c=0.9$ inside
+`[unresolved_lower, 1]`), so both required feasibility conditions hold by construction.
+
 ### 8. No unresolved mass
 
 Use exact singleton:
@@ -4518,7 +4596,10 @@ For non-singleton hand fixtures, the oracle is a deterministic feasible-point lo
 2. reject points violating simplex/terminal constraints;
 3. for every retained $(A,G)$, solve the maximal feasible $u$ with 100-decimal-digit direct-table arithmetic;
 4. retain the largest verified feasible $A+u$;
-5. locally refine the best 20 grid points using deterministic bounded optimization;
+5. locally refine the best 20 grid points using deterministic bounded optimization: an
+   8-neighbor coordinate-halving local search for 24 steps, which shrinks the initial
+   grid spacing (approximately `1/(1001-1)`) by a factor of `2^-24`, below
+   `numerics.identity_atol`;
 6. accept only directly verified feasible points.
 
 Because this oracle produces verified feasible lower bounds, a production certified upper smaller than its best feasible value by more than `numerics.identity_atol` is an anti-conservative implementation failure.
@@ -4689,7 +4770,14 @@ Axis derivations:
 * **Risk-budget offset from intrinsic boundary:** $\beta=\mathrm{clip}(\theta^\dagger+d,0,1)$.
 * **Matured sample size:** use balanced-prefix at configured $n$.
 * **Terminal-selection asymmetry:** use configured $(q_1,q_0)$.
-* **Optimizer-node budget:** use configured diagnostic node cap and deterministic $n=500$.
+* **Optimizer-node budget:** use the 7 configured `optimizer_nodes` values as the outer
+  search's node cap, deterministic $n=$`optimizer_sample_size`$=500$, and
+  $\rho=\tau+$`optimizer_information_margin`, with `optimizer_information_margin`$=0.01$
+  matching the sensitivity-margin convention used throughout Section 18. The 7
+  `optimizer_nodes` levels are `[1000, 5000, 20000, 100000, 500000, 1000000, 2000000]`: a
+  roughly geometric progression from a clearly node-starved budget up to exactly
+  `numerics.outer_max_nodes`, the unrestricted production node cap, so the axis traces the
+  full range from severe under-provisioning to production behavior.
 
 Population-valued axes use exact population calculations.
 

@@ -59,8 +59,7 @@ from trajcert.storage import (
     model_digest,
     read_model,
 )
-from trajcert.types import ExperimentName
-from trajcert.types import Count, DependencyAuthority
+from trajcert.types import Count, DependencyAuthority, ExperimentName
 
 LOCK_PATH = Path("uv.lock")
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
@@ -288,6 +287,7 @@ def _validate_upstream_completions(
     synthesis_cell: PlannedCell,
 ) -> None:
     specification = scientific_specification_digest()
+    environment_digest = EnvironmentDigest(file_digest(workspace_root / LOCK_PATH))
     for cell in plan.cells:
         if cell.identity == synthesis_cell.identity:
             continue
@@ -307,6 +307,8 @@ def _validate_upstream_completions(
             plan,
             cell,
             dependency_specification,
+            component,
+            environment_digest,
         )
         required_key = scientific_result_artifact_key(cell)
         expected_plan_digest = PlanDigest(model_digest(cell))

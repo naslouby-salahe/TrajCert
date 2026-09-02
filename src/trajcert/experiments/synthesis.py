@@ -87,11 +87,11 @@ from trajcert.storage import (
     model_digest,
     models_digest,
 )
-from trajcert.types import ExperimentName
 from trajcert.types import (
     AbsoluteError,
     BandCount,
     DomainModel,
+    ExperimentName,
     FamilySize,
     InequalityMargin,
     LawKey,
@@ -721,33 +721,23 @@ def _theorem_validation_observations(
     observations: list[TheoremValidationObservation] = []
     observations.extend(_legacy_observations(plan, workspace_root))
     observations.extend(
-        _identity_observations(
-            plan, workspace_root, ExperimentName.PATH_INFORMATION_DECOMPOSITION
-        )
+        _identity_observations(plan, workspace_root, ExperimentName.PATH_INFORMATION_DECOMPOSITION)
     )
     observations.extend(_convexity_observations(plan, workspace_root))
     observations.extend(
-        _identity_observations(
-            plan, workspace_root, ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY
-        )
+        _identity_observations(plan, workspace_root, ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY)
     )
     observations.extend(_sharp_set_observations(plan, workspace_root))
     observations.extend(_refinement_observations(plan, workspace_root))
     observations.extend(
-        _identity_observations(
-            plan, workspace_root, ExperimentName.STRICT_TIMING_GAIN_IDENTITY
-        )
+        _identity_observations(plan, workspace_root, ExperimentName.STRICT_TIMING_GAIN_IDENTITY)
     )
     observations.extend(_safety_boundary_observations(plan, workspace_root))
     observations.extend(
-        _identity_observations(
-            plan, workspace_root, ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY
-        )
+        _identity_observations(plan, workspace_root, ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY)
     )
     observations.extend(
-        _identity_observations(
-            plan, workspace_root, ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK
-        )
+        _identity_observations(plan, workspace_root, ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK)
     )
     observations.extend(
         _identity_observations(

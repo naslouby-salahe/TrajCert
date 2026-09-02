@@ -65,7 +65,14 @@ _CONFIG_ANNOTATION_PATTERN = re.compile(r"Config\b")
 _CONFIG_MODULE_NAME = "config.py"
 _TYPES_MODULE_NAME = "types.py"
 _CONSTANT_NAME_EXEMPTIONS = frozenset(
-    {"ENDPOINT_BAND_COUNT", "_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT"}
+    {
+        "ENDPOINT_BAND_COUNT",
+        "_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT",
+        "ENTROPY_MAXIMIZING_PROBABILITY",
+        "RESOLVED_HARM_BOUNDARY_OFFSET",
+        "INFORMATION_ROUNDOFF_ULPS",
+        "ARB_INCUMBENT_BISECTION_ITERATIONS",
+    }
 )
 _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
     {
@@ -119,6 +126,28 @@ _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
         "_format_tex_value",
         "_format_scalar",
         "_escape_tex",
+        # Wall-clock run telemetry (progress/elapsed-time logging): runtime
+        # instrumentation, not scientific domain data or a persisted artifact.
+        "ExperimentProgress._completed_cells",
+        "ExperimentProgress._started_at",
+        "cell_started",
+        "cell_finished",
+        "SearchProgress._phase",
+        "SearchProgress._node_cap",
+        "SearchProgress._started_at",
+        "StreamProgress._stage",
+        "StreamProgress._stream_count",
+        "StreamProgress._started_at",
+        "StreamProgress._last_logged_at",
+        "StreamProgress._log_interval_seconds",
+        # Process-pool worker count: execution/runtime concurrency degree, not
+        # a scientific domain value.
+        "_run_cells_in_parallel",
+        "_current_cell_label",
+        "SearchProgress._last_logged_at",
+        "SearchProgress._log_interval_seconds",
+        "__init__",
+        "maybe_log",
     }
 )
 

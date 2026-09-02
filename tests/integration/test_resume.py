@@ -28,7 +28,7 @@ from trajcert.experiments.runner import (
     scientific_result_path,
     scientific_specification_digest,
 )
-from trajcert.provenance import ExperimentNameValue
+from trajcert.provenance import EnvironmentDigest
 from trajcert.storage import (
     CellArtifactIndex,
     CompletionRecord,
@@ -39,12 +39,13 @@ from trajcert.storage import (
     model_digest,
     read_model,
 )
-from trajcert.types import PublicExecutionState, ReasonCode
+from trajcert.types import ExperimentName, PublicExecutionState, ReasonCode
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SHA256_HEX_LENGTH = 64
-_INVENTORY_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
-_LEGACY_INCOHERENCE_NAME = ExperimentNameValue("Path Information Decomposition")
+_INVENTORY_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
+_ENVIRONMENT_DIGEST = EnvironmentDigest(file_digest(_REPO_ROOT / "uv.lock"))
+_LEGACY_INCOHERENCE_NAME = ExperimentName.PATH_INFORMATION_DECOMPOSITION
 _EXECUTOR_INVOCATIONS_AFTER_OVERWRITE = 2
 
 
@@ -81,7 +82,9 @@ def _build_context(
         cell.identity.semantic_cell_key,
         component_digest,
     )
-    dependency = cell_dependency_fingerprint(tmp_path, plan, cell, dependency_specification)
+    dependency = cell_dependency_fingerprint(
+        tmp_path, plan, cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
+    )
     return ExecutionContext(
         workspace_root=tmp_path,
         plan_digest=plan.plan_digest,
@@ -288,14 +291,18 @@ def test_cell_dependency_fingerprint_reflects_upstream_completion(
         legacy_cell.identity.semantic_cell_key,
         component_digest,
     )
-    before = cell_dependency_fingerprint(tmp_path, plan, legacy_cell, dependency_specification)
+    before = cell_dependency_fingerprint(
+        tmp_path, plan, legacy_cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
+    )
 
     inventory_context = _build_context(tmp_path, plan, inventory_cell)
     executor = execute_dispatched_cell
     outcome = run_cell(inventory_cell, inventory_context, (), executor, False)
     assert outcome.state is PublicExecutionState.COMPLETED
 
-    after = cell_dependency_fingerprint(tmp_path, plan, legacy_cell, dependency_specification)
+    after = cell_dependency_fingerprint(
+        tmp_path, plan, legacy_cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
+    )
     assert before != after
 
 

@@ -17,6 +17,7 @@ from trajcert.math.bounds import (
     unresolved_as_harm_upper,
 )
 from trajcert.math.information import observed_timing_information
+from trajcert.telemetry import StreamProgress
 from trajcert.types import (
     AbsoluteTightening,
     CertifiedUpdateFractionGain,
@@ -136,16 +137,21 @@ def sequential_sensitivity_utility(
         band_count=ENDPOINT_BAND_COUNT,
         terminal_horizon=fine_partition.terminal_horizon,
     )
-    streams = tuple(
-        _sequential_stream_utility(
-            parameters=parameters,
-            fine_partition=fine_partition,
-            endpoint_partition=endpoint_partition,
-            sensitivity_budget=sensitivity_budget,
-            stream_index=stream_index,
+    stream_count = config.sequential.utility.streams
+    stream_progress = StreamProgress("sequential_utility", stream_count)
+    collected: list[SequentialStreamUtility] = []
+    for stream_index in range(stream_count):
+        collected.append(
+            _sequential_stream_utility(
+                parameters=parameters,
+                fine_partition=fine_partition,
+                endpoint_partition=endpoint_partition,
+                sensitivity_budget=sensitivity_budget,
+                stream_index=stream_index,
+            )
         )
-        for stream_index in range(config.sequential.utility.streams)
-    )
+        stream_progress.maybe_log(stream_index + 1)
+    streams = tuple(collected)
     return SequentialUtilityResult(
         sensitivity_budget=sensitivity_budget,
         streams=streams,

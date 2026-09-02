@@ -2,18 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import cache
 from heapq import heappop, heappush
 from math import inf, ldexp, nextafter
 
 import numpy as np
 from flint import arb, ctx
 
-from trajcert.config import active_config
+from trajcert.constants import ARB_INCUMBENT_BISECTION_ITERATIONS, ENTROPY_MAXIMIZING_PROBABILITY
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelope
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.entropy import binary_entropy_from_masses
+from trajcert.telemetry import SearchProgress
 from trajcert.types import (
     ArbEndpointValue,
     ArbitraryPrecisionBits,
@@ -235,10 +237,12 @@ def _projection_search(
     )
     visited = 0
     active: _Box | None = None
+    progress = SearchProgress("projection_search", node_cap)
     try:
         while queue and visited < node_cap:
             active = heappop(queue)[2]
             visited += 1
+            progress.maybe_log(visited, len(queue), incumbent)
             counter, incumbent, completed = _projection_step(
                 queue,
                 counter,
@@ -381,10 +385,12 @@ def _compatibility_search(
     best_upper = inf
     visited = 0
     active: _Box | None = None
+    progress = SearchProgress("compatibility_search", node_cap)
     try:
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)
             visited += 1
+            progress.maybe_log(visited, len(queue), best_upper)
             counter, best_upper, completed = _compatibility_step(
                 queue,
                 counter,
@@ -504,10 +510,12 @@ def _intrinsic_search(
     )
     visited = 0
     active: _Box | None = None
+    progress = SearchProgress("intrinsic_search", node_cap)
     try:
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)
             visited += 1
+            progress.maybe_log(visited, len(queue), best_upper)
             counter, best_upper, completed = _intrinsic_step(
                 queue,
                 counter,
@@ -783,15 +791,18 @@ def _bisected_hidden_mass(
     minimum_hidden, minimum_information = minimum
     if minimum_information > rho or minimum_hidden > hidden_upper:
         return None
+    resolved_entropy = _resolved_bandwise_entropy_arb(summary)
     lower = max(hidden_lower, minimum_hidden)
     upper = hidden_upper
-    for _ in range(active_config.get().numerics.bisection_iterations_past_float64_precision):
+    for _ in range(ARB_INCUMBENT_BISECTION_ITERATIONS):
         candidate = (lower + upper) / 2.0
-        if _verified_information_feasible(summary, candidate, rho):
+        if candidate in (lower, upper):
+            break
+        if _verified_information_feasible(summary, candidate, rho, resolved_entropy):
             lower = candidate
         else:
             upper = candidate
-    if not _verified_information_feasible(summary, lower, rho):
+    if not _verified_information_feasible(summary, lower, rho, resolved_entropy):
         return None
     return lower
 
@@ -838,18 +849,27 @@ def _verified_information_feasible(
     summary: ObservableSummary,
     hidden: Mass,
     rho: SensitivityBudget,
+    resolved_entropy: arb | None = None,
 ) -> SearchPredicate:
-    information = _information_point_arb(summary, hidden)
+    information = _information_point_arb(summary, hidden, resolved_entropy)
     return _arb_upper(information) <= rho
 
 
-def _information_point_arb(summary: ObservableSummary, hidden: Mass) -> arb:
-    harmful = summary.resolved_harmful_mass
-    unresolved = summary.unresolved_mass
-    theta_entropy = _binary_entropy_arb(_arb_exact(harmful + hidden))
+def _resolved_bandwise_entropy_arb(summary: ObservableSummary) -> arb:
     resolved_entropy = arb(0)
     for left, right in zip(summary.harmful_by_band, summary.correct_by_band, strict=True):
         resolved_entropy += _mass_entropy_arb(_arb_exact(float(left)), _arb_exact(float(right)))
+    return resolved_entropy
+
+
+def _information_point_arb(
+    summary: ObservableSummary, hidden: Mass, resolved_entropy: arb | None = None
+) -> arb:
+    harmful = summary.resolved_harmful_mass
+    unresolved = summary.unresolved_mass
+    theta_entropy = _binary_entropy_arb(_arb_exact(harmful + hidden))
+    if resolved_entropy is None:
+        resolved_entropy = _resolved_bandwise_entropy_arb(summary)
     terminal_entropy = _mass_entropy_arb(
         _arb_exact(hidden), _arb_exact(max(0.0, unresolved - hidden))
     )
@@ -888,8 +908,8 @@ def _binary_entropy_bounds(lower: Mass, upper: Mass) -> tuple[InformationNats, I
     right = _binary_entropy_point_arb(upper)
     minimum = min(_arb_lower(left), _arb_lower(right))
     maximum = max(_arb_upper(left), _arb_upper(right))
-    if lower <= active_config.get().numerics.entropy_maximizing_probability <= upper:
-        maximum = max(maximum, _arb_upper(arb(2).log()))
+    if lower <= ENTROPY_MAXIMIZING_PROBABILITY <= upper:
+        maximum = max(maximum, _arb_upper(_log_two(ctx.prec)))
     return max(0.0, minimum), max(0.0, maximum)
 
 
@@ -905,13 +925,13 @@ def _mass_entropy_bounds(
         for right in (right_lower, right_upper)
     )
     lower = min(_arb_lower(value) for value in corners)
-    left_interval = _arb_interval(left_lower, left_upper)
-    right_interval = _arb_interval(right_lower, right_upper)
     if left_lower > 0.0 and right_lower > 0.0:
+        left_interval = _arb_interval(left_lower, left_upper)
+        right_interval = _arb_interval(right_lower, right_upper)
         interval_upper = _arb_upper(_mass_entropy_arb(left_interval, right_interval))
     else:
         interval_upper = inf
-    generic_upper = (left_upper + right_upper) * _arb_upper(arb(2).log())
+    generic_upper = (left_upper + right_upper) * _arb_upper(_log_two(ctx.prec))
     upper = min(interval_upper, generic_upper)
     return max(0.0, lower), max(0.0, upper)
 
@@ -1013,7 +1033,7 @@ def _queue_upper(
     incumbent: RiskValue | None,
     active: _Box | None = None,
 ) -> RiskValue:
-    values = [item[2].objective_upper for item in queue]
+    values = [-queue[0][0]] if queue else []
     if active is not None:
         values.append(active.objective_upper)
     if incumbent is not None:
@@ -1043,7 +1063,19 @@ def _assumption_free_envelope_upper(envelope: ObservableSummaryEnvelope) -> Risk
 
 def _arb_exact(value: ArbEndpointValue) -> arb:
     numerator, denominator = value.as_integer_ratio()
-    return arb(f"{numerator}/{denominator}")
+    if denominator == 1:
+        return arb(numerator)
+    return arb(numerator) / arb(denominator)
+
+
+@cache
+def _log_two(precision_bits: ArbitraryPrecisionBits) -> arb:
+    previous_precision = ctx.prec
+    ctx.prec = precision_bits
+    try:
+        return arb(2).log()
+    finally:
+        ctx.prec = previous_precision
 
 
 def _arb_interval(lower: Mass, upper: Mass) -> arb:

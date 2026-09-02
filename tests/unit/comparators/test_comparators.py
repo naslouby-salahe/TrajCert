@@ -29,6 +29,8 @@ from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.projection import ProjectionTerminationReason
 from trajcert.types import ActionChannelId, ClientId, EpochId
 
+_COMPARISON_GUARD = 1e-12
+
 
 def _state(counts: tuple[int, ...], band_count: int = 2) -> CategoricalState:
     partition = build_partition(band_count, band_count, 8.0)
@@ -127,11 +129,13 @@ def test_ignorable_delay_update_intersects_previous_running() -> None:
 def test_legacy_bandwise_odds_ratio_rejects_invalid_gamma() -> None:
     observable = summary([0.2, 0.3], [0.3, 0.1], 0.1)
     with pytest.raises(InvalidScientificDataError, match="at least one"):
-        _ = legacy_bandwise_odds_ratio(observable, 0.9)
+        _ = legacy_bandwise_odds_ratio(observable, 0.9, _COMPARISON_GUARD)
 
 
 def test_legacy_bandwise_odds_ratio_all_zero_bands_applicable() -> None:
-    result = legacy_bandwise_odds_ratio(summary([0.0, 0.0], [0.0, 0.0], 1.0), 1.5)
+    result = legacy_bandwise_odds_ratio(
+        summary([0.0, 0.0], [0.0, 0.0], 1.0), 1.5, _COMPARISON_GUARD
+    )
     assert result.applicability is LegacyApplicability.APPLICABLE
     assert result.hidden_mass_interval is not None
     assert result.informative_bands == 0
@@ -139,18 +143,22 @@ def test_legacy_bandwise_odds_ratio_all_zero_bands_applicable() -> None:
 
 def test_legacy_bandwise_odds_ratio_zero_edge_band_incompatible() -> None:
     assert (
-        legacy_bandwise_odds_ratio(summary([0.0, 0.2], [0.1, 0.1], 0.6), 1.5).applicability
+        legacy_bandwise_odds_ratio(
+            summary([0.0, 0.2], [0.1, 0.1], 0.6), 1.5, _COMPARISON_GUARD
+        ).applicability
         is LegacyApplicability.MODEL_INCOMPATIBLE
     )
     assert (
-        legacy_bandwise_odds_ratio(summary([0.2, 0.0], [0.1, 0.1], 0.6), 1.5).applicability
+        legacy_bandwise_odds_ratio(
+            summary([0.2, 0.0], [0.1, 0.1], 0.6), 1.5, _COMPARISON_GUARD
+        ).applicability
         is LegacyApplicability.MODEL_INCOMPATIBLE
     )
 
 
 def test_legacy_bandwise_odds_ratio_symmetric_bands_applicable() -> None:
     observable = summary([0.2, 0.2], [0.2, 0.2], 0.2)
-    result = legacy_bandwise_odds_ratio(observable, 1.5)
+    result = legacy_bandwise_odds_ratio(observable, 1.5, _COMPARISON_GUARD)
     assert result.applicability is LegacyApplicability.APPLICABLE
     assert result.hidden_mass_interval is not None
     assert result.hidden_mass_interval.lower == pytest.approx(0.08)
@@ -159,6 +167,17 @@ def test_legacy_bandwise_odds_ratio_symmetric_bands_applicable() -> None:
     assert result.latent_risk_interval.lower == pytest.approx(0.48)
     assert result.latent_risk_interval.upper == pytest.approx(0.52)
     assert result.informative_bands == len(observable.harmful_by_band)
+
+
+def test_legacy_bandwise_odds_ratio_tolerates_knife_edge_roundoff() -> None:
+    observable = summary(
+        [0.1956521739130435, 0.0676328502415459], [0.15, 0.105], 0.4817149758454106
+    )
+    result = legacy_bandwise_odds_ratio(observable, 1.5, _COMPARISON_GUARD)
+    assert result.applicability is LegacyApplicability.APPLICABLE
+    assert result.hidden_mass_interval is not None
+    assert result.hidden_mass_interval.lower == pytest.approx(0.23671497584541068, abs=1e-9)
+    assert result.hidden_mass_interval.upper == pytest.approx(0.23671497584541068, abs=1e-9)
 
 
 def test_pattern_mixture_requires_two_nonempty_bands() -> None:

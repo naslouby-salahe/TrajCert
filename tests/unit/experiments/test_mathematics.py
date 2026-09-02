@@ -99,6 +99,7 @@ def test_sharp_set_constructive_identity_matches_oracle() -> None:
         _SHARP_IDENTITY_ATOL,
         _ORACLE_DIGITS,
         _ORACLE_BRACKET_WIDTH,
+        _COMPARISON_GUARD,
     )
     assert isinstance(result, SharpSetIdentityResult)
     assert result.passed
@@ -120,6 +121,7 @@ def test_sharp_set_constructive_identity_model_incompatible() -> None:
         _SHARP_IDENTITY_ATOL,
         _ORACLE_DIGITS,
         _ORACLE_BRACKET_WIDTH,
+        _COMPARISON_GUARD,
     )
     assert result.passed
     assert result.production_lower is None
@@ -221,7 +223,7 @@ def test_safety_boundary_identity_without_frontier() -> None:
 
 
 def test_evaluate_safety_boundary_case_invalid_case() -> None:
-    cases = safety_budget_cases(summary([0.0], [0.0], 1.0), 0.005)
+    cases = safety_budget_cases(summary([0.0], [0.0], 1.0))
     invalid = next(case for case in cases if not case.valid)
     result = evaluate_safety_boundary_case(
         summary([0.2], [0.4], 0.4), invalid, _ORACLE_DIGITS, _IDENTITY_ATOL
@@ -232,7 +234,7 @@ def test_evaluate_safety_boundary_case_invalid_case() -> None:
 
 
 def test_evaluate_safety_boundary_case_valid_case() -> None:
-    cases = safety_budget_cases(summary([0.2], [0.4], 0.4), 0.005)
+    cases = safety_budget_cases(summary([0.2], [0.4], 0.4))
     valid = next(case for case in cases if case.valid and case.risk_budget is not None)
     result = evaluate_safety_boundary_case(
         summary([0.2], [0.4], 0.4), valid, _ORACLE_DIGITS, _IDENTITY_ATOL
@@ -274,6 +276,18 @@ def test_legacy_partition_incoherence_rejects_outside_unit_q() -> None:
         _ = evaluate_legacy_partition_incoherence(2.0, 0.0)
     with pytest.raises(InvalidScientificDataError, match="strictly inside"):
         _ = evaluate_legacy_partition_incoherence(2.0, 1.0)
+
+
+@pytest.mark.parametrize(
+    ("gamma", "q"),
+    [(1.5, 0.1), (1.5, 0.3), (2.0, 0.1), (2.0, 0.3), (4.0, 0.1), (4.0, 0.3)],
+)
+def test_legacy_partition_incoherence_accepts_every_configured_case(gamma: float, q: float) -> None:
+    result = evaluate_legacy_partition_incoherence(gamma, q)
+    assert result.passed
+    fine_interval = result.fine_hidden_mass_interval
+    assert fine_interval.lower - _NEAR_ZERO <= result.true_hidden_terminal_harmful
+    assert result.true_hidden_terminal_harmful <= fine_interval.upper + _NEAR_ZERO
 
 
 def test_legacy_partition_incoherence_measures_endpoint_widening() -> None:

@@ -21,7 +21,7 @@ from trajcert.experiments.synthesis import (
     synthesis_artifact_keys,
     synthesis_artifact_paths,
 )
-from trajcert.provenance import ExperimentNameValue
+from trajcert.provenance import EnvironmentDigest
 from trajcert.reporting import export
 from trajcert.reporting.export import (
     ReportExportResult,
@@ -56,6 +56,7 @@ from trajcert.storage import (
     model_digest,
     write_completion_last,
 )
+from trajcert.types import ExperimentName
 
 _RENDERED_COUNT = 3
 _SOURCE_COUNT = 2
@@ -355,9 +356,7 @@ def test_export_report_renders_named_experiment_tree(
 ) -> None:
     workspace = _completed_workspace(tmp_path)
     _export_harness(monkeypatch)
-    result = export_report(
-        workspace, experiment_name=ExperimentNameValue("Anytime Coverage Stress")
-    )
+    result = export_report(workspace, experiment_name=ExperimentName.ANYTIME_COVERAGE_STRESS)
     assert result.target == workspace / "results" / "experiments" / "anytime-coverage-stress"
     assert result.reused is False
 
@@ -367,7 +366,7 @@ def test_export_report_renders_synthesis_project_summary(
 ) -> None:
     workspace = _completed_workspace(tmp_path)
     _export_harness(monkeypatch)
-    result = export_report(workspace, experiment_name=ExperimentNameValue("Statistical Synthesis"))
+    result = export_report(workspace, experiment_name=ExperimentName.STATISTICAL_SYNTHESIS)
     assert result.target == workspace / "results" / "project_summary"
     assert result.reused is False
 
@@ -377,7 +376,7 @@ def test_export_report_rejects_ownerless_experiment(
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
     monkeypatch.setattr(export, "require_synthesis_completion", _noop_synthesis_completion)
-    experiment_name = ExperimentNameValue("Sequential Sensitivity Utility")
+    experiment_name = ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY
     with pytest.raises(InvalidScientificDataError, match="no roadmap publication artifacts"):
         _ = export_report(workspace, experiment_name=experiment_name)
 
@@ -402,9 +401,9 @@ def test_export_report_rejects_missing_source_commit(
 
 
 def _duplicate_synthesis_cells(
-    plan: ExperimentPlan, _name: ExperimentNameValue
+    plan: ExperimentPlan, _name: ExperimentName
 ) -> tuple[PlannedCell, ...]:
-    cell = cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
+    cell = cells_for_experiment(plan, ExperimentName.STATISTICAL_SYNTHESIS)[0]
     return (cell, cell)
 
 
@@ -418,9 +417,7 @@ def test_require_synthesis_completion_rejects_multiple_cells(
         export.require_synthesis_completion(tmp_path)
 
 
-def _fixed_component_digest(
-    _workspace_root: Path, _experiment_name: ExperimentNameValue
-) -> DigestHex:
+def _fixed_component_digest(_workspace_root: Path, _experiment_name: ExperimentName) -> DigestHex:
     return _COMPONENT_DIGEST
 
 
@@ -429,6 +426,8 @@ def _fixed_dependency_fingerprint(
     _plan: ExperimentPlan,
     _cell: PlannedCell,
     _scientific_dependency: SpecificationDigest,
+    _implementation_component_digest: DigestHex,
+    _environment_dependency_digest: EnvironmentDigest,
 ) -> DependencyFingerprint:
     return DependencyFingerprint("upstream-fingerprint")
 
@@ -478,7 +477,7 @@ def _matching_completion(
 def _synthesis_cell(config: TrajCertConfig) -> PlannedCell:
     _ = active_config.set(config)
     plan = build_plan(config)
-    return cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
+    return cells_for_experiment(plan, ExperimentName.STATISTICAL_SYNTHESIS)[0]
 
 
 def test_require_synthesis_completion_rejects_stale_completion(
@@ -529,7 +528,7 @@ def _stale_completion(_path: Path, _model_type: type[CompletionRecord]) -> Compl
 def _reordered_plan(config: TrajCertConfig) -> ExperimentPlan:
     _ = active_config.set(config)
     plan = build_plan(config)
-    synthesis = cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
+    synthesis = cells_for_experiment(plan, ExperimentName.STATISTICAL_SYNTHESIS)[0]
     others = tuple(cell for cell in plan.cells if cell.identity != synthesis.identity)
     return plan.model_copy(update={"cells": (synthesis, *others)})
 
@@ -543,6 +542,7 @@ def test_require_synthesis_completion_rejects_stale_upstream(
     monkeypatch.setattr(export, "cell_dependency_fingerprint", _fixed_dependency_fingerprint)
     monkeypatch.setattr(export, "read_model", _stale_completion)
     _ = active_config.set(config)
+    _ = (tmp_path / "uv.lock").write_text("locked\n", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError, match="upstream completion is stale"):
         export.require_synthesis_completion(tmp_path)
 

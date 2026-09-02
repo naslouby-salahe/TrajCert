@@ -49,6 +49,20 @@ def test_solver_bisects_interior_roots_and_rejects_invalid_tolerances() -> None:
         _ = solve_hidden_mass_interval(observed, 0.45, 0.0, 1e-7)
 
 
+_TIGHT_ROOT_ATOL = 1e-10
+_LOOSE_IDENTITY_ATOL = 1e-3
+
+
+def test_solver_bisection_narrows_to_root_atol_not_identity_atol() -> None:
+    observed = summary([0.2, 0.0], [0.0, 0.4], 0.4)
+    result = solve_hidden_mass_interval(observed, 0.45, _TIGHT_ROOT_ATOL, _LOOSE_IDENTITY_ATOL)
+    assert result.lower_root is not None
+    assert result.upper_root is not None
+    for root in (result.lower_root, result.upper_root):
+        assert root.status is RootStatus.BISECTION
+        assert root.width <= _TIGHT_ROOT_ATOL
+
+
 @pytest.mark.parametrize(("width", "tolerance", "expected"), [(0.0, 0.1, 0), (0.1, 0.1, 2)])
 def test_solver_boundary_helper_values(width: float, tolerance: float, expected: int) -> None:
     assert solver.compute_iteration_cap(width, tolerance) == expected

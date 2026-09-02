@@ -286,17 +286,13 @@ class NumericsConfig(ConfigModel):
     outer_gap: ToleranceValue
     outer_max_nodes: OuterMaxNodes
     arbitrary_precision_bits: ArbitraryPrecisionBits
-    float_roundoff_ulps: ToleranceValue
     profile_grid_points: GridPointCount
     sharp_diagnostic_grid_points: GridPointCount
     oracle_bracket_width: ToleranceValue
     projection_refinement_candidates: RefinementCandidateCount
     projection_refinement_steps: RefinementStepCount
-    resolved_harm_boundary_offset: ToleranceValue
     compatibility_floor_offset: ToleranceValue
     sharpness_diagnostic_offset: ToleranceValue
-    entropy_maximizing_probability: Probability
-    bisection_iterations_past_float64_precision: IterationBudget
     log2_match_tolerance: ToleranceValue
 
 

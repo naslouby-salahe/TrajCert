@@ -23,7 +23,6 @@ from trajcert.experiments.status import (
     inspect_cell_status,
 )
 from trajcert.provenance import (
-    ExperimentNameValue,
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
@@ -41,13 +40,19 @@ from trajcert.storage import (
     atomic_write_model,
     model_digest,
 )
-from trajcert.types import EvidenceClass, FailureMessage, PublicExecutionState, ReasonCode
+from trajcert.types import (
+    EvidenceClass,
+    ExperimentName,
+    FailureMessage,
+    PublicExecutionState,
+    ReasonCode,
+)
 
-_EXPERIMENT_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
+_EXPERIMENT_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
 _MIXED_STATUS_CELL_COUNT = 4
 
 
-def _cell(executable: bool = True, required: tuple[ExperimentNameValue, ...] = ()) -> PlannedCell:
+def _cell(executable: bool = True, required: tuple[ExperimentName, ...] = ()) -> PlannedCell:
     return PlannedCell(
         experiment_order=2,
         cell_ordinal=1,
@@ -121,17 +126,17 @@ def test_inspect_cell_status_ready_without_artifacts(tmp_path: Path) -> None:
 
 
 def test_inspect_cell_status_blocked_missing_dependency_status() -> None:
-    cell = _cell(required=(ExperimentNameValue("Legacy Partition Incoherence Check"),))
+    cell = _cell(required=(ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,))
     result = inspect_cell_status(cell, _context(Path("/nonexistent")), ())
     assert result.state is PublicExecutionState.BLOCKED
     assert result.reason == ReasonCode("MISSING_DEPENDENCY_STATUS")
 
 
 def test_inspect_cell_status_blocked_uncompleted_dependency() -> None:
-    cell = _cell(required=(ExperimentNameValue("Legacy Partition Incoherence Check"),))
+    cell = _cell(required=(ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,))
     dependencies = (
         DependencyReadiness(
-            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
+            experiment_name=ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
             state=PublicExecutionState.READY,
         ),
     )

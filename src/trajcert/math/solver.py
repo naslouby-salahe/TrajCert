@@ -174,7 +174,7 @@ def _bisect(
             raise RootSolveError("derived bisection iteration cap exhausted")
         midpoint = (lower + upper) / 2.0
         residual = _profile_residual(summary, midpoint, rho)
-        if abs(residual) <= identity_atol:
+        if residual == 0.0:
             lower = midpoint
             upper = midpoint
             break

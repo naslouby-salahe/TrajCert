@@ -1,29 +1,22 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
-from trajcert.exceptions import SerializationError
 from trajcert.provenance import (
     ArtifactTypeName,
     CodeCommit,
     DependencyMaterial,
     EnvironmentDigest,
-    ExperimentNameValue,
     ParentArtifactIdentity,
-    ProducerComponentName,
-    ProducerComponentRegistration,
     ProvenanceMaterial,
     SemanticCellIdentity,
     SemanticCoordinates,
     dependency_fingerprint,
-    implementation_component_digest,
     provenance_fingerprint,
 )
 from trajcert.storage import ArtifactKey, DigestHex, SpecificationDigest
-from trajcert.types import LawName, PartitionName
+from trajcert.types import ExperimentName, LawName, PartitionName
 
 _HEX_LENGTH = 64
 _HEX_A = "a" * _HEX_LENGTH
@@ -57,7 +50,7 @@ def _coordinates() -> SemanticCoordinates:
 
 def _identity() -> SemanticCellIdentity:
     return SemanticCellIdentity(
-        experiment_name=ExperimentNameValue("My Experiment!"), coordinates=_coordinates()
+        experiment_name=ExperimentName.PARTITION_COHERENCE, coordinates=_coordinates()
     )
 
 
@@ -145,12 +138,12 @@ def test_semantic_coordinates_rejects_invalid_values(field: str, value: object) 
 
 def test_semantic_cell_identity_experiment_slug_is_semantic() -> None:
     identity = _identity()
-    assert identity.experiment_slug == "my-experiment"
+    assert identity.experiment_slug == "partition-coherence"
 
 
 def test_semantic_cell_key_embeds_experiment_and_canonical_coordinates() -> None:
     identity = _identity()
-    assert identity.semantic_cell_key.startswith("My Experiment!::")
+    assert identity.semantic_cell_key.startswith("Partition Coherence::")
     assert "partition_name" in str(identity.semantic_cell_key)
 
 
@@ -170,10 +163,10 @@ def test_semantic_cell_identity_path_coordinates() -> None:
 
 def test_semantic_cell_identity_empty_coordinates_path_is_empty() -> None:
     identity = SemanticCellIdentity(
-        experiment_name=ExperimentNameValue("X"), coordinates=SemanticCoordinates()
+        experiment_name=ExperimentName.PARTITION_COHERENCE, coordinates=SemanticCoordinates()
     )
     assert identity.path_coordinates == ()
-    assert identity.experiment_slug == "x"
+    assert identity.experiment_slug == "partition-coherence"
 
 
 def test_semantic_cell_key_is_deterministic() -> None:
@@ -237,51 +230,3 @@ def test_provenance_fingerprint_is_content_sensitive() -> None:
     base = _provenance_material()
     changed = base.model_copy(update={"dirty_tree_flag": True})
     assert provenance_fingerprint(base) != provenance_fingerprint(changed)
-
-
-def test_implementation_component_digest_is_deterministic(tmp_path: Path) -> None:
-    _ = (tmp_path / "x.py").write_text("print(1)\n", encoding="utf-8")
-    _ = (tmp_path / "y.py").write_text("print(2)\n", encoding="utf-8")
-    registration = _registration()
-    first = implementation_component_digest(tmp_path, registration)
-    second = implementation_component_digest(tmp_path, registration)
-    assert first == second
-
-
-def test_implementation_component_digest_is_order_independent(tmp_path: Path) -> None:
-    _ = (tmp_path / "x.py").write_text("print(1)\n", encoding="utf-8")
-    _ = (tmp_path / "y.py").write_text("print(2)\n", encoding="utf-8")
-    forward = implementation_component_digest(tmp_path, _registration())
-    reversed_registration = ProducerComponentRegistration(
-        producer_component=ProducerComponentName("component"),
-        source_files=(Path("y.py"), Path("x.py")),
-    )
-    assert forward == implementation_component_digest(tmp_path, reversed_registration)
-
-
-def test_implementation_component_digest_is_content_sensitive(tmp_path: Path) -> None:
-    source = tmp_path / "x.py"
-    _ = source.write_text("print(1)\n", encoding="utf-8")
-    registration = ProducerComponentRegistration(
-        producer_component=ProducerComponentName("component"),
-        source_files=(Path("x.py"),),
-    )
-    first = implementation_component_digest(tmp_path, registration)
-    _ = source.write_text("print(2)\n", encoding="utf-8")
-    assert implementation_component_digest(tmp_path, registration) != first
-
-
-def test_implementation_component_digest_rejects_missing_source(tmp_path: Path) -> None:
-    registration = ProducerComponentRegistration(
-        producer_component=ProducerComponentName("component"),
-        source_files=(Path("missing.py"),),
-    )
-    with pytest.raises(SerializationError):
-        _ = implementation_component_digest(tmp_path, registration)
-
-
-def _registration() -> ProducerComponentRegistration:
-    return ProducerComponentRegistration(
-        producer_component=ProducerComponentName("component"),
-        source_files=(Path("x.py"), Path("y.py")),
-    )

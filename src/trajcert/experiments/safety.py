@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from trajcert.data.laws import LawParameters
 from trajcert.data.summaries import ObservableSummary
 from trajcert.experiments.solver_validation import (
     SafetyFrontierOracleComparison,
@@ -17,6 +18,7 @@ from trajcert.math.safety import (
     safety_budget_cases,
 )
 from trajcert.types import (
+    BandCount,
     DomainModel,
     InformationNats,
     OracleDigits,
@@ -72,6 +74,9 @@ def compatibility_floor_behavior(
     oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
     compatibility_floor_offset: ToleranceValue,
+    comparison_guard: ToleranceValue,
+    population_law: LawParameters | None = None,
+    population_band_count: BandCount | None = None,
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
@@ -99,6 +104,9 @@ def compatibility_floor_behavior(
             identity_atol=identity_atol,
             oracle_digits=oracle_digits,
             oracle_bracket_width=oracle_bracket_width,
+            comparison_guard=comparison_guard,
+            population_law=population_law,
+            population_band_count=population_band_count,
         )
         points.append(
             CompatibilitySweepPoint(
@@ -119,6 +127,9 @@ def sharpness_against_generic_oracle(
     oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
     sharpness_diagnostic_offset: ToleranceValue,
+    comparison_guard: ToleranceValue,
+    population_law: LawParameters | None = None,
+    population_band_count: BandCount | None = None,
 ) -> SolverOracleComparison:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else float(tau_value)
@@ -129,6 +140,9 @@ def sharpness_against_generic_oracle(
         identity_atol=identity_atol,
         oracle_digits=oracle_digits,
         oracle_bracket_width=oracle_bracket_width,
+        comparison_guard=comparison_guard,
+        population_law=population_law,
+        population_band_count=population_band_count,
     )
 
 
@@ -136,12 +150,11 @@ def safety_and_intrinsic_impossibility(
     summary: ObservableSummary,
     oracle_digits: OracleDigits,
     identity_atol: ToleranceValue,
-    resolved_harm_boundary_offset: ToleranceValue,
 ) -> SafetyIntrinsicResult:
     tau_value = observed_timing_information(summary)
     tau = None if tau_value is None else float(tau_value)
     evaluations: list[SafetyCaseEvaluation] = []
-    for case in safety_budget_cases(summary, resolved_harm_boundary_offset):
+    for case in safety_budget_cases(summary):
         expected_regime = _expected_safety_regime(case)
         if not case.valid or case.risk_budget is None:
             evaluations.append(

@@ -15,7 +15,7 @@ from trajcert.experiments.anytime import HandCaseResult
 from trajcert.experiments.mathematics import IdentityResult
 from trajcert.experiments.plan import PlannedCell, build_plan, cells_for_experiment
 from trajcert.provenance import (
-    ExperimentNameValue,
+    EnvironmentDigest,
     ProducerComponentName,
     SemanticCellIdentity,
     SemanticCoordinates,
@@ -39,6 +39,7 @@ from trajcert.types import (
     ClientId,
     EpochId,
     EvidenceClass,
+    ExperimentName,
     PartitionName,
     PublicExecutionState,
     ReasonCode,
@@ -48,8 +49,8 @@ from trajcert.types import (
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _SMOKE_FIXTURE_COUNT = 6
 _SHA256_HEX_LENGTH = 64
-_INVENTORY = ExperimentNameValue("Legacy Partition Incoherence Check")
-_HAND_CASE_EXPERIMENT = ExperimentNameValue("Anytime Implementation Hand Cases")
+_INVENTORY = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
+_HAND_CASE_EXPERIMENT = ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES
 _HAND_CASE_VARIANT = VariantName("hand-case-01")
 _HAND_CASE_PARTITION = PartitionName("8-band partition")
 _MISSING_CONFIGURATION_REASON = ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
@@ -67,7 +68,7 @@ def _cell(
     *,
     executable: bool = True,
     invalid_reason: ReasonCode | None = None,
-    required: tuple[ExperimentNameValue, ...] = (),
+    required: tuple[ExperimentName, ...] = (),
 ) -> PlannedCell:
     return PlannedCell(
         experiment_order=1,
@@ -335,7 +336,7 @@ def test_producer_component_digest_is_deterministic() -> None:
 
 
 def test_producer_component_digest_rejects_unregistered_experiment(tmp_path: Path) -> None:
-    experiment_name = ExperimentNameValue("Unregistered Experiment")
+    experiment_name = ExperimentName.REAL_TRAJECTORY_VALIDATION
     with pytest.raises(InvalidScientificDataError, match="missing producer-component registration"):
         _ = runner.producer_component_digest(tmp_path, experiment_name)
 
@@ -356,8 +357,14 @@ def test_cell_dependency_fingerprint_is_deterministic_without_parents(tmp_path: 
     plan = build_plan(config)
     cell = cells_for_experiment(plan, _HAND_CASE_EXPERIMENT)[0]
     scientific_dependency = SpecificationDigest("dependency")
-    first = runner.cell_dependency_fingerprint(tmp_path, plan, cell, scientific_dependency)
-    second = runner.cell_dependency_fingerprint(tmp_path, plan, cell, scientific_dependency)
+    component_digest = DigestHex("b" * _SHA256_HEX_LENGTH)
+    environment_digest = EnvironmentDigest("c" * _SHA256_HEX_LENGTH)
+    first = runner.cell_dependency_fingerprint(
+        tmp_path, plan, cell, scientific_dependency, component_digest, environment_digest
+    )
+    second = runner.cell_dependency_fingerprint(
+        tmp_path, plan, cell, scientific_dependency, component_digest, environment_digest
+    )
     assert first == second
 
 
@@ -365,11 +372,11 @@ def test_expected_seed_count_reflects_stream_configuration() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     _ = active_config.set(config)
     assert (
-        runner.expected_seed_count(ExperimentNameValue("Anytime Coverage Stress"))
+        runner.expected_seed_count(ExperimentName.ANYTIME_COVERAGE_STRESS)
         == config.sequential.coverage.streams
     )
     assert (
-        runner.expected_seed_count(ExperimentNameValue("Sequential Sensitivity Utility"))
+        runner.expected_seed_count(ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY)
         == config.sequential.utility.streams
     )
     assert runner.expected_seed_count(_HAND_CASE_EXPERIMENT) == 0
@@ -544,12 +551,8 @@ def test_audit_local_validity_reports_runtime_violations() -> None:
 def test_execute_scientific_cell_dispatches_proof_checks() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     plan = build_plan(config)
-    projection = cells_for_experiment(plan, ExperimentNameValue("Anytime Projection Proof Check"))[
-        0
-    ]
-    complexity = cells_for_experiment(
-        plan, ExperimentNameValue("Population Complexity Proof Check")
-    )[0]
+    projection = cells_for_experiment(plan, ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK)[0]
+    complexity = cells_for_experiment(plan, ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK)[0]
     projection_result = cast(IdentityResult, runner.execute_scientific_cell(projection, config))
     complexity_result = cast(IdentityResult, runner.execute_scientific_cell(complexity, config))
     assert projection_result.passed is True
@@ -569,7 +572,7 @@ def test_execute_scientific_cell_rejects_unregistered_experiment() -> None:
         experiment_order=1,
         cell_ordinal=1,
         identity=SemanticCellIdentity(
-            experiment_name=ExperimentNameValue("Unregistered Experiment"),
+            experiment_name=ExperimentName.REAL_TRAJECTORY_VALIDATION,
             coordinates=SemanticCoordinates(),
         ),
         evidence_class=EvidenceClass.VALIDATION,
@@ -585,7 +588,7 @@ def test_execute_dispatched_cell_rejects_statistical_synthesis(tmp_path: Path) -
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     _ = active_config.set(config)
     plan = build_plan(config)
-    cell = cells_for_experiment(plan, ExperimentNameValue("Statistical Synthesis"))[0]
+    cell = cells_for_experiment(plan, ExperimentName.STATISTICAL_SYNTHESIS)[0]
     context = _context(tmp_path, cell)
     with pytest.raises(InvalidScientificDataError, match="dedicated cross-experiment executor"):
         _ = runner.execute_dispatched_cell(cell, context)

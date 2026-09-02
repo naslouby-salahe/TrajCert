@@ -31,7 +31,6 @@ from trajcert.experiments.plan import (
 from trajcert.experiments.runner import SmokeResult
 from trajcert.experiments.status import ExperimentStatus
 from trajcert.provenance import (
-    ExperimentNameValue,
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
@@ -49,6 +48,7 @@ from trajcert.storage import (
 from trajcert.types import (
     CliCommand,
     EvidenceClass,
+    ExperimentName,
     PublicExecutionState,
     ReasonCode,
 )
@@ -79,7 +79,7 @@ def _single_cell_plan() -> ExperimentPlan:
         experiment_order=1,
         cell_ordinal=1,
         identity=SemanticCellIdentity(
-            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
+            experiment_name=ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
             coordinates=SemanticCoordinates(variant_name=VariantName("q=0.1, Gamma=1.5")),
         ),
         evidence_class=EvidenceClass.VALIDATION,
@@ -100,7 +100,7 @@ def _single_cell_plan() -> ExperimentPlan:
 def _fake_run_experiment(experiment_name: str, *, overwrite: bool) -> RunExperimentResult:
     _ = overwrite
     return RunExperimentResult(
-        experiment_name=ExperimentNameValue(experiment_name),
+        experiment_name=ExperimentName(experiment_name),
         state=PublicExecutionState.COMPLETED,
         completed_cells=1,
         reused_cells=0,
@@ -111,7 +111,7 @@ def _fake_run_experiment(experiment_name: str, *, overwrite: bool) -> RunExperim
 
 def _fake_experiment_status(experiment_name: str) -> ExperimentStatus:
     return ExperimentStatus(
-        experiment_name=ExperimentNameValue(experiment_name),
+        experiment_name=ExperimentName(experiment_name),
         state=PublicExecutionState.COMPLETED,
         total_cells=1,
         completed_cells=1,
@@ -238,7 +238,7 @@ def _hand_case_cells() -> tuple[PlannedCell, ...]:
             experiment_order=1,
             cell_ordinal=index,
             identity=SemanticCellIdentity(
-                experiment_name=ExperimentNameValue("Anytime Implementation Hand Cases"),
+                experiment_name=ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES,
                 coordinates=SemanticCoordinates(variant_name=VariantName(f"hand-case-0{index}")),
             ),
             evidence_class=EvidenceClass.VALIDATION,
@@ -255,7 +255,7 @@ def _invalid_cell() -> PlannedCell:
         experiment_order=1,
         cell_ordinal=1,
         identity=SemanticCellIdentity(
-            experiment_name=ExperimentNameValue("Legacy Partition Incoherence Check"),
+            experiment_name=ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
             coordinates=SemanticCoordinates(variant_name=VariantName("q=0.1, Gamma=1.5")),
         ),
         evidence_class=EvidenceClass.VALIDATION,
@@ -301,33 +301,27 @@ def _no_dirty_tree(_workspace_root: Path) -> bool:
     return False
 
 
-def _no_cells(_plan: ExperimentPlan, _name: ExperimentNameValue) -> tuple[PlannedCell, ...]:
+def _no_cells(_plan: ExperimentPlan, _name: ExperimentName) -> tuple[PlannedCell, ...]:
     return ()
 
 
-def _hand_cells(_plan: ExperimentPlan, _name: ExperimentNameValue) -> tuple[PlannedCell, ...]:
+def _hand_cells(_plan: ExperimentPlan, _name: ExperimentName) -> tuple[PlannedCell, ...]:
     return _hand_case_cells()
 
 
-def _single_invalid_cell(
-    _plan: ExperimentPlan, _name: ExperimentNameValue
-) -> tuple[PlannedCell, ...]:
+def _single_invalid_cell(_plan: ExperimentPlan, _name: ExperimentName) -> tuple[PlannedCell, ...]:
     return (_invalid_cell(),)
 
 
-def _single_hand_case_cell(
-    plan: ExperimentPlan, _name: ExperimentNameValue
-) -> tuple[PlannedCell, ...]:
-    return (
-        cells_for_experiment(plan, ExperimentNameValue("Anytime Implementation Hand Cases"))[0],
-    )
+def _single_hand_case_cell(plan: ExperimentPlan, _name: ExperimentName) -> tuple[PlannedCell, ...]:
+    return (cells_for_experiment(plan, ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES)[0],)
 
 
 def _no_dependencies(
     _plan: ExperimentPlan,
     _root: Path,
     _cell: PlannedCell,
-    _cache: dict[ExperimentNameValue, ExperimentStatus],
+    _cache: dict[ExperimentName, ExperimentStatus],
 ) -> tuple[runner.DependencyReadiness, ...]:
     return ()
 
@@ -336,7 +330,7 @@ def _completed_upstream_dependencies(
     _plan: ExperimentPlan,
     _root: Path,
     cell: PlannedCell,
-    _cache: dict[ExperimentNameValue, ExperimentStatus],
+    _cache: dict[ExperimentName, ExperimentStatus],
 ) -> tuple[runner.DependencyReadiness, ...]:
     return tuple(
         runner.DependencyReadiness(experiment_name=name, state=PublicExecutionState.COMPLETED)
@@ -348,7 +342,7 @@ def _ready_upstream_dependencies(
     _plan: ExperimentPlan,
     _root: Path,
     cell: PlannedCell,
-    _cache: dict[ExperimentNameValue, ExperimentStatus],
+    _cache: dict[ExperimentName, ExperimentStatus],
 ) -> tuple[runner.DependencyReadiness, ...]:
     return tuple(
         runner.DependencyReadiness(experiment_name=name, state=PublicExecutionState.READY)
@@ -415,7 +409,7 @@ def _outcome_sequence_run_cell(
 def _real_cell_count(experiment_name: str) -> int:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     plan = build_plan(config)
-    return len(cells_for_experiment(plan, ExperimentNameValue(experiment_name)))
+    return len(cells_for_experiment(plan, ExperimentName(experiment_name)))
 
 
 @pytest.mark.parametrize(
@@ -763,7 +757,9 @@ def test_run_experiment_aggregates_cell_outcomes(
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
     monkeypatch.setattr(cli, "run_cell", _fake_run_cell_cycling)
-    result = cli.run_experiment("Anytime Implementation Hand Cases", workspace_root=workspace)
+    result = cli.run_experiment(
+        "Anytime Implementation Hand Cases", workspace_root=workspace, max_workers=1
+    )
     outcome_states = tuple(state for state, _reused in _HAND_CASE_OUTCOMES)
     assert result.state is PublicExecutionState.FAILED
     assert result.completed_cells == outcome_states.count(PublicExecutionState.COMPLETED)
@@ -808,7 +804,9 @@ def test_run_experiment_maps_aggregated_run_states(
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
     monkeypatch.setattr(cli, "run_cell", _outcome_sequence_run_cell(outcomes))
-    result = cli.run_experiment("Anytime Implementation Hand Cases", workspace_root=workspace)
+    result = cli.run_experiment(
+        "Anytime Implementation Hand Cases", workspace_root=workspace, max_workers=1
+    )
     assert result.state is expected
 
 
@@ -818,7 +816,9 @@ def test_run_experiment_resolves_real_execution_context(
     monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    result = cli.run_experiment("Anytime Implementation Hand Cases", workspace_root=Path())
+    result = cli.run_experiment(
+        "Anytime Implementation Hand Cases", workspace_root=Path(), max_workers=1
+    )
     assert result.state is PublicExecutionState.COMPLETED
     assert result.completed_cells == _real_cell_count("Anytime Implementation Hand Cases")
 
@@ -842,7 +842,9 @@ def test_run_experiment_requires_clean_working_tree(
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    result = cli.run_experiment("Anytime Implementation Hand Cases", workspace_root=workspace)
+    result = cli.run_experiment(
+        "Anytime Implementation Hand Cases", workspace_root=workspace, max_workers=1
+    )
     assert result.state is PublicExecutionState.COMPLETED
     assert result.completed_cells == _real_cell_count("Anytime Implementation Hand Cases")
 
@@ -915,7 +917,9 @@ def test_executor_dispatches_ordinary_cell_through_run_cell(
     monkeypatch.setattr(cli, "_dependency_readiness", _completed_upstream_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
     monkeypatch.setattr(cli, "execute_dispatched_cell", _dispatched_cell)
-    result = cli.run_experiment("Anytime Implementation Hand Cases", workspace_root=workspace)
+    result = cli.run_experiment(
+        "Anytime Implementation Hand Cases", workspace_root=workspace, max_workers=1
+    )
     assert result.state is PublicExecutionState.COMPLETED
     assert result.completed_cells == 1
 

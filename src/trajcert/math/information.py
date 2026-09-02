@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from math import isfinite, ulp
 
-from trajcert.config import active_config
+from trajcert.constants import INFORMATION_ROUNDOFF_ULPS
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.math.entropy import (
@@ -139,7 +139,6 @@ def _strictly_interior_hidden_mass(summary: ObservableSummary, value: Mass) -> M
 def _nonnegative_roundoff_guard(value: InformationNats) -> InformationNats:
     if value >= 0.0:
         return value
-    ulps = active_config.get().numerics.float_roundoff_ulps
-    if value >= -ulps * ulp(1.0):
+    if value >= -INFORMATION_ROUNDOFF_ULPS * ulp(1.0):
         return 0.0
     raise InvalidScientificDataError("information quantity is negative")

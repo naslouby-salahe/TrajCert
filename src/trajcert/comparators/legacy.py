@@ -11,6 +11,7 @@ from trajcert.types import (
     GammaSensitivity,
     HiddenMassInterval,
     RiskInterval,
+    ToleranceValue,
     mass_tuple,
 )
 
@@ -31,6 +32,7 @@ class LegacySensitivityResult(DomainModel):
 def legacy_bandwise_odds_ratio(
     summary: ObservableSummary,
     gamma: GammaSensitivity,
+    comparison_guard: ToleranceValue,
 ) -> LegacySensitivityResult:
     if not isfinite(gamma) or gamma < 1.0:
         raise InvalidScientificDataError("legacy Gamma must be finite and at least one")
@@ -56,12 +58,14 @@ def legacy_bandwise_odds_ratio(
         ) / (gamma * harmful_band + correct_band)
         lower = max(lower, lower_bound)
         upper = min(upper, upper_bound)
-        if lower > upper:
+        if lower > upper + comparison_guard:
             return _incompatible(gamma, informative)
     lower = max(0.0, lower)
     upper = min(unresolved, upper)
-    if lower > upper:
+    if lower > upper + comparison_guard:
         return _incompatible(gamma, informative)
+    if lower > upper:
+        lower = upper = (lower + upper) / 2.0
     harmful_total = summary.resolved_harmful_mass
     return LegacySensitivityResult(
         gamma=gamma,

@@ -5,7 +5,7 @@ from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.experiments.plan import build_plan, cells_for_experiment
-from trajcert.provenance import ExperimentNameValue
+from trajcert.types import ExperimentName
 
 _PRODUCTION_CELL_TOTAL = 1_422
 
@@ -21,7 +21,7 @@ def test_recovered_plan_has_no_configuration_gap_cells() -> None:
 def test_sequential_utility_family_is_fully_planned() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     plan = build_plan(config)
-    cells = cells_for_experiment(plan, ExperimentNameValue("Sequential Sensitivity Utility"))
+    cells = cells_for_experiment(plan, ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY)
     expected_count = len(config.study_design.utility_and_coherence_laws) * len(
         config.sequential.utility.rho
     )
@@ -33,7 +33,7 @@ def test_sequential_utility_family_is_fully_planned() -> None:
 def test_coverage_stress_cells_match_authoritative_configuration() -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     plan = build_plan(config)
-    cells = cells_for_experiment(plan, ExperimentNameValue("Anytime Coverage Stress"))
+    cells = cells_for_experiment(plan, ExperimentName.ANYTIME_COVERAGE_STRESS)
     assert len(cells) == len(config.study_design.coverage_stress_cases)
     for cell, case in zip(cells, config.study_design.coverage_stress_cases, strict=True):
         assert cell.identity.coordinates.variant_name == case.name

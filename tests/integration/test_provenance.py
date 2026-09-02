@@ -26,16 +26,15 @@ from trajcert.experiments.runner import (
 from trajcert.provenance import (
     CodeCommit,
     EnvironmentDigest,
-    ExperimentNameValue,
     ProvenanceMaterial,
     provenance_fingerprint,
 )
 from trajcert.storage import DigestHex, ProvenanceFingerprint, SpecificationDigest, file_digest
-from trajcert.types import PublicExecutionState
+from trajcert.types import ExperimentName, PublicExecutionState
 
 _REPO_ROOT = Path.cwd()
-_INVENTORY_NAME = ExperimentNameValue("Legacy Partition Incoherence Check")
-_LEGACY_CHECK_NAME = ExperimentNameValue("Path Information Decomposition")
+_INVENTORY_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
+_LEGACY_CHECK_NAME = ExperimentName.PATH_INFORMATION_DECOMPOSITION
 _ALTERNATE_ROOT_ATOL = 5.0e-11
 _PLACEHOLDER_PROVENANCE = ProvenanceFingerprint("0" * 64)
 
@@ -191,7 +190,7 @@ def test_producer_component_digest_is_sensitive_to_real_file_content(tmp_path: P
 
 def test_producer_component_digest_rejects_unknown_experiment_name(tmp_path: Path) -> None:
     _symlink_or_skip(tmp_path / "src", (_REPO_ROOT / "src").resolve())
-    experiment_name = ExperimentNameValue("Not A Real Experiment")
+    experiment_name = ExperimentName.REAL_TRAJECTORY_VALIDATION
     with pytest.raises(InvalidScientificDataError):
         _ = producer_component_digest(tmp_path, experiment_name)
 
@@ -210,6 +209,7 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
         cell for cell in cells_for_experiment(plan, _INVENTORY_NAME) if cell.executable
     )
     specification = scientific_specification_digest()
+    environment_digest = EnvironmentDigest(file_digest(workspace_root / "uv.lock"))
     child_component_digest = producer_component_digest(
         workspace_root, child_cell.identity.experiment_name
     )
@@ -219,7 +219,12 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
         child_component_digest,
     )
     fingerprint_before = cell_dependency_fingerprint(
-        workspace_root, plan, child_cell, scientific_dependency
+        workspace_root,
+        plan,
+        child_cell,
+        scientific_dependency,
+        child_component_digest,
+        environment_digest,
     )
 
     parent_component_digest = producer_component_digest(
@@ -231,7 +236,12 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
         parent_component_digest,
     )
     parent_dependency_fingerprint = cell_dependency_fingerprint(
-        workspace_root, plan, parent_cell, parent_dependency_specification
+        workspace_root,
+        plan,
+        parent_cell,
+        parent_dependency_specification,
+        parent_component_digest,
+        environment_digest,
     )
     parent_context = ExecutionContext(
         workspace_root=workspace_root,
@@ -255,7 +265,12 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
     assert outcome.completion_path.is_file()
 
     fingerprint_after = cell_dependency_fingerprint(
-        workspace_root, plan, child_cell, scientific_dependency
+        workspace_root,
+        plan,
+        child_cell,
+        scientific_dependency,
+        child_component_digest,
+        environment_digest,
     )
     assert fingerprint_after != fingerprint_before
 

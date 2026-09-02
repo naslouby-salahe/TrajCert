@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+from trajcert.data.laws import LawParameters
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.information import observed_timing_information
-from trajcert.math.oracle import direct_mutual_information, solve_information_oracle
+from trajcert.math.oracle import (
+    direct_mutual_information,
+    solve_information_oracle,
+    solve_information_oracle_from_law,
+)
 from trajcert.math.safety import assess_safety_geometry
 from trajcert.math.solver import solve_hidden_mass_interval
 from trajcert.types import (
     AbsoluteError,
+    BandCount,
     CompatibilityRegime,
     DomainModel,
     InformationNats,
@@ -55,6 +61,9 @@ def compare_production_solver_to_oracle(
     identity_atol: ToleranceValue,
     oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
+    comparison_guard: ToleranceValue,
+    population_law: LawParameters | None = None,
+    population_band_count: BandCount | None = None,
 ) -> SolverOracleComparison:
     production = solve_hidden_mass_interval(
         summary,
@@ -62,9 +71,19 @@ def compare_production_solver_to_oracle(
         root_atol,
         identity_atol,
     )
-    oracle = solve_information_oracle(
-        summary, sensitivity_budget, oracle_digits, oracle_bracket_width
-    )
+    if population_law is not None and population_band_count is not None:
+        oracle = solve_information_oracle_from_law(
+            population_law,
+            population_band_count,
+            sensitivity_budget,
+            oracle_digits,
+            oracle_bracket_width,
+            comparison_guard,
+        )
+    else:
+        oracle = solve_information_oracle(
+            summary, sensitivity_budget, oracle_digits, oracle_bracket_width, comparison_guard
+        )
     state_match = production.compatibility.regime == oracle.regime
     lower_error: AbsoluteError | None = None
     upper_error: AbsoluteError | None = None

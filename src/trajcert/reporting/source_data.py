@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from collections import defaultdict
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import dataclass
@@ -43,9 +41,8 @@ from trajcert.math.information import (
     observed_timing_information,
 )
 from trajcert.math.safety import assess_safety_geometry
-from trajcert.paths import ExperimentSlug, fsync_directory
+from trajcert.paths import ExperimentSlug
 from trajcert.provenance import (
-    ExperimentNameValue,
     SensitivityCoordinate,
     VariantName,
 )
@@ -61,6 +58,7 @@ from trajcert.storage import (
     CompletionRecord,
     DigestHex,
     SemanticCellKey,
+    atomic_replace,
     file_digest,
     read_model,
 )
@@ -75,6 +73,7 @@ from trajcert.types import (
     ConvergenceGap,
     Count,
     DomainModel,
+    ExperimentName,
     FailureBoundaryLevel,
     FailureMessage,
     InequalityMargin,
@@ -853,7 +852,7 @@ def _solver_comparison_groups(
     grouped: dict[tuple[PartitionName, SensitivityCoordinate], list[SolverOracleComparison]] = (
         defaultdict(list)
     )
-    for cell in _cells(plan, ExperimentNameValue("Production Solver vs Independent Oracle")):
+    for cell in _cells(plan, ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE):
         partition = _required_partition(cell)
         offset = cell.identity.coordinates.sensitivity_coordinate or SensitivityCoordinate("")
         grouped[(partition, offset)].append(
@@ -874,7 +873,7 @@ def _frontier_oracle_evidence(
 ) -> _FrontierOracleEvidence:
     frontier_errors: list[AbsoluteError] = []
     frontier_pass = True
-    for cell in _cells(plan, ExperimentNameValue("Safety and Intrinsic Impossibility")):
+    for cell in _cells(plan, ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY):
         result = read_verified_scientific_result(cell, workspace_root, SafetyCaseEvaluation)
         oracle = result.frontier_oracle
         if oracle is not None and oracle.applicable:
@@ -928,7 +927,7 @@ def _coverage_results(
 ) -> tuple[tuple[PlannedCell, CoverageEvidenceResult], ...]:
     return tuple(
         (cell, read_verified_scientific_result(cell, workspace_root, CoverageEvidenceResult))
-        for cell in _cells(plan, ExperimentNameValue("Anytime Coverage Stress"))
+        for cell in _cells(plan, ExperimentName.ANYTIME_COVERAGE_STRESS)
     )
 
 
@@ -1030,7 +1029,7 @@ def _failure_results(
 ) -> tuple[tuple[PlannedCell, FailureBoundaryResult], ...]:
     return tuple(
         (cell, read_verified_scientific_result(cell, workspace_root, FailureBoundaryResult))
-        for cell in _cells(plan, ExperimentNameValue("Failure Boundary Atlas"))
+        for cell in _cells(plan, ExperimentName.FAILURE_BOUNDARY_ATLAS)
     )
 
 
@@ -1106,7 +1105,7 @@ def _scaling_results(
 ) -> tuple[ComputationalScalingResult, ...]:
     return tuple(
         read_verified_scientific_result(cell, workspace_root, ComputationalScalingResult)
-        for cell in _cells(plan, ExperimentNameValue("Computational Scaling"))
+        for cell in _cells(plan, ExperimentName.COMPUTATIONAL_SCALING)
     )
 
 
@@ -1151,7 +1150,7 @@ def _oracle_error_by_partition(
 ) -> dict[BandCount, AbsoluteError]:
     name_to_k = {partition_name(k): k for k in active_config.get().grids.partitions}
     grouped: dict[BandCount, list[AbsoluteError]] = defaultdict(list)
-    for cell in _cells(plan, ExperimentNameValue("Production Solver vs Independent Oracle")):
+    for cell in _cells(plan, ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE):
         k = name_to_k.get(_required_partition(cell))
         if k is None:
             continue
@@ -1165,7 +1164,7 @@ def _timing_figure_rows(
     plan: ExperimentPlan, workspace_root: Path
 ) -> tuple[TimingValueFigureRow, ...]:
     rows: list[TimingValueFigureRow] = []
-    for cell in _cells(plan, ExperimentNameValue("Strict Timing Gain")):
+    for cell in _cells(plan, ExperimentName.STRICT_TIMING_GAIN):
         result = read_verified_scientific_result(cell, workspace_root, PartitionCoherenceResult)
         if result.coarse_upper is None or result.fine_upper is None:
             raise InvalidScientificDataError(
@@ -1192,7 +1191,7 @@ def _population_results(
 ) -> tuple[tuple[PlannedCell, PopulationUtilityResult], ...]:
     return tuple(
         (cell, read_verified_scientific_result(cell, workspace_root, PopulationUtilityResult))
-        for cell in _cells(plan, ExperimentNameValue("Population Sensitivity Utility"))
+        for cell in _cells(plan, ExperimentName.POPULATION_SENSITIVITY_UTILITY)
     )
 
 
@@ -1292,7 +1291,7 @@ def _information_profile_rows(
     return tuple(rows)
 
 
-def _cells(plan: ExperimentPlan, name: ExperimentNameValue) -> tuple[PlannedCell, ...]:
+def _cells(plan: ExperimentPlan, name: ExperimentName) -> tuple[PlannedCell, ...]:
     cells = cells_for_experiment(plan, name)
     if not cells:
         raise InvalidScientificDataError(f"publication source requires experiment: {name}")
@@ -1461,16 +1460,7 @@ def _verify_registered_lineage(
 
 
 def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            dir=path.parent,
-            prefix=f".{path.name}.",
-            suffix=".parquet",
-            delete=False,
-        ) as stream:
-            temporary_path = Path(stream.name)
+    def write(temporary_path: Path) -> None:
         _WRITE_PARQUET(
             table,
             temporary_path,
@@ -1478,13 +1468,10 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
             use_dictionary=True,
             write_statistics=True,
         )
-        with temporary_path.open("rb+") as stream:
-            os.fsync(stream.fileno())
-        _ = temporary_path.replace(path)
-        fsync_directory(path.parent)
+
+    try:
+        atomic_replace(path, write)
     except (OSError, pa.ArrowException) as exc:
-        if temporary_path is not None:
-            temporary_path.unlink(missing_ok=True)
         raise SerializationError(f"atomic source-data Parquet write failed: {path}") from exc
 
 

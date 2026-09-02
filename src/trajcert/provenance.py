@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from pathlib import Path
 from typing import NewType
 
-from trajcert.exceptions import SerializationError
 from trajcert.paths import (
     CoordinateName,
     CoordinateToken,
@@ -20,7 +18,6 @@ from trajcert.storage import (
     SemanticCellKey,
     SpecificationDigest,
     canonical_model_bytes,
-    file_digest,
 )
 from trajcert.types import (
     AnytimeConfidenceDelta,
@@ -167,31 +164,9 @@ class ProvenanceMaterial(DomainModel):
     plan_digest: DigestHex
 
 
-class ProducerComponentRegistration(DomainModel):
-    producer_component: ProducerComponentName
-    source_files: tuple[Path, ...]
-
-
 def dependency_fingerprint(material: DependencyMaterial) -> DependencyFingerprint:
     return DependencyFingerprint(sha256(canonical_model_bytes(material)).hexdigest())
 
 
 def provenance_fingerprint(material: ProvenanceMaterial) -> ProvenanceFingerprint:
     return ProvenanceFingerprint(sha256(canonical_model_bytes(material)).hexdigest())
-
-
-def implementation_component_digest(
-    repository_root: Path, registration: ProducerComponentRegistration
-) -> DigestHex:
-    digest = sha256()
-    for relative_path in sorted(registration.source_files, key=lambda path: path.as_posix()):
-        full_path = repository_root / relative_path
-        if not full_path.is_file():
-            raise SerializationError(
-                f"registered implementation source is missing: {relative_path}"
-            )
-        digest.update(relative_path.as_posix().encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(file_digest(full_path).encode("ascii"))
-        digest.update(b"\n")
-    return DigestHex(digest.hexdigest())

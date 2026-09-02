@@ -69,10 +69,15 @@ from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyBudgetCase, safety_budget_cases
 from trajcert.paths import ExperimentLeaf, long_path_safe, semantic_cell_path, semantic_slug
 from trajcert.provenance import (
+    ArtifactTypeName,
+    DependencyMaterial,
+    EnvironmentDigest,
     FailureBoundaryCoordinate,
+    ParentArtifactIdentity,
     ProducerComponentName,
     SensitivityCoordinate,
     VariantName,
+    dependency_fingerprint,
 )
 from trajcert.storage import (
     ArtifactChecksum,
@@ -92,14 +97,15 @@ from trajcert.storage import (
     read_model,
     write_completion_last,
 )
+from trajcert.telemetry import set_current_cell_key
 from trajcert.types import (
     ActionChannelId,
     CaseIndex,
     ClientId,
     Count,
     DomainModel,
-    ExperimentName,
     EpochId,
+    ExperimentName,
     FailureBoundaryProbe,
     FailureMessage,
     LawKey,
@@ -109,12 +115,12 @@ from trajcert.types import (
     ReasonCode,
     SeedCount,
     SensitivityBudget,
-    ToleranceValue,
 )
 
 FailureType = NewType("FailureType", str)
 
 _RESULT_FILENAME = "scientific_result.json"
+_SCIENTIFIC_RESULT_ARTIFACT_TYPE: Final[ArtifactTypeName] = ArtifactTypeName("scientific-result")
 
 _NON_SCIENTIFIC_MODULE_PREFIXES = (
     "trajcert.cli",
@@ -154,17 +160,13 @@ _PRODUCER_ROOTS: dict[ExperimentName, Path] = {
     ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _SAFETY_PRODUCER_ROOT,
     ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: _SAFETY_PRODUCER_ROOT,
     ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: _SAFETY_PRODUCER_ROOT,
-    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: (
-        Path("src/trajcert/experiments/anytime.py")
-    ),
+    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: (Path("src/trajcert/experiments/anytime.py")),
     ExperimentName.ANYTIME_COVERAGE_STRESS: Path("src/trajcert/experiments/anytime.py"),
     ExperimentName.POPULATION_SENSITIVITY_UTILITY: (
         Path("src/trajcert/experiments/sensitivity.py")
     ),
     ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: Path("src/trajcert/experiments/sensitivity.py"),
-    ExperimentName.FAILURE_BOUNDARY_ATLAS: (
-        Path("src/trajcert/experiments/failure_boundaries.py")
-    ),
+    ExperimentName.FAILURE_BOUNDARY_ATLAS: (Path("src/trajcert/experiments/failure_boundaries.py")),
     ExperimentName.COMPUTATIONAL_SCALING: Path("src/trajcert/experiments/scaling.py"),
     ExperimentName.STATISTICAL_SYNTHESIS: Path("src/trajcert/experiments/synthesis.py"),
 }
@@ -347,6 +349,7 @@ def run_cell(
         dependency_fingerprint=context.dependency_fingerprint,
     )
     _ = atomic_write_model(running_path, running_record)
+    set_current_cell_key(cell.identity.semantic_cell_key)
     try:
         result = executor(cell, context)
         _validate_execution_result(result, context)
@@ -382,6 +385,7 @@ def run_cell(
             reason=ReasonCode("TECHNICAL_EXECUTION_FAILURE"),
         )
     finally:
+        set_current_cell_key(None)
         running_path.unlink(missing_ok=True)
 
 
@@ -453,6 +457,7 @@ def _completion_identity_matches(
         completion.cell_plan_digest == _cell_plan_digest(cell),
         completion.scientific_specification_digest == context.scientific_specification_digest,
         completion.scientific_dependency_digest == context.scientific_dependency_digest,
+        completion.provenance_fingerprint == context.provenance_fingerprint,
         completion.dependency_fingerprint == context.dependency_fingerprint,
         completion.manifest_digest == context.manifest_digest,
         completion.required_artifact_keys == context.required_artifact_keys,
@@ -590,22 +595,41 @@ def cell_dependency_fingerprint(
     plan: ExperimentPlan,
     cell: PlannedCell,
     scientific_dependency: SpecificationDigest,
+    implementation_component_digest: DigestHex,
+    environment_dependency_digest: EnvironmentDigest,
 ) -> DependencyFingerprint:
     required = set(cell.required_experiments)
     parents = tuple(item for item in plan.cells if item.identity.experiment_name in required)
-    parent_digests = tuple(
-        file_digest(cell_completion_path(parent, workspace_root))
+    parent_identities = tuple(
+        identity
         for parent in parents
-        if cell_completion_path(parent, workspace_root).is_file()
+        if (identity := _parent_artifact_identity(parent, workspace_root)) is not None
     )
-    payload = "|".join(
-        (
-            cell.identity.semantic_cell_key,
-            scientific_dependency,
-            *parent_digests,
-        )
+    material = DependencyMaterial(
+        artifact_type=_SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        semantic_cell=cell.identity,
+        scientific_dependency_digest=scientific_dependency,
+        implementation_component_digest=implementation_component_digest,
+        environment_dependency_digest=environment_dependency_digest,
+        seed_manifest_digest=None,
+        parents=parent_identities,
+        producer_specific_inputs=(),
     )
-    return DependencyFingerprint(sha256(payload.encode("utf-8")).hexdigest())
+    return dependency_fingerprint(material)
+
+
+def _parent_artifact_identity(
+    parent: PlannedCell, workspace_root: Path
+) -> ParentArtifactIdentity | None:
+    index_path = cell_artifact_index_path(parent, workspace_root)
+    if not index_path.is_file():
+        return None
+    index = read_model(index_path, CellArtifactIndex)
+    artifact_key = scientific_result_artifact_key(parent)
+    entry = next((item for item in index.artifacts if item.artifact_key == artifact_key), None)
+    if entry is None:
+        return None
+    return ParentArtifactIdentity(artifact_key=artifact_key, scientific_content_digest=entry.sha256)
 
 
 def expected_seed_count(experiment_name: ExperimentName) -> SeedCount:
@@ -894,6 +918,8 @@ def _dispatch_safety_boundary_identity(cell: PlannedCell) -> DomainModel:
 
 def _dispatch_sharpness_against_generic_oracle(cell: PlannedCell) -> DomainModel:
     config = active_config.get()
+    law = _law_from_name(cell.identity.coordinates.synthetic_law_name)
+    partition = _partition_from_coordinates(cell)
     return sharpness_against_generic_oracle(
         summary=_summary_from_coordinates(cell),
         root_atol=config.numerics.root_atol,
@@ -901,6 +927,9 @@ def _dispatch_sharpness_against_generic_oracle(cell: PlannedCell) -> DomainModel
         oracle_digits=config.numerics.oracle_digits,
         oracle_bracket_width=config.numerics.oracle_bracket_width,
         sharpness_diagnostic_offset=config.numerics.sharpness_diagnostic_offset,
+        comparison_guard=config.numerics.comparison_guard,
+        population_law=law,
+        population_band_count=partition.band_count,
     )
 
 
@@ -939,39 +968,8 @@ def _dispatch_computational_scaling(cell: PlannedCell) -> DomainModel:
     return benchmark_scaling_cell(bands)
 
 
-def _dispatch_summary_coordinate_experiment(
-    name: ExperimentName, cell: PlannedCell
-) -> DomainModel:
+def _dispatch_summary_coordinate_experiment(name: ExperimentName, cell: PlannedCell) -> DomainModel:
     return _execute_summary_cell(name, cell, _summary_from_coordinates(cell))
-
-
-_DISPATCH_TABLE: dict[ExperimentName, Callable[[PlannedCell], DomainModel]] = {
-    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: (
-        _dispatch_legacy_partition_incoherence
-    ),
-    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: _dispatch_refinement_dominance_identity,
-    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _dispatch_strict_timing_gain_identity,
-    ExperimentName.PARTITION_COHERENCE: _dispatch_partition_coherence,
-    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (
-        _dispatch_same_endpoint_different_timing
-    ),
-    ExperimentName.STRICT_TIMING_GAIN: _dispatch_strict_timing_gain,
-    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _dispatch_safety_boundary_identity,
-    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: (
-        _dispatch_sharpness_against_generic_oracle
-    ),
-    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: _safety_intrinsic_case,
-    ExperimentName.ANYTIME_COVERAGE_STRESS: _coverage_stress_case,
-    ExperimentName.POPULATION_SENSITIVITY_UTILITY: _dispatch_population_sensitivity_utility,
-    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: _dispatch_sequential_sensitivity_utility,
-    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: _dispatch_anytime_hand_case,
-    ExperimentName.FAILURE_BOUNDARY_ATLAS: _execute_failure_boundary,
-    ExperimentName.COMPUTATIONAL_SCALING: _dispatch_computational_scaling,
-    **{
-        name: partial(_dispatch_summary_coordinate_experiment, name)
-        for name in _SUMMARY_COORDINATE_EXPERIMENTS
-    },
-}
 
 
 def _summary_path_information_decomposition(
@@ -1017,6 +1015,7 @@ def _summary_sharp_set_constructive_identity(
         config.numerics.identity_atol,
         config.numerics.oracle_digits,
         config.numerics.oracle_bracket_width,
+        config.numerics.comparison_guard,
     )
 
 
@@ -1032,6 +1031,8 @@ def _summary_production_solver_vs_independent_oracle(
 ) -> DomainModel:
     config = active_config.get()
     rho = _rho_from_offset(summary, cell.identity.coordinates.sensitivity_coordinate)
+    law = _law_from_name(cell.identity.coordinates.synthetic_law_name)
+    partition = _partition_from_coordinates(cell)
     return compare_production_solver_to_oracle(
         summary,
         rho,
@@ -1039,14 +1040,18 @@ def _summary_production_solver_vs_independent_oracle(
         config.numerics.identity_atol,
         config.numerics.oracle_digits,
         config.numerics.oracle_bracket_width,
+        config.numerics.comparison_guard,
+        population_law=law,
+        population_band_count=partition.band_count,
     )
 
 
 def _summary_compatibility_floor_behavior(
     cell: PlannedCell, summary: ObservableSummary
 ) -> DomainModel:
-    del cell
     config = active_config.get()
+    law = _law_from_name(cell.identity.coordinates.synthetic_law_name)
+    partition = _partition_from_coordinates(cell)
     return compatibility_floor_behavior(
         summary,
         config.numerics.root_atol,
@@ -1054,16 +1059,15 @@ def _summary_compatibility_floor_behavior(
         config.numerics.oracle_digits,
         config.numerics.oracle_bracket_width,
         config.numerics.compatibility_floor_offset,
+        config.numerics.comparison_guard,
+        population_law=law,
+        population_band_count=partition.band_count,
     )
 
 
 def _summary_safety_boundary_identity(cell: PlannedCell, summary: ObservableSummary) -> DomainModel:
     config = active_config.get()
-    case = _safety_case(
-        summary,
-        cell.identity.coordinates.variant_name,
-        config.numerics.resolved_harm_boundary_offset,
-    )
+    case = _safety_case(summary, cell.identity.coordinates.variant_name)
     return evaluate_safety_boundary_case(
         summary,
         case,
@@ -1213,11 +1217,10 @@ def _variant_index(variant: VariantName | None) -> CaseIndex:
 def _safety_case(
     summary: ObservableSummary,
     variant: VariantName | None,
-    resolved_harm_boundary_offset: ToleranceValue,
 ) -> SafetyBudgetCase:
     if variant is None:
         raise ScientificCellDispatchError("safety cell is missing its case variant")
-    for case in safety_budget_cases(summary, resolved_harm_boundary_offset):
+    for case in safety_budget_cases(summary):
         if semantic_slug(case.name) == variant:
             return case
     raise ScientificCellDispatchError(f"unknown safety case: {variant}")
@@ -1230,7 +1233,6 @@ def _safety_intrinsic_case(cell: PlannedCell) -> SafetyCaseEvaluation:
         summary=summary,
         oracle_digits=config.numerics.oracle_digits,
         identity_atol=config.numerics.identity_atol,
-        resolved_harm_boundary_offset=config.numerics.resolved_harm_boundary_offset,
     )
     variant = cell.identity.coordinates.variant_name
     if variant is None:
@@ -1285,6 +1287,29 @@ def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
         return evaluate_optimizer_node_budget(int(value_text))
     parsed_axis, level = _failure_coordinate(coordinate)
     return evaluate_failure_boundary(parsed_axis, level)
+
+
+_DISPATCH_TABLE: dict[ExperimentName, Callable[[PlannedCell], DomainModel]] = {
+    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: (_dispatch_legacy_partition_incoherence),
+    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: _dispatch_refinement_dominance_identity,
+    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _dispatch_strict_timing_gain_identity,
+    ExperimentName.PARTITION_COHERENCE: _dispatch_partition_coherence,
+    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (_dispatch_same_endpoint_different_timing),
+    ExperimentName.STRICT_TIMING_GAIN: _dispatch_strict_timing_gain,
+    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _dispatch_safety_boundary_identity,
+    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: (_dispatch_sharpness_against_generic_oracle),
+    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: _safety_intrinsic_case,
+    ExperimentName.ANYTIME_COVERAGE_STRESS: _coverage_stress_case,
+    ExperimentName.POPULATION_SENSITIVITY_UTILITY: _dispatch_population_sensitivity_utility,
+    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: _dispatch_sequential_sensitivity_utility,
+    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: _dispatch_anytime_hand_case,
+    ExperimentName.FAILURE_BOUNDARY_ATLAS: _execute_failure_boundary,
+    ExperimentName.COMPUTATIONAL_SCALING: _dispatch_computational_scaling,
+    **{
+        name: partial(_dispatch_summary_coordinate_experiment, name)
+        for name in _SUMMARY_COORDINATE_EXPERIMENTS
+    },
+}
 
 
 def _failure_coordinate(

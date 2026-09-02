@@ -16,11 +16,11 @@ from trajcert.types import CompatibilityRegime, SafetyRegime
 
 _ORACLE_DIGITS = 20
 _ORACLE_BRACKET_WIDTH = 1e-14
-_RESOLVED_HARM_BOUNDARY_OFFSET = 0.005
 _ROOT_ATOL = 1e-8
 _IDENTITY_ATOL = 1e-8
 _COMPATIBILITY_OFFSET = 0.005
 _SHARPNESS_OFFSET = 0.05
+_COMPARISON_GUARD = 1e-12
 _EXPECTED_TAU = 0.01834500701737518
 _FRONTIER_AT_BOUNDARY = 0.018345007017375153
 _INTERIOR_FRONTIER_PRODUCTION = 0.02475744123686413
@@ -45,6 +45,7 @@ def test_compatibility_floor_marks_below_zero_budget_not_applicable() -> None:
         _ORACLE_DIGITS,
         _ORACLE_BRACKET_WIDTH,
         _COMPATIBILITY_OFFSET,
+        _COMPARISON_GUARD,
     )
     assert result.tau == 0.0
     assert result.passed
@@ -67,6 +68,7 @@ def test_compatibility_floor_below_tau_uses_model_incompatible_solver() -> None:
         _ORACLE_DIGITS,
         _ORACLE_BRACKET_WIDTH,
         _COMPATIBILITY_OFFSET,
+        _COMPARISON_GUARD,
     )
     assert result.tau == pytest.approx(_EXPECTED_TAU)
     below, at, above = result.points
@@ -80,7 +82,7 @@ def test_compatibility_floor_below_tau_uses_model_incompatible_solver() -> None:
     assert above.comparison.compatibility_regime == CompatibilityRegime.COMPATIBLE_INTERVAL
 
 
-def test_compatibility_floor_fails_when_above_tau_solver_mismatches() -> None:
+def test_compatibility_floor_matches_oracle_at_every_sweep_point() -> None:
     result = compatibility_floor_behavior(
         _benchmark_summary(),
         _ROOT_ATOL,
@@ -88,8 +90,9 @@ def test_compatibility_floor_fails_when_above_tau_solver_mismatches() -> None:
         _ORACLE_DIGITS,
         _ORACLE_BRACKET_WIDTH,
         _COMPATIBILITY_OFFSET,
+        _COMPARISON_GUARD,
     )
-    assert not result.passed
+    assert result.passed
     assert len(result.points) == _COMPATIBILITY_SWEEP_POINT_COUNT
     assert all(point.status == CompatibilitySweepStatus.APPLICABLE for point in result.points)
 
@@ -126,6 +129,7 @@ def test_sharpness_against_generic_oracle_uses_tau_offset_budget() -> None:
         _ORACLE_DIGITS,
         _ORACLE_BRACKET_WIDTH,
         _SHARPNESS_OFFSET,
+        _COMPARISON_GUARD,
     )
     benchmark = _benchmark_summary()
     expected_budget = float(observed_timing_information(benchmark) or 0.0) + _SHARPNESS_OFFSET
@@ -143,6 +147,7 @@ def test_sharpness_against_generic_oracle_passes_with_exact_boundary_roots() -> 
         _ORACLE_DIGITS,
         _ORACLE_BRACKET_WIDTH,
         _SHARPNESS_OFFSET,
+        _COMPARISON_GUARD,
     )
     assert comparison.passed
     assert comparison.max_root_residual == pytest.approx(_SHARPNESS_RESIDUAL)
@@ -150,7 +155,7 @@ def test_sharpness_against_generic_oracle_passes_with_exact_boundary_roots() -> 
 
 def test_safety_intrinsic_impossibility_covers_all_regimes() -> None:
     result = safety_and_intrinsic_impossibility(
-        _benchmark_summary(), _ORACLE_DIGITS, _IDENTITY_ATOL, _RESOLVED_HARM_BOUNDARY_OFFSET
+        _benchmark_summary(), _ORACLE_DIGITS, _IDENTITY_ATOL
     )
     assert result.passed
     assert len(result.cases) == _EXPECTED_CASE_COUNT
@@ -168,7 +173,7 @@ def test_safety_intrinsic_impossibility_covers_all_regimes() -> None:
 
 def test_safety_intrinsic_frontier_applies_only_to_interior_cases() -> None:
     result = safety_and_intrinsic_impossibility(
-        _benchmark_summary(), _ORACLE_DIGITS, _IDENTITY_ATOL, _RESOLVED_HARM_BOUNDARY_OFFSET
+        _benchmark_summary(), _ORACLE_DIGITS, _IDENTITY_ATOL
     )
     applicable = tuple(
         item.frontier_oracle.applicable for item in result.cases if item.frontier_oracle is not None
@@ -188,6 +193,6 @@ def test_safety_intrinsic_frontier_applies_only_to_interior_cases() -> None:
 
 def test_safety_intrinsic_reports_tau_for_benchmark_summary() -> None:
     result = safety_and_intrinsic_impossibility(
-        _benchmark_summary(), _ORACLE_DIGITS, _IDENTITY_ATOL, _RESOLVED_HARM_BOUNDARY_OFFSET
+        _benchmark_summary(), _ORACLE_DIGITS, _IDENTITY_ATOL
     )
     assert all(item.tau == pytest.approx(_EXPECTED_TAU) for item in result.cases)

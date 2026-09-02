@@ -182,10 +182,11 @@ def sharp_set_constructive_identity(
     identity_atol: ToleranceValue,
     oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
+    comparison_guard: ToleranceValue,
 ) -> SharpSetIdentityResult:
     production = sharp_risk_set(summary, sensitivity_budget, root_atol, identity_atol)
     oracle = solve_information_oracle(
-        summary, sensitivity_budget, oracle_digits, oracle_bracket_width
+        summary, sensitivity_budget, oracle_digits, oracle_bracket_width, comparison_guard
     )
     if production.latent_risk is None or oracle.latent_risk_interval is None:
         passed = production.latent_risk is None and oracle.latent_risk_interval is None
@@ -207,7 +208,7 @@ def sharp_set_constructive_identity(
         abs(production_upper - oracle_upper),
     )
     mismatches = _sharp_grid_mismatches(
-        summary, sensitivity_budget, production_lower, production_upper
+        summary, sensitivity_budget, production_lower, production_upper, comparison_guard
     )
     return SharpSetIdentityResult(
         passed=endpoint_error <= identity_atol and mismatches == 0,
@@ -362,6 +363,7 @@ def _sharp_grid_mismatches(
     sensitivity_budget: SensitivityBudget,
     lower_risk: RiskValue,
     upper_risk: RiskValue,
+    comparison_guard: ToleranceValue,
 ) -> Count:
     unresolved = summary.unresolved_mass
     harmful = summary.resolved_harmful_mass
@@ -370,8 +372,8 @@ def _sharp_grid_mismatches(
     for index in range(grid_points):
         hidden = unresolved * index / (grid_points - 1)
         risk = harmful + hidden
-        feasible = information_profile(summary, hidden) <= sensitivity_budget
-        inside = lower_risk <= risk <= upper_risk
+        feasible = information_profile(summary, hidden) <= sensitivity_budget + comparison_guard
+        inside = lower_risk - comparison_guard <= risk <= upper_risk + comparison_guard
         if feasible != inside:
             mismatches += 1
     return mismatches
@@ -430,8 +432,8 @@ def evaluate_legacy_partition_incoherence(
         terminal_horizon=config.method.terminal_horizon,
     )
     endpoint = coarsen_summary(fine, endpoint_partition, config.numerics.comparison_guard)
-    fine_result = legacy_bandwise_odds_ratio(fine, gamma)
-    endpoint_result = legacy_bandwise_odds_ratio(endpoint, gamma)
+    fine_result = legacy_bandwise_odds_ratio(fine, gamma, config.numerics.comparison_guard)
+    endpoint_result = legacy_bandwise_odds_ratio(endpoint, gamma, config.numerics.comparison_guard)
     if (
         fine_result.applicability is not LegacyApplicability.APPLICABLE
         or endpoint_result.applicability is not LegacyApplicability.APPLICABLE

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
 from math import isfinite
 from pathlib import Path
@@ -127,23 +127,31 @@ def write_completion_last(directory: Path, completion: CompletionRecord) -> Dige
 
 
 def _atomic_write_bytes(path: Path, payload: bytes) -> None:
+    def write(temporary_path: Path) -> None:
+        _ = temporary_path.write_bytes(payload)
+
+    try:
+        atomic_replace(path, write)
+    except OSError as exc:
+        raise SerializationError(f"atomic artifact write failed: {path}") from exc
+
+
+def atomic_replace(path: Path, write: Callable[[Path], None]) -> None:
     path = long_path_safe(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary_path: Path | None = None
+    with tempfile.NamedTemporaryFile(
+        dir=path.parent, prefix=f".{path.name}.", delete=False
+    ) as stream:
+        temporary_path = Path(stream.name)
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="wb", dir=path.parent, prefix=f".{path.name}.", delete=False
-        ) as stream:
-            _ = stream.write(payload)
-            stream.flush()
+        write(temporary_path)
+        with temporary_path.open("rb+") as stream:
             os.fsync(stream.fileno())
-            temporary_path = Path(stream.name)
         _ = temporary_path.replace(path)
         fsync_directory(path.parent)
-    except OSError as exc:
-        if temporary_path is not None:
-            temporary_path.unlink(missing_ok=True)
-        raise SerializationError(f"atomic artifact write failed: {path}") from exc
+    except BaseException:
+        temporary_path.unlink(missing_ok=True)
+        raise
 
 
 def _canonical_json(value: JsonValue) -> str:

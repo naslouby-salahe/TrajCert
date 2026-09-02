@@ -6,14 +6,16 @@ from math import log as float_log
 from typing import Self
 
 from flint import arb, ctx
-from mpmath import log, mp, mpf, sqrt
+from mpmath import exp, log, mp, mpf, sqrt
 from pydantic import model_validator
 
+from trajcert.data.laws import LawParameters
 from trajcert.data.partitions import TrajectoryPartition
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.types import (
     ArbEndpointValue,
+    BandCount,
     CompatibilityRegime,
     Count,
     DomainModel,
@@ -112,6 +114,7 @@ def solve_information_oracle(
     sensitivity_budget: SensitivityBudget,
     oracle_digits: OracleDigits,
     oracle_bracket_width: ToleranceValue,
+    comparison_guard: ToleranceValue,
 ) -> InformationOracleResult:
     digits = oracle_digits
     if digits <= 0:
@@ -124,8 +127,76 @@ def solve_information_oracle(
         unresolved = mpf(repr(summary.unresolved_mass))
         rho = mpf(repr(sensitivity_budget))
         bracket_width = mpf(repr(oracle_bracket_width))
+        guard = mpf(repr(comparison_guard))
         return _solve_information_oracle_data(
-            summary, harmful, correct, unresolved, rho, digits, bracket_width
+            summary.resolved_harmful_mass,
+            harmful,
+            correct,
+            unresolved,
+            rho,
+            digits,
+            bracket_width,
+            guard,
+        )
+    finally:
+        mp.dps = previous_digits
+
+
+def population_law_masses(
+    parameters: LawParameters,
+    band_count: BandCount,
+    digits: OracleDigits,
+) -> tuple[tuple[mpf, ...], tuple[mpf, ...], mpf]:
+    if digits <= 0:
+        raise InvalidScientificDataError("oracle precision must be positive")
+    theta = mpf(repr(parameters.theta))
+    q1 = mpf(repr(parameters.q1))
+    q0 = mpf(repr(parameters.q0))
+    lambda1 = mpf(repr(parameters.lambda1))
+    lambda0 = mpf(repr(parameters.lambda0))
+    harmful_weights = _oracle_band_weights(band_count, lambda1)
+    correct_weights = _oracle_band_weights(band_count, lambda0)
+    harmful_resolved_mass = theta * (mpf(1) - q1)
+    correct_resolved_mass = (mpf(1) - theta) * (mpf(1) - q0)
+    harmful = tuple(harmful_resolved_mass * weight for weight in harmful_weights)
+    correct = tuple(correct_resolved_mass * weight for weight in correct_weights)
+    unresolved = theta * q1 + (mpf(1) - theta) * q0
+    return harmful, correct, unresolved
+
+
+def _oracle_band_weights(band_count: BandCount, slope: mpf) -> tuple[mpf, ...]:
+    bands = band_count
+    if bands <= 0:
+        raise InvalidScientificDataError("band count must be positive")
+    center = (mpf(bands) + mpf(1)) / mpf(2)
+    logits = tuple(slope * (mpf(index) - center) for index in range(1, bands + 1))
+    maximum = max(logits)
+    unnormalized = tuple(exp(value - maximum) for value in logits)
+    total = sum(unnormalized, mpf(0))
+    return tuple(value / total for value in unnormalized)
+
+
+def solve_information_oracle_from_law(
+    parameters: LawParameters,
+    band_count: BandCount,
+    sensitivity_budget: SensitivityBudget,
+    oracle_digits: OracleDigits,
+    oracle_bracket_width: ToleranceValue,
+    comparison_guard: ToleranceValue,
+) -> InformationOracleResult:
+    digits = oracle_digits
+    if digits <= 0:
+        raise InvalidScientificDataError("oracle precision must be positive")
+    previous_digits = mp.dps
+    mp.dps = digits
+    try:
+        harmful, correct, unresolved = population_law_masses(parameters, band_count, digits)
+        harmful_total = float(sum(harmful, mpf(0)))
+        rho = mpf(repr(sensitivity_budget))
+        bracket_width = mpf(repr(oracle_bracket_width))
+        guard = mpf(repr(comparison_guard))
+        return _solve_information_oracle_data(
+            harmful_total, harmful, correct, unresolved, rho, digits, bracket_width, guard
         )
     finally:
         mp.dps = previous_digits
@@ -225,21 +296,23 @@ def direct_mutual_information(
 
 
 def _solve_information_oracle_data(
-    summary: ObservableSummary,
+    harmful_total: Mass,
     harmful: tuple[mpf, ...],
     correct: tuple[mpf, ...],
     unresolved: mpf,
     rho: mpf,
     digits: OracleDigits,
     bracket_width: mpf,
+    comparison_guard: mpf,
 ) -> InformationOracleResult:
-    minimum_bracket = _golden_minimum(harmful, correct, unresolved, bracket_width)
+    minimum_search_width = min(bracket_width, mpf(10) ** -(digits - 2))
+    minimum_bracket = _golden_minimum(harmful, correct, unresolved, minimum_search_width)
     minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
     minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
-    equality_tolerance = mpf(10) ** (-floor(digits / 2))
+    equality_tolerance = max(mpf(10) ** (-floor(digits / 2)), comparison_guard)
     if rho < minimum_information - equality_tolerance:
         return _result(
-            summary,
+            harmful_total,
             rho,
             minimum_hidden,
             minimum_information,
@@ -251,7 +324,7 @@ def _solve_information_oracle_data(
     if abs(rho - minimum_information) <= equality_tolerance:
         singleton = (minimum_hidden, minimum_hidden)
         return _result(
-            summary,
+            harmful_total,
             rho,
             minimum_hidden,
             minimum_information,
@@ -272,7 +345,7 @@ def _solve_information_oracle_data(
         else CompatibilityRegime.COMPATIBLE_INTERVAL
     )
     return _result(
-        summary,
+        harmful_total,
         rho,
         minimum_hidden,
         minimum_information,
@@ -795,7 +868,7 @@ def _mutual_information(
 
 
 def _result(
-    summary: ObservableSummary,
+    harmful_total: Mass,
     rho: mpf,
     minimum_hidden: mpf,
     minimum_information: mpf,
@@ -810,7 +883,7 @@ def _result(
     risk_interval = None
     if lower is not None and upper is not None:
         hidden_interval = HiddenMassInterval(lower=lower.midpoint, upper=upper.midpoint)
-        harmful = summary.resolved_harmful_mass
+        harmful = harmful_total
         risk_interval = RiskInterval(
             lower=harmful + lower.midpoint,
             upper=harmful + upper.midpoint,
