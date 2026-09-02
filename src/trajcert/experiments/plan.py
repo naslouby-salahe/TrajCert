@@ -123,6 +123,30 @@ class ExperimentPlan(DomainModel):
         return self
 
 
+class DependencyGraphEdge(DomainModel):
+    experiment_name: ExperimentName
+    required_experiments: tuple[ExperimentName, ...]
+
+
+class DependencyGraphRecord(DomainModel):
+    edges: tuple[DependencyGraphEdge, ...]
+
+
+def dependency_graph(plan: ExperimentPlan) -> DependencyGraphRecord:
+    required_by_experiment: dict[ExperimentName, set[ExperimentName]] = {}
+    for cell in plan.cells:
+        required = required_by_experiment.setdefault(cell.identity.experiment_name, set())
+        required.update(cell.required_experiments)
+    edges = tuple(
+        DependencyGraphEdge(
+            experiment_name=name,
+            required_experiments=tuple(sorted(required_by_experiment.get(name, ()))),
+        )
+        for name, _ in _EXPERIMENTS
+    )
+    return DependencyGraphRecord(edges=edges)
+
+
 def build_plan(config: TrajCertConfig) -> ExperimentPlan:
     _ = active_config.set(config)
     cells = tuple(

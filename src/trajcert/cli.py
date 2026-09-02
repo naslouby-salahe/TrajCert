@@ -23,6 +23,7 @@ from trajcert.experiments.plan import (
     PlannedCell,
     build_plan,
     cells_for_experiment,
+    dependency_graph,
     experiment_names,
 )
 from trajcert.experiments.runner import (
@@ -64,9 +65,11 @@ from trajcert.paths import (
     RESULTS_ROOT,
     ExperimentLeaf,
     PreprocessingLeaf,
+    SharedArtifactCategory,
     experiment_leaf,
     preprocessing_leaf,
     semantic_slug,
+    shared_artifact_path,
 )
 from trajcert.provenance import (
     EnvironmentDigest,
@@ -374,7 +377,15 @@ def preprocess(
 
 def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
     workspace_root = workspace_root if workspace_root is not None else Path()
-    return build_plan(_load_config(workspace_root))
+    plan = build_plan(_load_config(workspace_root))
+    _persist_plan_artifacts(workspace_root, plan)
+    return plan
+
+
+def _persist_plan_artifacts(workspace_root: Path, plan: ExperimentPlan) -> None:
+    plans_root = workspace_root / shared_artifact_path(SharedArtifactCategory.DERIVED_PLANS)
+    _ = atomic_write_model(plans_root / "experiment_plan.json", plan)
+    _ = atomic_write_model(plans_root / "dependency_graph.json", dependency_graph(plan))
 
 
 def smoke(workspace_root: Path | None = None) -> SmokeResult:

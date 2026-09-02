@@ -23,6 +23,7 @@ from trajcert.exceptions import (
 )
 from trajcert.experiments import runner
 from trajcert.experiments.plan import (
+    DependencyGraphRecord,
     ExperimentPlan,
     PlannedCell,
     build_plan,
@@ -51,6 +52,7 @@ from trajcert.storage import (
     PlanDigest,
     ProvenanceFingerprint,
     SpecificationDigest,
+    read_model,
 )
 from trajcert.types import (
     CliCommand,
@@ -559,6 +561,22 @@ def test_plan_view_matches_cell_count() -> None:
     plan = cli.plan_view()
     assert plan.planned_cell_count == len(plan.cells)
     assert plan.executable_cells + plan.invalid_cells == plan.planned_cell_count
+
+
+def test_plan_view_persists_shared_plan_artifacts(tmp_path: Path) -> None:
+    workspace = _configured_workspace(tmp_path)
+    plan = cli.plan_view(workspace_root=workspace)
+    plans_root = workspace / "outputs" / "artifacts" / "derived" / "plans"
+    stored_plan = read_model(plans_root / "experiment_plan.json", ExperimentPlan)
+    assert stored_plan == plan
+    stored_graph = read_model(plans_root / "dependency_graph.json", DependencyGraphRecord)
+    assert len(stored_graph.edges) == len(experiment_names())
+    synthesis_edge = next(
+        edge
+        for edge in stored_graph.edges
+        if edge.experiment_name == ExperimentName.STATISTICAL_SYNTHESIS
+    )
+    assert len(synthesis_edge.required_experiments) > 0
 
 
 def test_smoke_passes_all_fixtures() -> None:
