@@ -306,10 +306,6 @@ def _fake_git_run(*args: object, **kwargs: object) -> subprocess.CompletedProces
     return subprocess.CompletedProcess(("git", "rev-parse", "HEAD"), 0, stdout="short")
 
 
-def _no_dirty_tree(_workspace_root: Path) -> bool:
-    return False
-
-
 def _no_cells(_plan: ExperimentPlan, _name: ExperimentName) -> tuple[PlannedCell, ...]:
     return ()
 
@@ -585,11 +581,6 @@ def test_smoke_passes_all_fixtures() -> None:
     assert result.passed_fixture_count == _FIXTURE_COUNT
 
 
-def test_run_experiment_requires_git_workspace(tmp_path: Path) -> None:
-    with pytest.raises(InvalidScientificDataError, match="cannot inspect source working tree"):
-        _ = cli.run_experiment("Population Sensitivity Utility", workspace_root=tmp_path)
-
-
 def test_experiment_status_rejects_unknown_family() -> None:
     with pytest.raises(InvalidScientificDataError, match="unknown experiment family"):
         _ = cli.experiment_status("Unknown Experiment")
@@ -784,7 +775,6 @@ def test_run_experiment_reports_invalid_when_no_cells(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "cells_for_experiment", _no_cells)
     result = cli.run_experiment("Anytime Implementation Hand Cases", workspace_root=workspace)
     assert result.state is PublicExecutionState.INVALID
@@ -795,7 +785,6 @@ def test_run_experiment_aggregates_cell_outcomes(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "cells_for_experiment", _hand_cells)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
@@ -842,7 +831,6 @@ def test_run_experiment_maps_aggregated_run_states(
     tmp_path: Path,
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "cells_for_experiment", _hand_cells)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
@@ -856,7 +844,6 @@ def test_run_experiment_maps_aggregated_run_states(
 def test_run_experiment_resolves_real_execution_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
     result = cli.run_experiment(
@@ -869,7 +856,6 @@ def test_run_experiment_resolves_real_execution_context(
 def test_run_experiment_synthesis_resolves_real_locality(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
@@ -887,7 +873,6 @@ def test_run_experiment_synthesis_completion_triggers_publication_render(
     def _record_render(workspace_root: Path) -> None:
         calls.append(workspace_root)
 
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
@@ -905,7 +890,6 @@ def test_run_experiment_synthesis_failure_skips_publication_render(
     def _record_render(workspace_root: Path) -> None:
         calls.append(workspace_root)
 
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
     monkeypatch.setattr(cli, "run_cell", _failed_run_cell)
@@ -923,7 +907,6 @@ def test_run_experiment_non_synthesis_completion_skips_publication_render(
     def _record_render(workspace_root: Path) -> None:
         calls.append(workspace_root)
 
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
@@ -973,7 +956,6 @@ def test_render_synthesis_publication_artifacts_writes_under_owner_experiment_le
             "x", encoding="utf-8"
         )
 
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
     monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
@@ -1011,13 +993,6 @@ def test_run_experiment_requires_clean_working_tree(
     )
     assert result.state is PublicExecutionState.COMPLETED
     assert result.completed_cells == _real_cell_count("Anytime Implementation Hand Cases")
-
-
-def test_run_experiment_rejects_dirty_working_tree(tmp_path: Path) -> None:
-    workspace = _git_workspace(tmp_path)
-    _ = (workspace / "untracked.txt").write_text("x", encoding="utf-8")
-    with pytest.raises(InvalidScientificDataError, match="clean Git working tree"):
-        _ = cli.run_experiment("Anytime Implementation Hand Cases", workspace_root=workspace)
 
 
 def test_experiment_status_resolves_real_workspace() -> None:
@@ -1075,7 +1050,6 @@ def test_executor_dispatches_ordinary_cell_through_run_cell(
         return write_artifact_executor(cell, context)
 
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "cells_for_experiment", _single_hand_case_cell)
     monkeypatch.setattr(cli, "_dependency_readiness", _completed_upstream_dependencies)
     monkeypatch.setattr(cli, "_execution_context", _context_for)
@@ -1156,7 +1130,6 @@ def test_run_experiment_rejects_missing_uv_lock(
         _ = (workspace / "src").symlink_to(_REPO_SRC, target_is_directory=True)
     except OSError as exc:
         pytest.skip(f"symlink creation unavailable in this environment: {exc}")
-    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
     with pytest.raises(InvalidScientificDataError, match=r"uv\.lock is required"):

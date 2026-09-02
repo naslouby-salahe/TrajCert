@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib
 import multiprocessing
 import os
-import subprocess
 import sys
 from argparse import ArgumentParser
 from collections.abc import Sequence
@@ -405,8 +404,6 @@ def run_experiment(
     max_workers: int | None = None,
 ) -> RunExperimentResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
-    if _dirty_tree(workspace_root):
-        raise InvalidScientificDataError("authoritative run requires a clean Git working tree")
     config = _load_config(workspace_root)
     plan = build_plan(config)
     name = _known_experiment_name(experiment_name)
@@ -718,20 +715,6 @@ def _provenance(
         plan_digest=DigestHex(plan.plan_digest),
     )
     return provenance_fingerprint(material)
-
-
-def _dirty_tree(workspace_root: Path) -> bool:
-    try:
-        result = subprocess.run(
-            ("git", "status", "--porcelain=v1", "--untracked-files=all"),
-            cwd=workspace_root,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise InvalidScientificDataError("cannot inspect source working tree") from exc
-    return bool(result.stdout.strip())
 
 
 def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:

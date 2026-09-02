@@ -3951,14 +3951,6 @@ seed-manifest checksums
 execution timestamps
 ```
 
-Authoritative `trajcert run` execution requires a clean source tree:
-
-```text
-git status --porcelain=v1 --untracked-files=all
-```
-
-must return no entries.
-
 The source commit is obtained by:
 
 ```text
