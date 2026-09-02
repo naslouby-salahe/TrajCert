@@ -78,7 +78,7 @@ def write_artifact_executor(
     relative_path = runner.scientific_result_path(cell)
     path = context.workspace_root / relative_path
     path.parent.mkdir(parents=True, exist_ok=True)
-    _ = path.write_text("artifact-payload", encoding="utf-8")
+    _ = path.write_text('{"passed": true, "measure": 1.0}', encoding="utf-8")
     return runner.CellExecutionResult(
         artifact_index=CellArtifactIndex(
             artifacts=(

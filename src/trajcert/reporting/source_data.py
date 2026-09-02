@@ -41,7 +41,7 @@ from trajcert.math.information import (
     observed_timing_information,
 )
 from trajcert.math.safety import assess_safety_geometry
-from trajcert.paths import ExperimentSlug
+from trajcert.paths import ExperimentLeaf, ExperimentSlug, experiment_leaf, semantic_slug
 from trajcert.provenance import (
     SensitivityCoordinate,
     VariantName,
@@ -1476,14 +1476,14 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
 
 
 def _source(
-    path: str,
+    path: Path,
     role: PublicationSourceRole,
     columns: tuple[str, ...],
     sort_columns: tuple[str, ...],
     owner: str,
 ) -> PublicationSourceDescriptor:
     return PublicationSourceDescriptor(
-        source_path=Path(path),
+        source_path=path,
         source_role=role,
         columns=tuple(ColumnName(column) for column in columns),
         sort_columns=tuple(ColumnName(column) for column in sort_columns),
@@ -1493,7 +1493,11 @@ def _source(
 
 _TABLE_SOURCES = (
     _source(
-        "outputs/experiments/statistical-synthesis/evaluations/aggregates/theorem_validation_summary.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "theorem_validation_summary.parquet",
         PublicationSourceRole.TABLE,
         (
             "theorem_name",
@@ -1507,7 +1511,11 @@ _TABLE_SOURCES = (
         "statistical-synthesis",
     ),
     _source(
-        "outputs/experiments/production-solver-vs-independent-oracle/evaluations/aggregates/solver_oracle_validation.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "solver_oracle_validation.parquet",
         PublicationSourceRole.TABLE,
         (
             "partition_name",
@@ -1525,7 +1533,11 @@ _TABLE_SOURCES = (
         "production-solver-vs-independent-oracle",
     ),
     _source(
-        "outputs/experiments/statistical-synthesis/evaluations/aggregates/partition_timing_results.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "partition_timing_results.parquet",
         PublicationSourceRole.TABLE,
         (
             "law_name",
@@ -1546,7 +1558,11 @@ _TABLE_SOURCES = (
         "statistical-synthesis",
     ),
     _source(
-        "outputs/experiments/statistical-synthesis/evaluations/aggregates/compatibility_safety.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "compatibility_safety.parquet",
         PublicationSourceRole.TABLE,
         (
             "law_name",
@@ -1567,7 +1583,11 @@ _TABLE_SOURCES = (
         "statistical-synthesis",
     ),
     _source(
-        "outputs/experiments/anytime-coverage-stress/evaluations/aggregates/anytime_coverage.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.ANYTIME_COVERAGE_STRESS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "anytime_coverage.parquet",
         PublicationSourceRole.TABLE,
         (
             "stress_cell",
@@ -1590,14 +1610,22 @@ _TABLE_SOURCES = (
         "anytime-coverage-stress",
     ),
     _source(
-        "outputs/experiments/statistical-synthesis/evaluations/aggregates/rho_utility.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "rho_utility.parquet",
         PublicationSourceRole.TABLE,
         tuple(RhoUtilityRow.model_fields),
         ("analysis_type", "law_name", "rho", "partition_name", "metric_name"),
         "statistical-synthesis",
     ),
     _source(
-        "outputs/experiments/failure-boundary-atlas/evaluations/aggregates/failure_boundaries.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.FAILURE_BOUNDARY_ATLAS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "failure_boundaries.parquet",
         PublicationSourceRole.TABLE,
         (
             "axis",
@@ -1616,7 +1644,11 @@ _TABLE_SOURCES = (
         "failure-boundary-atlas",
     ),
     _source(
-        "outputs/experiments/computational-scaling/evaluations/aggregates/computational_scaling.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.COMPUTATIONAL_SCALING)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "computational_scaling.parquet",
         PublicationSourceRole.TABLE,
         (
             "K",
@@ -1637,7 +1669,11 @@ _TABLE_SOURCES = (
 
 _FIGURE_SOURCES = (
     _source(
-        "outputs/experiments/statistical-synthesis/evaluations/aggregates/figure_partition_coherence.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_partition_coherence.parquet",
         PublicationSourceRole.FIGURE,
         (
             "law_name",
@@ -1652,7 +1688,11 @@ _FIGURE_SOURCES = (
         "statistical-synthesis",
     ),
     _source(
-        "outputs/experiments/strict-timing-gain/evaluations/aggregates/figure_timing_value.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.STRICT_TIMING_GAIN)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_timing_value.parquet",
         PublicationSourceRole.FIGURE,
         (
             "semantic_timing_case",
@@ -1666,7 +1706,11 @@ _FIGURE_SOURCES = (
         "strict-timing-gain",
     ),
     _source(
-        "outputs/experiments/safety-and-intrinsic-impossibility/evaluations/aggregates/figure_information_profile.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_information_profile.parquet",
         PublicationSourceRole.FIGURE,
         (
             "u",
@@ -1683,7 +1727,11 @@ _FIGURE_SOURCES = (
         "safety-and-intrinsic-impossibility",
     ),
     _source(
-        "outputs/experiments/anytime-coverage-stress/evaluations/aggregates/figure_anytime_paths.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.ANYTIME_COVERAGE_STRESS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_anytime_paths.parquet",
         PublicationSourceRole.FIGURE,
         (
             "stream_seed_index",
@@ -1698,7 +1746,11 @@ _FIGURE_SOURCES = (
         "anytime-coverage-stress",
     ),
     _source(
-        "outputs/experiments/anytime-coverage-stress/evaluations/aggregates/figure_anytime_coverage.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.ANYTIME_COVERAGE_STRESS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_anytime_coverage.parquet",
         PublicationSourceRole.FIGURE,
         (
             "stress_cell",
@@ -1713,7 +1765,11 @@ _FIGURE_SOURCES = (
         "anytime-coverage-stress",
     ),
     _source(
-        "outputs/experiments/population-sensitivity-utility/evaluations/aggregates/figure_rho_sensitivity.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.POPULATION_SENSITIVITY_UTILITY)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_rho_sensitivity.parquet",
         PublicationSourceRole.FIGURE,
         (
             "law_name",
@@ -1727,7 +1783,11 @@ _FIGURE_SOURCES = (
         "population-sensitivity-utility",
     ),
     _source(
-        "outputs/experiments/failure-boundary-atlas/evaluations/aggregates/figure_failure_boundaries.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.FAILURE_BOUNDARY_ATLAS)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_failure_boundaries.parquet",
         PublicationSourceRole.FIGURE,
         (
             "axis",
@@ -1742,7 +1802,11 @@ _FIGURE_SOURCES = (
         "failure-boundary-atlas",
     ),
     _source(
-        "outputs/experiments/computational-scaling/evaluations/aggregates/figure_computational_scaling.parquet",
+        experiment_leaf(
+            ExperimentSlug(semantic_slug(ExperimentName.COMPUTATIONAL_SCALING)),
+            ExperimentLeaf.EVALUATION_AGGREGATES,
+        )
+        / "figure_computational_scaling.parquet",
         PublicationSourceRole.FIGURE,
         (
             "K",

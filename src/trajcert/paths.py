@@ -35,7 +35,9 @@ class ExperimentLeaf(StrEnum):
     ARTIFACTS_FITTED = "artifacts/fitted"
     ARTIFACTS_DERIVED = "artifacts/derived"
     EVALUATION_RECORDS = "evaluations/records"
-    EVALUATION_COMPARISONS = "evaluations/comparisons"
+    EVALUATION_COMPARISONS_PAIRED = "evaluations/comparisons/paired"
+    EVALUATION_COMPARISONS_BASELINE = "evaluations/comparisons/baseline"
+    EVALUATION_COMPARISONS_ORACLE = "evaluations/comparisons/oracle"
     EVALUATION_AGGREGATES = "evaluations/aggregates"
     METRICS_PER_SEED = "metrics/per_seed"
     METRICS_PER_CONDITION = "metrics/per_condition"
@@ -44,6 +46,10 @@ class ExperimentLeaf(StrEnum):
     STATISTICS_CONFIDENCE_INTERVALS = "statistics/confidence_intervals"
     STATISTICS_EFFECTS = "statistics/effects"
     STATISTICS_MULTIPLICITY = "statistics/multiplicity"
+    FIGURES_MAIN = "figures/main"
+    FIGURES_SUPPLEMENTARY = "figures/supplementary"
+    TABLES_MAIN = "tables/main"
+    TABLES_SUPPLEMENTARY = "tables/supplementary"
     CHECKPOINTS_EXECUTION = "checkpoints/execution"
     DIAGNOSTICS_SCIENTIFIC = "diagnostics/scientific"
     DIAGNOSTICS_NUMERICAL = "diagnostics/numerical"
@@ -56,6 +62,57 @@ class ExperimentLeaf(StrEnum):
     PROVENANCE_CODE = "provenance/code"
     PROVENANCE_ENVIRONMENT = "provenance/environment"
     PROVENANCE_DEPENDENCIES = "provenance/dependencies"
+
+
+class ResultsExperimentLeaf(StrEnum):
+    FIGURES_MAIN = "figures/main"
+    FIGURES_SUPPLEMENTARY = "figures/supplementary"
+    TABLES_MAIN = "tables/main"
+    TABLES_SUPPLEMENTARY = "tables/supplementary"
+    SOURCE_DATA_FIGURES = "source_data/figures"
+    SOURCE_DATA_TABLES = "source_data/tables"
+    METRICS_PRIMARY = "metrics/primary"
+    METRICS_SECONDARY = "metrics/secondary"
+    METRICS_SUMMARY = "metrics/summary"
+    STATISTICS_TESTS = "statistics/tests"
+    STATISTICS_CONFIDENCE_INTERVALS = "statistics/confidence_intervals"
+    STATISTICS_EFFECTS = "statistics/effects"
+    STATISTICS_MULTIPLICITY = "statistics/multiplicity"
+    REPRODUCIBILITY = "reproducibility"
+
+
+class PreprocessingLeaf(StrEnum):
+    INVENTORIES_SYNTHETIC_LAWS = "inventories/synthetic-laws"
+    INVENTORIES_PARTITIONS = "inventories/partitions"
+    INVENTORIES_REAL_TRAJECTORIES = "inventories/real-trajectories"
+    VALIDATION_SCHEMAS = "validation/schemas"
+    VALIDATION_INTEGRITY = "validation/integrity"
+    VALIDATION_TRAJECTORY_CONSISTENCY = "validation/trajectory-consistency"
+    VALIDATION_PARTITION_CONSISTENCY = "validation/partition-consistency"
+    PREPARED_LAWS = "prepared/laws"
+    PREPARED_PARTITIONS = "prepared/partitions"
+    PREPARED_HAND_CASES = "prepared/hand-cases"
+    PREPARED_REAL_TRAJECTORIES = "prepared/real-trajectories"
+    METADATA_PREPARATION_RECORDS = "metadata/preparation-records"
+    METADATA_CONTENT_DIGESTS = "metadata/content-digests"
+    METADATA_DEPENDENCY_RECORDS = "metadata/dependency-records"
+
+
+class SharedArtifactCategory(StrEnum):
+    FITTED = "fitted"
+    BASELINES_LEGACY_BANDWISE_ODDS_RATIO = "baselines/legacy-bandwise-odds-ratio"
+    BASELINES_CALLBACK_MODEL = "baselines/callback-model"
+    BASELINES_GENERIC_INFORMATION_ORACLE = "baselines/generic-information-oracle"
+    DERIVED_PLANS = "derived/plans"
+    DERIVED_STREAMS = "derived/streams"
+    DERIVED_POPULATION = "derived/population"
+    DERIVED_SEQUENTIAL = "derived/sequential"
+
+
+class CacheCategory(StrEnum):
+    PREPROCESSING = "preprocessing"
+    EVALUATION = "evaluation"
+    ANALYSIS = "analysis"
 
 
 def long_path_safe(path: Path) -> Path:
@@ -160,6 +217,22 @@ def experiment_root(experiment_slug: ExperimentSlug) -> Path:
 
 def experiment_leaf(experiment_slug: ExperimentSlug, leaf: ExperimentLeaf) -> Path:
     return experiment_root(experiment_slug) / Path(leaf)
+
+
+def results_experiment_leaf(experiment_slug: ExperimentSlug, leaf: ResultsExperimentLeaf) -> Path:
+    return RESULTS_EXPERIMENTS_ROOT / experiment_slug / Path(leaf)
+
+
+def preprocessing_leaf(leaf: PreprocessingLeaf) -> Path:
+    return OUTPUTS_ROOT / "preprocessing" / Path(leaf)
+
+
+def shared_artifact_path(category: SharedArtifactCategory) -> Path:
+    return ARTIFACTS_ROOT / Path(category)
+
+
+def cache_path(category: CacheCategory) -> Path:
+    return OUTPUTS_ROOT / "cache" / Path(category)
 
 
 def semantic_cell_path(

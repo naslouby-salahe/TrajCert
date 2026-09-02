@@ -83,6 +83,7 @@ _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
         "_canonical_json_object",
         "_canonical_json_array",
         "_merge_size_fields",
+        "_write_reflected_json",
         # Free-text error/label messages: not domain identifiers.
         "validated_finite_vector",
         "_positive_tolerance",

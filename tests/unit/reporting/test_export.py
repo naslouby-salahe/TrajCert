@@ -21,6 +21,7 @@ from trajcert.experiments.synthesis import (
     synthesis_artifact_keys,
     synthesis_artifact_paths,
 )
+from trajcert.paths import ExperimentLeaf, experiment_leaf
 from trajcert.provenance import EnvironmentDigest
 from trajcert.reporting import export
 from trajcert.reporting.export import (
@@ -30,17 +31,14 @@ from trajcert.reporting.export import (
     require_synthesis_completion,
     validate_results_layout,
 )
-from trajcert.reporting.figures import FigureRenderResult
 from trajcert.reporting.source_data import (
     VerifiedSourceData,
     figure_source_descriptors,
     table_source_descriptors,
 )
-from trajcert.reporting.tables import TableRenderResult
 from trajcert.schemas import (
-    PublicationFormat,
     PublicationSourceDescriptor,
-    RenderedPublicationArtifact,
+    PublicationSourceRole,
     VerifiedSourceLineage,
 )
 from trajcert.storage import (
@@ -285,64 +283,44 @@ def _verified_source(
     )
 
 
-def _rendered_artifact(
-    path: Path, artifact_format: PublicationFormat
-) -> RenderedPublicationArtifact:
-    return RenderedPublicationArtifact(
-        source_path=Path("source.parquet"),
-        source_sha256=DigestHex("0" * _SHA256_HEX_LENGTH),
-        destination_path=path,
-        destination_sha256=DigestHex("0" * _SHA256_HEX_LENGTH),
-        publication_format=artifact_format,
+def _pre_rendered_leaf(descriptor: PublicationSourceDescriptor) -> ExperimentLeaf:
+    if descriptor.source_role is PublicationSourceRole.TABLE:
+        return ExperimentLeaf.TABLES_MAIN
+    return ExperimentLeaf.FIGURES_MAIN
+
+
+def _pre_rendered_extensions(descriptor: PublicationSourceDescriptor) -> tuple[str, ...]:
+    if descriptor.source_role is PublicationSourceRole.TABLE:
+        return ("csv", "tex")
+    return ("svg", "png")
+
+
+def _write_pre_rendered_artifacts(workspace: Path, descriptor: PublicationSourceDescriptor) -> None:
+    source_path = workspace / descriptor.source_path
+    source_path.parent.mkdir(parents=True, exist_ok=True)
+    _ = source_path.write_bytes(b"parquet-payload")
+    outputs_directory = workspace / experiment_leaf(
+        descriptor.owner_experiment, _pre_rendered_leaf(descriptor)
     )
-
-
-def _fake_render_tables(
-    sources: tuple[VerifiedSourceData, ...], destination_directory: Path
-) -> tuple[TableRenderResult, ...]:
-    destination_directory.mkdir(parents=True, exist_ok=True)
-    return tuple(
-        TableRenderResult(
-            csv=_rendered_artifact(
-                destination_directory / f"table-{index}.csv", PublicationFormat.CSV
-            ),
-            tex=_rendered_artifact(
-                destination_directory / f"table-{index}.tex", PublicationFormat.TEX
-            ),
+    outputs_directory.mkdir(parents=True, exist_ok=True)
+    for extension in _pre_rendered_extensions(descriptor):
+        _ = (outputs_directory / f"{descriptor.source_path.stem}.{extension}").write_bytes(
+            b"rendered-payload"
         )
-        for index, _source in enumerate(sources)
-    )
 
 
-def _fake_render_figures(
-    sources: tuple[VerifiedSourceData, ...], destination_directory: Path
-) -> tuple[FigureRenderResult, ...]:
-    destination_directory.mkdir(parents=True, exist_ok=True)
-    return tuple(
-        FigureRenderResult(
-            svg=_rendered_artifact(
-                destination_directory / f"figure-{index}.svg", PublicationFormat.SVG
-            ),
-            png=_rendered_artifact(
-                destination_directory / f"figure-{index}.png", PublicationFormat.PNG
-            ),
-        )
-        for index, _source in enumerate(sources)
-    )
-
-
-def _export_harness(monkeypatch: pytest.MonkeyPatch) -> None:
+def _export_harness(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> None:
     monkeypatch.setattr(export, "require_synthesis_completion", _noop_synthesis_completion)
     monkeypatch.setattr(export, "read_verified_source_data", _verified_source)
-    monkeypatch.setattr(export, "render_tables", _fake_render_tables)
-    monkeypatch.setattr(export, "render_figures", _fake_render_figures)
+    for descriptor in (*table_source_descriptors(), *figure_source_descriptors()):
+        _write_pre_rendered_artifacts(workspace, descriptor)
 
 
 def test_export_report_renders_complete_results_tree(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _completed_workspace(tmp_path)
-    _export_harness(monkeypatch)
+    _export_harness(monkeypatch, workspace)
     result = export_report(workspace)
     source_count = len(table_source_descriptors()) + len(figure_source_descriptors())
     assert result.rendered_artifact_count == source_count * _ARTIFACTS_PER_SOURCE
@@ -355,7 +333,7 @@ def test_export_report_renders_named_experiment_tree(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _completed_workspace(tmp_path)
-    _export_harness(monkeypatch)
+    _export_harness(monkeypatch, workspace)
     result = export_report(workspace, experiment_name=ExperimentName.ANYTIME_COVERAGE_STRESS)
     assert result.target == workspace / "results" / "experiments" / "anytime-coverage-stress"
     assert result.reused is False
@@ -365,10 +343,59 @@ def test_export_report_renders_synthesis_project_summary(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _completed_workspace(tmp_path)
-    _export_harness(monkeypatch)
+    _export_harness(monkeypatch, workspace)
     result = export_report(workspace, experiment_name=ExperimentName.STATISTICAL_SYNTHESIS)
     assert result.target == workspace / "results" / "project_summary"
     assert result.reused is False
+
+
+def test_export_report_raises_when_pre_rendered_table_artifact_is_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    workspace = _completed_workspace(tmp_path)
+    _export_harness(monkeypatch, workspace)
+    descriptor = table_source_descriptors()[0]
+    missing_path = (
+        workspace
+        / experiment_leaf(descriptor.owner_experiment, ExperimentLeaf.TABLES_MAIN)
+        / f"{descriptor.source_path.stem}.csv"
+    )
+    missing_path.unlink()
+    with pytest.raises(InvalidScientificDataError) as excinfo:
+        _ = export_report(workspace)
+    assert str(missing_path) in str(excinfo.value)
+
+
+def test_export_report_raises_when_pre_rendered_figure_artifact_is_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    workspace = _completed_workspace(tmp_path)
+    _export_harness(monkeypatch, workspace)
+    descriptor = figure_source_descriptors()[0]
+    missing_path = (
+        workspace
+        / experiment_leaf(descriptor.owner_experiment, ExperimentLeaf.FIGURES_MAIN)
+        / f"{descriptor.source_path.stem}.png"
+    )
+    missing_path.unlink()
+    with pytest.raises(InvalidScientificDataError) as excinfo:
+        _ = export_report(workspace)
+    assert str(missing_path) in str(excinfo.value)
+
+
+def test_export_report_copies_verified_source_data_parquet(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    workspace = _completed_workspace(tmp_path)
+    _export_harness(monkeypatch, workspace)
+    result = export_report(workspace, experiment_name=ExperimentName.ANYTIME_COVERAGE_STRESS)
+    descriptor = next(
+        item
+        for item in table_source_descriptors()
+        if item.owner_experiment == "anytime-coverage-stress"
+    )
+    copied = result.target / "source_data" / "tables" / descriptor.source_path.name
+    assert copied.is_file()
 
 
 def test_export_report_rejects_ownerless_experiment(
@@ -385,7 +412,7 @@ def test_export_report_rejects_missing_reproducibility_input(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
-    _export_harness(monkeypatch)
+    _export_harness(monkeypatch, workspace)
     with pytest.raises(InvalidScientificDataError, match="reproducibility input is missing"):
         _ = export_report(workspace)
 
@@ -395,7 +422,7 @@ def test_export_report_rejects_missing_source_commit(
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
     _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
-    _export_harness(monkeypatch)
+    _export_harness(monkeypatch, workspace)
     with pytest.raises(InvalidScientificDataError, match="cannot resolve source commit"):
         _ = export_report(workspace)
 
@@ -552,7 +579,7 @@ def test_export_report_rejects_short_source_commit(
 ) -> None:
     workspace = _workspace_with_config(tmp_path)
     _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
-    _export_harness(monkeypatch)
+    _export_harness(monkeypatch, workspace)
 
     def _short_git_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
         _ = (args, kwargs)

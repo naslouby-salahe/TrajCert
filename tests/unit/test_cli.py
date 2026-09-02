@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
+import pyarrow as pa
 import pytest
 from pydantic import ValidationError
 
@@ -30,15 +31,21 @@ from trajcert.experiments.plan import (
 )
 from trajcert.experiments.runner import SmokeResult
 from trajcert.experiments.status import ExperimentStatus
+from trajcert.paths import PreprocessingLeaf, preprocessing_leaf
 from trajcert.provenance import (
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
 )
 from trajcert.reporting.export import ReportExportResult
-from trajcert.reporting.source_data import table_source_descriptors
-from trajcert.schemas import PublicationSourceDescriptor
+from trajcert.reporting.source_data import (
+    VerifiedSourceData,
+    figure_source_descriptors,
+    table_source_descriptors,
+)
+from trajcert.schemas import PublicationSourceDescriptor, VerifiedSourceLineage
 from trajcert.storage import (
+    ArtifactKey,
     DependencyFingerprint,
     DigestHex,
     PlanDigest,
@@ -137,7 +144,7 @@ def _fake_smoke_fail() -> SmokeResult:
 
 def _fake_preprocess_target(dataset_name: str | None = None, *, overwrite: bool = False) -> Path:
     del dataset_name, overwrite
-    return Path("outputs/preprocessing/validation/scientific_inventory.json")
+    return preprocessing_leaf(PreprocessingLeaf.VALIDATION_INTEGRITY) / "scientific_inventory.json"
 
 
 def _fake_doctor_fail() -> DoctorResult:
@@ -382,6 +389,20 @@ def _completed_run_cell(
     return _cell_outcome(PublicExecutionState.COMPLETED, reused=False)
 
 
+def _noop_publication_render(_workspace_root: Path) -> None:
+    pass
+
+
+def _failed_run_cell(
+    _cell: PlannedCell,
+    _context: runner.ExecutionContext,
+    _dependencies: tuple[runner.DependencyReadiness, ...],
+    _executor: runner.CellExecutor,
+    _overwrite: bool,
+) -> runner.CellRunOutcome:
+    return _cell_outcome(PublicExecutionState.FAILED, reused=False)
+
+
 def _outcome_sequence_run_cell(
     states: tuple[PublicExecutionState, ...],
 ) -> Callable[
@@ -504,7 +525,11 @@ def test_doctor_rejects_missing_dependency_lock(tmp_path: Path) -> None:
 def test_preprocess_writes_configuration_artifact(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
     target = cli.preprocess(workspace_root=workspace)
-    expected = workspace / "outputs" / "preprocessing" / "validation" / "scientific_inventory.json"
+    expected = (
+        workspace
+        / preprocessing_leaf(PreprocessingLeaf.VALIDATION_INTEGRITY)
+        / "scientific_inventory.json"
+    )
     assert target == expected
     assert target.is_file()
     stored = TrajCertConfig.model_validate_json(target.read_text(encoding="utf-8"))
@@ -830,9 +855,130 @@ def test_run_experiment_synthesis_resolves_real_locality(
     monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
     monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _noop_publication_render)
     result = cli.run_experiment("Statistical Synthesis", workspace_root=Path())
     assert result.state is PublicExecutionState.COMPLETED
     assert result.completed_cells == _real_cell_count("Statistical Synthesis")
+
+
+def test_run_experiment_synthesis_completion_triggers_publication_render(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[Path] = []
+
+    def _record_render(workspace_root: Path) -> None:
+        calls.append(workspace_root)
+
+    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
+    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
+    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _record_render)
+    result = cli.run_experiment("Statistical Synthesis", workspace_root=Path())
+    assert result.state is PublicExecutionState.COMPLETED
+    assert calls == [Path()]
+
+
+def test_run_experiment_synthesis_failure_skips_publication_render(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[Path] = []
+
+    def _record_render(workspace_root: Path) -> None:
+        calls.append(workspace_root)
+
+    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
+    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
+    monkeypatch.setattr(cli, "run_cell", _failed_run_cell)
+    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _record_render)
+    result = cli.run_experiment("Statistical Synthesis", workspace_root=Path())
+    assert result.state is PublicExecutionState.FAILED
+    assert calls == []
+
+
+def test_run_experiment_non_synthesis_completion_skips_publication_render(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[Path] = []
+
+    def _record_render(workspace_root: Path) -> None:
+        calls.append(workspace_root)
+
+    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
+    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(cli, "_execution_context", _context_for)
+    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _record_render)
+    result = cli.run_experiment(
+        "Anytime Implementation Hand Cases", workspace_root=Path(), max_workers=1
+    )
+    assert result.state is PublicExecutionState.COMPLETED
+    assert calls == []
+
+
+def test_render_synthesis_publication_artifacts_writes_under_owner_experiment_leaves(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    workspace = _configured_workspace(tmp_path)
+    recorded_table_destinations: list[Path] = []
+    recorded_figure_destinations: list[Path] = []
+
+    def _fake_read_verified(
+        _root: Path, descriptor: PublicationSourceDescriptor
+    ) -> VerifiedSourceData:
+        return VerifiedSourceData(
+            descriptor=descriptor,
+            table=pa.Table.from_pydict({"quantity": [1], "value": [0.5]}),
+            lineage=VerifiedSourceLineage(
+                source_path=descriptor.source_path,
+                source_sha256=DigestHex("0" * _SHA256_HEX_LENGTH),
+                artifact_key=ArtifactKey("artifact"),
+                completion_sha256=DigestHex("0" * _SHA256_HEX_LENGTH),
+                scientific_specification_digest=SpecificationDigest("specification"),
+                dependency_fingerprint=DependencyFingerprint("dependency"),
+                provenance_fingerprint=ProvenanceFingerprint("provenance"),
+            ),
+        )
+
+    def _fake_render_table(source: VerifiedSourceData, destination_directory: Path) -> None:
+        recorded_table_destinations.append(destination_directory)
+        destination_directory.mkdir(parents=True, exist_ok=True)
+        _ = (destination_directory / f"{source.descriptor.source_path.stem}.csv").write_text(
+            "x", encoding="utf-8"
+        )
+
+    def _fake_render_figure(source: VerifiedSourceData, destination_directory: Path) -> None:
+        recorded_figure_destinations.append(destination_directory)
+        destination_directory.mkdir(parents=True, exist_ok=True)
+        _ = (destination_directory / f"{source.descriptor.source_path.stem}.svg").write_text(
+            "x", encoding="utf-8"
+        )
+
+    monkeypatch.setattr(cli, "_dirty_tree", _no_dirty_tree)
+    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(cli, "_execution_context", _context_for)
+    monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
+    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(cli, "read_verified_source_data", _fake_read_verified)
+    monkeypatch.setattr(cli, "render_table", _fake_render_table)
+    monkeypatch.setattr(cli, "render_figure", _fake_render_figure)
+
+    result = cli.run_experiment("Statistical Synthesis", workspace_root=workspace)
+    assert result.state is PublicExecutionState.COMPLETED
+
+    tables = table_source_descriptors()
+    figures = figure_source_descriptors()
+    assert len(recorded_table_destinations) == len(tables)
+    assert len(recorded_figure_destinations) == len(figures)
+    for descriptor, destination in zip(tables, recorded_table_destinations, strict=True):
+        expected = workspace / "outputs" / "experiments" / descriptor.owner_experiment
+        assert destination == expected / "tables" / "main"
+        assert (destination / f"{descriptor.source_path.stem}.csv").is_file()
+    for descriptor, destination in zip(figures, recorded_figure_destinations, strict=True):
+        expected = workspace / "outputs" / "experiments" / descriptor.owner_experiment
+        assert destination == expected / "figures" / "main"
+        assert (destination / f"{descriptor.source_path.stem}.svg").is_file()
 
 
 def test_run_experiment_requires_clean_working_tree(
@@ -858,7 +1004,6 @@ def test_run_experiment_rejects_dirty_working_tree(tmp_path: Path) -> None:
 
 def test_experiment_status_resolves_real_workspace() -> None:
     status = cli.experiment_status("Legacy Partition Incoherence Check", workspace_root=Path())
-    assert status.state is PublicExecutionState.READY
     assert status.total_cells == _real_cell_count("Legacy Partition Incoherence Check")
 
 

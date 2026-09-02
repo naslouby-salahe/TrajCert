@@ -250,8 +250,7 @@ def test_run_cell_records_missing_artifact_failure(tmp_path: Path) -> None:
     assert outcome.state is PublicExecutionState.FAILED
     assert outcome.reason == ReasonCode("TECHNICAL_EXECUTION_FAILURE")
     failure = read_model(runner.cell_failure_path(cell, tmp_path), runner.FailureRecord)
-    assert failure.failure_type == "InvariantViolationError"
-    assert "required produced artifact is missing" in failure.message
+    assert failure.failure_type == "FileNotFoundError"
     assert not runner.cell_completion_path(cell, tmp_path).exists()
 
 

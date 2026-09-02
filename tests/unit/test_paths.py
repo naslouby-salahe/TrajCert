@@ -12,15 +12,23 @@ from trajcert.paths import (
     PROJECT_SUMMARY_ROOT,
     RESULTS_EXPERIMENTS_ROOT,
     RESULTS_ROOT,
+    CacheCategory,
     CoordinateName,
     CoordinateToken,
     ExperimentLeaf,
     ExperimentSlug,
+    PreprocessingLeaf,
+    ResultsExperimentLeaf,
+    SharedArtifactCategory,
+    cache_path,
     canonical_number_token,
     experiment_leaf,
     experiment_root,
+    preprocessing_leaf,
+    results_experiment_leaf,
     semantic_cell_path,
     semantic_slug,
+    shared_artifact_path,
 )
 
 _SLUG_CASES: tuple[tuple[str, str], ...] = (
@@ -130,7 +138,9 @@ def test_experiment_leaf_enum_values() -> None:
         ExperimentLeaf.ARTIFACTS_FITTED: "artifacts/fitted",
         ExperimentLeaf.ARTIFACTS_DERIVED: "artifacts/derived",
         ExperimentLeaf.EVALUATION_RECORDS: "evaluations/records",
-        ExperimentLeaf.EVALUATION_COMPARISONS: "evaluations/comparisons",
+        ExperimentLeaf.EVALUATION_COMPARISONS_PAIRED: "evaluations/comparisons/paired",
+        ExperimentLeaf.EVALUATION_COMPARISONS_BASELINE: "evaluations/comparisons/baseline",
+        ExperimentLeaf.EVALUATION_COMPARISONS_ORACLE: "evaluations/comparisons/oracle",
         ExperimentLeaf.EVALUATION_AGGREGATES: "evaluations/aggregates",
         ExperimentLeaf.METRICS_PER_SEED: "metrics/per_seed",
         ExperimentLeaf.METRICS_PER_CONDITION: "metrics/per_condition",
@@ -139,6 +149,10 @@ def test_experiment_leaf_enum_values() -> None:
         ExperimentLeaf.STATISTICS_CONFIDENCE_INTERVALS: "statistics/confidence_intervals",
         ExperimentLeaf.STATISTICS_EFFECTS: "statistics/effects",
         ExperimentLeaf.STATISTICS_MULTIPLICITY: "statistics/multiplicity",
+        ExperimentLeaf.FIGURES_MAIN: "figures/main",
+        ExperimentLeaf.FIGURES_SUPPLEMENTARY: "figures/supplementary",
+        ExperimentLeaf.TABLES_MAIN: "tables/main",
+        ExperimentLeaf.TABLES_SUPPLEMENTARY: "tables/supplementary",
         ExperimentLeaf.CHECKPOINTS_EXECUTION: "checkpoints/execution",
         ExperimentLeaf.DIAGNOSTICS_SCIENTIFIC: "diagnostics/scientific",
         ExperimentLeaf.DIAGNOSTICS_NUMERICAL: "diagnostics/numerical",
@@ -153,3 +167,34 @@ def test_experiment_leaf_enum_values() -> None:
         ExperimentLeaf.PROVENANCE_DEPENDENCIES: "provenance/dependencies",
     }
     assert {member: member.value for member in ExperimentLeaf} == expected
+
+
+def test_experiment_leaf_values_are_clean_relative_paths() -> None:
+    for member in ExperimentLeaf:
+        value = member.value
+        assert value == value.strip("/")
+        assert not value.startswith("/")
+        assert not value.endswith("/")
+        assert ".." not in value.split("/")
+
+
+def test_results_experiment_leaf_layout() -> None:
+    assert results_experiment_leaf(
+        ExperimentSlug("foo"), ResultsExperimentLeaf.FIGURES_MAIN
+    ) == Path("results/experiments/foo/figures/main")
+
+
+def test_preprocessing_leaf_layout() -> None:
+    assert preprocessing_leaf(PreprocessingLeaf.PREPARED_LAWS) == Path(
+        "outputs/preprocessing/prepared/laws"
+    )
+
+
+def test_shared_artifact_path_layout() -> None:
+    assert shared_artifact_path(SharedArtifactCategory.DERIVED_STREAMS) == Path(
+        "outputs/artifacts/derived/streams"
+    )
+
+
+def test_cache_path_layout() -> None:
+    assert cache_path(CacheCategory.EVALUATION) == Path("outputs/cache/evaluation")

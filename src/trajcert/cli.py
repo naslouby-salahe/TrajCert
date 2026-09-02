@@ -59,7 +59,15 @@ from trajcert.experiments.synthesis import (
     synthesis_artifact_keys,
     synthesis_dependency_fingerprint,
 )
-from trajcert.paths import RESULTS_ROOT, semantic_slug
+from trajcert.paths import (
+    OUTPUTS_ROOT,
+    RESULTS_ROOT,
+    ExperimentLeaf,
+    PreprocessingLeaf,
+    experiment_leaf,
+    preprocessing_leaf,
+    semantic_slug,
+)
 from trajcert.provenance import (
     EnvironmentDigest,
     ProducerComponentName,
@@ -73,7 +81,13 @@ from trajcert.reporting.export import (
     source_commit,
     validate_results_layout,
 )
-from trajcert.reporting.source_data import figure_source_descriptors, table_source_descriptors
+from trajcert.reporting.figures import render_figure
+from trajcert.reporting.source_data import (
+    figure_source_descriptors,
+    read_verified_source_data,
+    table_source_descriptors,
+)
+from trajcert.reporting.tables import render_table
 from trajcert.storage import (
     DigestHex,
     ProvenanceFingerprint,
@@ -266,7 +280,9 @@ def _print_smoke(result: SmokeResult) -> None:
     print(f"TrajCert smoke: {state} ({result.passed_fixture_count}/6 fixtures passed)")
 
 
-_PREPROCESS_PATH = Path("outputs/preprocessing/validation/scientific_inventory.json")
+_PREPROCESS_PATH = (
+    preprocessing_leaf(PreprocessingLeaf.VALIDATION_INTEGRITY) / "scientific_inventory.json"
+)
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
 _LOCAL_BOUND_EXPERIMENTS = (
@@ -406,6 +422,8 @@ def run_experiment(
         )
     state = _run_state(len(cells), completed, failed, blocked)
     progress.experiment_finished(state, completed, reused, failed, blocked)
+    if name == _SYNTHESIS_NAME and state is PublicExecutionState.COMPLETED:
+        _render_synthesis_publication_artifacts(workspace_root)
     return RunExperimentResult(
         experiment_name=name,
         state=state,
@@ -414,6 +432,21 @@ def run_experiment(
         failed_cells=failed,
         blocked_cells=blocked,
     )
+
+
+def _render_synthesis_publication_artifacts(workspace_root: Path) -> None:
+    for descriptor in table_source_descriptors():
+        verified = read_verified_source_data(workspace_root, descriptor)
+        destination = workspace_root / experiment_leaf(
+            descriptor.owner_experiment, ExperimentLeaf.TABLES_MAIN
+        )
+        _ = render_table(verified, destination)
+    for descriptor in figure_source_descriptors():
+        verified = read_verified_source_data(workspace_root, descriptor)
+        destination = workspace_root / experiment_leaf(
+            descriptor.owner_experiment, ExperimentLeaf.FIGURES_MAIN
+        )
+        _ = render_figure(verified, destination)
 
 
 def _run_cells_sequentially(
@@ -794,7 +827,7 @@ def _local_validity_target(
 def _assert_workspace_writable(workspace_root: Path) -> None:
     if not workspace_root.is_dir() or not os.access(workspace_root, os.W_OK):
         raise InvalidScientificDataError(f"workspace is not writable: {workspace_root}")
-    for relative in (Path("outputs"), RESULTS_ROOT):
+    for relative in (OUTPUTS_ROOT, RESULTS_ROOT):
         directory = workspace_root / relative
         if directory.exists() and (not directory.is_dir() or not os.access(directory, os.W_OK)):
             raise InvalidScientificDataError(f"workspace path is not writable: {directory}")

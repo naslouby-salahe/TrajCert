@@ -32,18 +32,19 @@ from trajcert.paths import (
     RESULTS_EXPERIMENTS_ROOT,
     RESULTS_ROOT,
     CoordinateToken,
+    ExperimentLeaf,
+    experiment_leaf,
     semantic_slug,
 )
 from trajcert.provenance import CodeCommit, EnvironmentDigest
-from trajcert.reporting.figures import FigureRenderResult, render_figures
 from trajcert.reporting.source_data import (
     VerifiedSourceData,
     all_publication_source_descriptors,
     read_verified_source_data,
 )
-from trajcert.reporting.tables import TableRenderResult, render_tables
 from trajcert.schemas import (
     EnvironmentReproducibilityRecord,
+    PublicationFormat,
     PublicationReproducibilityRecord,
     PublicationSourceDescriptor,
     PublicationSourceRole,
@@ -64,10 +65,20 @@ from trajcert.types import Count, DependencyAuthority, ExperimentName
 LOCK_PATH = Path("uv.lock")
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
-_ALLOWED_EXPERIMENT_CHILDREN = frozenset({"figures", "tables", "metrics", "statistics"})
-_ALLOWED_PROJECT_CHILDREN = frozenset(
-    {"figures", "tables", "metrics", "statistics", "reproducibility"}
+_ALLOWED_EXPERIMENT_CHILDREN = frozenset(
+    {"figures", "tables", "source_data", "metrics", "statistics", "reproducibility"}
 )
+_ALLOWED_PROJECT_CHILDREN = frozenset(
+    {"figures", "tables", "source_data", "metrics", "statistics", "reproducibility"}
+)
+_TABLE_FORMATS = (PublicationFormat.CSV, PublicationFormat.TEX)
+_FIGURE_FORMATS = (PublicationFormat.SVG, PublicationFormat.PNG)
+_FORMAT_EXTENSIONS = {
+    PublicationFormat.CSV: "csv",
+    PublicationFormat.TEX: "tex",
+    PublicationFormat.SVG: "svg",
+    PublicationFormat.PNG: "png",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +106,7 @@ def export_report(
             staged_target = temporary_root / "results"
             final_target = workspace_root / RESULTS_ROOT
             rendered = _render_complete_results_tree(
+                workspace_root,
                 sources,
                 staged_target,
                 final_target,
@@ -117,6 +129,7 @@ def export_report(
                 staged_target = temporary_root / owner
                 final_target = workspace_root / RESULTS_EXPERIMENTS_ROOT / owner
             rendered = _render_publication_tree(
+                workspace_root,
                 sources,
                 staged_target,
                 final_target,
@@ -147,6 +160,7 @@ def _selected_descriptors(
 
 
 def _render_complete_results_tree(
+    workspace_root: Path,
     sources: tuple[VerifiedSourceData, ...],
     staged_results_root: Path,
     final_results_root: Path,
@@ -163,6 +177,7 @@ def _render_complete_results_tree(
             final_target = final_results_root / "experiments" / owner
         rendered.extend(
             _render_publication_tree(
+                workspace_root,
                 owned,
                 staged_target,
                 final_target,
@@ -172,6 +187,7 @@ def _render_complete_results_tree(
 
 
 def _render_publication_tree(
+    workspace_root: Path,
     sources: tuple[VerifiedSourceData, ...],
     staged_target: Path,
     final_target: Path,
@@ -182,20 +198,80 @@ def _render_publication_tree(
     figures = tuple(
         item for item in sources if item.descriptor.source_role is PublicationSourceRole.FIGURE
     )
-    table_results = render_tables(tables, staged_target / "tables")
-    figure_results = render_figures(figures, staged_target / "figures")
-    return _finalized_render_paths(table_results, figure_results, staged_target, final_target)
+    staged = _copy_rendered_artifacts(
+        workspace_root,
+        tables,
+        ExperimentLeaf.TABLES_MAIN,
+        staged_target / "tables" / "main",
+        _TABLE_FORMATS,
+    ) + _copy_rendered_artifacts(
+        workspace_root,
+        figures,
+        ExperimentLeaf.FIGURES_MAIN,
+        staged_target / "figures" / "main",
+        _FIGURE_FORMATS,
+    )
+    _copy_source_data(workspace_root, tables, staged_target / "source_data" / "tables")
+    _copy_source_data(workspace_root, figures, staged_target / "source_data" / "figures")
+    return _finalized_render_paths(staged, staged_target, final_target)
+
+
+def _copy_rendered_artifacts(
+    workspace_root: Path,
+    sources: tuple[VerifiedSourceData, ...],
+    outputs_leaf: ExperimentLeaf,
+    staged_directory: Path,
+    formats: tuple[PublicationFormat, ...],
+) -> tuple[RenderedPublicationArtifact, ...]:
+    if not sources:
+        return ()
+    staged_directory.mkdir(parents=True, exist_ok=True)
+    artifacts: list[RenderedPublicationArtifact] = []
+    for source in sources:
+        basename = source.descriptor.source_path.stem
+        outputs_directory = workspace_root / experiment_leaf(
+            source.descriptor.owner_experiment, outputs_leaf
+        )
+        for publication_format in formats:
+            extension = _FORMAT_EXTENSIONS[publication_format]
+            rendered_path = outputs_directory / f"{basename}.{extension}"
+            if not rendered_path.is_file():
+                raise InvalidScientificDataError(
+                    f"expected pre-rendered publication artifact is missing: {rendered_path}"
+                )
+            destination_path = staged_directory / f"{basename}.{extension}"
+            _ = shutil.copy2(rendered_path, destination_path)
+            artifacts.append(
+                RenderedPublicationArtifact(
+                    source_path=source.descriptor.source_path,
+                    source_sha256=source.lineage.source_sha256,
+                    destination_path=destination_path,
+                    destination_sha256=file_digest(destination_path),
+                    publication_format=publication_format,
+                )
+            )
+    return tuple(artifacts)
+
+
+def _copy_source_data(
+    workspace_root: Path,
+    sources: tuple[VerifiedSourceData, ...],
+    staged_directory: Path,
+) -> None:
+    if not sources:
+        return
+    staged_directory.mkdir(parents=True, exist_ok=True)
+    for source in sources:
+        source_path = workspace_root / source.descriptor.source_path
+        destination_path = staged_directory / source_path.name
+        _ = shutil.copy2(source_path, destination_path)
 
 
 def _finalized_render_paths(
-    tables: tuple[TableRenderResult, ...],
-    figures: tuple[FigureRenderResult, ...],
+    staged: tuple[RenderedPublicationArtifact, ...],
     staged_target: Path,
     final_target: Path,
 ) -> tuple[RenderedPublicationArtifact, ...]:
-    staged = tuple(artifact for result in tables for artifact in (result.csv, result.tex)) + tuple(
-        artifact for result in figures for artifact in (result.svg, result.png)
-    )
     return tuple(
         artifact.model_copy(
             update={

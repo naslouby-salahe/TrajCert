@@ -2932,6 +2932,9 @@ outputs/
 │       ├── evaluations/
 │       │   ├── records/
 │       │   ├── comparisons/
+│       │   │   ├── paired/
+│       │   │   ├── baseline/
+│       │   │   └── oracle/
 │       │   └── aggregates/
 │       ├── metrics/
 │       │   ├── per_seed/
@@ -2942,6 +2945,12 @@ outputs/
 │       │   ├── confidence_intervals/
 │       │   ├── effects/
 │       │   └── multiplicity/
+│       ├── figures/
+│       │   ├── main/
+│       │   └── supplementary/
+│       ├── tables/
+│       │   ├── main/
+│       │   └── supplementary/
 │       ├── checkpoints/
 │       │   └── execution/
 │       ├── diagnostics/
@@ -2963,6 +2972,26 @@ outputs/
     ├── evaluation/
     └── analysis/
 ```
+
+The artifact lifecycle is:
+
+```text
+scientific execution
+        |
+        v
+outputs/
+authoritative computational evidence
+        |
+        v
+report
+publication transformation / synthesis
+        |
+        v
+results/
+publication-facing evidence
+```
+
+`run <experiment>` generates all applicable authoritative computational evidence for that experiment under `outputs/`, including its evaluations, metrics, statistics, figures, tables, diagnostics, and provenance. It is incorrect for `run <experiment>` to generate only raw records while deferring to `report` the calculation of figures, metrics, statistics, summaries, or other experiment-level analysis that logically belongs to that experiment. `report` reads already-complete authoritative computational evidence from `outputs/` and converts or synthesizes it into publication-facing artifacts under `results/`; `report` must not silently repair incomplete experiment execution. `results/` is never a scientific input.
 
 `outputs/preprocessing/` contains authoritative deterministic preparation products.
 
@@ -3039,21 +3068,93 @@ Recoverable checkpoints never constitute completion evidence.
 
 The compact manuscript-facing workspace is rooted at ``results``.
 
-`report` exports only completed, schema-valid, dependency-valid, provenance-valid evidence.
+`report` reads only completed, schema-valid, dependency-valid, provenance-valid evidence from `outputs/`. `report` must not train, simulate missing streams, rerun missing experiment cells, solve missing scientific cells, silently regenerate experiment computations, or read scientific input from `results/`. If mandatory `outputs/` evidence required for a publication artifact is missing, `report` fails explicitly, naming the missing artifact identity, rather than silently repairing, skipping, or substituting stale evidence.
 
-Experiment-specific evidence is published under:
-
-```text
-results/experiments/<descriptive-experiment-name>/
-```
-
-`Statistical Synthesis` owns cross-experiment summary and synthesis artifacts under:
+The layout is:
 
 ```text
-results/project_summary/
+results/
+├── experiments/
+│   └── <descriptive-experiment-name>/
+│       ├── figures/
+│       │   ├── main/
+│       │   └── supplementary/
+│       ├── tables/
+│       │   ├── main/
+│       │   └── supplementary/
+│       ├── source_data/
+│       │   ├── figures/
+│       │   └── tables/
+│       ├── metrics/
+│       │   ├── primary/
+│       │   ├── secondary/
+│       │   └── summary/
+│       ├── statistics/
+│       │   ├── tests/
+│       │   ├── confidence_intervals/
+│       │   ├── effects/
+│       │   └── multiplicity/
+│       └── reproducibility/
+│
+└── project_summary/
+    ├── figures/
+    │   ├── main/
+    │   └── supplementary/
+    ├── tables/
+    │   ├── main/
+    │   └── supplementary/
+    ├── source_data/
+    │   ├── figures/
+    │   └── tables/
+    ├── metrics/
+    │   ├── primary/
+    │   └── summary/
+    ├── statistics/
+    │   ├── comparisons/
+    │   ├── confidence_intervals/
+    │   ├── effects/
+    │   └── multiplicity/
+    └── reproducibility/
+        ├── configuration/
+        ├── datasets/
+        ├── seeds/
+        ├── software/
+        └── evidence/
 ```
 
-Every figure and table is rendered only from authoritative machine-readable evidence under `outputs/`.
+Experiment-specific evidence is published under `results/experiments/<descriptive-experiment-name>/`. `Statistical Synthesis` owns cross-experiment summary and synthesis artifacts under `results/project_summary/`.
+
+`results/project_summary/figures/main/` holds the manuscript figures, one PDF/SVG/PNG triple per required figure from Section 20, named `figure_0N_<descriptive-slug>` where N is the figure's ordinal in Section 20 and `<descriptive-slug>` is derived from its title:
+
+```text
+figure_01_partition_coherence      (Figure 1: Partition coherence at fixed sensitivity)
+figure_02_exact_timing_value       (Figure 2: Exact timing value)
+figure_03_information_profile_safety_corridor  (Figure 3: Information profile and safety corridor)
+figure_04_anytime_certificates     (Figure 4: Representative anytime certificates)
+figure_05_anytime_stress_validity  (Figure 5: Anytime stress validity)
+figure_06_rho_sensitivity          (Figure 6: Full rho sensitivity)
+figure_07_failure_boundary_atlas   (Figure 7: Failure-boundary atlas)
+figure_08_computational_scaling    (Figure 8: Computational scaling)
+```
+
+`results/project_summary/tables/main/` holds the manuscript tables, one CSV/TeX pair per required table from Section 19, named for its scientific content:
+
+```text
+theorem_validation          (Table 1)
+solver_oracle_validation    (Table 6)
+partition_timing_results    (Table 7)
+compatibility_safety        (Table 8)
+anytime_coverage            (Table 9)
+rho_utility                 (Table 10)
+failure_boundaries          (Table 11)
+computational_scaling       (Table 12)
+```
+
+There is no Table 2, 3, 4, or 5 defined anywhere in this document; table numbering is not contiguous by design (Tables 1 and 6-12 are the complete authoritative set).
+
+`results/project_summary/source_data/figures/` and `results/project_summary/source_data/tables/` hold the exact Parquet publication-source copies backing each manuscript figure/table, named identically to their figure/table basename above.
+
+Every figure and table is rendered only from authoritative machine-readable evidence already computed under `outputs/` by the owning experiment's `run` execution; `report` performs only selection, combination, relabeling, reformatting, and publication rendering — it does not compute new analysis. Publication provenance is traceable: `results` artifact -> `source_data` publication copy -> `outputs/` artifact(s) -> semantic experiment identity, recorded in `results/project_summary/reproducibility/evidence/result_lineage.json`.
 
 `results/` is never consumed as scientific computational input.
 
@@ -4879,7 +4980,7 @@ It:
 4. computes cross-experiment deterministic aggregates;
 5. verifies the complete 54-test Holm family;
 6. applies materiality;
-7. produces Tables 5, 7, 8, and 10 source data;
+7. produces Tables 1, 7, 8, and 10 source data;
 8. produces cross-experiment Figure 1 source data;
 9. performs the local-validity audits in Section 21.11.
 

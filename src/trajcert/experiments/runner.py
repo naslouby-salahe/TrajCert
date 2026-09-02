@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import ast
+import json
 from collections.abc import Callable
 from enum import StrEnum
 from functools import partial
 from hashlib import sha256
 from pathlib import Path
-from typing import Final, NewType
+from typing import Final, NewType, cast
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, JsonValue
 
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
@@ -91,6 +92,7 @@ from trajcert.storage import (
     ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
+    atomic_write_bytes,
     atomic_write_model,
     file_digest,
     model_digest,
@@ -352,6 +354,7 @@ def run_cell(
     set_current_cell_key(cell.identity.semantic_cell_key)
     try:
         result = executor(cell, context)
+        _write_reflected_evidence(cell, context, result)
         _validate_execution_result(result, context)
         _verify_artifacts(result.artifact_index, context.workspace_root)
         _ = atomic_write_model(
@@ -387,6 +390,105 @@ def run_cell(
     finally:
         set_current_cell_key(None)
         running_path.unlink(missing_ok=True)
+
+
+def _write_reflected_evidence(
+    cell: PlannedCell,
+    context: ExecutionContext,
+    result: CellExecutionResult,
+) -> None:
+    artifact_key = scientific_result_artifact_key(cell)
+    entry = next(
+        item for item in result.artifact_index.artifacts if item.artifact_key == artifact_key
+    )
+    scientific_result = cast(
+        "dict[str, JsonValue]",
+        json.loads((context.workspace_root / entry.relative_path).read_text(encoding="utf-8")),
+    )
+    metrics_payload: dict[str, JsonValue] = {
+        key: value
+        for key, value in scientific_result.items()
+        if isinstance(value, (int, float)) and not isinstance(value, bool)
+    }
+    diagnostics_payload: dict[str, JsonValue] = {
+        key: value for key, value in scientific_result.items() if isinstance(value, bool)
+    }
+    metrics_leaf = (
+        ExperimentLeaf.METRICS_PER_SEED
+        if context.expected_seed_count > 0
+        else ExperimentLeaf.METRICS_PER_CONDITION
+    )
+    _write_reflected_json(
+        cell, context.workspace_root, metrics_leaf, "metrics.json", metrics_payload
+    )
+    _write_reflected_json(
+        cell,
+        context.workspace_root,
+        ExperimentLeaf.DIAGNOSTICS_SCIENTIFIC,
+        "diagnostics.json",
+        diagnostics_payload,
+    )
+    _write_reflected_json(
+        cell,
+        context.workspace_root,
+        ExperimentLeaf.PROVENANCE_CONFIGURATION,
+        "configuration.json",
+        {"value": context.scientific_specification_digest},
+    )
+    _write_reflected_json(
+        cell,
+        context.workspace_root,
+        ExperimentLeaf.PROVENANCE_DATA,
+        "data.json",
+        {"value": context.scientific_dependency_digest},
+    )
+    _write_reflected_json(
+        cell,
+        context.workspace_root,
+        ExperimentLeaf.PROVENANCE_SEEDS,
+        "seeds.json",
+        {
+            "expected_seed_count": context.expected_seed_count,
+            "completed_seed_count": result.completed_seed_count,
+        },
+    )
+    _write_reflected_json(
+        cell,
+        context.workspace_root,
+        ExperimentLeaf.PROVENANCE_CODE,
+        "code.json",
+        {"value": context.provenance_fingerprint},
+    )
+    _write_reflected_json(
+        cell,
+        context.workspace_root,
+        ExperimentLeaf.PROVENANCE_ENVIRONMENT,
+        "environment.json",
+        {"manifest_digest": context.manifest_digest},
+    )
+    _write_reflected_json(
+        cell,
+        context.workspace_root,
+        ExperimentLeaf.PROVENANCE_DEPENDENCIES,
+        "dependencies.json",
+        {"value": context.dependency_fingerprint},
+    )
+
+
+def _write_reflected_json(
+    cell: PlannedCell,
+    workspace_root: Path,
+    leaf: ExperimentLeaf,
+    filename: str,
+    payload: dict[str, JsonValue],
+) -> None:
+    directory = semantic_cell_path(
+        cell.identity.experiment_slug,
+        leaf,
+        cell.identity.path_coordinates,
+    )
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    _ = atomic_write_bytes(workspace_root / directory / filename, encoded)
 
 
 def dependency_block_reason(
