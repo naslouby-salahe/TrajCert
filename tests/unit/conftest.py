@@ -90,9 +90,6 @@ def write_artifact_executor(
             )
         ),
         completed_seed_count=context.expected_seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
         invariant_validation_pass=True,
         dependency_validation_pass=True,
-        provenance_record_complete=True,
     )

@@ -57,7 +57,6 @@ class EnvironmentReproducibilityRecord(DomainModel):
     dependency_authority: DependencyAuthority
     dependency_lock_path: Path
     environment_lock_digest: EnvironmentDigest
-    container_image_digest: None = None
 
 
 class PublicationReproducibilityRecord(DomainModel):

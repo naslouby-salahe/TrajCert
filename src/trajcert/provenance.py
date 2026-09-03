@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from typing import NewType
+from pathlib import Path
+from typing import Literal, NewType
 
 from trajcert.paths import (
     CoordinateName,
@@ -14,6 +15,7 @@ from trajcert.storage import (
     ArtifactKey,
     DependencyFingerprint,
     DigestHex,
+    PlanDigest,
     ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
@@ -24,10 +26,12 @@ from trajcert.types import (
     BandCount,
     Count,
     DomainModel,
+    EvidenceClass,
     ExperimentName,
     GammaCoordinate,
     LawName,
     PartitionName,
+    PublicExecutionState,
     RiskBudget,
     SeedIndex,
     SensitivityBudget,
@@ -44,7 +48,11 @@ ArtifactTypeName = NewType("ArtifactTypeName", str)
 EnvironmentDigest = NewType("EnvironmentDigest", str)
 SeedManifestDigest = NewType("SeedManifestDigest", str)
 CodeCommit = NewType("CodeCommit", str)
-ContainerImageDigest = NewType("ContainerImageDigest", str)
+ArtifactOwner = NewType("ArtifactOwner", str)
+ExecutionGroup = NewType("ExecutionGroup", str)
+DatasetName = NewType("DatasetName", str)
+SeedSetKey = NewType("SeedSetKey", str)
+SchemaName = NewType("SchemaName", str)
 
 
 class SemanticCoordinates(DomainModel):
@@ -155,9 +163,7 @@ class DependencyMaterial(DomainModel):
 class ProvenanceMaterial(DomainModel):
     scientific_specification_digest: SpecificationDigest
     code_commit: CodeCommit
-    dirty_tree_flag: bool
     environment_lock_digest: EnvironmentDigest
-    container_image_digest: ContainerImageDigest | None = None
     dataset_preprocessing_digests: tuple[DigestHex, ...]
     partition_digest: DigestHex | None
     seed_manifest_digests: tuple[SeedManifestDigest, ...]
@@ -170,3 +176,119 @@ def dependency_fingerprint(material: DependencyMaterial) -> DependencyFingerprin
 
 def provenance_fingerprint(material: ProvenanceMaterial) -> ProvenanceFingerprint:
     return ProvenanceFingerprint(sha256(canonical_model_bytes(material)).hexdigest())
+
+
+_ENVELOPE_SCHEMA_NAME: SchemaName = SchemaName("ReusableArtifactEnvelope")
+
+
+class ReusableArtifactEnvelope(DomainModel):
+    artifact_key: ArtifactKey
+    artifact_type: ArtifactTypeName
+    artifact_owner: ArtifactOwner
+    producer_component: ProducerComponentName
+    semantic_cell_key: SemanticCellKey
+    semantic_coordinates: SemanticCoordinates
+    experiment_name: ExperimentName
+    classification: EvidenceClass
+    execution_group: ExecutionGroup
+    scientific_specification_digest: SpecificationDigest
+    scientific_dependency_digest: SpecificationDigest
+    provenance_fingerprint: ProvenanceFingerprint
+    dependency_fingerprint: DependencyFingerprint
+    implementation_component_digest: DigestHex
+    environment_dependency_digest: EnvironmentDigest
+    plan_digest: DigestHex
+    cell_plan_digest: PlanDigest
+    status: PublicExecutionState
+    method_name: MethodName | None
+    baseline_name: BaselineName | None
+    dataset_name: DatasetName | None
+    dataset_checksum: DigestHex | None
+    synthetic_law_name: LawName | None
+    partition_name: PartitionName | None
+    rho: SensitivityBudget | None
+    beta: RiskBudget | None
+    delta: AnytimeConfidenceDelta | None
+    environment_lock_digest: EnvironmentDigest
+    code_commit: CodeCommit
+    seed_set_keys: tuple[SeedSetKey, ...]
+    parent_artifact_keys: tuple[ArtifactKey, ...]
+    parent_artifact_digests: tuple[DigestHex, ...]
+    input_paths: tuple[Path, ...]
+    canonical_active_path: Path
+    schema_name: SchemaName
+    schema_version: Literal[1]
+
+
+class ReusableArtifactEnvelopeInputs(DomainModel):
+    evidence_class: EvidenceClass
+    artifact_key: ArtifactKey
+    artifact_type: ArtifactTypeName
+    producer_component: ProducerComponentName
+    status: PublicExecutionState
+    canonical_active_path: Path
+    cell_plan_digest: PlanDigest
+    scientific_dependency_digest: SpecificationDigest
+    provenance_fingerprint: ProvenanceFingerprint
+    dependency_fingerprint: DependencyFingerprint
+    implementation_component_digest: DigestHex
+    environment_dependency_digest: EnvironmentDigest
+    provenance_material: ProvenanceMaterial
+    parents: tuple[ParentArtifactIdentity, ...]
+
+
+def reusable_artifact_envelope(
+    cell_identity: SemanticCellIdentity,
+    inputs: ReusableArtifactEnvelopeInputs,
+) -> ReusableArtifactEnvelope:
+    coordinates = cell_identity.coordinates
+    provenance_material = inputs.provenance_material
+    parents = inputs.parents
+    return ReusableArtifactEnvelope(
+        artifact_key=inputs.artifact_key,
+        artifact_type=inputs.artifact_type,
+        artifact_owner=ArtifactOwner(str(cell_identity.experiment_name)),
+        producer_component=inputs.producer_component,
+        semantic_cell_key=cell_identity.semantic_cell_key,
+        semantic_coordinates=coordinates,
+        experiment_name=cell_identity.experiment_name,
+        classification=inputs.evidence_class,
+        execution_group=ExecutionGroup(str(inputs.provenance_fingerprint)),
+        scientific_specification_digest=provenance_material.scientific_specification_digest,
+        scientific_dependency_digest=inputs.scientific_dependency_digest,
+        provenance_fingerprint=inputs.provenance_fingerprint,
+        dependency_fingerprint=inputs.dependency_fingerprint,
+        implementation_component_digest=inputs.implementation_component_digest,
+        environment_dependency_digest=inputs.environment_dependency_digest,
+        plan_digest=provenance_material.plan_digest,
+        cell_plan_digest=inputs.cell_plan_digest,
+        status=inputs.status,
+        method_name=coordinates.method_name,
+        baseline_name=coordinates.baseline_name,
+        dataset_name=(
+            None
+            if coordinates.synthetic_law_name is None
+            else DatasetName(str(coordinates.synthetic_law_name))
+        ),
+        dataset_checksum=(
+            provenance_material.dataset_preprocessing_digests[0]
+            if provenance_material.dataset_preprocessing_digests
+            else None
+        ),
+        synthetic_law_name=coordinates.synthetic_law_name,
+        partition_name=coordinates.partition_name,
+        rho=coordinates.rho,
+        beta=coordinates.beta,
+        delta=coordinates.delta,
+        environment_lock_digest=provenance_material.environment_lock_digest,
+        code_commit=provenance_material.code_commit,
+        seed_set_keys=tuple(
+            SeedSetKey(str(digest)) for digest in provenance_material.seed_manifest_digests
+        ),
+        parent_artifact_keys=tuple(parent.artifact_key for parent in parents),
+        parent_artifact_digests=tuple(parent.scientific_content_digest for parent in parents),
+        input_paths=(),
+        canonical_active_path=inputs.canonical_active_path,
+        schema_name=_ENVELOPE_SCHEMA_NAME,
+        schema_version=1,
+    )

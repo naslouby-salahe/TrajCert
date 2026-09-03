@@ -21,6 +21,7 @@ from trajcert.types import (
     ArbitraryPrecisionBits,
     AxisPaddingFraction,
     BandCount,
+    BatchSize,
     CaseIndex,
     CategoryIndex,
     CertifiedFractionGain,
@@ -61,7 +62,6 @@ from trajcert.types import (
     RhoValueCount,
     RiskBudget,
     RiskOffset,
-    SeedDigestBytes,
     SeedIndex,
     SensitivityBudget,
     SensitivityOffset,
@@ -350,6 +350,8 @@ class CoverageConfig(ConfigModel):
     max_events: EventCount
     checkpoint_every: EventCount
     acceptance_upper_limit: AcceptanceUpperLimit
+    clopper_pearson_confidence: ConfidenceLevel
+    batch_size: BatchSize
 
     @model_validator(mode="after")
     def validate_checkpoint_interval(self) -> CoverageConfig:
@@ -363,6 +365,7 @@ class SequentialUtilityConfig(ConfigModel):
     max_events: EventCount
     checkpoint_every: EventCount
     rho: tuple[SensitivityBudget, ...]
+    batch_size: BatchSize
 
     @model_validator(mode="after")
     def validate_rho(self) -> SequentialUtilityConfig:
@@ -515,7 +518,6 @@ class SerializationConfig(ConfigModel):
 
 
 class DeterminismConfig(ConfigModel):
-    seed_digest_bytes: SeedDigestBytes
     fixture_stream_index: SeedIndex
 
 

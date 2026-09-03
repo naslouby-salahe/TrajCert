@@ -302,7 +302,6 @@ def _write_reproducibility(
             dependency_authority=DependencyAuthority("uv.lock"),
             dependency_lock_path=LOCK_PATH,
             environment_lock_digest=EnvironmentDigest(file_digest(lock_path)),
-            container_image_digest=None,
         ),
         sources=tuple(source.lineage for source in sources),
         rendered_artifacts=rendered,

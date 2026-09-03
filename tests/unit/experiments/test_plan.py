@@ -19,7 +19,7 @@ from trajcert.provenance import (
 from trajcert.storage import PlanDigest
 from trajcert.types import EvidenceClass, ExperimentName, ReasonCode
 
-_EXPECTED_REGISTRY_TOTAL = 1423
+_EXPECTED_REGISTRY_TOTAL = 1427
 _EXPECTED_SCALING_CELL_COUNT = 2
 _PLAN_DIGEST = PlanDigest("digest")
 

@@ -11,7 +11,7 @@ from typing import Final, NewType, cast
 
 from pydantic import BaseModel, Field, JsonValue
 
-from trajcert.config import TrajCertConfig, active_config
+from trajcert.config import CoverageStressCaseConfig, TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.maturity import mature_ledger
@@ -23,7 +23,15 @@ from trajcert.exceptions import (
     InvariantViolationError,
     SerializationError,
 )
-from trajcert.experiments.anytime import evaluate_configured_coverage_stress, run_anytime_hand_case
+from trajcert.experiments.anytime import (
+    CoverageBatchResult,
+    combine_coverage_stress_batches,
+    coverage_evidence_from_base,
+    coverage_stress_batch,
+    evaluate_configured_coverage_stress,
+    resolve_coverage_stress_case,
+    run_anytime_hand_case,
+)
 from trajcert.experiments.comparator_reduction import evaluate_comparator_reduction
 from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
@@ -53,8 +61,11 @@ from trajcert.experiments.safety import (
 )
 from trajcert.experiments.scaling import benchmark_scaling_cell
 from trajcert.experiments.sensitivity import (
+    SequentialUtilityBatchResult,
+    combine_sequential_sensitivity_utility_batches,
     population_sensitivity_utility,
     sequential_sensitivity_utility,
+    sequential_sensitivity_utility_batch,
 )
 from trajcert.experiments.solver_validation import compare_production_solver_to_oracle
 from trajcert.experiments.timing import (
@@ -76,6 +87,7 @@ from trajcert.provenance import (
     FailureBoundaryCoordinate,
     ParentArtifactIdentity,
     ProducerComponentName,
+    ReusableArtifactEnvelope,
     SensitivityCoordinate,
     VariantName,
     dependency_fingerprint,
@@ -102,6 +114,8 @@ from trajcert.storage import (
 from trajcert.telemetry import set_current_cell_key
 from trajcert.types import (
     ActionChannelId,
+    BatchIndex,
+    BatchSize,
     CaseIndex,
     ClientId,
     Count,
@@ -116,13 +130,15 @@ from trajcert.types import (
     PublicExecutionState,
     ReasonCode,
     SeedCount,
+    SeedIndex,
     SensitivityBudget,
+    StreamCount,
 )
 
 FailureType = NewType("FailureType", str)
 
 _RESULT_FILENAME = "scientific_result.json"
-_SCIENTIFIC_RESULT_ARTIFACT_TYPE: Final[ArtifactTypeName] = ArtifactTypeName("scientific-result")
+SCIENTIFIC_RESULT_ARTIFACT_TYPE: Final[ArtifactTypeName] = ArtifactTypeName("scientific-result")
 
 _NON_SCIENTIFIC_MODULE_PREFIXES = (
     "trajcert.cli",
@@ -203,16 +219,14 @@ class ExecutionContext(DomainModel):
     manifest_digest: DigestHex
     required_artifact_keys: tuple[ArtifactKey, ...]
     expected_seed_count: SeedCount
+    reusable_artifact_envelope: ReusableArtifactEnvelope
 
 
 class CellExecutionResult(DomainModel):
     artifact_index: CellArtifactIndex
     completed_seed_count: SeedCount
-    metrics_complete: bool
-    statistics_complete: bool
     invariant_validation_pass: bool
     dependency_validation_pass: bool
-    provenance_record_complete: bool
 
 
 class RunningRecord(DomainModel):
@@ -227,6 +241,7 @@ class FailureRecord(DomainModel):
     dependency_fingerprint: DependencyFingerprint
     failure_type: FailureType
     message: FailureMessage
+    execution_state: PublicExecutionState
 
 
 class CellRunOutcome(DomainModel):
@@ -235,6 +250,21 @@ class CellRunOutcome(DomainModel):
     completion_path: Path
     failure_path: Path
     reason: ReasonCode | None
+
+
+class CheckpointRecord(DomainModel):
+    semantic_cell_key: SemanticCellKey
+    artifact_key: ArtifactKey
+    dependency_fingerprint: DependencyFingerprint
+    provenance_fingerprint: ProvenanceFingerprint
+    cell_plan_digest: PlanDigest
+    batch_index: BatchIndex
+    seed_index_start: SeedIndex
+    seed_index_stop_exclusive: SeedIndex
+    input_artifact_keys: tuple[ArtifactKey, ...]
+    input_artifact_digests: tuple[DigestHex, ...]
+    result_file_sha256: DigestHex
+    completed: bool
 
 
 class ScientificInputClass(StrEnum):
@@ -283,7 +313,7 @@ class LocalValidityAuditResult(DomainModel):
     passed: bool = Field(serialization_alias="pass")
 
 
-class ScientificCellDispatchError(ValueError):
+class ScientificCellDispatchError(InvariantViolationError):
     pass
 
 
@@ -355,7 +385,8 @@ def run_cell(
     try:
         result = executor(cell, context)
         _write_reflected_evidence(cell, context, result)
-        _validate_execution_result(result, context)
+        completion_evidence = _derive_completion_evidence(cell, context, context.workspace_root)
+        _validate_execution_result(result, context, completion_evidence)
         _verify_artifacts(result.artifact_index, context.workspace_root)
         _ = atomic_write_model(
             cell_artifact_index_path(cell, context.workspace_root), result.artifact_index
@@ -370,6 +401,24 @@ def run_cell(
             failure_path=failure_path,
             reason=None,
         )
+    except InvalidScientificDataError as exc:
+        failure = FailureRecord(
+            semantic_cell_key=cell.identity.semantic_cell_key,
+            plan_digest=context.plan_digest,
+            dependency_fingerprint=context.dependency_fingerprint,
+            failure_type=FailureType(type(exc).__name__),
+            message=FailureMessage(str(exc)),
+            execution_state=PublicExecutionState.INVALID,
+        )
+        _ = atomic_write_model(failure_path, failure)
+        completion_path.unlink(missing_ok=True)
+        return CellRunOutcome(
+            state=PublicExecutionState.INVALID,
+            reused=False,
+            completion_path=completion_path,
+            failure_path=failure_path,
+            reason=ReasonCode("DATA_VALIDATION_FAILURE"),
+        )
     except Exception as exc:
         failure = FailureRecord(
             semantic_cell_key=cell.identity.semantic_cell_key,
@@ -377,6 +426,7 @@ def run_cell(
             dependency_fingerprint=context.dependency_fingerprint,
             failure_type=FailureType(type(exc).__name__),
             message=FailureMessage(str(exc)),
+            execution_state=PublicExecutionState.FAILED,
         )
         _ = atomic_write_model(failure_path, failure)
         completion_path.unlink(missing_ok=True)
@@ -397,6 +447,8 @@ def _write_reflected_evidence(
     context: ExecutionContext,
     result: CellExecutionResult,
 ) -> None:
+    if cell.identity.experiment_name == ExperimentName.STATISTICAL_SYNTHESIS:
+        return
     artifact_key = scientific_result_artifact_key(cell)
     entry = next(
         item for item in result.artifact_index.artifacts if item.artifact_key == artifact_key
@@ -514,9 +566,31 @@ def completion_is_compatible(
         index_path = cell_artifact_index_path(cell, context.workspace_root)
         index = read_model(index_path, CellArtifactIndex)
         _verify_completion_artifacts(completion, index, context.workspace_root)
+        envelope_path = cell_envelope_path(cell, context.workspace_root)
+        if envelope_path.is_file():
+            envelope = read_model(envelope_path, ReusableArtifactEnvelope)
+            if not _envelope_identity_matches(cell, context, envelope):
+                return False
     except (SerializationError, InvariantViolationError):
         return False
     return True
+
+
+def _envelope_identity_matches(
+    cell: PlannedCell,
+    context: ExecutionContext,
+    envelope: ReusableArtifactEnvelope,
+) -> bool:
+    checks = (
+        envelope.semantic_cell_key == cell.identity.semantic_cell_key,
+        envelope.cell_plan_digest == _cell_plan_digest(cell),
+        envelope.scientific_specification_digest == context.scientific_specification_digest,
+        envelope.scientific_dependency_digest == context.scientific_dependency_digest,
+        envelope.provenance_fingerprint == context.provenance_fingerprint,
+        envelope.dependency_fingerprint == context.dependency_fingerprint,
+        envelope.status is PublicExecutionState.COMPLETED,
+    )
+    return all(checks)
 
 
 def cell_completion_path(cell: PlannedCell, workspace_root: Path) -> Path:
@@ -534,6 +608,22 @@ def cell_running_path(cell: PlannedCell, workspace_root: Path) -> Path:
 
 def cell_artifact_index_path(cell: PlannedCell, workspace_root: Path) -> Path:
     return cell_completion_path(cell, workspace_root).with_name("artifact_index.json")
+
+
+def cell_envelope_path(cell: PlannedCell, workspace_root: Path) -> Path:
+    return cell_completion_path(cell, workspace_root).with_name("envelope.json")
+
+
+def cell_checkpoint_batch_path(
+    cell: PlannedCell, workspace_root: Path, batch_index: BatchIndex
+) -> Path:
+    return cell_completion_path(cell, workspace_root).with_name(f"batch_{batch_index}.json")
+
+
+def cell_checkpoint_batch_result_path(
+    cell: PlannedCell, workspace_root: Path, batch_index: BatchIndex
+) -> Path:
+    return cell_completion_path(cell, workspace_root).with_name(f"batch_{batch_index}_result.json")
 
 
 def cell_failure_path(cell: PlannedCell, workspace_root: Path) -> Path:
@@ -570,7 +660,11 @@ def _completion_identity_matches(
     return all(checks)
 
 
-def _validate_execution_result(result: CellExecutionResult, context: ExecutionContext) -> None:
+def _validate_execution_result(
+    result: CellExecutionResult,
+    context: ExecutionContext,
+    completion_evidence: CompletionEvidence,
+) -> None:
     produced = tuple(entry.artifact_key for entry in result.artifact_index.artifacts)
     if len(produced) != len(set(produced)):
         raise InvariantViolationError("executor produced duplicate artifact keys")
@@ -578,11 +672,11 @@ def _validate_execution_result(result: CellExecutionResult, context: ExecutionCo
         raise InvariantViolationError("executor omitted a required artifact key")
     checks = (
         (result.completed_seed_count == context.expected_seed_count, "expected seed count"),
-        (result.metrics_complete, "required metrics"),
-        (result.statistics_complete, "required statistics"),
+        (completion_evidence.metrics_complete, "required metrics"),
+        (completion_evidence.statistics_complete, "required statistics"),
         (result.invariant_validation_pass, "scientific invariant validation"),
         (result.dependency_validation_pass, "dependency validation"),
-        (result.provenance_record_complete, "provenance record"),
+        (completion_evidence.provenance_record_complete, "provenance record"),
     )
     failed = tuple(label for passed, label in checks if not passed)
     if failed:
@@ -620,6 +714,72 @@ def _verify_completion_artifacts(
     if expected_checksums != completion.artifact_sha256_map:
         raise SerializationError("persisted artifact checksums do not match completion record")
     _verify_artifacts(index, workspace_root)
+
+
+class CompletionEvidence(DomainModel):
+    metrics_complete: bool
+    statistics_complete: bool
+    provenance_record_complete: bool
+
+
+def _reflected_evidence_paths(
+    cell: PlannedCell, context: ExecutionContext, workspace_root: Path
+) -> tuple[Path, Path, tuple[Path, ...]]:
+    metrics_leaf = (
+        ExperimentLeaf.METRICS_PER_SEED
+        if context.expected_seed_count > 0
+        else ExperimentLeaf.METRICS_PER_CONDITION
+    )
+    metrics_path = (
+        workspace_root
+        / semantic_cell_path(
+            cell.identity.experiment_slug, metrics_leaf, cell.identity.path_coordinates
+        )
+        / "metrics.json"
+    )
+    diagnostics_path = (
+        workspace_root
+        / semantic_cell_path(
+            cell.identity.experiment_slug,
+            ExperimentLeaf.DIAGNOSTICS_SCIENTIFIC,
+            cell.identity.path_coordinates,
+        )
+        / "diagnostics.json"
+    )
+    provenance_paths = tuple(
+        workspace_root
+        / semantic_cell_path(cell.identity.experiment_slug, leaf, cell.identity.path_coordinates)
+        / filename
+        for leaf, filename in (
+            (ExperimentLeaf.PROVENANCE_CONFIGURATION, "configuration.json"),
+            (ExperimentLeaf.PROVENANCE_DATA, "data.json"),
+            (ExperimentLeaf.PROVENANCE_SEEDS, "seeds.json"),
+            (ExperimentLeaf.PROVENANCE_CODE, "code.json"),
+            (ExperimentLeaf.PROVENANCE_ENVIRONMENT, "environment.json"),
+            (ExperimentLeaf.PROVENANCE_DEPENDENCIES, "dependencies.json"),
+        )
+    )
+    return metrics_path, diagnostics_path, provenance_paths
+
+
+def _derive_completion_evidence(
+    cell: PlannedCell, context: ExecutionContext, workspace_root: Path
+) -> CompletionEvidence:
+    if cell.identity.experiment_name == ExperimentName.STATISTICAL_SYNTHESIS:
+        envelope_present = cell_envelope_path(cell, workspace_root).is_file()
+        return CompletionEvidence(
+            metrics_complete=envelope_present,
+            statistics_complete=envelope_present,
+            provenance_record_complete=envelope_present,
+        )
+    metrics_path, diagnostics_path, provenance_paths = _reflected_evidence_paths(
+        cell, context, workspace_root
+    )
+    return CompletionEvidence(
+        metrics_complete=metrics_path.is_file(),
+        statistics_complete=diagnostics_path.is_file(),
+        provenance_record_complete=all(path.is_file() for path in provenance_paths),
+    )
 
 
 def _completion_record(
@@ -692,6 +852,33 @@ def scientific_dependency_digest(
     return SpecificationDigest(sha256(payload).hexdigest())
 
 
+def cell_dependency_material(
+    workspace_root: Path,
+    plan: ExperimentPlan,
+    cell: PlannedCell,
+    scientific_dependency: SpecificationDigest,
+    implementation_component_digest: DigestHex,
+    environment_dependency_digest: EnvironmentDigest,
+) -> DependencyMaterial:
+    required = set(cell.required_experiments)
+    parents = tuple(item for item in plan.cells if item.identity.experiment_name in required)
+    parent_identities = tuple(
+        identity
+        for parent in parents
+        if (identity := _parent_artifact_identity(parent, workspace_root)) is not None
+    )
+    return DependencyMaterial(
+        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        semantic_cell=cell.identity,
+        scientific_dependency_digest=scientific_dependency,
+        implementation_component_digest=implementation_component_digest,
+        environment_dependency_digest=environment_dependency_digest,
+        seed_manifest_digest=None,
+        parents=parent_identities,
+        producer_specific_inputs=(),
+    )
+
+
 def cell_dependency_fingerprint(
     workspace_root: Path,
     plan: ExperimentPlan,
@@ -700,22 +887,13 @@ def cell_dependency_fingerprint(
     implementation_component_digest: DigestHex,
     environment_dependency_digest: EnvironmentDigest,
 ) -> DependencyFingerprint:
-    required = set(cell.required_experiments)
-    parents = tuple(item for item in plan.cells if item.identity.experiment_name in required)
-    parent_identities = tuple(
-        identity
-        for parent in parents
-        if (identity := _parent_artifact_identity(parent, workspace_root)) is not None
-    )
-    material = DependencyMaterial(
-        artifact_type=_SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-        semantic_cell=cell.identity,
-        scientific_dependency_digest=scientific_dependency,
-        implementation_component_digest=implementation_component_digest,
-        environment_dependency_digest=environment_dependency_digest,
-        seed_manifest_digest=None,
-        parents=parent_identities,
-        producer_specific_inputs=(),
+    material = cell_dependency_material(
+        workspace_root,
+        plan,
+        cell,
+        scientific_dependency,
+        implementation_component_digest,
+        environment_dependency_digest,
     )
     return dependency_fingerprint(material)
 
@@ -1345,8 +1523,9 @@ def _safety_intrinsic_case(cell: PlannedCell) -> SafetyCaseEvaluation:
     raise ScientificCellDispatchError(f"unknown safety/impossibility case: {variant}")
 
 
-def _coverage_stress_case(cell: PlannedCell) -> DomainModel:
-    config = active_config.get()
+def _coverage_stress_case_config(
+    cell: PlannedCell, config: TrajCertConfig
+) -> CoverageStressCaseConfig:
     variant = cell.identity.coordinates.variant_name
     if variant is None:
         raise ScientificCellDispatchError(
@@ -1365,8 +1544,14 @@ def _coverage_stress_case(cell: PlannedCell) -> DomainModel:
             raise ScientificCellDispatchError(
                 "coverage-stress partition coordinate does not match configuration"
             )
-        return evaluate_configured_coverage_stress(case, config)
+        return case
     raise ScientificCellDispatchError(f"unknown configured coverage-stress case: {variant}")
+
+
+def _coverage_stress_case(cell: PlannedCell) -> DomainModel:
+    config = active_config.get()
+    case = _coverage_stress_case_config(cell, config)
+    return evaluate_configured_coverage_stress(case, config)
 
 
 def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
@@ -1536,6 +1721,168 @@ def _validate_upstream_artifact_entry(
         raise InvalidScientificDataError("upstream scientific-result checksum mismatch")
 
 
+def _batch_seed_ranges(total: StreamCount, batch_size: BatchSize) -> tuple[range, ...]:
+    ranges: list[range] = []
+    start = 0
+    while start < total:
+        stop = min(start + batch_size, total)
+        ranges.append(range(start, stop))
+        start = stop
+    return tuple(ranges)
+
+
+def _checkpoint_batch_valid(
+    checkpoint: CheckpointRecord,
+    cell: PlannedCell,
+    context: ExecutionContext,
+    artifact_key: ArtifactKey,
+    batch_index: BatchIndex,
+    seed_index_start: SeedIndex,
+    seed_index_stop_exclusive: SeedIndex,
+    result_path: Path,
+) -> bool:
+    if not checkpoint.completed:
+        return False
+    if (
+        checkpoint.semantic_cell_key != cell.identity.semantic_cell_key
+        or checkpoint.artifact_key != artifact_key
+        or checkpoint.dependency_fingerprint != context.dependency_fingerprint
+        or checkpoint.provenance_fingerprint != context.provenance_fingerprint
+        or checkpoint.cell_plan_digest != _cell_plan_digest(cell)
+        or checkpoint.batch_index != batch_index
+        or checkpoint.seed_index_start != seed_index_start
+        or checkpoint.seed_index_stop_exclusive != seed_index_stop_exclusive
+    ):
+        return False
+    return file_digest(result_path) == checkpoint.result_file_sha256
+
+
+def _recover_batch[PayloadT: DomainModel](
+    cell: PlannedCell,
+    context: ExecutionContext,
+    artifact_key: ArtifactKey,
+    batch_index: BatchIndex,
+    seed_index_start: SeedIndex,
+    seed_index_stop_exclusive: SeedIndex,
+    payload_type: type[PayloadT],
+    compute: Callable[[], PayloadT],
+) -> PayloadT:
+    workspace_root = context.workspace_root
+    checkpoint_path = cell_checkpoint_batch_path(cell, workspace_root, batch_index)
+    result_path = cell_checkpoint_batch_result_path(cell, workspace_root, batch_index)
+    if checkpoint_path.is_file() and result_path.is_file():
+        try:
+            checkpoint = read_model(checkpoint_path, CheckpointRecord)
+            if _checkpoint_batch_valid(
+                checkpoint,
+                cell,
+                context,
+                artifact_key,
+                batch_index,
+                seed_index_start,
+                seed_index_stop_exclusive,
+                result_path,
+            ):
+                return read_model(result_path, payload_type)
+        except SerializationError:
+            pass
+    payload = compute()
+    digest = atomic_write_model(result_path, payload)
+    checkpoint = CheckpointRecord(
+        semantic_cell_key=cell.identity.semantic_cell_key,
+        artifact_key=artifact_key,
+        dependency_fingerprint=context.dependency_fingerprint,
+        provenance_fingerprint=context.provenance_fingerprint,
+        cell_plan_digest=_cell_plan_digest(cell),
+        batch_index=batch_index,
+        seed_index_start=seed_index_start,
+        seed_index_stop_exclusive=seed_index_stop_exclusive,
+        input_artifact_keys=(),
+        input_artifact_digests=(),
+        result_file_sha256=digest,
+        completed=True,
+    )
+    _ = atomic_write_model(checkpoint_path, checkpoint)
+    return payload
+
+
+def _coverage_stress_cell_with_recovery(
+    cell: PlannedCell, context: ExecutionContext, artifact_key: ArtifactKey
+) -> DomainModel:
+    config = active_config.get()
+    case = _coverage_stress_case_config(cell, config)
+    parameters, partition, rho, _ = resolve_coverage_stress_case(case)
+    stream_count = config.sequential.coverage.streams
+    batch_size = config.sequential.coverage.batch_size
+    batches: list[CoverageBatchResult] = []
+    for batch_index, seed_range in enumerate(_batch_seed_ranges(stream_count, batch_size)):
+        batches.append(
+            _recover_batch(
+                cell,
+                context,
+                artifact_key,
+                batch_index,
+                seed_range.start,
+                seed_range.stop,
+                CoverageBatchResult,
+                lambda seed_range=seed_range, batch_index=batch_index: coverage_stress_batch(
+                    parameters, partition, config, rho, seed_range, batch_index
+                ),
+            )
+        )
+    base = combine_coverage_stress_batches(parameters, tuple(batches))
+    return coverage_evidence_from_base(case, config, base)
+
+
+def _sequential_utility_cell_with_recovery(
+    cell: PlannedCell, context: ExecutionContext, artifact_key: ArtifactKey
+) -> DomainModel:
+    config = active_config.get()
+    parameters = _law_from_name(cell.identity.coordinates.synthetic_law_name)
+    fine_partition = build_partition(
+        config.method.finest_bands,
+        config.method.finest_bands,
+        config.method.terminal_horizon,
+    )
+    sensitivity_budget = _direct_rho(cell)
+    stream_count = config.sequential.utility.streams
+    batch_size = config.sequential.utility.batch_size
+    batches: list[SequentialUtilityBatchResult] = []
+    for batch_index, seed_range in enumerate(_batch_seed_ranges(stream_count, batch_size)):
+        batches.append(
+            _recover_batch(
+                cell,
+                context,
+                artifact_key,
+                batch_index,
+                seed_range.start,
+                seed_range.stop,
+                SequentialUtilityBatchResult,
+                lambda seed_range=seed_range,
+                batch_index=batch_index: sequential_sensitivity_utility_batch(
+                    parameters, fine_partition, sensitivity_budget, seed_range, batch_index
+                ),
+            )
+        )
+    return combine_sequential_sensitivity_utility_batches(sensitivity_budget, tuple(batches))
+
+
+def _dispatch_with_batched_recovery(
+    cell: PlannedCell, context: ExecutionContext, artifact_key: ArtifactKey
+) -> DomainModel:
+    if cell.identity.experiment_name == ExperimentName.ANYTIME_COVERAGE_STRESS:
+        return _coverage_stress_cell_with_recovery(cell, context, artifact_key)
+    return _sequential_utility_cell_with_recovery(cell, context, artifact_key)
+
+
+_BATCH_CHECKPOINT_RECOVERABLE_EXPERIMENTS: Final[frozenset[ExperimentName]] = frozenset(
+    {
+        ExperimentName.ANYTIME_COVERAGE_STRESS,
+        ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY,
+    }
+)
+
+
 def execute_dispatched_cell(
     cell: PlannedCell,
     context: ExecutionContext,
@@ -1550,9 +1897,17 @@ def execute_dispatched_cell(
             "dispatched cell execution requires exactly its scientific-result artifact"
         )
     relative_path = scientific_result_path(cell)
+    result = (
+        _dispatch_with_batched_recovery(cell, context, artifact_key)
+        if cell.identity.experiment_name in _BATCH_CHECKPOINT_RECOVERABLE_EXPERIMENTS
+        else execute_scientific_cell(cell, active_config.get())
+    )
     digest = atomic_write_model(
         context.workspace_root / relative_path,
-        execute_scientific_cell(cell, active_config.get()),
+        result,
+    )
+    _ = atomic_write_model(
+        cell_envelope_path(cell, context.workspace_root), context.reusable_artifact_envelope
     )
     return CellExecutionResult(
         artifact_index=CellArtifactIndex(
@@ -1565,11 +1920,8 @@ def execute_dispatched_cell(
             )
         ),
         completed_seed_count=context.expected_seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
         invariant_validation_pass=True,
         dependency_validation_pass=True,
-        provenance_record_complete=True,
     )
 
 

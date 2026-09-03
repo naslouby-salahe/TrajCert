@@ -73,6 +73,7 @@ from trajcert.types import (
     ActionChannelId,
     AnytimeConfidenceDelta,
     BandCount,
+    BatchIndex,
     CaseIndex,
     CategoryIndex,
     ClientId,
@@ -151,6 +152,18 @@ class CoverageMethodResult(DomainModel):
 class CoverageStressResult(DomainModel):
     methods: tuple[CoverageMethodResult, ...]
     primary_passed: bool
+
+
+class MethodFailureCount(DomainModel):
+    method: SequentialMethod
+    failures: Count
+
+
+class CoverageBatchResult(DomainModel):
+    batch_index: BatchIndex
+    seed_index_start: SeedIndex
+    seed_index_stop_exclusive: SeedIndex
+    method_failures: tuple[MethodFailureCount, ...]
 
 
 class CoverageMethodEvidence(DomainModel):
@@ -289,13 +302,33 @@ def run_coverage_stress(
 ) -> CoverageStressResult:
     _ = active_config.set(config)
     stream_count = config.sequential.coverage.streams
+    batch = coverage_stress_batch(
+        parameters,
+        partition,
+        config,
+        sensitivity_budget,
+        stream_range=range(stream_count),
+        batch_index=0,
+    )
+    return combine_coverage_stress_batches(parameters, (batch,))
+
+
+def coverage_stress_batch(
+    parameters: LawParameters,
+    partition: TrajectoryPartition,
+    config: TrajCertConfig,
+    sensitivity_budget: SensitivityBudget,
+    stream_range: range,
+    batch_index: BatchIndex,
+) -> CoverageBatchResult:
+    _ = active_config.set(config)
     max_events = config.sequential.coverage.max_events
     checkpoint_every = config.sequential.coverage.checkpoint_every
     true_risk = parameters.theta
     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
     failures = dict.fromkeys(SequentialMethod, 0)
-    stream_progress = StreamProgress("coverage_stress", stream_count)
-    for stream_index in range(stream_count):
+    stream_progress = StreamProgress(f"coverage_stress_batch_{batch_index}", len(stream_range))
+    for position, stream_index in enumerate(stream_range, start=1):
         for method, did_fail in _coverage_stream_failures(
             parameters,
             partition,
@@ -308,7 +341,32 @@ def run_coverage_stress(
         ).items():
             if did_fail:
                 failures[method] += 1
-        stream_progress.maybe_log(stream_index + 1)
+        stream_progress.maybe_log(position)
+    return CoverageBatchResult(
+        batch_index=batch_index,
+        seed_index_start=stream_range.start,
+        seed_index_stop_exclusive=stream_range.stop,
+        method_failures=tuple(
+            MethodFailureCount(method=method, failures=count) for method, count in failures.items()
+        ),
+    )
+
+
+def combine_coverage_stress_batches(
+    parameters: LawParameters,
+    batches: tuple[CoverageBatchResult, ...],
+) -> CoverageStressResult:
+    if not batches:
+        raise InvalidScientificDataError("coverage-stress combination requires batches")
+    config = active_config.get()
+    stream_count = sum(
+        batch.seed_index_stop_exclusive - batch.seed_index_start for batch in batches
+    )
+    assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
+    failures = dict.fromkeys(SequentialMethod, 0)
+    for batch in batches:
+        for entry in batch.method_failures:
+            failures[entry.method] += entry.failures
     results = tuple(
         _coverage_method_result(method, assumption_valid, stream_count, failures)
         for method in SequentialMethod
@@ -432,11 +490,10 @@ def _coverage_method_result(
     )
 
 
-def evaluate_configured_coverage_stress(
+def resolve_coverage_stress_case(
     case: CoverageStressCaseConfig,
-    config: TrajCertConfig,
-) -> CoverageEvidenceResult:
-    _ = active_config.set(config)
+) -> tuple[LawParameters, TrajectoryPartition, SensitivityBudget, RiskBudget]:
+    config = active_config.get()
     parameters = _parameters(case)
     partition = build_partition(
         finest_band_count=case.band_count,
@@ -452,12 +509,31 @@ def evaluate_configured_coverage_stress(
     )
     rho = _sensitivity_budget(case, parameters, summary)
     beta = _risk_budget(case, summary, rho)
+    return parameters, partition, rho, beta
+
+
+def evaluate_configured_coverage_stress(
+    case: CoverageStressCaseConfig,
+    config: TrajCertConfig,
+) -> CoverageEvidenceResult:
+    _ = active_config.set(config)
+    parameters, partition, rho, _ = resolve_coverage_stress_case(case)
     base = run_coverage_stress(
         parameters=parameters,
         partition=partition,
         config=config,
         sensitivity_budget=rho,
     )
+    return coverage_evidence_from_base(case, config, base)
+
+
+def coverage_evidence_from_base(
+    case: CoverageStressCaseConfig,
+    config: TrajCertConfig,
+    base: CoverageStressResult,
+) -> CoverageEvidenceResult:
+    _ = active_config.set(config)
+    parameters, partition, rho, beta = resolve_coverage_stress_case(case)
     true_information = _true_information(parameters, partition)
     trajectory_evidence = _trajcert_trajectory_evidence(
         parameters,
@@ -539,7 +615,7 @@ def _clopper_pearson_upper(failures: Count, streams: StreamCount) -> Probability
     config = active_config.get()
     return float(
         beta_distribution.ppf(
-            config.confidence.level,
+            config.sequential.coverage.clopper_pearson_confidence,
             failures + 1,
             streams - failures,
         )

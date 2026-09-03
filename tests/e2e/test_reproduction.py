@@ -20,10 +20,8 @@ def test_reproducibility_record_truthfully_represents_non_container_execution() 
         dependency_authority=DependencyAuthority("uv.lock"),
         dependency_lock_path=Path("uv.lock"),
         environment_lock_digest=EnvironmentDigest("0" * 64),
-        container_image_digest=None,
     )
     assert record.dependency_authority == "uv.lock"
-    assert record.container_image_digest is None
 
 
 def test_all_publication_sources_are_authoritative_outputs_not_results() -> None:

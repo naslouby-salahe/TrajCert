@@ -15,8 +15,13 @@ from trajcert.experiments.anytime import HandCaseResult
 from trajcert.experiments.mathematics import IdentityResult
 from trajcert.experiments.plan import PlannedCell, build_plan, cells_for_experiment
 from trajcert.provenance import (
+    ArtifactOwner,
+    CodeCommit,
     EnvironmentDigest,
+    ExecutionGroup,
     ProducerComponentName,
+    ReusableArtifactEnvelope,
+    SchemaName,
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
@@ -32,6 +37,8 @@ from trajcert.storage import (
     ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
+    atomic_write_model,
+    model_digest,
     read_model,
 )
 from trajcert.types import (
@@ -91,6 +98,47 @@ def _invalid_cell() -> PlannedCell:
     return _cell(executable=False, invalid_reason=_MISSING_CONFIGURATION_REASON)
 
 
+def _envelope(cell: PlannedCell) -> ReusableArtifactEnvelope:
+    return ReusableArtifactEnvelope(
+        artifact_key=runner.scientific_result_artifact_key(cell),
+        artifact_type=runner.SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
+        producer_component=ProducerComponentName("test-component"),
+        semantic_cell_key=cell.identity.semantic_cell_key,
+        semantic_coordinates=cell.identity.coordinates,
+        experiment_name=cell.identity.experiment_name,
+        classification=cell.evidence_class,
+        execution_group=ExecutionGroup("execution-group"),
+        scientific_specification_digest=SpecificationDigest("specification"),
+        scientific_dependency_digest=SpecificationDigest("dependency"),
+        provenance_fingerprint=ProvenanceFingerprint("provenance"),
+        dependency_fingerprint=DependencyFingerprint("dependency-fingerprint"),
+        implementation_component_digest=_MANIFEST_DIGEST,
+        environment_dependency_digest=EnvironmentDigest("env"),
+        plan_digest=_MANIFEST_DIGEST,
+        cell_plan_digest=PlanDigest(str(model_digest(cell))),
+        status=PublicExecutionState.COMPLETED,
+        method_name=None,
+        baseline_name=None,
+        dataset_name=None,
+        dataset_checksum=None,
+        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
+        partition_name=cell.identity.coordinates.partition_name,
+        rho=None,
+        beta=None,
+        delta=None,
+        environment_lock_digest=EnvironmentDigest("env"),
+        code_commit=CodeCommit("commit"),
+        seed_set_keys=(),
+        parent_artifact_keys=(),
+        parent_artifact_digests=(),
+        input_paths=(),
+        canonical_active_path=runner.scientific_result_path(cell),
+        schema_name=SchemaName("ReusableArtifactEnvelope"),
+        schema_version=1,
+    )
+
+
 def _context(workspace_root: Path, cell: PlannedCell) -> runner.ExecutionContext:
     return runner.ExecutionContext(
         workspace_root=workspace_root,
@@ -102,6 +150,7 @@ def _context(workspace_root: Path, cell: PlannedCell) -> runner.ExecutionContext
         manifest_digest=_MANIFEST_DIGEST,
         required_artifact_keys=(runner.scientific_result_artifact_key(cell),),
         expected_seed_count=0,
+        reusable_artifact_envelope=_envelope(cell),
     )
 
 
@@ -119,11 +168,8 @@ def _missing_artifact_executor(
             )
         ),
         completed_seed_count=context.expected_seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
         invariant_validation_pass=True,
         dependency_validation_pass=True,
-        provenance_record_complete=True,
     )
 
 
@@ -132,6 +178,13 @@ def _raise_executor(
 ) -> runner.CellExecutionResult:
     del cell, context
     raise RuntimeError("executor exploded")
+
+
+def _raise_invalid_data_executor(
+    cell: PlannedCell, context: runner.ExecutionContext
+) -> runner.CellExecutionResult:
+    del cell, context
+    raise InvalidScientificDataError("malformed observable law")
 
 
 def _target_identity() -> LedgerIdentity:
@@ -239,6 +292,19 @@ def test_run_cell_records_executor_failure(tmp_path: Path) -> None:
     assert outcome.reason == ReasonCode("TECHNICAL_EXECUTION_FAILURE")
     failure = read_model(runner.cell_failure_path(cell, tmp_path), runner.FailureRecord)
     assert failure.message == "executor exploded"
+    assert not runner.cell_completion_path(cell, tmp_path).exists()
+    assert not runner.cell_running_path(cell, tmp_path).exists()
+
+
+def test_run_cell_records_data_validation_failure_as_invalid(tmp_path: Path) -> None:
+    cell = _cell()
+    context = _context(tmp_path, cell)
+    outcome = runner.run_cell(cell, context, (), _raise_invalid_data_executor, False)
+    assert outcome.state is PublicExecutionState.INVALID
+    assert outcome.reason == ReasonCode("DATA_VALIDATION_FAILURE")
+    failure = read_model(runner.cell_failure_path(cell, tmp_path), runner.FailureRecord)
+    assert failure.failure_type == "InvalidScientificDataError"
+    assert failure.execution_state is PublicExecutionState.INVALID
     assert not runner.cell_completion_path(cell, tmp_path).exists()
     assert not runner.cell_running_path(cell, tmp_path).exists()
 
@@ -591,6 +657,39 @@ def test_execute_dispatched_cell_rejects_statistical_synthesis(tmp_path: Path) -
     context = _context(tmp_path, cell)
     with pytest.raises(InvalidScientificDataError, match="dedicated cross-experiment executor"):
         _ = runner.execute_dispatched_cell(cell, context)
+
+
+def test_run_cell_writes_evidence_for_statistical_synthesis_cell(tmp_path: Path) -> None:
+    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
+    plan = build_plan(config)
+    cell = cells_for_experiment(plan, ExperimentName.STATISTICAL_SYNTHESIS)[0]
+    context = _context(tmp_path, cell).model_copy(update={"required_artifact_keys": ()})
+
+    def _stub_synthesis_executor(
+        cell: PlannedCell, context: runner.ExecutionContext
+    ) -> runner.CellExecutionResult:
+        _ = atomic_write_model(
+            runner.cell_envelope_path(cell, context.workspace_root),
+            context.reusable_artifact_envelope,
+        )
+        return runner.CellExecutionResult(
+            artifact_index=CellArtifactIndex(artifacts=()),
+            completed_seed_count=0,
+            invariant_validation_pass=True,
+            dependency_validation_pass=True,
+        )
+
+    dependencies = tuple(
+        runner.DependencyReadiness(experiment_name=name, state=PublicExecutionState.COMPLETED)
+        for name in cell.required_experiments
+    )
+    outcome = runner.run_cell(cell, context, dependencies, _stub_synthesis_executor, False)
+    assert outcome.state is PublicExecutionState.COMPLETED
+    completion = read_model(runner.cell_completion_path(cell, tmp_path), CompletionRecord)
+    assert completion.metrics_complete is True
+    assert completion.statistics_complete is True
+    assert completion.provenance_record_complete is True
 
 
 def test_execute_dispatched_cell_requires_exact_result_artifact(tmp_path: Path) -> None:

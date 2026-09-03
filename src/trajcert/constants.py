@@ -8,6 +8,7 @@ from trajcert.types import BandCount
 SEED_PREFIX = "TrajCert"
 SEED_FIELD_SEPARATOR = "|"
 SEED_MODULUS = 1 << 63
+SEED_DIGEST_BYTES = 8
 TERMINAL_CATEGORY_NAME = "infinity"
 ENDPOINT_PARTITION_NAME = "Endpoint-only partition"
 ENDPOINT_BAND_COUNT: BandCount = 1

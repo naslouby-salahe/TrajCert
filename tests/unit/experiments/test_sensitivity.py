@@ -14,12 +14,15 @@ from trajcert.config import (
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters
 from trajcert.data.partitions import build_partition
+from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.sensitivity import (
     PopulationUtilityResult,
     SequentialStreamUtility,
     SequentialUtilityResult,
+    combine_sequential_sensitivity_utility_batches,
     population_sensitivity_utility,
     sequential_sensitivity_utility,
+    sequential_sensitivity_utility_batch,
 )
 from trajcert.types import CompatibilityRegime, LawKey
 
@@ -40,6 +43,7 @@ def _small_config() -> TrajCertConfig:
         max_events=_MAX_EVENTS,
         checkpoint_every=_CHECKPOINT_EVERY,
         rho=config.sequential.utility.rho,
+        batch_size=1,
     )
     sequential = SequentialConfig(coverage=config.sequential.coverage, utility=utility)
     minimum_evidence = MinimumEvidenceConfig(
@@ -156,3 +160,25 @@ def test_sequential_sensitivity_utility_small_run() -> None:
         stream.certified_update_fraction_gain
     )
     assert result.mean_bound_gain == pytest.approx(stream.mean_bound_gain)
+
+
+def test_sequential_utility_batches_combine_to_match_single_run() -> None:
+    config = _small_config()
+    parameters = _law_parameters(config.laws[LawKey.TIMING_TERMINAL_HARMFUL_LATE])
+    fine_partition = build_partition(
+        config.method.finest_bands, config.method.finest_bands, config.method.terminal_horizon
+    )
+    _ = active_config.set(config)
+    whole = sequential_sensitivity_utility(parameters, fine_partition, _SENSITIVITY_BUDGET)
+    batch = sequential_sensitivity_utility_batch(
+        parameters, fine_partition, _SENSITIVITY_BUDGET, range(0, _STREAMS), batch_index=0
+    )
+    assert batch.seed_index_start == 0
+    assert batch.seed_index_stop_exclusive == _STREAMS
+    combined = combine_sequential_sensitivity_utility_batches(_SENSITIVITY_BUDGET, (batch,))
+    assert combined == whole
+
+
+def test_combine_sequential_sensitivity_utility_batches_rejects_empty_batches() -> None:
+    with pytest.raises(InvalidScientificDataError, match="requires batches"):
+        _ = combine_sequential_sensitivity_utility_batches(_SENSITIVITY_BUDGET, ())

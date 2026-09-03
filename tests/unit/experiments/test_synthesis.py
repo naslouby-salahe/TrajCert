@@ -45,6 +45,7 @@ from trajcert.experiments.mathematics import (
 )
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan
 from trajcert.experiments.runner import (
+    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     ExecutionContext,
     LocalValidityTarget,
     cell_artifact_index_path,
@@ -93,7 +94,17 @@ from trajcert.experiments.synthesis import (
 )
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase
-from trajcert.provenance import BaselineName, MethodName
+from trajcert.provenance import (
+    ArtifactOwner,
+    BaselineName,
+    CodeCommit,
+    EnvironmentDigest,
+    ExecutionGroup,
+    MethodName,
+    ProducerComponentName,
+    ReusableArtifactEnvelope,
+    SchemaName,
+)
 from trajcert.reporting.source_data import AnalysisType, RhoUtilityMetricName
 from trajcert.storage import (
     ArtifactChecksum,
@@ -116,6 +127,7 @@ from trajcert.types import (
     EpochId,
     FailureBoundaryLevel,
     HiddenMassInterval,
+    PublicExecutionState,
     RiskInterval,
     SafetyCaseName,
     SafetyRegime,
@@ -426,6 +438,7 @@ def _small_synthesis_config() -> TrajCertConfig:
         max_events=config.sequential.utility.max_events,
         checkpoint_every=config.sequential.utility.checkpoint_every,
         rho=config.sequential.utility.rho,
+        batch_size=1,
     )
     return config.model_copy(
         update={
@@ -574,6 +587,50 @@ def _same_endpoint_result_for(cell: PlannedCell) -> BaseModel | None:
     return None
 
 
+def _synthesis_envelope(
+    plan: ExperimentPlan, fingerprint: DependencyFingerprint
+) -> ReusableArtifactEnvelope:
+    cell = _synthesis_cell(plan)
+    return ReusableArtifactEnvelope(
+        artifact_key=scientific_result_artifact_key(cell),
+        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
+        producer_component=ProducerComponentName("test-component"),
+        semantic_cell_key=cell.identity.semantic_cell_key,
+        semantic_coordinates=cell.identity.coordinates,
+        experiment_name=cell.identity.experiment_name,
+        classification=cell.evidence_class,
+        execution_group=ExecutionGroup("execution-group"),
+        scientific_specification_digest=SpecificationDigest("spec"),
+        scientific_dependency_digest=SpecificationDigest("spec-dep"),
+        provenance_fingerprint=ProvenanceFingerprint("provenance"),
+        dependency_fingerprint=fingerprint,
+        implementation_component_digest=DigestHex("manifest"),
+        environment_dependency_digest=EnvironmentDigest("env"),
+        plan_digest=DigestHex("manifest"),
+        cell_plan_digest=PlanDigest(str(model_digest(cell))),
+        status=PublicExecutionState.COMPLETED,
+        method_name=None,
+        baseline_name=None,
+        dataset_name=None,
+        dataset_checksum=None,
+        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
+        partition_name=cell.identity.coordinates.partition_name,
+        rho=None,
+        beta=None,
+        delta=None,
+        environment_lock_digest=EnvironmentDigest("env"),
+        code_commit=CodeCommit("commit"),
+        seed_set_keys=(),
+        parent_artifact_keys=(),
+        parent_artifact_digests=(),
+        input_paths=(),
+        canonical_active_path=scientific_result_path(cell),
+        schema_name=SchemaName("ReusableArtifactEnvelope"),
+        schema_version=1,
+    )
+
+
 def _execution_context(
     plan: ExperimentPlan,
     workspace_root: Path,
@@ -589,6 +646,7 @@ def _execution_context(
         manifest_digest=DigestHex("manifest"),
         required_artifact_keys=synthesis_artifact_keys(_synthesis_cell(plan)),
         expected_seed_count=0,
+        reusable_artifact_envelope=_synthesis_envelope(plan, fingerprint),
     )
 
 

@@ -1798,8 +1798,27 @@ C_L=\sum_kq(\ell_{a_k},\ell_{b_k}),
 $$
 
 $$
-C_U=\sum_kq(u_{a_k},u_{b_k}).
+C_U=
+\min\left(
+\sum_kq(u_{a_k},u_{b_k}),\;
+\left(\min\left(1,\sum_k(u_{a_k}+u_{b_k})\right)\right)\log 2,\;
+\log 2
+\right).
 $$
+
+The per-category interval upper bounds $u_{a_k},u_{b_k}$ are marginal, simultaneous-confidence
+bounds; they are not jointly constrained to a total probability mass of at most $1$. Because
+$q(a,b)\le(a+b)\log 2$ for all $a,b\ge0$ (the binary-entropy bound), the raw sum
+$\sum_kq(u_{a_k},u_{b_k})$ alone is not guaranteed to be a valid upper bound on the true
+resolved-entropy contribution $C$ whenever $\sum_k(u_{a_k}+u_{b_k})$ exceeds the true achievable
+resolved mass — concretely, unconstrained per-category upper bounds can push this raw sum above
+$1$, which is not a valid value for a resolved-entropy-in-nats quantity that must lie in
+$[0,\log 2]$ per band and $[0,1]$ in aggregate. $C_U$ must therefore additionally be clipped to
+the two mathematically necessary bounds above: the achievable-resolved-mass bound
+$\left(\min\left(1,\sum_k(u_{a_k}+u_{b_k})\right)\right)\log 2$, and the absolute entropy
+ceiling $\log 2$. This clipping is required for $C_U$ to remain a valid member of the feasible
+set $\mathcal E_n$ below; it does not change $C_L$, which uses only lower-bound entropy
+contributions and is unaffected by this constraint.
 
 Use
 
@@ -3480,9 +3499,7 @@ The provenance fingerprint is SHA-256 of canonical JSON containing complete reco
 ```text
 scientific_specification_digest
 code_commit
-dirty_tree_flag
 environment_lock_digest
-container_image_digest
 dataset/preprocessing checksums
 partition checksum
 seed-manifest checksums
@@ -3503,7 +3520,7 @@ parent canonical scientific-content digests
 other producer-specific immutable inputs
 ```
 
-Repository commit, dirty-tree flag, timestamps, unrelated plan rows, unrelated source files, tests, documentation, logging code, and report-only code are excluded from the dependency fingerprint unless they are material inputs to the producer.
+Repository commit, timestamps, unrelated plan rows, unrelated source files, tests, documentation, logging code, and report-only code are excluded from the dependency fingerprint unless they are material inputs to the producer.
 
 ## 13.5 Scientific result records
 
@@ -3931,9 +3948,7 @@ The reusable provenance envelope records:
 
 ```text
 Git commit
-dirty-tree flag
 dependency-lock SHA-256
-container image digest
 Python implementation/version
 OS/kernel
 CPU model
@@ -3958,16 +3973,6 @@ git rev-parse HEAD
 ```
 
 If Git metadata is unavailable, `run` is blocked with `environment_or_prerequisite_block`.
-
-The container image digest is supplied to the running container as:
-
-```text
-TRAJCERT_CONTAINER_IMAGE_DIGEST
-```
-
-and must be populated by the launcher from the OCI/Docker image inspection result. Authoritative execution is blocked when this value is absent.
-
-The environment manifest records the value verbatim and validates that it is a nonempty OCI/Docker digest or immutable image identifier.
 
 `The authoritative execution environment` fixes authoritative execution to CPU. GPU acceleration may not substitute for that environment.
 
@@ -5770,7 +5775,6 @@ A complete reproduction requires:
 ```text
 source commit
 requirements.lock
-container image digest
 this roadmap
 configs/trajcert.yaml
 deterministic synthetic generator

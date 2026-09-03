@@ -10,6 +10,7 @@ from trajcert.experiments.comparator_reduction import (
     ComparatorReductionResult,
     evaluate_comparator_reduction,
 )
+from trajcert.types import ComparatorAssumption, ComparatorObservationAccess
 
 _ORACLE_DIGITS = 20
 _FINEST_BAND_COUNT = 8
@@ -114,6 +115,15 @@ def test_comparator_reduction_generic_points_carry_budgets() -> None:
     assert result.generic_information[1].oracle.regime == "NO_UNRESOLVED_MASS"
     assert result.generic_information[2].oracle.regime == "NO_UNRESOLVED_MASS"
     assert result.generic_information[0].oracle.minimum_information == 0.0
+    assert (
+        result.generic_information[0].observation_access
+        is ComparatorObservationAccess.FULL_OBSERVABLE_LAW
+    )
+    assert (
+        result.generic_information[0].assumptions
+        is ComparatorAssumption.MUTUAL_INFORMATION_BUDGET_ONLY
+    )
+    assert result.generic_information[0].exact_equality_to_trajcert is None
 
 
 def test_comparator_reduction_endpoint_points_carry_budgets() -> None:

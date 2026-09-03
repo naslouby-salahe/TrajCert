@@ -145,10 +145,15 @@ def _matching_failure_status(
         or failure.dependency_fingerprint != context.dependency_fingerprint
     ):
         return None
+    reason = (
+        ReasonCode("DATA_VALIDATION_FAILURE")
+        if failure.execution_state is PublicExecutionState.INVALID
+        else ReasonCode("TECHNICAL_EXECUTION_FAILURE")
+    )
     return CellStatus(
         semantic_cell_key=semantic_cell_key,
-        state=PublicExecutionState.FAILED,
-        reason=ReasonCode("TECHNICAL_EXECUTION_FAILURE"),
+        state=failure.execution_state,
+        reason=reason,
     )
 
 

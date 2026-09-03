@@ -6,6 +6,8 @@ from math import isfinite
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
+    ComparatorAssumption,
+    ComparatorObservationAccess,
     Count,
     DomainModel,
     GammaSensitivity,
@@ -14,6 +16,9 @@ from trajcert.types import (
     ToleranceValue,
     mass_tuple,
 )
+
+_OBSERVATION_ACCESS = ComparatorObservationAccess.BANDWISE_ODDS_RATIO
+_ASSUMPTIONS = ComparatorAssumption.LEGACY_BANDWISE_ODDS_RATIO
 
 
 class LegacyApplicability(StrEnum):
@@ -27,6 +32,9 @@ class LegacySensitivityResult(DomainModel):
     hidden_mass_interval: HiddenMassInterval | None
     latent_risk_interval: RiskInterval | None
     informative_bands: Count
+    observation_access: ComparatorObservationAccess
+    assumptions: ComparatorAssumption
+    exact_equality_to_trajcert: bool | None = None
 
 
 def legacy_bandwise_odds_ratio(
@@ -76,6 +84,8 @@ def legacy_bandwise_odds_ratio(
             upper=harmful_total + upper,
         ),
         informative_bands=informative,
+        observation_access=_OBSERVATION_ACCESS,
+        assumptions=_ASSUMPTIONS,
     )
 
 
@@ -86,4 +96,6 @@ def _incompatible(gamma: GammaSensitivity, informative: Count) -> LegacySensitiv
         hidden_mass_interval=None,
         latent_risk_interval=None,
         informative_bands=informative,
+        observation_access=_OBSERVATION_ACCESS,
+        assumptions=_ASSUMPTIONS,
     )

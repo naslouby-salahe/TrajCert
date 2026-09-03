@@ -171,6 +171,7 @@ class TheoremValidationSummaryRow(DomainModel):
     minimum_inequality_margin: InequalityMargin | None
     all_cases_pass: SearchPredicate
     primary_artifact: ArtifactKey
+    scientific_consequence: FailureMessage
 
 
 class PartitionTimingRow(DomainModel):
@@ -504,17 +505,35 @@ def theorem_validation_summary_rows(
         margins = tuple(
             item.inequality_margin for item in group if item.inequality_margin is not None
         )
+        all_cases_pass = all(item.passed for item in group)
         rows.append(
             TheoremValidationSummaryRow(
                 theorem_name=theorem_name,
                 case_count=len(group),
                 maximum_absolute_error=max(errors, default=None),
                 minimum_inequality_margin=min(margins, default=None),
-                all_cases_pass=all(item.passed for item in group),
+                all_cases_pass=all_cases_pass,
                 primary_artifact=next(iter(artifacts)),
+                scientific_consequence=_theorem_scientific_consequence(
+                    theorem_name, len(group), all_cases_pass
+                ),
             )
         )
     return tuple(rows)
+
+
+def _theorem_scientific_consequence(
+    theorem_name: TheoremName, case_count: Count, all_cases_pass: SearchPredicate
+) -> FailureMessage:
+    if all_cases_pass:
+        return FailureMessage(
+            f"{theorem_name}: all {case_count} case(s) validated within tolerance; "
+            + "the theorem holds under configured conditions"
+        )
+    return FailureMessage(
+        f"{theorem_name}: at least one of {case_count} case(s) violated the theorem's "
+        + "mandatory relation; evidence falsifies the theorem under configured conditions"
+    )
 
 
 def partition_timing_rows(
@@ -1506,6 +1525,7 @@ _TABLE_SOURCES = (
             "minimum_inequality_margin",
             "all_cases_pass",
             "primary_artifact",
+            "scientific_consequence",
         ),
         ("theorem_name",),
         "statistical-synthesis",

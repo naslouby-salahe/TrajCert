@@ -38,12 +38,14 @@ PositiveInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeInt = Annotated[StrictInt, Field(ge=0)]
 BandCount = PositiveInt
 BandIndex = PositiveInt
+BatchCount = PositiveInt
+BatchIndex = NonNegativeInt
+BatchSize = PositiveInt
 CaseIndex = NonNegativeInt
 CategoryIndex = NonNegativeInt
 Count = NonNegativeInt
 IterationCount = NonNegativeInt
 SeedCount = NonNegativeInt
-SeedDigestBytes = PositiveInt
 SeedIndex = NonNegativeInt
 SeedValue = NonNegativeInt
 EntropyValue = NonNegativeFloat
@@ -259,6 +261,21 @@ class CompatibilityRegime(StrEnum):
     MODEL_INCOMPATIBLE = "MODEL_INCOMPATIBLE"
     MINIMUM_INFORMATION_SINGLETON = "MINIMUM_INFORMATION_SINGLETON"
     COMPATIBLE_INTERVAL = "COMPATIBLE_INTERVAL"
+
+
+class ComparatorObservationAccess(StrEnum):
+    BANDWISE_LOG_ODDS = "BANDWISE_LOG_ODDS"
+    BANDWISE_ODDS_RATIO = "BANDWISE_ODDS_RATIO"
+    REPEATED_ATTEMPT_SEQUENCE = "REPEATED_ATTEMPT_SEQUENCE"
+    FULL_OBSERVABLE_LAW = "FULL_OBSERVABLE_LAW"
+
+
+class ComparatorAssumption(StrEnum):
+    COMMON_LOG_ODDS_SLOPE = "COMMON_LOG_ODDS_SLOPE"
+    TWO_BAND_STABLE_RESISTANCE = "TWO_BAND_STABLE_RESISTANCE"
+    LEGACY_BANDWISE_ODDS_RATIO = "LEGACY_BANDWISE_ODDS_RATIO"
+    REPEATED_ATTEMPT_PATTERN_MIXTURE = "REPEATED_ATTEMPT_PATTERN_MIXTURE"
+    MUTUAL_INFORMATION_BUDGET_ONLY = "MUTUAL_INFORMATION_BUDGET_ONLY"
 
 
 class RootBranch(StrEnum):

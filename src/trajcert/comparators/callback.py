@@ -10,6 +10,8 @@ from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import (
     CategoryIndex,
+    ComparatorAssumption,
+    ComparatorObservationAccess,
     Count,
     DomainModel,
     GridPointCount,
@@ -30,6 +32,9 @@ class CallbackResult(DomainModel):
     accepted_hidden_roots: tuple[Mass, ...]
     latent_risk_interval: RiskInterval | None
     informative_bands: Count
+    observation_access: ComparatorObservationAccess
+    assumptions: ComparatorAssumption
+    exact_equality_to_trajcert: bool | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,8 +57,9 @@ def alho_common_slope_callback(
         left > mpf(0) and right > mpf(0)
         for left, right in zip(data.harmful, data.correct, strict=True)
     )
+    assumptions = ComparatorAssumption.COMMON_LOG_ODDS_SLOPE
     if informative < config.minimum_comparable_bands:
-        return _not_applicable(informative)
+        return _not_applicable(informative, assumptions)
     roots = _accepted_roots(
         data,
         oracle_digits,
@@ -63,7 +69,7 @@ def alho_common_slope_callback(
         mpf(repr(config.minimum_bracket_width)),
         mpf(repr(config.root_deduplication_tolerance)),
     )
-    return _result(summary, roots, informative)
+    return _result(summary, roots, informative, assumptions)
 
 
 def stable_resistance_callback(
@@ -71,8 +77,9 @@ def stable_resistance_callback(
     oracle_digits: OracleDigits,
 ) -> CallbackResult:
     config = active_config.get().comparators.callback
+    assumptions = ComparatorAssumption.TWO_BAND_STABLE_RESISTANCE
     if summary.partition.band_count < config.minimum_comparable_bands:
-        return _not_applicable(0)
+        return _not_applicable(0, assumptions)
     data = _data(summary)
     roots = _accepted_roots(
         data,
@@ -86,7 +93,7 @@ def stable_resistance_callback(
     informative_bands = len(
         {config.stable_resistance_first_band, config.stable_resistance_second_band}
     )
-    return _result(summary, roots, informative_bands)
+    return _result(summary, roots, informative_bands, assumptions)
 
 
 def _accepted_roots(
@@ -212,6 +219,7 @@ def _result(
     summary: ObservableSummary,
     roots: tuple[mpf, ...],
     informative: Count,
+    assumptions: ComparatorAssumption,
 ) -> CallbackResult:
     if not roots:
         return CallbackResult(
@@ -219,6 +227,8 @@ def _result(
             accepted_hidden_roots=(),
             latent_risk_interval=None,
             informative_bands=informative,
+            observation_access=ComparatorObservationAccess.BANDWISE_LOG_ODDS,
+            assumptions=assumptions,
         )
     harmful = summary.resolved_harmful_mass
     rendered = tuple(float(value) for value in roots)
@@ -230,13 +240,17 @@ def _result(
             upper=harmful + rendered[-1],
         ),
         informative_bands=informative,
+        observation_access=ComparatorObservationAccess.BANDWISE_LOG_ODDS,
+        assumptions=assumptions,
     )
 
 
-def _not_applicable(informative: Count) -> CallbackResult:
+def _not_applicable(informative: Count, assumptions: ComparatorAssumption) -> CallbackResult:
     return CallbackResult(
         status=CallbackStatus.NOT_APPLICABLE,
         accepted_hidden_roots=(),
         latent_risk_interval=None,
         informative_bands=informative,
+        observation_access=ComparatorObservationAccess.BANDWISE_LOG_ODDS,
+        assumptions=assumptions,
     )

@@ -77,9 +77,7 @@ def _provenance_material() -> ProvenanceMaterial:
     return ProvenanceMaterial(
         scientific_specification_digest=SpecificationDigest(_HEX_S),
         code_commit=CodeCommit("abc123"),
-        dirty_tree_flag=False,
         environment_lock_digest=EnvironmentDigest(_HEX_A),
-        container_image_digest=None,
         dataset_preprocessing_digests=(),
         partition_digest=DigestHex(_HEX_P),
         seed_manifest_digests=(),
@@ -190,10 +188,8 @@ def test_dependency_material_requires_seed_manifest_field() -> None:
         _ = DependencyMaterial.model_validate(payload)
 
 
-def test_provenance_material_container_image_digest_defaults_to_none() -> None:
+def test_provenance_material_dataset_preprocessing_digests_default_empty() -> None:
     material = _provenance_material()
-    assert material.container_image_digest is None
-    assert material.dirty_tree_flag is False
     assert material.dataset_preprocessing_digests == ()
 
 
@@ -228,5 +224,5 @@ def test_provenance_fingerprint_is_deterministic_hex() -> None:
 
 def test_provenance_fingerprint_is_content_sensitive() -> None:
     base = _provenance_material()
-    changed = base.model_copy(update={"dirty_tree_flag": True})
+    changed = base.model_copy(update={"code_commit": CodeCommit("def456")})
     assert provenance_fingerprint(base) != provenance_fingerprint(changed)

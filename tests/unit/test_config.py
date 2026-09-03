@@ -187,12 +187,25 @@ def test_config_models_enforce_cross_field_contracts(
         ),
         (
             CoverageConfig,
-            {"streams": 1, "max_events": 1, "checkpoint_every": 2, "acceptance_upper_limit": 0.5},
+            {
+                "streams": 1,
+                "max_events": 1,
+                "checkpoint_every": 2,
+                "acceptance_upper_limit": 0.5,
+                "clopper_pearson_confidence": 0.95,
+                "batch_size": 1,
+            },
             "cannot exceed",
         ),
         (
             SequentialUtilityConfig,
-            {"streams": 1, "max_events": 1, "checkpoint_every": 1, "rho": (0.8,)},
+            {
+                "streams": 1,
+                "max_events": 1,
+                "checkpoint_every": 1,
+                "rho": (0.8,),
+                "batch_size": 1,
+            },
             "cannot exceed",
         ),
         (

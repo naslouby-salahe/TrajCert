@@ -27,7 +27,13 @@ from trajcert.data.summaries import ObservableCounts
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.projection import ProjectionTerminationReason
-from trajcert.types import ActionChannelId, ClientId, EpochId
+from trajcert.types import (
+    ActionChannelId,
+    ClientId,
+    ComparatorAssumption,
+    ComparatorObservationAccess,
+    EpochId,
+)
 
 _COMPARISON_GUARD = 1e-12
 
@@ -167,6 +173,9 @@ def test_legacy_bandwise_odds_ratio_symmetric_bands_applicable() -> None:
     assert result.latent_risk_interval.lower == pytest.approx(0.48)
     assert result.latent_risk_interval.upper == pytest.approx(0.52)
     assert result.informative_bands == len(observable.harmful_by_band)
+    assert result.observation_access is ComparatorObservationAccess.BANDWISE_ODDS_RATIO
+    assert result.assumptions is ComparatorAssumption.LEGACY_BANDWISE_ODDS_RATIO
+    assert result.exact_equality_to_trajcert is None
 
 
 def test_legacy_bandwise_odds_ratio_tolerates_knife_edge_roundoff() -> None:
@@ -199,6 +208,9 @@ def test_pattern_mixture_fits_applicable_model() -> None:
     assert result.slope is not None
     assert result.gradient_infinity_norm is not None
     assert len(result.points) == len(config.c)
+    assert result.observation_access is ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE
+    assert result.assumptions is ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE
+    assert result.exact_equality_to_trajcert is None
 
 
 def test_alho_common_slope_callback_not_applicable_without_two_bands() -> None:
@@ -213,6 +225,9 @@ def test_alho_common_slope_callback_finds_common_slope_root() -> None:
     assert result.status is CallbackStatus.APPLICABLE
     assert result.accepted_hidden_roots == pytest.approx((0.09438309802370014,))
     assert result.informative_bands == len(observable.harmful_by_band)
+    assert result.observation_access is ComparatorObservationAccess.BANDWISE_LOG_ODDS
+    assert result.assumptions is ComparatorAssumption.COMMON_LOG_ODDS_SLOPE
+    assert result.exact_equality_to_trajcert is None
 
 
 def test_alho_common_slope_callback_three_bands() -> None:
@@ -238,3 +253,5 @@ def test_stable_resistance_callback_finds_equality_root() -> None:
     result = stable_resistance_callback(summary([0.2, 0.3], [0.3, 0.1], 0.1), 50)
     assert result.status is CallbackStatus.APPLICABLE
     assert result.accepted_hidden_roots == pytest.approx((0.09438309802370014,))
+    assert result.observation_access is ComparatorObservationAccess.BANDWISE_LOG_ODDS
+    assert result.assumptions is ComparatorAssumption.TWO_BAND_STABLE_RESISTANCE

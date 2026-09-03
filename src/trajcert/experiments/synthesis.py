@@ -38,6 +38,7 @@ from trajcert.experiments.runner import (
     LocalValidityTarget,
     StaticComponentDependency,
     audit_local_validity_targets,
+    cell_envelope_path,
     read_verified_scientific_result,
     scientific_result_artifact_key,
     verified_upstream_completion_and_index,
@@ -1082,14 +1083,14 @@ def execute_statistical_synthesis(
             raise InvalidScientificDataError(
                 f"Statistical Synthesis artifact checksum mismatch: {entry.artifact_key}"
             )
+    _ = atomic_write_model(
+        cell_envelope_path(cell, context.workspace_root), context.reusable_artifact_envelope
+    )
     return CellExecutionResult(
         artifact_index=CellArtifactIndex(artifacts=entries),
         completed_seed_count=0,
-        metrics_complete=True,
-        statistics_complete=True,
         invariant_validation_pass=True,
         dependency_validation_pass=True,
-        provenance_record_complete=True,
     )
 
 

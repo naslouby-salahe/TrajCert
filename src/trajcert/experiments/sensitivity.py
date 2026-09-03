@@ -10,6 +10,7 @@ from trajcert.data.maturity import mature_ledger
 from trajcert.data.partitions import TrajectoryPartition, build_partition
 from trajcert.data.summaries import ObservableSummary
 from trajcert.data.synthetic import generate_stochastic_ledger
+from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import SequentialCheckpoint, run_sequential_trace
 from trajcert.math.bounds import (
     complete_case_arrival_only,
@@ -20,6 +21,7 @@ from trajcert.math.information import observed_timing_information
 from trajcert.telemetry import StreamProgress
 from trajcert.types import (
     AbsoluteTightening,
+    BatchIndex,
     CertifiedUpdateFractionGain,
     CompatibilityRegime,
     Count,
@@ -66,6 +68,13 @@ class SequentialUtilityResult(DomainModel):
     streams: tuple[SequentialStreamUtility, ...]
     mean_certified_update_fraction_gain: CertifiedUpdateFractionGain
     mean_bound_gain: RiskBoundGain
+
+
+class SequentialUtilityBatchResult(DomainModel):
+    batch_index: BatchIndex
+    seed_index_start: SeedIndex
+    seed_index_stop_exclusive: SeedIndex
+    streams: tuple[SequentialStreamUtility, ...]
 
 
 def population_sensitivity_utility(
@@ -132,15 +141,35 @@ def sequential_sensitivity_utility(
     config = active_config.get()
     if fine_partition.band_count != config.method.finest_bands:
         raise ValueError("sequential utility requires the configured finest partition")
+    stream_count = config.sequential.utility.streams
+    batch = sequential_sensitivity_utility_batch(
+        parameters,
+        fine_partition,
+        sensitivity_budget,
+        stream_range=range(stream_count),
+        batch_index=0,
+    )
+    return combine_sequential_sensitivity_utility_batches(sensitivity_budget, (batch,))
+
+
+def sequential_sensitivity_utility_batch(
+    parameters: LawParameters,
+    fine_partition: TrajectoryPartition,
+    sensitivity_budget: SensitivityBudget,
+    stream_range: range,
+    batch_index: BatchIndex,
+) -> SequentialUtilityBatchResult:
+    config = active_config.get()
+    if fine_partition.band_count != config.method.finest_bands:
+        raise ValueError("sequential utility requires the configured finest partition")
     endpoint_partition = build_partition(
         finest_band_count=fine_partition.finest_band_count,
         band_count=ENDPOINT_BAND_COUNT,
         terminal_horizon=fine_partition.terminal_horizon,
     )
-    stream_count = config.sequential.utility.streams
-    stream_progress = StreamProgress("sequential_utility", stream_count)
+    stream_progress = StreamProgress(f"sequential_utility_batch_{batch_index}", len(stream_range))
     collected: list[SequentialStreamUtility] = []
-    for stream_index in range(stream_count):
+    for position, stream_index in enumerate(stream_range, start=1):
         collected.append(
             _sequential_stream_utility(
                 parameters=parameters,
@@ -150,8 +179,25 @@ def sequential_sensitivity_utility(
                 stream_index=stream_index,
             )
         )
-        stream_progress.maybe_log(stream_index + 1)
-    streams = tuple(collected)
+        stream_progress.maybe_log(position)
+    return SequentialUtilityBatchResult(
+        batch_index=batch_index,
+        seed_index_start=stream_range.start,
+        seed_index_stop_exclusive=stream_range.stop,
+        streams=tuple(collected),
+    )
+
+
+def combine_sequential_sensitivity_utility_batches(
+    sensitivity_budget: SensitivityBudget,
+    batches: tuple[SequentialUtilityBatchResult, ...],
+) -> SequentialUtilityResult:
+    if not batches:
+        raise InvalidScientificDataError("sequential utility combination requires batches")
+    ordered_batches = tuple(sorted(batches, key=lambda batch: batch.batch_index))
+    streams = tuple(stream for batch in ordered_batches for stream in batch.streams)
+    if not streams:
+        raise InvalidScientificDataError("sequential utility combination requires streams")
     return SequentialUtilityResult(
         sensitivity_budget=sensitivity_budget,
         streams=streams,

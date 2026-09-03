@@ -13,6 +13,8 @@ from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.summaries import ObservableSummary
 from trajcert.math.oracle import InformationOracleResult, solve_information_oracle
 from trajcert.types import (
+    ComparatorAssumption,
+    ComparatorObservationAccess,
     CompatibilityRegime,
     DomainModel,
     HiddenMassInterval,
@@ -20,10 +22,16 @@ from trajcert.types import (
     SensitivityBudget,
 )
 
+_GENERIC_OBSERVATION_ACCESS = ComparatorObservationAccess.FULL_OBSERVABLE_LAW
+_GENERIC_ASSUMPTIONS = ComparatorAssumption.MUTUAL_INFORMATION_BUDGET_ONLY
+
 
 class GenericInformationPoint(DomainModel):
     rho: SensitivityBudget
     oracle: InformationOracleResult
+    observation_access: ComparatorObservationAccess = _GENERIC_OBSERVATION_ACCESS
+    assumptions: ComparatorAssumption = _GENERIC_ASSUMPTIONS
+    exact_equality_to_trajcert: bool | None = None
 
 
 class EndpointPoint(DomainModel):

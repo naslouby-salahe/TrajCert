@@ -12,6 +12,11 @@ _CELL_KEY = SemanticCellKey("Partition Coherence::example")
 _STRESS_CELL_COUNT = 3
 
 
+@pytest.fixture(autouse=True)
+def trajcert_logger_enabled() -> None:
+    logging.getLogger("trajcert").disabled = False
+
+
 def test_experiment_progress_logs_start_cell_and_finish(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

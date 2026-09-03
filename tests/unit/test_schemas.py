@@ -153,18 +153,17 @@ def test_rendered_publication_artifact_constructs() -> None:
     assert artifact.destination_path == Path("d.png")
 
 
-def test_environment_reproducibility_record_container_digest_defaults_none() -> None:
+def test_environment_reproducibility_record_constructs() -> None:
     record = EnvironmentReproducibilityRecord(
         dependency_authority=DependencyAuthority("pypi"),
         dependency_lock_path=Path("lock.json"),
         environment_lock_digest=EnvironmentDigest(_HEX_A),
     )
-    assert record.container_image_digest is None
     assert record.dependency_authority == "pypi"
     assert record.dependency_lock_path == Path("lock.json")
 
 
-def test_environment_reproducibility_record_rejects_non_none_container_digest() -> None:
+def test_environment_reproducibility_record_rejects_extra_fields() -> None:
     payload = {
         "dependency_authority": "pypi",
         "dependency_lock_path": Path("lock.json"),
@@ -192,7 +191,6 @@ def test_publication_reproducibility_record_constructs() -> None:
     assert record.configuration_path == Path("configs/trajcert.yaml")
     assert len(record.sources) == 1
     assert len(record.rendered_artifacts) == 1
-    assert record.environment.container_image_digest is None
 
 
 def test_schema_models_reject_extra_fields() -> None:

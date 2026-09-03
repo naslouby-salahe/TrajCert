@@ -26,6 +26,7 @@ from trajcert.experiments.plan import (
     experiment_names,
 )
 from trajcert.experiments.runner import (
+    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     CellExecutionResult,
     CellExecutor,
     CellRunOutcome,
@@ -36,7 +37,7 @@ from trajcert.experiments.runner import (
     ScientificInputClass,
     SmokeResult,
     StaticComponentDependency,
-    cell_dependency_fingerprint,
+    cell_dependency_material,
     dependency_block_reason,
     execute_dispatched_cell,
     expected_seed_count,
@@ -45,6 +46,7 @@ from trajcert.experiments.runner import (
     run_smoke_fixtures,
     scientific_dependency_digest,
     scientific_result_artifact_key,
+    scientific_result_path,
     scientific_specification_digest,
 )
 from trajcert.experiments.status import (
@@ -72,9 +74,13 @@ from trajcert.paths import (
 )
 from trajcert.provenance import (
     EnvironmentDigest,
+    ParentArtifactIdentity,
     ProducerComponentName,
     ProvenanceMaterial,
+    ReusableArtifactEnvelopeInputs,
+    dependency_fingerprint,
     provenance_fingerprint,
+    reusable_artifact_envelope,
 )
 from trajcert.reporting.export import (
     LOCK_PATH,
@@ -92,7 +98,7 @@ from trajcert.reporting.source_data import (
 from trajcert.reporting.tables import render_table
 from trajcert.storage import (
     DigestHex,
-    ProvenanceFingerprint,
+    PlanDigest,
     SemanticCellKey,
     SpecificationDigest,
     atomic_write_model,
@@ -369,8 +375,16 @@ def preprocess(
     target = workspace_root / _PREPROCESS_PATH
     if not overwrite and target.is_file():
         return target
-    _ = dataset_name
-    _ = atomic_write_model(target, _load_config(workspace_root))
+    config = _load_config(workspace_root)
+    finest = config.method.finest_bands
+    selected = tuple(
+        parameters
+        for parameters in configured_laws()
+        if dataset_name is None or parameters.name == dataset_name
+    )
+    for parameters in selected:
+        _ = build_full_law(parameters, finest)
+    _ = atomic_write_model(target, config)
     return target
 
 
@@ -668,8 +682,9 @@ def _execution_context(
         upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
         dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
         required = synthesis_artifact_keys(cell)
+        parents: tuple[ParentArtifactIdentity, ...] = ()
     else:
-        dependency = cell_dependency_fingerprint(
+        dependency_material = cell_dependency_material(
             workspace_root,
             plan,
             cell,
@@ -677,17 +692,41 @@ def _execution_context(
             component_digest,
             environment_digest,
         )
+        dependency = dependency_fingerprint(dependency_material)
         required = (scientific_result_artifact_key(cell),)
+        parents = dependency_material.parents
+    provenance_material = _provenance_material(plan, workspace_root, environment_digest)
+    provenance = provenance_fingerprint(provenance_material)
+    envelope = reusable_artifact_envelope(
+        cell.identity,
+        ReusableArtifactEnvelopeInputs(
+            evidence_class=cell.evidence_class,
+            artifact_key=scientific_result_artifact_key(cell),
+            artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+            producer_component=ProducerComponentName(str(cell.identity.experiment_name)),
+            status=PublicExecutionState.COMPLETED,
+            canonical_active_path=scientific_result_path(cell),
+            cell_plan_digest=PlanDigest(model_digest(cell)),
+            scientific_dependency_digest=dependency_specification,
+            provenance_fingerprint=provenance,
+            dependency_fingerprint=dependency,
+            implementation_component_digest=component_digest,
+            environment_dependency_digest=environment_digest,
+            provenance_material=provenance_material,
+            parents=parents,
+        ),
+    )
     return ExecutionContext(
         workspace_root=workspace_root,
         plan_digest=plan.plan_digest,
         scientific_specification_digest=specification,
         scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=_provenance(plan, workspace_root, environment_digest),
+        provenance_fingerprint=provenance,
         dependency_fingerprint=dependency,
         manifest_digest=model_digest(cell),
         required_artifact_keys=required,
         expected_seed_count=expected_seed_count(cell.identity.experiment_name),
+        reusable_artifact_envelope=envelope,
     )
 
 
@@ -698,23 +737,20 @@ def _environment_digest(workspace_root: Path) -> EnvironmentDigest:
     return EnvironmentDigest(file_digest(lock))
 
 
-def _provenance(
+def _provenance_material(
     plan: ExperimentPlan,
     workspace_root: Path,
     environment_digest: EnvironmentDigest,
-) -> ProvenanceFingerprint:
-    material = ProvenanceMaterial(
+) -> ProvenanceMaterial:
+    return ProvenanceMaterial(
         scientific_specification_digest=SpecificationDigest(model_digest(active_config.get())),
         code_commit=source_commit(workspace_root),
-        dirty_tree_flag=False,
         environment_lock_digest=environment_digest,
-        container_image_digest=None,
         dataset_preprocessing_digests=(),
         partition_digest=None,
         seed_manifest_digests=(),
         plan_digest=DigestHex(plan.plan_digest),
     )
-    return provenance_fingerprint(material)
 
 
 def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:

@@ -11,6 +11,8 @@ from scipy.special import expit
 from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.types import (
+    ComparatorAssumption,
+    ComparatorObservationAccess,
     Count,
     DomainModel,
     GradientNorm,
@@ -20,6 +22,9 @@ from trajcert.types import (
     SlopeValue,
     Vector,
 )
+
+_OBSERVATION_ACCESS = ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE
+_ASSUMPTIONS = ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE
 
 
 class PatternMixtureStatus(StrEnum):
@@ -41,6 +46,9 @@ class PatternMixtureResult(DomainModel):
     gradient_infinity_norm: GradientNorm | None
     objective: ObjectiveValue | None
     points: tuple[PatternMixturePoint, ...]
+    observation_access: ComparatorObservationAccess
+    assumptions: ComparatorAssumption
+    exact_equality_to_trajcert: bool | None = None
 
 
 def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
@@ -57,6 +65,8 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             gradient_infinity_norm=None,
             objective=None,
             points=(),
+            observation_access=_OBSERVATION_ACCESS,
+            assumptions=_ASSUMPTIONS,
         )
     indices = nonempty.astype(np.float64) + 1.0
     weights = masses[nonempty]
@@ -116,6 +126,8 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             gradient_infinity_norm=gradient_norm if isfinite(gradient_norm) else None,
             objective=final_objective if isfinite(final_objective) else None,
             points=(),
+            observation_access=_OBSERVATION_ACCESS,
+            assumptions=_ASSUMPTIONS,
         )
     harmful_mass = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
@@ -140,4 +152,6 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
         gradient_infinity_norm=gradient_norm,
         objective=final_objective,
         points=points,
+        observation_access=_OBSERVATION_ACCESS,
+        assumptions=_ASSUMPTIONS,
     )

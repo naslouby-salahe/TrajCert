@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.runner import (
+    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     DependencyReadiness,
     ExecutionContext,
     FailureRecord,
@@ -15,6 +16,7 @@ from trajcert.experiments.runner import (
     cell_completion_path,
     cell_failure_path,
     cell_running_path,
+    scientific_result_path,
 )
 from trajcert.experiments.status import (
     CellStatus,
@@ -23,6 +25,13 @@ from trajcert.experiments.status import (
     inspect_cell_status,
 )
 from trajcert.provenance import (
+    ArtifactOwner,
+    CodeCommit,
+    EnvironmentDigest,
+    ExecutionGroup,
+    ProducerComponentName,
+    ReusableArtifactEnvelope,
+    SchemaName,
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
@@ -67,6 +76,48 @@ def _cell(executable: bool = True, required: tuple[ExperimentName, ...] = ()) ->
     )
 
 
+def _envelope() -> ReusableArtifactEnvelope:
+    cell = _cell()
+    return ReusableArtifactEnvelope(
+        artifact_key=ArtifactKey("scientific-result|legacy-cell"),
+        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
+        producer_component=ProducerComponentName("test-component"),
+        semantic_cell_key=cell.identity.semantic_cell_key,
+        semantic_coordinates=cell.identity.coordinates,
+        experiment_name=cell.identity.experiment_name,
+        classification=cell.evidence_class,
+        execution_group=ExecutionGroup("execution-group"),
+        scientific_specification_digest=SpecificationDigest("spec-digest"),
+        scientific_dependency_digest=SpecificationDigest("dependency-digest"),
+        provenance_fingerprint=ProvenanceFingerprint("provenance-digest"),
+        dependency_fingerprint=DependencyFingerprint("fingerprint"),
+        implementation_component_digest=DigestHex("manifest-digest"),
+        environment_dependency_digest=EnvironmentDigest("env"),
+        plan_digest=DigestHex("plan-digest"),
+        cell_plan_digest=PlanDigest(str(model_digest(cell))),
+        status=PublicExecutionState.COMPLETED,
+        method_name=None,
+        baseline_name=None,
+        dataset_name=None,
+        dataset_checksum=None,
+        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
+        partition_name=cell.identity.coordinates.partition_name,
+        rho=None,
+        beta=None,
+        delta=None,
+        environment_lock_digest=EnvironmentDigest("env"),
+        code_commit=CodeCommit("commit"),
+        seed_set_keys=(),
+        parent_artifact_keys=(),
+        parent_artifact_digests=(),
+        input_paths=(),
+        canonical_active_path=scientific_result_path(cell),
+        schema_name=SchemaName("ReusableArtifactEnvelope"),
+        schema_version=1,
+    )
+
+
 def _context(workspace_root: Path) -> ExecutionContext:
     return ExecutionContext(
         workspace_root=workspace_root,
@@ -78,6 +129,7 @@ def _context(workspace_root: Path) -> ExecutionContext:
         manifest_digest=DigestHex("manifest-digest"),
         required_artifact_keys=(ArtifactKey("scientific-result|legacy-cell"),),
         expected_seed_count=0,
+        reusable_artifact_envelope=_envelope(),
     )
 
 
@@ -182,11 +234,29 @@ def test_inspect_cell_status_failed_with_matching_failure(tmp_path: Path) -> Non
         dependency_fingerprint=context.dependency_fingerprint,
         failure_type=FailureType("RuntimeError"),
         message=FailureMessage("boom"),
+        execution_state=PublicExecutionState.FAILED,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
     result = inspect_cell_status(cell, context, ())
     assert result.state is PublicExecutionState.FAILED
     assert result.reason == ReasonCode("TECHNICAL_EXECUTION_FAILURE")
+
+
+def test_inspect_cell_status_invalid_with_data_validation_failure(tmp_path: Path) -> None:
+    cell = _cell()
+    context = _context(tmp_path)
+    record = FailureRecord(
+        semantic_cell_key=cell.identity.semantic_cell_key,
+        plan_digest=context.plan_digest,
+        dependency_fingerprint=context.dependency_fingerprint,
+        failure_type=FailureType("InvalidProbabilityError"),
+        message=FailureMessage("bad probability"),
+        execution_state=PublicExecutionState.INVALID,
+    )
+    _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
+    result = inspect_cell_status(cell, context, ())
+    assert result.state is PublicExecutionState.INVALID
+    assert result.reason == ReasonCode("DATA_VALIDATION_FAILURE")
 
 
 def test_inspect_cell_status_failed_with_invalid_failure_record(tmp_path: Path) -> None:
@@ -207,6 +277,7 @@ def test_inspect_cell_status_ready_when_failure_digest_mismatches(tmp_path: Path
         dependency_fingerprint=context.dependency_fingerprint,
         failure_type=FailureType("RuntimeError"),
         message=FailureMessage("boom"),
+        execution_state=PublicExecutionState.FAILED,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
     result = inspect_cell_status(cell, context, ())

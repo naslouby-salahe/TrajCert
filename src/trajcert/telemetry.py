@@ -18,6 +18,7 @@ _current_cell_key: ContextVar[SemanticCellKey | None] = ContextVar("current_cell
 
 
 def configure_logging() -> None:
+    _logger.disabled = False
     if _logger.handlers:
         return
     handler = logging.StreamHandler(sys.stderr)

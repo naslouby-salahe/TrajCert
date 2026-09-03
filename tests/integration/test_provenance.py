@@ -10,8 +10,9 @@ from trajcert import cli
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.plan import build_plan, cells_for_experiment
+from trajcert.experiments.plan import PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
+    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     DependencyReadiness,
     ExecutionContext,
     cell_dependency_fingerprint,
@@ -21,15 +22,29 @@ from trajcert.experiments.runner import (
     run_cell,
     scientific_dependency_digest,
     scientific_result_artifact_key,
+    scientific_result_path,
     scientific_specification_digest,
 )
 from trajcert.provenance import (
+    ArtifactOwner,
     CodeCommit,
     EnvironmentDigest,
+    ExecutionGroup,
+    ProducerComponentName,
     ProvenanceMaterial,
+    ReusableArtifactEnvelope,
+    SchemaName,
     provenance_fingerprint,
 )
-from trajcert.storage import DigestHex, ProvenanceFingerprint, SpecificationDigest, file_digest
+from trajcert.storage import (
+    DependencyFingerprint,
+    DigestHex,
+    PlanDigest,
+    ProvenanceFingerprint,
+    SpecificationDigest,
+    file_digest,
+    model_digest,
+)
 from trajcert.types import ExperimentName, PublicExecutionState
 
 _REPO_ROOT = Path.cwd()
@@ -37,6 +52,52 @@ _INVENTORY_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
 _LEGACY_CHECK_NAME = ExperimentName.PATH_INFORMATION_DECOMPOSITION
 _ALTERNATE_ROOT_ATOL = 5.0e-11
 _PLACEHOLDER_PROVENANCE = ProvenanceFingerprint("0" * 64)
+
+
+def _placeholder_envelope(
+    cell: PlannedCell,
+    specification: SpecificationDigest,
+    dependency_specification: SpecificationDigest,
+    dependency: DependencyFingerprint,
+) -> ReusableArtifactEnvelope:
+    return ReusableArtifactEnvelope(
+        artifact_key=scientific_result_artifact_key(cell),
+        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
+        producer_component=ProducerComponentName("test-component"),
+        semantic_cell_key=cell.identity.semantic_cell_key,
+        semantic_coordinates=cell.identity.coordinates,
+        experiment_name=cell.identity.experiment_name,
+        classification=cell.evidence_class,
+        execution_group=ExecutionGroup("execution-group"),
+        scientific_specification_digest=specification,
+        scientific_dependency_digest=dependency_specification,
+        provenance_fingerprint=_PLACEHOLDER_PROVENANCE,
+        dependency_fingerprint=dependency,
+        implementation_component_digest=DigestHex(str(specification)),
+        environment_dependency_digest=EnvironmentDigest("env"),
+        plan_digest=DigestHex(str(specification)),
+        cell_plan_digest=PlanDigest(str(model_digest(cell))),
+        status=PublicExecutionState.COMPLETED,
+        method_name=cell.identity.coordinates.method_name,
+        baseline_name=cell.identity.coordinates.baseline_name,
+        dataset_name=None,
+        dataset_checksum=None,
+        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
+        partition_name=cell.identity.coordinates.partition_name,
+        rho=cell.identity.coordinates.rho,
+        beta=cell.identity.coordinates.beta,
+        delta=cell.identity.coordinates.delta,
+        environment_lock_digest=EnvironmentDigest("env"),
+        code_commit=CodeCommit("commit"),
+        seed_set_keys=(),
+        parent_artifact_keys=(),
+        parent_artifact_digests=(),
+        input_paths=(),
+        canonical_active_path=scientific_result_path(cell),
+        schema_name=SchemaName("ReusableArtifactEnvelope"),
+        schema_version=1,
+    )
 
 
 def _write_workspace_commit(workspace_root: Path) -> None:
@@ -253,6 +314,12 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
         manifest_digest=DigestHex(str(specification)),
         required_artifact_keys=(scientific_result_artifact_key(parent_cell),),
         expected_seed_count=expected_seed_count(parent_cell.identity.experiment_name),
+        reusable_artifact_envelope=_placeholder_envelope(
+            parent_cell,
+            specification,
+            parent_dependency_specification,
+            parent_dependency_fingerprint,
+        ),
     )
     outcome = run_cell(
         parent_cell,
@@ -290,9 +357,7 @@ def test_provenance_fingerprint_reflects_environment_lock_content(tmp_path: Path
         return ProvenanceMaterial(
             scientific_specification_digest=SpecificationDigest("a" * 64),
             code_commit=CodeCommit("b" * 40),
-            dirty_tree_flag=False,
             environment_lock_digest=EnvironmentDigest(str(file_digest(lock_path))),
-            container_image_digest=None,
             dataset_preprocessing_digests=(),
             partition_digest=None,
             seed_manifest_digests=(),

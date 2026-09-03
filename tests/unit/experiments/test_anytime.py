@@ -36,6 +36,7 @@ _HAND_CASE_UTILITY_INTERVAL = 50
 _COVERAGE_STREAMS = 1
 _COVERAGE_EVENTS = 8
 _COVERAGE_ACCEPTANCE = 0.06
+_CLOPPER_PEARSON_CONFIDENCE = 0.95
 _COVERAGE_MATURED = 4
 _COVERAGE_RESOLVED = 2
 _SENSITIVITY_BUDGET = 0.05
@@ -68,12 +69,15 @@ def _hand_case_config() -> TrajCertConfig:
         max_events=_HAND_CASE_MATURED_EVENTS,
         checkpoint_every=_HAND_CASE_MATURED_EVENTS // 2,
         acceptance_upper_limit=_COVERAGE_ACCEPTANCE,
+        clopper_pearson_confidence=_CLOPPER_PEARSON_CONFIDENCE,
+        batch_size=1,
     )
     utility = SequentialUtilityConfig(
         streams=_COVERAGE_STREAMS,
         max_events=_HAND_CASE_MATURED_EVENTS,
         checkpoint_every=_HAND_CASE_UTILITY_INTERVAL,
         rho=config.sequential.utility.rho,
+        batch_size=1,
     )
     numerics = config.numerics.model_copy(update={"outer_max_nodes": _OUTER_NODE_CAP})
     return config.model_copy(
@@ -91,12 +95,15 @@ def _coverage_config() -> TrajCertConfig:
         max_events=_COVERAGE_EVENTS,
         checkpoint_every=_COVERAGE_EVENTS,
         acceptance_upper_limit=_COVERAGE_ACCEPTANCE,
+        clopper_pearson_confidence=_CLOPPER_PEARSON_CONFIDENCE,
+        batch_size=1,
     )
     utility = SequentialUtilityConfig(
         streams=_COVERAGE_STREAMS,
         max_events=_COVERAGE_EVENTS,
         checkpoint_every=_COVERAGE_EVENTS,
         rho=config.sequential.utility.rho,
+        batch_size=1,
     )
     minimum = MinimumEvidenceConfig(
         matured_events=_COVERAGE_MATURED, resolved_events=_COVERAGE_RESOLVED
@@ -304,6 +311,27 @@ def test_run_coverage_stress_marks_ignorable_delay_inapplicable_for_violated_ass
     )
     assert ignorable.applicable is False
     assert ignorable.failure_rate is None
+
+
+def test_coverage_stress_batches_combine_to_match_single_run() -> None:
+    config = _coverage_config()
+    parameters = _parameters(config.laws[LawKey.NO_PATH_DEPENDENCE], LawKey.NO_PATH_DEPENDENCE)
+    partition = _partition(_HAND_CASE_BANDS)
+    whole = anytime.run_coverage_stress(parameters, partition, config, _SENSITIVITY_BUDGET)
+    first = anytime.coverage_stress_batch(
+        parameters, partition, config, _SENSITIVITY_BUDGET, range(0, 1), batch_index=0
+    )
+    assert first.seed_index_start == 0
+    assert first.seed_index_stop_exclusive == 1
+    combined = anytime.combine_coverage_stress_batches(parameters, (first,))
+    assert combined == whole
+
+
+def test_combine_coverage_stress_batches_rejects_empty_batches() -> None:
+    config = _coverage_config()
+    parameters = _parameters(config.laws[LawKey.NO_PATH_DEPENDENCE], LawKey.NO_PATH_DEPENDENCE)
+    with pytest.raises(InvalidScientificDataError, match="requires batches"):
+        _ = anytime.combine_coverage_stress_batches(parameters, ())
 
 
 def test_evaluate_configured_coverage_stress_true_information_reference() -> None:

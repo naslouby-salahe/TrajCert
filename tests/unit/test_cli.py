@@ -16,6 +16,7 @@ from trajcert import cli
 from trajcert.cli import CliArguments, CliExitCode, DoctorResult, RunExperimentResult
 from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
+from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.exceptions import (
     ConfigurationError,
     InvalidScientificDataError,
@@ -34,6 +35,13 @@ from trajcert.experiments.runner import SmokeResult
 from trajcert.experiments.status import ExperimentStatus
 from trajcert.paths import PreprocessingLeaf, preprocessing_leaf
 from trajcert.provenance import (
+    ArtifactOwner,
+    CodeCommit,
+    EnvironmentDigest,
+    ExecutionGroup,
+    ProducerComponentName,
+    ReusableArtifactEnvelope,
+    SchemaName,
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
@@ -52,12 +60,14 @@ from trajcert.storage import (
     PlanDigest,
     ProvenanceFingerprint,
     SpecificationDigest,
+    model_digest,
     read_model,
 )
 from trajcert.types import (
     CliCommand,
     EvidenceClass,
     ExperimentName,
+    LawKey,
     PublicExecutionState,
     ReasonCode,
 )
@@ -227,6 +237,47 @@ def _git_workspace(tmp_path: Path) -> Path:
     return workspace
 
 
+def _tmp_envelope(cell: PlannedCell) -> ReusableArtifactEnvelope:
+    return ReusableArtifactEnvelope(
+        artifact_key=runner.scientific_result_artifact_key(cell),
+        artifact_type=runner.SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
+        producer_component=ProducerComponentName("test-component"),
+        semantic_cell_key=cell.identity.semantic_cell_key,
+        semantic_coordinates=cell.identity.coordinates,
+        experiment_name=cell.identity.experiment_name,
+        classification=cell.evidence_class,
+        execution_group=ExecutionGroup("execution-group"),
+        scientific_specification_digest=SpecificationDigest("specification"),
+        scientific_dependency_digest=SpecificationDigest("dependency"),
+        provenance_fingerprint=ProvenanceFingerprint("provenance"),
+        dependency_fingerprint=DependencyFingerprint("dependency-fingerprint"),
+        implementation_component_digest=DigestHex("0" * _SHA256_HEX_LENGTH),
+        environment_dependency_digest=EnvironmentDigest("env"),
+        plan_digest=DigestHex("0" * _SHA256_HEX_LENGTH),
+        cell_plan_digest=PlanDigest(str(model_digest(cell))),
+        status=PublicExecutionState.COMPLETED,
+        method_name=None,
+        baseline_name=None,
+        dataset_name=None,
+        dataset_checksum=None,
+        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
+        partition_name=cell.identity.coordinates.partition_name,
+        rho=None,
+        beta=None,
+        delta=None,
+        environment_lock_digest=EnvironmentDigest("env"),
+        code_commit=CodeCommit("commit"),
+        seed_set_keys=(),
+        parent_artifact_keys=(),
+        parent_artifact_digests=(),
+        input_paths=(),
+        canonical_active_path=runner.scientific_result_path(cell),
+        schema_name=SchemaName("ReusableArtifactEnvelope"),
+        schema_version=1,
+    )
+
+
 def _tmp_context(cell: PlannedCell, workspace_root: Path) -> runner.ExecutionContext:
     return runner.ExecutionContext(
         workspace_root=workspace_root,
@@ -238,6 +289,7 @@ def _tmp_context(cell: PlannedCell, workspace_root: Path) -> runner.ExecutionCon
         manifest_digest=DigestHex("0" * _SHA256_HEX_LENGTH),
         required_artifact_keys=(runner.scientific_result_artifact_key(cell),),
         expected_seed_count=0,
+        reusable_artifact_envelope=_tmp_envelope(cell),
     )
 
 
@@ -532,6 +584,23 @@ def test_preprocess_writes_configuration_artifact(tmp_path: Path) -> None:
     assert target.is_file()
     stored = TrajCertConfig.model_validate_json(target.read_text(encoding="utf-8"))
     assert stored == TrajCertConfig.from_yaml(workspace / PRODUCTION_CONFIG_PATH)
+
+
+def test_preprocess_with_dataset_name_validates_only_that_law(tmp_path: Path) -> None:
+    workspace = _configured_workspace(tmp_path)
+    dataset_name = str(LAW_DISPLAY_NAMES[LawKey.NO_PATH_DEPENDENCE])
+    target = cli.preprocess(dataset_name, workspace_root=workspace)
+    assert target.is_file()
+
+
+def test_main_preprocess_rejects_unknown_dataset_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(cli, "preprocess", _fake_preprocess_target)
+    monkeypatch.setattr(sys, "argv", ["trajcert", "preprocess", "not-a-configured-law"])
+    with pytest.raises(SystemExit) as raised:
+        cli.main()
+    assert raised.value.code == CliExitCode.USAGE_OR_UNKNOWN_NAME
 
 
 def test_preprocess_reuses_existing_artifact_without_overwrite(tmp_path: Path) -> None:

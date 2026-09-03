@@ -267,8 +267,10 @@ def test_theorem_validation_summary_rows_aggregates_grouped_observations() -> No
     assert rows[0].minimum_inequality_margin == pytest.approx(0.2)
     assert rows[0].all_cases_pass is False
     assert rows[0].primary_artifact == ArtifactKey("a")
+    assert "falsifies the theorem" in rows[0].scientific_consequence
     assert rows[1].theorem_name == TheoremName("T2")
     assert rows[1].all_cases_pass is True
+    assert "theorem holds" in rows[1].scientific_consequence
 
 
 def test_theorem_validation_summary_rows_rejects_empty_observations() -> None:
