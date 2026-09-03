@@ -253,7 +253,7 @@ def reusable_artifact_envelope(
         semantic_coordinates=coordinates,
         experiment_name=cell_identity.experiment_name,
         classification=inputs.evidence_class,
-        execution_group=ExecutionGroup(str(inputs.provenance_fingerprint)),
+        execution_group=ExecutionGroup(inputs.provenance_fingerprint),
         scientific_specification_digest=provenance_material.scientific_specification_digest,
         scientific_dependency_digest=inputs.scientific_dependency_digest,
         provenance_fingerprint=inputs.provenance_fingerprint,
@@ -268,7 +268,7 @@ def reusable_artifact_envelope(
         dataset_name=(
             None
             if coordinates.synthetic_law_name is None
-            else DatasetName(str(coordinates.synthetic_law_name))
+            else DatasetName(coordinates.synthetic_law_name)
         ),
         dataset_checksum=(
             provenance_material.dataset_preprocessing_digests[0]
@@ -283,7 +283,7 @@ def reusable_artifact_envelope(
         environment_lock_digest=provenance_material.environment_lock_digest,
         code_commit=provenance_material.code_commit,
         seed_set_keys=tuple(
-            SeedSetKey(str(digest)) for digest in provenance_material.seed_manifest_digests
+            SeedSetKey(digest) for digest in provenance_material.seed_manifest_digests
         ),
         parent_artifact_keys=tuple(parent.artifact_key for parent in parents),
         parent_artifact_digests=tuple(parent.scientific_content_digest for parent in parents),

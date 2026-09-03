@@ -58,7 +58,22 @@ SUPPRESSIONS = frozenset(
 
 _UNTYPED_BOUNDARY_PATTERN = re.compile(r"\b(?:Any|object)\b")
 _LEAKED_PRIMITIVE_PATTERN = re.compile(r"\b(?:float|int|str)\b")
-_BUILDING_BLOCK_NAMES = frozenset({"StrictFloat", "StrictInt"})
+_BUILDING_BLOCK_NAMES = frozenset(
+    {
+        "StrictFloat",
+        "StrictInt",
+        "NonNegativeInt",
+        "PositiveInt",
+        "NonNegativeFloat",
+        "PositiveFloat",
+        "UnitFloat",
+        "OpenUnitFloat",
+        "UnitInterval",
+        "OpenUnitInterval",
+        "FiniteFloat",
+        "SignedInt",
+    }
+)
 _ACTIVE_CONFIG_SET_PATTERN = re.compile(r"active_config\.set\(")
 _CONSTANT_NAME_PATTERN = re.compile(r"^_{0,2}[A-Z][A-Z0-9_]*$")
 _CONFIG_ANNOTATION_PATTERN = re.compile(r"Config\b")
@@ -306,6 +321,17 @@ class _AuditVisitor(cst.CSTVisitor):
         if _contains_roadmap(node):
             self._add(RULE_ROADMAP, node, "runtime roadmap access is forbidden")
 
+    def visit_Comparison(self, node: cst.Comparison) -> None:
+        operands = [node.left, *(target.comparator for target in node.comparisons)]
+        for operand in operands:
+            if _is_bare_dotted_value_attribute(operand):
+                self._add(
+                    RULE_REDUNDANT_CONVERSION,
+                    node,
+                    "comparing enum.value directly is redundant; "
+                    "compare the enum/domain type itself",
+                )
+
     def visit_Call(self, node: cst.Call) -> None:
         call = _qualified_name(node.func)
         if call in {"yaml.safe_load", "yaml.load"}:
@@ -424,6 +450,14 @@ def audit_tree(root: Path) -> tuple[Finding, ...]:
 def _contains_roadmap(node: cst.SimpleString) -> bool:
     value = node.evaluated_value
     return isinstance(value, str) and "roadmap" in value.casefold()
+
+
+def _is_bare_dotted_value_attribute(expression: cst.BaseExpression) -> bool:
+    return (
+        isinstance(expression, cst.Attribute)
+        and expression.attr.value == "value"
+        and isinstance(expression.value, (cst.Name, cst.Attribute))
+    )
 
 
 def _qualified_name(expression: cst.BaseExpression) -> str:
