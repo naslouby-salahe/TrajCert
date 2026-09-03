@@ -33,6 +33,8 @@ from trajcert.types import (
     ToleranceValue,
 )
 
+_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"
+
 
 class OracleBracket(DomainModel):
     lower: Mass
@@ -118,7 +120,7 @@ def solve_information_oracle(
 ) -> InformationOracleResult:
     digits = oracle_digits
     if digits <= 0:
-        raise InvalidScientificDataError("oracle precision must be positive")
+        raise InvalidScientificDataError(_ORACLE_PRECISION_MUST_BE_POSITIVE)
     previous_digits = mp.dps
     mp.dps = digits
     try:
@@ -148,7 +150,7 @@ def population_law_masses(
     digits: OracleDigits,
 ) -> tuple[tuple[mpf, ...], tuple[mpf, ...], mpf]:
     if digits <= 0:
-        raise InvalidScientificDataError("oracle precision must be positive")
+        raise InvalidScientificDataError(_ORACLE_PRECISION_MUST_BE_POSITIVE)
     theta = mpf(repr(parameters.theta))
     q1 = mpf(repr(parameters.q1))
     q0 = mpf(repr(parameters.q0))
@@ -186,7 +188,7 @@ def solve_information_oracle_from_law(
 ) -> InformationOracleResult:
     digits = oracle_digits
     if digits <= 0:
-        raise InvalidScientificDataError("oracle precision must be positive")
+        raise InvalidScientificDataError(_ORACLE_PRECISION_MUST_BE_POSITIVE)
     previous_digits = mp.dps
     mp.dps = digits
     try:
@@ -213,7 +215,7 @@ def feasible_projection_lower_oracle(
 ) -> ProjectionFeasibleOracleResult:
     digits = oracle_digits
     if digits <= 0:
-        raise InvalidScientificDataError("oracle precision must be positive")
+        raise InvalidScientificDataError(_ORACLE_PRECISION_MUST_BE_POSITIVE)
     previous_precision = ctx.prec
     ctx.prec = max(previous_precision, ceil(digits * log2(10.0)))
     try:

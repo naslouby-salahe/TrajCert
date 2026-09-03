@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import ceil, isfinite, log2
+from math import ceil, isclose, isfinite, log2
 
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvariantViolationError, RootSolveError
@@ -174,7 +174,7 @@ def _bisect(
             raise RootSolveError("derived bisection iteration cap exhausted")
         midpoint = (lower + upper) / 2.0
         residual = _profile_residual(summary, midpoint, rho)
-        if residual == 0.0:
+        if isclose(residual, 0.0, rel_tol=0.0, abs_tol=0.0):
             lower = midpoint
             upper = midpoint
             break
