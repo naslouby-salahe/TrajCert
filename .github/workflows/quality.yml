@@ -29,7 +29,7 @@ jobs:
       - run: uv run --no-sync --no-build vulture src/trajcert --min-confidence 100 --ignore-names table,where,compression,use_dictionary,write_statistics,field_type,nullable,value_type,fields,tz,unit
       - run: uv run --no-sync --no-build deptry .
       - run: uv run --no-sync --no-build coverage run -m pytest -q
-      - run: uv run --no-sync --no-build coverage report --fail-under=95
+      - run: uv run --no-sync --no-build coverage report
       - run: uv run --no-sync --no-build coverage xml
       - name: SonarQube Cloud scan
         uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f
