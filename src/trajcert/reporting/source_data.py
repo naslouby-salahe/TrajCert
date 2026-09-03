@@ -1436,7 +1436,7 @@ def _verify_registered_lineage(
     descriptor: PublicationSourceDescriptor,
     source_path: Path,
 ) -> VerifiedSourceLineage:
-    checkpoints_root = workspace_root / "outputs" / "experiments"
+    checkpoints_root = workspace_root / "outputs" / "experiments"  #TODO: use enum for this
     if not checkpoints_root.is_dir():
         raise InvalidScientificDataError(
             "publication sources require completed experiment evidence"
@@ -1456,7 +1456,7 @@ def _verify_registered_lineage(
         )
         raise InvalidScientificDataError(message)
     index_path, index, artifact_key = matches[0]
-    completion_path = index_path.with_name("COMPLETED.json")
+    completion_path = index_path.with_name("COMPLETED.json")  #TODO: use enum for this
     completion = read_model(completion_path, CompletionRecord)
     if artifact_key not in completion.produced_artifact_keys:
         raise InvalidScientificDataError("source artifact is absent from its completion record")
@@ -1497,9 +1497,9 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
 def _source(
     path: Path,
     role: PublicationSourceRole,
-    columns: tuple[str, ...],
-    sort_columns: tuple[str, ...],
-    owner: str,
+    columns: tuple[str, ...], #TODO: do not use primitives
+    sort_columns: tuple[str, ...], #TODO: do not use primitives
+    owner: str, #TODO: do not use primitives
 ) -> PublicationSourceDescriptor:
     return PublicationSourceDescriptor(
         source_path=path,
@@ -1510,7 +1510,7 @@ def _source(
     )
 
 
-_TABLE_SOURCES = (
+_TABLE_SOURCES = ( #TODO: this is a horrible management. Use an enum to not hardcode strings. ANd use a better approach such as a builder to handle this bloated approach. Adapt all code. NO backwards compatiblity
     _source(
         experiment_leaf(
             ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
@@ -1687,7 +1687,7 @@ _TABLE_SOURCES = (
 )
 
 
-_FIGURE_SOURCES = (
+_FIGURE_SOURCES = ( #TODO: this is a horrible management. Use an enum to not hardcode strings. ANd use a better approach such as a builder to handle this bloated approach. Adapt all code. NO backwards compatiblity
     _source(
         experiment_leaf(
             ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),

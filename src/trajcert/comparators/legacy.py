@@ -17,9 +17,6 @@ from trajcert.types import (
     mass_tuple,
 )
 
-_OBSERVATION_ACCESS = ComparatorObservationAccess.BANDWISE_ODDS_RATIO
-_ASSUMPTIONS = ComparatorAssumption.LEGACY_BANDWISE_ODDS_RATIO
-
 
 class LegacyApplicability(StrEnum):
     APPLICABLE = "APPLICABLE"
@@ -84,8 +81,8 @@ def legacy_bandwise_odds_ratio(
             upper=harmful_total + upper,
         ),
         informative_bands=informative,
-        observation_access=_OBSERVATION_ACCESS,
-        assumptions=_ASSUMPTIONS,
+        observation_access=ComparatorObservationAccess.BANDWISE_ODDS_RATIO,
+        assumptions=ComparatorAssumption.LEGACY_BANDWISE_ODDS_RATIO,
     )
 
 
@@ -96,6 +93,6 @@ def _incompatible(gamma: GammaSensitivity, informative: Count) -> LegacySensitiv
         hidden_mass_interval=None,
         latent_risk_interval=None,
         informative_bands=informative,
-        observation_access=_OBSERVATION_ACCESS,
-        assumptions=_ASSUMPTIONS,
+        observation_access=ComparatorObservationAccess.BANDWISE_ODDS_RATIO,
+        assumptions=ComparatorAssumption.LEGACY_BANDWISE_ODDS_RATIO,
     )

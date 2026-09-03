@@ -156,8 +156,10 @@ def parse_args(argv: Sequence[str] | None = None) -> CliArguments:
     parser = build_parser()
     arguments = parser.parse_args(argv)
     command = CliCommand(cast(str, arguments.command))
-    raw_name = getattr(arguments, "experiment_name", None)
-    raw_dataset_name = getattr(arguments, "dataset_name", None)
+    raw_name = getattr(arguments, "experiment_name" #TODO: use enum for this
+                       , None)
+    raw_dataset_name = getattr(arguments, "dataset_name"#TODO: use enum for this
+                               , None)
     return CliArguments(
         command=command,
         experiment_name=None if raw_name is None else cast(str, raw_name),
@@ -202,7 +204,7 @@ def _dispatch(arguments: CliArguments) -> None:
             experiment_name=name,
             overwrite=arguments.overwrite,
         )
-        action = "reused" if exported.reused else "rendered"
+        action = "reused" if exported.reused else "rendered" #TODO: use enum for this
         target = exported.target.as_posix()
         print(
             f"TrajCert report: {action} {exported.rendered_artifact_count} artifacts "
@@ -211,23 +213,23 @@ def _dispatch(arguments: CliArguments) -> None:
 
 
 def build_parser() -> ArgumentParser:
-    parser = ArgumentParser(prog="trajcert")
+    parser = ArgumentParser(prog="trajcert") #TODO: use enum for this
     subparsers = parser.add_subparsers(dest="command", required=True)
     for command in (CliCommand.DOCTOR, CliCommand.PLAN):
         _ = subparsers.add_parser(command)
     preprocess_parser = subparsers.add_parser(CliCommand.PREPROCESS)
-    _ = preprocess_parser.add_argument("dataset_name", nargs="?")
-    _ = preprocess_parser.add_argument("--overwrite", action="store_true")
+    _ = preprocess_parser.add_argument("dataset_name", nargs="?") #TODO: use enum for this
+    _ = preprocess_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
     smoke_parser = subparsers.add_parser(CliCommand.SMOKE)
-    _ = smoke_parser.add_argument("--overwrite", action="store_true")
+    _ = smoke_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
     run_parser = subparsers.add_parser(CliCommand.RUN)
-    _ = run_parser.add_argument("experiment_name")
-    _ = run_parser.add_argument("--overwrite", action="store_true")
+    _ = run_parser.add_argument("experiment_name") #TODO: use enum for this
+    _ = run_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
     status_parser = subparsers.add_parser(CliCommand.STATUS)
-    _ = status_parser.add_argument("experiment_name", nargs="?")
+    _ = status_parser.add_argument("experiment_name", nargs="?") #TODO: use enum for this
     report_parser = subparsers.add_parser(CliCommand.REPORT)
-    _ = report_parser.add_argument("experiment_name", nargs="?")
-    _ = report_parser.add_argument("--overwrite", action="store_true")
+    _ = report_parser.add_argument("experiment_name", nargs="?") #TODO: use enum for this
+    _ = report_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
     return parser
 
 
@@ -570,7 +572,7 @@ def experiment_status(
 def report(
     *,
     workspace_root: Path | None = None,
-    experiment_name: str | None = None,
+    experiment_name: str | None = None, #TODO: use enum for this. IT should already exist. If not then create it and adapt the whole code
     overwrite: bool = False,
 ) -> ReportExportResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
@@ -584,7 +586,8 @@ def _load_config(workspace_root: Path) -> TrajCertConfig:
     return config
 
 
-def _known_experiment_name(value: str) -> ExperimentName:
+def _known_experiment_name(value: str #TODO: why do we have this? why not directly enum??
+                           ) -> ExperimentName:
     try:
         return ExperimentName(value)
     except ValueError as error:

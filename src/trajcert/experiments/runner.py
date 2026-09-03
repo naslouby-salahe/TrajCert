@@ -137,10 +137,10 @@ from trajcert.types import (
 
 FailureType = NewType("FailureType", str)
 
-_RESULT_FILENAME = "scientific_result.json"
+_RESULT_FILENAME = "scientific_result.json" #TODO: This should be in storage as part of enumeration of artifact types or filenames...
 SCIENTIFIC_RESULT_ARTIFACT_TYPE: Final[ArtifactTypeName] = ArtifactTypeName("scientific-result")
 
-_NON_SCIENTIFIC_MODULE_PREFIXES = (
+_NON_SCIENTIFIC_MODULE_PREFIXES = ( 
     "trajcert.cli",
     "trajcert.reporting.export",
     "trajcert.reporting.figures",

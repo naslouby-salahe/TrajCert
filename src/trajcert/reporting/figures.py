@@ -41,39 +41,39 @@ _MUTED = "#6a6a6a"
 _LIGHT = "#d8d8d8"
 _BACKGROUND = "#ffffff"
 
-_COL_LAW_NAME = ColumnName("law_name")
-_COL_RHO_OFFSET = ColumnName("rho_offset")
-_COL_RISK_LOWER = ColumnName("risk_lower")
-_COL_RISK_UPPER = ColumnName("risk_upper")
-_COL_PARTITION_BAND_COUNT = ColumnName("partition_band_count")
-_COL_TAU = ColumnName("tau")
-_COL_DELTA_TAU = ColumnName("delta_tau")
-_COL_BOUND_GAIN = ColumnName("bound_gain")
-_COL_U = ColumnName("u")
-_COL_INFORMATION_PROFILE = ColumnName("information_profile")
-_COL_U_DAGGER = ColumnName("u_dagger")
-_COL_U_BETA = ColumnName("u_beta")
-_COL_RHO = ColumnName("rho")
-_COL_RHO_STAR = ColumnName("rho_star")
-_COL_FEASIBLE_LOWER = ColumnName("feasible_lower")
-_COL_FEASIBLE_UPPER = ColumnName("feasible_upper")
-_COL_STREAM_SEED_INDEX = ColumnName("stream_seed_index")
-_COL_N_MATURED = ColumnName("n_matured")
-_COL_RISK_UPPER_ANYTIME = ColumnName("risk_upper_anytime")
-_COL_TRUE_THETA = ColumnName("true_theta")
-_COL_BETA = ColumnName("beta")
-_COL_CLOPPER_PEARSON_UPPER_95 = ColumnName("clopper_pearson_upper_95")
-_COL_DELTA = ColumnName("delta")
-_COL_ACCEPTANCE_UPPER_LIMIT = ColumnName("acceptance_upper_limit")
-_COL_AXIS = ColumnName("axis")
-_COL_K = ColumnName("K")
-_COL_POPULATION_MEDIAN_RUNTIME_MS = ColumnName("population_median_runtime_ms")
-_COL_OUTER_MEDIAN_RUNTIME_MS = ColumnName("outer_median_runtime_ms")
-_COL_MEDIAN_OUTER_NODES = ColumnName("median_outer_nodes")
-_COL_EVIDENCE_GATE_PASS = ColumnName("evidence_gate_pass")
-_COL_CRITERION_PASS = ColumnName("criterion_pass")
-_COL_PARTITION_NAME = ColumnName("partition_name")
-_COL_RHO_IS_LOG2 = ColumnName("rho_is_log2")
+_COL_LAW_NAME = ColumnName("law_name") #TODO: use enum for this
+_COL_RHO_OFFSET = ColumnName("rho_offset") #TODO: use enum for this
+_COL_RISK_LOWER = ColumnName("risk_lower") #TODO: use enum for this
+_COL_RISK_UPPER = ColumnName("risk_upper") #TODO: use enum for this
+_COL_PARTITION_BAND_COUNT = ColumnName("partition_band_count") #TODO: use enum for this
+_COL_TAU = ColumnName("tau") #TODO: use enum for this
+_COL_DELTA_TAU = ColumnName("delta_tau") #TODO: use enum for this
+_COL_BOUND_GAIN = ColumnName("bound_gain") #TODO: use enum for this
+_COL_U = ColumnName("u") #TODO: use enum for this
+_COL_INFORMATION_PROFILE = ColumnName("information_profile") #TODO: use enum for this
+_COL_U_DAGGER = ColumnName("u_dagger") #TODO: use enum for this
+_COL_U_BETA = ColumnName("u_beta") #TODO: use enum for this
+_COL_RHO = ColumnName("rho") #TODO: use enum for this
+_COL_RHO_STAR = ColumnName("rho_star") #TODO: use enum for this
+_COL_FEASIBLE_LOWER = ColumnName("feasible_lower") #TODO: use enum for this
+_COL_FEASIBLE_UPPER = ColumnName("feasible_upper") #TODO: use enum for this
+_COL_STREAM_SEED_INDEX = ColumnName("stream_seed_index") #TODO: use enum for this
+_COL_N_MATURED = ColumnName("n_matured") #TODO: use enum for this
+_COL_RISK_UPPER_ANYTIME = ColumnName("risk_upper_anytime") #TODO: use enum for this
+_COL_TRUE_THETA = ColumnName("true_theta") #TODO: use enum for this
+_COL_BETA = ColumnName("beta") #TODO: use enum for this
+_COL_CLOPPER_PEARSON_UPPER_95 = ColumnName("clopper_pearson_upper_95") #TODO: use enum for this
+_COL_DELTA = ColumnName("delta") #TODO: use enum for this
+_COL_ACCEPTANCE_UPPER_LIMIT = ColumnName("acceptance_upper_limit") #TODO: use enum for this
+_COL_AXIS = ColumnName("axis") #TODO: use enum for this
+_COL_K = ColumnName("K") #TODO: use enum for this
+_COL_POPULATION_MEDIAN_RUNTIME_MS = ColumnName("population_median_runtime_ms") #TODO: use enum for this
+_COL_OUTER_MEDIAN_RUNTIME_MS = ColumnName("outer_median_runtime_ms") #TODO: use enum for this
+_COL_MEDIAN_OUTER_NODES = ColumnName("median_outer_nodes") #TODO: use enum for this
+_COL_EVIDENCE_GATE_PASS = ColumnName("evidence_gate_pass") #TODO: use enum for this
+_COL_CRITERION_PASS = ColumnName("criterion_pass") #TODO: use enum for this
+_COL_PARTITION_NAME = ColumnName("partition_name") #TODO: use enum for this
+_COL_RHO_IS_LOG2 = ColumnName("rho_is_log2") #TODO: use enum for this
 
 
 @dataclass(frozen=True, slots=True)
@@ -270,8 +270,8 @@ def _information_profile(table: pa.Table) -> PlotDocument:
     commands.extend(_polyline(scale, xs, ys))
     first = rows[0]
     for column, label in (
-        (_COL_U_DAGGER, "u_dagger"),
-        (_COL_U_BETA, "u_beta"),
+        (_COL_U_DAGGER, "u_dagger"), #TODO: use enum. No hardcoded strings
+        (_COL_U_BETA, "u_beta"),#TODO: use enum. No hardcoded strings
     ):
         value = _optional_float(first, column)
         if value is not None:
@@ -279,9 +279,9 @@ def _information_profile(table: pa.Table) -> PlotDocument:
             commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
             commands.append(Text(Point(x + 4.0, panel.top + 16.0), label, size=11))
     for column, label in (
-        (_COL_TAU, "tau"),
-        (_COL_RHO, "rho"),
-        (_COL_RHO_STAR, "rho_star"),
+        (_COL_TAU, "tau"), #TODO: use enum. No hardcoded strings
+        (_COL_RHO, "rho"), #TODO: use enum. No hardcoded strings
+        (_COL_RHO_STAR, "rho_star"), #TODO: use enum. No hardcoded strings
     ):
         value = _optional_float(first, column)
         if value is not None:
@@ -330,8 +330,8 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
             commands.append(Circle(point, radius=2.5, hollow=not row[_COL_EVIDENCE_GATE_PASS]))
     first = rows[0]
     for column, label in (
-        (_COL_TRUE_THETA, "true theta"),
-        (_COL_BETA, "beta"),
+        (_COL_TRUE_THETA, "true theta"), #TODO: use enum. No hardcoded strings
+        (_COL_BETA, "beta"), #TODO: use enum. No hardcoded strings
     ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
@@ -368,8 +368,8 @@ def _anytime_coverage(table: pa.Table) -> PlotDocument:
             commands.append(Cross(point, radius=5.0))
     first = rows[0]
     for column, label in (
-        (_COL_DELTA, "anytime delta"),
-        (_COL_ACCEPTANCE_UPPER_LIMIT, "acceptance limit"),
+        (_COL_DELTA, "anytime delta"), #TODO: use enum. No hardcoded strings
+        (_COL_ACCEPTANCE_UPPER_LIMIT, "acceptance limit"), #TODO: use enum. No hardcoded strings
     ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
@@ -464,7 +464,7 @@ def _computational_scaling(table: pa.Table) -> PlotDocument:
     population = tuple(_required_float(row, _COL_POPULATION_MEDIAN_RUNTIME_MS) for row in rows)
     outer = tuple(_required_float(row, _COL_OUTER_MEDIAN_RUNTIME_MS) for row in rows)
     nodes = tuple(_required_float(row, _COL_MEDIAN_OUTER_NODES) for row in rows)
-    commands = _base_commands("Computational scaling")
+    commands = _base_commands("Computational scaling") #TODO: use enum for this
     left, right = _horizontal_panels(2)
     population_scale = _panel_scale(left, xs, population)
     commands.extend(_panel_frame(left, "Population solver runtime"))
@@ -472,14 +472,14 @@ def _computational_scaling(table: pa.Table) -> PlotDocument:
     for x, y in zip(xs, population, strict=True):
         commands.append(Circle(Point(population_scale.map_x(x), population_scale.map_y(y))))
     combined_scale = _panel_scale(right, xs, (*outer, *nodes))
-    commands.extend(_panel_frame(right, "Outer projection runtime / nodes"))
+    commands.extend(_panel_frame(right, "Outer projection runtime / nodes"))  #TODO: use enum for this
     commands.extend(_polyline(combined_scale, xs, outer))
     commands.extend(_polyline(combined_scale, xs, nodes, dashed=True))
     for x, y in zip(xs, outer, strict=True):
         commands.append(Circle(Point(combined_scale.map_x(x), combined_scale.map_y(y))))
     for x, y in zip(xs, nodes, strict=True):
         commands.append(Cross(Point(combined_scale.map_x(x), combined_scale.map_y(y))))
-    return PlotDocument(title="Computational scaling", commands=tuple(commands))
+    return PlotDocument(title="Computational scaling", commands=tuple(commands)) #TODO: use enum for this
 
 
 @dataclass(frozen=True, slots=True)
@@ -584,7 +584,8 @@ def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, Plo
     return lower - pad, upper + pad
 
 
-def _panel_frame(panel: Panel, title: str) -> list[DrawCommand]:
+def _panel_frame(panel: Panel, title: str #TODO: use enum for this
+                 ) -> list[DrawCommand]:
     return [
         Rectangle(panel.left, panel.top, panel.width, panel.height),
         Text(
@@ -596,7 +597,8 @@ def _panel_frame(panel: Panel, title: str) -> list[DrawCommand]:
     ]
 
 
-def _base_commands(title: str) -> list[DrawCommand]:
+def _base_commands(title: str #TODO: use enum for this
+                   ) -> list[DrawCommand]:
     width = active_config.get().figure_layout.width
     return [Text(Point(width / 2.0, 38.0), title, size=22, anchor=TextAnchor.MIDDLE)]
 

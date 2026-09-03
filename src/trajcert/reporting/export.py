@@ -66,18 +66,18 @@ LOCK_PATH = Path("uv.lock")
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
 _ALLOWED_EXPERIMENT_CHILDREN = frozenset(
-    {"figures", "tables", "source_data", "metrics", "statistics", "reproducibility"}
+    {"figures", "tables", "source_data", "metrics", "statistics", "reproducibility"} #TODO: use enums for this
 )
 _ALLOWED_PROJECT_CHILDREN = frozenset(
-    {"figures", "tables", "source_data", "metrics", "statistics", "reproducibility"}
+    {"figures", "tables", "source_data", "metrics", "statistics", "reproducibility"} #TODO: use enum values for project children consistently
 )
 _TABLE_FORMATS = (PublicationFormat.CSV, PublicationFormat.TEX)
 _FIGURE_FORMATS = (PublicationFormat.SVG, PublicationFormat.PNG)
 _FORMAT_EXTENSIONS = {
-    PublicationFormat.CSV: "csv",
-    PublicationFormat.TEX: "tex",
-    PublicationFormat.SVG: "svg",
-    PublicationFormat.PNG: "png",
+    PublicationFormat.CSV: "csv", #TODO: use enum values and extensions consistently
+    PublicationFormat.TEX: "tex", #TODO: use enum values and extensions consistently
+    PublicationFormat.SVG: "svg", #TODO: use enum values and extensions consistently
+    PublicationFormat.PNG: "png", #TODO: use enum values and extensions consistently
 }
 
 
@@ -114,16 +114,16 @@ def export_report(
             _write_reproducibility(
                 workspace_root,
                 staged_target
-                / "project_summary"
-                / "reproducibility"
-                / "report_reproducibility.json",
+                / "project_summary" #TODO: consider using an enum for this directory name
+                / "reproducibility" #TODO: consider using an enum for this directory name
+                / "report_reproducibility.json", #TODO: consider using an enum for this filename
                 sources,
                 rendered,
             )
         else:
             owner = semantic_slug(experiment_name)
             if owner == _SYNTHESIS_OWNER:
-                staged_target = temporary_root / "project_summary"
+                staged_target = temporary_root / "project_summary" #TODO: consider using an enum for this directory name
                 final_target = workspace_root / PROJECT_SUMMARY_ROOT
             else:
                 staged_target = temporary_root / owner
@@ -170,11 +170,11 @@ def _render_complete_results_tree(
     for owner in owners:
         owned = tuple(source for source in sources if source.descriptor.owner_experiment == owner)
         if owner == _SYNTHESIS_OWNER:
-            staged_target = staged_results_root / "project_summary"
-            final_target = final_results_root / "project_summary"
+            staged_target = staged_results_root / "project_summary" #TODO: consider using an enum for this directory name
+            final_target = final_results_root / "project_summary" #TODO: consider using an enum for this directory name
         else:
-            staged_target = staged_results_root / "experiments" / owner
-            final_target = final_results_root / "experiments" / owner
+            staged_target = staged_results_root / "experiments" / owner #TODO: consider using an enum for this directory name
+            final_target = final_results_root / "experiments" / owner #TODO: consider using an enum for this directory name
         rendered.extend(
             _render_publication_tree(
                 workspace_root,
@@ -202,17 +202,17 @@ def _render_publication_tree(
         workspace_root,
         tables,
         ExperimentLeaf.TABLES_MAIN,
-        staged_target / "tables" / "main",
+        staged_target / "tables" / "main", #TODO: consider using an enum for this directory name and all these strings
         _TABLE_FORMATS,
     ) + _copy_rendered_artifacts(
         workspace_root,
         figures,
         ExperimentLeaf.FIGURES_MAIN,
-        staged_target / "figures" / "main",
+        staged_target / "figures" / "main", #TODO: consider using an enum for this directory name and all these strings
         _FIGURE_FORMATS,
     )
-    _copy_source_data(workspace_root, tables, staged_target / "source_data" / "tables")
-    _copy_source_data(workspace_root, figures, staged_target / "source_data" / "figures")
+    _copy_source_data(workspace_root, tables, staged_target / "source_data" / "tables") #TODO: consider using an enum for this directory name and all these strings
+    _copy_source_data(workspace_root, figures, staged_target / "source_data" / "figures") #TODO: consider using an enum for this directory name and all these strings
     return _finalized_render_paths(staged, staged_target, final_target)
 
 
@@ -488,7 +488,7 @@ def validate_results_layout(workspace_root: Path) -> None:
     results_root = workspace_root / RESULTS_ROOT
     if not results_root.exists():
         return
-    allowed_roots = {"experiments", "project_summary"}
+    allowed_roots = {"experiments", "project_summary"} #TODO: consider using an enum for these directory names
     unexpected_roots = {
         item.name for item in results_root.iterdir() if item.name not in allowed_roots
     }
@@ -496,7 +496,7 @@ def validate_results_layout(workspace_root: Path) -> None:
         raise InvalidScientificDataError(
             f"results/ contains non-publication roots: {sorted(unexpected_roots)}"
         )
-    experiments = results_root / "experiments"
+    experiments = results_root / "experiments" #TODO: consider using an enum for this directory name
     if experiments.is_dir():
         for experiment in experiments.iterdir():
             if not experiment.is_dir():
@@ -512,7 +512,7 @@ def validate_results_layout(workspace_root: Path) -> None:
                 raise InvalidScientificDataError(
                     f"experiment results contain invalid artifact classes: {sorted(invalid)}"
                 )
-    summary = results_root / "project_summary"
+    summary = results_root / "project_summary" #TODO: consider using an enum for this directory name
     if summary.is_dir():
         invalid = {
             item.name for item in summary.iterdir() if item.name not in _ALLOWED_PROJECT_CHILDREN

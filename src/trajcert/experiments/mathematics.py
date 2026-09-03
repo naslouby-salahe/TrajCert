@@ -341,11 +341,11 @@ def endpoint_special_case_identity(
     return IdentityResult(passed=error <= identity_atol, max_absolute_error=error)
 
 
-def anytime_projection_proof_check() -> IdentityResult:
+def anytime_projection_proof_check() -> IdentityResult: #TODO: does this do no checks? Just returns true?
     return IdentityResult(passed=True, max_absolute_error=0.0)
 
 
-def population_complexity_proof_check() -> IdentityResult:
+def population_complexity_proof_check() -> IdentityResult:#TODO: does this do no checks? Just returns true?
     return IdentityResult(passed=True, max_absolute_error=0.0)
 
 

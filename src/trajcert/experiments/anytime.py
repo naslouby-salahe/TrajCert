@@ -96,8 +96,6 @@ from trajcert.types import (
     mass_tuple,
 )
 
-_PRINCIPAL_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
-
 
 class SequentialMethod(StrEnum):
     TRAJCERT = "TrajCert"
@@ -216,7 +214,7 @@ def run_sequential_trace(
     events: tuple[MaturedEvent, ...],
     identity: LedgerIdentity,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
     checkpoint_every: EventCount,
@@ -277,7 +275,7 @@ def run_anytime_hand_case(
     config: TrajCertConfig,
 ) -> HandCaseResult:
     _ = active_config.set(config)
-    handlers = (
+    handlers = ( #TODO: isn't there a way to handle hand cases more dynamically rather than hardcoding them? like an enumeration or map or whatever is best
         _hand_case_insufficient_matured,
         _hand_case_insufficient_resolved,
         _hand_case_model_incompatible,
@@ -297,7 +295,7 @@ def run_anytime_hand_case(
 def run_coverage_stress(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     sensitivity_budget: SensitivityBudget,
 ) -> CoverageStressResult:
     _ = active_config.set(config)
@@ -316,7 +314,7 @@ def run_coverage_stress(
 def coverage_stress_batch(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     sensitivity_budget: SensitivityBudget,
     stream_range: range,
     batch_index: BatchIndex,
@@ -514,7 +512,7 @@ def resolve_coverage_stress_case(
 
 def evaluate_configured_coverage_stress(
     case: CoverageStressCaseConfig,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
 ) -> CoverageEvidenceResult:
     _ = active_config.set(config)
     parameters, partition, rho, _ = resolve_coverage_stress_case(case)
@@ -529,7 +527,7 @@ def evaluate_configured_coverage_stress(
 
 def coverage_evidence_from_base(
     case: CoverageStressCaseConfig,
-    config: TrajCertConfig,
+    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     base: CoverageStressResult,
 ) -> CoverageEvidenceResult:
     _ = active_config.set(config)
@@ -846,7 +844,7 @@ def _risk_budget(
 def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
     case = config.hand_cases.insufficient_matured
-    parameters = _law(_PRINCIPAL_LAW)
+    parameters = _law(LawKey.TIMING_TERMINAL_HARMFUL_LATE)
     ledger = generate_balanced_prefix_ledger(
         parameters, partition, config.hand_cases.stream, case.event_count
     )
@@ -874,7 +872,7 @@ def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseR
 def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
     case = config.hand_cases.insufficient_resolved
-    parameters = _law(_PRINCIPAL_LAW)
+    parameters = _law(LawKey.TIMING_TERMINAL_HARMFUL_LATE)
     full_law = build_full_law(parameters, partition.band_count)
     categories = observable_category_probabilities(full_law)
     finite = categories[:-1]
@@ -959,7 +957,7 @@ def _hand_case_intrinsic(partition: TrajectoryPartition) -> HandCaseResult:
 
 def _hand_case_certified(partition: TrajectoryPartition) -> HandCaseResult:
     case = active_config.get().hand_cases.certified
-    summary = _population_summary(_PRINCIPAL_LAW, partition)
+    summary = _population_summary(LawKey.TIMING_TERMINAL_HARMFUL_LATE, partition)
     tau = observed_timing_information(summary) or 0.0
     rho = tau + case.rho_margin
     projection = _project(singleton_summary_envelope(summary), rho)
@@ -976,7 +974,7 @@ def _hand_case_certified(partition: TrajectoryPartition) -> HandCaseResult:
 
 def _hand_case_uncertified(partition: TrajectoryPartition) -> HandCaseResult:
     case = active_config.get().hand_cases.uncertified
-    summary = _population_summary(_PRINCIPAL_LAW, partition)
+    summary = _population_summary(LawKey.TIMING_TERMINAL_HARMFUL_LATE, partition)
     tau = observed_timing_information(summary) or 0.0
     minimum = minimum_information_point(summary)
     if minimum is None:
@@ -1152,7 +1150,7 @@ def _hand_case_simplex_boundary(partition: TrajectoryPartition) -> HandCaseResul
 def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseResult:
     config = active_config.get()
     case = config.hand_cases.optimizer_fallback
-    parameters = _law(_PRINCIPAL_LAW)
+    parameters = _law(LawKey.TIMING_TERMINAL_HARMFUL_LATE)
     ledger = generate_balanced_prefix_ledger(
         parameters, partition, config.hand_cases.stream, case.event_count
     )

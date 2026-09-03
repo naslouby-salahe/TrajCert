@@ -106,26 +106,26 @@ from trajcert.types import (
     Vector,
 )
 
-_METHOD_NAME = MethodName("TrajCert finest trajectory partition")
-_BASELINE_NAME = BaselineName("Endpoint-only partition")
-_SYNTHESIS_EXPERIMENT_NAME = "Statistical Synthesis"
-_THEOREM_TABLE_KEY = ArtifactKey("publication-source|theorem-validation-summary")
-_SOLVER_ORACLE_KEY = ArtifactKey("publication-source|solver-oracle-validation")
-_PARTITION_TABLE_KEY = ArtifactKey("publication-source|partition-timing-results")
-_COMPATIBILITY_TABLE_KEY = ArtifactKey("publication-source|compatibility-safety")
-_ANYTIME_COVERAGE_KEY = ArtifactKey("publication-source|anytime-coverage")
-_RHO_UTILITY_KEY = ArtifactKey("publication-source|rho-utility")
-_FAILURE_BOUNDARIES_KEY = ArtifactKey("publication-source|failure-boundaries")
-_COMPUTATIONAL_SCALING_KEY = ArtifactKey("publication-source|computational-scaling")
-_FIGURE_PARTITION_KEY = ArtifactKey("publication-source|figure-partition-coherence")
-_FIGURE_TIMING_KEY = ArtifactKey("publication-source|figure-timing-value")
-_FIGURE_PROFILE_KEY = ArtifactKey("publication-source|figure-information-profile")
-_FIGURE_PATHS_KEY = ArtifactKey("publication-source|figure-anytime-paths")
-_FIGURE_COVERAGE_KEY = ArtifactKey("publication-source|figure-anytime-coverage")
-_FIGURE_RHO_KEY = ArtifactKey("publication-source|figure-rho-sensitivity")
-_FIGURE_FAILURE_KEY = ArtifactKey("publication-source|figure-failure-boundaries")
-_FIGURE_SCALING_KEY = ArtifactKey("publication-source|figure-computational-scaling")
-_LOCAL_VALIDITY_KEY = ArtifactKey("statistical-synthesis|local-validity-audit")
+_METHOD_NAME = MethodName("TrajCert finest trajectory partition") #TODO: should be handled better. Use enums and check where already used to adapt
+_BASELINE_NAME = BaselineName("Endpoint-only partition") #TODO: should be handled better. Use enums and check where already used to adapt
+_SYNTHESIS_EXPERIMENT_NAME = "Statistical Synthesis" #TODO: should be handled better. Use enums and check where already used to adapt
+_THEOREM_TABLE_KEY = ArtifactKey("publication-source|theorem-validation-summary") #TODO: should be handled better. Use enums and check where already used to adapt
+_SOLVER_ORACLE_KEY = ArtifactKey("publication-source|solver-oracle-validation") #TODO: should be handled better. Use enums and check where already used to adapt
+_PARTITION_TABLE_KEY = ArtifactKey("publication-source|partition-timing-results") #TODO: should be handled better. Use enums and check where already used to adapt
+_COMPATIBILITY_TABLE_KEY = ArtifactKey("publication-source|compatibility-safety") #TODO: should be handled better. Use enums and check where already used to adapt
+_ANYTIME_COVERAGE_KEY = ArtifactKey("publication-source|anytime-coverage") #TODO: should be handled better. Use enums and check where already used to adapt
+_RHO_UTILITY_KEY = ArtifactKey("publication-source|rho-utility") #TODO: should be handled better. Use enums and check where already used to adapt
+_FAILURE_BOUNDARIES_KEY = ArtifactKey("publication-source|failure-boundaries") #TODO: should be handled better. Use enums and check where already used to adapt
+_COMPUTATIONAL_SCALING_KEY = ArtifactKey("publication-source|computational-scaling") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_PARTITION_KEY = ArtifactKey("publication-source|figure-partition-coherence") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_TIMING_KEY = ArtifactKey("publication-source|figure-timing-value") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_PROFILE_KEY = ArtifactKey("publication-source|figure-information-profile") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_PATHS_KEY = ArtifactKey("publication-source|figure-anytime-paths") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_COVERAGE_KEY = ArtifactKey("publication-source|figure-anytime-coverage") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_RHO_KEY = ArtifactKey("publication-source|figure-rho-sensitivity") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_FAILURE_KEY = ArtifactKey("publication-source|figure-failure-boundaries") #TODO: should be handled better. Use enums and check where already used to adapt
+_FIGURE_SCALING_KEY = ArtifactKey("publication-source|figure-computational-scaling") #TODO: should be handled better. Use enums and check where already used to adapt
+_LOCAL_VALIDITY_KEY = ArtifactKey("statistical-synthesis|local-validity-audit") #TODO: should be handled better. Use enums and check where already used to adapt
 
 
 class SequentialUtilityEvidence(DomainModel):
@@ -1103,47 +1103,47 @@ def synthesis_artifact_paths(cell: PlannedCell) -> SynthesisArtifactPaths:
     )
     return SynthesisArtifactPaths(
         by_key={
-            _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet",
+            _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet", #TODO: consider moving this to storage enumeration
             _SOLVER_ORACLE_KEY: _aggregate(
-                ExperimentSlug("production-solver-vs-independent-oracle"),
-                "solver_oracle_validation.parquet",
+                ExperimentSlug("production-solver-vs-independent-oracle"), #TODO: create an enum for experiment slugs
+                "solver_oracle_validation.parquet",#TODO: consider moving this to storage enumeration
             ),
-            _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",
-            _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",
+            _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",#TODO: consider moving this to storage enumeration
+            _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",#TODO: consider moving this to storage enumeration
             _ANYTIME_COVERAGE_KEY: _aggregate(
-                ExperimentSlug("anytime-coverage-stress"), "anytime_coverage.parquet"
+                ExperimentSlug("anytime-coverage-stress"), "anytime_coverage.parquet"#TODO: consider moving this to storage enumeration
             ),
-            _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",
+            _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",#TODO: consider moving this to storage enumeration
             _FAILURE_BOUNDARIES_KEY: _aggregate(
-                ExperimentSlug("failure-boundary-atlas"), "failure_boundaries.parquet"
+                ExperimentSlug("failure-boundary-atlas"), "failure_boundaries.parquet"#TODO: consider moving this to storage enumeration
             ),
             _COMPUTATIONAL_SCALING_KEY: _aggregate(
-                ExperimentSlug("computational-scaling"), "computational_scaling.parquet"
+                ExperimentSlug("computational-scaling"), "computational_scaling.parquet"#TODO: consider moving this to storage enumeration
             ),
-            _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",
+            _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",#TODO: consider moving this to storage enumeration
             _FIGURE_TIMING_KEY: _aggregate(
-                ExperimentSlug("strict-timing-gain"), "figure_timing_value.parquet"
+                ExperimentSlug("strict-timing-gain"), "figure_timing_value.parquet"#TODO: consider moving this to storage enumeration
             ),
             _FIGURE_PROFILE_KEY: _aggregate(
                 ExperimentSlug("safety-and-intrinsic-impossibility"),
-                "figure_information_profile.parquet",
+                "figure_information_profile.parquet",#TODO: consider moving this to storage enumeration
             ),
             _FIGURE_PATHS_KEY: _aggregate(
-                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_paths.parquet"
+                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_paths.parquet"#TODO: consider moving this to storage enumeration
             ),
             _FIGURE_COVERAGE_KEY: _aggregate(
-                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_coverage.parquet"
+                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_coverage.parquet"#TODO: consider moving this to storage enumeration
             ),
             _FIGURE_RHO_KEY: _aggregate(
-                ExperimentSlug("population-sensitivity-utility"), "figure_rho_sensitivity.parquet"
+                ExperimentSlug("population-sensitivity-utility"), "figure_rho_sensitivity.parquet"#TODO: consider moving this to storage enumeration
             ),
             _FIGURE_FAILURE_KEY: _aggregate(
-                ExperimentSlug("failure-boundary-atlas"), "figure_failure_boundaries.parquet"
+                ExperimentSlug("failure-boundary-atlas"), "figure_failure_boundaries.parquet"#TODO: consider moving this to storage enumeration
             ),
             _FIGURE_SCALING_KEY: _aggregate(
-                ExperimentSlug("computational-scaling"), "figure_computational_scaling.parquet"
+                ExperimentSlug("computational-scaling"), "figure_computational_scaling.parquet"#TODO: consider moving this to storage enumeration
             ),
-            _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",
+            _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",#TODO: consider moving this to storage enumeration
         }
     )
 

@@ -23,9 +23,6 @@ from trajcert.types import (
     Vector,
 )
 
-_OBSERVATION_ACCESS = ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE
-_ASSUMPTIONS = ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE
-
 
 class PatternMixtureStatus(StrEnum):
     APPLICABLE = "APPLICABLE"
@@ -65,8 +62,8 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             gradient_infinity_norm=None,
             objective=None,
             points=(),
-            observation_access=_OBSERVATION_ACCESS,
-            assumptions=_ASSUMPTIONS,
+            observation_access=ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE,
+            assumptions=ComparatorAssumption.PATTERN_MIXTURE,
         )
     indices = nonempty.astype(np.float64) + 1.0
     weights = masses[nonempty]
@@ -126,8 +123,8 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             gradient_infinity_norm=gradient_norm if isfinite(gradient_norm) else None,
             objective=final_objective if isfinite(final_objective) else None,
             points=(),
-            observation_access=_OBSERVATION_ACCESS,
-            assumptions=_ASSUMPTIONS,
+            observation_access=ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE,
+            assumptions=ComparatorAssumption.PATTERN_MIXTURE,
         )
     harmful_mass = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
@@ -152,6 +149,6 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
         gradient_infinity_norm=gradient_norm,
         objective=final_objective,
         points=points,
-        observation_access=_OBSERVATION_ACCESS,
-        assumptions=_ASSUMPTIONS,
+        observation_access=ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE,
+        assumptions=ComparatorAssumption.PATTERN_MIXTURE,
     )

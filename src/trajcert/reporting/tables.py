@@ -20,9 +20,9 @@ from trajcert.types import ColumnName, TabularCellValue
 
 _P_VALUE_COLUMNS = frozenset(
     {
-        ColumnName("raw_p_value"),
-        ColumnName("holm_adjusted_p_value"),
-        ColumnName("holm_adjusted_p"),
+        ColumnName("raw_p_value"), #TODO: use enums. Handle this better
+        ColumnName("holm_adjusted_p_value"), #TODO: use enums. Handle this better
+        ColumnName("holm_adjusted_p"), #TODO: use enums. Handle this better
     }
 )
 

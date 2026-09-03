@@ -35,17 +35,17 @@ def set_current_cell_key(semantic_cell_key: SemanticCellKey | None) -> None:
     _ = _current_cell_key.set(semantic_cell_key)
 
 
-def _current_cell_label() -> str:
+def _current_cell_label() -> str: #TODO: use aliases not primitives
     key = _current_cell_key.get()
     return _UNKNOWN_CELL_LABEL if key is None else key
 
 
 class SearchProgress:
-    _phase: str
-    _node_cap: int
-    _started_at: float
-    _last_logged_at: float
-    _log_interval_seconds: float
+    _phase: str #TODO: use aliases not primitives
+    _node_cap: int #TODO: use aliases not primitives
+    _started_at: float #TODO: use aliases not primitives
+    _last_logged_at: float #TODO: use aliases not primitives
+    _log_interval_seconds: float #TODO: use aliases not primitives
 
     def __init__(self, phase: str, node_cap: int, log_interval_seconds: float = 5.0) -> None:
         self._phase = phase
@@ -76,11 +76,11 @@ class SearchProgress:
 
 
 class StreamProgress:
-    _stage: str
-    _stream_count: int
-    _started_at: float
-    _last_logged_at: float
-    _log_interval_seconds: float
+    _stage: str #TODO: use aliases not primitives
+    _stream_count: int #TODO: use aliases not primitives
+    _started_at: float #TODO: use aliases not primitives
+    _last_logged_at: float #TODO: use aliases not primitives
+    _log_interval_seconds: float #TODO: use aliases not primitives
 
     def __init__(self, stage: str, stream_count: int, log_interval_seconds: float = 5.0) -> None:
         self._stage = stage
@@ -116,8 +116,8 @@ class StreamProgress:
 class ExperimentProgress:
     _experiment_name: ExperimentName
     _total_cells: Count
-    _completed_cells: int
-    _started_at: float
+    _completed_cells: int #TODO: use aliases not primitives
+    _started_at: float #TODO: use aliases not primitives
 
     def __init__(self, experiment_name: ExperimentName, total_cells: Count) -> None:
         self._experiment_name = experiment_name
