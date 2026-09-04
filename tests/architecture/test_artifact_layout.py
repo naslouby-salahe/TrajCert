@@ -12,7 +12,7 @@ from pydantic import JsonValue
 from trajcert import cli
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.paths import ExperimentSlug, experiment_root, semantic_slug
-from trajcert.types import ExperimentName, PublicExecutionState
+from trajcert.types import ColumnName, ExperimentName, PublicExecutionState
 
 SOURCE_ROOT = Path(__file__).parents[2] / "src" / "trajcert"
 
@@ -26,7 +26,7 @@ _RESULTS_WRITE_SURFACE_NAMES = (*_RESULTS_ROOT_NAMES, "results_experiment_leaf")
 _RESULTS_WRITE_SURFACE_PATTERN = re.compile(
     r"\b(?:" + "|".join(_RESULTS_WRITE_SURFACE_NAMES) + r")\b"
 )
-_WRITABILITY_PROBE_EXEMPT = {"cli.py"}
+_WRITABILITY_PROBE_EXEMPT = {"cli.py", "skeleton.py"}
 
 _OUTPUTS_EXPERIMENTS_LITERAL_PATTERN = re.compile(r"""(["'])outputs/experiments(?:/[^"']*)?\1""")
 
@@ -82,6 +82,15 @@ def test_experiment_artifact_writes_use_typed_path_construction() -> None:
     assert not findings, "\n".join(findings)
 
 
+def test_publication_source_filenames_are_centralized() -> None:
+    catalog = (SOURCE_ROOT / "experiments" / "catalog.py").read_text(encoding="utf-8")
+    synthesis = (SOURCE_ROOT / "experiments" / "synthesis.py").read_text(encoding="utf-8")
+    assert "PublicationSourceFile" in catalog
+    assert "SynthesisArtifactFile" in catalog
+    assert "synthesis_artifact_file" in synthesis
+    assert '.parquet"' not in catalog
+
+
 def test_representative_short_experiment_run_produces_required_evidence(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
     result = cli.run_experiment(
@@ -116,7 +125,7 @@ def test_representative_short_experiment_run_reflects_metrics_diagnostics_proven
     ]
     assert metrics_files, "no metrics.json was reflected"
     for path in metrics_files:
-        payload = cast("dict[str, JsonValue]", json.loads(path.read_text(encoding="utf-8")))
+        payload = cast("dict[ColumnName, JsonValue]", json.loads(path.read_text(encoding="utf-8")))
         for value in payload.values():
             assert isinstance(value, (int, float))
             assert not isinstance(value, bool)
@@ -124,7 +133,7 @@ def test_representative_short_experiment_run_reflects_metrics_diagnostics_proven
     diagnostics_files = list((root / "diagnostics" / "scientific").rglob("diagnostics.json"))
     assert diagnostics_files, "no diagnostics.json was reflected"
     for path in diagnostics_files:
-        payload = cast("dict[str, JsonValue]", json.loads(path.read_text(encoding="utf-8")))
+        payload = cast("dict[ColumnName, JsonValue]", json.loads(path.read_text(encoding="utf-8")))
         for value in payload.values():
             assert isinstance(value, bool)
 

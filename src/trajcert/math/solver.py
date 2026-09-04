@@ -17,6 +17,7 @@ from trajcert.types import (
     RootBranch,
     RootStatus,
     SensitivityBudget,
+    ToleranceName,
     ToleranceValue,
 )
 
@@ -270,9 +271,7 @@ def validate_final_signs(
     validate_initial_signs(branch, lower, upper)
 
 
-def _positive_tolerance(value: ToleranceValue, 
-                        name: str#TODO: consider using a more specific type for the name of the tolerance
-                        ) -> ToleranceValue:
+def _positive_tolerance(value: ToleranceValue, name: ToleranceName) -> ToleranceValue:
     if not isfinite(value) or value <= 0.0:
         raise RootSolveError(f"{name} must be finite and positive")
     return value

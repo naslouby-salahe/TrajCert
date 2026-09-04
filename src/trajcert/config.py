@@ -294,6 +294,7 @@ class NumericsConfig(ConfigModel):
     compatibility_floor_offset: ToleranceValue
     sharpness_diagnostic_offset: ToleranceValue
     log2_match_tolerance: ToleranceValue
+    proof_check_tolerance: ToleranceValue
 
 
 class LegacyPatternMixtureConfig(ConfigModel):

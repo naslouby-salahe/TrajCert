@@ -82,7 +82,7 @@ study_design:
   timing_offsets: [0.005, 0.025, 0.1]
   population_rho_value_count: 15
   representative_stream_indices: [0, 1, 2, 3]
-numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, profile_grid_points: 1001, sharp_diagnostic_grid_points: 2001, oracle_bracket_width: 1.0e-14, projection_refinement_candidates: 20, projection_refinement_steps: 24, compatibility_floor_offset: 0.005, sharpness_diagnostic_offset: 0.05, log2_match_tolerance: 1.0e-15}
+numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, profile_grid_points: 1001, sharp_diagnostic_grid_points: 2001, oracle_bracket_width: 1.0e-14, projection_refinement_candidates: 20, projection_refinement_steps: 24, compatibility_floor_offset: 0.005, sharpness_diagnostic_offset: 0.05, log2_match_tolerance: 1.0e-15, proof_check_tolerance: 1.0e-15}
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
   pattern_mixture:

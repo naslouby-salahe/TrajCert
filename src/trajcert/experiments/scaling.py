@@ -247,7 +247,6 @@ def _execute_target(
         events=mature_ledger(ledger, partition),
         identity=ledger.identity,
         partition=partition,
-        config=config,
         sensitivity_budget=true_information + config.benchmark.scaling_information_margin,
         risk_budget=config.budgets.risk,
         checkpoint_every=config.benchmark.outer_sample_size,

@@ -321,7 +321,7 @@ def _invalid_cell() -> PlannedCell:
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=False,
-        invalid_reason=ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION"),
+        invalid_reason=ReasonCode.MISSING_AUTHORITATIVE_CONFIGURATION,
         required_experiments=(),
     )
 

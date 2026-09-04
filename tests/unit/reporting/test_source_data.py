@@ -516,7 +516,7 @@ def test_compatibility_safety_evidence_skips_degenerate_safety_cases() -> None:
             name=SafetyCaseName.BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY,
             risk_budget=None,
             valid=False,
-            invalid_reason=ReasonCode("DEGENERATE_SAFETY_INTERVAL"),
+            invalid_reason=ReasonCode.DEGENERATE_SAFETY_INTERVAL,
         ),
         tau=None,
         expected_regime=None,

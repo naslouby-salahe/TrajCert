@@ -100,7 +100,7 @@ def _completion_status(
     return CellStatus(
         semantic_cell_key=key,
         state=PublicExecutionState.BLOCKED,
-        reason=ReasonCode("STALE_OR_INCOMPATIBLE_COMPLETION"),
+        reason=ReasonCode.STALE_OR_INCOMPATIBLE_COMPLETION,
     )
 
 
@@ -137,7 +137,7 @@ def _matching_failure_status(
         return CellStatus(
             semantic_cell_key=semantic_cell_key,
             state=PublicExecutionState.FAILED,
-            reason=ReasonCode("INVALID_FAILURE_RECORD"),
+            reason=ReasonCode.INVALID_FAILURE_RECORD,
         )
     if (
         failure.semantic_cell_key != semantic_cell_key
@@ -146,9 +146,9 @@ def _matching_failure_status(
     ):
         return None
     reason = (
-        ReasonCode("DATA_VALIDATION_FAILURE")
+        ReasonCode.DATA_VALIDATION_FAILURE
         if failure.execution_state is PublicExecutionState.INVALID
-        else ReasonCode("TECHNICAL_EXECUTION_FAILURE")
+        else ReasonCode.TECHNICAL_EXECUTION_FAILURE
     )
     return CellStatus(
         semantic_cell_key=semantic_cell_key,

@@ -341,12 +341,35 @@ def endpoint_special_case_identity(
     return IdentityResult(passed=error <= identity_atol, max_absolute_error=error)
 
 
-def anytime_projection_proof_check() -> IdentityResult: #TODO: does this do no checks? Just returns true?
-    return IdentityResult(passed=True, max_absolute_error=0.0)
+def anytime_projection_proof_check() -> IdentityResult:
+    deltas = (0.1, 0.05, 0.01)
+    horizons = (1, 2, 10, 100)
+    errors = tuple(
+        abs((delta / (horizon * (horizon + 1))) - (delta / horizon - delta / (horizon + 1)))
+        for delta in deltas
+        for horizon in horizons
+    )
+    maximum_error = max(errors)
+    return IdentityResult(
+        passed=maximum_error <= active_config.get().numerics.proof_check_tolerance,
+        max_absolute_error=maximum_error,
+    )
 
 
-def population_complexity_proof_check() -> IdentityResult:#TODO: does this do no checks? Just returns true?
-    return IdentityResult(passed=True, max_absolute_error=0.0)
+def population_complexity_proof_check() -> IdentityResult:
+    branching_factors = (1, 2, 3, 5)
+    depths = range(1, 12)
+    errors = tuple(
+        abs(
+            sum(branching**level for level in range(depth + 1))
+            - ((branching ** (depth + 1) - 1) / (branching - 1) if branching > 1 else depth + 1)
+        )
+        for branching in branching_factors
+        for depth in depths
+    )
+    return IdentityResult(
+        passed=all(error == 0.0 for error in errors), max_absolute_error=max(errors)
+    )
 
 
 def _direct_second_derivative(summary: ObservableSummary, hidden: Mass) -> InformationCurvature:

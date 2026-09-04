@@ -60,7 +60,7 @@ _INVENTORY = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
 _HAND_CASE_EXPERIMENT = ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES
 _HAND_CASE_VARIANT = VariantName("hand-case-01")
 _HAND_CASE_PARTITION = PartitionName("8-band partition")
-_MISSING_CONFIGURATION_REASON = ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
+_MISSING_CONFIGURATION_REASON = ReasonCode.MISSING_AUTHORITATIVE_CONFIGURATION
 _MANIFEST_DIGEST = DigestHex("0" * 64)
 _COMPONENT_NAMES = (
     ProducerComponentName("inference/categorical.py"),
@@ -236,7 +236,7 @@ def test_run_cell_blocks_on_missing_dependency_status(tmp_path: Path) -> None:
     cell = _cell(required=(_INVENTORY,))
     outcome = runner.run_cell(cell, _context(tmp_path, cell), (), write_artifact_executor, False)
     assert outcome.state is PublicExecutionState.BLOCKED
-    assert outcome.reason == ReasonCode("MISSING_DEPENDENCY_STATUS")
+    assert outcome.reason == ReasonCode.MISSING_DEPENDENCY_STATUS
 
 
 def test_run_cell_blocks_on_uncompleted_dependency(tmp_path: Path) -> None:
@@ -248,7 +248,7 @@ def test_run_cell_blocks_on_uncompleted_dependency(tmp_path: Path) -> None:
         cell, _context(tmp_path, cell), dependencies, write_artifact_executor, False
     )
     assert outcome.state is PublicExecutionState.BLOCKED
-    assert outcome.reason == ReasonCode("UPSTREAM_EXPERIMENT_NOT_COMPLETED")
+    assert outcome.reason == ReasonCode.UPSTREAM_EXPERIMENT_NOT_COMPLETED
 
 
 def test_run_cell_executes_and_writes_completion_record(tmp_path: Path) -> None:
@@ -289,7 +289,7 @@ def test_run_cell_records_executor_failure(tmp_path: Path) -> None:
     context = _context(tmp_path, cell)
     outcome = runner.run_cell(cell, context, (), _raise_executor, False)
     assert outcome.state is PublicExecutionState.FAILED
-    assert outcome.reason == ReasonCode("TECHNICAL_EXECUTION_FAILURE")
+    assert outcome.reason == ReasonCode.TECHNICAL_EXECUTION_FAILURE
     failure = read_model(runner.cell_failure_path(cell, tmp_path), runner.FailureRecord)
     assert failure.message == "executor exploded"
     assert not runner.cell_completion_path(cell, tmp_path).exists()
@@ -301,7 +301,7 @@ def test_run_cell_records_data_validation_failure_as_invalid(tmp_path: Path) -> 
     context = _context(tmp_path, cell)
     outcome = runner.run_cell(cell, context, (), _raise_invalid_data_executor, False)
     assert outcome.state is PublicExecutionState.INVALID
-    assert outcome.reason == ReasonCode("DATA_VALIDATION_FAILURE")
+    assert outcome.reason == ReasonCode.DATA_VALIDATION_FAILURE
     failure = read_model(runner.cell_failure_path(cell, tmp_path), runner.FailureRecord)
     assert failure.failure_type == "InvalidScientificDataError"
     assert failure.execution_state is PublicExecutionState.INVALID
@@ -314,7 +314,7 @@ def test_run_cell_records_missing_artifact_failure(tmp_path: Path) -> None:
     context = _context(tmp_path, cell)
     outcome = runner.run_cell(cell, context, (), _missing_artifact_executor, False)
     assert outcome.state is PublicExecutionState.FAILED
-    assert outcome.reason == ReasonCode("TECHNICAL_EXECUTION_FAILURE")
+    assert outcome.reason == ReasonCode.TECHNICAL_EXECUTION_FAILURE
     failure = read_model(runner.cell_failure_path(cell, tmp_path), runner.FailureRecord)
     assert failure.failure_type == "FileNotFoundError"
     assert not runner.cell_completion_path(cell, tmp_path).exists()
@@ -322,7 +322,7 @@ def test_run_cell_records_missing_artifact_failure(tmp_path: Path) -> None:
 
 def test_dependency_block_reason_requires_all_statuses() -> None:
     cell = _cell(required=(_INVENTORY,))
-    assert runner.dependency_block_reason(cell, ()) == ReasonCode("MISSING_DEPENDENCY_STATUS")
+    assert runner.dependency_block_reason(cell, ()) == ReasonCode.MISSING_DEPENDENCY_STATUS
 
 
 def test_dependency_block_reason_requires_completion() -> None:
@@ -336,8 +336,8 @@ def test_dependency_block_reason_requires_completion() -> None:
         runner.DependencyReadiness(experiment_name=_INVENTORY, state=PublicExecutionState.READY),
     )
     assert runner.dependency_block_reason(cell, completed) is None
-    assert runner.dependency_block_reason(cell, ready) == ReasonCode(
-        "UPSTREAM_EXPERIMENT_NOT_COMPLETED"
+    assert (
+        runner.dependency_block_reason(cell, ready) == ReasonCode.UPSTREAM_EXPERIMENT_NOT_COMPLETED
     )
 
 

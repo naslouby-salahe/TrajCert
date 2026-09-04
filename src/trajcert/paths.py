@@ -10,9 +10,12 @@ from typing import NewType
 from trajcert.config import active_config
 from trajcert.exceptions import SerializationError
 from trajcert.types import (
+    ArtifactFileName,
+    BatchIndex,
     DecimalCoefficient,
     DecimalDigits,
     FixedNotationExponent,
+    ModuleName,
     NumericSign,
     PathCoordinateValue,
 )
@@ -113,6 +116,93 @@ class CacheCategory(StrEnum):
     PREPROCESSING = "preprocessing"
     EVALUATION = "evaluation"
     ANALYSIS = "analysis"
+
+
+class ArtifactFile(StrEnum):
+    COMPLETION = "COMPLETED.json"
+    RUNNING = "RUNNING.json"
+    ARTIFACT_INDEX = "artifact_index.json"
+    ENVELOPE = "envelope.json"
+    FAILURE = "failure.json"
+    SCIENTIFIC_RESULT = "scientific_result.json"
+    METRICS = "metrics.json"
+    DIAGNOSTICS = "diagnostics.json"
+    CONFIGURATION = "configuration.json"
+    DATA = "data.json"
+    SEEDS = "seeds.json"
+    CODE = "code.json"
+    ENVIRONMENT = "environment.json"
+    DEPENDENCIES = "dependencies.json"
+    REPORT_REPRODUCIBILITY = "report_reproducibility.json"
+    SCIENTIFIC_INVENTORY = "scientific_inventory.json"
+
+
+class ArtifactPayloadField(StrEnum):
+    VALUE = "value"
+    EXPECTED_SEED_COUNT = "expected_seed_count"
+    COMPLETED_SEED_COUNT = "completed_seed_count"
+    MANIFEST_DIGEST = "manifest_digest"
+
+
+class PublicationExtension(StrEnum):
+    CSV = "csv"
+    TEX = "tex"
+    SVG = "svg"
+    PNG = "png"
+
+
+class PublicationSourceFile(StrEnum):
+    THEOREM_VALIDATION_SUMMARY = "theorem_validation_summary.parquet"
+    SOLVER_ORACLE_VALIDATION = "solver_oracle_validation.parquet"
+    PARTITION_TIMING_RESULTS = "partition_timing_results.parquet"
+    COMPATIBILITY_SAFETY = "compatibility_safety.parquet"
+    ANYTIME_COVERAGE = "anytime_coverage.parquet"
+    RHO_UTILITY = "rho_utility.parquet"
+    FAILURE_BOUNDARIES = "failure_boundaries.parquet"
+    COMPUTATIONAL_SCALING = "computational_scaling.parquet"
+    FIGURE_PARTITION_COHERENCE = "figure_partition_coherence.parquet"
+    FIGURE_TIMING_VALUE = "figure_timing_value.parquet"
+    FIGURE_INFORMATION_PROFILE = "figure_information_profile.parquet"
+    FIGURE_ANYTIME_PATHS = "figure_anytime_paths.parquet"
+    FIGURE_ANYTIME_COVERAGE = "figure_anytime_coverage.parquet"
+    FIGURE_RHO_SENSITIVITY = "figure_rho_sensitivity.parquet"
+    FIGURE_FAILURE_BOUNDARIES = "figure_failure_boundaries.parquet"
+    FIGURE_COMPUTATIONAL_SCALING = "figure_computational_scaling.parquet"
+
+
+class SynthesisArtifactFile(StrEnum):
+    LOCAL_VALIDITY_AUDIT = "local_validity_audit.json"
+
+
+class SourceFile(StrEnum):
+    EXPERIMENT_ANYTIME = "experiments/anytime.py"
+    EXPERIMENT_COMPARATOR_REDUCTION = "experiments/comparator_reduction.py"
+    EXPERIMENT_FAILURE_BOUNDARIES = "experiments/failure_boundaries.py"
+    EXPERIMENT_MATHEMATICS = "experiments/mathematics.py"
+    EXPERIMENT_SCALING = "experiments/scaling.py"
+    EXPERIMENT_SAFETY = "experiments/safety.py"
+    EXPERIMENT_SENSITIVITY = "experiments/sensitivity.py"
+    EXPERIMENT_SOLVER_VALIDATION = "experiments/solver_validation.py"
+    EXPERIMENT_SYNTHESIS = "experiments/synthesis.py"
+    EXPERIMENT_TIMING = "experiments/timing.py"
+    INFERENCE_CATEGORICAL = "inference/categorical.py"
+    INFERENCE_CONFIDENCE = "inference/confidence.py"
+    INFERENCE_ENVELOPE = "inference/envelope.py"
+    INFERENCE_PROJECTION = "inference/projection.py"
+    INFERENCE_CERTIFICATION = "inference/certification.py"
+
+
+class PlanArtifactFile(StrEnum):
+    EXPERIMENT_PLAN = "experiment_plan.json"
+    DEPENDENCY_GRAPH = "dependency_graph.json"
+
+
+class ResultsLeaf(StrEnum):
+    FIGURES_MAIN = "figures/main"
+    TABLES_MAIN = "tables/main"
+    SOURCE_DATA_FIGURES = "source_data/figures"
+    SOURCE_DATA_TABLES = "source_data/tables"
+    REPRODUCIBILITY = "reproducibility"
 
 
 def long_path_safe(path: Path) -> Path:
@@ -221,6 +311,32 @@ def experiment_leaf(experiment_slug: ExperimentSlug, leaf: ExperimentLeaf) -> Pa
 
 def results_experiment_leaf(experiment_slug: ExperimentSlug, leaf: ResultsExperimentLeaf) -> Path:
     return RESULTS_EXPERIMENTS_ROOT / experiment_slug / Path(leaf)
+
+
+def results_publication_leaf(leaf: ResultsLeaf) -> Path:
+    return Path(leaf)
+
+
+def artifact_path(directory: Path, artifact: ArtifactFile) -> Path:
+    return directory / artifact
+
+
+def checkpoint_batch_file(batch_index: BatchIndex, *, result: bool = False) -> ArtifactFileName:
+    suffix = "_result" if result else ""
+    return ArtifactFileName(f"batch_{batch_index}{suffix}.json")
+
+
+def source_file_path(source_file: SourceFile) -> Path:
+    return Path("src") / "trajcert" / Path(source_file)
+
+
+def module_source_candidates(module_name: ModuleName) -> tuple[Path, Path]:
+    module_path = Path("src") / Path(*module_name.split("."))
+    return module_path.with_suffix(".py"), module_path / "__init__.py"
+
+
+def plan_artifact_path(artifact: PlanArtifactFile) -> Path:
+    return shared_artifact_path(SharedArtifactCategory.DERIVED_PLANS) / artifact
 
 
 def preprocessing_leaf(leaf: PreprocessingLeaf) -> Path:

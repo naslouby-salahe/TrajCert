@@ -27,6 +27,12 @@ from trajcert.experiments.anytime import (
     CoverageEvidenceResult,
     SequentialMethod,
 )
+from trajcert.experiments.catalog import (
+    PublicationColumn,
+    PublicationSourceName,
+    publication_columns,
+    publication_source_descriptors,
+)
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis, FailureBoundaryResult
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
 from trajcert.experiments.runner import read_verified_scientific_result
@@ -41,8 +47,12 @@ from trajcert.math.information import (
     observed_timing_information,
 )
 from trajcert.math.safety import assess_safety_geometry
-from trajcert.paths import ExperimentLeaf, ExperimentSlug, experiment_leaf, semantic_slug
+from trajcert.paths import (
+    EXPERIMENTS_ROOT,
+    ArtifactFile,
+)
 from trajcert.provenance import (
+    CoordinateGrammar,
     SensitivityCoordinate,
     VariantName,
 )
@@ -105,6 +115,8 @@ from trajcert.types import (
     TabularCellValue,
 )
 
+__all__ = ["PublicationSourceName"]
+
 TheoremName = NewType("TheoremName", str)
 RegimeName = NewType("RegimeName", str)
 MethodDisplayName = NewType("MethodDisplayName", str)
@@ -145,23 +157,8 @@ class AnalysisType(StrEnum):
     SEQUENTIAL = "SEQUENTIAL"
 
 
-class PublicationSourceName(StrEnum):
-    THEOREM_VALIDATION = "theorem_validation_summary"
-    SOLVER_ORACLE_VALIDATION = "solver_oracle_validation"
-    PARTITION_TIMING = "partition_timing_results"
-    COMPATIBILITY_SAFETY = "compatibility_safety"
-    ANYTIME_COVERAGE = "anytime_coverage"
-    RHO_UTILITY = "rho_utility"
-    FAILURE_BOUNDARIES = "failure_boundaries"
-    COMPUTATIONAL_SCALING = "computational_scaling"
-    FIGURE_PARTITION_COHERENCE = "figure_partition_coherence"
-    FIGURE_TIMING_VALUE = "figure_timing_value"
-    FIGURE_INFORMATION_PROFILE = "figure_information_profile"
-    FIGURE_ANYTIME_PATHS = "figure_anytime_paths"
-    FIGURE_ANYTIME_COVERAGE = "figure_anytime_coverage"
-    FIGURE_RHO_SENSITIVITY = "figure_rho_sensitivity"
-    FIGURE_FAILURE_BOUNDARIES = "figure_failure_boundaries"
-    FIGURE_COMPUTATIONAL_SCALING = "figure_computational_scaling"
+def _columns(*columns: PublicationColumn) -> tuple[ColumnName, ...]:
+    return publication_columns(*columns)
 
 
 class TheoremValidationSummaryRow(DomainModel):
@@ -1326,7 +1323,7 @@ def _required_partition(cell: PlannedCell) -> PartitionName:
 
 def _rho_offset(cell: PlannedCell) -> SensitivityOffset:
     coordinate = cell.identity.coordinates.sensitivity_coordinate or SensitivityCoordinate("")
-    prefix = "rho-offset="
+    prefix = CoordinateGrammar.RHO_OFFSET_PREFIX
     if not coordinate.startswith(prefix):
         raise InvalidScientificDataError("strict timing figure cell lacks rho-offset coordinate")
     return float(coordinate[len(prefix) :])
@@ -1338,15 +1335,23 @@ def _max_optional(values: Iterable[AbsoluteError | None]) -> AbsoluteError | Non
 
 
 def table_source_descriptors() -> tuple[PublicationSourceDescriptor, ...]:
-    return _TABLE_SOURCES
+    return tuple(
+        source
+        for source in publication_source_descriptors()
+        if source.source_role is PublicationSourceRole.TABLE
+    )
 
 
 def figure_source_descriptors() -> tuple[PublicationSourceDescriptor, ...]:
-    return _FIGURE_SOURCES
+    return tuple(
+        source
+        for source in publication_source_descriptors()
+        if source.source_role is PublicationSourceRole.FIGURE
+    )
 
 
 def all_publication_source_descriptors() -> tuple[PublicationSourceDescriptor, ...]:
-    return (*_TABLE_SOURCES, *_FIGURE_SOURCES)
+    return publication_source_descriptors()
 
 
 def read_verified_source_data(
@@ -1436,7 +1441,7 @@ def _verify_registered_lineage(
     descriptor: PublicationSourceDescriptor,
     source_path: Path,
 ) -> VerifiedSourceLineage:
-    checkpoints_root = workspace_root / "outputs" / "experiments"  #TODO: use enum for this
+    checkpoints_root = workspace_root / EXPERIMENTS_ROOT
     if not checkpoints_root.is_dir():
         raise InvalidScientificDataError(
             "publication sources require completed experiment evidence"
@@ -1456,7 +1461,7 @@ def _verify_registered_lineage(
         )
         raise InvalidScientificDataError(message)
     index_path, index, artifact_key = matches[0]
-    completion_path = index_path.with_name("COMPLETED.json")  #TODO: use enum for this
+    completion_path = index_path.with_name(ArtifactFile.COMPLETION)
     completion = read_model(completion_path, CompletionRecord)
     if artifact_key not in completion.produced_artifact_keys:
         raise InvalidScientificDataError("source artifact is absent from its completion record")
@@ -1492,349 +1497,3 @@ def _atomic_write_parquet(path: Path, table: pa.Table) -> None:
         atomic_replace(path, write)
     except (OSError, pa.ArrowException) as exc:
         raise SerializationError(f"atomic source-data Parquet write failed: {path}") from exc
-
-
-def _source(
-    path: Path,
-    role: PublicationSourceRole,
-    columns: tuple[str, ...], #TODO: do not use primitives
-    sort_columns: tuple[str, ...], #TODO: do not use primitives
-    owner: str, #TODO: do not use primitives
-) -> PublicationSourceDescriptor:
-    return PublicationSourceDescriptor(
-        source_path=path,
-        source_role=role,
-        columns=tuple(ColumnName(column) for column in columns),
-        sort_columns=tuple(ColumnName(column) for column in sort_columns),
-        owner_experiment=ExperimentSlug(owner),
-    )
-
-
-_TABLE_SOURCES = ( #TODO: this is a horrible management. Use an enum to not hardcode strings. ANd use a better approach such as a builder to handle this bloated approach. Adapt all code. NO backwards compatiblity
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "theorem_validation_summary.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "theorem_name",
-            "case_count",
-            "maximum_absolute_error",
-            "minimum_inequality_margin",
-            "all_cases_pass",
-            "primary_artifact",
-            "scientific_consequence",
-        ),
-        ("theorem_name",),
-        "statistical-synthesis",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "solver_oracle_validation.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "partition_name",
-            "rho_offset_mode",
-            "cell_count",
-            "max_abs_u_lower_error",
-            "max_abs_u_upper_error",
-            "max_abs_risk_upper_error",
-            "max_abs_rho_star_error",
-            "rho_star_applicable_cell_count",
-            "state_mismatch_count",
-            "pass",
-        ),
-        ("partition_name", "rho_offset_mode"),
-        "production-solver-vs-independent-oracle",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "partition_timing_results.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "law_name",
-            "coarse_partition",
-            "fine_partition",
-            "rho",
-            "tau_coarse",
-            "tau_fine",
-            "delta_tau",
-            "coarse_risk_upper",
-            "fine_risk_upper",
-            "bound_gain",
-            "fine_subset_coarse",
-            "theorem_condition",
-            "pass",
-        ),
-        ("law_name", "coarse_partition", "fine_partition", "rho"),
-        "statistical-synthesis",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "compatibility_safety.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "law_name",
-            "partition_name",
-            "rho",
-            "beta",
-            "tau",
-            "theta_dagger",
-            "risk_lower",
-            "risk_upper",
-            "rho_star",
-            "expected_regime",
-            "observed_regime",
-            "oracle_error",
-            "pass",
-        ),
-        ("law_name", "partition_name", "rho", "beta"),
-        "statistical-synthesis",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.ANYTIME_COVERAGE_STRESS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "anytime_coverage.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "stress_cell",
-            "method_name",
-            "K",
-            "true_theta",
-            "true_mutual_information",
-            "rho",
-            "beta",
-            "delta",
-            "independent_streams",
-            "ever_violations",
-            "violation_rate",
-            "clopper_pearson_upper_95",
-            "criterion_pass",
-            "median_first_certified_n",
-            "median_certified_update_fraction",
-        ),
-        ("stress_cell", "method_name"),
-        "anytime-coverage-stress",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "rho_utility.parquet",
-        PublicationSourceRole.TABLE,
-        tuple(RhoUtilityRow.model_fields),
-        ("analysis_type", "law_name", "rho", "partition_name", "metric_name"),
-        "statistical-synthesis",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.FAILURE_BOUNDARY_ATLAS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "failure_boundaries.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "axis",
-            "level",
-            "controlled_value_json",
-            "rho",
-            "beta",
-            "tau",
-            "risk_upper",
-            "operational_state",
-            "optimizer_gap",
-            "runtime_ms",
-            "scientific_interpretation",
-        ),
-        ("axis", "level"),
-        "failure-boundary-atlas",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.COMPUTATIONAL_SCALING)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "computational_scaling.parquet",
-        PublicationSourceRole.TABLE,
-        (
-            "K",
-            "population_median_runtime_ms",
-            "population_iqr_runtime_ms",
-            "outer_median_runtime_ms",
-            "outer_iqr_runtime_ms",
-            "peak_memory_mib",
-            "median_root_iterations",
-            "median_outer_nodes",
-            "max_oracle_error",
-        ),
-        ("K",),
-        "computational-scaling",
-    ),
-)
-
-
-_FIGURE_SOURCES = ( #TODO: this is a horrible management. Use an enum to not hardcode strings. ANd use a better approach such as a builder to handle this bloated approach. Adapt all code. NO backwards compatiblity
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.STATISTICAL_SYNTHESIS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_partition_coherence.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "law_name",
-            "partition_name",
-            "partition_band_count",
-            "rho",
-            "tau",
-            "risk_lower",
-            "risk_upper",
-        ),
-        ("law_name", "partition_band_count"),
-        "statistical-synthesis",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.STRICT_TIMING_GAIN)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_timing_value.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "semantic_timing_case",
-            "rho_offset",
-            "delta_tau",
-            "bound_gain",
-            "coarse_risk_upper",
-            "fine_risk_upper",
-        ),
-        ("rho_offset", "semantic_timing_case", "delta_tau"),
-        "strict-timing-gain",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_information_profile.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "u",
-            "information_profile",
-            "u_dagger",
-            "tau",
-            "rho",
-            "u_beta",
-            "rho_star",
-            "feasible_lower",
-            "feasible_upper",
-        ),
-        ("u",),
-        "safety-and-intrinsic-impossibility",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.ANYTIME_COVERAGE_STRESS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_anytime_paths.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "stream_seed_index",
-            "n_matured",
-            "risk_upper_anytime",
-            "true_theta",
-            "beta",
-            "evidence_gate_pass",
-            "operational_state",
-        ),
-        ("stream_seed_index", "n_matured"),
-        "anytime-coverage-stress",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.ANYTIME_COVERAGE_STRESS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_anytime_coverage.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "stress_cell",
-            "method_name",
-            "K",
-            "clopper_pearson_upper_95",
-            "delta",
-            "acceptance_upper_limit",
-            "criterion_pass",
-        ),
-        ("stress_cell", "method_name"),
-        "anytime-coverage-stress",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.POPULATION_SENSITIVITY_UTILITY)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_rho_sensitivity.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "law_name",
-            "partition_name",
-            "rho",
-            "risk_upper",
-            "compatibility_state",
-            "rho_is_log2",
-        ),
-        ("law_name", "partition_name", "rho"),
-        "population-sensitivity-utility",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.FAILURE_BOUNDARY_ATLAS)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_failure_boundaries.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "axis",
-            "level",
-            "controlled_value_json",
-            "risk_upper",
-            "operational_state",
-            "optimizer_gap",
-            "runtime_ms",
-        ),
-        ("axis", "level"),
-        "failure-boundary-atlas",
-    ),
-    _source(
-        experiment_leaf(
-            ExperimentSlug(semantic_slug(ExperimentName.COMPUTATIONAL_SCALING)),
-            ExperimentLeaf.EVALUATION_AGGREGATES,
-        )
-        / "figure_computational_scaling.parquet",
-        PublicationSourceRole.FIGURE,
-        (
-            "K",
-            "population_median_runtime_ms",
-            "outer_median_runtime_ms",
-            "median_outer_nodes",
-        ),
-        ("K",),
-        "computational-scaling",
-    ),
-)

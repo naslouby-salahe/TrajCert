@@ -88,19 +88,19 @@ def safety_budget_cases(summary: ObservableSummary) -> tuple[SafetyBudgetCase, .
                 name=SafetyCaseName.BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY,
                 risk_budget=None,
                 valid=False,
-                invalid_reason=ReasonCode("DEGENERATE_SAFETY_INTERVAL"), #TODO: reason code should be enum
+                invalid_reason=ReasonCode.DEGENERATE_SAFETY_INTERVAL,
             ),
             SafetyBudgetCase(
                 name=SafetyCaseName.AT_INTRINSIC_BOUNDARY,
                 risk_budget=None,
                 valid=False,
-                invalid_reason=ReasonCode("NO_RESOLVED_MASS"), #TODO: reason code should be enum
+                invalid_reason=ReasonCode.NO_RESOLVED_MASS,
             ),
             SafetyBudgetCase(
                 name=SafetyCaseName.INTERIOR_SAFETY_FRONTIER,
                 risk_budget=None,
                 valid=False,
-                invalid_reason=ReasonCode("NO_RESOLVED_MASS"), #TODO: reason code should be enum
+                invalid_reason=ReasonCode.NO_RESOLVED_MASS,
             ),
             SafetyBudgetCase(
                 name=SafetyCaseName.ASSUMPTION_FREE_BOUNDARY,
@@ -122,7 +122,7 @@ def safety_budget_cases(summary: ObservableSummary) -> tuple[SafetyBudgetCase, .
             name=SafetyCaseName.BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY,
             risk_budget=((harmful + theta_dagger) / 2.0) if between_is_valid else None,
             valid=between_is_valid,
-            invalid_reason=None if between_is_valid else ReasonCode("DEGENERATE_SAFETY_INTERVAL"), #TODO: reason code should be enum
+            invalid_reason=(None if between_is_valid else ReasonCode.DEGENERATE_SAFETY_INTERVAL),
         ),
         SafetyBudgetCase(
             name=SafetyCaseName.AT_INTRINSIC_BOUNDARY,

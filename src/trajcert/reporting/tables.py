@@ -4,11 +4,13 @@ import csv
 import io
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 import pyarrow as pa
 
 from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.catalog import PublicationColumn
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
     PublicationFormat,
@@ -16,13 +18,13 @@ from trajcert.schemas import (
     RenderedPublicationArtifact,
 )
 from trajcert.storage import atomic_write_bytes
-from trajcert.types import ColumnName, TabularCellValue
+from trajcert.types import ColumnName, TableRow, TabularCellValue
 
 _P_VALUE_COLUMNS = frozenset(
     {
-        ColumnName("raw_p_value"), #TODO: use enums. Handle this better
-        ColumnName("holm_adjusted_p_value"), #TODO: use enums. Handle this better
-        ColumnName("holm_adjusted_p"), #TODO: use enums. Handle this better
+        ColumnName(PublicationColumn.RAW_P_VALUE),
+        ColumnName(PublicationColumn.HOLM_ADJUSTED_P_VALUE),
+        ColumnName(PublicationColumn.HOLM_ADJUSTED_P),
     }
 )
 
@@ -70,7 +72,7 @@ def _csv_payload(table: pa.Table) -> bytes:
     writer = csv.writer(stream, lineterminator="\n")
     writer.writerow(table.column_names)
     for row in table.to_pylist():
-        typed_row: dict[str, TabularCellValue] = row
+        typed_row = cast(TableRow, row)
         writer.writerow(
             _format_csv_value(ColumnName(column), typed_row[column])
             for column in table.column_names
@@ -85,7 +87,7 @@ def _tex_payload(table: pa.Table) -> bytes:
     lines.append(" & ".join(_escape_tex(column) for column in columns) + r" \\")
     lines.append("\\midrule")
     for row in table.to_pylist():
-        typed_row: dict[str, TabularCellValue] = row
+        typed_row = cast(TableRow, row)
         rendered = tuple(_format_tex_value(column, typed_row[column]) for column in columns)
         lines.append(" & ".join(rendered) + r" \\")
     lines.extend(("\\bottomrule", "\\end{tabular}", ""))

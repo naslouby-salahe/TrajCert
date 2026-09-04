@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from tests.unit.conftest import summary
+from trajcert.config import active_config
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.mathematics import (
@@ -257,11 +258,11 @@ def test_endpoint_special_case_identity_rejects_multi_band() -> None:
     assert result.max_absolute_error == 1.0
 
 
-def test_proof_check_helpers_always_pass() -> None:
+def test_proof_check_helpers_verify_their_invariants() -> None:
     anytime = anytime_projection_proof_check()
     population = population_complexity_proof_check()
     assert anytime.passed
-    assert anytime.max_absolute_error == 0.0
+    assert anytime.max_absolute_error <= active_config.get().numerics.proof_check_tolerance
     assert population.passed
     assert population.max_absolute_error == 0.0
 

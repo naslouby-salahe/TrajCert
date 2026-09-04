@@ -26,7 +26,9 @@ from trajcert.types import (
 class GenericInformationPoint(DomainModel):
     rho: SensitivityBudget
     oracle: InformationOracleResult
-    observation_access: ComparatorObservationAccess = ComparatorObservationAccess.FULL_OBSERVABLE_LAW
+    observation_access: ComparatorObservationAccess = (
+        ComparatorObservationAccess.FULL_OBSERVABLE_LAW
+    )
     assumptions: ComparatorAssumption = ComparatorAssumption.MUTUAL_INFORMATION_BUDGET_ONLY
     exact_equality_to_trajcert: bool | None = None
 

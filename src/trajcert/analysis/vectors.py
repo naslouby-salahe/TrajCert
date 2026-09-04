@@ -4,13 +4,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.types import Vector
+from trajcert.types import FailureMessage, Vector
 
 
 def validated_finite_vector(
-    values: Vector, 
-    empty_message: str, #TODO: do not use primitives. Use an alias or a dedicated type for messages. And identify why this wasn't caught by tests
-    non_finite_message: str #TODO: do not use primitives. Use an alias or a dedicated type for messages. And identify why this wasn't caught by tests
+    values: Vector,
+    empty_message: FailureMessage,
+    non_finite_message: FailureMessage,
 ) -> NDArray[np.float64]:
     array = np.asarray(values, dtype=np.float64)
     if array.ndim != 1 or array.size == 0:

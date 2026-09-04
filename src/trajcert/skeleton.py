@@ -3,13 +3,21 @@ from __future__ import annotations
 from pathlib import Path
 
 from trajcert.paths import (
+    OUTPUTS_ROOT,
+    PROJECT_SUMMARY_ROOT,
+    RESULTS_ROOT,
     CacheCategory,
     ExperimentLeaf,
     ExperimentSlug,
     PreprocessingLeaf,
     ResultsExperimentLeaf,
     SharedArtifactCategory,
+    cache_path,
+    experiment_leaf,
+    preprocessing_leaf,
+    results_experiment_leaf,
     semantic_slug,
+    shared_artifact_path,
 )
 from trajcert.types import ExperimentName
 
@@ -57,24 +65,23 @@ def _experiment_slugs() -> tuple[ExperimentSlug, ...]:
 
 def create_outputs_skeleton(root: Path) -> None:
     for leaf in PreprocessingLeaf:
-        _ensure_leaf_directory(root / "preprocessing" / Path(leaf))
-    _ensure_leaf_directory(root / "artifacts" / "fitted")
+        _ensure_leaf_directory(root / preprocessing_leaf(leaf).relative_to(OUTPUTS_ROOT))
     for category in SharedArtifactCategory:
-        if category is SharedArtifactCategory.FITTED:
-            continue
-        _ensure_leaf_directory(root / "artifacts" / Path(category))
+        _ensure_leaf_directory(root / shared_artifact_path(category).relative_to(OUTPUTS_ROOT))
     for slug in _experiment_slugs():
         for leaf in ExperimentLeaf:
-            _ensure_leaf_directory(root / "experiments" / slug / Path(leaf))
+            _ensure_leaf_directory(root / experiment_leaf(slug, leaf).relative_to(OUTPUTS_ROOT))
     for category in CacheCategory:
-        _ensure_leaf_directory(root / "cache" / Path(category))
+        _ensure_leaf_directory(root / cache_path(category).relative_to(OUTPUTS_ROOT))
 
 
 def create_results_skeleton(root: Path) -> None:
     for slug in _experiment_slugs():
         for leaf in ResultsExperimentLeaf:
-            _ensure_leaf_directory(root / "experiments" / slug / Path(leaf))
-    project_summary_root = root / "project_summary"
+            _ensure_leaf_directory(
+                root / results_experiment_leaf(slug, leaf).relative_to(RESULTS_ROOT)
+            )
+    project_summary_root = root / PROJECT_SUMMARY_ROOT.relative_to(RESULTS_ROOT)
     for leaf in _PROJECT_SUMMARY_FIGURE_TABLE_LEAVES:
         _ensure_leaf_directory(project_summary_root / Path(leaf))
     for relative_leaf in (

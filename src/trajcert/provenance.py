@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal, NewType
@@ -38,6 +39,20 @@ from trajcert.types import (
 )
 
 ComparisonPairName = NewType("ComparisonPairName", str)
+
+
+class CoordinateGrammar(StrEnum):
+    ASSIGNMENT = "="
+    COMPARISON_PAIR = " -> "
+    HAND_CASE_PREFIX = "hand-case-"
+    LEGACY_Q_PREFIX = "q="
+    RHO_OFFSET_PREFIX = "rho-offset="
+    TERMINAL_Q1_PREFIX = "q1:"
+    TERMINAL_Q0_SEPARATOR = ",q0:"
+    NEGATIVE_PREFIX = "negative-"
+    NONNEGATIVE_PREFIX = "nonnegative-"
+
+
 MethodName = NewType("MethodName", str)
 BaselineName = NewType("BaselineName", str)
 FailureBoundaryCoordinate = NewType("FailureBoundaryCoordinate", str)

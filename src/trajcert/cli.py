@@ -7,7 +7,7 @@ import sys
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from pathlib import Path
 from typing import cast
 
@@ -17,6 +17,8 @@ from trajcert.data.laws import LAW_DISPLAY_NAMES, build_full_law, configured_law
 from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError, TrajCertError
+from trajcert.experiments.catalog import experiment_names as catalog_experiment_names
+from trajcert.experiments.catalog import supports_batched_recovery
 from trajcert.experiments.plan import (
     ExperimentPlan,
     PlannedCell,
@@ -64,13 +66,15 @@ from trajcert.experiments.synthesis import (
 from trajcert.paths import (
     OUTPUTS_ROOT,
     RESULTS_ROOT,
+    ArtifactFile,
     ExperimentLeaf,
+    PlanArtifactFile,
     PreprocessingLeaf,
-    SharedArtifactCategory,
+    SourceFile,
     experiment_leaf,
+    plan_artifact_path,
     preprocessing_leaf,
     semantic_slug,
-    shared_artifact_path,
 )
 from trajcert.provenance import (
     EnvironmentDigest,
@@ -108,12 +112,14 @@ from trajcert.storage import (
 from trajcert.telemetry import ExperimentProgress, configure_logging
 from trajcert.types import (
     ActionChannelId,
+    CliArgumentValue,
     CliCommand,
     ClientId,
     Count,
     DomainModel,
     EpochId,
     ExperimentName,
+    LawName,
     PublicExecutionState,
     ReasonCode,
 )
@@ -127,10 +133,54 @@ class CliExitCode(IntEnum):
     COMPLETION_OR_EVIDENCE_FAILURE = 30
 
 
+class CliArgumentName(StrEnum):
+    COMMAND = "command"
+    EXPERIMENT_NAME = "experiment_name"
+    DATASET_NAME = "dataset_name"
+    OVERWRITE = "overwrite"
+
+
+class CliParserToken(StrEnum):
+    PROGRAM_NAME = "trajcert"
+    OPTIONAL_POSITIONAL = "?"
+    OVERWRITE_OPTION = "--overwrite"
+    STORE_TRUE = "store_true"
+
+
+class CliRuntimeModule(StrEnum):
+    NUMPY = "numpy"
+    PYDANTIC = "pydantic"
+    PYARROW = "pyarrow"
+    SCIPY = "scipy"
+    FLINT = "flint"
+    MPMATH = "mpmath"
+    YAML = "yaml"
+
+
+class CliReportAction(StrEnum):
+    REUSED = "reused"
+    RENDERED = "rendered"
+
+
+class CliCheckState(StrEnum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+
+
+class CliProcessStartMethod(StrEnum):
+    SPAWN = "spawn"
+
+
+class CliSyntheticIdentity(StrEnum):
+    CLIENT_ID = "synthetic-client"
+    ACTION_CHANNEL_ID = "automatic-action"
+    STATIC_EPOCH_SUFFIX = "::static-epoch"
+
+
 class CliArguments(DomainModel):
     command: CliCommand
-    experiment_name: str | None
-    dataset_name: str | None
+    experiment_name: ExperimentName | None
+    dataset_name: LawName | None
     overwrite: bool
 
 
@@ -155,16 +205,24 @@ def main() -> None:
 def parse_args(argv: Sequence[str] | None = None) -> CliArguments:
     parser = build_parser()
     arguments = parser.parse_args(argv)
-    command = CliCommand(cast(str, arguments.command))
-    raw_name = getattr(arguments, "experiment_name" #TODO: use enum for this
-                       , None)
-    raw_dataset_name = getattr(arguments, "dataset_name"#TODO: use enum for this
-                               , None)
+    command = CliCommand(getattr(arguments, CliArgumentName.COMMAND))
+    raw_name = cast(
+        CliArgumentValue | None,
+        getattr(arguments, CliArgumentName.EXPERIMENT_NAME, None),
+    )
+    raw_dataset_name = cast(
+        CliArgumentValue | None,
+        getattr(arguments, CliArgumentName.DATASET_NAME, None),
+    )
     return CliArguments(
         command=command,
-        experiment_name=None if raw_name is None else cast(str, raw_name),
-        dataset_name=None if raw_dataset_name is None else cast(str, raw_dataset_name),
-        overwrite=cast(bool, getattr(arguments, "overwrite", False)),
+        experiment_name=_parse_experiment_name(
+            parser,
+            raw_name,
+            required=command is CliCommand.RUN,
+        ),
+        dataset_name=_parse_dataset_name(parser, raw_dataset_name),
+        overwrite=cast(bool, getattr(arguments, CliArgumentName.OVERWRITE, False)),
     )
 
 
@@ -204,7 +262,7 @@ def _dispatch(arguments: CliArguments) -> None:
             experiment_name=name,
             overwrite=arguments.overwrite,
         )
-        action = "reused" if exported.reused else "rendered" #TODO: use enum for this
+        action = CliReportAction.REUSED if exported.reused else CliReportAction.RENDERED
         target = exported.target.as_posix()
         print(
             f"TrajCert report: {action} {exported.rendered_artifact_count} artifacts "
@@ -213,47 +271,78 @@ def _dispatch(arguments: CliArguments) -> None:
 
 
 def build_parser() -> ArgumentParser:
-    parser = ArgumentParser(prog="trajcert") #TODO: use enum for this
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    parser = ArgumentParser(prog=CliParserToken.PROGRAM_NAME)
+    subparsers = parser.add_subparsers(dest=CliArgumentName.COMMAND, required=True)
     for command in (CliCommand.DOCTOR, CliCommand.PLAN):
         _ = subparsers.add_parser(command)
     preprocess_parser = subparsers.add_parser(CliCommand.PREPROCESS)
-    _ = preprocess_parser.add_argument("dataset_name", nargs="?") #TODO: use enum for this
-    _ = preprocess_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
+    _ = preprocess_parser.add_argument(
+        CliArgumentName.DATASET_NAME,
+        nargs=CliParserToken.OPTIONAL_POSITIONAL,
+    )
+    _ = preprocess_parser.add_argument(
+        CliParserToken.OVERWRITE_OPTION,
+        action=CliParserToken.STORE_TRUE,
+    )
     smoke_parser = subparsers.add_parser(CliCommand.SMOKE)
-    _ = smoke_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
+    _ = smoke_parser.add_argument(CliParserToken.OVERWRITE_OPTION, action=CliParserToken.STORE_TRUE)
     run_parser = subparsers.add_parser(CliCommand.RUN)
-    _ = run_parser.add_argument("experiment_name") #TODO: use enum for this
-    _ = run_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
+    _ = run_parser.add_argument(CliArgumentName.EXPERIMENT_NAME)
+    _ = run_parser.add_argument(CliParserToken.OVERWRITE_OPTION, action=CliParserToken.STORE_TRUE)
     status_parser = subparsers.add_parser(CliCommand.STATUS)
-    _ = status_parser.add_argument("experiment_name", nargs="?") #TODO: use enum for this
+    _ = status_parser.add_argument(
+        CliArgumentName.EXPERIMENT_NAME,
+        nargs=CliParserToken.OPTIONAL_POSITIONAL,
+    )
     report_parser = subparsers.add_parser(CliCommand.REPORT)
-    _ = report_parser.add_argument("experiment_name", nargs="?") #TODO: use enum for this
-    _ = report_parser.add_argument("--overwrite", action="store_true")#TODO: use enum for this
+    _ = report_parser.add_argument(
+        CliArgumentName.EXPERIMENT_NAME,
+        nargs=CliParserToken.OPTIONAL_POSITIONAL,
+    )
+    _ = report_parser.add_argument(
+        CliParserToken.OVERWRITE_OPTION, action=CliParserToken.STORE_TRUE
+    )
     return parser
 
 
-def _experiment_name(arguments: CliArguments, *, required: bool) -> str | None:
+def _experiment_name(arguments: CliArguments, *, required: bool) -> ExperimentName | None:
     value = arguments.experiment_name
     if value is None:
         if required:
             build_parser().error("experiment name is required")
         return None
-    if not value:
-        build_parser().error("experiment name must be a non-empty descriptive name")
-    known = set(experiment_names())
-    if value not in known:
-        build_parser().error(f"unknown experiment name: {value}")
     return value
 
 
-def _dataset_name(arguments: CliArguments) -> str | None:
-    value = arguments.dataset_name
+def _dataset_name(arguments: CliArguments) -> LawName | None:
+    return arguments.dataset_name
+
+
+def _parse_experiment_name(
+    parser: ArgumentParser,
+    value: CliArgumentValue | None,
+    *,
+    required: bool,
+) -> ExperimentName | None:
+    if value is None:
+        if required:
+            parser.error("experiment name is required")
+        return None
+    if not value:
+        parser.error("experiment name must be a non-empty descriptive name")
+    try:
+        return ExperimentName(value)
+    except ValueError as exc:
+        parser.error(f"unknown experiment name: {value}")
+        raise AssertionError("ArgumentParser.error must terminate") from exc
+
+
+def _parse_dataset_name(parser: ArgumentParser, value: CliArgumentValue | None) -> LawName | None:
     if value is None:
         return None
-    if not value or value not in LAW_DISPLAY_NAMES.values():
-        build_parser().error(f"unknown dataset name: {value}")
-    return value
+    if LawName(value) not in LAW_DISPLAY_NAMES.values():
+        parser.error(f"unknown dataset name: {value}")
+    return LawName(value)
 
 
 def _print_run(result: RunExperimentResult) -> None:
@@ -286,19 +375,14 @@ def _print_project_status() -> None:
 
 
 def _print_smoke(result: SmokeResult) -> None:
-    state = "PASS" if result.passed else "FAIL"
+    state = CliCheckState.PASS if result.passed else CliCheckState.FAIL
     print(f"TrajCert smoke: {state} ({result.passed_fixture_count}/6 fixtures passed)")
 
 
 _PREPROCESS_PATH = (
-    preprocessing_leaf(PreprocessingLeaf.VALIDATION_INTEGRITY) / "scientific_inventory.json"
+    preprocessing_leaf(PreprocessingLeaf.VALIDATION_INTEGRITY) / ArtifactFile.SCIENTIFIC_INVENTORY
 )
-_SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
-_REQUIRED_IMPORTS = ("numpy", "pydantic", "pyarrow", "scipy", "flint", "mpmath", "yaml")
-_LOCAL_BOUND_EXPERIMENTS = (
-    ExperimentName.ANYTIME_COVERAGE_STRESS,
-    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY,
-)
+_REQUIRED_IMPORTS = tuple(CliRuntimeModule)
 
 
 class RunExperimentResult(DomainModel):
@@ -368,7 +452,7 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
 
 
 def preprocess(
-    dataset_name: str | None = None,
+    dataset_name: LawName | None = None,
     *,
     workspace_root: Path | None = None,
     overwrite: bool = False,
@@ -398,9 +482,13 @@ def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
 
 
 def _persist_plan_artifacts(workspace_root: Path, plan: ExperimentPlan) -> None:
-    plans_root = workspace_root / shared_artifact_path(SharedArtifactCategory.DERIVED_PLANS)
-    _ = atomic_write_model(plans_root / "experiment_plan.json", plan)
-    _ = atomic_write_model(plans_root / "dependency_graph.json", dependency_graph(plan))
+    _ = atomic_write_model(
+        workspace_root / plan_artifact_path(PlanArtifactFile.EXPERIMENT_PLAN), plan
+    )
+    _ = atomic_write_model(
+        workspace_root / plan_artifact_path(PlanArtifactFile.DEPENDENCY_GRAPH),
+        dependency_graph(plan),
+    )
 
 
 def smoke(workspace_root: Path | None = None) -> SmokeResult:
@@ -413,7 +501,7 @@ def smoke(workspace_root: Path | None = None) -> SmokeResult:
 
 
 def run_experiment(
-    experiment_name: str,
+    experiment_name: ExperimentName,
     *,
     workspace_root: Path | None = None,
     overwrite: bool = False,
@@ -436,7 +524,7 @@ def run_experiment(
     status_cache: dict[ExperimentName, ExperimentStatus] = {}
     dependencies = _dependency_readiness(plan, workspace_root, cells[0], status_cache)
     progress = ExperimentProgress(name, len(cells))
-    if name == _SYNTHESIS_NAME or max_workers == 1:
+    if name is ExperimentName.STATISTICAL_SYNTHESIS or max_workers == 1:
         completed, reused, failed, blocked = _run_cells_sequentially(
             cells, plan, workspace_root, dependencies, _executor(name, plan), overwrite, progress
         )
@@ -446,7 +534,7 @@ def run_experiment(
         )
     state = _run_state(len(cells), completed, failed, blocked)
     progress.experiment_finished(state, completed, reused, failed, blocked)
-    if name == _SYNTHESIS_NAME and state is PublicExecutionState.COMPLETED:
+    if name is ExperimentName.STATISTICAL_SYNTHESIS and state is PublicExecutionState.COMPLETED:
         _render_synthesis_publication_artifacts(workspace_root)
     return RunExperimentResult(
         experiment_name=name,
@@ -507,7 +595,7 @@ def _run_cells_in_parallel(
     completed = reused = failed = blocked = 0
     available_workers = max_workers if max_workers is not None else (os.cpu_count() or 1)
     worker_count = min(len(cells), available_workers)
-    spawn_context = multiprocessing.get_context("spawn")
+    spawn_context = multiprocessing.get_context(CliProcessStartMethod.SPAWN)
     with ProcessPoolExecutor(max_workers=worker_count, mp_context=spawn_context) as pool:
         futures: dict[Future[CellRunOutcome], tuple[SemanticCellKey, float]] = {}
         for cell in cells:
@@ -558,21 +646,20 @@ def _tally_outcome(
 
 
 def experiment_status(
-    experiment_name: str,
+    experiment_name: ExperimentName,
     *,
     workspace_root: Path | None = None,
 ) -> ExperimentStatus:
     workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
     plan = build_plan(config)
-    name = _known_experiment_name(experiment_name)
-    return _experiment_status(name, plan, workspace_root, {})
+    return _experiment_status(_known_experiment_name(experiment_name), plan, workspace_root, {})
 
 
 def report(
     *,
     workspace_root: Path | None = None,
-    experiment_name: str | None = None, #TODO: use enum for this. IT should already exist. If not then create it and adapt the whole code
+    experiment_name: ExperimentName | None = None,
     overwrite: bool = False,
 ) -> ReportExportResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
@@ -586,8 +673,7 @@ def _load_config(workspace_root: Path) -> TrajCertConfig:
     return config
 
 
-def _known_experiment_name(value: str #TODO: why do we have this? why not directly enum??
-                           ) -> ExperimentName:
+def _known_experiment_name(value: ExperimentName) -> ExperimentName:
     try:
         return ExperimentName(value)
     except ValueError as error:
@@ -638,7 +724,7 @@ def _current_cell_status(
         return CellStatus(
             semantic_cell_key=key,
             state=PublicExecutionState.BLOCKED,
-            reason=ReasonCode("CURRENT_EXECUTION_CONTEXT_UNAVAILABLE"),
+            reason=ReasonCode.CURRENT_EXECUTION_CONTEXT_UNAVAILABLE,
         )
     return inspect_cell_status(cell, context, dependencies)
 
@@ -659,7 +745,7 @@ def _dependency_readiness(
 
 
 def _executor(name: ExperimentName, plan: ExperimentPlan) -> CellExecutor:
-    if name == _SYNTHESIS_NAME:
+    if name is ExperimentName.STATISTICAL_SYNTHESIS:
         return make_statistical_synthesis_executor(plan, _locality_input(plan))
 
     def execute(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
@@ -681,7 +767,7 @@ def _execution_context(
         component_digest,
     )
     environment_digest = _environment_digest(workspace_root)
-    if cell.identity.experiment_name == _SYNTHESIS_NAME:
+    if cell.identity.experiment_name is ExperimentName.STATISTICAL_SYNTHESIS:
         upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
         dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
         required = synthesis_artifact_keys(cell)
@@ -757,17 +843,17 @@ def _provenance_material(
 
 
 def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:
-    client_id = ClientId("synthetic-client")
+    client_id = ClientId(CliSyntheticIdentity.CLIENT_ID)
     static_dependencies = _local_static_dependencies(client_id)
     bound_cells = tuple(
         cell
-        for experiment_name in _LOCAL_BOUND_EXPERIMENTS
+        for experiment_name in _locality_experiments()
         for cell in cells_for_experiment(plan, experiment_name)
         if cell.executable
     )
     expected_roots = sum(
         len(cells_for_experiment(plan, experiment_name))
-        for experiment_name in _LOCAL_BOUND_EXPERIMENTS
+        for experiment_name in _locality_experiments()
     )
     if len(bound_cells) != expected_roots:
         raise InvalidScientificDataError(
@@ -780,12 +866,16 @@ def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:
     )
 
 
+def _locality_experiments() -> tuple[ExperimentName, ...]:
+    return tuple(name for name in catalog_experiment_names() if supports_batched_recovery(name))
+
+
 def _local_static_dependencies(
     client_id: ClientId,
 ) -> tuple[StaticComponentDependency, ...]:
     contracts = (
         (
-            "inference/categorical.py",
+            SourceFile.INFERENCE_CATEGORICAL,
             (
                 ScientificInputClass.TARGET_STREAM_EVENT_COUNT,
                 ScientificInputClass.TARGET_EPOCH_MANIFEST,
@@ -793,7 +883,7 @@ def _local_static_dependencies(
             ),
         ),
         (
-            "inference/confidence.py",
+            SourceFile.INFERENCE_CONFIDENCE,
             (
                 ScientificInputClass.TARGET_STREAM_EVENT_COUNT,
                 ScientificInputClass.CONFIG_VALUES,
@@ -801,18 +891,18 @@ def _local_static_dependencies(
             ),
         ),
         (
-            "inference/envelope.py",
+            SourceFile.INFERENCE_ENVELOPE,
             (ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,),
         ),
         (
-            "inference/projection.py",
+            SourceFile.INFERENCE_PROJECTION,
             (
                 ScientificInputClass.CONFIG_VALUES,
                 ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
             ),
         ),
         (
-            "inference/certification.py",
+            SourceFile.INFERENCE_CERTIFICATION,
             (
                 ScientificInputClass.CONFIG_VALUES,
                 ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
@@ -840,8 +930,8 @@ def _local_validity_target(
         )
     identity = LedgerIdentity(
         client_id=client_id,
-        action_channel_id=ActionChannelId("automatic-action"),
-        epoch_id=EpochId(f"{semantic_slug(law_name)}::static-epoch"),
+        action_channel_id=ActionChannelId(CliSyntheticIdentity.ACTION_CHANNEL_ID),
+        epoch_id=EpochId(f"{semantic_slug(law_name)}{CliSyntheticIdentity.STATIC_EPOCH_SUFFIX}"),
     )
     root_key = scientific_result_artifact_key(cell)
     root = RuntimeLineageArtifact(

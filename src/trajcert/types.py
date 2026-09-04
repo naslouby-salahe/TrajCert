@@ -10,7 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, StrictF
 from pydantic_core import core_schema
 
 ActionChannelId = NewType("ActionChannelId", str)
+ArtifactFileName = NewType("ArtifactFileName", str)
 ClientId = NewType("ClientId", str)
+CliArgumentValue = NewType("CliArgumentValue", str)
 ColumnName = NewType("ColumnName", str)
 ConfigFieldPath = NewType("ConfigFieldPath", str)
 FacetLabel = NewType("FacetLabel", str)
@@ -22,12 +24,18 @@ EventId = NewType("EventId", str)
 FailureBoundaryLevel = NewType("FailureBoundaryLevel", str)
 FailureMessage = NewType("FailureMessage", str)
 LawName = NewType("LawName", str)
+ModuleName = NewType("ModuleName", str)
 NumericSign = NewType("NumericSign", str)
 PartitionName = NewType("PartitionName", str)
-ReasonCode = NewType("ReasonCode", str)
+TelemetryLabel = NewType("TelemetryLabel", str)
+ToleranceName = NewType("ToleranceName", str)
+TelemetryPhase = NewType("TelemetryPhase", str)
+TimestampSeconds = NewType("TimestampSeconds", float)
+LogIntervalSeconds = NewType("LogIntervalSeconds", float)
 SeedNamespace = NewType("SeedNamespace", str)
 SemanticComparisonKey = NewType("SemanticComparisonKey", str)
 SerializedConfigJson = NewType("SerializedConfigJson", str)
+SvgFragment = NewType("SvgFragment", str)
 UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
 OpenUnitFloat = Annotated[StrictFloat, Field(gt=0.0, lt=1.0, allow_inf_nan=False)]
 PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
@@ -203,6 +211,23 @@ class PublicExecutionState(StrEnum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     INVALID = "INVALID"
+
+
+class ReasonCode(StrEnum):
+    MISSING_AUTHORITATIVE_CONFIGURATION = "MISSING_AUTHORITATIVE_CONFIGURATION"
+    DEGENERATE_SAFETY_INTERVAL = "DEGENERATE_SAFETY_INTERVAL"
+    NO_RESOLVED_MASS = "NO_RESOLVED_MASS"
+    DATA_VALIDATION_FAILURE = "DATA_VALIDATION_FAILURE"
+    TECHNICAL_EXECUTION_FAILURE = "TECHNICAL_EXECUTION_FAILURE"
+    MISSING_DEPENDENCY_STATUS = "MISSING_DEPENDENCY_STATUS"
+    UPSTREAM_EXPERIMENT_NOT_COMPLETED = "UPSTREAM_EXPERIMENT_NOT_COMPLETED"
+    STALE_OR_INCOMPATIBLE_COMPLETION = "STALE_OR_INCOMPATIBLE_COMPLETION"
+    INVALID_FAILURE_RECORD = "INVALID_FAILURE_RECORD"
+    CURRENT_EXECUTION_CONTEXT_UNAVAILABLE = "CURRENT_EXECUTION_CONTEXT_UNAVAILABLE"
+
+
+class TextEncoding(StrEnum):
+    UTF8 = "utf-8"
 
 
 class EvidenceClass(StrEnum):

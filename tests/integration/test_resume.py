@@ -297,7 +297,7 @@ def test_run_cell_blocked_on_missing_dependency_status(
     outcome = run_cell(legacy_cell, context, (), _raising_executor, False)
     assert outcome.state is PublicExecutionState.BLOCKED
     assert outcome.reused is False
-    assert outcome.reason == ReasonCode("MISSING_DEPENDENCY_STATUS")
+    assert outcome.reason == ReasonCode.MISSING_DEPENDENCY_STATUS
     assert not cell_completion_path(legacy_cell, tmp_path).exists()
     assert not cell_running_path(legacy_cell, tmp_path).exists()
     assert not cell_failure_path(legacy_cell, tmp_path).exists()
@@ -313,14 +313,14 @@ def test_run_cell_blocked_on_upstream_not_completed(
     outcome = run_cell(legacy_cell, context, dependencies, _raising_executor, False)
     assert outcome.state is PublicExecutionState.BLOCKED
     assert outcome.reused is False
-    assert outcome.reason == ReasonCode("UPSTREAM_EXPERIMENT_NOT_COMPLETED")
+    assert outcome.reason == ReasonCode.UPSTREAM_EXPERIMENT_NOT_COMPLETED
     assert not cell_completion_path(legacy_cell, tmp_path).exists()
 
 
 def test_run_cell_invalid_cell_short_circuits(
     tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
 ) -> None:
-    invalid_reason = ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
+    invalid_reason = ReasonCode.MISSING_AUTHORITATIVE_CONFIGURATION
     invalid_cell = inventory_cell.model_copy(
         update={"executable": False, "invalid_reason": invalid_reason}
     )
@@ -346,7 +346,7 @@ def test_run_cell_failure_and_recovery(
     failed = run_cell(inventory_cell, context, (), raise_boom, False)
     assert failed.state is PublicExecutionState.FAILED
     assert failed.reused is False
-    assert failed.reason == ReasonCode("TECHNICAL_EXECUTION_FAILURE")
+    assert failed.reason == ReasonCode.TECHNICAL_EXECUTION_FAILURE
     failure_path = cell_failure_path(inventory_cell, tmp_path)
     assert failure_path.is_file()
     failure = read_model(failure_path, FailureRecord)

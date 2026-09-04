@@ -12,7 +12,13 @@ from typing import Literal, NewType, TypeVar
 from pydantic import BaseModel, JsonValue, ValidationError
 
 from trajcert.exceptions import SerializationError
-from trajcert.paths import canonical_number_token, fsync_directory, long_path_safe
+from trajcert.paths import (
+    ArtifactFile,
+    artifact_path,
+    canonical_number_token,
+    fsync_directory,
+    long_path_safe,
+)
 from trajcert.types import Count, DomainModel, SeedCount
 
 ArtifactKey = NewType("ArtifactKey", str)
@@ -123,7 +129,7 @@ def read_model[ModelT: BaseModel](path: Path, model_type: type[ModelT]) -> Model
 def write_completion_last(directory: Path, completion: CompletionRecord) -> DigestHex:
     directory = long_path_safe(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    return atomic_write_model(directory / "COMPLETED.json", completion)
+    return atomic_write_model(artifact_path(directory, ArtifactFile.COMPLETION), completion)
 
 
 def _atomic_write_bytes(path: Path, payload: bytes) -> None:

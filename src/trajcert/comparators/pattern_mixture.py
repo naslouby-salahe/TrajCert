@@ -63,7 +63,7 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             objective=None,
             points=(),
             observation_access=ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE,
-            assumptions=ComparatorAssumption.PATTERN_MIXTURE,
+                assumptions=ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE,
         )
     indices = nonempty.astype(np.float64) + 1.0
     weights = masses[nonempty]
@@ -124,7 +124,7 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             objective=final_objective if isfinite(final_objective) else None,
             points=(),
             observation_access=ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE,
-            assumptions=ComparatorAssumption.PATTERN_MIXTURE,
+            assumptions=ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE,
         )
     harmful_mass = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
@@ -150,5 +150,5 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
         objective=final_objective,
         points=points,
         observation_access=ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE,
-        assumptions=ComparatorAssumption.PATTERN_MIXTURE,
+        assumptions=ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE,
     )

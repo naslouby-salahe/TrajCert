@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import StrEnum
 from math import log
 from statistics import median
@@ -12,7 +13,6 @@ from trajcert.comparators.repeated_static import repeated_static_projection
 from trajcert.config import (
     CoverageStressCaseConfig,
     CoverageStressSensitivityReference,
-    TrajCertConfig,
     active_config,
 )
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
@@ -111,6 +111,22 @@ class AnytimeOperationalState(StrEnum):
     INTRINSICALLY_UNCERTIFIABLE = "INTRINSICALLY_UNCERTIFIABLE"
     INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
     TECHNICAL_FAIL = "TECHNICAL_FAIL"
+
+
+class HandCaseName(StrEnum):
+    INSUFFICIENT_MATURED = "insufficient_matured"
+    INSUFFICIENT_RESOLVED = "insufficient_resolved"
+    MODEL_INCOMPATIBLE = "model_incompatible"
+    INTRINSIC = "intrinsic"
+    CERTIFIED = "certified"
+    UNCERTIFIED = "uncertified"
+    ZERO_RESOLVED_PLAUSIBLE = "zero_resolved_plausible"
+    NO_UNRESOLVED = "no_unresolved"
+    SIMPLEX_BOUNDARY = "simplex_boundary"
+    OPTIMIZER_FALLBACK = "optimizer_fallback"
+
+
+HAND_CASE_ORDER: tuple[HandCaseName, ...] = tuple(HandCaseName)
 
 
 class SequentialCheckpoint(DomainModel):
@@ -214,13 +230,12 @@ def run_sequential_trace(
     events: tuple[MaturedEvent, ...],
     identity: LedgerIdentity,
     partition: TrajectoryPartition,
-    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     sensitivity_budget: SensitivityBudget,
     risk_budget: RiskBudget,
     checkpoint_every: EventCount,
     outer_max_nodes: OuterMaxNodes | None = None,
 ) -> SequentialTrace:
-    _ = active_config.set(config)
+    config = active_config.get()
     if checkpoint_every <= 0:
         raise ValueError("checkpoint_every must be positive")
     state = initialize_categorical_state(identity, partition)
@@ -272,38 +287,22 @@ def run_sequential_trace(
 def run_anytime_hand_case(
     case_index: CaseIndex,
     partition: TrajectoryPartition,
-    config: TrajCertConfig,
 ) -> HandCaseResult:
-    _ = active_config.set(config)
-    handlers = ( #TODO: isn't there a way to handle hand cases more dynamically rather than hardcoding them? like an enumeration or map or whatever is best
-        _hand_case_insufficient_matured,
-        _hand_case_insufficient_resolved,
-        _hand_case_model_incompatible,
-        _hand_case_intrinsic,
-        _hand_case_certified,
-        _hand_case_uncertified,
-        _hand_case_zero_resolved_plausible,
-        _hand_case_no_unresolved,
-        _hand_case_simplex_boundary,
-        _hand_case_optimizer_fallback,
-    )
-    if case_index < 1 or case_index > len(handlers):
-        raise ValueError("hand case index must lie in [1, 10]")
-    return handlers[case_index - 1](partition)
+    if case_index < 1 or case_index > len(HAND_CASE_ORDER):
+        raise ValueError(f"hand case index must lie in [1, {len(HAND_CASE_ORDER)}]")
+    return _HAND_CASE_HANDLERS[HAND_CASE_ORDER[case_index - 1]](partition)
 
 
 def run_coverage_stress(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     sensitivity_budget: SensitivityBudget,
 ) -> CoverageStressResult:
-    _ = active_config.set(config)
+    config = active_config.get()
     stream_count = config.sequential.coverage.streams
     batch = coverage_stress_batch(
         parameters,
         partition,
-        config,
         sensitivity_budget,
         stream_range=range(stream_count),
         batch_index=0,
@@ -314,12 +313,11 @@ def run_coverage_stress(
 def coverage_stress_batch(
     parameters: LawParameters,
     partition: TrajectoryPartition,
-    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     sensitivity_budget: SensitivityBudget,
     stream_range: range,
     batch_index: BatchIndex,
 ) -> CoverageBatchResult:
-    _ = active_config.set(config)
+    config = active_config.get()
     max_events = config.sequential.coverage.max_events
     checkpoint_every = config.sequential.coverage.checkpoint_every
     true_risk = parameters.theta
@@ -512,25 +510,21 @@ def resolve_coverage_stress_case(
 
 def evaluate_configured_coverage_stress(
     case: CoverageStressCaseConfig,
-    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
 ) -> CoverageEvidenceResult:
-    _ = active_config.set(config)
     parameters, partition, rho, _ = resolve_coverage_stress_case(case)
     base = run_coverage_stress(
         parameters=parameters,
         partition=partition,
-        config=config,
         sensitivity_budget=rho,
     )
-    return coverage_evidence_from_base(case, config, base)
+    return coverage_evidence_from_base(case, base)
 
 
 def coverage_evidence_from_base(
     case: CoverageStressCaseConfig,
-    config: TrajCertConfig, #TODO: don't pass conf as input param. It should be accessed via active_config.get(). Identify why tests aren't catching this
     base: CoverageStressResult,
 ) -> CoverageEvidenceResult:
-    _ = active_config.set(config)
+    config = active_config.get()
     parameters, partition, rho, beta = resolve_coverage_stress_case(case)
     true_information = _true_information(parameters, partition)
     trajectory_evidence = _trajcert_trajectory_evidence(
@@ -645,7 +639,6 @@ def _trajcert_trajectory_evidence(
             events=mature_ledger(ledger, partition),
             identity=ledger.identity,
             partition=partition,
-            config=config,
             sensitivity_budget=rho,
             risk_budget=beta,
             checkpoint_every=checkpoint_every,
@@ -853,7 +846,6 @@ def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseR
         events,
         ledger.identity,
         partition,
-        config,
         config.budgets.information_nats,
         config.budgets.risk,
         case.event_count,
@@ -902,7 +894,6 @@ def _hand_case_insufficient_resolved(partition: TrajectoryPartition) -> HandCase
         events,
         identity,
         partition,
-        config,
         config.budgets.information_nats,
         config.budgets.risk,
         case.total_count,
@@ -1373,3 +1364,19 @@ def _oracle_input(envelope: ObservableSummaryEnvelope) -> ProjectionOracleInput:
             upper=envelope.unresolved.upper,
         ),
     )
+
+
+_HAND_CASE_HANDLERS: dict[HandCaseName, Callable[[TrajectoryPartition], HandCaseResult]] = {
+    HandCaseName.INSUFFICIENT_MATURED: _hand_case_insufficient_matured,
+    HandCaseName.INSUFFICIENT_RESOLVED: _hand_case_insufficient_resolved,
+    HandCaseName.MODEL_INCOMPATIBLE: _hand_case_model_incompatible,
+    HandCaseName.INTRINSIC: _hand_case_intrinsic,
+    HandCaseName.CERTIFIED: _hand_case_certified,
+    HandCaseName.UNCERTIFIED: _hand_case_uncertified,
+    HandCaseName.ZERO_RESOLVED_PLAUSIBLE: _hand_case_zero_resolved_plausible,
+    HandCaseName.NO_UNRESOLVED: _hand_case_no_unresolved,
+    HandCaseName.SIMPLEX_BOUNDARY: _hand_case_simplex_boundary,
+    HandCaseName.OPTIMIZER_FALLBACK: _hand_case_optimizer_fallback,
+}
+if set(_HAND_CASE_HANDLERS) != set(HAND_CASE_ORDER):
+    raise RuntimeError("hand-case registry must define every hand case exactly once")

@@ -11,9 +11,18 @@ from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.catalog import (
+    EXPERIMENT_CATALOG,
+    CoordinateHandler,
+    DependencyPolicy,
+    coordinate_handler_for,
+    dependency_policy_for,
+)
+from trajcert.experiments.catalog import experiment_names as catalog_experiment_names
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis
 from trajcert.provenance import (
     ComparisonPairName,
+    CoordinateGrammar,
     FailureBoundaryCoordinate,
     SemanticCellIdentity,
     SemanticCoordinates,
@@ -46,38 +55,6 @@ class _SafetyCaseVariant(StrEnum):
 
 
 _SAFETY_CASES = tuple(_SafetyCaseVariant)
-
-_EXPERIMENTS: tuple[tuple[ExperimentName, EvidenceClass], ...] = (
-    (ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK, EvidenceClass.VALIDATION),
-    (ExperimentName.PATH_INFORMATION_DECOMPOSITION, EvidenceClass.VALIDATION),
-    (ExperimentName.INFORMATION_PROFILE_CONVEXITY, EvidenceClass.VALIDATION),
-    (ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY, EvidenceClass.VALIDATION),
-    (ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY, EvidenceClass.VALIDATION),
-    (ExperimentName.REFINEMENT_DOMINANCE_IDENTITY, EvidenceClass.VALIDATION),
-    (ExperimentName.STRICT_TIMING_GAIN_IDENTITY, EvidenceClass.VALIDATION),
-    (ExperimentName.SAFETY_BOUNDARY_IDENTITY, EvidenceClass.VALIDATION),
-    (ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY, EvidenceClass.VALIDATION),
-    (ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK, EvidenceClass.VALIDATION),
-    (ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK, EvidenceClass.VALIDATION),
-    (ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE, EvidenceClass.VALIDATION),
-    (ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.PARTITION_COHERENCE, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING, EvidenceClass.ABLATION),
-    (ExperimentName.STRICT_TIMING_GAIN, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES, EvidenceClass.VALIDATION),
-    (ExperimentName.ANYTIME_COVERAGE_STRESS, EvidenceClass.CONFIRMATORY),
-    (ExperimentName.POPULATION_SENSITIVITY_UTILITY, EvidenceClass.ROBUSTNESS),
-    (ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY, EvidenceClass.ROBUSTNESS),
-    (ExperimentName.FAILURE_BOUNDARY_ATLAS, EvidenceClass.FAILURE_BOUNDARY),
-    (ExperimentName.REAL_TRAJECTORY_VALIDATION, EvidenceClass.GENERALIZATION),
-    (ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL, EvidenceClass.DIAGNOSTIC),
-    (ExperimentName.COMPUTATIONAL_SCALING, EvidenceClass.VALIDATION),
-    (ExperimentName.STATISTICAL_SYNTHESIS, EvidenceClass.VALIDATION),
-)
 
 
 class PlannedCell(DomainModel):
@@ -142,7 +119,7 @@ def dependency_graph(plan: ExperimentPlan) -> DependencyGraphRecord:
             experiment_name=name,
             required_experiments=tuple(sorted(required_by_experiment.get(name, ()))),
         )
-        for name, _ in _EXPERIMENTS
+        for name in catalog_experiment_names()
     )
     return DependencyGraphRecord(edges=edges)
 
@@ -151,10 +128,12 @@ def build_plan(config: TrajCertConfig) -> ExperimentPlan:
     _ = active_config.set(config)
     cells = tuple(
         cell
-        for order, (name, evidence_class) in enumerate(_EXPERIMENTS, start=1)
-        for cell in _expand_experiment(order, name, evidence_class)
+        for order, definition in enumerate(EXPERIMENT_CATALOG, start=1)
+        for cell in _expand_experiment(order, definition.name, definition.evidence_class)
     )
-    nonapplicable = tuple(name for name, _ in _EXPERIMENTS if not _coordinates_for_experiment(name))
+    nonapplicable = tuple(
+        name for name in catalog_experiment_names() if not _coordinates_for_experiment(name)
+    )
     executable_count = sum(cell.executable for cell in cells)
     invalid_count = len(cells) - executable_count
     material = PlanDigestMaterial(cells=cells, nonapplicable_experiments=nonapplicable)
@@ -170,7 +149,7 @@ def build_plan(config: TrajCertConfig) -> ExperimentPlan:
 
 
 def experiment_names() -> tuple[ExperimentName, ...]:
-    return tuple(name for name, _ in _EXPERIMENTS)
+    return catalog_experiment_names()
 
 
 def cells_for_experiment(
@@ -208,20 +187,16 @@ def _expand_experiment(
 def _coordinates_for_experiment(
     name: ExperimentName,
 ) -> tuple[SemanticCoordinates, ...]:
-    handler = _COORDINATE_DISPATCH.get(name)
-    if handler is None and name in {
-        ExperimentName.REAL_TRAJECTORY_VALIDATION,
-        ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
-    }:
-        return ()
+    handler = coordinate_handler_for(name)
     if handler is None:
-        raise InvalidScientificDataError(f"no plan expansion implementation for experiment: {name}")
-    return handler()
+        return ()
+    return _COORDINATE_FACTORY[handler]()
 
 
 def _adjacent_partition_pairs() -> tuple[ComparisonPairName, ...]:
     return tuple(
-        ComparisonPairName(f"{fine} -> {coarse}") for fine, coarse in pairwise(_partition_names())
+        ComparisonPairName(f"{fine}{CoordinateGrammar.COMPARISON_PAIR}{coarse}")
+        for fine, coarse in pairwise(_partition_names())
     )
 
 
@@ -272,7 +247,8 @@ def _coordinates_strict_timing_gain() -> tuple[SemanticCoordinates, ...]:
         SemanticCoordinates(
             synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
             comparison_pair_name=ComparisonPairName(
-                f"{partition_name(case.fine_bands)} -> {partition_name(case.coarse_bands)}"
+                f"{partition_name(case.fine_bands)}{CoordinateGrammar.COMPARISON_PAIR}"
+                + partition_name(case.coarse_bands)
             ),
             sensitivity_coordinate=_offset_coordinate(offset),
         )
@@ -386,7 +362,7 @@ def _coordinates_safety_and_intrinsic_impossibility() -> tuple[SemanticCoordinat
 def _coordinates_anytime_implementation_hand_cases() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(
-            variant_name=VariantName(f"hand-case-{case_index:02d}"),
+            variant_name=VariantName(f"{CoordinateGrammar.HAND_CASE_PREFIX}{case_index:02d}"),
             partition_name=partition,
         )
         for case_index, partition in product(range(1, 11), _partition_names()[:3])
@@ -496,54 +472,52 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
         coordinates.append(
             SemanticCoordinates(
                 failure_boundary_axis_and_level=FailureBoundaryCoordinate(
-                    f"terminal-selection-asymmetry=q1:{q1},q0:{q0}"
+                    f"terminal-selection-asymmetry{CoordinateGrammar.ASSIGNMENT}"
+                    + f"{CoordinateGrammar.TERMINAL_Q1_PREFIX}{q1}"
+                    + f"{CoordinateGrammar.TERMINAL_Q0_SEPARATOR}{q0}"
                 )
             )
         )
     return tuple(coordinates)
 
 
-_COORDINATE_DISPATCH: dict[ExperimentName, Callable[[], tuple[SemanticCoordinates, ...]]] = {
-    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: (
-        _coordinates_legacy_partition_incoherence_check
-    ),
-    ExperimentName.PATH_INFORMATION_DECOMPOSITION: _coordinates_law_and_partition_product,
-    ExperimentName.INFORMATION_PROFILE_CONVEXITY: _coordinates_law_and_partition_product,
-    ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY: _coordinates_law_and_partition_product,
-    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: (_coordinates_sharp_set_constructive_identity),
-    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: (_coordinates_refinement_dominance_identity),
-    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _coordinates_strict_timing_gain,
-    ExperimentName.STRICT_TIMING_GAIN: _coordinates_strict_timing_gain,
-    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _coordinates_safety_boundary_identity,
-    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: (_coordinates_endpoint_special_case_identity),
-    ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK: (_coordinates_anytime_projection_proof_check),
-    ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK: (
+_COORDINATE_FACTORY: dict[CoordinateHandler, Callable[[], tuple[SemanticCoordinates, ...]]] = {
+    CoordinateHandler.LEGACY_PARTITION_INCOHERENCE: _coordinates_legacy_partition_incoherence_check,
+    CoordinateHandler.LAW_AND_PARTITION_PRODUCT: _coordinates_law_and_partition_product,
+    CoordinateHandler.SHARP_SET_CONSTRUCTIVE_IDENTITY: _coordinates_sharp_set_constructive_identity,
+    CoordinateHandler.REFINEMENT_DOMINANCE_IDENTITY: _coordinates_refinement_dominance_identity,
+    CoordinateHandler.STRICT_TIMING_GAIN: _coordinates_strict_timing_gain,
+    CoordinateHandler.SAFETY_BOUNDARY_IDENTITY: _coordinates_safety_boundary_identity,
+    CoordinateHandler.ENDPOINT_SPECIAL_CASE_IDENTITY: _coordinates_endpoint_special_case_identity,
+    CoordinateHandler.ANYTIME_PROJECTION_PROOF_CHECK: _coordinates_anytime_projection_proof_check,
+    CoordinateHandler.POPULATION_COMPLEXITY_PROOF_CHECK: (
         _coordinates_population_complexity_proof_check
     ),
-    ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: (
+    CoordinateHandler.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: (
         _coordinates_production_solver_vs_independent_oracle
     ),
-    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: (_coordinates_comparator_reduction),
-    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: (_coordinates_comparator_reduction),
-    ExperimentName.PARTITION_COHERENCE: _coordinates_partition_coherence,
-    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (_coordinates_same_endpoint_different_timing),
-    ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _coordinates_compatibility_floor_behavior,
-    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: (
+    CoordinateHandler.COMPARATOR_REDUCTION: _coordinates_comparator_reduction,
+    CoordinateHandler.PARTITION_COHERENCE: _coordinates_partition_coherence,
+    CoordinateHandler.SAME_ENDPOINT_DIFFERENT_TIMING: _coordinates_same_endpoint_different_timing,
+    CoordinateHandler.COMPATIBILITY_FLOOR_BEHAVIOR: _coordinates_compatibility_floor_behavior,
+    CoordinateHandler.SHARPNESS_AGAINST_GENERIC_ORACLE: (
         _coordinates_sharpness_against_generic_oracle
     ),
-    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: (
+    CoordinateHandler.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: (
         _coordinates_safety_and_intrinsic_impossibility
     ),
-    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: (
+    CoordinateHandler.ANYTIME_IMPLEMENTATION_HAND_CASES: (
         _coordinates_anytime_implementation_hand_cases
     ),
-    ExperimentName.ANYTIME_COVERAGE_STRESS: _coordinates_anytime_coverage_stress,
-    ExperimentName.POPULATION_SENSITIVITY_UTILITY: (_coordinates_population_sensitivity_utility),
-    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: (_coordinates_sequential_sensitivity_utility),
-    ExperimentName.FAILURE_BOUNDARY_ATLAS: _failure_boundary_coordinates,
-    ExperimentName.COMPUTATIONAL_SCALING: _coordinates_computational_scaling,
-    ExperimentName.STATISTICAL_SYNTHESIS: _coordinates_statistical_synthesis,
+    CoordinateHandler.ANYTIME_COVERAGE_STRESS: _coordinates_anytime_coverage_stress,
+    CoordinateHandler.POPULATION_SENSITIVITY_UTILITY: _coordinates_population_sensitivity_utility,
+    CoordinateHandler.SEQUENTIAL_SENSITIVITY_UTILITY: _coordinates_sequential_sensitivity_utility,
+    CoordinateHandler.FAILURE_BOUNDARY: _failure_boundary_coordinates,
+    CoordinateHandler.COMPUTATIONAL_SCALING: _coordinates_computational_scaling,
+    CoordinateHandler.STATISTICAL_SYNTHESIS: _coordinates_statistical_synthesis,
 }
+if set(_COORDINATE_FACTORY) != set(CoordinateHandler):
+    raise RuntimeError("coordinate factory must implement every catalog coordinate handler")
 
 
 def _signed_level(
@@ -557,7 +531,7 @@ def _signed_level(
 
 
 def _offset_coordinate(offset: SensitivityOffset) -> SensitivityCoordinate:
-    return SensitivityCoordinate(f"rho-offset={offset}")
+    return SensitivityCoordinate(f"{CoordinateGrammar.RHO_OFFSET_PREFIX}{offset}")
 
 
 def _variant(name: VariantName) -> SemanticCoordinates:
@@ -567,20 +541,21 @@ def _variant(name: VariantName) -> SemanticCoordinates:
 def _required_experiments(
     name: ExperimentName,
 ) -> tuple[ExperimentName, ...]:
-    precondition = _EXPERIMENTS[0][0]
-    if name == precondition:
-        dependencies: tuple[ExperimentName, ...] = ()
-    elif name == ExperimentName.STATISTICAL_SYNTHESIS:
+    precondition = EXPERIMENT_CATALOG[0].name
+    policy = dependency_policy_for(name)
+    if policy in {DependencyPolicy.ROOT, DependencyPolicy.NONAPPLICABLE}:
+        return ()
+    if policy is DependencyPolicy.SYNTHESIS:
         excluded = {
             name,
             ExperimentName.REAL_TRAJECTORY_VALIDATION,
             ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
         }
-        dependencies = tuple(
+        return tuple(
             experiment_name
-            for experiment_name, _ in _EXPERIMENTS
+            for experiment_name in catalog_experiment_names()
             if experiment_name not in excluded
         )
-    else:
-        dependencies = (precondition,)
-    return dependencies
+    if policy is DependencyPolicy.ROOT_PRECONDITION:
+        return (precondition,)
+    raise RuntimeError(f"unhandled dependency policy: {policy}")

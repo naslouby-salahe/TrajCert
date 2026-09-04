@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ast
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from enum import StrEnum
 from functools import partial
 from hashlib import sha256
@@ -31,6 +31,14 @@ from trajcert.experiments.anytime import (
     evaluate_configured_coverage_stress,
     resolve_coverage_stress_case,
     run_anytime_hand_case,
+)
+from trajcert.experiments.catalog import (
+    ExecutionHandler,
+    SeedPolicy,
+    execution_handler_for,
+    experiment_definition,
+    seed_policy_for,
+    supports_batched_recovery,
 )
 from trajcert.experiments.comparator_reduction import evaluate_comparator_reduction
 from trajcert.experiments.failure_boundaries import (
@@ -79,9 +87,21 @@ from trajcert.inference.projection import project_upper_risk
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyBudgetCase, safety_budget_cases
-from trajcert.paths import ExperimentLeaf, long_path_safe, semantic_cell_path, semantic_slug
+from trajcert.paths import (
+    ArtifactFile,
+    ArtifactPayloadField,
+    ExperimentLeaf,
+    SourceFile,
+    artifact_path,
+    checkpoint_batch_file,
+    long_path_safe,
+    module_source_candidates,
+    semantic_cell_path,
+    semantic_slug,
+)
 from trajcert.provenance import (
     ArtifactTypeName,
+    CoordinateGrammar,
     DependencyMaterial,
     EnvironmentDigest,
     FailureBoundaryCoordinate,
@@ -118,6 +138,7 @@ from trajcert.types import (
     BatchSize,
     CaseIndex,
     ClientId,
+    ColumnName,
     Count,
     DomainModel,
     EpochId,
@@ -126,6 +147,7 @@ from trajcert.types import (
     FailureMessage,
     LawKey,
     LawName,
+    ModuleName,
     PartitionName,
     PublicExecutionState,
     ReasonCode,
@@ -133,74 +155,31 @@ from trajcert.types import (
     SeedIndex,
     SensitivityBudget,
     StreamCount,
+    TableRow,
 )
 
 FailureType = NewType("FailureType", str)
 
-_RESULT_FILENAME = "scientific_result.json" #TODO: This should be in storage as part of enumeration of artifact types or filenames...
+
+class FirstPartyModule(StrEnum):
+    ROOT = "trajcert"
+    CLI = "trajcert.cli"
+    REPORTING_EXPORT = "trajcert.reporting.export"
+    REPORTING_FIGURES = "trajcert.reporting.figures"
+    REPORTING_TABLES = "trajcert.reporting.tables"
+
+
+class ScientificArtifactKeyPrefix(StrEnum):
+    SCIENTIFIC_RESULT = "scientific-result|"
+
+
 SCIENTIFIC_RESULT_ARTIFACT_TYPE: Final[ArtifactTypeName] = ArtifactTypeName("scientific-result")
 
-_NON_SCIENTIFIC_MODULE_PREFIXES = ( 
-    "trajcert.cli",
-    "trajcert.reporting.export",
-    "trajcert.reporting.figures",
-    "trajcert.reporting.tables",
-)
-
-_MATHEMATICS_PRODUCER_ROOT: Final[Path] = Path("src/trajcert/experiments/mathematics.py")
-_TIMING_PRODUCER_ROOT: Final[Path] = Path("src/trajcert/experiments/timing.py")
-_SAFETY_PRODUCER_ROOT: Final[Path] = Path("src/trajcert/experiments/safety.py")
-
-_PRODUCER_ROOTS: dict[ExperimentName, Path] = {
-    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.PATH_INFORMATION_DECOMPOSITION: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.INFORMATION_PROFILE_CONVEXITY: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.ANYTIME_PROJECTION_PROOF_CHECK: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.POPULATION_COMPLEXITY_PROOF_CHECK: _MATHEMATICS_PRODUCER_ROOT,
-    ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: Path(
-        "src/trajcert/experiments/solver_validation.py"
-    ),
-    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: Path(
-        "src/trajcert/experiments/comparator_reduction.py"
-    ),
-    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: Path(
-        "src/trajcert/experiments/comparator_reduction.py"
-    ),
-    ExperimentName.PARTITION_COHERENCE: _TIMING_PRODUCER_ROOT,
-    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: _TIMING_PRODUCER_ROOT,
-    ExperimentName.STRICT_TIMING_GAIN: _TIMING_PRODUCER_ROOT,
-    ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _SAFETY_PRODUCER_ROOT,
-    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: _SAFETY_PRODUCER_ROOT,
-    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: _SAFETY_PRODUCER_ROOT,
-    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: (Path("src/trajcert/experiments/anytime.py")),
-    ExperimentName.ANYTIME_COVERAGE_STRESS: Path("src/trajcert/experiments/anytime.py"),
-    ExperimentName.POPULATION_SENSITIVITY_UTILITY: (
-        Path("src/trajcert/experiments/sensitivity.py")
-    ),
-    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: Path("src/trajcert/experiments/sensitivity.py"),
-    ExperimentName.FAILURE_BOUNDARY_ATLAS: (Path("src/trajcert/experiments/failure_boundaries.py")),
-    ExperimentName.COMPUTATIONAL_SCALING: Path("src/trajcert/experiments/scaling.py"),
-    ExperimentName.STATISTICAL_SYNTHESIS: Path("src/trajcert/experiments/synthesis.py"),
-}
-
-_SUMMARY_COORDINATE_EXPERIMENTS = frozenset(
-    {
-        ExperimentName.PATH_INFORMATION_DECOMPOSITION,
-        ExperimentName.INFORMATION_PROFILE_CONVEXITY,
-        ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY,
-        ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY,
-        ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY,
-        ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE,
-        ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR,
-        ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION,
-        ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION,
-    }
+_NON_SCIENTIFIC_MODULE_PREFIXES = (
+    FirstPartyModule.CLI,
+    FirstPartyModule.REPORTING_EXPORT,
+    FirstPartyModule.REPORTING_FIGURES,
+    FirstPartyModule.REPORTING_TABLES,
 )
 
 
@@ -417,7 +396,7 @@ def run_cell(
             reused=False,
             completion_path=completion_path,
             failure_path=failure_path,
-            reason=ReasonCode("DATA_VALIDATION_FAILURE"),
+            reason=ReasonCode.DATA_VALIDATION_FAILURE,
         )
     except Exception as exc:
         failure = FailureRecord(
@@ -435,7 +414,7 @@ def run_cell(
             reused=False,
             completion_path=completion_path,
             failure_path=failure_path,
-            reason=ReasonCode("TECHNICAL_EXECUTION_FAILURE"),
+            reason=ReasonCode.TECHNICAL_EXECUTION_FAILURE,
         )
     finally:
         set_current_cell_key(None)
@@ -454,15 +433,15 @@ def _write_reflected_evidence(
         item for item in result.artifact_index.artifacts if item.artifact_key == artifact_key
     )
     scientific_result = cast(
-        "dict[str, JsonValue]",
+        Mapping[ColumnName, JsonValue],
         json.loads((context.workspace_root / entry.relative_path).read_text(encoding="utf-8")),
     )
-    metrics_payload: dict[str, JsonValue] = {
+    metrics_payload: dict[ColumnName, JsonValue] = {
         key: value
         for key, value in scientific_result.items()
         if isinstance(value, (int, float)) and not isinstance(value, bool)
     }
-    diagnostics_payload: dict[str, JsonValue] = {
+    diagnostics_payload: dict[ColumnName, JsonValue] = {
         key: value for key, value in scientific_result.items() if isinstance(value, bool)
     }
     metrics_leaf = (
@@ -471,59 +450,59 @@ def _write_reflected_evidence(
         else ExperimentLeaf.METRICS_PER_CONDITION
     )
     _write_reflected_json(
-        cell, context.workspace_root, metrics_leaf, "metrics.json", metrics_payload
+        cell, context.workspace_root, metrics_leaf, ArtifactFile.METRICS, metrics_payload
     )
     _write_reflected_json(
         cell,
         context.workspace_root,
         ExperimentLeaf.DIAGNOSTICS_SCIENTIFIC,
-        "diagnostics.json",
+        ArtifactFile.DIAGNOSTICS,
         diagnostics_payload,
     )
     _write_reflected_json(
         cell,
         context.workspace_root,
         ExperimentLeaf.PROVENANCE_CONFIGURATION,
-        "configuration.json",
-        {"value": context.scientific_specification_digest},
+        ArtifactFile.CONFIGURATION,
+        {ColumnName(ArtifactPayloadField.VALUE): context.scientific_specification_digest},
     )
     _write_reflected_json(
         cell,
         context.workspace_root,
         ExperimentLeaf.PROVENANCE_DATA,
-        "data.json",
-        {"value": context.scientific_dependency_digest},
+        ArtifactFile.DATA,
+        {ColumnName(ArtifactPayloadField.VALUE): context.scientific_dependency_digest},
     )
     _write_reflected_json(
         cell,
         context.workspace_root,
         ExperimentLeaf.PROVENANCE_SEEDS,
-        "seeds.json",
+        ArtifactFile.SEEDS,
         {
-            "expected_seed_count": context.expected_seed_count,
-            "completed_seed_count": result.completed_seed_count,
+            ColumnName(ArtifactPayloadField.EXPECTED_SEED_COUNT): context.expected_seed_count,
+            ColumnName(ArtifactPayloadField.COMPLETED_SEED_COUNT): result.completed_seed_count,
         },
     )
     _write_reflected_json(
         cell,
         context.workspace_root,
         ExperimentLeaf.PROVENANCE_CODE,
-        "code.json",
-        {"value": context.provenance_fingerprint},
+        ArtifactFile.CODE,
+        {ColumnName(ArtifactPayloadField.VALUE): context.provenance_fingerprint},
     )
     _write_reflected_json(
         cell,
         context.workspace_root,
         ExperimentLeaf.PROVENANCE_ENVIRONMENT,
-        "environment.json",
-        {"manifest_digest": context.manifest_digest},
+        ArtifactFile.ENVIRONMENT,
+        {ColumnName(ArtifactPayloadField.MANIFEST_DIGEST): context.manifest_digest},
     )
     _write_reflected_json(
         cell,
         context.workspace_root,
         ExperimentLeaf.PROVENANCE_DEPENDENCIES,
-        "dependencies.json",
-        {"value": context.dependency_fingerprint},
+        ArtifactFile.DEPENDENCIES,
+        {ColumnName(ArtifactPayloadField.VALUE): context.dependency_fingerprint},
     )
 
 
@@ -531,8 +510,8 @@ def _write_reflected_json(
     cell: PlannedCell,
     workspace_root: Path,
     leaf: ExperimentLeaf,
-    filename: str,
-    payload: dict[str, JsonValue],
+    filename: ArtifactFile,
+    payload: TableRow,
 ) -> None:
     directory = semantic_cell_path(
         cell.identity.experiment_slug,
@@ -548,11 +527,11 @@ def dependency_block_reason(
 ) -> ReasonCode | None:
     supplied = {item.experiment_name: item.state for item in dependencies}
     if any(name not in supplied for name in cell.required_experiments):
-        return ReasonCode("MISSING_DEPENDENCY_STATUS")
+        return ReasonCode.MISSING_DEPENDENCY_STATUS
     if any(
         supplied[name] is not PublicExecutionState.COMPLETED for name in cell.required_experiments
     ):
-        return ReasonCode("UPSTREAM_EXPERIMENT_NOT_COMPLETED")
+        return ReasonCode.UPSTREAM_EXPERIMENT_NOT_COMPLETED
     return None
 
 
@@ -599,31 +578,33 @@ def cell_completion_path(cell: PlannedCell, workspace_root: Path) -> Path:
         ExperimentLeaf.CHECKPOINTS_EXECUTION,
         cell.identity.path_coordinates,
     )
-    return workspace_root / directory / "COMPLETED.json"
+    return workspace_root / artifact_path(directory, ArtifactFile.COMPLETION)
 
 
 def cell_running_path(cell: PlannedCell, workspace_root: Path) -> Path:
-    return cell_completion_path(cell, workspace_root).with_name("RUNNING.json")
+    return cell_completion_path(cell, workspace_root).with_name(ArtifactFile.RUNNING)
 
 
 def cell_artifact_index_path(cell: PlannedCell, workspace_root: Path) -> Path:
-    return cell_completion_path(cell, workspace_root).with_name("artifact_index.json")
+    return cell_completion_path(cell, workspace_root).with_name(ArtifactFile.ARTIFACT_INDEX)
 
 
 def cell_envelope_path(cell: PlannedCell, workspace_root: Path) -> Path:
-    return cell_completion_path(cell, workspace_root).with_name("envelope.json")
+    return cell_completion_path(cell, workspace_root).with_name(ArtifactFile.ENVELOPE)
 
 
 def cell_checkpoint_batch_path(
     cell: PlannedCell, workspace_root: Path, batch_index: BatchIndex
 ) -> Path:
-    return cell_completion_path(cell, workspace_root).with_name(f"batch_{batch_index}.json")
+    return cell_completion_path(cell, workspace_root).with_name(checkpoint_batch_file(batch_index))
 
 
 def cell_checkpoint_batch_result_path(
     cell: PlannedCell, workspace_root: Path, batch_index: BatchIndex
 ) -> Path:
-    return cell_completion_path(cell, workspace_root).with_name(f"batch_{batch_index}_result.json")
+    return cell_completion_path(cell, workspace_root).with_name(
+        checkpoint_batch_file(batch_index, result=True)
+    )
 
 
 def cell_failure_path(cell: PlannedCell, workspace_root: Path) -> Path:
@@ -632,7 +613,7 @@ def cell_failure_path(cell: PlannedCell, workspace_root: Path) -> Path:
         ExperimentLeaf.LOGS_FAILURES,
         cell.identity.path_coordinates,
     )
-    return workspace_root / directory / "failure.json"
+    return workspace_root / artifact_path(directory, ArtifactFile.FAILURE)
 
 
 def _cell_plan_digest(cell: PlannedCell) -> PlanDigest:
@@ -735,7 +716,7 @@ def _reflected_evidence_paths(
         / semantic_cell_path(
             cell.identity.experiment_slug, metrics_leaf, cell.identity.path_coordinates
         )
-        / "metrics.json"
+        / ArtifactFile.METRICS
     )
     diagnostics_path = (
         workspace_root
@@ -744,19 +725,19 @@ def _reflected_evidence_paths(
             ExperimentLeaf.DIAGNOSTICS_SCIENTIFIC,
             cell.identity.path_coordinates,
         )
-        / "diagnostics.json"
+        / ArtifactFile.DIAGNOSTICS
     )
     provenance_paths = tuple(
         workspace_root
         / semantic_cell_path(cell.identity.experiment_slug, leaf, cell.identity.path_coordinates)
         / filename
         for leaf, filename in (
-            (ExperimentLeaf.PROVENANCE_CONFIGURATION, "configuration.json"),
-            (ExperimentLeaf.PROVENANCE_DATA, "data.json"),
-            (ExperimentLeaf.PROVENANCE_SEEDS, "seeds.json"),
-            (ExperimentLeaf.PROVENANCE_CODE, "code.json"),
-            (ExperimentLeaf.PROVENANCE_ENVIRONMENT, "environment.json"),
-            (ExperimentLeaf.PROVENANCE_DEPENDENCIES, "dependencies.json"),
+            (ExperimentLeaf.PROVENANCE_CONFIGURATION, ArtifactFile.CONFIGURATION),
+            (ExperimentLeaf.PROVENANCE_DATA, ArtifactFile.DATA),
+            (ExperimentLeaf.PROVENANCE_SEEDS, ArtifactFile.SEEDS),
+            (ExperimentLeaf.PROVENANCE_CODE, ArtifactFile.CODE),
+            (ExperimentLeaf.PROVENANCE_ENVIRONMENT, ArtifactFile.ENVIRONMENT),
+            (ExperimentLeaf.PROVENANCE_DEPENDENCIES, ArtifactFile.DEPENDENCIES),
         )
     )
     return metrics_path, diagnostics_path, provenance_paths
@@ -828,7 +809,7 @@ def producer_component_digest(
     workspace_root: Path,
     experiment_name: ExperimentName,
 ) -> DigestHex:
-    root = _PRODUCER_ROOTS.get(experiment_name)
+    root = experiment_definition(experiment_name).producer_root
     if root is None:
         raise InvalidScientificDataError(
             f"missing producer-component registration: {experiment_name}"
@@ -914,12 +895,14 @@ def _parent_artifact_identity(
 
 def expected_seed_count(experiment_name: ExperimentName) -> SeedCount:
     config = active_config.get()
-    name = experiment_name
-    if name == ExperimentName.ANYTIME_COVERAGE_STRESS:
+    policy = seed_policy_for(experiment_name)
+    if policy is SeedPolicy.COVERAGE_STREAMS:
         return config.sequential.coverage.streams
-    if name == ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY:
+    if policy is SeedPolicy.UTILITY_STREAMS:
         return config.sequential.utility.streams
-    return 0
+    if policy is SeedPolicy.NONE:
+        return 0
+    raise RuntimeError(f"unhandled seed policy: {policy}")
 
 
 def _first_party_import_closure(workspace_root: Path, root: Path) -> tuple[Path, ...]:
@@ -944,8 +927,8 @@ def _first_party_import_closure(workspace_root: Path, root: Path) -> tuple[Path,
     return tuple(sorted(visited, key=lambda path: path.as_posix()))
 
 
-def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:
-    modules: set[str] = set()
+def _first_party_imports(tree: ast.AST) -> tuple[ModuleName, ...]:
+    modules: set[ModuleName] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             modules.update(_first_party_import_from(node))
@@ -954,34 +937,38 @@ def _first_party_imports(tree: ast.AST) -> tuple[str, ...]:
     return tuple(sorted(modules))
 
 
-def _first_party_import_from(node: ast.ImportFrom) -> tuple[str, ...]:
+def _first_party_import_from(node: ast.ImportFrom) -> tuple[ModuleName, ...]:
     return tuple(
-        module for module in (node.module,) if module is not None and _is_first_party_module(module)
+        ModuleName(module)
+        for module in (node.module,)
+        if module is not None and _is_first_party_module(ModuleName(module))
     )
 
 
-def _first_party_import(node: ast.Import) -> tuple[str, ...]:
-    return tuple(alias.name for alias in node.names if _is_first_party_module(alias.name))
+def _first_party_import(node: ast.Import) -> tuple[ModuleName, ...]:
+    return tuple(
+        ModuleName(alias.name)
+        for alias in node.names
+        if _is_first_party_module(ModuleName(alias.name))
+    )
 
 
-def _is_first_party_module(module_name: str) -> bool:
-    return module_name.startswith("trajcert") and not _non_scientific_module(module_name)
+def _is_first_party_module(module_name: ModuleName) -> bool:
+    return module_name.startswith(FirstPartyModule.ROOT) and not _non_scientific_module(module_name)
 
 
-def _non_scientific_module(module_name: str) -> bool:
+def _non_scientific_module(module_name: ModuleName) -> bool:
     return any(
         module_name == prefix or module_name.startswith(f"{prefix}.")
         for prefix in _NON_SCIENTIFIC_MODULE_PREFIXES
     )
 
 
-def _module_path(workspace_root: Path, module_name: str) -> Path | None:
+def _module_path(workspace_root: Path, module_name: ModuleName) -> Path | None:
     parts = module_name.split(".")
-    if not parts or parts[0] != "trajcert":
+    if not parts or parts[0] != FirstPartyModule.ROOT:
         return None
-    module_path = Path("src") / Path(*parts)
-    file_candidate = module_path.with_suffix(".py")
-    package_candidate = module_path / "__init__.py"
+    file_candidate, package_candidate = module_source_candidates(module_name)
     if (workspace_root / file_candidate).is_file():
         return file_candidate
     if (workspace_root / package_candidate).is_file():
@@ -1024,11 +1011,11 @@ def static_dependency_audit(
     dependencies: tuple[StaticComponentDependency, ...],
 ) -> bool:
     expected_components = {
-        ProducerComponentName("inference/categorical.py"),
-        ProducerComponentName("inference/confidence.py"),
-        ProducerComponentName("inference/envelope.py"),
-        ProducerComponentName("inference/projection.py"),
-        ProducerComponentName("inference/certification.py"),
+        ProducerComponentName(SourceFile.INFERENCE_CATEGORICAL),
+        ProducerComponentName(SourceFile.INFERENCE_CONFIDENCE),
+        ProducerComponentName(SourceFile.INFERENCE_ENVELOPE),
+        ProducerComponentName(SourceFile.INFERENCE_PROJECTION),
+        ProducerComponentName(SourceFile.INFERENCE_CERTIFICATION),
     }
     supplied_components = tuple(item.producer_component for item in dependencies)
     if len(supplied_components) != len(set(supplied_components)):
@@ -1095,16 +1082,16 @@ def execute_scientific_cell(cell: PlannedCell, config: TrajCertConfig) -> Domain
     if not cell.executable:
         raise ScientificCellDispatchError("planned-invalid cell cannot be scientifically executed")
     _ = active_config.set(config)
-    name = cell.identity.experiment_name
-    if name == "Anytime Projection Proof Check":
-        return anytime_projection_proof_check()
-    if name == "Population Complexity Proof Check":
-        return population_complexity_proof_check()
-    handler = _DISPATCH_TABLE.get(name)
+    handler_name = execution_handler_for(cell.identity.experiment_name)
+    if handler_name is None:
+        raise ScientificCellDispatchError(
+            "experiment lacks a registered dispatch handler or authoritative scientific coordinates"
+        )
+    handler = _EXECUTION_DISPATCH.get(handler_name)
     if handler is None:
         raise ScientificCellDispatchError(
             "experiment lacks a registered dispatch handler or authoritative "
-            + f"scientific coordinates: {name}"
+            + f"scientific coordinates: {cell.identity.experiment_name}"
         )
     return handler(cell)
 
@@ -1112,11 +1099,15 @@ def execute_scientific_cell(cell: PlannedCell, config: TrajCertConfig) -> Domain
 def _dispatch_legacy_partition_incoherence(cell: PlannedCell) -> DomainModel:
     gamma = cell.identity.coordinates.gamma
     variant = cell.identity.coordinates.variant_name
-    if gamma is None or variant is None or not variant.startswith("q="):
+    if (
+        gamma is None
+        or variant is None
+        or not variant.startswith(CoordinateGrammar.LEGACY_Q_PREFIX)
+    ):
         raise ScientificCellDispatchError("legacy incoherence cell is missing Gamma or q")
     return evaluate_legacy_partition_incoherence(
         gamma=gamma,
-        q=float(variant.removeprefix("q=")),
+        q=float(variant.removeprefix(CoordinateGrammar.LEGACY_Q_PREFIX)),
     )
 
 
@@ -1191,11 +1182,6 @@ def _dispatch_strict_timing_gain(cell: PlannedCell) -> DomainModel:
     )
 
 
-def _dispatch_safety_boundary_identity(cell: PlannedCell) -> DomainModel:
-    summary = _law_level_finest_summary(cell)
-    return _execute_summary_cell(ExperimentName.SAFETY_BOUNDARY_IDENTITY, cell, summary)
-
-
 def _dispatch_sharpness_against_generic_oracle(cell: PlannedCell) -> DomainModel:
     config = active_config.get()
     law = _law_from_name(cell.identity.coordinates.synthetic_law_name)
@@ -1238,7 +1224,7 @@ def _dispatch_sequential_sensitivity_utility(cell: PlannedCell) -> DomainModel:
 def _dispatch_anytime_hand_case(cell: PlannedCell) -> DomainModel:
     partition = _partition_from_coordinates(cell)
     case_index = _variant_index(cell.identity.coordinates.variant_name)
-    return run_anytime_hand_case(case_index, partition, active_config.get())
+    return run_anytime_hand_case(case_index, partition)
 
 
 def _dispatch_computational_scaling(cell: PlannedCell) -> DomainModel:
@@ -1246,10 +1232,6 @@ def _dispatch_computational_scaling(cell: PlannedCell) -> DomainModel:
     if bands is None:
         raise ScientificCellDispatchError("scaling cell is missing K")
     return benchmark_scaling_cell(bands)
-
-
-def _dispatch_summary_coordinate_experiment(name: ExperimentName, cell: PlannedCell) -> DomainModel:
-    return _execute_summary_cell(name, cell, _summary_from_coordinates(cell))
 
 
 def _summary_path_information_decomposition(
@@ -1361,33 +1343,19 @@ def _summary_comparator_reduction(cell: PlannedCell, summary: ObservableSummary)
     return evaluate_comparator_reduction(summary)
 
 
-_SUMMARY_DISPATCH_TABLE: dict[
-    ExperimentName, Callable[[PlannedCell, ObservableSummary], DomainModel]
-] = {
-    ExperimentName.PATH_INFORMATION_DECOMPOSITION: _summary_path_information_decomposition,
-    ExperimentName.INFORMATION_PROFILE_CONVEXITY: _summary_information_profile_convexity,
-    ExperimentName.MINIMUM_COMPATIBILITY_IDENTITY: _summary_minimum_compatibility_identity,
-    ExperimentName.SHARP_SET_CONSTRUCTIVE_IDENTITY: _summary_sharp_set_constructive_identity,
-    ExperimentName.ENDPOINT_SPECIAL_CASE_IDENTITY: _summary_endpoint_special_case_identity,
-    ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE: (
-        _summary_production_solver_vs_independent_oracle
-    ),
-    ExperimentName.COMPATIBILITY_FLOOR_BEHAVIOR: _summary_compatibility_floor_behavior,
-    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _summary_safety_boundary_identity,
-    ExperimentName.CALLBACK_MODEL_REDUCTION_FALSIFICATION: _summary_comparator_reduction,
-    ExperimentName.GENERIC_INFORMATION_OPTIMIZATION_REDUCTION: _summary_comparator_reduction,
-}
-
-
-def _execute_summary_cell(
-    name: ExperimentName,
+def _dispatch_summary_handler(
+    handler: Callable[[PlannedCell, ObservableSummary], DomainModel],
+    summary_factory: Callable[[PlannedCell], ObservableSummary],
     cell: PlannedCell,
-    summary: ObservableSummary,
 ) -> DomainModel:
-    handler = _SUMMARY_DISPATCH_TABLE.get(name)
-    if handler is None:
-        raise ScientificCellDispatchError(f"no summary executor for {name}")
-    return handler(cell, summary)
+    return handler(cell, summary_factory(cell))
+
+
+def _dispatch_cell_independent(
+    handler: Callable[[], DomainModel], cell: PlannedCell
+) -> DomainModel:
+    del cell
+    return handler()
 
 
 def _summary_from_coordinates(cell: PlannedCell) -> ObservableSummary:
@@ -1413,7 +1381,7 @@ def _refinement_inputs(
     comparison = cell.identity.coordinates.comparison_pair_name
     if comparison is None:
         raise ScientificCellDispatchError("refinement cell is missing its comparison pair")
-    fine_text, separator, coarse_text = comparison.partition(" -> ")
+    fine_text, separator, coarse_text = comparison.partition(CoordinateGrammar.COMPARISON_PAIR)
     if not separator:
         raise ScientificCellDispatchError("invalid comparison-pair encoding")
     fine = _partition_named(PartitionName(fine_text))
@@ -1473,7 +1441,7 @@ def _rho_from_offset(
     summary: ObservableSummary,
     coordinate: SensitivityCoordinate | None,
 ) -> SensitivityBudget:
-    prefix = "rho-offset="
+    prefix = CoordinateGrammar.RHO_OFFSET_PREFIX
     if coordinate is None or not coordinate.startswith(prefix):
         raise ScientificCellDispatchError("rho-offset cell is missing its sensitivity coordinate")
     offset = float(coordinate[len(prefix) :])
@@ -1488,7 +1456,7 @@ def _direct_rho(cell: PlannedCell) -> SensitivityBudget:
 
 
 def _variant_index(variant: VariantName | None) -> CaseIndex:
-    prefix = "hand-case-"
+    prefix = CoordinateGrammar.HAND_CASE_PREFIX
     if variant is None or not variant.startswith(prefix):
         raise ScientificCellDispatchError("cell is missing its expected variant index")
     return int(variant[len(prefix) :])
@@ -1551,23 +1519,23 @@ def _coverage_stress_case_config(
 def _coverage_stress_case(cell: PlannedCell) -> DomainModel:
     config = active_config.get()
     case = _coverage_stress_case_config(cell, config)
-    return evaluate_configured_coverage_stress(case, config)
+    return evaluate_configured_coverage_stress(case)
 
 
 def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
     coordinate = cell.identity.coordinates.failure_boundary_axis_and_level
     if coordinate is None:
         raise ScientificCellDispatchError("failure-boundary cell is missing axis/level")
-    axis_text, separator, value_text = coordinate.partition("=")
+    axis_text, separator, value_text = coordinate.partition(CoordinateGrammar.ASSIGNMENT)
     if not separator:
         raise ScientificCellDispatchError("invalid failure-boundary coordinate")
     axis = FailureBoundaryAxis(axis_text)
     if axis is FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY:
-        q1_text, separator, q0_text = value_text.partition(",q0:")
-        if not separator or not q1_text.startswith("q1:"):
+        q1_text, separator, q0_text = value_text.partition(CoordinateGrammar.TERMINAL_Q0_SEPARATOR)
+        if not separator or not q1_text.startswith(CoordinateGrammar.TERMINAL_Q1_PREFIX):
             raise ScientificCellDispatchError("invalid terminal-selection-asymmetry coordinate")
         return evaluate_terminal_selection_asymmetry(
-            q1=float(q1_text.removeprefix("q1:")),
+            q1=float(q1_text.removeprefix(CoordinateGrammar.TERMINAL_Q1_PREFIX)),
             q0=float(q0_text),
         )
     if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
@@ -1576,48 +1544,90 @@ def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
     return evaluate_failure_boundary(parsed_axis, level)
 
 
-_DISPATCH_TABLE: dict[ExperimentName, Callable[[PlannedCell], DomainModel]] = {
-    ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK: (_dispatch_legacy_partition_incoherence),
-    ExperimentName.REFINEMENT_DOMINANCE_IDENTITY: _dispatch_refinement_dominance_identity,
-    ExperimentName.STRICT_TIMING_GAIN_IDENTITY: _dispatch_strict_timing_gain_identity,
-    ExperimentName.PARTITION_COHERENCE: _dispatch_partition_coherence,
-    ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING: (_dispatch_same_endpoint_different_timing),
-    ExperimentName.STRICT_TIMING_GAIN: _dispatch_strict_timing_gain,
-    ExperimentName.SAFETY_BOUNDARY_IDENTITY: _dispatch_safety_boundary_identity,
-    ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE: (_dispatch_sharpness_against_generic_oracle),
-    ExperimentName.SAFETY_AND_INTRINSIC_IMPOSSIBILITY: _safety_intrinsic_case,
-    ExperimentName.ANYTIME_COVERAGE_STRESS: _coverage_stress_case,
-    ExperimentName.POPULATION_SENSITIVITY_UTILITY: _dispatch_population_sensitivity_utility,
-    ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY: _dispatch_sequential_sensitivity_utility,
-    ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES: _dispatch_anytime_hand_case,
-    ExperimentName.FAILURE_BOUNDARY_ATLAS: _execute_failure_boundary,
-    ExperimentName.COMPUTATIONAL_SCALING: _dispatch_computational_scaling,
-    **{
-        name: partial(_dispatch_summary_coordinate_experiment, name)
-        for name in _SUMMARY_COORDINATE_EXPERIMENTS
-    },
+_EXECUTION_DISPATCH: dict[ExecutionHandler, Callable[[PlannedCell], DomainModel]] = {
+    ExecutionHandler.LEGACY_PARTITION_INCOHERENCE: _dispatch_legacy_partition_incoherence,
+    ExecutionHandler.REFINEMENT_DOMINANCE: _dispatch_refinement_dominance_identity,
+    ExecutionHandler.STRICT_TIMING_IDENTITY: _dispatch_strict_timing_gain_identity,
+    ExecutionHandler.PARTITION_COHERENCE: _dispatch_partition_coherence,
+    ExecutionHandler.SAME_ENDPOINT_TIMING: _dispatch_same_endpoint_different_timing,
+    ExecutionHandler.STRICT_TIMING_GAIN: _dispatch_strict_timing_gain,
+    ExecutionHandler.SAFETY_BOUNDARY: partial(
+        _dispatch_summary_handler, _summary_safety_boundary_identity, _law_level_finest_summary
+    ),
+    ExecutionHandler.SHARPNESS: _dispatch_sharpness_against_generic_oracle,
+    ExecutionHandler.SAFETY_INTRINSIC: _safety_intrinsic_case,
+    ExecutionHandler.COVERAGE_STRESS: _coverage_stress_case,
+    ExecutionHandler.POPULATION_UTILITY: _dispatch_population_sensitivity_utility,
+    ExecutionHandler.SEQUENTIAL_UTILITY: _dispatch_sequential_sensitivity_utility,
+    ExecutionHandler.ANYTIME_HAND_CASE: _dispatch_anytime_hand_case,
+    ExecutionHandler.FAILURE_BOUNDARY: _execute_failure_boundary,
+    ExecutionHandler.COMPUTATIONAL_SCALING: _dispatch_computational_scaling,
+    ExecutionHandler.SUMMARY_PATH_INFORMATION: partial(
+        _dispatch_summary_handler,
+        _summary_path_information_decomposition,
+        _summary_from_coordinates,
+    ),
+    ExecutionHandler.SUMMARY_INFORMATION_PROFILE: partial(
+        _dispatch_summary_handler, _summary_information_profile_convexity, _summary_from_coordinates
+    ),
+    ExecutionHandler.SUMMARY_MINIMUM_COMPATIBILITY: partial(
+        _dispatch_summary_handler,
+        _summary_minimum_compatibility_identity,
+        _summary_from_coordinates,
+    ),
+    ExecutionHandler.SUMMARY_SHARP_SET: partial(
+        _dispatch_summary_handler,
+        _summary_sharp_set_constructive_identity,
+        _summary_from_coordinates,
+    ),
+    ExecutionHandler.SUMMARY_ENDPOINT: partial(
+        _dispatch_summary_handler,
+        _summary_endpoint_special_case_identity,
+        _summary_from_coordinates,
+    ),
+    ExecutionHandler.SUMMARY_SOLVER_ORACLE: partial(
+        _dispatch_summary_handler,
+        _summary_production_solver_vs_independent_oracle,
+        _summary_from_coordinates,
+    ),
+    ExecutionHandler.SUMMARY_COMPATIBILITY_FLOOR: partial(
+        _dispatch_summary_handler, _summary_compatibility_floor_behavior, _summary_from_coordinates
+    ),
+    ExecutionHandler.SUMMARY_COMPARATOR_REDUCTION: partial(
+        _dispatch_summary_handler, _summary_comparator_reduction, _summary_from_coordinates
+    ),
+    ExecutionHandler.ANYTIME_PROJECTION_PROOF: partial(
+        _dispatch_cell_independent, anytime_projection_proof_check
+    ),
+    ExecutionHandler.POPULATION_COMPLEXITY_PROOF: partial(
+        _dispatch_cell_independent, population_complexity_proof_check
+    ),
 }
+if set(_EXECUTION_DISPATCH) != set(ExecutionHandler) - {ExecutionHandler.SYNTHESIS}:
+    raise RuntimeError("runner dispatch must define every direct execution handler exactly once")
 
 
 def _failure_coordinate(
     coordinate: FailureBoundaryCoordinate,
 ) -> tuple[FailureBoundaryAxis, FailureBoundaryProbe]:
-    axis_text, separator, value_text = coordinate.partition("=")
+    axis_text, separator, value_text = coordinate.partition(CoordinateGrammar.ASSIGNMENT)
     if not separator:
         raise ScientificCellDispatchError("invalid failure-boundary coordinate")
     axis = FailureBoundaryAxis(axis_text)
     if axis is FailureBoundaryAxis.RISK_OFFSET:
-        if value_text.startswith("negative-"):
-            return axis, -float(value_text.removeprefix("negative-"))
-        if value_text.startswith("nonnegative-"):
-            return axis, float(value_text.removeprefix("nonnegative-"))
+        if value_text.startswith(CoordinateGrammar.NEGATIVE_PREFIX):
+            return axis, -float(value_text.removeprefix(CoordinateGrammar.NEGATIVE_PREFIX))
+        if value_text.startswith(CoordinateGrammar.NONNEGATIVE_PREFIX):
+            return axis, float(value_text.removeprefix(CoordinateGrammar.NONNEGATIVE_PREFIX))
     if axis in {FailureBoundaryAxis.PATH_RESOLUTION, FailureBoundaryAxis.MATURED_SAMPLE_SIZE}:
         return axis, int(value_text)
     return axis, float(value_text)
 
 
 def scientific_result_artifact_key(cell: PlannedCell) -> ArtifactKey:
-    return ArtifactKey(f"scientific-result|{cell.identity.semantic_cell_key}")
+    return ArtifactKey(
+        f"{ScientificArtifactKeyPrefix.SCIENTIFIC_RESULT}{cell.identity.semantic_cell_key}"
+    )
 
 
 def scientific_result_path(cell: PlannedCell) -> Path:
@@ -1627,7 +1637,7 @@ def scientific_result_path(cell: PlannedCell) -> Path:
             ExperimentLeaf.EVALUATION_RECORDS,
             cell.identity.path_coordinates,
         )
-        / _RESULT_FILENAME
+        / ArtifactFile.SCIENTIFIC_RESULT
     )
 
 
@@ -1826,12 +1836,12 @@ def _coverage_stress_cell_with_recovery(
                 seed_range.stop,
                 CoverageBatchResult,
                 lambda seed_range=seed_range, batch_index=batch_index: coverage_stress_batch(
-                    parameters, partition, config, rho, seed_range, batch_index
+                    parameters, partition, rho, seed_range, batch_index
                 ),
             )
         )
     base = combine_coverage_stress_batches(parameters, tuple(batches))
-    return coverage_evidence_from_base(case, config, base)
+    return coverage_evidence_from_base(case, base)
 
 
 def _sequential_utility_cell_with_recovery(
@@ -1870,17 +1880,12 @@ def _sequential_utility_cell_with_recovery(
 def _dispatch_with_batched_recovery(
     cell: PlannedCell, context: ExecutionContext, artifact_key: ArtifactKey
 ) -> DomainModel:
-    if cell.identity.experiment_name == ExperimentName.ANYTIME_COVERAGE_STRESS:
+    policy = seed_policy_for(cell.identity.experiment_name)
+    if policy is SeedPolicy.COVERAGE_STREAMS:
         return _coverage_stress_cell_with_recovery(cell, context, artifact_key)
-    return _sequential_utility_cell_with_recovery(cell, context, artifact_key)
-
-
-_BATCH_CHECKPOINT_RECOVERABLE_EXPERIMENTS: Final[frozenset[ExperimentName]] = frozenset(
-    {
-        ExperimentName.ANYTIME_COVERAGE_STRESS,
-        ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY,
-    }
-)
+    if policy is SeedPolicy.UTILITY_STREAMS:
+        return _sequential_utility_cell_with_recovery(cell, context, artifact_key)
+    raise ScientificCellDispatchError("experiment does not support batched recovery")
 
 
 def execute_dispatched_cell(
@@ -1899,7 +1904,7 @@ def execute_dispatched_cell(
     relative_path = scientific_result_path(cell)
     result = (
         _dispatch_with_batched_recovery(cell, context, artifact_key)
-        if cell.identity.experiment_name in _BATCH_CHECKPOINT_RECOVERABLE_EXPERIMENTS
+        if supports_batched_recovery(cell.identity.experiment_name)
         else execute_scientific_cell(cell, active_config.get())
     )
     digest = atomic_write_model(

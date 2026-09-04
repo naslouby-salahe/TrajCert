@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import struct
 import zlib
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from html import escape
@@ -15,7 +15,12 @@ import pyarrow as pa
 
 from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.reporting.source_data import VerifiedSourceData
+from trajcert.experiments.catalog import PublicationColumn
+from trajcert.paths import PublicationExtension
+from trajcert.reporting.source_data import (
+    PublicationSourceName,
+    VerifiedSourceData,
+)
 from trajcert.schemas import (
     PublicationFormat,
     PublicationSourceRole,
@@ -32,48 +37,11 @@ from trajcert.types import (
     PixelIntensity,
     PlotValue,
     RasterCoordinate,
+    SvgFragment,
     TableRow,
     TabularCellValue,
+    TextEncoding,
 )
-
-_STROKE = "#202020"
-_MUTED = "#6a6a6a"
-_LIGHT = "#d8d8d8"
-_BACKGROUND = "#ffffff"
-
-_COL_LAW_NAME = ColumnName("law_name") #TODO: use enum for this
-_COL_RHO_OFFSET = ColumnName("rho_offset") #TODO: use enum for this
-_COL_RISK_LOWER = ColumnName("risk_lower") #TODO: use enum for this
-_COL_RISK_UPPER = ColumnName("risk_upper") #TODO: use enum for this
-_COL_PARTITION_BAND_COUNT = ColumnName("partition_band_count") #TODO: use enum for this
-_COL_TAU = ColumnName("tau") #TODO: use enum for this
-_COL_DELTA_TAU = ColumnName("delta_tau") #TODO: use enum for this
-_COL_BOUND_GAIN = ColumnName("bound_gain") #TODO: use enum for this
-_COL_U = ColumnName("u") #TODO: use enum for this
-_COL_INFORMATION_PROFILE = ColumnName("information_profile") #TODO: use enum for this
-_COL_U_DAGGER = ColumnName("u_dagger") #TODO: use enum for this
-_COL_U_BETA = ColumnName("u_beta") #TODO: use enum for this
-_COL_RHO = ColumnName("rho") #TODO: use enum for this
-_COL_RHO_STAR = ColumnName("rho_star") #TODO: use enum for this
-_COL_FEASIBLE_LOWER = ColumnName("feasible_lower") #TODO: use enum for this
-_COL_FEASIBLE_UPPER = ColumnName("feasible_upper") #TODO: use enum for this
-_COL_STREAM_SEED_INDEX = ColumnName("stream_seed_index") #TODO: use enum for this
-_COL_N_MATURED = ColumnName("n_matured") #TODO: use enum for this
-_COL_RISK_UPPER_ANYTIME = ColumnName("risk_upper_anytime") #TODO: use enum for this
-_COL_TRUE_THETA = ColumnName("true_theta") #TODO: use enum for this
-_COL_BETA = ColumnName("beta") #TODO: use enum for this
-_COL_CLOPPER_PEARSON_UPPER_95 = ColumnName("clopper_pearson_upper_95") #TODO: use enum for this
-_COL_DELTA = ColumnName("delta") #TODO: use enum for this
-_COL_ACCEPTANCE_UPPER_LIMIT = ColumnName("acceptance_upper_limit") #TODO: use enum for this
-_COL_AXIS = ColumnName("axis") #TODO: use enum for this
-_COL_K = ColumnName("K") #TODO: use enum for this
-_COL_POPULATION_MEDIAN_RUNTIME_MS = ColumnName("population_median_runtime_ms") #TODO: use enum for this
-_COL_OUTER_MEDIAN_RUNTIME_MS = ColumnName("outer_median_runtime_ms") #TODO: use enum for this
-_COL_MEDIAN_OUTER_NODES = ColumnName("median_outer_nodes") #TODO: use enum for this
-_COL_EVIDENCE_GATE_PASS = ColumnName("evidence_gate_pass") #TODO: use enum for this
-_COL_CRITERION_PASS = ColumnName("criterion_pass") #TODO: use enum for this
-_COL_PARTITION_NAME = ColumnName("partition_name") #TODO: use enum for this
-_COL_RHO_IS_LOG2 = ColumnName("rho_is_log2") #TODO: use enum for this
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,15 +56,38 @@ class TextAnchor(StrEnum):
     END = "end"
 
 
-class FigureName(StrEnum):
-    PARTITION_COHERENCE = "figure_partition_coherence"
-    TIMING_VALUE = "figure_timing_value"
-    INFORMATION_PROFILE = "figure_information_profile"
-    ANYTIME_PATHS = "figure_anytime_paths"
-    ANYTIME_COVERAGE = "figure_anytime_coverage"
-    RHO_SENSITIVITY = "figure_rho_sensitivity"
-    FAILURE_BOUNDARIES = "figure_failure_boundaries"
-    COMPUTATIONAL_SCALING = "figure_computational_scaling"
+class FigureColor(StrEnum):
+    STROKE = "#202020"
+    MUTED = "#6a6a6a"
+    LIGHT = "#d8d8d8"
+    BACKGROUND = "#ffffff"
+
+
+class FigureLabel(StrEnum):
+    PARTITION_COHERENCE = "Partition coherence at fixed sensitivity"
+    EXACT_TIMING_VALUE = "Exact timing value"
+    INFORMATION_PROFILE = "Information profile"
+    INFORMATION_PROFILE_WITH_SAFETY_CORRIDOR = "Information profile and safety corridor"
+    REPRESENTATIVE_ANYTIME_CERTIFICATES = "Representative anytime certificates"
+    ANYTIME_STRESS_VALIDITY = "Anytime stress validity"
+    EXACT_ONE_SIDED_UPPER_LIMITS = "Exact one-sided upper limits"
+    FULL_RHO_SENSITIVITY = "Full rho sensitivity"
+    FAILURE_BOUNDARY_ATLAS = "Failure-boundary atlas"
+    COMPUTATIONAL_SCALING = "Computational scaling"
+    POPULATION_SOLVER_RUNTIME = "Population solver runtime"
+    OUTER_PROJECTION_RUNTIME_NODES = "Outer projection runtime / nodes"
+    SEEDS_ZERO_TO_THREE = "Seeds 0-3"
+    TAU_PREFIX = "tau="
+    RHO_OFFSET_PREFIX = "rho offset "
+    U_DAGGER = "u_dagger"
+    U_BETA = "u_beta"
+    TAU = "tau"
+    RHO = "rho"
+    RHO_STAR = "rho_star"
+    TRUE_THETA = "true theta"
+    BETA = "beta"
+    ANYTIME_DELTA = "anytime delta"
+    ACCEPTANCE_LIMIT = "acceptance limit"
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,7 +120,7 @@ class Cross:
 @dataclass(frozen=True, slots=True)
 class Text:
     position: Point
-    value: str
+    value: FacetLabel
     size: PixelCount = 14
     anchor: TextAnchor = TextAnchor.START
 
@@ -148,17 +139,23 @@ type DrawCommand = Line | Circle | Cross | Text | Rectangle
 
 @dataclass(frozen=True, slots=True)
 class PlotDocument:
-    title: str
+    title: FacetLabel
     commands: tuple[DrawCommand, ...]
 
 
 def render_figure(source: VerifiedSourceData, destination_directory: Path) -> FigureRenderResult:
     if source.descriptor.source_role is not PublicationSourceRole.FIGURE:
         raise InvalidScientificDataError("figure renderer requires a figure source descriptor")
-    document = _build_document(source.descriptor.source_path.stem, source.table)
+    try:
+        source_name = PublicationSourceName(source.descriptor.source_path.stem)
+    except ValueError as exc:
+        raise InvalidScientificDataError(
+            f"no deterministic figure renderer for {source.descriptor.source_path}"
+        ) from exc
+    document = _build_document(source_name, source.table)
     basename = source.descriptor.source_path.stem
-    svg_path = destination_directory / f"{basename}.svg"
-    png_path = destination_directory / f"{basename}.png"
+    svg_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.SVG}")
+    png_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.PNG}")
     svg_digest = atomic_write_bytes(svg_path, _svg_bytes(document))
     png_digest = atomic_write_bytes(png_path, _png_bytes(document))
     return FigureRenderResult(
@@ -185,93 +182,96 @@ def render_figures(
     return tuple(render_figure(source, destination_directory) for source in sources)
 
 
-def _build_document(name: str, table: pa.Table) -> PlotDocument:
-    builders: dict[FigureName, Callable[[pa.Table], PlotDocument]] = {
-        FigureName.PARTITION_COHERENCE: _partition_coherence,
-        FigureName.TIMING_VALUE: _timing_value,
-        FigureName.INFORMATION_PROFILE: _information_profile,
-        FigureName.ANYTIME_PATHS: _anytime_paths,
-        FigureName.ANYTIME_COVERAGE: _anytime_coverage,
-        FigureName.RHO_SENSITIVITY: _rho_sensitivity,
-        FigureName.FAILURE_BOUNDARIES: _failure_boundaries,
-        FigureName.COMPUTATIONAL_SCALING: _computational_scaling,
+def _build_document(name: PublicationSourceName, table: pa.Table) -> PlotDocument:
+    builders: Mapping[PublicationSourceName, Callable[[pa.Table], PlotDocument]] = {
+        PublicationSourceName.FIGURE_PARTITION_COHERENCE: _partition_coherence,
+        PublicationSourceName.FIGURE_TIMING_VALUE: _timing_value,
+        PublicationSourceName.FIGURE_INFORMATION_PROFILE: _information_profile,
+        PublicationSourceName.FIGURE_ANYTIME_PATHS: _anytime_paths,
+        PublicationSourceName.FIGURE_ANYTIME_COVERAGE: _anytime_coverage,
+        PublicationSourceName.FIGURE_RHO_SENSITIVITY: _rho_sensitivity,
+        PublicationSourceName.FIGURE_FAILURE_BOUNDARIES: _failure_boundaries,
+        PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING: _computational_scaling,
     }
     try:
-        figure_name = FigureName(name)
-    except ValueError as exc:
+        return builders[name](table)
+    except KeyError as exc:
         raise InvalidScientificDataError(f"no deterministic figure renderer for {name}") from exc
-    return builders[figure_name](table)
 
 
 def _partition_coherence(table: pa.Table) -> PlotDocument:
-    laws = _unique_strings(table, _COL_LAW_NAME)
-    commands = _base_commands("Partition coherence at fixed sensitivity")
+    laws = _unique_strings(table, PublicationColumn.LAW_NAME)
+    commands = _base_commands(FigureLabel.PARTITION_COHERENCE)
     panels = _horizontal_panels(len(laws))
     for law, panel in zip(laws, panels, strict=True):
-        selected = _matching_rows(table, _COL_LAW_NAME, law)
+        selected = _matching_rows(table, PublicationColumn.LAW_NAME, law)
         x_values = tuple(
             value
             for row in selected
             for value in (
-                _required_float(row, _COL_RISK_LOWER),
-                _required_float(row, _COL_RISK_UPPER),
+                _required_float(row, PublicationColumn.RISK_LOWER),
+                _required_float(row, PublicationColumn.RISK_UPPER),
             )
         )
-        y_values = tuple(_required_float(row, _COL_PARTITION_BAND_COUNT) for row in selected)
+        y_values = tuple(
+            _required_float(row, PublicationColumn.PARTITION_BAND_COUNT) for row in selected
+        )
         scale = _panel_scale(panel, x_values, y_values)
         commands.extend(_panel_frame(panel, law))
         for row in selected:
-            lower = scale.map_x(_required_float(row, _COL_RISK_LOWER))
-            upper = scale.map_x(_required_float(row, _COL_RISK_UPPER))
-            y = scale.map_y(_required_float(row, _COL_PARTITION_BAND_COUNT))
+            lower = scale.map_x(_required_float(row, PublicationColumn.RISK_LOWER))
+            upper = scale.map_x(_required_float(row, PublicationColumn.RISK_UPPER))
+            y = scale.map_y(_required_float(row, PublicationColumn.PARTITION_BAND_COUNT))
             commands.append(Line(Point(lower, y), Point(upper, y), width=3.0))
             commands.append(Circle(Point(lower, y), radius=4.0))
             commands.append(Circle(Point(upper, y), radius=4.0))
             commands.append(
                 Text(
                     Point((lower + upper) / 2.0, y - 8.0),
-                    f"tau={_required_float(row, _COL_TAU):.4g}",
+                    FacetLabel(
+                        f"{FigureLabel.TAU_PREFIX}{_required_float(row, PublicationColumn.TAU):.4g}"
+                    ),
                     size=11,
                     anchor=TextAnchor.MIDDLE,
                 )
             )
-    return PlotDocument(title="Partition coherence at fixed sensitivity", commands=tuple(commands))
+    return PlotDocument(title=FigureLabel.PARTITION_COHERENCE, commands=tuple(commands))
 
 
 def _timing_value(table: pa.Table) -> PlotDocument:
-    facets = _unique_strings(table, _COL_RHO_OFFSET)
-    commands = _base_commands("Exact timing value")
+    facets = _unique_strings(table, PublicationColumn.RHO_OFFSET)
+    commands = _base_commands(FigureLabel.EXACT_TIMING_VALUE)
     panels = _horizontal_panels(len(facets))
     for facet, panel in zip(facets, panels, strict=True):
-        selected = _matching_rows(table, _COL_RHO_OFFSET, facet)
-        xs = tuple(_required_float(row, _COL_DELTA_TAU) for row in selected)
-        ys = tuple(_required_float(row, _COL_BOUND_GAIN) for row in selected)
+        selected = _matching_rows(table, PublicationColumn.RHO_OFFSET, facet)
+        xs = tuple(_required_float(row, PublicationColumn.DELTA_TAU) for row in selected)
+        ys = tuple(_required_float(row, PublicationColumn.BOUND_GAIN) for row in selected)
         scale = _panel_scale(panel, (*xs, 0.0), ys)
-        commands.extend(_panel_frame(panel, f"rho offset {facet}"))
+        commands.extend(_panel_frame(panel, FacetLabel(f"{FigureLabel.RHO_OFFSET_PREFIX}{facet}")))
         zero_x = scale.map_x(0.0)
         commands.append(Line(Point(zero_x, panel.top), Point(zero_x, panel.bottom), dashed=True))
         for row in selected:
             point = Point(
-                scale.map_x(_required_float(row, _COL_DELTA_TAU)),
-                scale.map_y(_required_float(row, _COL_BOUND_GAIN)),
+                scale.map_x(_required_float(row, PublicationColumn.DELTA_TAU)),
+                scale.map_y(_required_float(row, PublicationColumn.BOUND_GAIN)),
             )
             commands.append(Circle(point, radius=4.0))
-    return PlotDocument(title="Exact timing value", commands=tuple(commands))
+    return PlotDocument(title=FigureLabel.EXACT_TIMING_VALUE, commands=tuple(commands))
 
 
 def _information_profile(table: pa.Table) -> PlotDocument:
     rows = _rows(table)
-    xs = tuple(_required_float(row, _COL_U) for row in rows)
-    ys = tuple(_required_float(row, _COL_INFORMATION_PROFILE) for row in rows)
+    xs = tuple(_required_float(row, PublicationColumn.U) for row in rows)
+    ys = tuple(_required_float(row, PublicationColumn.INFORMATION_PROFILE) for row in rows)
     panel = _single_panel()
     scale = _panel_scale(panel, xs, ys)
-    commands = _base_commands("Information profile and safety corridor")
-    commands.extend(_panel_frame(panel, "Information profile"))
+    commands = _base_commands(FigureLabel.INFORMATION_PROFILE_WITH_SAFETY_CORRIDOR)
+    commands.extend(_panel_frame(panel, FigureLabel.INFORMATION_PROFILE))
     commands.extend(_polyline(scale, xs, ys))
     first = rows[0]
     for column, label in (
-        (_COL_U_DAGGER, "u_dagger"), #TODO: use enum. No hardcoded strings
-        (_COL_U_BETA, "u_beta"),#TODO: use enum. No hardcoded strings
+        (PublicationColumn.U_DAGGER, FigureLabel.U_DAGGER),
+        (PublicationColumn.U_BETA, FigureLabel.U_BETA),
     ):
         value = _optional_float(first, column)
         if value is not None:
@@ -279,28 +279,31 @@ def _information_profile(table: pa.Table) -> PlotDocument:
             commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
             commands.append(Text(Point(x + 4.0, panel.top + 16.0), label, size=11))
     for column, label in (
-        (_COL_TAU, "tau"), #TODO: use enum. No hardcoded strings
-        (_COL_RHO, "rho"), #TODO: use enum. No hardcoded strings
-        (_COL_RHO_STAR, "rho_star"), #TODO: use enum. No hardcoded strings
+        (PublicationColumn.TAU, FigureLabel.TAU),
+        (PublicationColumn.RHO, FigureLabel.RHO),
+        (PublicationColumn.RHO_STAR, FigureLabel.RHO_STAR),
     ):
         value = _optional_float(first, column)
         if value is not None:
             y = scale.map_y(value)
             commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
             commands.append(Text(Point(panel.left + 5.0, y - 5.0), label, size=11))
-    feasible_lower = _optional_float(first, _COL_FEASIBLE_LOWER)
-    feasible_upper = _optional_float(first, _COL_FEASIBLE_UPPER)
+    feasible_lower = _optional_float(first, PublicationColumn.FEASIBLE_LOWER)
+    feasible_upper = _optional_float(first, PublicationColumn.FEASIBLE_UPPER)
     if feasible_lower is not None and feasible_upper is not None:
         left = scale.map_x(feasible_lower)
         right = scale.map_x(feasible_upper)
         commands.append(
             Rectangle(left, panel.top, max(1.0, right - left), panel.height, filled=False)
         )
-    return PlotDocument(title="Information profile and safety corridor", commands=tuple(commands))
+    return PlotDocument(
+        title=FigureLabel.INFORMATION_PROFILE_WITH_SAFETY_CORRIDOR,
+        commands=tuple(commands),
+    )
 
 
 def _anytime_paths(table: pa.Table) -> PlotDocument:
-    seeds = _unique_numbers(table, _COL_STREAM_SEED_INDEX)
+    seeds = _unique_numbers(table, PublicationColumn.STREAM_SEED_INDEX)
     expected_seeds = tuple(
         float(index) for index in active_config.get().study_design.representative_stream_indices
     )
@@ -309,80 +312,90 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
             "representative anytime figure source must contain exactly the configured seeds"
         )
     rows = _rows(table)
-    xs = tuple(_required_float(row, _COL_N_MATURED) for row in rows)
-    ys = tuple(_required_float(row, _COL_RISK_UPPER_ANYTIME) for row in rows)
+    xs = tuple(_required_float(row, PublicationColumn.N_MATURED) for row in rows)
+    ys = tuple(_required_float(row, PublicationColumn.RISK_UPPER_ANYTIME) for row in rows)
     panel = _single_panel()
     scale = _panel_scale(panel, xs, ys)
-    commands = _base_commands("Representative anytime certificates")
-    commands.extend(_panel_frame(panel, "Seeds 0-3"))
+    commands = _base_commands(FigureLabel.REPRESENTATIVE_ANYTIME_CERTIFICATES)
+    commands.extend(_panel_frame(panel, FigureLabel.SEEDS_ZERO_TO_THREE))
     for seed in seeds:
         selected = tuple(
-            row for row in rows if _required_float(row, _COL_STREAM_SEED_INDEX) == seed
+            row for row in rows if _required_float(row, PublicationColumn.STREAM_SEED_INDEX) == seed
         )
-        seed_xs = tuple(_required_float(row, _COL_N_MATURED) for row in selected)
-        seed_ys = tuple(_required_float(row, _COL_RISK_UPPER_ANYTIME) for row in selected)
+        seed_xs = tuple(_required_float(row, PublicationColumn.N_MATURED) for row in selected)
+        seed_ys = tuple(
+            _required_float(row, PublicationColumn.RISK_UPPER_ANYTIME) for row in selected
+        )
         commands.extend(_polyline(scale, seed_xs, seed_ys))
         for row in selected:
             point = Point(
-                scale.map_x(_required_float(row, _COL_N_MATURED)),
-                scale.map_y(_required_float(row, _COL_RISK_UPPER_ANYTIME)),
+                scale.map_x(_required_float(row, PublicationColumn.N_MATURED)),
+                scale.map_y(_required_float(row, PublicationColumn.RISK_UPPER_ANYTIME)),
             )
-            commands.append(Circle(point, radius=2.5, hollow=not row[_COL_EVIDENCE_GATE_PASS]))
+            commands.append(
+                Circle(
+                    point,
+                    radius=2.5,
+                    hollow=not _required_bool(row, PublicationColumn.EVIDENCE_GATE_PASS),
+                )
+            )
     first = rows[0]
     for column, label in (
-        (_COL_TRUE_THETA, "true theta"), #TODO: use enum. No hardcoded strings
-        (_COL_BETA, "beta"), #TODO: use enum. No hardcoded strings
+        (PublicationColumn.TRUE_THETA, FigureLabel.TRUE_THETA),
+        (PublicationColumn.BETA, FigureLabel.BETA),
     ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
         commands.append(
             Text(Point(panel.right - 4.0, y - 6.0), label, size=11, anchor=TextAnchor.END)
         )
-    return PlotDocument(title="Representative anytime certificates", commands=tuple(commands))
+    return PlotDocument(
+        title=FigureLabel.REPRESENTATIVE_ANYTIME_CERTIFICATES, commands=tuple(commands)
+    )
 
 
 def _anytime_coverage(table: pa.Table) -> PlotDocument:
     rows = _rows(table)
     xs = tuple(float(index) for index in range(len(rows)))
-    ys = tuple(_required_float(row, _COL_CLOPPER_PEARSON_UPPER_95) for row in rows)
+    ys = tuple(_required_float(row, PublicationColumn.CLOPPER_PEARSON_UPPER_95) for row in rows)
     refs = tuple(
         value
         for row in rows
         for value in (
-            _required_float(row, _COL_DELTA),
-            _required_float(row, _COL_ACCEPTANCE_UPPER_LIMIT),
+            _required_float(row, PublicationColumn.DELTA),
+            _required_float(row, PublicationColumn.ACCEPTANCE_UPPER_LIMIT),
         )
     )
     panel = _single_panel()
     scale = _panel_scale(panel, xs, (*ys, *refs))
-    commands = _base_commands("Anytime stress validity")
-    commands.extend(_panel_frame(panel, "Exact one-sided upper limits"))
+    commands = _base_commands(FigureLabel.ANYTIME_STRESS_VALIDITY)
+    commands.extend(_panel_frame(panel, FigureLabel.EXACT_ONE_SIDED_UPPER_LIMITS))
     for index, row in enumerate(rows):
         point = Point(
             scale.map_x(float(index)),
-            scale.map_y(_required_float(row, _COL_CLOPPER_PEARSON_UPPER_95)),
+            scale.map_y(_required_float(row, PublicationColumn.CLOPPER_PEARSON_UPPER_95)),
         )
-        if row[_COL_CRITERION_PASS]:
+        if _required_bool(row, PublicationColumn.CRITERION_PASS):
             commands.append(Circle(point, radius=4.0))
         else:
             commands.append(Cross(point, radius=5.0))
     first = rows[0]
     for column, label in (
-        (_COL_DELTA, "anytime delta"), #TODO: use enum. No hardcoded strings
-        (_COL_ACCEPTANCE_UPPER_LIMIT, "acceptance limit"), #TODO: use enum. No hardcoded strings
+        (PublicationColumn.DELTA, FigureLabel.ANYTIME_DELTA),
+        (PublicationColumn.ACCEPTANCE_UPPER_LIMIT, FigureLabel.ACCEPTANCE_LIMIT),
     ):
         y = scale.map_y(_required_float(first, column))
         commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
         commands.append(Text(Point(panel.left + 4.0, y - 5.0), label, size=11))
-    return PlotDocument(title="Anytime stress validity", commands=tuple(commands))
+    return PlotDocument(title=FigureLabel.ANYTIME_STRESS_VALIDITY, commands=tuple(commands))
 
 
 def _rho_sensitivity(table: pa.Table) -> PlotDocument:
-    laws = _unique_strings(table, _COL_LAW_NAME)
-    commands = _base_commands("Full rho sensitivity")
+    laws = _unique_strings(table, PublicationColumn.LAW_NAME)
+    commands = _base_commands(FigureLabel.FULL_RHO_SENSITIVITY)
     for law, panel in zip(laws, _horizontal_panels(len(laws)), strict=True):
         _rho_sensitivity_law(commands, table, law, panel)
-    return PlotDocument(title="Full rho sensitivity", commands=tuple(commands))
+    return PlotDocument(title=FigureLabel.FULL_RHO_SENSITIVITY, commands=tuple(commands))
 
 
 def _rho_sensitivity_law(
@@ -391,14 +404,18 @@ def _rho_sensitivity_law(
     law: FacetLabel,
     panel: Panel,
 ) -> None:
-    rows = _matching_rows(table, _COL_LAW_NAME, law)
-    xs = tuple(_required_float(row, _COL_RHO) for row in rows)
+    rows = _matching_rows(table, PublicationColumn.LAW_NAME, law)
+    xs = tuple(_required_float(row, PublicationColumn.RHO) for row in rows)
     finite_ys = tuple(
-        value for row in rows if (value := _optional_float(row, _COL_RISK_UPPER)) is not None
+        value
+        for row in rows
+        if (value := _optional_float(row, PublicationColumn.RISK_UPPER)) is not None
     )
     scale = _panel_scale(panel, xs, finite_ys or (0.0, 1.0))
     commands.extend(_panel_frame(panel, law))
-    for partition in sorted({FacetLabel(str(row[_COL_PARTITION_NAME])) for row in rows}):
+    for partition in sorted(
+        {_required_facet_label(row, PublicationColumn.PARTITION_NAME) for row in rows}
+    ):
         _rho_sensitivity_partition(commands, scale, rows, partition, panel)
 
 
@@ -409,13 +426,19 @@ def _rho_sensitivity_partition(
     partition: FacetLabel,
     panel: Panel,
 ) -> None:
-    selected = tuple(row for row in rows if FacetLabel(str(row[_COL_PARTITION_NAME])) == partition)
-    compatible = tuple(row for row in selected if _optional_float(row, _COL_RISK_UPPER) is not None)
+    selected = tuple(
+        row
+        for row in rows
+        if _required_facet_label(row, PublicationColumn.PARTITION_NAME) == partition
+    )
+    compatible = tuple(
+        row for row in selected if _optional_float(row, PublicationColumn.RISK_UPPER) is not None
+    )
     commands.extend(
         _polyline(
             scale,
-            tuple(_required_float(row, _COL_RHO) for row in compatible),
-            tuple(_required_float(row, _COL_RISK_UPPER) for row in compatible),
+            tuple(_required_float(row, PublicationColumn.RHO) for row in compatible),
+            tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in compatible),
         )
     )
     for row in selected:
@@ -428,58 +451,61 @@ def _rho_sensitivity_marker(
     row: TableRow,
     panel: Panel,
 ) -> None:
-    x = scale.map_x(_required_float(row, _COL_RHO))
-    risk = _optional_float(row, _COL_RISK_UPPER)
+    x = scale.map_x(_required_float(row, PublicationColumn.RHO))
+    risk = _optional_float(row, PublicationColumn.RISK_UPPER)
     if risk is None:
         commands.append(Cross(Point(x, panel.bottom - 5.0), radius=4.0))
     else:
         commands.append(Circle(Point(x, scale.map_y(risk)), radius=3.0))
-    if row[_COL_RHO_IS_LOG2]:
+    if _required_bool(row, PublicationColumn.RHO_IS_LOG2):
         commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
 
 
 def _failure_boundaries(table: pa.Table) -> PlotDocument:
-    axes = _unique_strings(table, _COL_AXIS)
-    commands = _base_commands("Failure-boundary atlas")
+    axes = _unique_strings(table, PublicationColumn.AXIS)
+    commands = _base_commands(FigureLabel.FAILURE_BOUNDARY_ATLAS)
     columns = active_config.get().figure_layout.failure_boundary_grid_columns
     panels = _grid_panels(len(axes), columns=columns)
     for axis, panel in zip(axes, panels, strict=True):
-        rows = _matching_rows(table, _COL_AXIS, axis)
+        rows = _matching_rows(table, PublicationColumn.AXIS, axis)
         xs = tuple(float(index) for index in range(len(rows)))
-        ys = tuple(_required_float(row, _COL_RISK_UPPER) for row in rows)
+        ys = tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in rows)
         scale = _panel_scale(panel, xs, ys)
         commands.extend(_panel_frame(panel, axis))
         commands.extend(_polyline(scale, xs, ys))
         for index, row in enumerate(rows):
             point = Point(
-                scale.map_x(float(index)), scale.map_y(_required_float(row, _COL_RISK_UPPER))
+                scale.map_x(float(index)),
+                scale.map_y(_required_float(row, PublicationColumn.RISK_UPPER)),
             )
             commands.append(Circle(point, radius=3.5))
-    return PlotDocument(title="Failure-boundary atlas", commands=tuple(commands))
+    return PlotDocument(title=FigureLabel.FAILURE_BOUNDARY_ATLAS, commands=tuple(commands))
 
 
 def _computational_scaling(table: pa.Table) -> PlotDocument:
     rows = _rows(table)
-    xs = tuple(log2(_required_float(row, _COL_K)) for row in rows)
-    population = tuple(_required_float(row, _COL_POPULATION_MEDIAN_RUNTIME_MS) for row in rows)
-    outer = tuple(_required_float(row, _COL_OUTER_MEDIAN_RUNTIME_MS) for row in rows)
-    nodes = tuple(_required_float(row, _COL_MEDIAN_OUTER_NODES) for row in rows)
-    commands = _base_commands("Computational scaling") #TODO: use enum for this
+    xs = tuple(log2(_required_float(row, PublicationColumn.K)) for row in rows)
+    population = tuple(
+        _required_float(row, PublicationColumn.POPULATION_MEDIAN_RUNTIME_MS) for row in rows
+    )
+    outer = tuple(_required_float(row, PublicationColumn.OUTER_MEDIAN_RUNTIME_MS) for row in rows)
+    nodes = tuple(_required_float(row, PublicationColumn.MEDIAN_OUTER_NODES) for row in rows)
+    commands = _base_commands(FigureLabel.COMPUTATIONAL_SCALING)
     left, right = _horizontal_panels(2)
     population_scale = _panel_scale(left, xs, population)
-    commands.extend(_panel_frame(left, "Population solver runtime"))
+    commands.extend(_panel_frame(left, FigureLabel.POPULATION_SOLVER_RUNTIME))
     commands.extend(_polyline(population_scale, xs, population))
     for x, y in zip(xs, population, strict=True):
         commands.append(Circle(Point(population_scale.map_x(x), population_scale.map_y(y))))
     combined_scale = _panel_scale(right, xs, (*outer, *nodes))
-    commands.extend(_panel_frame(right, "Outer projection runtime / nodes"))  #TODO: use enum for this
+    commands.extend(_panel_frame(right, FigureLabel.OUTER_PROJECTION_RUNTIME_NODES))
     commands.extend(_polyline(combined_scale, xs, outer))
     commands.extend(_polyline(combined_scale, xs, nodes, dashed=True))
     for x, y in zip(xs, outer, strict=True):
         commands.append(Circle(Point(combined_scale.map_x(x), combined_scale.map_y(y))))
     for x, y in zip(xs, nodes, strict=True):
         commands.append(Cross(Point(combined_scale.map_x(x), combined_scale.map_y(y))))
-    return PlotDocument(title="Computational scaling", commands=tuple(commands)) #TODO: use enum for this
+    return PlotDocument(title=FigureLabel.COMPUTATIONAL_SCALING, commands=tuple(commands))
 
 
 @dataclass(frozen=True, slots=True)
@@ -584,8 +610,7 @@ def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, Plo
     return lower - pad, upper + pad
 
 
-def _panel_frame(panel: Panel, title: str #TODO: use enum for this
-                 ) -> list[DrawCommand]:
+def _panel_frame(panel: Panel, title: FacetLabel) -> list[DrawCommand]:
     return [
         Rectangle(panel.left, panel.top, panel.width, panel.height),
         Text(
@@ -597,8 +622,7 @@ def _panel_frame(panel: Panel, title: str #TODO: use enum for this
     ]
 
 
-def _base_commands(title: str #TODO: use enum for this
-                   ) -> list[DrawCommand]:
+def _base_commands(title: FacetLabel) -> list[DrawCommand]:
     width = active_config.get().figure_layout.width
     return [Text(Point(width / 2.0, 38.0), title, size=22, anchor=TextAnchor.MIDDLE)]
 
@@ -617,31 +641,47 @@ def _polyline(
 
 
 def _rows(table: pa.Table) -> tuple[TableRow, ...]:
-    return tuple(cast(dict[ColumnName, TabularCellValue], row) for row in table.to_pylist())
+    return tuple(cast(TableRow, row) for row in table.to_pylist())
 
 
-def _column_values(table: pa.Table, column: ColumnName) -> tuple[TabularCellValue, ...]:
-    return tuple(cast(TabularCellValue, value) for value in table.column(column).to_pylist())
+def _column_value(row: TableRow, column: PublicationColumn) -> TabularCellValue:
+    return row[ColumnName(column)]
 
 
-def _unique_strings(table: pa.Table, column: ColumnName) -> tuple[FacetLabel, ...]:
+def _column_values(table: pa.Table, column: PublicationColumn) -> tuple[TabularCellValue, ...]:
+    return tuple(
+        cast(TabularCellValue, value) for value in table.column(ColumnName(column)).to_pylist()
+    )
+
+
+def _facet_label(value: TabularCellValue) -> FacetLabel:
+    return FacetLabel(str(value))
+
+
+def _required_facet_label(row: TableRow, column: PublicationColumn) -> FacetLabel:
+    return _facet_label(_column_value(row, column))
+
+
+def _unique_strings(table: pa.Table, column: PublicationColumn) -> tuple[FacetLabel, ...]:
     values = tuple(
-        FacetLabel(str(value)) for value in _column_values(table, column) if value is not None
+        _facet_label(value) for value in _column_values(table, column) if value is not None
     )
     return tuple(dict.fromkeys(values))
 
 
-def _unique_numbers(table: pa.Table, column: ColumnName) -> tuple[PlotValue, ...]:
+def _unique_numbers(table: pa.Table, column: PublicationColumn) -> tuple[PlotValue, ...]:
     values = tuple(float(value) for value in _column_values(table, column) if value is not None)
     return tuple(dict.fromkeys(values))
 
 
-def _matching_rows(table: pa.Table, column: ColumnName, value: FacetLabel) -> tuple[TableRow, ...]:
-    return tuple(row for row in _rows(table) if str(row[column]) == value)
+def _matching_rows(
+    table: pa.Table, column: PublicationColumn, value: FacetLabel
+) -> tuple[TableRow, ...]:
+    return tuple(row for row in _rows(table) if _required_facet_label(row, column) == value)
 
 
-def _required_float(row: TableRow, column: ColumnName) -> PlotValue:
-    value = row[column]
+def _required_float(row: TableRow, column: PublicationColumn) -> PlotValue:
+    value = _column_value(row, column)
     if not isinstance(value, int | float):
         raise InvalidScientificDataError(f"figure requires non-null numeric {column}")
     numeric = float(value)
@@ -650,8 +690,8 @@ def _required_float(row: TableRow, column: ColumnName) -> PlotValue:
     return numeric
 
 
-def _optional_float(row: TableRow, column: ColumnName) -> PlotValue | None:
-    value = row[column]
+def _optional_float(row: TableRow, column: PublicationColumn) -> PlotValue | None:
+    value = _column_value(row, column)
     if value is None:
         return None
     if not isinstance(value, int | float):
@@ -662,51 +702,58 @@ def _optional_float(row: TableRow, column: ColumnName) -> PlotValue | None:
     return numeric
 
 
+def _required_bool(row: TableRow, column: PublicationColumn) -> bool:
+    value = _column_value(row, column)
+    if not isinstance(value, bool):
+        raise InvalidScientificDataError(f"figure requires boolean {column}")
+    return value
+
+
 def _svg_bytes(document: PlotDocument) -> bytes:
     layout = active_config.get().figure_layout
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{layout.width}" height="{layout.height}" '
         + f'viewBox="0 0 {layout.width} {layout.height}">',
-        f'<rect width="100%" height="100%" fill="{_BACKGROUND}"/>',
+        f'<rect width="100%" height="100%" fill="{FigureColor.BACKGROUND}"/>',
     ]
     lines.extend(_svg_command(command) for command in document.commands)
     lines.append("</svg>")
-    return ("\n".join(lines) + "\n").encode("utf-8")
+    return ("\n".join(lines) + "\n").encode(TextEncoding.UTF8)
 
 
-def _svg_command(command: DrawCommand) -> str:
+def _svg_command(command: DrawCommand) -> SvgFragment:
     if isinstance(command, Line):
         dash = ' stroke-dasharray="6 5"' if command.dashed else ""
-        return (
+        return SvgFragment(
             f'<line x1="{command.start.x:.3f}" y1="{command.start.y:.3f}" '
             f'x2="{command.end.x:.3f}" y2="{command.end.y:.3f}" '
-            f'stroke="{_STROKE}" stroke-width="{command.width:.2f}"{dash}/>'
+            f'stroke="{FigureColor.STROKE}" stroke-width="{command.width:.2f}"{dash}/>'
         )
     if isinstance(command, Circle):
-        fill = _BACKGROUND if command.hollow else _STROKE
-        return (
+        fill = FigureColor.BACKGROUND if command.hollow else FigureColor.STROKE
+        return SvgFragment(
             f'<circle cx="{command.center.x:.3f}" cy="{command.center.y:.3f}" '
-            f'r="{command.radius:.2f}" fill="{fill}" stroke="{_STROKE}"/>'
+            f'r="{command.radius:.2f}" fill="{fill}" stroke="{FigureColor.STROKE}"/>'
         )
     if isinstance(command, Cross):
         x, y, r = command.center.x, command.center.y, command.radius
-        return (
+        return SvgFragment(
             f'<path d="M {x - r:.3f} {y - r:.3f} L {x + r:.3f} {y + r:.3f} '
             f'M {x - r:.3f} {y + r:.3f} L {x + r:.3f} {y - r:.3f}" '
-            f'stroke="{_STROKE}" stroke-width="1.5" fill="none"/>'
+            f'stroke="{FigureColor.STROKE}" stroke-width="1.5" fill="none"/>'
         )
     if isinstance(command, Rectangle):
-        fill = _LIGHT if command.filled else "none"
-        return (
+        fill = FigureColor.LIGHT if command.filled else "none"
+        return SvgFragment(
             f'<rect x="{command.left:.3f}" y="{command.top:.3f}" '
             f'width="{command.width:.3f}" height="{command.height:.3f}" '
-            f'fill="{fill}" stroke="{_MUTED}" stroke-width="1"/>'
+            f'fill="{fill}" stroke="{FigureColor.MUTED}" stroke-width="1"/>'
         )
-    return (
+    return SvgFragment(
         f'<text x="{command.position.x:.3f}" y="{command.position.y:.3f}" '
         f'font-family="sans-serif" font-size="{command.size}" text-anchor="{command.anchor}" '
-        f'fill="{_STROKE}">{escape(command.value)}</text>'
+        f'fill="{FigureColor.STROKE}">{escape(command.value)}</text>'
     )
 
 

@@ -22,6 +22,16 @@ from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.catalog import (
+    PublicationSourceName,
+    SynthesisArtifactName,
+    publication_baseline_name,
+    publication_method_name,
+    publication_source_artifact_key,
+    publication_source_path,
+    synthesis_artifact_file,
+    synthesis_artifact_key,
+)
 from trajcert.experiments.mathematics import (
     ConvexityResult,
     IdentityResult,
@@ -47,8 +57,11 @@ from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, Safety
 from trajcert.experiments.sensitivity import PopulationUtilityResult, SequentialUtilityResult
 from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
-from trajcert.paths import ExperimentLeaf, ExperimentSlug, experiment_leaf
-from trajcert.provenance import BaselineName, MethodName
+from trajcert.paths import (
+    ExperimentLeaf,
+    experiment_leaf,
+)
+from trajcert.provenance import BaselineName, CoordinateGrammar, MethodName
 from trajcert.reporting.source_data import (
     PARTITION_COHERENCE_POPULATION_LAWS,
     AnalysisType,
@@ -59,6 +72,7 @@ from trajcert.reporting.source_data import (
     PartitionTimingRow,
     PopulationFigureEvidence,
     PopulationUtilitySourceEvidence,
+    PublicationSourceRows,
     RhoUtilityMetricName,
     RhoUtilityRow,
     SafetySourceEvidence,
@@ -105,27 +119,6 @@ from trajcert.types import (
     SensitivityBudget,
     Vector,
 )
-
-_METHOD_NAME = MethodName("TrajCert finest trajectory partition") #TODO: should be handled better. Use enums and check where already used to adapt
-_BASELINE_NAME = BaselineName("Endpoint-only partition") #TODO: should be handled better. Use enums and check where already used to adapt
-_SYNTHESIS_EXPERIMENT_NAME = "Statistical Synthesis" #TODO: should be handled better. Use enums and check where already used to adapt
-_THEOREM_TABLE_KEY = ArtifactKey("publication-source|theorem-validation-summary") #TODO: should be handled better. Use enums and check where already used to adapt
-_SOLVER_ORACLE_KEY = ArtifactKey("publication-source|solver-oracle-validation") #TODO: should be handled better. Use enums and check where already used to adapt
-_PARTITION_TABLE_KEY = ArtifactKey("publication-source|partition-timing-results") #TODO: should be handled better. Use enums and check where already used to adapt
-_COMPATIBILITY_TABLE_KEY = ArtifactKey("publication-source|compatibility-safety") #TODO: should be handled better. Use enums and check where already used to adapt
-_ANYTIME_COVERAGE_KEY = ArtifactKey("publication-source|anytime-coverage") #TODO: should be handled better. Use enums and check where already used to adapt
-_RHO_UTILITY_KEY = ArtifactKey("publication-source|rho-utility") #TODO: should be handled better. Use enums and check where already used to adapt
-_FAILURE_BOUNDARIES_KEY = ArtifactKey("publication-source|failure-boundaries") #TODO: should be handled better. Use enums and check where already used to adapt
-_COMPUTATIONAL_SCALING_KEY = ArtifactKey("publication-source|computational-scaling") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_PARTITION_KEY = ArtifactKey("publication-source|figure-partition-coherence") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_TIMING_KEY = ArtifactKey("publication-source|figure-timing-value") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_PROFILE_KEY = ArtifactKey("publication-source|figure-information-profile") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_PATHS_KEY = ArtifactKey("publication-source|figure-anytime-paths") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_COVERAGE_KEY = ArtifactKey("publication-source|figure-anytime-coverage") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_RHO_KEY = ArtifactKey("publication-source|figure-rho-sensitivity") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_FAILURE_KEY = ArtifactKey("publication-source|figure-failure-boundaries") #TODO: should be handled better. Use enums and check where already used to adapt
-_FIGURE_SCALING_KEY = ArtifactKey("publication-source|figure-computational-scaling") #TODO: should be handled better. Use enums and check where already used to adapt
-_LOCAL_VALIDITY_KEY = ArtifactKey("statistical-synthesis|local-validity-audit") #TODO: should be handled better. Use enums and check where already used to adapt
 
 
 class SequentialUtilityEvidence(DomainModel):
@@ -229,8 +222,8 @@ def paired_series_from_sequential_utility(
             law_name=law_name,
             sensitivity_budget=rho,
             metric_name=metric,
-            method_name=_METHOD_NAME,
-            baseline_name=_BASELINE_NAME,
+            method_name=publication_method_name(),
+            baseline_name=publication_baseline_name(),
             method_values=method_values,
             baseline_values=baseline_values,
         )
@@ -531,6 +524,35 @@ class SynthesisEvidenceBundle(DomainModel):
     partition_coherence_figure: tuple[PartitionCoherenceFigureRow, ...]
 
 
+def _publication_source_rows(
+    evidence: SynthesisEvidenceBundle,
+    publication: PublicationSourceRows,
+) -> Mapping[PublicationSourceName, tuple[DomainModel, ...]]:
+    sources = {
+        PublicationSourceName.THEOREM_VALIDATION: evidence.theorem_validation,
+        PublicationSourceName.SOLVER_ORACLE_VALIDATION: publication.solver_oracle_validation,
+        PublicationSourceName.PARTITION_TIMING: evidence.partition_timing,
+        PublicationSourceName.COMPATIBILITY_SAFETY: evidence.compatibility_safety,
+        PublicationSourceName.ANYTIME_COVERAGE: publication.anytime_coverage,
+        PublicationSourceName.RHO_UTILITY: evidence.rho_utility,
+        PublicationSourceName.FAILURE_BOUNDARIES: publication.failure_boundaries,
+        PublicationSourceName.COMPUTATIONAL_SCALING: publication.computational_scaling,
+        PublicationSourceName.FIGURE_PARTITION_COHERENCE: evidence.partition_coherence_figure,
+        PublicationSourceName.FIGURE_TIMING_VALUE: publication.figure_timing_value,
+        PublicationSourceName.FIGURE_INFORMATION_PROFILE: publication.figure_information_profile,
+        PublicationSourceName.FIGURE_ANYTIME_PATHS: publication.figure_anytime_paths,
+        PublicationSourceName.FIGURE_ANYTIME_COVERAGE: publication.figure_anytime_coverage,
+        PublicationSourceName.FIGURE_RHO_SENSITIVITY: publication.figure_rho_sensitivity,
+        PublicationSourceName.FIGURE_FAILURE_BOUNDARIES: publication.figure_failure_boundaries,
+        PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING: (
+            publication.figure_computational_scaling
+        ),
+    }
+    if set(sources) != set(PublicationSourceName):
+        raise RuntimeError("publication source rows must cover the catalog exactly once")
+    return sources
+
+
 def build_synthesis_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
@@ -599,7 +621,7 @@ def _partition_timing_evidence(
         comparison = cell.identity.coordinates.comparison_pair_name
         if comparison is None:
             raise InvalidScientificDataError("partition-coherence cell lacks its comparison pair")
-        fine_text, separator, coarse_text = comparison.partition(" -> ")
+        fine_text, separator, coarse_text = comparison.partition(CoordinateGrammar.COMPARISON_PAIR)
         if not separator:
             raise InvalidScientificDataError("partition-coherence comparison pair is malformed")
         fine = PartitionName(fine_text)
@@ -909,7 +931,7 @@ def _rho_from_persisted_tau(
     cell: PlannedCell,
 ) -> SensitivityBudget:
     coordinate = cell.identity.coordinates.sensitivity_coordinate
-    prefix = "rho-offset="
+    prefix = CoordinateGrammar.RHO_OFFSET_PREFIX
     if coordinate is None or not coordinate.startswith(prefix):
         raise InvalidScientificDataError("partition-coherence cell lacks its rho-offset coordinate")
     return result.fine_tau + float(coordinate.removeprefix(prefix))
@@ -985,7 +1007,7 @@ def synthesis_artifact_keys(cell: PlannedCell) -> tuple[ArtifactKey, ...]:
 
 
 def local_validity_artifact_key() -> ArtifactKey:
-    return _LOCAL_VALIDITY_KEY
+    return synthesis_artifact_key(SynthesisArtifactName.LOCAL_VALIDITY_AUDIT)
 
 
 def make_statistical_synthesis_executor(
@@ -1022,54 +1044,15 @@ def execute_statistical_synthesis(
     paths = synthesis_artifact_paths(cell)
     root = context.workspace_root
     digests = {
-        _THEOREM_TABLE_KEY: write_source_data(
-            root / paths[_THEOREM_TABLE_KEY], evidence.theorem_validation
-        ),
-        _SOLVER_ORACLE_KEY: write_source_data(
-            root / paths[_SOLVER_ORACLE_KEY], publication.solver_oracle_validation
-        ),
-        _PARTITION_TABLE_KEY: write_source_data(
-            root / paths[_PARTITION_TABLE_KEY], evidence.partition_timing
-        ),
-        _COMPATIBILITY_TABLE_KEY: write_source_data(
-            root / paths[_COMPATIBILITY_TABLE_KEY], evidence.compatibility_safety
-        ),
-        _ANYTIME_COVERAGE_KEY: write_source_data(
-            root / paths[_ANYTIME_COVERAGE_KEY], publication.anytime_coverage
-        ),
-        _RHO_UTILITY_KEY: write_source_data(root / paths[_RHO_UTILITY_KEY], evidence.rho_utility),
-        _FAILURE_BOUNDARIES_KEY: write_source_data(
-            root / paths[_FAILURE_BOUNDARIES_KEY], publication.failure_boundaries
-        ),
-        _COMPUTATIONAL_SCALING_KEY: write_source_data(
-            root / paths[_COMPUTATIONAL_SCALING_KEY], publication.computational_scaling
-        ),
-        _FIGURE_PARTITION_KEY: write_source_data(
-            root / paths[_FIGURE_PARTITION_KEY], evidence.partition_coherence_figure
-        ),
-        _FIGURE_TIMING_KEY: write_source_data(
-            root / paths[_FIGURE_TIMING_KEY], publication.figure_timing_value
-        ),
-        _FIGURE_PROFILE_KEY: write_source_data(
-            root / paths[_FIGURE_PROFILE_KEY], publication.figure_information_profile
-        ),
-        _FIGURE_PATHS_KEY: write_source_data(
-            root / paths[_FIGURE_PATHS_KEY], publication.figure_anytime_paths
-        ),
-        _FIGURE_COVERAGE_KEY: write_source_data(
-            root / paths[_FIGURE_COVERAGE_KEY], publication.figure_anytime_coverage
-        ),
-        _FIGURE_RHO_KEY: write_source_data(
-            root / paths[_FIGURE_RHO_KEY], publication.figure_rho_sensitivity
-        ),
-        _FIGURE_FAILURE_KEY: write_source_data(
-            root / paths[_FIGURE_FAILURE_KEY], publication.figure_failure_boundaries
-        ),
-        _FIGURE_SCALING_KEY: write_source_data(
-            root / paths[_FIGURE_SCALING_KEY], publication.figure_computational_scaling
-        ),
-        _LOCAL_VALIDITY_KEY: atomic_write_model(root / paths[_LOCAL_VALIDITY_KEY], local_validity),
+        publication_source_artifact_key(source): write_source_data(
+            root / paths[publication_source_artifact_key(source)], rows
+        )
+        for source, rows in _publication_source_rows(evidence, publication).items()
     }
+    local_validity_key = local_validity_artifact_key()
+    digests[local_validity_key] = atomic_write_model(
+        root / paths[local_validity_key], local_validity
+    )
     entries = tuple(
         ArtifactIndexEntry(
             artifact_key=key,
@@ -1095,61 +1078,16 @@ def execute_statistical_synthesis(
 
 
 def synthesis_artifact_paths(cell: PlannedCell) -> SynthesisArtifactPaths:
-    if cell.identity.experiment_name != _SYNTHESIS_EXPERIMENT_NAME:
+    if cell.identity.experiment_name is not ExperimentName.STATISTICAL_SYNTHESIS:
         raise InvalidScientificDataError("synthesis artifact paths require the synthesis cell")
-    synthesis = experiment_leaf(
-        cell.identity.experiment_slug,
-        ExperimentLeaf.EVALUATION_AGGREGATES,
-    )
-    return SynthesisArtifactPaths(
-        by_key={
-            _THEOREM_TABLE_KEY: synthesis / "theorem_validation_summary.parquet", #TODO: consider moving this to storage enumeration
-            _SOLVER_ORACLE_KEY: _aggregate(
-                ExperimentSlug("production-solver-vs-independent-oracle"), #TODO: create an enum for experiment slugs
-                "solver_oracle_validation.parquet",#TODO: consider moving this to storage enumeration
-            ),
-            _PARTITION_TABLE_KEY: synthesis / "partition_timing_results.parquet",#TODO: consider moving this to storage enumeration
-            _COMPATIBILITY_TABLE_KEY: synthesis / "compatibility_safety.parquet",#TODO: consider moving this to storage enumeration
-            _ANYTIME_COVERAGE_KEY: _aggregate(
-                ExperimentSlug("anytime-coverage-stress"), "anytime_coverage.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _RHO_UTILITY_KEY: synthesis / "rho_utility.parquet",#TODO: consider moving this to storage enumeration
-            _FAILURE_BOUNDARIES_KEY: _aggregate(
-                ExperimentSlug("failure-boundary-atlas"), "failure_boundaries.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _COMPUTATIONAL_SCALING_KEY: _aggregate(
-                ExperimentSlug("computational-scaling"), "computational_scaling.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _FIGURE_PARTITION_KEY: synthesis / "figure_partition_coherence.parquet",#TODO: consider moving this to storage enumeration
-            _FIGURE_TIMING_KEY: _aggregate(
-                ExperimentSlug("strict-timing-gain"), "figure_timing_value.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _FIGURE_PROFILE_KEY: _aggregate(
-                ExperimentSlug("safety-and-intrinsic-impossibility"),
-                "figure_information_profile.parquet",#TODO: consider moving this to storage enumeration
-            ),
-            _FIGURE_PATHS_KEY: _aggregate(
-                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_paths.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _FIGURE_COVERAGE_KEY: _aggregate(
-                ExperimentSlug("anytime-coverage-stress"), "figure_anytime_coverage.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _FIGURE_RHO_KEY: _aggregate(
-                ExperimentSlug("population-sensitivity-utility"), "figure_rho_sensitivity.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _FIGURE_FAILURE_KEY: _aggregate(
-                ExperimentSlug("failure-boundary-atlas"), "figure_failure_boundaries.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _FIGURE_SCALING_KEY: _aggregate(
-                ExperimentSlug("computational-scaling"), "figure_computational_scaling.parquet"#TODO: consider moving this to storage enumeration
-            ),
-            _LOCAL_VALIDITY_KEY: synthesis / "local_validity_audit.json",#TODO: consider moving this to storage enumeration
-        }
-    )
-
-
-def _aggregate(experiment_slug: ExperimentSlug, filename: str) -> Path:
-    return experiment_leaf(experiment_slug, ExperimentLeaf.EVALUATION_AGGREGATES) / filename
+    paths = {
+        publication_source_artifact_key(source): publication_source_path(source)
+        for source in PublicationSourceName
+    }
+    paths[local_validity_artifact_key()] = experiment_leaf(
+        cell.identity.experiment_slug, ExperimentLeaf.EVALUATION_AGGREGATES
+    ) / synthesis_artifact_file(SynthesisArtifactName.LOCAL_VALIDITY_AUDIT)
+    return SynthesisArtifactPaths(by_key=paths)
 
 
 def _validate_synthesis_cell(
@@ -1157,7 +1095,7 @@ def _validate_synthesis_cell(
     context: ExecutionContext,
     plan: ExperimentPlan,
 ) -> None:
-    if cell.identity.experiment_name != _SYNTHESIS_EXPERIMENT_NAME:
+    if cell.identity.experiment_name is not ExperimentName.STATISTICAL_SYNTHESIS:
         raise InvalidScientificDataError(
             "dedicated synthesis executor received a non-synthesis cell"
         )

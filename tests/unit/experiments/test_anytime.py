@@ -11,6 +11,7 @@ from trajcert.config import (
     SequentialConfig,
     SequentialUtilityConfig,
     TrajCertConfig,
+    active_config,
 )
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters
@@ -80,12 +81,14 @@ def _hand_case_config() -> TrajCertConfig:
         batch_size=1,
     )
     numerics = config.numerics.model_copy(update={"outer_max_nodes": _OUTER_NODE_CAP})
-    return config.model_copy(
+    configured = config.model_copy(
         update={
             "sequential": SequentialConfig(coverage=coverage, utility=utility),
             "numerics": numerics,
         }
     )
+    _ = active_config.set(configured)
+    return configured
 
 
 def _coverage_config() -> TrajCertConfig:
@@ -109,13 +112,15 @@ def _coverage_config() -> TrajCertConfig:
         matured_events=_COVERAGE_MATURED, resolved_events=_COVERAGE_RESOLVED
     )
     numerics = config.numerics.model_copy(update={"outer_max_nodes": _OUTER_NODE_CAP})
-    return config.model_copy(
+    configured = config.model_copy(
         update={
             "sequential": SequentialConfig(coverage=coverage, utility=utility),
             "minimum_evidence": minimum,
             "numerics": numerics,
         }
     )
+    _ = active_config.set(configured)
+    return configured
 
 
 def _trace_events() -> tuple[tuple[MaturedEvent, ...], LedgerIdentity]:
@@ -128,7 +133,7 @@ def _trace_events() -> tuple[tuple[MaturedEvent, ...], LedgerIdentity]:
 
 
 def test_run_sequential_trace_requires_positive_checkpoint_interval() -> None:
-    config = _hand_case_config()
+    _ = _hand_case_config()
     events, identity = _trace_events()
     partition = _partition(_HAND_CASE_BANDS)
     with pytest.raises(ValueError, match="positive"):
@@ -136,7 +141,6 @@ def test_run_sequential_trace_requires_positive_checkpoint_interval() -> None:
             events,
             identity,
             partition,
-            config,
             _SENSITIVITY_BUDGET,
             _SENSITIVITY_BUDGET,
             0,
@@ -144,13 +148,12 @@ def test_run_sequential_trace_requires_positive_checkpoint_interval() -> None:
 
 
 def test_run_sequential_trace_records_interval_and_terminal_checkpoints() -> None:
-    config = _hand_case_config()
+    _ = _hand_case_config()
     events, identity = _trace_events()
     trace = anytime.run_sequential_trace(
         events,
         identity,
         _partition(_HAND_CASE_BANDS),
-        config,
         _SENSITIVITY_BUDGET,
         _SENSITIVITY_BUDGET,
         _TRACE_INTERVAL,
@@ -164,13 +167,12 @@ def test_run_sequential_trace_records_interval_and_terminal_checkpoints() -> Non
 
 
 def test_run_sequential_trace_keeps_terminal_checkpoint_when_interval_exceeds_events() -> None:
-    config = _hand_case_config()
+    _ = _hand_case_config()
     events, identity = _trace_events()
     trace = anytime.run_sequential_trace(
         events,
         identity,
         _partition(_HAND_CASE_BANDS),
-        config,
         _SENSITIVITY_BUDGET,
         _SENSITIVITY_BUDGET,
         _TRACE_LARGE_INTERVAL,
@@ -180,14 +182,13 @@ def test_run_sequential_trace_keeps_terminal_checkpoint_when_interval_exceeds_ev
 
 
 def test_run_sequential_trace_empty_stream_has_no_checkpoints() -> None:
-    config = _hand_case_config()
+    _ = _hand_case_config()
     _, identity = _trace_events()
     empty: tuple[MaturedEvent, ...] = ()
     trace = anytime.run_sequential_trace(
         empty,
         identity,
         _partition(_HAND_CASE_BANDS),
-        config,
         _SENSITIVITY_BUDGET,
         _SENSITIVITY_BUDGET,
         1,
@@ -197,13 +198,12 @@ def test_run_sequential_trace_empty_stream_has_no_checkpoints() -> None:
 
 
 def test_run_sequential_trace_checkpoints_every_event() -> None:
-    config = _hand_case_config()
+    _ = _hand_case_config()
     events, identity = _trace_events()
     trace = anytime.run_sequential_trace(
         events,
         identity,
         _partition(_HAND_CASE_BANDS),
-        config,
         _SENSITIVITY_BUDGET,
         _SENSITIVITY_BUDGET,
         1,
@@ -212,58 +212,65 @@ def test_run_sequential_trace_checkpoints_every_event() -> None:
 
 
 def test_run_anytime_hand_case_rejects_out_of_range_index() -> None:
-    config = _hand_case_config()
+    _ = _hand_case_config()
     partition = _partition(_HAND_CASE_BANDS)
     with pytest.raises(ValueError, match=r"\[1, 10\]"):
-        _ = anytime.run_anytime_hand_case(0, partition, config)
+        _ = anytime.run_anytime_hand_case(0, partition)
     with pytest.raises(ValueError, match=r"\[1, 10\]"):
-        _ = anytime.run_anytime_hand_case(11, partition, config)
+        _ = anytime.run_anytime_hand_case(11, partition)
 
 
 def test_run_anytime_hand_case_insufficient_matured_events() -> None:
-    result = anytime.run_anytime_hand_case(1, _partition(_HAND_CASE_BANDS), _hand_case_config())
+    _ = _hand_case_config()
+    result = anytime.run_anytime_hand_case(1, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.INSUFFICIENT_EVIDENCE
     assert result.observed_state is ScientificState.INSUFFICIENT_EVIDENCE
 
 
 def test_run_anytime_hand_case_insufficient_resolved_events() -> None:
-    result = anytime.run_anytime_hand_case(2, _partition(_HAND_CASE_BANDS), _hand_case_config())
+    _ = _hand_case_config()
+    result = anytime.run_anytime_hand_case(2, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.INSUFFICIENT_EVIDENCE
     assert result.observed_state is ScientificState.INSUFFICIENT_EVIDENCE
 
 
 def test_run_anytime_hand_case_model_incompatible() -> None:
-    result = anytime.run_anytime_hand_case(3, _partition(_HAND_CASE_BANDS), _hand_case_config())
+    _ = _hand_case_config()
+    result = anytime.run_anytime_hand_case(3, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.MODEL_INCOMPATIBLE
     assert result.observed_state is ScientificState.MODEL_INCOMPATIBLE
 
 
 def test_run_anytime_hand_case_intrinsically_uncertifiable() -> None:
-    result = anytime.run_anytime_hand_case(4, _partition(_HAND_CASE_BANDS), _hand_case_config())
+    _ = _hand_case_config()
+    result = anytime.run_anytime_hand_case(4, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.INTRINSICALLY_UNCERTIFIABLE
     assert result.observed_state is ScientificState.INTRINSICALLY_UNCERTIFIABLE
 
 
 def test_run_anytime_hand_case_certified() -> None:
-    result = anytime.run_anytime_hand_case(5, _partition(_HAND_CASE_BANDS), _hand_case_config())
+    _ = _hand_case_config()
+    result = anytime.run_anytime_hand_case(5, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.CERTIFIED
     assert result.observed_state is ScientificState.CERTIFIED
 
 
 def test_run_anytime_hand_case_uncertified() -> None:
-    result = anytime.run_anytime_hand_case(6, _partition(_HAND_CASE_BANDS), _hand_case_config())
+    _ = _hand_case_config()
+    result = anytime.run_anytime_hand_case(6, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.UNCERTIFIED
     assert result.observed_state is ScientificState.UNCERTIFIED
 
 
 def test_run_anytime_hand_case_zero_resolved_mass_plausible() -> None:
-    result = anytime.run_anytime_hand_case(7, _partition(_HAND_CASE_BANDS), _hand_case_config())
+    _ = _hand_case_config()
+    result = anytime.run_anytime_hand_case(7, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.UNCERTIFIED
     assert result.observed_state is ScientificState.UNCERTIFIED
@@ -271,7 +278,7 @@ def test_run_anytime_hand_case_zero_resolved_mass_plausible() -> None:
 
 def test_run_anytime_hand_case_no_unresolved_mass_certifies() -> None:
     config = _hand_case_config()
-    result = anytime.run_anytime_hand_case(8, _partition(_HAND_CASE_BANDS), config)
+    result = anytime.run_anytime_hand_case(8, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.expected_state is ScientificState.CERTIFIED
     assert result.projection_upper == pytest.approx(
@@ -281,7 +288,7 @@ def test_run_anytime_hand_case_no_unresolved_mass_certifies() -> None:
 
 def test_run_anytime_hand_case_simplex_boundary_within_identity_tolerance() -> None:
     config = _hand_case_config()
-    result = anytime.run_anytime_hand_case(9, _partition(_HAND_CASE_BANDS), config)
+    result = anytime.run_anytime_hand_case(9, _partition(_HAND_CASE_BANDS))
     assert result.passed is True
     assert result.oracle_feasible_lower is not None
     assert result.anti_conservatism is not None
@@ -292,7 +299,7 @@ def test_run_coverage_stress_reports_all_methods_for_assumption_valid_law() -> N
     config = _coverage_config()
     parameters = _parameters(config.laws[LawKey.NO_PATH_DEPENDENCE], LawKey.NO_PATH_DEPENDENCE)
     result = anytime.run_coverage_stress(
-        parameters, _partition(_HAND_CASE_BANDS), config, _SENSITIVITY_BUDGET
+        parameters, _partition(_HAND_CASE_BANDS), _SENSITIVITY_BUDGET
     )
     assert result.primary_passed is True
     assert len(result.methods) == len(tuple(anytime.SequentialMethod))
@@ -304,7 +311,7 @@ def test_run_coverage_stress_marks_ignorable_delay_inapplicable_for_violated_ass
     config = _coverage_config()
     parameters = _parameters(config.laws[_ASSUMPTION_VIOLATED_LAW], _ASSUMPTION_VIOLATED_LAW)
     result = anytime.run_coverage_stress(
-        parameters, _partition(_HAND_CASE_BANDS), config, _SENSITIVITY_BUDGET
+        parameters, _partition(_HAND_CASE_BANDS), _SENSITIVITY_BUDGET
     )
     ignorable = next(
         item for item in result.methods if item.method is anytime.SequentialMethod.IGNORABLE_DELAY
@@ -317,9 +324,9 @@ def test_coverage_stress_batches_combine_to_match_single_run() -> None:
     config = _coverage_config()
     parameters = _parameters(config.laws[LawKey.NO_PATH_DEPENDENCE], LawKey.NO_PATH_DEPENDENCE)
     partition = _partition(_HAND_CASE_BANDS)
-    whole = anytime.run_coverage_stress(parameters, partition, config, _SENSITIVITY_BUDGET)
+    whole = anytime.run_coverage_stress(parameters, partition, _SENSITIVITY_BUDGET)
     first = anytime.coverage_stress_batch(
-        parameters, partition, config, _SENSITIVITY_BUDGET, range(0, 1), batch_index=0
+        parameters, partition, _SENSITIVITY_BUDGET, range(0, 1), batch_index=0
     )
     assert first.seed_index_start == 0
     assert first.seed_index_stop_exclusive == 1
@@ -335,7 +342,7 @@ def test_combine_coverage_stress_batches_rejects_empty_batches() -> None:
 
 
 def test_evaluate_configured_coverage_stress_true_information_reference() -> None:
-    config = _coverage_config()
+    _ = _coverage_config()
     case = CoverageStressCaseConfig(
         name=CoverageStressCaseName("independent-resolution-control"),
         law=LawKey.NO_PATH_DEPENDENCE,
@@ -343,7 +350,7 @@ def test_evaluate_configured_coverage_stress_true_information_reference() -> Non
         rho_offset=_RHO_OFFSET,
         sensitivity_reference=CoverageStressSensitivityReference.TRUE_INFORMATION,
     )
-    result = anytime.evaluate_configured_coverage_stress(case, config)
+    result = anytime.evaluate_configured_coverage_stress(case)
     assert result.band_count == _HAND_CASE_BANDS
     assert len(result.methods) == len(tuple(anytime.SequentialMethod))
     assert len(result.representative_paths) == _COVERAGE_STREAMS
@@ -356,7 +363,7 @@ def test_evaluate_configured_coverage_stress_true_information_reference() -> Non
 
 
 def test_evaluate_configured_coverage_stress_compatibility_floor_reference() -> None:
-    config = _coverage_config()
+    _ = _coverage_config()
     case = CoverageStressCaseConfig(
         name=CoverageStressCaseName("minimum-information-completion"),
         law=_PRINCIPAL_LAW,
@@ -365,7 +372,7 @@ def test_evaluate_configured_coverage_stress_compatibility_floor_reference() -> 
         sensitivity_reference=CoverageStressSensitivityReference.COMPATIBILITY_FLOOR,
         minimum_information_completion=True,
     )
-    result = anytime.evaluate_configured_coverage_stress(case, config)
+    result = anytime.evaluate_configured_coverage_stress(case)
     assert result.rho > 0.0
     ignorable = next(
         item
@@ -386,12 +393,12 @@ def test_evaluate_configured_coverage_stress_applies_near_certification_beta_off
         sensitivity_reference=CoverageStressSensitivityReference.TRUE_INFORMATION,
         beta_offset=_BETA_OFFSET,
     )
-    result = anytime.evaluate_configured_coverage_stress(case, config)
+    result = anytime.evaluate_configured_coverage_stress(case)
     assert result.beta > config.budgets.risk
 
 
 def test_evaluate_configured_coverage_stress_rejects_excessive_sensitivity_budget() -> None:
-    config = _coverage_config()
+    _ = _coverage_config()
     case = CoverageStressCaseConfig(
         name=CoverageStressCaseName("excessive-budget"),
         law=LawKey.NO_PATH_DEPENDENCE,
@@ -400,4 +407,4 @@ def test_evaluate_configured_coverage_stress_rejects_excessive_sensitivity_budge
         sensitivity_reference=CoverageStressSensitivityReference.TRUE_INFORMATION,
     )
     with pytest.raises(InvalidScientificDataError, match="exceeds binary-information maximum"):
-        _ = anytime.evaluate_configured_coverage_stress(case, config)
+        _ = anytime.evaluate_configured_coverage_stress(case)

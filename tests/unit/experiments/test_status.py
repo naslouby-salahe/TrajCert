@@ -71,7 +71,7 @@ def _cell(executable: bool = True, required: tuple[ExperimentName, ...] = ()) ->
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=executable,
-        invalid_reason=(None if executable else ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")),
+        invalid_reason=(None if executable else ReasonCode.MISSING_AUTHORITATIVE_CONFIGURATION),
         required_experiments=required,
     )
 
@@ -167,7 +167,7 @@ def test_inspect_cell_status_reports_invalid_cell() -> None:
     cell = _cell(executable=False)
     result = inspect_cell_status(cell, _context(Path("/nonexistent")), ())
     assert result.state is PublicExecutionState.INVALID
-    assert result.reason == ReasonCode("MISSING_AUTHORITATIVE_CONFIGURATION")
+    assert result.reason == ReasonCode.MISSING_AUTHORITATIVE_CONFIGURATION
 
 
 def test_inspect_cell_status_ready_without_artifacts(tmp_path: Path) -> None:
@@ -181,7 +181,7 @@ def test_inspect_cell_status_blocked_missing_dependency_status() -> None:
     cell = _cell(required=(ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,))
     result = inspect_cell_status(cell, _context(Path("/nonexistent")), ())
     assert result.state is PublicExecutionState.BLOCKED
-    assert result.reason == ReasonCode("MISSING_DEPENDENCY_STATUS")
+    assert result.reason == ReasonCode.MISSING_DEPENDENCY_STATUS
 
 
 def test_inspect_cell_status_blocked_uncompleted_dependency() -> None:
@@ -194,7 +194,7 @@ def test_inspect_cell_status_blocked_uncompleted_dependency() -> None:
     )
     result = inspect_cell_status(cell, _context(Path("/nonexistent")), dependencies)
     assert result.state is PublicExecutionState.BLOCKED
-    assert result.reason == ReasonCode("UPSTREAM_EXPERIMENT_NOT_COMPLETED")
+    assert result.reason == ReasonCode.UPSTREAM_EXPERIMENT_NOT_COMPLETED
 
 
 def test_inspect_cell_status_completed_with_compatible_completion(tmp_path: Path) -> None:
@@ -214,7 +214,7 @@ def test_inspect_cell_status_blocked_by_stale_completion(tmp_path: Path) -> None
     _write_raw(cell_completion_path(cell, tmp_path), "{not valid completion json")
     result = inspect_cell_status(cell, _context(tmp_path), ())
     assert result.state is PublicExecutionState.BLOCKED
-    assert result.reason == ReasonCode("STALE_OR_INCOMPATIBLE_COMPLETION")
+    assert result.reason == ReasonCode.STALE_OR_INCOMPATIBLE_COMPLETION
 
 
 def test_inspect_cell_status_running_when_running_file_present(tmp_path: Path) -> None:
@@ -239,7 +239,7 @@ def test_inspect_cell_status_failed_with_matching_failure(tmp_path: Path) -> Non
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
     result = inspect_cell_status(cell, context, ())
     assert result.state is PublicExecutionState.FAILED
-    assert result.reason == ReasonCode("TECHNICAL_EXECUTION_FAILURE")
+    assert result.reason == ReasonCode.TECHNICAL_EXECUTION_FAILURE
 
 
 def test_inspect_cell_status_invalid_with_data_validation_failure(tmp_path: Path) -> None:
@@ -256,7 +256,7 @@ def test_inspect_cell_status_invalid_with_data_validation_failure(tmp_path: Path
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
     result = inspect_cell_status(cell, context, ())
     assert result.state is PublicExecutionState.INVALID
-    assert result.reason == ReasonCode("DATA_VALIDATION_FAILURE")
+    assert result.reason == ReasonCode.DATA_VALIDATION_FAILURE
 
 
 def test_inspect_cell_status_failed_with_invalid_failure_record(tmp_path: Path) -> None:
@@ -264,7 +264,7 @@ def test_inspect_cell_status_failed_with_invalid_failure_record(tmp_path: Path) 
     _write_raw(cell_failure_path(cell, tmp_path), "{invalid failure json")
     result = inspect_cell_status(cell, _context(tmp_path), ())
     assert result.state is PublicExecutionState.FAILED
-    assert result.reason == ReasonCode("INVALID_FAILURE_RECORD")
+    assert result.reason == ReasonCode.INVALID_FAILURE_RECORD
 
 
 def test_inspect_cell_status_ready_when_failure_digest_mismatches(tmp_path: Path) -> None:
