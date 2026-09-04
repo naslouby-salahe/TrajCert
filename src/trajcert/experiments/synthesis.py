@@ -10,8 +10,11 @@ from numpy.typing import NDArray
 from trajcert.analysis.aggregation import PairedEffectSummary, summarize_paired_differences
 from trajcert.analysis.bootstrap import PercentileBootstrapInterval, paired_percentile_bootstrap
 from trajcert.analysis.materiality import (
+    PopulationMaterialityObservation,
+    PopulationMaterialitySummary,
     SequentialMaterialityObservation,
     SequentialMaterialitySummary,
+    evaluate_population_materiality,
     evaluate_sequential_materiality,
 )
 from trajcert.analysis.metrics import PracticalMetric, numeric_first_certification
@@ -514,6 +517,7 @@ class SynthesisEvidenceBundle(DomainModel):
     compatibility_safety: tuple[CompatibilitySafetyRow, ...]
     rho_utility: tuple[RhoUtilityRow, ...]
     partition_coherence_figure: tuple[PartitionCoherenceFigureRow, ...]
+    population_materiality: PopulationMaterialitySummary
 
 
 def _publication_source_rows(
@@ -552,6 +556,16 @@ def build_synthesis_evidence(
     population_source = _population_utility_evidence(plan, workspace_root)
     sequential_source = _sequential_utility_evidence(plan, workspace_root)
     sequential_synthesis = synthesize_from_sequential_utility(sequential_source)
+    population_materiality = evaluate_population_materiality(
+        PopulationMaterialityObservation(
+            law_name=item.law_name,
+            sensitivity_budget=item.result.sensitivity_budget,
+            compatibility_regime=item.result.compatibility_regime,
+            absolute_tightening=item.result.absolute_tightening,
+            relative_unresolved_gain=item.result.relative_unresolved_gain,
+        )
+        for item in population_source
+    )
     population_rows = population_rho_utility_rows(population_source)
     sequential_rows = sequential_rho_utility_rows(sequential_synthesis)
     return SynthesisEvidenceBundle(
@@ -573,6 +587,7 @@ def build_synthesis_evidence(
             _population_figure_evidence(population_source),
             _same_endpoint_figure_evidence(plan, workspace_root),
         ),
+        population_materiality=population_materiality,
     )
 
 

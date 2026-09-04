@@ -30,6 +30,7 @@ from trajcert.types import (
     SearchPredicate,
     SensitivityBudget,
     SurvivingBoxCount,
+    TelemetryPhase,
     ToleranceValue,
     VisitedNodeCount,
 )
@@ -235,9 +236,9 @@ def _projection_search(
         identity_atol=identity_atol,
         comparison_guard=comparison_guard,
     )
-    visited = 0
+    visited: VisitedNodeCount = 0
     active: _Box | None = None
-    progress = SearchProgress("projection_search", node_cap)
+    progress = SearchProgress(TelemetryPhase("projection_search"), node_cap)
     try:
         while queue and visited < node_cap:
             active = heappop(queue)[2]
@@ -383,9 +384,9 @@ def _compatibility_search(
     if _box_possible(initial, envelope):
         heappush(queue, (initial_lower, counter, initial))
     best_upper = inf
-    visited = 0
+    visited: VisitedNodeCount = 0
     active: _Box | None = None
-    progress = SearchProgress("compatibility_search", node_cap)
+    progress = SearchProgress(TelemetryPhase("compatibility_search"), node_cap)
     try:
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)
@@ -510,9 +511,9 @@ def _intrinsic_search(
         gap=gap,
         comparison_guard=comparison_guard,
     )
-    visited = 0
+    visited: VisitedNodeCount = 0
     active: _Box | None = None
-    progress = SearchProgress("intrinsic_search", node_cap)
+    progress = SearchProgress(TelemetryPhase("intrinsic_search"), node_cap)
     try:
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)

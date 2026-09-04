@@ -155,3 +155,28 @@ def test_scanner_invokes_the_per_file_auditor_on_every_file_on_disk(
 
     files_on_disk = set(SOURCE_ROOT.rglob("*.py"))
     assert set(visited) == files_on_disk
+
+
+def test_bool_finite_domain_field_fixture_is_rejected() -> None:
+    rule_ids = {f.rule_id for f in audit_path(FIXTURES / "invalid" / "bool_mode_field.py")}
+    assert RULE_PRIMITIVE in rule_ids
+
+
+def test_enum_value_return_fixture_is_rejected_with_redundant_conversion() -> None:
+    rule_ids = {f.rule_id for f in audit_path(FIXTURES / "invalid" / "enum_value_return.py")}
+    assert RULE_REDUNDANT_CONVERSION in rule_ids
+
+
+def test_primitive_container_param_fixture_is_rejected() -> None:
+    rule_ids = {f.rule_id for f in audit_path(FIXTURES / "invalid" / "primitive_sequence_param.py")}
+    assert RULE_PRIMITIVE in rule_ids
+
+
+def test_bare_dict_param_fixture_is_rejected() -> None:
+    rule_ids = {f.rule_id for f in audit_path(FIXTURES / "invalid" / "bare_dict_param.py")}
+    assert RULE_PRIMITIVE in rule_ids
+
+
+def test_qualified_building_block_fixture_is_rejected() -> None:
+    rule_ids = {f.rule_id for f in audit_path(FIXTURES / "invalid" / "building_block_qualified.py")}
+    assert RULE_BUILDING_BLOCK in rule_ids

@@ -11,15 +11,18 @@ from trajcert.types import (
     Count,
     ExperimentName,
     LogIntervalSeconds,
+    ProvenSearchBound,
     PublicExecutionState,
     TelemetryLabel,
     TelemetryPhase,
     TimestampSeconds,
+    VisitedNodeCount,
 )
 
 _LOGGER_NAME: Final[str] = "trajcert"
 _TIMESTAMP_FORMAT: Final[str] = "%Y-%m-%dT%H:%M:%S"
 _UNKNOWN_CELL_LABEL: Final[str] = "unknown"
+_DEFAULT_LOG_INTERVAL_SECONDS: Final[LogIntervalSeconds] = LogIntervalSeconds(5.0)
 
 _logger = logging.getLogger(_LOGGER_NAME)
 _current_cell_key: ContextVar[SemanticCellKey | None] = ContextVar("current_cell_key", default=None)
@@ -55,14 +58,24 @@ class SearchProgress:
     _last_logged_at: TimestampSeconds
     _log_interval_seconds: LogIntervalSeconds
 
-    def __init__(self, phase: str, node_cap: int, log_interval_seconds: float = 5.0) -> None:
-        self._phase = TelemetryPhase(phase)
+    def __init__(
+        self,
+        phase: TelemetryPhase,
+        node_cap: Count,
+        log_interval_seconds: LogIntervalSeconds = _DEFAULT_LOG_INTERVAL_SECONDS,
+    ) -> None:
+        self._phase = phase
         self._node_cap = node_cap
         self._started_at = TimestampSeconds(time.monotonic())
         self._last_logged_at = self._started_at
-        self._log_interval_seconds = LogIntervalSeconds(log_interval_seconds)
+        self._log_interval_seconds = log_interval_seconds
 
-    def maybe_log(self, visited_nodes: int, queue_size: int, best_bound: float | None) -> None:
+    def maybe_log(
+        self,
+        visited_nodes: VisitedNodeCount,
+        queue_size: Count,
+        best_bound: ProvenSearchBound | None,
+    ) -> None:
         now = time.monotonic()
         if now - self._last_logged_at < self._log_interval_seconds:
             return
@@ -90,14 +103,19 @@ class StreamProgress:
     _last_logged_at: TimestampSeconds
     _log_interval_seconds: LogIntervalSeconds
 
-    def __init__(self, stage: str, stream_count: int, log_interval_seconds: float = 5.0) -> None:
-        self._stage = TelemetryPhase(stage)
+    def __init__(
+        self,
+        stage: TelemetryPhase,
+        stream_count: Count,
+        log_interval_seconds: LogIntervalSeconds = _DEFAULT_LOG_INTERVAL_SECONDS,
+    ) -> None:
+        self._stage = stage
         self._stream_count = stream_count
         self._started_at = TimestampSeconds(time.monotonic())
         self._last_logged_at = self._started_at
-        self._log_interval_seconds = LogIntervalSeconds(log_interval_seconds)
+        self._log_interval_seconds = log_interval_seconds
 
-    def maybe_log(self, streams_done: int) -> None:
+    def maybe_log(self, streams_done: Count) -> None:
         now = time.monotonic()
         if now - self._last_logged_at < self._log_interval_seconds:
             return
@@ -138,7 +156,7 @@ class ExperimentProgress:
             total_cells,
         )
 
-    def cell_started(self, semantic_cell_key: SemanticCellKey) -> float:
+    def cell_started(self, semantic_cell_key: SemanticCellKey) -> TimestampSeconds:
         started_at = time.monotonic()
         _logger.info(
             "cell_started experiment=%s cell=%d/%d remaining=%d semantic_cell_key=%s",
@@ -148,14 +166,14 @@ class ExperimentProgress:
             self._total_cells - self._completed_cells,
             semantic_cell_key,
         )
-        return started_at
+        return TimestampSeconds(started_at)
 
     def cell_finished(
         self,
         semantic_cell_key: SemanticCellKey,
         state: PublicExecutionState,
         reused: bool,
-        started_at: float,
+        started_at: TimestampSeconds,
     ) -> None:
         self._completed_cells += 1
         cell_elapsed_seconds = time.monotonic() - started_at

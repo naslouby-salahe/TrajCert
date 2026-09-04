@@ -79,7 +79,7 @@ def compatibility_floor_behavior(
     population_band_count: BandCount | None = None,
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
-    tau = 0.0 if tau_value is None else float(tau_value)
+    tau = 0.0 if tau_value is None else tau_value
     definitions: tuple[tuple[CompatibilitySweepLabel, float], ...] = (
         (CompatibilitySweepLabel.BELOW, tau - compatibility_floor_offset),
         (CompatibilitySweepLabel.AT, tau),
@@ -132,7 +132,7 @@ def sharpness_against_generic_oracle(
     population_band_count: BandCount | None = None,
 ) -> SolverOracleComparison:
     tau_value = observed_timing_information(summary)
-    tau = 0.0 if tau_value is None else float(tau_value)
+    tau = 0.0 if tau_value is None else tau_value
     return compare_production_solver_to_oracle(
         summary=summary,
         sensitivity_budget=tau + sharpness_diagnostic_offset,
@@ -152,7 +152,7 @@ def safety_and_intrinsic_impossibility(
     identity_atol: ToleranceValue,
 ) -> SafetyIntrinsicResult:
     tau_value = observed_timing_information(summary)
-    tau = None if tau_value is None else float(tau_value)
+    tau = None if tau_value is None else tau_value
     evaluations: list[SafetyCaseEvaluation] = []
     for case in safety_budget_cases(summary):
         expected_regime = _expected_safety_regime(case)

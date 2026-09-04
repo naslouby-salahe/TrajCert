@@ -93,6 +93,7 @@ from trajcert.types import (
     SeedIndex,
     SensitivityBudget,
     StreamCount,
+    TelemetryPhase,
     mass_tuple,
 )
 
@@ -323,7 +324,10 @@ def coverage_stress_batch(
     true_risk = parameters.theta
     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
     failures = dict.fromkeys(SequentialMethod, 0)
-    stream_progress = StreamProgress(f"coverage_stress_batch_{batch_index}", len(stream_range))
+    stream_progress = StreamProgress(
+        TelemetryPhase(f"coverage_stress_batch_{batch_index}"),
+        len(stream_range),
+    )
     for position, stream_index in enumerate(stream_range, start=1):
         for method, did_fail in _coverage_stream_failures(
             parameters,
@@ -627,7 +631,7 @@ def _trajcert_trajectory_evidence(
     first_certified: list[float] = []
     certified_fractions: list[float] = []
     representative: list[AnytimePathEvidence] = []
-    stream_progress = StreamProgress("trajectory_evidence", stream_count)
+    stream_progress = StreamProgress(TelemetryPhase("trajectory_evidence"), stream_count)
     for stream_index in range(stream_count):
         ledger = generate_stochastic_ledger(
             parameters=parameters,

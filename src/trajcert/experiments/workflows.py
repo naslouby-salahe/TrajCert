@@ -83,6 +83,7 @@ from trajcert.types import (
     LawName,
     PublicExecutionState,
     ReasonCode,
+    TimestampSeconds,
 )
 
 
@@ -223,7 +224,7 @@ def run_experiment(
     *,
     workspace_root: Path | None = None,
     overwrite: bool = False,
-    max_workers: int | None = None,
+    max_workers: Count | None = None,
 ) -> RunExperimentResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
@@ -308,14 +309,14 @@ def _run_cells_in_parallel(
     dependencies: tuple[DependencyReadiness, ...],
     overwrite: bool,
     progress: ExperimentProgress,
-    max_workers: int | None,
+    max_workers: Count | None,
 ) -> tuple[Count, Count, Count, Count]:
     completed = reused = failed = blocked = 0
     available_workers = max_workers if max_workers is not None else (os.cpu_count() or 1)
     worker_count = min(len(cells), available_workers)
     spawn_context = multiprocessing.get_context(CliProcessStartMethod.SPAWN)
     with ProcessPoolExecutor(max_workers=worker_count, mp_context=spawn_context) as pool:
-        futures: dict[Future[CellRunOutcome], tuple[SemanticCellKey, float]] = {}
+        futures: dict[Future[CellRunOutcome], tuple[SemanticCellKey, TimestampSeconds]] = {}
         for cell in cells:
             context = _execution_context(cell, plan, workspace_root)
             semantic_cell_key = cell.identity.semantic_cell_key

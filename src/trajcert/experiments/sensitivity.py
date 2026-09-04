@@ -34,6 +34,7 @@ from trajcert.types import (
     ScientificState,
     SeedIndex,
     SensitivityBudget,
+    TelemetryPhase,
 )
 
 
@@ -167,7 +168,10 @@ def sequential_sensitivity_utility_batch(
         band_count=ENDPOINT_BAND_COUNT,
         terminal_horizon=fine_partition.terminal_horizon,
     )
-    stream_progress = StreamProgress(f"sequential_utility_batch_{batch_index}", len(stream_range))
+    stream_progress = StreamProgress(
+        TelemetryPhase(f"sequential_utility_batch_{batch_index}"),
+        len(stream_range),
+    )
     collected: list[SequentialStreamUtility] = []
     for position, stream_index in enumerate(stream_range, start=1):
         collected.append(

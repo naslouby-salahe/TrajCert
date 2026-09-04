@@ -56,7 +56,26 @@ SUPPRESSIONS = frozenset(
 )
 
 _UNTYPED_BOUNDARY_PATTERN = re.compile(r"\b(?:Any|object)\b")
-_LEAKED_PRIMITIVE_PATTERN = re.compile(r"\b(?:float|int|str)\b")
+_LEAKED_PRIMITIVE_PATTERN = re.compile(r"\b(?:int|float|str|Any|object)\b")
+_BARE_CONTAINER_PATTERN = re.compile(r"^(?:dict|list|set|Mapping|Sequence)$")
+_BUILDING_BLOCK_PATTERN = re.compile(
+    r"\b(?:StrictFloat|StrictInt|NonNegativeInt|PositiveInt|NonNegativeFloat|PositiveFloat|"
+    r"UnitFloat|OpenUnitFloat|UnitInterval|OpenUnitInterval|FiniteFloat|SignedInt)\b"
+)
+_FINITE_DOMAIN_SUFFIX_PATTERN = re.compile(
+    r"(?:mode|type|status|state|policy|strategy|kind|category|direction|stage|"
+    r"objective|outcome|split|aggregation|format|level|variant|class|family)$",
+    re.IGNORECASE,
+)
+_VALUE_BOUNDARY_FUNCTIONS = frozenset(
+    {
+        # Human-readable / persisted coordinate-token rendering.
+        "display",
+        "coordinate_token",
+        "render",
+        "_render_coordinate",
+    }
+)
 _BUILDING_BLOCK_NAMES = frozenset(
     {
         "StrictFloat",
@@ -130,28 +149,6 @@ _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
         "_format_tex_value",
         "_format_scalar",
         "_escape_tex",
-        # Wall-clock run telemetry (progress/elapsed-time logging): runtime
-        # instrumentation, not scientific domain data or a persisted artifact.
-        "ExperimentProgress._completed_cells",
-        "ExperimentProgress._started_at",
-        "cell_started",
-        "cell_finished",
-        "SearchProgress._phase",
-        "SearchProgress._node_cap",
-        "SearchProgress._started_at",
-        "StreamProgress._stage",
-        "StreamProgress._stream_count",
-        "StreamProgress._started_at",
-        "StreamProgress._last_logged_at",
-        "StreamProgress._log_interval_seconds",
-        # Process-pool worker count: execution/runtime concurrency degree, not
-        # a scientific domain value.
-        "_run_cells_in_parallel",
-        "_current_cell_label",
-        "SearchProgress._last_logged_at",
-        "SearchProgress._log_interval_seconds",
-        "__init__",
-        "maybe_log",
     }
 )
 
@@ -232,12 +229,60 @@ class _AuditVisitor(cst.CSTVisitor):
         if exemption_key in _PRIMITIVE_BOUNDARY_EXEMPTIONS:
             return
         annotation_text = _expression_text(annotation)
-        if _LEAKED_PRIMITIVE_PATTERN.search(annotation_text):
+        if _BUILDING_BLOCK_PATTERN.search(annotation_text):
+            self._add(
+                RULE_BUILDING_BLOCK,
+                node,
+                f"generic numeric building block {annotation_text!r} may only be used in types.py",
+            )
+            return
+        leaf_name = exemption_key.rsplit(".", maxsplit=1)[-1] if exemption_key else ""
+        is_bool_predicate = re.search(
+            r"\bbool\b", annotation_text
+        ) is not None and not _FINITE_DOMAIN_SUFFIX_PATTERN.search(leaf_name)
+        if _LEAKED_PRIMITIVE_PATTERN.search(annotation_text) or (
+            re.search(r"\bbool\b", annotation_text)
+            and _FINITE_DOMAIN_SUFFIX_PATTERN.search(leaf_name)
+        ):
             self._add(
                 RULE_PRIMITIVE,
                 node,
                 f"raw primitive {annotation_text!r} requires a domain type",
             )
+            return
+        if _BARE_CONTAINER_PATTERN.match(annotation_text.strip()) and not is_bool_predicate:
+            self._add(
+                RULE_PRIMITIVE,
+                node,
+                f"untyped container {annotation_text!r} requires a typed domain collection",
+            )
+        elif (
+            leaf_name
+            and _FINITE_DOMAIN_SUFFIX_PATTERN.search(leaf_name)
+            and re.search(r"\b(?:bool|str|int)\b", annotation_text)
+        ):
+            self._add(
+                RULE_PRIMITIVE,
+                node,
+                f"{leaf_name!r} is a finite domain and must use an enum/domain type, "
+                f"not {annotation_text!r}",
+            )
+
+    def visit_Attribute(self, node: cst.Attribute) -> None:
+        if node.attr.value != "value":
+            return
+        enclosing = self._enclosing_function_name(node)
+        if enclosing in _VALUE_BOUNDARY_FUNCTIONS:
+            return
+        if enclosing is None:
+            return
+        if enclosing in {"_canonical_json", "_canonical_json_object", "_canonical_json_array"}:
+            return
+        self._add(
+            RULE_REDUNDANT_CONVERSION,
+            node,
+            "enum .value used outside a serialization boundary; pass the enum/domain type",
+        )
 
     def _enclosing_function_name(self, node: cst.CSTNode) -> str | None:
         current: cst.CSTNode = node
@@ -271,6 +316,20 @@ class _AuditVisitor(cst.CSTVisitor):
                     RULE_BUILDING_BLOCK,
                     node,
                     f"{imported_name!r} may only be imported by trajcert.types",
+                )
+
+    def visit_Import(self, node: cst.Import) -> None:
+        if self.path.name == _TYPES_MODULE_NAME:
+            return
+        for alias in node.names:
+            name = _expression_text(alias.name)
+            if name in _BUILDING_BLOCK_NAMES or any(
+                name.endswith(f".{member}") for member in _BUILDING_BLOCK_NAMES
+            ):
+                self._add(
+                    RULE_BUILDING_BLOCK,
+                    node,
+                    f"{name!r} may only be imported by trajcert.types",
                 )
 
     def visit_Assign(self, node: cst.Assign) -> None:
@@ -429,9 +488,13 @@ def audit_path(path: Path, *, production: bool = False) -> tuple[Finding, ...]:
 
 def audit_tree(root: Path) -> tuple[Finding, ...]:
     findings: list[Finding] = []
-    for path in sorted(root.rglob("*.py")):
+    for path in audit_scope(root):
         findings.extend(audit_path(path, production=True))
     return tuple(findings)
+
+
+def audit_scope(root: Path) -> tuple[Path, ...]:
+    return tuple(sorted(root.rglob("*.py")))
 
 
 def _contains_roadmap(node: cst.SimpleString) -> bool:
