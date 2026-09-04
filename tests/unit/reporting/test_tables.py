@@ -51,7 +51,7 @@ _EXPECTED_TEX = (
     "\\midrule\n"
     "<0.0001 & 0.0001 & a\\_b & true & 1 & 0.2 \\\\\n"
     "0.0002 & 0.5 & c\\&d & false & 2 & \\text{null} \\\\\n"
-    "\\text{null} & 0.25 & e\\textbackslash\\{\\}f & true & 3 & 3.5 \\\\\n"
+    "\\text{null} & 0.25 & e\\textbackslash{}f & true & 3 & 3.5 \\\\\n"
     "\\bottomrule\n"
     "\\end{tabular}\n"
 )
@@ -61,7 +61,7 @@ _EXPECTED_SPECIAL_TEX = (
     "\\toprule\n"
     "label \\\\\n"
     "\\midrule\n"
-    "\\textbackslash\\{\\}\\&\\%\\$\\#\\_\\{\\}\\textasciitilde{}\\textasciicircum{} \\\\\n"
+    "\\textbackslash{}\\&\\%\\$\\#\\_\\{\\}\\textasciitilde{}\\textasciicircum{} \\\\\n"
     "plain \\\\\n"
     "\\bottomrule\n"
     "\\end{tabular}\n"

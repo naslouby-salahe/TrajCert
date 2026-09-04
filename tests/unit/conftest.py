@@ -8,7 +8,14 @@ from trajcert.constants import PRODUCTION_CONFIG_PATH, TESTS_CONFIG_OVERRIDES_PA
 from trajcert.data.ledger import LedgerEvent, LedgerIdentity
 from trajcert.data.partitions import build_partition
 from trajcert.data.summaries import ObservableCounts, ObservableSummary, summarize_observable_masses
-from trajcert.experiments import runner
+from trajcert.experiments.artifacts import (
+    scientific_result_artifact_key,
+    scientific_result_path,
+)
+from trajcert.experiments.models import (
+    CellExecutionResult,
+    ExecutionContext,
+)
 from trajcert.experiments.plan import PlannedCell
 from trajcert.inference.categorical import CategoricalState
 from trajcert.storage import ArtifactIndexEntry, CellArtifactIndex, file_digest
@@ -72,18 +79,16 @@ def categorical_state(counts: tuple[int, ...], band_count: int = 2) -> Categoric
     )
 
 
-def write_artifact_executor(
-    cell: PlannedCell, context: runner.ExecutionContext
-) -> runner.CellExecutionResult:
-    relative_path = runner.scientific_result_path(cell)
+def write_artifact_executor(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
+    relative_path = scientific_result_path(cell)
     path = context.workspace_root / relative_path
     path.parent.mkdir(parents=True, exist_ok=True)
     _ = path.write_text('{"passed": true, "measure": 1.0}', encoding="utf-8")
-    return runner.CellExecutionResult(
+    return CellExecutionResult(
         artifact_index=CellArtifactIndex(
             artifacts=(
                 ArtifactIndexEntry(
-                    artifact_key=runner.scientific_result_artifact_key(cell),
+                    artifact_key=scientific_result_artifact_key(cell),
                     relative_path=relative_path,
                     sha256=file_digest(path),
                 ),

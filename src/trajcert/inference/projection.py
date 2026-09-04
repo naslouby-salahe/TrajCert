@@ -404,8 +404,10 @@ def _compatibility_search(
             if completed is not None:
                 return completed
             active = None
-    except (ArithmeticError, ValueError, NumericalError):
-        pass
+    except NumericalError:
+        raise
+    except (ArithmeticError, ValueError) as exc:
+        raise NumericalError("compatibility search failed on a numerical error") from exc
     return _compatibility_final(queue, best_upper, active, envelope)
 
 
@@ -527,8 +529,10 @@ def _intrinsic_search(
             if completed is not None:
                 return completed
             active = None
-    except (ArithmeticError, ValueError, NumericalError):
-        pass
+    except NumericalError:
+        raise
+    except (ArithmeticError, ValueError) as exc:
+        raise NumericalError("intrinsic search failed on a numerical error") from exc
     return _intrinsic_final(queue, best_upper, active)
 
 

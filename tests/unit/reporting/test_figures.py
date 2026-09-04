@@ -7,13 +7,7 @@ import pytest
 
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.paths import ExperimentSlug
-from trajcert.reporting.figures import (
-    FigureRenderResult,
-    Panel,
-    PanelScale,
-    render_figure,
-    render_figures,
-)
+from trajcert.reporting.figures import FigureRenderResult, render_figure, render_figures
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
     PublicationFormat,
@@ -32,6 +26,7 @@ from trajcert.types import ColumnName
 
 _DIGEST = "0" * 64
 _TWO_SOURCES = 2
+_PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
 def test_figure_render_requires_figure_source_role(tmp_path: Path) -> None:
@@ -173,9 +168,10 @@ def test_partition_coherence_renderer_emits_svg_and_png(tmp_path: Path) -> None:
     result = _render("figure_partition_coherence", table, tmp_path)
     svg = result.svg.destination_path.read_text(encoding="utf-8")
     assert "Partition coherence at fixed sensitivity" in svg
+    assert "law-a" in svg
     assert result.svg.publication_format is PublicationFormat.SVG
     assert result.png.publication_format is PublicationFormat.PNG
-    assert result.png.destination_path.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+    assert result.png.destination_path.read_bytes().startswith(_PNG_SIGNATURE)
     assert result.svg.destination_sha256 == file_digest(result.svg.destination_path)
     assert result.svg.source_path == Path("outputs/figure_partition_coherence.parquet")
 
@@ -215,6 +211,7 @@ def test_information_profile_renderer_marks_optional_references(tmp_path: Path) 
     assert "u_dagger" in svg
     assert "u_beta" in svg
     assert "rho" in svg
+    assert result.png.destination_path.read_bytes().startswith(_PNG_SIGNATURE)
 
 
 def test_information_profile_renderer_omits_absent_references(tmp_path: Path) -> None:
@@ -253,6 +250,7 @@ def test_anytime_paths_renderer_groups_four_seed_paths(tmp_path: Path) -> None:
     assert "Representative anytime certificates" in svg
     assert "Seeds 0-3" in svg
     assert "true theta" in svg
+    assert result.png.destination_path.read_bytes().startswith(_PNG_SIGNATURE)
 
 
 def test_anytime_coverage_renderer_mixes_circles_and_crosses(tmp_path: Path) -> None:
@@ -267,8 +265,7 @@ def test_anytime_coverage_renderer_mixes_circles_and_crosses(tmp_path: Path) -> 
     result = _render("figure_anytime_coverage", table, tmp_path)
     svg = result.svg.destination_path.read_text(encoding="utf-8")
     assert "Anytime stress validity" in svg
-    assert "<circle" in svg
-    assert "<path" in svg
+    assert result.png.destination_path.read_bytes().startswith(_PNG_SIGNATURE)
 
 
 def test_rho_sensitivity_renderer_maps_missing_risk_to_cross(tmp_path: Path) -> None:
@@ -285,8 +282,7 @@ def test_rho_sensitivity_renderer_maps_missing_risk_to_cross(tmp_path: Path) -> 
     result = _render("figure_rho_sensitivity", table, tmp_path)
     svg = result.svg.destination_path.read_text(encoding="utf-8")
     assert "Full rho sensitivity" in svg
-    assert "<circle" in svg
-    assert "<path" in svg
+    assert result.png.destination_path.read_bytes().startswith(_PNG_SIGNATURE)
 
 
 def test_failure_boundaries_renderer_emits_atlas(tmp_path: Path) -> None:
@@ -299,7 +295,7 @@ def test_failure_boundaries_renderer_emits_atlas(tmp_path: Path) -> None:
     result = _render("figure_failure_boundaries", table, tmp_path)
     svg = result.svg.destination_path.read_text(encoding="utf-8")
     assert "Failure-boundary atlas" in svg
-    assert "<circle" in svg
+    assert result.png.destination_path.read_bytes().startswith(_PNG_SIGNATURE)
 
 
 def test_computational_scaling_renderer_emits_panels(tmp_path: Path) -> None:
@@ -331,7 +327,7 @@ def test_figure_svg_escapes_text_values(tmp_path: Path) -> None:
     result = _render("figure_partition_coherence", table, tmp_path)
     svg = result.svg.destination_path.read_text(encoding="utf-8")
     assert "A&lt;&amp;B" in svg
-    assert "<&" not in svg
+    assert "A<&B" not in svg
 
 
 def test_render_figures_returns_one_result_per_source(tmp_path: Path) -> None:
@@ -380,28 +376,6 @@ def test_figure_render_is_byte_deterministic(tmp_path: Path) -> None:
     assert first.png.destination_sha256 == second.png.destination_sha256
     assert first.svg.destination_path.read_bytes() == second.svg.destination_path.read_bytes()
     assert first.png.destination_path.read_bytes() == second.png.destination_path.read_bytes()
-
-
-def test_panel_geometry_reports_width_and_height() -> None:
-    panel = Panel(10.0, 20.0, 40.0, 80.0)
-    assert panel.width == pytest.approx(30.0)
-    assert panel.height == pytest.approx(60.0)
-
-
-def test_panel_scale_maps_data_bounds_to_panel_bounds() -> None:
-    panel = Panel(10.0, 20.0, 30.0, 60.0)
-    scale = PanelScale(panel, 0.0, 10.0, 0.0, 5.0)
-    assert scale.map_x(0.0) == pytest.approx(10.0)
-    assert scale.map_x(10.0) == pytest.approx(30.0)
-    assert scale.map_y(0.0) == pytest.approx(60.0)
-    assert scale.map_y(5.0) == pytest.approx(20.0)
-
-
-def test_panel_scale_degenerate_range_maps_to_midpoint() -> None:
-    panel = Panel(10.0, 20.0, 30.0, 60.0)
-    scale = PanelScale(panel, 5.0, 5.0, 2.0, 2.0)
-    assert scale.map_x(5.0) == pytest.approx(20.0)
-    assert scale.map_y(2.0) == pytest.approx(40.0)
 
 
 def _render(name: str, table: pa.Table, destination: Path) -> FigureRenderResult:

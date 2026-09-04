@@ -117,20 +117,19 @@ def _format_scalar(column: ColumnName, value: TabularCellValue) -> str:
     return str(value)
 
 
+_TEX_ESCAPE_MAP = {
+    "\\": r"\textbackslash{}",
+    "&": r"\&",
+    "%": r"\%",
+    "$": r"\$",
+    "#": r"\#",
+    "_": r"\_",
+    "{": r"\{",
+    "}": r"\}",
+    "~": r"\textasciitilde{}",
+    "^": r"\textasciicircum{}",
+}
+
+
 def _escape_tex(value: str) -> str:
-    replacements = (
-        ("\\", r"\textbackslash{}"),
-        ("&", r"\&"),
-        ("%", r"\%"),
-        ("$", r"\$"),
-        ("#", r"\#"),
-        ("_", r"\_"),
-        ("{", r"\{"),
-        ("}", r"\}"),
-        ("~", r"\textasciitilde{}"),
-        ("^", r"\textasciicircum{}"),
-    )
-    escaped = value
-    for old, new in replacements:
-        escaped = escaped.replace(old, new)
-    return escaped
+    return "".join(_TEX_ESCAPE_MAP.get(character, character) for character in value)

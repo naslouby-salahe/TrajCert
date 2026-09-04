@@ -28,6 +28,12 @@ from trajcert.experiments.anytime import (
     CoverageMethodEvidence,
     SequentialMethod,
 )
+from trajcert.experiments.artifacts import (
+    cell_artifact_index_path,
+    cell_completion_path,
+    scientific_result_artifact_key,
+    scientific_result_path,
+)
 from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
     FailureBoundaryResult,
@@ -42,14 +48,12 @@ from trajcert.experiments.mathematics import (
     SafetyBoundaryIdentityResult,
     SharpSetIdentityResult,
 )
+from trajcert.experiments.models import (
+    ExecutionContext,
+)
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan
 from trajcert.experiments.runner import (
-    ExecutionContext,
-    cell_artifact_index_path,
-    cell_completion_path,
     expected_seed_count,
-    scientific_result_artifact_key,
-    scientific_result_path,
 )
 from trajcert.experiments.safety import (
     CompatibilityFloorBehaviorResult,
@@ -93,7 +97,7 @@ from trajcert.provenance import (
     BaselineName,
     MethodName,
 )
-from trajcert.reporting.source_data import AnalysisType, RhoUtilityMetricName
+from trajcert.reporting.publication_rows import AnalysisType, RhoUtilityMetricName
 from trajcert.storage import (
     ArtifactChecksum,
     ArtifactIndexEntry,
@@ -347,9 +351,7 @@ def test_execute_statistical_synthesis_writes_all_artifacts(
 ) -> None:
     cell = _synthesis_cell(synthesis_plan)
     context = _execution_context(synthesis_plan, synthesis_workspace, synthesis_fingerprint)
-    result = execute_statistical_synthesis(
-        cell, context, synthesis_plan, small_config
-    )
+    result = execute_statistical_synthesis(cell, context, synthesis_plan, small_config)
     assert result.completed_seed_count == 0
     assert len(result.artifact_index.artifacts) == _SYNTHESIS_ARTIFACT_COUNT
     paths = synthesis_artifact_paths(cell)
@@ -815,11 +817,12 @@ def _safety_boundary_result() -> SafetyBoundaryCaseEvaluation:
 
 def _coverage_result(cell: PlannedCell) -> CoverageEvidenceResult:
     config = active_config.get()
-    variant = str(cell.identity.coordinates.variant_name or "")
-    principal = variant == "Timing-and-terminal harmful-late stress"
-    if "Thirty-two-band" in variant:
+    variant = cell.identity.coordinates.variant_name
+    variant_text = "" if variant is None else variant.display
+    principal = variant_text == "Timing-and-terminal harmful-late stress"
+    if "Thirty-two-band" in variant_text:
         band_count = 32
-    elif "Sixteen-band" in variant:
+    elif "Sixteen-band" in variant_text:
         band_count = 16
     else:
         band_count = config.method.finest_bands

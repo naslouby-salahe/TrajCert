@@ -1,26 +1,28 @@
 from __future__ import annotations
 
-import struct
-import zlib
-from collections.abc import Callable, Mapping
+import io
+import os
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from html import escape
-from itertools import pairwise
 from math import isfinite, log2
 from pathlib import Path
 from typing import cast
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import pyarrow as pa
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 
 from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.paths import PublicationExtension
 from trajcert.reporting.publication_sources import PublicationColumn
-from trajcert.reporting.source_data import (
-    PublicationSourceName,
-    VerifiedSourceData,
-)
+from trajcert.reporting.source_data import PublicationSourceName, VerifiedSourceData
 from trajcert.schemas import (
     PublicationFormat,
     PublicationSourceRole,
@@ -30,18 +32,16 @@ from trajcert.storage import atomic_write_bytes
 from trajcert.types import (
     ColumnName,
     FacetLabel,
-    FigureCoordinate,
     GridColumnCount,
     PanelCount,
-    PixelCount,
-    PixelIntensity,
     PlotValue,
-    RasterCoordinate,
-    SvgFragment,
     TableRow,
     TabularCellValue,
-    TextEncoding,
 )
+
+matplotlib.rcParams["svg.fonttype"] = "none"
+matplotlib.rcParams["svg.hashsalt"] = "trajcert"
+os.environ.setdefault("SOURCE_DATE_EPOCH", "0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,17 +50,10 @@ class FigureRenderResult:
     png: RenderedPublicationArtifact
 
 
-class TextAnchor(StrEnum):
-    START = "start"
-    MIDDLE = "middle"
-    END = "end"
-
-
 class FigureColor(StrEnum):
     STROKE = "#202020"
     MUTED = "#6a6a6a"
     LIGHT = "#d8d8d8"
-    BACKGROUND = "#ffffff"
 
 
 class FigureLabel(StrEnum):
@@ -90,59 +83,6 @@ class FigureLabel(StrEnum):
     ACCEPTANCE_LIMIT = "acceptance limit"
 
 
-@dataclass(frozen=True, slots=True)
-class Point:
-    x: FigureCoordinate
-    y: FigureCoordinate
-
-
-@dataclass(frozen=True, slots=True)
-class Line:
-    start: Point
-    end: Point
-    width: FigureCoordinate = 1.5
-    dashed: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class Circle:
-    center: Point
-    radius: FigureCoordinate = 3.5
-    hollow: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class Cross:
-    center: Point
-    radius: FigureCoordinate = 4.0
-
-
-@dataclass(frozen=True, slots=True)
-class Text:
-    position: Point
-    value: str
-    size: PixelCount = 14
-    anchor: TextAnchor = TextAnchor.START
-
-
-@dataclass(frozen=True, slots=True)
-class Rectangle:
-    left: FigureCoordinate
-    top: FigureCoordinate
-    width: FigureCoordinate
-    height: FigureCoordinate
-    filled: bool = False
-
-
-type DrawCommand = Line | Circle | Cross | Text | Rectangle
-
-
-@dataclass(frozen=True, slots=True)
-class PlotDocument:
-    title: str
-    commands: tuple[DrawCommand, ...]
-
-
 def render_figure(source: VerifiedSourceData, destination_directory: Path) -> FigureRenderResult:
     if source.descriptor.source_role is not PublicationSourceRole.FIGURE:
         raise InvalidScientificDataError("figure renderer requires a figure source descriptor")
@@ -152,12 +92,15 @@ def render_figure(source: VerifiedSourceData, destination_directory: Path) -> Fi
         raise InvalidScientificDataError(
             f"no deterministic figure renderer for {source.descriptor.source_path}"
         ) from exc
-    document = _build_document(source_name, source.table)
-    basename = source.descriptor.source_path.stem
-    svg_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.SVG}")
-    png_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.PNG}")
-    svg_digest = atomic_write_bytes(svg_path, _svg_bytes(document))
-    png_digest = atomic_write_bytes(png_path, _png_bytes(document))
+    figure = _build_figure(source_name, source.table)
+    try:
+        basename = source.descriptor.source_path.stem
+        svg_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.SVG}")
+        png_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.PNG}")
+        svg_digest = atomic_write_bytes(svg_path, _svg_bytes(figure))
+        png_digest = atomic_write_bytes(png_path, _png_bytes(figure))
+    finally:
+        plt.close(figure)
     return FigureRenderResult(
         svg=RenderedPublicationArtifact(
             source_path=source.descriptor.source_path,
@@ -182,8 +125,8 @@ def render_figures(
     return tuple(render_figure(source, destination_directory) for source in sources)
 
 
-def _build_document(name: PublicationSourceName, table: pa.Table) -> PlotDocument:
-    builders: Mapping[PublicationSourceName, Callable[[pa.Table], PlotDocument]] = {
+def _build_figure(name: PublicationSourceName, table: pa.Table) -> Figure:
+    builders: Mapping[PublicationSourceName, Callable[[pa.Table], Figure]] = {
         PublicationSourceName.FIGURE_PARTITION_COHERENCE: _partition_coherence,
         PublicationSourceName.FIGURE_TIMING_VALUE: _timing_value,
         PublicationSourceName.FIGURE_INFORMATION_PROFILE: _information_profile,
@@ -199,13 +142,13 @@ def _build_document(name: PublicationSourceName, table: pa.Table) -> PlotDocumen
         raise InvalidScientificDataError(f"no deterministic figure renderer for {name}") from exc
 
 
-def _partition_coherence(table: pa.Table) -> PlotDocument:
+def _partition_coherence(table: pa.Table) -> Figure:
     laws = _unique_strings(table, PublicationColumn.LAW_NAME)
-    commands = _base_commands(FigureLabel.PARTITION_COHERENCE)
-    panels = _horizontal_panels(len(laws))
-    for law, panel in zip(laws, panels, strict=True):
+    figure = _new_figure()
+    axes = _horizontal_axes(figure, len(laws))
+    for law, ax in zip(laws, axes, strict=True):
         selected = _matching_rows(table, PublicationColumn.LAW_NAME, law)
-        x_values = tuple(
+        xs = tuple(
             value
             for row in selected
             for value in (
@@ -213,71 +156,68 @@ def _partition_coherence(table: pa.Table) -> PlotDocument:
                 _required_float(row, PublicationColumn.RISK_UPPER),
             )
         )
-        y_values = tuple(
-            _required_float(row, PublicationColumn.PARTITION_BAND_COUNT) for row in selected
-        )
-        scale = _panel_scale(panel, x_values, y_values)
-        commands.extend(_panel_frame(panel, law))
+        ys = tuple(_required_float(row, PublicationColumn.PARTITION_BAND_COUNT) for row in selected)
+        _set_limits(ax, xs, ys)
+        _set_title(ax, str(law))
         for row in selected:
-            lower = scale.map_x(_required_float(row, PublicationColumn.RISK_LOWER))
-            upper = scale.map_x(_required_float(row, PublicationColumn.RISK_UPPER))
-            y = scale.map_y(_required_float(row, PublicationColumn.PARTITION_BAND_COUNT))
-            commands.append(Line(Point(lower, y), Point(upper, y), width=3.0))
-            commands.append(Circle(Point(lower, y), radius=4.0))
-            commands.append(Circle(Point(upper, y), radius=4.0))
-            commands.append(
-                Text(
-                    Point((lower + upper) / 2.0, y - 8.0),
-                    FacetLabel(
-                        f"{FigureLabel.TAU_PREFIX}{_required_float(row, PublicationColumn.TAU):.4g}"
-                    ),
-                    size=11,
-                    anchor=TextAnchor.MIDDLE,
-                )
+            lower = _required_float(row, PublicationColumn.RISK_LOWER)
+            upper = _required_float(row, PublicationColumn.RISK_UPPER)
+            band = _required_float(row, PublicationColumn.PARTITION_BAND_COUNT)
+            ax.hlines(band, lower, upper, color=FigureColor.STROKE, linewidth=3.0)
+            _circle(ax, lower, band)
+            _circle(ax, upper, band)
+            label = f"{FigureLabel.TAU_PREFIX}{_required_float(row, PublicationColumn.TAU):.4g}"
+            ax.text(
+                (lower + upper) / 2.0,
+                band,
+                label,
+                fontsize=11,
+                ha="center",
+                va="bottom",
+                color=FigureColor.STROKE,
             )
-    return PlotDocument(title=FigureLabel.PARTITION_COHERENCE, commands=tuple(commands))
+    _main_title(figure, FigureLabel.PARTITION_COHERENCE)
+    return figure
 
 
-def _timing_value(table: pa.Table) -> PlotDocument:
+def _timing_value(table: pa.Table) -> Figure:
     facets = _unique_strings(table, PublicationColumn.RHO_OFFSET)
-    commands = _base_commands(FigureLabel.EXACT_TIMING_VALUE)
-    panels = _horizontal_panels(len(facets))
-    for facet, panel in zip(facets, panels, strict=True):
+    figure = _new_figure()
+    axes = _horizontal_axes(figure, len(facets))
+    for facet, ax in zip(facets, axes, strict=True):
         selected = _matching_rows(table, PublicationColumn.RHO_OFFSET, facet)
         xs = tuple(_required_float(row, PublicationColumn.DELTA_TAU) for row in selected)
         ys = tuple(_required_float(row, PublicationColumn.BOUND_GAIN) for row in selected)
-        scale = _panel_scale(panel, (*xs, 0.0), ys)
-        commands.extend(_panel_frame(panel, FacetLabel(f"{FigureLabel.RHO_OFFSET_PREFIX}{facet}")))
-        zero_x = scale.map_x(0.0)
-        commands.append(Line(Point(zero_x, panel.top), Point(zero_x, panel.bottom), dashed=True))
-        for row in selected:
-            point = Point(
-                scale.map_x(_required_float(row, PublicationColumn.DELTA_TAU)),
-                scale.map_y(_required_float(row, PublicationColumn.BOUND_GAIN)),
-            )
-            commands.append(Circle(point, radius=4.0))
-    return PlotDocument(title=FigureLabel.EXACT_TIMING_VALUE, commands=tuple(commands))
+        _set_limits(ax, (*xs, 0.0), ys)
+        _set_title(ax, f"{FigureLabel.RHO_OFFSET_PREFIX}{facet}")
+        ax.axvline(0.0, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+        _scatter_markers(ax, xs, ys)
+    _main_title(figure, FigureLabel.EXACT_TIMING_VALUE)
+    return figure
 
 
-def _information_profile(table: pa.Table) -> PlotDocument:
+def _information_profile(table: pa.Table) -> Figure:
     rows = _rows(table)
     xs = tuple(_required_float(row, PublicationColumn.U) for row in rows)
     ys = tuple(_required_float(row, PublicationColumn.INFORMATION_PROFILE) for row in rows)
-    panel = _single_panel()
-    scale = _panel_scale(panel, xs, ys)
-    commands = _base_commands(FigureLabel.INFORMATION_PROFILE_WITH_SAFETY_CORRIDOR)
-    commands.extend(_panel_frame(panel, FigureLabel.INFORMATION_PROFILE))
-    commands.extend(_polyline(scale, xs, ys))
+    figure = _new_figure()
+    ax = _single_axis(figure)
+    _set_limits(ax, xs, ys)
+    _set_title(ax, FigureLabel.INFORMATION_PROFILE)
+    ax.plot(xs, ys, color=FigureColor.STROKE, linewidth=1.5)
     first = rows[0]
+    left, _ = ax.get_xlim()
+    top, bottom = ax.get_ylim()
     for column, label in (
         (PublicationColumn.U_DAGGER, FigureLabel.U_DAGGER),
         (PublicationColumn.U_BETA, FigureLabel.U_BETA),
     ):
         value = _optional_float(first, column)
         if value is not None:
-            x = scale.map_x(value)
-            commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
-            commands.append(Text(Point(x + 4.0, panel.top + 16.0), label, size=11))
+            ax.axvline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+            ax.text(
+                value, top, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE
+            )
     for column, label in (
         (PublicationColumn.TAU, FigureLabel.TAU),
         (PublicationColumn.RHO, FigureLabel.RHO),
@@ -285,24 +225,29 @@ def _information_profile(table: pa.Table) -> PlotDocument:
     ):
         value = _optional_float(first, column)
         if value is not None:
-            y = scale.map_y(value)
-            commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
-            commands.append(Text(Point(panel.left + 5.0, y - 5.0), label, size=11))
+            ax.axhline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+            ax.text(
+                left, value, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE
+            )
     feasible_lower = _optional_float(first, PublicationColumn.FEASIBLE_LOWER)
     feasible_upper = _optional_float(first, PublicationColumn.FEASIBLE_UPPER)
     if feasible_lower is not None and feasible_upper is not None:
-        left = scale.map_x(feasible_lower)
-        right = scale.map_x(feasible_upper)
-        commands.append(
-            Rectangle(left, panel.top, max(1.0, right - left), panel.height, filled=False)
+        width = max(1.0, feasible_upper - feasible_lower)
+        ax.add_patch(
+            Rectangle(
+                (feasible_lower, bottom),
+                width,
+                top - bottom,
+                fill=False,
+                edgecolor=FigureColor.MUTED,
+                linewidth=1.0,
+            )
         )
-    return PlotDocument(
-        title=FigureLabel.INFORMATION_PROFILE_WITH_SAFETY_CORRIDOR,
-        commands=tuple(commands),
-    )
+    _main_title(figure, FigureLabel.INFORMATION_PROFILE_WITH_SAFETY_CORRIDOR)
+    return figure
 
 
-def _anytime_paths(table: pa.Table) -> PlotDocument:
+def _anytime_paths(table: pa.Table) -> Figure:
     seeds = _unique_numbers(table, PublicationColumn.STREAM_SEED_INDEX)
     expected_seeds = tuple(
         float(index) for index in active_config.get().study_design.representative_stream_indices
@@ -314,10 +259,10 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
     rows = _rows(table)
     xs = tuple(_required_float(row, PublicationColumn.N_MATURED) for row in rows)
     ys = tuple(_required_float(row, PublicationColumn.RISK_UPPER_ANYTIME) for row in rows)
-    panel = _single_panel()
-    scale = _panel_scale(panel, xs, ys)
-    commands = _base_commands(FigureLabel.REPRESENTATIVE_ANYTIME_CERTIFICATES)
-    commands.extend(_panel_frame(panel, FigureLabel.SEEDS_ZERO_TO_THREE))
+    figure = _new_figure()
+    ax = _single_axis(figure)
+    _set_limits(ax, xs, ys)
+    _set_title(ax, FigureLabel.SEEDS_ZERO_TO_THREE)
     for seed in seeds:
         selected = tuple(
             row for row in rows if _required_float(row, PublicationColumn.STREAM_SEED_INDEX) == seed
@@ -326,35 +271,35 @@ def _anytime_paths(table: pa.Table) -> PlotDocument:
         seed_ys = tuple(
             _required_float(row, PublicationColumn.RISK_UPPER_ANYTIME) for row in selected
         )
-        commands.extend(_polyline(scale, seed_xs, seed_ys))
-        for row in selected:
-            point = Point(
-                scale.map_x(_required_float(row, PublicationColumn.N_MATURED)),
-                scale.map_y(_required_float(row, PublicationColumn.RISK_UPPER_ANYTIME)),
-            )
-            commands.append(
-                Circle(
-                    point,
-                    radius=2.5,
-                    hollow=not _required_bool(row, PublicationColumn.EVIDENCE_GATE_PASS),
-                )
-            )
+        ax.plot(seed_xs, seed_ys, color=FigureColor.STROKE, linewidth=1.5)
+    for row in rows:
+        x = _required_float(row, PublicationColumn.N_MATURED)
+        y = _required_float(row, PublicationColumn.RISK_UPPER_ANYTIME)
+        hollow = not _required_bool(row, PublicationColumn.EVIDENCE_GATE_PASS)
+        ax.plot(
+            [x],
+            [y],
+            marker="o",
+            markersize=4.0,
+            linestyle="none",
+            color=FigureColor.STROKE,
+            markerfacecolor="#ffffff" if hollow else FigureColor.STROKE,
+            markeredgecolor=FigureColor.STROKE,
+        )
     first = rows[0]
+    _, right = ax.get_xlim()
     for column, label in (
         (PublicationColumn.TRUE_THETA, FigureLabel.TRUE_THETA),
         (PublicationColumn.BETA, FigureLabel.BETA),
     ):
-        y = scale.map_y(_required_float(first, column))
-        commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
-        commands.append(
-            Text(Point(panel.right - 4.0, y - 6.0), label, size=11, anchor=TextAnchor.END)
-        )
-    return PlotDocument(
-        title=FigureLabel.REPRESENTATIVE_ANYTIME_CERTIFICATES, commands=tuple(commands)
-    )
+        y = _required_float(first, column)
+        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+        ax.text(right, y, label, fontsize=11, ha="right", va="bottom", color=FigureColor.STROKE)
+    _main_title(figure, FigureLabel.REPRESENTATIVE_ANYTIME_CERTIFICATES)
+    return figure
 
 
-def _anytime_coverage(table: pa.Table) -> PlotDocument:
+def _anytime_coverage(table: pa.Table) -> Figure:
     rows = _rows(table)
     xs = tuple(float(index) for index in range(len(rows)))
     ys = tuple(_required_float(row, PublicationColumn.CLOPPER_PEARSON_UPPER_95) for row in rows)
@@ -366,44 +311,41 @@ def _anytime_coverage(table: pa.Table) -> PlotDocument:
             _required_float(row, PublicationColumn.ACCEPTANCE_UPPER_LIMIT),
         )
     )
-    panel = _single_panel()
-    scale = _panel_scale(panel, xs, (*ys, *refs))
-    commands = _base_commands(FigureLabel.ANYTIME_STRESS_VALIDITY)
-    commands.extend(_panel_frame(panel, FigureLabel.EXACT_ONE_SIDED_UPPER_LIMITS))
+    figure = _new_figure()
+    ax = _single_axis(figure)
+    _set_limits(ax, xs, (*ys, *refs))
+    _set_title(ax, FigureLabel.EXACT_ONE_SIDED_UPPER_LIMITS)
     for index, row in enumerate(rows):
-        point = Point(
-            scale.map_x(float(index)),
-            scale.map_y(_required_float(row, PublicationColumn.CLOPPER_PEARSON_UPPER_95)),
-        )
+        x = float(index)
+        y = _required_float(row, PublicationColumn.CLOPPER_PEARSON_UPPER_95)
         if _required_bool(row, PublicationColumn.CRITERION_PASS):
-            commands.append(Circle(point, radius=4.0))
+            _circle(ax, x, y)
         else:
-            commands.append(Cross(point, radius=5.0))
+            _cross(ax, x, y)
     first = rows[0]
+    left, _ = ax.get_xlim()
     for column, label in (
         (PublicationColumn.DELTA, FigureLabel.ANYTIME_DELTA),
         (PublicationColumn.ACCEPTANCE_UPPER_LIMIT, FigureLabel.ACCEPTANCE_LIMIT),
     ):
-        y = scale.map_y(_required_float(first, column))
-        commands.append(Line(Point(panel.left, y), Point(panel.right, y), dashed=True))
-        commands.append(Text(Point(panel.left + 4.0, y - 5.0), label, size=11))
-    return PlotDocument(title=FigureLabel.ANYTIME_STRESS_VALIDITY, commands=tuple(commands))
+        y = _required_float(first, column)
+        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+        ax.text(left, y, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE)
+    _main_title(figure, FigureLabel.ANYTIME_STRESS_VALIDITY)
+    return figure
 
 
-def _rho_sensitivity(table: pa.Table) -> PlotDocument:
+def _rho_sensitivity(table: pa.Table) -> Figure:
     laws = _unique_strings(table, PublicationColumn.LAW_NAME)
-    commands = _base_commands(FigureLabel.FULL_RHO_SENSITIVITY)
-    for law, panel in zip(laws, _horizontal_panels(len(laws)), strict=True):
-        _rho_sensitivity_law(commands, table, law, panel)
-    return PlotDocument(title=FigureLabel.FULL_RHO_SENSITIVITY, commands=tuple(commands))
+    figure = _new_figure()
+    axes = _horizontal_axes(figure, len(laws))
+    for law, ax in zip(laws, axes, strict=True):
+        _rho_sensitivity_law(ax, table, law)
+    _main_title(figure, FigureLabel.FULL_RHO_SENSITIVITY)
+    return figure
 
 
-def _rho_sensitivity_law(
-    commands: list[DrawCommand],
-    table: pa.Table,
-    law: FacetLabel,
-    panel: Panel,
-) -> None:
+def _rho_sensitivity_law(ax: Axes, table: pa.Table, law: FacetLabel) -> None:
     rows = _matching_rows(table, PublicationColumn.LAW_NAME, law)
     xs = tuple(_required_float(row, PublicationColumn.RHO) for row in rows)
     finite_ys = tuple(
@@ -411,21 +353,15 @@ def _rho_sensitivity_law(
         for row in rows
         if (value := _optional_float(row, PublicationColumn.RISK_UPPER)) is not None
     )
-    scale = _panel_scale(panel, xs, finite_ys or (0.0, 1.0))
-    commands.extend(_panel_frame(panel, law))
+    _set_limits(ax, xs, finite_ys or (0.0, 1.0))
+    _set_title(ax, str(law))
     for partition in sorted(
         {_required_facet_label(row, PublicationColumn.PARTITION_NAME) for row in rows}
     ):
-        _rho_sensitivity_partition(commands, scale, rows, partition, panel)
+        _rho_sensitivity_partition(ax, rows, partition)
 
 
-def _rho_sensitivity_partition(
-    commands: list[DrawCommand],
-    scale: PanelScale,
-    rows: tuple[TableRow, ...],
-    partition: FacetLabel,
-    panel: Panel,
-) -> None:
+def _rho_sensitivity_partition(ax: Axes, rows: tuple[TableRow, ...], partition: FacetLabel) -> None:
     selected = tuple(
         row
         for row in rows
@@ -434,55 +370,47 @@ def _rho_sensitivity_partition(
     compatible = tuple(
         row for row in selected if _optional_float(row, PublicationColumn.RISK_UPPER) is not None
     )
-    commands.extend(
-        _polyline(
-            scale,
-            tuple(_required_float(row, PublicationColumn.RHO) for row in compatible),
-            tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in compatible),
-        )
+    ax.plot(
+        tuple(_required_float(row, PublicationColumn.RHO) for row in compatible),
+        tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in compatible),
+        color=FigureColor.STROKE,
+        linewidth=1.5,
     )
     for row in selected:
-        _rho_sensitivity_marker(commands, scale, row, panel)
+        _rho_sensitivity_marker(ax, row)
 
 
-def _rho_sensitivity_marker(
-    commands: list[DrawCommand],
-    scale: PanelScale,
-    row: TableRow,
-    panel: Panel,
-) -> None:
-    x = scale.map_x(_required_float(row, PublicationColumn.RHO))
+def _rho_sensitivity_marker(ax: Axes, row: TableRow) -> None:
+    x = _required_float(row, PublicationColumn.RHO)
     risk = _optional_float(row, PublicationColumn.RISK_UPPER)
     if risk is None:
-        commands.append(Cross(Point(x, panel.bottom - 5.0), radius=4.0))
+        ax.plot([x], [0.0], marker="x", markersize=5.0, linestyle="none", color=FigureColor.STROKE)
     else:
-        commands.append(Circle(Point(x, scale.map_y(risk)), radius=3.0))
+        _circle(ax, x, risk)
     if _required_bool(row, PublicationColumn.RHO_IS_LOG2):
-        commands.append(Line(Point(x, panel.top), Point(x, panel.bottom), dashed=True))
+        ax.axvline(x, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
 
 
-def _failure_boundaries(table: pa.Table) -> PlotDocument:
-    axes = _unique_strings(table, PublicationColumn.AXIS)
-    commands = _base_commands(FigureLabel.FAILURE_BOUNDARY_ATLAS)
-    columns = active_config.get().figure_layout.failure_boundary_grid_columns
-    panels = _grid_panels(len(axes), columns=columns)
-    for axis, panel in zip(axes, panels, strict=True):
+def _failure_boundaries(table: pa.Table) -> Figure:
+    axes_labels = _unique_strings(table, PublicationColumn.AXIS)
+    figure = _new_figure()
+    axes = _grid_axes(
+        figure, len(axes_labels), active_config.get().figure_layout.failure_boundary_grid_columns
+    )
+    for axis, ax in zip(axes_labels, axes, strict=True):
         rows = _matching_rows(table, PublicationColumn.AXIS, axis)
         xs = tuple(float(index) for index in range(len(rows)))
         ys = tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in rows)
-        scale = _panel_scale(panel, xs, ys)
-        commands.extend(_panel_frame(panel, axis))
-        commands.extend(_polyline(scale, xs, ys))
-        for index, row in enumerate(rows):
-            point = Point(
-                scale.map_x(float(index)),
-                scale.map_y(_required_float(row, PublicationColumn.RISK_UPPER)),
-            )
-            commands.append(Circle(point, radius=3.5))
-    return PlotDocument(title=FigureLabel.FAILURE_BOUNDARY_ATLAS, commands=tuple(commands))
+        _set_limits(ax, xs, ys)
+        _set_title(ax, str(axis))
+        ax.plot(xs, ys, color=FigureColor.STROKE, linewidth=1.5)
+        for x, y in zip(xs, ys, strict=True):
+            _circle(ax, x, y)
+    _main_title(figure, FigureLabel.FAILURE_BOUNDARY_ATLAS)
+    return figure
 
 
-def _computational_scaling(table: pa.Table) -> PlotDocument:
+def _computational_scaling(table: pa.Table) -> Figure:
     rows = _rows(table)
     xs = tuple(log2(_required_float(row, PublicationColumn.K)) for row in rows)
     population = tuple(
@@ -490,116 +418,102 @@ def _computational_scaling(table: pa.Table) -> PlotDocument:
     )
     outer = tuple(_required_float(row, PublicationColumn.OUTER_MEDIAN_RUNTIME_MS) for row in rows)
     nodes = tuple(_required_float(row, PublicationColumn.MEDIAN_OUTER_NODES) for row in rows)
-    commands = _base_commands(FigureLabel.COMPUTATIONAL_SCALING)
-    left, right = _horizontal_panels(2)
-    population_scale = _panel_scale(left, xs, population)
-    commands.extend(_panel_frame(left, FigureLabel.POPULATION_SOLVER_RUNTIME))
-    commands.extend(_polyline(population_scale, xs, population))
+    figure = _new_figure()
+    left, right = _horizontal_axes(figure, 2)
+    _set_limits(left, xs, population)
+    _set_title(left, FigureLabel.POPULATION_SOLVER_RUNTIME)
+    left.plot(xs, population, color=FigureColor.STROKE, linewidth=1.5)
     for x, y in zip(xs, population, strict=True):
-        commands.append(Circle(Point(population_scale.map_x(x), population_scale.map_y(y))))
-    combined_scale = _panel_scale(right, xs, (*outer, *nodes))
-    commands.extend(_panel_frame(right, FigureLabel.OUTER_PROJECTION_RUNTIME_NODES))
-    commands.extend(_polyline(combined_scale, xs, outer))
-    commands.extend(_polyline(combined_scale, xs, nodes, dashed=True))
+        _circle(left, x, y)
+    _set_limits(right, xs, (*outer, *nodes))
+    _set_title(right, FigureLabel.OUTER_PROJECTION_RUNTIME_NODES)
+    right.plot(xs, outer, color=FigureColor.STROKE, linewidth=1.5)
+    right.plot(xs, nodes, color=FigureColor.STROKE, linewidth=1.5, linestyle="--")
     for x, y in zip(xs, outer, strict=True):
-        commands.append(Circle(Point(combined_scale.map_x(x), combined_scale.map_y(y))))
+        _circle(right, x, y)
     for x, y in zip(xs, nodes, strict=True):
-        commands.append(Cross(Point(combined_scale.map_x(x), combined_scale.map_y(y))))
-    return PlotDocument(title=FigureLabel.COMPUTATIONAL_SCALING, commands=tuple(commands))
+        _cross(right, x, y)
+    _main_title(figure, FigureLabel.COMPUTATIONAL_SCALING)
+    return figure
 
 
-@dataclass(frozen=True, slots=True)
-class Panel:
-    left: FigureCoordinate
-    top: FigureCoordinate
-    right: FigureCoordinate
-    bottom: FigureCoordinate
-
-    @property
-    def width(self) -> FigureCoordinate:
-        return self.right - self.left
-
-    @property
-    def height(self) -> FigureCoordinate:
-        return self.bottom - self.top
-
-
-@dataclass(frozen=True, slots=True)
-class PanelScale:
-    panel: Panel
-    x_min: PlotValue
-    x_max: PlotValue
-    y_min: PlotValue
-    y_max: PlotValue
-
-    def map_x(self, value: PlotValue) -> FigureCoordinate:
-        denominator = self.x_max - self.x_min
-        fraction = 0.5 if not denominator else (value - self.x_min) / denominator
-        return self.panel.left + fraction * self.panel.width
-
-    def map_y(self, value: PlotValue) -> FigureCoordinate:
-        denominator = self.y_max - self.y_min
-        fraction = 0.5 if not denominator else (value - self.y_min) / denominator
-        return self.panel.bottom - fraction * self.panel.height
-
-
-def _single_panel() -> Panel:
+def _new_figure() -> Figure:
     layout = active_config.get().figure_layout
-    return Panel(
-        layout.margin_left,
-        layout.margin_top,
-        layout.width - layout.margin_right,
-        layout.height - layout.margin_bottom,
+    dpi = 100
+    return plt.figure(figsize=(layout.width / dpi, layout.height / dpi), dpi=dpi)
+
+
+def _single_axis(figure: Figure) -> Axes:
+    layout = active_config.get().figure_layout
+    axes = figure.subplots(1, 1, squeeze=False)
+    figure.subplots_adjust(
+        left=layout.margin_left / layout.width,
+        right=1.0 - layout.margin_right / layout.width,
+        top=1.0 - layout.margin_top / layout.height,
+        bottom=layout.margin_bottom / layout.height,
     )
+    return axes.ravel()[0]
 
 
-def _horizontal_panels(count: PanelCount) -> tuple[Panel, ...]:
+def _horizontal_axes(figure: Figure, count: PanelCount) -> tuple[Axes, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
     layout = active_config.get().figure_layout
+    panel_width = (layout.width - layout.margin_left - layout.margin_right) / count
     gap = layout.horizontal_panel_gap
-    available = layout.width - layout.margin_left - layout.margin_right - gap * (count - 1)
-    width = available / count
-    return tuple(
-        Panel(
-            layout.margin_left + index * (width + gap),
-            layout.margin_top,
-            layout.margin_left + index * (width + gap) + width,
-            layout.height - layout.margin_bottom,
-        )
-        for index in range(count)
+    wspace = gap / panel_width if panel_width else 0.2
+    axes = figure.subplots(1, count, squeeze=False)
+    figure.subplots_adjust(
+        left=layout.margin_left / layout.width,
+        right=1.0 - layout.margin_right / layout.width,
+        top=1.0 - layout.margin_top / layout.height,
+        bottom=layout.margin_bottom / layout.height,
+        wspace=wspace,
     )
+    return tuple(axes.ravel())
 
 
-def _grid_panels(count: PanelCount, columns: GridColumnCount) -> tuple[Panel, ...]:
+def _grid_axes(figure: Figure, count: PanelCount, columns: GridColumnCount) -> tuple[Axes, ...]:
     if count <= 0:
         raise InvalidScientificDataError("figure requires at least one panel")
     layout = active_config.get().figure_layout
     rows = (count + columns - 1) // columns
-    gap_x = layout.grid_panel_gap_x
-    gap_y = layout.grid_panel_gap_y
-    horizontal_margin = layout.margin_left + layout.margin_right
-    vertical_margin = layout.margin_top + layout.margin_bottom
-    available_width = layout.width - horizontal_margin - gap_x * (columns - 1)
-    available_height = layout.height - vertical_margin - gap_y * (rows - 1)
-    width = available_width / columns
-    height = available_height / rows
-    panels: list[Panel] = []
-    for index in range(count):
-        row = index // columns
-        column = index % columns
-        left = layout.margin_left + column * (width + gap_x)
-        top = layout.margin_top + row * (height + gap_y)
-        panels.append(Panel(left, top, left + width, top + height))
-    return tuple(panels)
+    panel_width = (
+        layout.width
+        - layout.margin_left
+        - layout.margin_right
+        - layout.grid_panel_gap_x * (columns - 1)
+    ) / columns
+    panel_height = (
+        layout.height
+        - layout.margin_top
+        - layout.margin_bottom
+        - layout.grid_panel_gap_y * (rows - 1)
+    ) / rows
+    wspace = layout.grid_panel_gap_x / panel_width if panel_width else 0.2
+    hspace = layout.grid_panel_gap_y / panel_height if panel_height else 0.2
+    axes = figure.subplots(rows, columns, squeeze=False)
+    figure.subplots_adjust(
+        left=layout.margin_left / layout.width,
+        right=1.0 - layout.margin_right / layout.width,
+        top=1.0 - layout.margin_top / layout.height,
+        bottom=layout.margin_bottom / layout.height,
+        wspace=wspace,
+        hspace=hspace,
+    )
+    flat = tuple(axes.ravel())
+    for axis in flat[count:]:
+        axis.set_visible(False)
+    return flat[:count]
 
 
-def _panel_scale(panel: Panel, xs: tuple[PlotValue, ...], ys: tuple[PlotValue, ...]) -> PanelScale:
+def _set_limits(ax: Axes, xs: Sequence[PlotValue], ys: Sequence[PlotValue]) -> None:
     if not xs or not ys:
         raise InvalidScientificDataError("figure panel source cannot be empty")
     x_min, x_max = _expanded_bounds(min(xs), max(xs))
     y_min, y_max = _expanded_bounds(min(ys), max(ys))
-    return PanelScale(panel, x_min, x_max, y_min, y_max)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
 
 
 def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, PlotValue]:
@@ -610,34 +524,24 @@ def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, Plo
     return lower - pad, upper + pad
 
 
-def _panel_frame(panel: Panel, title: str) -> list[DrawCommand]:
-    return [
-        Rectangle(panel.left, panel.top, panel.width, panel.height),
-        Text(
-            Point(panel.left + panel.width / 2.0, panel.top - 18.0),
-            title,
-            size=13,
-            anchor=TextAnchor.MIDDLE,
-        ),
-    ]
+def _set_title(ax: Axes, title: str) -> None:
+    ax.set_title(title, fontsize=13, color=FigureColor.STROKE)
 
 
-def _base_commands(title: str) -> list[DrawCommand]:
-    width = active_config.get().figure_layout.width
-    return [Text(Point(width / 2.0, 38.0), title, size=22, anchor=TextAnchor.MIDDLE)]
+def _main_title(figure: Figure, title: str) -> None:
+    figure.suptitle(title, fontsize=22, color=FigureColor.STROKE)
 
 
-def _polyline(
-    scale: PanelScale,
-    xs: tuple[PlotValue, ...],
-    ys: tuple[PlotValue, ...],
-    *,
-    dashed: bool = False,
-) -> list[DrawCommand]:
-    if len(xs) != len(ys):
-        raise InvalidScientificDataError("polyline x/y coordinates must have identical length")
-    points = tuple(Point(scale.map_x(x), scale.map_y(y)) for x, y in zip(xs, ys, strict=True))
-    return [Line(left, right, dashed=dashed) for left, right in pairwise(points)]
+def _circle(ax: Axes, x: PlotValue, y: PlotValue) -> None:
+    ax.plot([x], [y], marker="o", markersize=5.0, linestyle="none", color=FigureColor.STROKE)
+
+
+def _cross(ax: Axes, x: PlotValue, y: PlotValue) -> None:
+    ax.plot([x], [y], marker="x", markersize=6.0, linestyle="none", color=FigureColor.STROKE)
+
+
+def _scatter_markers(ax: Axes, xs: Sequence[PlotValue], ys: Sequence[PlotValue]) -> None:
+    ax.plot(xs, ys, marker="o", markersize=5.0, linestyle="none", color=FigureColor.STROKE)
 
 
 def _rows(table: pa.Table) -> tuple[TableRow, ...]:
@@ -709,162 +613,13 @@ def _required_bool(row: TableRow, column: PublicationColumn) -> bool:
     return value
 
 
-def _svg_bytes(document: PlotDocument) -> bytes:
-    layout = active_config.get().figure_layout
-    lines = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{layout.width}" height="{layout.height}" '
-        + f'viewBox="0 0 {layout.width} {layout.height}">',
-        f'<rect width="100%" height="100%" fill="{FigureColor.BACKGROUND}"/>',
-    ]
-    lines.extend(_svg_command(command) for command in document.commands)
-    lines.append("</svg>")
-    return ("\n".join(lines) + "\n").encode(TextEncoding.UTF8)
+def _svg_bytes(figure: Figure) -> bytes:
+    buffer = io.BytesIO()
+    figure.savefig(buffer, format="svg")
+    return buffer.getvalue()
 
 
-def _svg_command(command: DrawCommand) -> SvgFragment:
-    if isinstance(command, Line):
-        dash = ' stroke-dasharray="6 5"' if command.dashed else ""
-        return SvgFragment(
-            f'<line x1="{command.start.x:.3f}" y1="{command.start.y:.3f}" '
-            + f'x2="{command.end.x:.3f}" y2="{command.end.y:.3f}" '
-            + f'stroke="{FigureColor.STROKE}" stroke-width="{command.width:.2f}"{dash}/>'
-        )
-    if isinstance(command, Circle):
-        fill = FigureColor.BACKGROUND if command.hollow else FigureColor.STROKE
-        return SvgFragment(
-            f'<circle cx="{command.center.x:.3f}" cy="{command.center.y:.3f}" '
-            + f'r="{command.radius:.2f}" fill="{fill}" stroke="{FigureColor.STROKE}"/>'
-        )
-    if isinstance(command, Cross):
-        x, y, r = command.center.x, command.center.y, command.radius
-        return SvgFragment(
-            f'<path d="M {x - r:.3f} {y - r:.3f} L {x + r:.3f} {y + r:.3f} '
-            + f'M {x - r:.3f} {y + r:.3f} L {x + r:.3f} {y - r:.3f}" '
-            + f'stroke="{FigureColor.STROKE}" stroke-width="1.5" fill="none"/>'
-        )
-    if isinstance(command, Rectangle):
-        fill = FigureColor.LIGHT if command.filled else "none"
-        return SvgFragment(
-            f'<rect x="{command.left:.3f}" y="{command.top:.3f}" '
-            + f'width="{command.width:.3f}" height="{command.height:.3f}" '
-            + f'fill="{fill}" stroke="{FigureColor.MUTED}" stroke-width="1"/>'
-        )
-    return SvgFragment(
-        f'<text x="{command.position.x:.3f}" y="{command.position.y:.3f}" '
-        + f'font-family="sans-serif" font-size="{command.size}" text-anchor="{command.anchor}" '
-        + f'fill="{FigureColor.STROKE}">{escape(command.value)}</text>'
-    )
-
-
-def _png_bytes(document: PlotDocument) -> bytes:
-    layout = active_config.get().figure_layout
-    pixels = bytearray([255] * (layout.width * layout.height * 3))
-    for command in document.commands:
-        if isinstance(command, Line):
-            _raster_line(pixels, command.start, command.end, dashed=command.dashed)
-        elif isinstance(command, Circle):
-            _raster_circle(pixels, command.center, command.radius, command.hollow)
-        elif isinstance(command, Cross):
-            r = command.radius
-            _raster_line(
-                pixels,
-                Point(command.center.x - r, command.center.y - r),
-                Point(command.center.x + r, command.center.y + r),
-            )
-            _raster_line(
-                pixels,
-                Point(command.center.x - r, command.center.y + r),
-                Point(command.center.x + r, command.center.y - r),
-            )
-        elif isinstance(command, Rectangle):
-            _raster_rectangle(pixels, command)
-    raw = bytearray()
-    stride = layout.width * 3
-    for row in range(layout.height):
-        raw.append(0)
-        start = row * stride
-        raw.extend(pixels[start : start + stride])
-    signature = b"\x89PNG\r\n\x1a\n"
-    ihdr = struct.pack(">IIBBBBB", layout.width, layout.height, 8, 2, 0, 0, 0)
-    return (
-        signature
-        + _png_chunk(b"IHDR", ihdr)
-        + _png_chunk(b"IDAT", zlib.compress(bytes(raw), 9))
-        + _png_chunk(b"IEND", b"")
-    )
-
-
-def _png_chunk(kind: bytes, payload: bytes) -> bytes:
-    body = kind + payload
-    return struct.pack(">I", len(payload)) + body + struct.pack(">I", zlib.crc32(body) & 0xFFFFFFFF)
-
-
-def _raster_line(pixels: bytearray, start: Point, end: Point, *, dashed: bool = False) -> None:
-    x0: RasterCoordinate = round(start.x)
-    y0: RasterCoordinate = round(start.y)
-    x1: RasterCoordinate = round(end.x)
-    y1: RasterCoordinate = round(end.y)
-    dx = abs(x1 - x0)
-    sx = 1 if x0 < x1 else -1
-    dy = -abs(y1 - y0)
-    sy = 1 if y0 < y1 else -1
-    error = dx + dy
-    step = 0
-    while True:
-        if not dashed or (step // 6) % 2 == 0:
-            _set_pixel(pixels, x0, y0)
-        if x0 == x1 and y0 == y1:
-            break
-        doubled = 2 * error
-        if doubled >= dy:
-            error += dy
-            x0 += sx
-        if doubled <= dx:
-            error += dx
-            y0 += sy
-        step += 1
-
-
-def _raster_circle(
-    pixels: bytearray, center: Point, radius: FigureCoordinate, hollow: bool
-) -> None:
-    cx: RasterCoordinate = round(center.x)
-    cy: RasterCoordinate = round(center.y)
-    r: PixelCount = max(1, round(radius))
-    for y in range(cy - r, cy + r + 1):
-        for x in range(cx - r, cx + r + 1):
-            distance = (x - cx) ** 2 + (y - cy) ** 2
-            if hollow:
-                if (r - 1) ** 2 <= distance <= r**2:
-                    _set_pixel(pixels, x, y)
-            elif distance <= r**2:
-                _set_pixel(pixels, x, y)
-
-
-def _raster_rectangle(pixels: bytearray, rectangle: Rectangle) -> None:
-    left: RasterCoordinate = round(rectangle.left)
-    top: RasterCoordinate = round(rectangle.top)
-    right: RasterCoordinate = round(rectangle.left + rectangle.width)
-    bottom: RasterCoordinate = round(rectangle.top + rectangle.height)
-    if rectangle.filled:
-        for y in range(top, bottom + 1):
-            for x in range(left, right + 1):
-                _set_pixel(pixels, x, y, value=216)
-    _raster_line(pixels, Point(left, top), Point(right, top))
-    _raster_line(pixels, Point(right, top), Point(right, bottom))
-    _raster_line(pixels, Point(right, bottom), Point(left, bottom))
-    _raster_line(pixels, Point(left, bottom), Point(left, top))
-
-
-def _set_pixel(
-    pixels: bytearray,
-    x: RasterCoordinate,
-    y: RasterCoordinate,
-    value: PixelIntensity = 32,
-) -> None:
-    layout = active_config.get().figure_layout
-    if not (0 <= x < layout.width and 0 <= y < layout.height):
-        return
-    offset = (y * layout.width + x) * 3
-    pixels[offset : offset + 3] = bytes((value, value, value))
+def _png_bytes(figure: Figure) -> bytes:
+    buffer = io.BytesIO()
+    figure.savefig(buffer, format="png")
+    return buffer.getvalue()

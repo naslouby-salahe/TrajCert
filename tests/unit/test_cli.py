@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from tests.unit.conftest import write_artifact_executor
 from trajcert import cli
-from trajcert.cli import CliArguments, CliExitCode, DoctorResult, RunExperimentResult
+from trajcert.cli import CliArguments, CliExitCode
 from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
@@ -21,7 +21,15 @@ from trajcert.exceptions import (
     InvalidScientificDataError,
     SerializationError,
 )
-from trajcert.experiments import runner
+from trajcert.experiments import workflows
+from trajcert.experiments.artifacts import scientific_result_artifact_key
+from trajcert.experiments.models import (
+    CellExecutionResult,
+    CellExecutor,
+    CellRunOutcome,
+    DependencyReadiness,
+    ExecutionContext,
+)
 from trajcert.experiments.plan import (
     DependencyGraphRecord,
     ExperimentPlan,
@@ -30,13 +38,14 @@ from trajcert.experiments.plan import (
     cells_for_experiment,
     experiment_names,
 )
-from trajcert.experiments.runner import SmokeResult
+from trajcert.experiments.smoke import SmokeResult
 from trajcert.experiments.status import ExperimentStatus
+from trajcert.experiments.workflows import DoctorResult, RunExperimentResult
 from trajcert.paths import PreprocessingLeaf, preprocessing_leaf
 from trajcert.provenance import (
     SemanticCellIdentity,
     SemanticCoordinates,
-    VariantName,
+    VariantCoordinate,
 )
 from trajcert.reporting.export import ReportExportResult
 from trajcert.reporting.source_data import (
@@ -90,7 +99,7 @@ def _single_cell_plan() -> ExperimentPlan:
         cell_ordinal=1,
         identity=SemanticCellIdentity(
             experiment_name=ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
-            coordinates=SemanticCoordinates(variant_name=VariantName("q=0.1, Gamma=1.5")),
+            coordinates=SemanticCoordinates(variant_name=VariantCoordinate(q=0.1), gamma=1.5),
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=True,
@@ -209,13 +218,13 @@ def _git_workspace(tmp_path: Path) -> Path:
     return workspace
 
 
-def _tmp_context(cell: PlannedCell, workspace_root: Path) -> runner.ExecutionContext:
-    return runner.ExecutionContext(
+def _tmp_context(cell: PlannedCell, workspace_root: Path) -> ExecutionContext:
+    return ExecutionContext(
         workspace_root=workspace_root,
         plan_digest=PlanDigest("plan"),
         scientific_specification_digest=SpecificationDigest("specification"),
         dependency_fingerprint=DependencyFingerprint("dependency-fingerprint"),
-        required_artifact_keys=(runner.scientific_result_artifact_key(cell),),
+        required_artifact_keys=(scientific_result_artifact_key(cell),),
         expected_seed_count=0,
     )
 
@@ -227,7 +236,9 @@ def _hand_case_cells() -> tuple[PlannedCell, ...]:
             cell_ordinal=index,
             identity=SemanticCellIdentity(
                 experiment_name=ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES,
-                coordinates=SemanticCoordinates(variant_name=VariantName(f"hand-case-0{index}")),
+                coordinates=SemanticCoordinates(
+                    variant_name=VariantCoordinate(hand_case_index=index)
+                ),
             ),
             evidence_class=EvidenceClass.VALIDATION,
             executable=True,
@@ -244,7 +255,7 @@ def _invalid_cell() -> PlannedCell:
         cell_ordinal=1,
         identity=SemanticCellIdentity(
             experiment_name=ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
-            coordinates=SemanticCoordinates(variant_name=VariantName("q=0.1, Gamma=1.5")),
+            coordinates=SemanticCoordinates(variant_name=VariantCoordinate(q=0.1), gamma=1.5),
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=False,
@@ -253,8 +264,8 @@ def _invalid_cell() -> PlannedCell:
     )
 
 
-def _cell_outcome(state: PublicExecutionState, *, reused: bool) -> runner.CellRunOutcome:
-    return runner.CellRunOutcome(
+def _cell_outcome(state: PublicExecutionState, *, reused: bool) -> CellRunOutcome:
+    return CellRunOutcome(
         state=state,
         reused=reused,
         completion_path=Path("completion"),
@@ -263,7 +274,7 @@ def _cell_outcome(state: PublicExecutionState, *, reused: bool) -> runner.CellRu
     )
 
 
-def _cycle_outcome(cell: PlannedCell) -> runner.CellRunOutcome:
+def _cycle_outcome(cell: PlannedCell) -> CellRunOutcome:
     ordinal = int(cell.cell_ordinal)
     state, reused = _HAND_CASE_OUTCOMES[min(ordinal, len(_HAND_CASE_OUTCOMES)) - 1]
     return _cell_outcome(state, reused=reused)
@@ -271,11 +282,11 @@ def _cycle_outcome(cell: PlannedCell) -> runner.CellRunOutcome:
 
 def _fake_run_cell_cycling(
     cell: PlannedCell,
-    context: runner.ExecutionContext,
-    dependencies: tuple[runner.DependencyReadiness, ...],
-    executor: runner.CellExecutor,
+    context: ExecutionContext,
+    dependencies: tuple[DependencyReadiness, ...],
+    executor: CellExecutor,
     overwrite: bool,
-) -> runner.CellRunOutcome:
+) -> CellRunOutcome:
     _ = (context, dependencies, executor, overwrite)
     return _cycle_outcome(cell)
 
@@ -301,7 +312,7 @@ def _no_dependencies(
     _root: Path,
     _cell: PlannedCell,
     _cache: dict[ExperimentName, ExperimentStatus],
-) -> tuple[runner.DependencyReadiness, ...]:
+) -> tuple[DependencyReadiness, ...]:
     return ()
 
 
@@ -310,9 +321,9 @@ def _completed_upstream_dependencies(
     _root: Path,
     cell: PlannedCell,
     _cache: dict[ExperimentName, ExperimentStatus],
-) -> tuple[runner.DependencyReadiness, ...]:
+) -> tuple[DependencyReadiness, ...]:
     return tuple(
-        runner.DependencyReadiness(experiment_name=name, state=PublicExecutionState.COMPLETED)
+        DependencyReadiness(experiment_name=name, state=PublicExecutionState.COMPLETED)
         for name in cell.required_experiments
     )
 
@@ -322,9 +333,9 @@ def _ready_upstream_dependencies(
     _root: Path,
     cell: PlannedCell,
     _cache: dict[ExperimentName, ExperimentStatus],
-) -> tuple[runner.DependencyReadiness, ...]:
+) -> tuple[DependencyReadiness, ...]:
     return tuple(
-        runner.DependencyReadiness(experiment_name=name, state=PublicExecutionState.READY)
+        DependencyReadiness(experiment_name=name, state=PublicExecutionState.READY)
         for name in cell.required_experiments
     )
 
@@ -333,7 +344,7 @@ def _context_for(
     cell: PlannedCell,
     _plan: ExperimentPlan,
     root: Path,
-) -> runner.ExecutionContext:
+) -> ExecutionContext:
     return _tmp_context(cell, root)
 
 
@@ -341,7 +352,7 @@ def _raise_context(
     _cell: PlannedCell,
     _plan: ExperimentPlan,
     _root: Path,
-) -> runner.ExecutionContext:
+) -> ExecutionContext:
     raise InvalidScientificDataError("context unavailable")
 
 
@@ -353,11 +364,11 @@ def _synthesis_fingerprint(
 
 def _completed_run_cell(
     _cell: PlannedCell,
-    _context: runner.ExecutionContext,
-    _dependencies: tuple[runner.DependencyReadiness, ...],
-    _executor: runner.CellExecutor,
+    _context: ExecutionContext,
+    _dependencies: tuple[DependencyReadiness, ...],
+    _executor: CellExecutor,
     _overwrite: bool,
-) -> runner.CellRunOutcome:
+) -> CellRunOutcome:
     return _cell_outcome(PublicExecutionState.COMPLETED, reused=False)
 
 
@@ -367,11 +378,11 @@ def _noop_publication_render(_workspace_root: Path) -> None:
 
 def _failed_run_cell(
     _cell: PlannedCell,
-    _context: runner.ExecutionContext,
-    _dependencies: tuple[runner.DependencyReadiness, ...],
-    _executor: runner.CellExecutor,
+    _context: ExecutionContext,
+    _dependencies: tuple[DependencyReadiness, ...],
+    _executor: CellExecutor,
     _overwrite: bool,
-) -> runner.CellRunOutcome:
+) -> CellRunOutcome:
     return _cell_outcome(PublicExecutionState.FAILED, reused=False)
 
 
@@ -380,20 +391,20 @@ def _outcome_sequence_run_cell(
 ) -> Callable[
     [
         PlannedCell,
-        runner.ExecutionContext,
-        tuple[runner.DependencyReadiness, ...],
-        runner.CellExecutor,
+        ExecutionContext,
+        tuple[DependencyReadiness, ...],
+        CellExecutor,
         bool,
     ],
-    runner.CellRunOutcome,
+    CellRunOutcome,
 ]:
     def _run_cell(
         _cell: PlannedCell,
-        _context: runner.ExecutionContext,
-        _dependencies: tuple[runner.DependencyReadiness, ...],
-        _executor: runner.CellExecutor,
+        _context: ExecutionContext,
+        _dependencies: tuple[DependencyReadiness, ...],
+        _executor: CellExecutor,
         _overwrite: bool,
-    ) -> runner.CellRunOutcome:
+    ) -> CellRunOutcome:
         return _cell_outcome(states[int(_cell.cell_ordinal) - 1], reused=False)
 
     return _run_cell
@@ -483,18 +494,18 @@ def test_doctor_result_fails_when_any_check_fails() -> None:
 
 def test_doctor_rejects_workspace_without_configuration(tmp_path: Path) -> None:
     with pytest.raises(ConfigurationError):
-        _ = cli.doctor(workspace_root=tmp_path)
+        _ = workflows.doctor(workspace_root=tmp_path)
 
 
 def test_doctor_rejects_missing_dependency_lock(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
     with pytest.raises(InvalidScientificDataError, match=r"uv\.lock is missing or empty"):
-        _ = cli.doctor(workspace_root=workspace)
+        _ = workflows.doctor(workspace_root=workspace)
 
 
 def test_preprocess_writes_configuration_artifact(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
-    target = cli.preprocess(workspace_root=workspace)
+    target = workflows.preprocess(workspace_root=workspace)
     expected = (
         workspace
         / preprocessing_leaf(PreprocessingLeaf.VALIDATION_INTEGRITY)
@@ -509,7 +520,7 @@ def test_preprocess_writes_configuration_artifact(tmp_path: Path) -> None:
 def test_preprocess_with_dataset_name_validates_only_that_law(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
     dataset_name = str(LAW_DISPLAY_NAMES[LawKey.NO_PATH_DEPENDENCE])
-    target = cli.preprocess(LawName(dataset_name), workspace_root=workspace)
+    target = workflows.preprocess(LawName(dataset_name), workspace_root=workspace)
     assert target.is_file()
 
 
@@ -525,32 +536,32 @@ def test_main_preprocess_rejects_unknown_dataset_name(
 
 def test_preprocess_reuses_existing_artifact_without_overwrite(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
-    first = cli.preprocess(workspace_root=workspace)
+    first = workflows.preprocess(workspace_root=workspace)
     written_at = first.stat().st_mtime_ns
-    second = cli.preprocess(workspace_root=workspace)
+    second = workflows.preprocess(workspace_root=workspace)
     assert second == first
     assert second.stat().st_mtime_ns == written_at
 
 
 def test_preprocess_overwrite_forces_recompute(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
-    first = cli.preprocess(workspace_root=workspace)
+    first = workflows.preprocess(workspace_root=workspace)
     _ = first.write_bytes(b"stale")
-    second = cli.preprocess(workspace_root=workspace, overwrite=True)
+    second = workflows.preprocess(workspace_root=workspace, overwrite=True)
     assert second == first
     stored = TrajCertConfig.model_validate_json(second.read_text(encoding="utf-8"))
     assert stored == TrajCertConfig.from_yaml(workspace / PRODUCTION_CONFIG_PATH)
 
 
 def test_plan_view_matches_cell_count() -> None:
-    plan = cli.plan_view()
+    plan = workflows.plan_view()
     assert plan.planned_cell_count == len(plan.cells)
     assert plan.executable_cells + plan.invalid_cells == plan.planned_cell_count
 
 
 def test_plan_view_persists_shared_plan_artifacts(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
-    plan = cli.plan_view(workspace_root=workspace)
+    plan = workflows.plan_view(workspace_root=workspace)
     plans_root = workspace / "outputs" / "artifacts" / "derived" / "plans"
     stored_plan = read_model(plans_root / "experiment_plan.json", ExperimentPlan)
     assert stored_plan == plan
@@ -565,25 +576,27 @@ def test_plan_view_persists_shared_plan_artifacts(tmp_path: Path) -> None:
 
 
 def test_smoke_passes_all_fixtures() -> None:
-    result = cli.smoke()
+    result = workflows.smoke()
     assert result.passed is True
     assert result.passed_fixture_count == _FIXTURE_COUNT
 
 
 def test_experiment_status_rejects_unknown_family() -> None:
     with pytest.raises(InvalidScientificDataError, match="unknown experiment family"):
-        _ = cli.experiment_status(cast(ExperimentName, cast(object, "Unknown Experiment")))
+        _ = workflows.experiment_status(cast(ExperimentName, cast(object, "Unknown Experiment")))
 
 
 def test_experiment_status_zero_declared_cells_is_invalid() -> None:
-    status = cli.experiment_status(ExperimentName("Real-Trajectory Validation"))
+    status = workflows.experiment_status(ExperimentName("Real-Trajectory Validation"))
     assert status.state is PublicExecutionState.INVALID
     assert status.total_cells == 0
 
 
 def test_report_rejects_unknown_experiment_name() -> None:
     with pytest.raises(InvalidScientificDataError, match="unknown experiment family"):
-        _ = cli.report(experiment_name=cast(ExperimentName, cast(object, "Unknown Experiment")))
+        _ = workflows.report(
+            experiment_name=cast(ExperimentName, cast(object, "Unknown Experiment"))
+        )
 
 
 def test_main_run_prints_execution_summary(
@@ -747,7 +760,7 @@ def test_main_report_prints_reused_summary(
 
 def test_doctor_passes_complete_git_workspace(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
-    result = cli.doctor(workspace_root=workspace)
+    result = workflows.doctor(workspace_root=workspace)
     assert result.passed is True
 
 
@@ -764,8 +777,8 @@ def test_run_experiment_reports_invalid_when_no_cells(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "cells_for_experiment", _no_cells)
-    result = cli.run_experiment(
+    monkeypatch.setattr(workflows, "cells_for_experiment", _no_cells)
+    result = workflows.run_experiment(
         ExperimentName("Anytime Implementation Hand Cases"), workspace_root=workspace
     )
     assert result.state is PublicExecutionState.INVALID
@@ -776,11 +789,11 @@ def test_run_experiment_aggregates_cell_outcomes(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "cells_for_experiment", _hand_cells)
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _context_for)
-    monkeypatch.setattr(cli, "run_cell", _fake_run_cell_cycling)
-    result = cli.run_experiment(
+    monkeypatch.setattr(workflows, "cells_for_experiment", _hand_cells)
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _context_for)
+    monkeypatch.setattr(workflows, "run_cell", _fake_run_cell_cycling)
+    result = workflows.run_experiment(
         ExperimentName("Anytime Implementation Hand Cases"), workspace_root=workspace, max_workers=1
     )
     outcome_states = tuple(state for state, _reused in _HAND_CASE_OUTCOMES)
@@ -822,11 +835,11 @@ def test_run_experiment_maps_aggregated_run_states(
     tmp_path: Path,
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "cells_for_experiment", _hand_cells)
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _context_for)
-    monkeypatch.setattr(cli, "run_cell", _outcome_sequence_run_cell(outcomes))
-    result = cli.run_experiment(
+    monkeypatch.setattr(workflows, "cells_for_experiment", _hand_cells)
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _context_for)
+    monkeypatch.setattr(workflows, "run_cell", _outcome_sequence_run_cell(outcomes))
+    result = workflows.run_experiment(
         ExperimentName("Anytime Implementation Hand Cases"), workspace_root=workspace, max_workers=1
     )
     assert result.state is expected
@@ -835,9 +848,9 @@ def test_run_experiment_maps_aggregated_run_states(
 def test_run_experiment_resolves_real_execution_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    result = cli.run_experiment(
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
+    result = workflows.run_experiment(
         ExperimentName("Anytime Implementation Hand Cases"), workspace_root=Path(), max_workers=1
     )
     assert result.state is PublicExecutionState.COMPLETED
@@ -847,11 +860,15 @@ def test_run_experiment_resolves_real_execution_context(
 def test_run_experiment_synthesis_resolves_real_locality(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _noop_publication_render)
-    result = cli.run_experiment(ExperimentName("Statistical Synthesis"), workspace_root=Path())
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
+    monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(
+        workflows, "_render_synthesis_publication_artifacts", _noop_publication_render
+    )
+    result = workflows.run_experiment(
+        ExperimentName("Statistical Synthesis"), workspace_root=Path()
+    )
     assert result.state is PublicExecutionState.COMPLETED
     assert result.completed_cells == _real_cell_count("Statistical Synthesis")
 
@@ -864,11 +881,13 @@ def test_run_experiment_synthesis_completion_triggers_publication_render(
     def _record_render(workspace_root: Path) -> None:
         calls.append(workspace_root)
 
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _record_render)
-    result = cli.run_experiment(ExperimentName("Statistical Synthesis"), workspace_root=Path())
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
+    monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(workflows, "_render_synthesis_publication_artifacts", _record_render)
+    result = workflows.run_experiment(
+        ExperimentName("Statistical Synthesis"), workspace_root=Path()
+    )
     assert result.state is PublicExecutionState.COMPLETED
     assert calls == [Path()]
 
@@ -881,11 +900,13 @@ def test_run_experiment_synthesis_failure_skips_publication_render(
     def _record_render(workspace_root: Path) -> None:
         calls.append(workspace_root)
 
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
-    monkeypatch.setattr(cli, "run_cell", _failed_run_cell)
-    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _record_render)
-    result = cli.run_experiment(ExperimentName("Statistical Synthesis"), workspace_root=Path())
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
+    monkeypatch.setattr(workflows, "run_cell", _failed_run_cell)
+    monkeypatch.setattr(workflows, "_render_synthesis_publication_artifacts", _record_render)
+    result = workflows.run_experiment(
+        ExperimentName("Statistical Synthesis"), workspace_root=Path()
+    )
     assert result.state is PublicExecutionState.FAILED
     assert calls == []
 
@@ -898,11 +919,11 @@ def test_run_experiment_non_synthesis_completion_skips_publication_render(
     def _record_render(workspace_root: Path) -> None:
         calls.append(workspace_root)
 
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _context_for)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    monkeypatch.setattr(cli, "_render_synthesis_publication_artifacts", _record_render)
-    result = cli.run_experiment(
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _context_for)
+    monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(workflows, "_render_synthesis_publication_artifacts", _record_render)
+    result = workflows.run_experiment(
         ExperimentName("Anytime Implementation Hand Cases"), workspace_root=Path(), max_workers=1
     )
     assert result.state is PublicExecutionState.COMPLETED
@@ -946,15 +967,17 @@ def test_render_synthesis_publication_artifacts_writes_under_owner_experiment_le
             "x", encoding="utf-8"
         )
 
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _context_for)
-    monkeypatch.setattr(cli, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    monkeypatch.setattr(cli, "read_verified_source_data", _fake_read_verified)
-    monkeypatch.setattr(cli, "render_table", _fake_render_table)
-    monkeypatch.setattr(cli, "render_figure", _fake_render_figure)
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _context_for)
+    monkeypatch.setattr(workflows, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
+    monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(workflows, "read_verified_source_data", _fake_read_verified)
+    monkeypatch.setattr(workflows, "render_table", _fake_render_table)
+    monkeypatch.setattr(workflows, "render_figure", _fake_render_figure)
 
-    result = cli.run_experiment(ExperimentName("Statistical Synthesis"), workspace_root=workspace)
+    result = workflows.run_experiment(
+        ExperimentName("Statistical Synthesis"), workspace_root=workspace
+    )
     assert result.state is PublicExecutionState.COMPLETED
 
     tables = table_source_descriptors()
@@ -975,10 +998,10 @@ def test_run_experiment_requires_clean_working_tree(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _git_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _context_for)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
-    result = cli.run_experiment(
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _context_for)
+    monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
+    result = workflows.run_experiment(
         ExperimentName("Anytime Implementation Hand Cases"), workspace_root=workspace, max_workers=1
     )
     assert result.state is PublicExecutionState.COMPLETED
@@ -986,7 +1009,7 @@ def test_run_experiment_requires_clean_working_tree(
 
 
 def test_experiment_status_resolves_real_workspace() -> None:
-    status = cli.experiment_status(
+    status = workflows.experiment_status(
         ExperimentName("Legacy Partition Incoherence Check"), workspace_root=Path()
     )
     assert status.total_cells == _real_cell_count("Legacy Partition Incoherence Check")
@@ -996,8 +1019,8 @@ def test_experiment_status_reports_invalid_cell(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "cells_for_experiment", _single_invalid_cell)
-    status = cli.experiment_status(
+    monkeypatch.setattr(workflows, "cells_for_experiment", _single_invalid_cell)
+    status = workflows.experiment_status(
         ExperimentName("Legacy Partition Incoherence Check"), workspace_root=workspace
     )
     assert status.state is PublicExecutionState.INVALID
@@ -1007,8 +1030,8 @@ def test_experiment_status_reports_blocked_upstream(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dependency_readiness", _ready_upstream_dependencies)
-    status = cli.experiment_status(
+    monkeypatch.setattr(workflows, "_dependency_readiness", _ready_upstream_dependencies)
+    status = workflows.experiment_status(
         ExperimentName("Production Solver vs Independent Oracle"), workspace_root=workspace
     )
     assert status.state is PublicExecutionState.BLOCKED
@@ -1018,9 +1041,9 @@ def test_experiment_status_reports_ready_cell(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _context_for)
-    status = cli.experiment_status(
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _context_for)
+    status = workflows.experiment_status(
         ExperimentName("Legacy Partition Incoherence Check"), workspace_root=workspace
     )
     assert status.state is PublicExecutionState.READY
@@ -1030,9 +1053,9 @@ def test_experiment_status_blocks_when_context_unavailable(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _raise_context)
-    status = cli.experiment_status(
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _raise_context)
+    status = workflows.experiment_status(
         ExperimentName("Legacy Partition Incoherence Check"), workspace_root=workspace
     )
     assert status.state is PublicExecutionState.BLOCKED
@@ -1043,16 +1066,16 @@ def test_executor_dispatches_ordinary_cell_through_run_cell(
 ) -> None:
     def _dispatched_cell(
         cell: PlannedCell,
-        context: runner.ExecutionContext,
-    ) -> runner.CellExecutionResult:
+        context: ExecutionContext,
+    ) -> CellExecutionResult:
         return write_artifact_executor(cell, context)
 
     workspace = _configured_workspace(tmp_path)
-    monkeypatch.setattr(cli, "cells_for_experiment", _single_hand_case_cell)
-    monkeypatch.setattr(cli, "_dependency_readiness", _completed_upstream_dependencies)
-    monkeypatch.setattr(cli, "_execution_context", _context_for)
-    monkeypatch.setattr(cli, "execute_dispatched_cell", _dispatched_cell)
-    result = cli.run_experiment(
+    monkeypatch.setattr(workflows, "cells_for_experiment", _single_hand_case_cell)
+    monkeypatch.setattr(workflows, "_dependency_readiness", _completed_upstream_dependencies)
+    monkeypatch.setattr(workflows, "_execution_context", _context_for)
+    monkeypatch.setattr(workflows, "execute_dispatched_cell", _dispatched_cell)
+    result = workflows.run_experiment(
         ExperimentName("Anytime Implementation Hand Cases"), workspace_root=workspace, max_workers=1
     )
     assert result.state is PublicExecutionState.COMPLETED
@@ -1062,7 +1085,7 @@ def test_executor_dispatches_ordinary_cell_through_run_cell(
 def test_report_requires_completed_synthesis(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
     with pytest.raises(SerializationError, match="cannot read artifact"):
-        _ = cli.report(workspace_root=workspace)
+        _ = workflows.report(workspace_root=workspace)
 
 
 def test_main_report_failure_maps_to_completion_code(
@@ -1089,7 +1112,7 @@ def test_doctor_rejects_file_outputs_path(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
     _ = (workspace / "outputs").write_text("x", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError, match="workspace path is not writable"):
-        _ = cli.doctor(workspace_root=workspace)
+        _ = workflows.doctor(workspace_root=workspace)
 
 
 def _truncated_table_sources() -> tuple[PublicationSourceDescriptor, ...]:
@@ -1100,9 +1123,9 @@ def test_doctor_rejects_incomplete_publication_sources(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _git_workspace(tmp_path)
-    monkeypatch.setattr(cli, "table_source_descriptors", _truncated_table_sources)
+    monkeypatch.setattr(workflows, "table_source_descriptors", _truncated_table_sources)
     with pytest.raises(InvalidScientificDataError, match="publication source contract"):
-        _ = cli.doctor(workspace_root=workspace)
+        _ = workflows.doctor(workspace_root=workspace)
 
 
 def test_run_experiment_rejects_missing_uv_lock(
@@ -1113,9 +1136,9 @@ def test_run_experiment_rejects_missing_uv_lock(
         _ = (workspace / "src").symlink_to(_REPO_SRC, target_is_directory=True)
     except OSError as exc:
         pytest.skip(f"symlink creation unavailable in this environment: {exc}")
-    monkeypatch.setattr(cli, "_dependency_readiness", _no_dependencies)
-    monkeypatch.setattr(cli, "run_cell", _completed_run_cell)
+    monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
+    monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
     with pytest.raises(InvalidScientificDataError, match=r"uv\.lock is required"):
-        _ = cli.run_experiment(
+        _ = workflows.run_experiment(
             ExperimentName("Anytime Implementation Hand Cases"), workspace_root=workspace
         )

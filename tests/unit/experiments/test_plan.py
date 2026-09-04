@@ -14,6 +14,7 @@ from trajcert.experiments.plan import (
 from trajcert.provenance import (
     SemanticCellIdentity,
     SemanticCoordinates,
+    VariantCoordinate,
     VariantName,
 )
 from trajcert.storage import PlanDigest
@@ -34,7 +35,9 @@ def _cell(executable: bool, invalid_reason: ReasonCode | None) -> PlannedCell:
         cell_ordinal=1,
         identity=SemanticCellIdentity(
             experiment_name=ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK,
-            coordinates=SemanticCoordinates(variant_name=VariantName("protocol-inventory-gate")),
+            coordinates=SemanticCoordinates(
+                variant_name=VariantCoordinate(name=VariantName("protocol-inventory-gate"))
+            ),
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=executable,

@@ -26,7 +26,7 @@ from trajcert.experiments.solver_validation import (
 )
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase
-from trajcert.reporting.source_data import (
+from trajcert.reporting.publication_rows import (
     AnalysisType,
     CompatibilityFloorSourceEvidence,
     CompatibilitySafetyEvidence,
@@ -35,7 +35,6 @@ from trajcert.reporting.source_data import (
     PartitionTimingRow,
     PopulationFigureEvidence,
     PopulationUtilitySourceEvidence,
-    PublicationSourceName,
     RegimeName,
     RhoUtilityMetricName,
     RhoUtilityRow,
@@ -44,17 +43,20 @@ from trajcert.reporting.source_data import (
     SharpnessSourceEvidence,
     TheoremName,
     TheoremValidationObservation,
-    all_publication_source_descriptors,
     compatibility_safety_evidence,
     compatibility_safety_rows,
-    figure_source_descriptors,
     partition_coherence_figure_rows,
     partition_timing_rows,
     population_rho_utility_rows,
+    theorem_validation_summary_rows,
+)
+from trajcert.reporting.source_data import (
+    PublicationSourceName,
+    all_publication_source_descriptors,
+    figure_source_descriptors,
     read_source_data,
     read_verified_source_data,
     table_source_descriptors,
-    theorem_validation_summary_rows,
     write_source_data,
 )
 from trajcert.schemas import PublicationSourceDescriptor, PublicationSourceRole
@@ -205,7 +207,7 @@ def test_write_source_data_raises_serialization_error_on_atomic_failure(
         _ = (table, where, compression, use_dictionary, write_statistics)
         raise OSError("simulated parquet write failure")
 
-    monkeypatch.setattr("trajcert.reporting.source_data._WRITE_PARQUET", failing_write)
+    monkeypatch.setattr("trajcert.reporting.source_data.pq.write_table", failing_write)
     row = RhoUtilityRow(
         analysis_type=AnalysisType.POPULATION,
         law_name=LawName("law"),

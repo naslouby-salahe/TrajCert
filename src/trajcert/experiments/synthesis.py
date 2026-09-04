@@ -22,6 +22,11 @@ from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.artifacts import (
+    read_verified_scientific_result,
+    scientific_result_artifact_key,
+    verified_upstream_completion_and_index,
+)
 from trajcert.experiments.mathematics import (
     ConvexityResult,
     IdentityResult,
@@ -30,28 +35,18 @@ from trajcert.experiments.mathematics import (
     SafetyBoundaryCaseEvaluation,
     SharpSetIdentityResult,
 )
-from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
-from trajcert.experiments.runner import (
+from trajcert.experiments.models import (
     CellExecutionResult,
     CellExecutor,
     ExecutionContext,
-    read_verified_scientific_result,
-    scientific_result_artifact_key,
-    verified_upstream_completion_and_index,
 )
+from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
 from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
 from trajcert.experiments.sensitivity import PopulationUtilityResult, SequentialUtilityResult
 from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
-from trajcert.provenance import BaselineName, CoordinateGrammar, MethodName
-from trajcert.reporting.publication_sources import (
-    PublicationSourceName,
-    publication_baseline_name,
-    publication_method_name,
-    publication_source_artifact_key,
-    publication_source_path,
-)
-from trajcert.reporting.source_data import (
+from trajcert.provenance import BaselineName, MethodName
+from trajcert.reporting.publication_rows import (
     PARTITION_COHERENCE_POPULATION_LAWS,
     AnalysisType,
     CompatibilityFloorSourceEvidence,
@@ -77,6 +72,15 @@ from trajcert.reporting.source_data import (
     partition_timing_rows,
     population_rho_utility_rows,
     theorem_validation_summary_rows,
+)
+from trajcert.reporting.publication_sources import (
+    PublicationSourceName,
+    publication_baseline_name,
+    publication_method_name,
+    publication_source_artifact_key,
+    publication_source_path,
+)
+from trajcert.reporting.source_data import (
     write_source_data,
 )
 from trajcert.storage import (
@@ -609,11 +613,10 @@ def _partition_timing_evidence(
         comparison = cell.identity.coordinates.comparison_pair_name
         if comparison is None:
             raise InvalidScientificDataError("partition-coherence cell lacks its comparison pair")
-        fine_text, separator, coarse_text = comparison.partition(CoordinateGrammar.COMPARISON_PAIR)
-        if not separator:
+        if comparison.fine is None or comparison.coarse is None:
             raise InvalidScientificDataError("partition-coherence comparison pair is malformed")
-        fine = PartitionName(fine_text)
-        coarse = PartitionName(coarse_text)
+        fine = comparison.fine
+        coarse = comparison.coarse
         result = read_verified_scientific_result(cell, workspace_root, PartitionCoherenceResult)
         evidence.append(
             PartitionTimingEvidence(
@@ -919,10 +922,9 @@ def _rho_from_persisted_tau(
     cell: PlannedCell,
 ) -> SensitivityBudget:
     coordinate = cell.identity.coordinates.sensitivity_coordinate
-    prefix = CoordinateGrammar.RHO_OFFSET_PREFIX
-    if coordinate is None or not coordinate.startswith(prefix):
+    if coordinate is None:
         raise InvalidScientificDataError("partition-coherence cell lacks its rho-offset coordinate")
-    return result.fine_tau + float(coordinate.removeprefix(prefix))
+    return result.fine_tau + coordinate.offset
 
 
 def _family_primary_artifact(cells: tuple[PlannedCell, ...]) -> ArtifactKey:

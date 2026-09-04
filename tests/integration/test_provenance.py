@@ -5,18 +5,18 @@ from pathlib import Path
 
 import pytest
 
-from trajcert import cli
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.plan import build_plan, cells_for_experiment
-from trajcert.experiments.runner import (
+from trajcert.experiments.artifacts import (
     cell_artifact_index_path,
     cell_dependency_fingerprint,
     cell_dependency_material,
     scientific_result_artifact_key,
     scientific_specification_digest,
 )
+from trajcert.experiments.plan import build_plan, cells_for_experiment
+from trajcert.experiments.workflows import doctor
 from trajcert.provenance import EnvironmentDigest
 from trajcert.storage import (
     ArtifactIndexEntry,
@@ -61,7 +61,7 @@ def _valid_workspace(tmp_path: Path) -> Path:
 
 def test_doctor_passes_on_a_provisioned_workspace(tmp_path: Path) -> None:
     workspace_root = _valid_workspace(tmp_path)
-    result = cli.doctor(workspace_root=workspace_root)
+    result = doctor(workspace_root=workspace_root)
     assert result.passed is True
     assert result.configuration_valid is True
     assert result.plan_valid is True
@@ -75,14 +75,14 @@ def test_doctor_passes_on_a_provisioned_workspace(tmp_path: Path) -> None:
 def test_doctor_rejects_missing_uv_lock(tmp_path: Path) -> None:
     _link_source_and_config(tmp_path)
     with pytest.raises(InvalidScientificDataError):
-        _ = cli.doctor(workspace_root=tmp_path)
+        _ = doctor(workspace_root=tmp_path)
 
 
 def test_doctor_rejects_empty_uv_lock(tmp_path: Path) -> None:
     _link_source_and_config(tmp_path)
     _ = (tmp_path / "uv.lock").write_text("", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError):
-        _ = cli.doctor(workspace_root=tmp_path)
+        _ = doctor(workspace_root=tmp_path)
 
 
 def test_scientific_specification_digest_is_config_content_sensitive() -> None:

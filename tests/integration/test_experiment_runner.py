@@ -10,17 +10,22 @@ from trajcert.config import (
     active_config,
 )
 from trajcert.constants import PRODUCTION_CONFIG_PATH
-from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
-from trajcert.experiments.runner import (
-    CheckpointRecord,
-    ExecutionContext,
+from trajcert.experiments.artifacts import (
     cell_checkpoint_batch_path,
     cell_dependency_material,
-    execute_dispatched_cell,
-    execute_scientific_cell,
-    expected_seed_count,
     scientific_result_artifact_key,
     scientific_specification_digest,
+)
+from trajcert.experiments.dispatch import execute_scientific_cell
+from trajcert.experiments.failure_boundaries import FailureBoundaryAxis
+from trajcert.experiments.models import (
+    CheckpointRecord,
+    ExecutionContext,
+)
+from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
+from trajcert.experiments.runner import (
+    execute_dispatched_cell,
+    expected_seed_count,
 )
 from trajcert.provenance import (
     EnvironmentDigest,
@@ -68,8 +73,9 @@ def test_terminal_selection_failure_boundary_dispatches() -> None:
     cell = next(
         item
         for item in cells
-        if "terminal-selection-asymmetry="
-        in str(item.identity.coordinates.failure_boundary_axis_and_level)
+        if item.identity.coordinates.failure_boundary_axis_and_level is not None
+        and item.identity.coordinates.failure_boundary_axis_and_level.axis
+        is FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY
     )
     result = execute_scientific_cell(cell, config)
     assert result is not None

@@ -112,12 +112,8 @@ _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
         "_aggregate",
         "_source",
         # Presentation-only free text (chart titles/labels), not domain data.
-        "_build_document",
-        "_panel_frame",
-        "_base_commands",
-        "_svg_command",
-        "Text.value",
-        "PlotDocument.title",
+        "_set_title",
+        "_main_title",
         # CLI argument boundary: raw argparse text prior to validation.
         "parse_args",
         "_experiment_name",

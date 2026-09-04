@@ -3,10 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+import trajcert.inference.projection as projection_module
 from tests.unit.conftest import categorical_state
 from trajcert.data.partitions import build_partition
 from trajcert.data.summaries import summarize_observable_masses
-from trajcert.exceptions import InvalidScientificDataError
+from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.inference.confidence import raw_confidence_region
 from trajcert.inference.envelope import (
     ObservableSummaryEnvelope,
@@ -83,3 +84,50 @@ def test_project_upper_risk_non_singleton_terminates_at_node_cap() -> None:
     assert result.visited_nodes >= 1
     assert result.sensitivity_budget == pytest.approx(0.05)
     assert 0.0 <= result.compatibility_lower_bound <= 1.0
+
+
+def _non_singleton_envelope() -> ObservableSummaryEnvelope:
+    partition = build_partition(2, 2, 8.0)
+    state = categorical_state((3, 0, 0, 2, 1), 2)
+    confidence = raw_confidence_region(state, 0.05, 1e-6)
+    return summary_envelope_from_confidence(partition, confidence)
+
+
+def test_compatibility_search_failure_propagates_as_numerical_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    envelope = _non_singleton_envelope()
+
+    def fail(*_args: object, **_kwargs: object) -> object:
+        raise ArithmeticError("injected compatibility failure")
+
+    monkeypatch.setattr(projection_module, "_compatibility_step", fail)
+    with pytest.raises(NumericalError, match="compatibility search failed"):
+        _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
+
+
+def test_intrinsic_search_failure_propagates_as_numerical_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    envelope = _non_singleton_envelope()
+
+    def fail(*_args: object, **_kwargs: object) -> object:
+        raise ArithmeticError("injected intrinsic failure")
+
+    monkeypatch.setattr(projection_module, "_intrinsic_step", fail)
+    with pytest.raises(NumericalError, match="intrinsic search failed"):
+        _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
+
+
+def test_projection_search_failure_reports_arithmetic_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    envelope = _non_singleton_envelope()
+
+    def fail(*_args: object, **_kwargs: object) -> object:
+        raise ArithmeticError("injected projection failure")
+
+    monkeypatch.setattr(projection_module, "_projection_step", fail)
+    result = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
+    assert result.termination_reason is ProjectionTerminationReason.ARITHMETIC_FALLBACK
+    assert 0.0 <= result.proven_upper <= 1.0

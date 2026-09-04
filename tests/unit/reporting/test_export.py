@@ -9,11 +9,11 @@ import pytest
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
-from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
-from trajcert.experiments.runner import (
+from trajcert.experiments.artifacts import (
     cell_completion_path,
     scientific_specification_digest,
 )
+from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.synthesis import (
     synthesis_artifact_keys,
 )

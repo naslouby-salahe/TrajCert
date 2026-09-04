@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from math import ceil, floor
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -65,12 +63,4 @@ def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDi
     )
     if np.any(values[:-1] > values[1:]):
         raise InvalidScientificDataError("linear quantile requires sorted values")
-    position = (values.size - 1) * probability
-    lower_index = floor(position)
-    upper_index = ceil(position)
-    lower_value = values.item(lower_index)
-    if lower_index == upper_index:
-        return lower_value
-    upper_value = values.item(upper_index)
-    weight = position - lower_index
-    return lower_value + weight * (upper_value - lower_value)
+    return float(np.quantile(values, probability, method="linear"))

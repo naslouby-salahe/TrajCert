@@ -5,17 +5,20 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from trajcert.experiments.plan import PlannedCell
-from trajcert.experiments.runner import (
-    DependencyReadiness,
-    ExecutionContext,
-    FailureRecord,
-    FailureType,
+from trajcert.experiments.artifacts import (
     cell_artifact_index_path,
     cell_completion_path,
     cell_failure_path,
     cell_running_path,
 )
+from trajcert.experiments.models import (
+    DependencyReadiness,
+    ExecutionContext,
+    FailureRecord,
+    FailureTraceback,
+    FailureType,
+)
+from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.status import (
     CellStatus,
     ExperimentStatus,
@@ -25,7 +28,7 @@ from trajcert.experiments.status import (
 from trajcert.provenance import (
     SemanticCellIdentity,
     SemanticCoordinates,
-    VariantName,
+    VariantCoordinate,
 )
 from trajcert.storage import (
     ArtifactKey,
@@ -56,7 +59,7 @@ def _cell(executable: bool = True, required: tuple[ExperimentName, ...] = ()) ->
         cell_ordinal=1,
         identity=SemanticCellIdentity(
             experiment_name=_EXPERIMENT_NAME,
-            coordinates=SemanticCoordinates(gamma=1.5, variant_name=VariantName("q=0.1")),
+            coordinates=SemanticCoordinates(gamma=1.5, variant_name=VariantCoordinate(q=0.1)),
         ),
         evidence_class=EvidenceClass.VALIDATION,
         executable=executable,
@@ -166,6 +169,7 @@ def test_inspect_cell_status_failed_with_matching_failure(tmp_path: Path) -> Non
         dependency_fingerprint=context.dependency_fingerprint,
         failure_type=FailureType("RuntimeError"),
         message=FailureMessage("boom"),
+        traceback=FailureTraceback("boom"),
         execution_state=PublicExecutionState.FAILED,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
@@ -183,6 +187,7 @@ def test_inspect_cell_status_invalid_with_data_validation_failure(tmp_path: Path
         dependency_fingerprint=context.dependency_fingerprint,
         failure_type=FailureType("InvalidProbabilityError"),
         message=FailureMessage("bad probability"),
+        traceback=FailureTraceback("bad probability"),
         execution_state=PublicExecutionState.INVALID,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
@@ -209,6 +214,7 @@ def test_inspect_cell_status_ready_when_failure_digest_mismatches(tmp_path: Path
         dependency_fingerprint=context.dependency_fingerprint,
         failure_type=FailureType("RuntimeError"),
         message=FailureMessage("boom"),
+        traceback=FailureTraceback("boom"),
         execution_state=PublicExecutionState.FAILED,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)

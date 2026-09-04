@@ -21,12 +21,13 @@ from trajcert.experiments.catalog import (
 from trajcert.experiments.catalog import experiment_names as catalog_experiment_names
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis
 from trajcert.provenance import (
-    ComparisonPairName,
-    CoordinateGrammar,
+    ComparisonPair,
     FailureBoundaryCoordinate,
+    NamedComparison,
     SemanticCellIdentity,
     SemanticCoordinates,
     SensitivityCoordinate,
+    VariantCoordinate,
     VariantName,
 )
 from trajcert.storage import PlanDigest, model_digest
@@ -35,7 +36,6 @@ from trajcert.types import (
     DomainModel,
     EvidenceClass,
     ExperimentName,
-    FailureBoundaryLevel,
     FailureBoundaryProbe,
     LawName,
     Ordinal,
@@ -193,10 +193,9 @@ def _coordinates_for_experiment(
     return _COORDINATE_FACTORY[handler]()
 
 
-def _adjacent_partition_pairs() -> tuple[ComparisonPairName, ...]:
+def _adjacent_partition_pairs() -> tuple[ComparisonPair, ...]:
     return tuple(
-        ComparisonPairName(f"{fine}{CoordinateGrammar.COMPARISON_PAIR}{coarse}")
-        for fine, coarse in pairwise(_partition_names())
+        ComparisonPair(fine=fine, coarse=coarse) for fine, coarse in pairwise(_partition_names())
     )
 
 
@@ -208,7 +207,7 @@ def _utility_and_coherence_laws() -> tuple[LawName, ...]:
 def _coordinates_legacy_partition_incoherence_check() -> tuple[SemanticCoordinates, ...]:
     legacy = active_config.get().study_design.legacy_partition_incoherence
     return tuple(
-        SemanticCoordinates(gamma=gamma, variant_name=VariantName(f"q={q}"))
+        SemanticCoordinates(gamma=gamma, variant_name=VariantCoordinate(q=q))
         for gamma, q in product(legacy.gamma, legacy.q)
     )
 
@@ -246,9 +245,9 @@ def _coordinates_strict_timing_gain() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(
             synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
-            comparison_pair_name=ComparisonPairName(
-                f"{partition_name(case.fine_bands)}{CoordinateGrammar.COMPARISON_PAIR}"
-                + partition_name(case.coarse_bands)
+            comparison_pair_name=ComparisonPair(
+                fine=PartitionName(partition_name(case.fine_bands)),
+                coarse=PartitionName(partition_name(case.coarse_bands)),
             ),
             sensitivity_coordinate=_offset_coordinate(offset),
         )
@@ -260,7 +259,10 @@ def _coordinates_strict_timing_gain() -> tuple[SemanticCoordinates, ...]:
 
 def _coordinates_safety_boundary_identity() -> tuple[SemanticCoordinates, ...]:
     return tuple(
-        SemanticCoordinates(synthetic_law_name=law, variant_name=VariantName(safety_case))
+        SemanticCoordinates(
+            synthetic_law_name=law,
+            variant_name=VariantCoordinate(name=VariantName(safety_case)),
+        )
         for law, safety_case in product(_law_names(), _SAFETY_CASES)
     )
 
@@ -273,11 +275,11 @@ def _coordinates_endpoint_special_case_identity() -> tuple[SemanticCoordinates, 
 
 
 def _coordinates_anytime_projection_proof_check() -> tuple[SemanticCoordinates, ...]:
-    return (_variant(VariantName("projection-proof-record")),)
+    return (_variant(VariantCoordinate(name=VariantName("projection-proof-record"))),)
 
 
 def _coordinates_population_complexity_proof_check() -> tuple[SemanticCoordinates, ...]:
-    return (_variant(VariantName("population-operation-count-record")),)
+    return (_variant(VariantCoordinate(name=VariantName("population-operation-count-record"))),)
 
 
 def _coordinates_production_solver_vs_independent_oracle() -> tuple[SemanticCoordinates, ...]:
@@ -319,8 +321,10 @@ def _coordinates_partition_coherence() -> tuple[SemanticCoordinates, ...]:
 
 def _coordinates_same_endpoint_different_timing() -> tuple[SemanticCoordinates, ...]:
     config = active_config.get()
-    comparison = ComparisonPairName(
-        "Same endpoint without timing information|Same endpoint with timing information"
+    comparison = ComparisonPair(
+        named=NamedComparison(
+            "Same endpoint without timing information|Same endpoint with timing information"
+        )
     )
     return tuple(
         SemanticCoordinates(comparison_pair_name=comparison, partition_name=partition, rho=rho)
@@ -354,7 +358,10 @@ def _coordinates_safety_and_intrinsic_impossibility() -> tuple[SemanticCoordinat
         LAW_DISPLAY_NAMES[key] for key in config.study_design.safety_and_impossibility_laws
     )
     return tuple(
-        SemanticCoordinates(synthetic_law_name=law, variant_name=VariantName(safety_case))
+        SemanticCoordinates(
+            synthetic_law_name=law,
+            variant_name=VariantCoordinate(name=VariantName(safety_case)),
+        )
         for law, safety_case in product(selected_laws, _SAFETY_CASES)
     )
 
@@ -362,7 +369,7 @@ def _coordinates_safety_and_intrinsic_impossibility() -> tuple[SemanticCoordinat
 def _coordinates_anytime_implementation_hand_cases() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(
-            variant_name=VariantName(f"{CoordinateGrammar.HAND_CASE_PREFIX}{case_index:02d}"),
+            variant_name=VariantCoordinate(hand_case_index=case_index),
             partition_name=partition,
         )
         for case_index, partition in product(range(1, 11), _partition_names()[:3])
@@ -375,7 +382,7 @@ def _coordinates_anytime_coverage_stress() -> tuple[SemanticCoordinates, ...]:
         SemanticCoordinates(
             synthetic_law_name=LAW_DISPLAY_NAMES[case.law],
             partition_name=partition_name(case.band_count),
-            variant_name=VariantName(case.name),
+            variant_name=VariantCoordinate(name=VariantName(case.name)),
         )
         for case in config.study_design.coverage_stress_cases
     )
@@ -407,7 +414,7 @@ def _coordinates_computational_scaling() -> tuple[SemanticCoordinates, ...]:
 
 
 def _coordinates_statistical_synthesis() -> tuple[SemanticCoordinates, ...]:
-    return (_variant(VariantName("deterministic-synthesis")),)
+    return (_variant(VariantCoordinate(name=VariantName("deterministic-synthesis"))),)
 
 
 def _law_names() -> tuple[LawName, ...]:
@@ -462,9 +469,7 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
             )
         coordinates.extend(
             SemanticCoordinates(
-                failure_boundary_axis_and_level=FailureBoundaryCoordinate(
-                    f"{axis_name}={_signed_level(axis_name, level)}"
-                )
+                failure_boundary_axis_and_level=_failure_boundary_coordinate(axis_name, level)
             )
             for level in levels
         )
@@ -472,9 +477,9 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
         coordinates.append(
             SemanticCoordinates(
                 failure_boundary_axis_and_level=FailureBoundaryCoordinate(
-                    f"terminal-selection-asymmetry{CoordinateGrammar.ASSIGNMENT}"
-                    + f"{CoordinateGrammar.TERMINAL_Q1_PREFIX}{q1}"
-                    + f"{CoordinateGrammar.TERMINAL_Q0_SEPARATOR}{q0}"
+                    axis=FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
+                    q1=q1,
+                    q0=q0,
                 )
             )
         )
@@ -520,21 +525,23 @@ if set(_COORDINATE_FACTORY) != set(CoordinateHandler):
     raise RuntimeError("coordinate factory must implement every catalog coordinate handler")
 
 
-def _signed_level(
-    axis_name: FailureBoundaryAxis, level: FailureBoundaryProbe
-) -> FailureBoundaryLevel:
-    if axis_name is not FailureBoundaryAxis.RISK_OFFSET:
-        return FailureBoundaryLevel(str(level))
-    numeric = float(level)
-    prefix = "negative" if numeric < 0.0 else "nonnegative"
-    return FailureBoundaryLevel(f"{prefix}-{abs(numeric)}")
+def _failure_boundary_coordinate(
+    axis: FailureBoundaryAxis, level: FailureBoundaryProbe
+) -> FailureBoundaryCoordinate:
+    if axis is FailureBoundaryAxis.PATH_RESOLUTION:
+        return FailureBoundaryCoordinate(axis=axis, band_count=int(level))
+    if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
+        return FailureBoundaryCoordinate(axis=axis, event_count=int(level))
+    if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
+        return FailureBoundaryCoordinate(axis=axis, node_count=int(level))
+    return FailureBoundaryCoordinate(axis=axis, finite_level=float(level))
 
 
 def _offset_coordinate(offset: SensitivityOffset) -> SensitivityCoordinate:
-    return SensitivityCoordinate(f"{CoordinateGrammar.RHO_OFFSET_PREFIX}{offset}")
+    return SensitivityCoordinate(offset=offset)
 
 
-def _variant(name: VariantName) -> SemanticCoordinates:
+def _variant(name: VariantCoordinate) -> SemanticCoordinates:
     return SemanticCoordinates(variant_name=name)
 
 

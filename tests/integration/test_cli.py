@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from trajcert import cli
-from trajcert.cli import DoctorResult
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.experiments.workflows import DoctorResult
 from trajcert.reporting.export import ReportExportResult
 from trajcert.types import CliCommand
 
@@ -107,10 +107,10 @@ def test_doctor_prints_compact_pass(
         "doctor",
         lambda: DoctorResult(
             configuration_valid=True,
-                plan_valid=True,
-                dependency_lock_valid=True,
-                imports_valid=True,
-                workspace_writable=True,
+            plan_valid=True,
+            dependency_lock_valid=True,
+            imports_valid=True,
+            workspace_writable=True,
             publication_contract_valid=True,
             results_layout_valid=True,
         ),

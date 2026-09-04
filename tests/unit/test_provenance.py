@@ -154,9 +154,7 @@ def test_semantic_cell_key_is_deterministic() -> None:
 def test_dependency_material_constructs() -> None:
     material = _dependency_material()
     assert material.artifact_type == ArtifactTypeName("model")
-    assert (
-        material.scientific_specification_digest == SpecificationDigest(_HEX_D)
-    )
+    assert material.scientific_specification_digest == SpecificationDigest(_HEX_D)
     assert material.environment_dependency_digest == EnvironmentDigest("env")
     assert len(material.parents) == 1
 

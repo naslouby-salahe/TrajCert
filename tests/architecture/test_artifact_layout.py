@@ -4,8 +4,8 @@ import re
 import shutil
 from pathlib import Path
 
-from trajcert import cli
 from trajcert.constants import PRODUCTION_CONFIG_PATH
+from trajcert.experiments.workflows import run_experiment
 from trajcert.paths import ExperimentSlug, experiment_root, semantic_slug
 from trajcert.types import ExperimentName, PublicExecutionState
 
@@ -21,7 +21,7 @@ _RESULTS_WRITE_SURFACE_NAMES = (*_RESULTS_ROOT_NAMES, "results_experiment_leaf")
 _RESULTS_WRITE_SURFACE_PATTERN = re.compile(
     r"\b(?:" + "|".join(_RESULTS_WRITE_SURFACE_NAMES) + r")\b"
 )
-_WRITABILITY_PROBE_EXEMPT = {"cli.py", "skeleton.py"}
+_WRITABILITY_PROBE_EXEMPT = {"cli.py", "skeleton.py", "workflows.py"}
 
 _OUTPUTS_EXPERIMENTS_LITERAL_PATTERN = re.compile(r"""(["'])outputs/experiments(?:/[^"']*)?\1""")
 
@@ -91,7 +91,7 @@ def test_publication_source_filenames_are_centralized() -> None:
 
 def test_representative_short_experiment_run_produces_required_evidence(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
-    result = cli.run_experiment(
+    result = run_experiment(
         ExperimentName("Legacy Partition Incoherence Check"),
         workspace_root=workspace,
         max_workers=1,
@@ -108,7 +108,7 @@ def test_representative_short_experiment_run_produces_required_evidence(tmp_path
 
 def test_representative_short_experiment_run_produces_explicit_outcomes(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
-    result = cli.run_experiment(
+    result = run_experiment(
         ExperimentName("Legacy Partition Incoherence Check"),
         workspace_root=workspace,
         max_workers=1,
