@@ -1,19 +1,15 @@
 from __future__ import annotations
 
-import ast
-import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from enum import StrEnum
 from functools import partial
-from hashlib import sha256
 from pathlib import Path
-from typing import Final, NewType, cast
+from typing import Final, NewType
 
-from pydantic import BaseModel, Field, JsonValue
+from pydantic import BaseModel
 
 from trajcert.config import CoverageStressCaseConfig, TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
-from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.maturity import mature_ledger
 from trajcert.data.partitions import TrajectoryPartition, build_partition, partition_name
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
@@ -36,7 +32,6 @@ from trajcert.experiments.catalog import (
     ExecutionHandler,
     SeedPolicy,
     execution_handler_for,
-    experiment_definition,
     seed_policy_for,
     supports_batched_recovery,
 )
@@ -89,13 +84,10 @@ from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyBudgetCase, safety_budget_cases
 from trajcert.paths import (
     ArtifactFile,
-    ArtifactPayloadField,
     ExperimentLeaf,
-    SourceFile,
     artifact_path,
     checkpoint_batch_file,
     long_path_safe,
-    module_source_candidates,
     semantic_cell_path,
     semantic_slug,
 )
@@ -106,8 +98,6 @@ from trajcert.provenance import (
     EnvironmentDigest,
     FailureBoundaryCoordinate,
     ParentArtifactIdentity,
-    ProducerComponentName,
-    ReusableArtifactEnvelope,
     SensitivityCoordinate,
     VariantName,
     dependency_fingerprint,
@@ -121,10 +111,8 @@ from trajcert.storage import (
     DependencyFingerprint,
     DigestHex,
     PlanDigest,
-    ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
-    atomic_write_bytes,
     atomic_write_model,
     file_digest,
     model_digest,
@@ -133,21 +121,16 @@ from trajcert.storage import (
 )
 from trajcert.telemetry import set_current_cell_key
 from trajcert.types import (
-    ActionChannelId,
     BatchIndex,
     BatchSize,
     CaseIndex,
-    ClientId,
-    ColumnName,
     Count,
     DomainModel,
-    EpochId,
     ExperimentName,
     FailureBoundaryProbe,
     FailureMessage,
     LawKey,
     LawName,
-    ModuleName,
     PartitionName,
     PublicExecutionState,
     ReasonCode,
@@ -155,18 +138,9 @@ from trajcert.types import (
     SeedIndex,
     SensitivityBudget,
     StreamCount,
-    TableRow,
 )
 
 FailureType = NewType("FailureType", str)
-
-
-class FirstPartyModule(StrEnum):
-    ROOT = "trajcert"
-    CLI = "trajcert.cli"
-    REPORTING_EXPORT = "trajcert.reporting.export"
-    REPORTING_FIGURES = "trajcert.reporting.figures"
-    REPORTING_TABLES = "trajcert.reporting.tables"
 
 
 class ScientificArtifactKeyPrefix(StrEnum):
@@ -174,13 +148,6 @@ class ScientificArtifactKeyPrefix(StrEnum):
 
 
 SCIENTIFIC_RESULT_ARTIFACT_TYPE: Final[ArtifactTypeName] = ArtifactTypeName("scientific-result")
-
-_NON_SCIENTIFIC_MODULE_PREFIXES = (
-    FirstPartyModule.CLI,
-    FirstPartyModule.REPORTING_EXPORT,
-    FirstPartyModule.REPORTING_FIGURES,
-    FirstPartyModule.REPORTING_TABLES,
-)
 
 
 class DependencyReadiness(DomainModel):
@@ -192,20 +159,14 @@ class ExecutionContext(DomainModel):
     workspace_root: Path
     plan_digest: PlanDigest
     scientific_specification_digest: SpecificationDigest
-    scientific_dependency_digest: SpecificationDigest
-    provenance_fingerprint: ProvenanceFingerprint
     dependency_fingerprint: DependencyFingerprint
-    manifest_digest: DigestHex
     required_artifact_keys: tuple[ArtifactKey, ...]
     expected_seed_count: SeedCount
-    reusable_artifact_envelope: ReusableArtifactEnvelope
 
 
 class CellExecutionResult(DomainModel):
     artifact_index: CellArtifactIndex
     completed_seed_count: SeedCount
-    invariant_validation_pass: bool
-    dependency_validation_pass: bool
 
 
 class RunningRecord(DomainModel):
@@ -235,7 +196,6 @@ class CheckpointRecord(DomainModel):
     semantic_cell_key: SemanticCellKey
     artifact_key: ArtifactKey
     dependency_fingerprint: DependencyFingerprint
-    provenance_fingerprint: ProvenanceFingerprint
     cell_plan_digest: PlanDigest
     batch_index: BatchIndex
     seed_index_start: SeedIndex
@@ -244,52 +204,6 @@ class CheckpointRecord(DomainModel):
     input_artifact_digests: tuple[DigestHex, ...]
     result_file_sha256: DigestHex
     completed: bool
-
-
-class ScientificInputClass(StrEnum):
-    TARGET_STREAM_EVENT_COUNT = "target-stream-event-count-artifacts"
-    TARGET_EPOCH_MANIFEST = "target-epoch-manifest"
-    TARGET_PARTITION_MANIFEST = "target-partition-manifest"
-    CONFIG_VALUES = "config.py-values"
-    LOCAL_NUMERICAL_DEPENDENCY = "local-numerical-dependencies"
-
-
-class StaticComponentDependency(DomainModel):
-    producer_component: ProducerComponentName
-    scientific_input_classes: tuple[ScientificInputClass, ...]
-    scientific_client_ids: tuple[ClientId, ...] = ()
-
-
-class RuntimeLineageArtifact(DomainModel):
-    artifact_key: ArtifactKey
-    parent_artifact_keys: tuple[ArtifactKey, ...] = ()
-    client_id: ClientId | None = None
-    action_channel_id: ActionChannelId | None = None
-    epoch_id: EpochId | None = None
-    foreign_client_ids: tuple[ClientId, ...] = ()
-    foreign_client_statistics: bool = False
-    foreign_model_updates: bool = False
-    cross_client_aggregate: bool = False
-
-
-class LocalValidityTarget(DomainModel):
-    target_identity: LedgerIdentity
-    root_artifact_key: ArtifactKey
-    lineage_artifacts: tuple[RuntimeLineageArtifact, ...]
-
-
-class RuntimeLineageAudit(DomainModel):
-    passed: bool
-    violating_artifact_keys: tuple[ArtifactKey, ...]
-
-
-class LocalValidityAuditResult(DomainModel):
-    static_dependency_pass: bool
-    runtime_lineage_pass: bool
-    audited_root_count: Count
-    foreign_scientific_parent_count: Count
-    violating_artifact_keys: tuple[ArtifactKey, ...]
-    passed: bool = Field(serialization_alias="pass")
 
 
 class ScientificCellDispatchError(InvariantViolationError):
@@ -363,9 +277,7 @@ def run_cell(
     set_current_cell_key(cell.identity.semantic_cell_key)
     try:
         result = executor(cell, context)
-        _write_reflected_evidence(cell, context, result)
-        completion_evidence = _derive_completion_evidence(cell, context, context.workspace_root)
-        _validate_execution_result(result, context, completion_evidence)
+        _validate_execution_result(result, context)
         _verify_artifacts(result.artifact_index, context.workspace_root)
         _ = atomic_write_model(
             cell_artifact_index_path(cell, context.workspace_root), result.artifact_index
@@ -421,107 +333,6 @@ def run_cell(
         running_path.unlink(missing_ok=True)
 
 
-def _write_reflected_evidence(
-    cell: PlannedCell,
-    context: ExecutionContext,
-    result: CellExecutionResult,
-) -> None:
-    if cell.identity.experiment_name == ExperimentName.STATISTICAL_SYNTHESIS:
-        return
-    artifact_key = scientific_result_artifact_key(cell)
-    entry = next(
-        item for item in result.artifact_index.artifacts if item.artifact_key == artifact_key
-    )
-    scientific_result = cast(
-        Mapping[ColumnName, JsonValue],
-        json.loads((context.workspace_root / entry.relative_path).read_text(encoding="utf-8")),
-    )
-    metrics_payload: dict[ColumnName, JsonValue] = {
-        key: value
-        for key, value in scientific_result.items()
-        if isinstance(value, (int, float)) and not isinstance(value, bool)
-    }
-    diagnostics_payload: dict[ColumnName, JsonValue] = {
-        key: value for key, value in scientific_result.items() if isinstance(value, bool)
-    }
-    metrics_leaf = (
-        ExperimentLeaf.METRICS_PER_SEED
-        if context.expected_seed_count > 0
-        else ExperimentLeaf.METRICS_PER_CONDITION
-    )
-    _write_reflected_json(
-        cell, context.workspace_root, metrics_leaf, ArtifactFile.METRICS, metrics_payload
-    )
-    _write_reflected_json(
-        cell,
-        context.workspace_root,
-        ExperimentLeaf.DIAGNOSTICS_SCIENTIFIC,
-        ArtifactFile.DIAGNOSTICS,
-        diagnostics_payload,
-    )
-    _write_reflected_json(
-        cell,
-        context.workspace_root,
-        ExperimentLeaf.PROVENANCE_CONFIGURATION,
-        ArtifactFile.CONFIGURATION,
-        {ColumnName(ArtifactPayloadField.VALUE): context.scientific_specification_digest},
-    )
-    _write_reflected_json(
-        cell,
-        context.workspace_root,
-        ExperimentLeaf.PROVENANCE_DATA,
-        ArtifactFile.DATA,
-        {ColumnName(ArtifactPayloadField.VALUE): context.scientific_dependency_digest},
-    )
-    _write_reflected_json(
-        cell,
-        context.workspace_root,
-        ExperimentLeaf.PROVENANCE_SEEDS,
-        ArtifactFile.SEEDS,
-        {
-            ColumnName(ArtifactPayloadField.EXPECTED_SEED_COUNT): context.expected_seed_count,
-            ColumnName(ArtifactPayloadField.COMPLETED_SEED_COUNT): result.completed_seed_count,
-        },
-    )
-    _write_reflected_json(
-        cell,
-        context.workspace_root,
-        ExperimentLeaf.PROVENANCE_CODE,
-        ArtifactFile.CODE,
-        {ColumnName(ArtifactPayloadField.VALUE): context.provenance_fingerprint},
-    )
-    _write_reflected_json(
-        cell,
-        context.workspace_root,
-        ExperimentLeaf.PROVENANCE_ENVIRONMENT,
-        ArtifactFile.ENVIRONMENT,
-        {ColumnName(ArtifactPayloadField.MANIFEST_DIGEST): context.manifest_digest},
-    )
-    _write_reflected_json(
-        cell,
-        context.workspace_root,
-        ExperimentLeaf.PROVENANCE_DEPENDENCIES,
-        ArtifactFile.DEPENDENCIES,
-        {ColumnName(ArtifactPayloadField.VALUE): context.dependency_fingerprint},
-    )
-
-
-def _write_reflected_json(
-    cell: PlannedCell,
-    workspace_root: Path,
-    leaf: ExperimentLeaf,
-    filename: ArtifactFile,
-    payload: TableRow,
-) -> None:
-    directory = semantic_cell_path(
-        cell.identity.experiment_slug,
-        leaf,
-        cell.identity.path_coordinates,
-    )
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    _ = atomic_write_bytes(workspace_root / directory / filename, encoded)
-
-
 def dependency_block_reason(
     cell: PlannedCell, dependencies: tuple[DependencyReadiness, ...]
 ) -> ReasonCode | None:
@@ -545,31 +356,9 @@ def completion_is_compatible(
         index_path = cell_artifact_index_path(cell, context.workspace_root)
         index = read_model(index_path, CellArtifactIndex)
         _verify_completion_artifacts(completion, index, context.workspace_root)
-        envelope_path = cell_envelope_path(cell, context.workspace_root)
-        if envelope_path.is_file():
-            envelope = read_model(envelope_path, ReusableArtifactEnvelope)
-            if not _envelope_identity_matches(cell, context, envelope):
-                return False
     except (SerializationError, InvariantViolationError):
         return False
     return True
-
-
-def _envelope_identity_matches(
-    cell: PlannedCell,
-    context: ExecutionContext,
-    envelope: ReusableArtifactEnvelope,
-) -> bool:
-    checks = (
-        envelope.semantic_cell_key == cell.identity.semantic_cell_key,
-        envelope.cell_plan_digest == _cell_plan_digest(cell),
-        envelope.scientific_specification_digest == context.scientific_specification_digest,
-        envelope.scientific_dependency_digest == context.scientific_dependency_digest,
-        envelope.provenance_fingerprint == context.provenance_fingerprint,
-        envelope.dependency_fingerprint == context.dependency_fingerprint,
-        envelope.status is PublicExecutionState.COMPLETED,
-    )
-    return all(checks)
 
 
 def cell_completion_path(cell: PlannedCell, workspace_root: Path) -> Path:
@@ -587,10 +376,6 @@ def cell_running_path(cell: PlannedCell, workspace_root: Path) -> Path:
 
 def cell_artifact_index_path(cell: PlannedCell, workspace_root: Path) -> Path:
     return cell_completion_path(cell, workspace_root).with_name(ArtifactFile.ARTIFACT_INDEX)
-
-
-def cell_envelope_path(cell: PlannedCell, workspace_root: Path) -> Path:
-    return cell_completion_path(cell, workspace_root).with_name(ArtifactFile.ENVELOPE)
 
 
 def cell_checkpoint_batch_path(
@@ -629,14 +414,10 @@ def _completion_identity_matches(
         completion.semantic_cell_key == cell.identity.semantic_cell_key,
         completion.cell_plan_digest == _cell_plan_digest(cell),
         completion.scientific_specification_digest == context.scientific_specification_digest,
-        completion.scientific_dependency_digest == context.scientific_dependency_digest,
-        completion.provenance_fingerprint == context.provenance_fingerprint,
         completion.dependency_fingerprint == context.dependency_fingerprint,
-        completion.manifest_digest == context.manifest_digest,
         completion.required_artifact_keys == context.required_artifact_keys,
         completion.expected_seed_count == context.expected_seed_count,
         completion.completed_seed_count == completion.expected_seed_count,
-        completion.expected_artifact_count == len(completion.produced_artifact_keys),
     )
     return all(checks)
 
@@ -644,24 +425,14 @@ def _completion_identity_matches(
 def _validate_execution_result(
     result: CellExecutionResult,
     context: ExecutionContext,
-    completion_evidence: CompletionEvidence,
 ) -> None:
     produced = tuple(entry.artifact_key for entry in result.artifact_index.artifacts)
     if len(produced) != len(set(produced)):
         raise InvariantViolationError("executor produced duplicate artifact keys")
     if any(key not in produced for key in context.required_artifact_keys):
         raise InvariantViolationError("executor omitted a required artifact key")
-    checks = (
-        (result.completed_seed_count == context.expected_seed_count, "expected seed count"),
-        (completion_evidence.metrics_complete, "required metrics"),
-        (completion_evidence.statistics_complete, "required statistics"),
-        (result.invariant_validation_pass, "scientific invariant validation"),
-        (result.dependency_validation_pass, "dependency validation"),
-        (completion_evidence.provenance_record_complete, "provenance record"),
-    )
-    failed = tuple(label for passed, label in checks if not passed)
-    if failed:
-        raise InvariantViolationError(f"executor completion contract failed: {', '.join(failed)}")
+    if result.completed_seed_count != context.expected_seed_count:
+        raise InvariantViolationError("executor returned an incomplete seed count")
 
 
 def _verify_artifacts(index: CellArtifactIndex, workspace_root: Path) -> None:
@@ -697,72 +468,6 @@ def _verify_completion_artifacts(
     _verify_artifacts(index, workspace_root)
 
 
-class CompletionEvidence(DomainModel):
-    metrics_complete: bool
-    statistics_complete: bool
-    provenance_record_complete: bool
-
-
-def _reflected_evidence_paths(
-    cell: PlannedCell, context: ExecutionContext, workspace_root: Path
-) -> tuple[Path, Path, tuple[Path, ...]]:
-    metrics_leaf = (
-        ExperimentLeaf.METRICS_PER_SEED
-        if context.expected_seed_count > 0
-        else ExperimentLeaf.METRICS_PER_CONDITION
-    )
-    metrics_path = (
-        workspace_root
-        / semantic_cell_path(
-            cell.identity.experiment_slug, metrics_leaf, cell.identity.path_coordinates
-        )
-        / ArtifactFile.METRICS
-    )
-    diagnostics_path = (
-        workspace_root
-        / semantic_cell_path(
-            cell.identity.experiment_slug,
-            ExperimentLeaf.DIAGNOSTICS_SCIENTIFIC,
-            cell.identity.path_coordinates,
-        )
-        / ArtifactFile.DIAGNOSTICS
-    )
-    provenance_paths = tuple(
-        workspace_root
-        / semantic_cell_path(cell.identity.experiment_slug, leaf, cell.identity.path_coordinates)
-        / filename
-        for leaf, filename in (
-            (ExperimentLeaf.PROVENANCE_CONFIGURATION, ArtifactFile.CONFIGURATION),
-            (ExperimentLeaf.PROVENANCE_DATA, ArtifactFile.DATA),
-            (ExperimentLeaf.PROVENANCE_SEEDS, ArtifactFile.SEEDS),
-            (ExperimentLeaf.PROVENANCE_CODE, ArtifactFile.CODE),
-            (ExperimentLeaf.PROVENANCE_ENVIRONMENT, ArtifactFile.ENVIRONMENT),
-            (ExperimentLeaf.PROVENANCE_DEPENDENCIES, ArtifactFile.DEPENDENCIES),
-        )
-    )
-    return metrics_path, diagnostics_path, provenance_paths
-
-
-def _derive_completion_evidence(
-    cell: PlannedCell, context: ExecutionContext, workspace_root: Path
-) -> CompletionEvidence:
-    if cell.identity.experiment_name == ExperimentName.STATISTICAL_SYNTHESIS:
-        envelope_present = cell_envelope_path(cell, workspace_root).is_file()
-        return CompletionEvidence(
-            metrics_complete=envelope_present,
-            statistics_complete=envelope_present,
-            provenance_record_complete=envelope_present,
-        )
-    metrics_path, diagnostics_path, provenance_paths = _reflected_evidence_paths(
-        cell, context, workspace_root
-    )
-    return CompletionEvidence(
-        metrics_complete=metrics_path.is_file(),
-        statistics_complete=diagnostics_path.is_file(),
-        provenance_record_complete=all(path.is_file() for path in provenance_paths),
-    )
-
-
 def _completion_record(
     cell: PlannedCell,
     context: ExecutionContext,
@@ -777,23 +482,12 @@ def _completion_record(
         semantic_cell_key=cell.identity.semantic_cell_key,
         cell_plan_digest=_cell_plan_digest(cell),
         scientific_specification_digest=context.scientific_specification_digest,
-        scientific_dependency_digest=context.scientific_dependency_digest,
-        provenance_fingerprint=context.provenance_fingerprint,
         dependency_fingerprint=context.dependency_fingerprint,
-        manifest_digest=context.manifest_digest,
         required_artifact_keys=context.required_artifact_keys,
         produced_artifact_keys=produced,
-        expected_artifact_count=len(produced),
         artifact_sha256_map=checksums,
         completed_seed_count=result.completed_seed_count,
         expected_seed_count=context.expected_seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
-        schema_validation_pass=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-        exit_status=0,
     )
 
 
@@ -805,40 +499,11 @@ def scientific_specification_digest() -> SpecificationDigest:
     return SpecificationDigest(model_digest(active_config.get()))
 
 
-def producer_component_digest(
-    workspace_root: Path,
-    experiment_name: ExperimentName,
-) -> DigestHex:
-    root = experiment_definition(experiment_name).producer_root
-    if root is None:
-        raise InvalidScientificDataError(
-            f"missing producer-component registration: {experiment_name}"
-        )
-    files = _first_party_import_closure(workspace_root, root)
-    digest = sha256()
-    for relative in files:
-        encoded = relative.as_posix().encode("utf-8")
-        digest.update(len(encoded).to_bytes(8, "big"))
-        digest.update(encoded)
-        digest.update(bytes.fromhex(file_digest(workspace_root / relative)))
-    return DigestHex(digest.hexdigest())
-
-
-def scientific_dependency_digest(
-    scientific_specification: SpecificationDigest,
-    semantic_cell_key: SemanticCellKey,
-    component_digest: DigestHex,
-) -> SpecificationDigest:
-    payload = f"{scientific_specification}|{semantic_cell_key}|{component_digest}".encode()
-    return SpecificationDigest(sha256(payload).hexdigest())
-
-
 def cell_dependency_material(
     workspace_root: Path,
     plan: ExperimentPlan,
     cell: PlannedCell,
-    scientific_dependency: SpecificationDigest,
-    implementation_component_digest: DigestHex,
+    scientific_specification: SpecificationDigest,
     environment_dependency_digest: EnvironmentDigest,
 ) -> DependencyMaterial:
     required = set(cell.required_experiments)
@@ -851,12 +516,9 @@ def cell_dependency_material(
     return DependencyMaterial(
         artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
         semantic_cell=cell.identity,
-        scientific_dependency_digest=scientific_dependency,
-        implementation_component_digest=implementation_component_digest,
+        scientific_specification_digest=scientific_specification,
         environment_dependency_digest=environment_dependency_digest,
-        seed_manifest_digest=None,
         parents=parent_identities,
-        producer_specific_inputs=(),
     )
 
 
@@ -864,16 +526,14 @@ def cell_dependency_fingerprint(
     workspace_root: Path,
     plan: ExperimentPlan,
     cell: PlannedCell,
-    scientific_dependency: SpecificationDigest,
-    implementation_component_digest: DigestHex,
+    scientific_specification: SpecificationDigest,
     environment_dependency_digest: EnvironmentDigest,
 ) -> DependencyFingerprint:
     material = cell_dependency_material(
         workspace_root,
         plan,
         cell,
-        scientific_dependency,
-        implementation_component_digest,
+        scientific_specification,
         environment_dependency_digest,
     )
     return dependency_fingerprint(material)
@@ -903,179 +563,6 @@ def expected_seed_count(experiment_name: ExperimentName) -> SeedCount:
     if policy is SeedPolicy.NONE:
         return 0
     raise RuntimeError(f"unhandled seed policy: {policy}")
-
-
-def _first_party_import_closure(workspace_root: Path, root: Path) -> tuple[Path, ...]:
-    pending = [root]
-    visited: set[Path] = set()
-    while pending:
-        relative = pending.pop()
-        if relative in visited:
-            continue
-        full_path = workspace_root / relative
-        if not full_path.is_file():
-            raise InvalidScientificDataError(f"registered producer source is missing: {relative}")
-        visited.add(relative)
-        try:
-            tree = ast.parse(full_path.read_text(encoding="utf-8"), filename=str(relative))
-        except (OSError, SyntaxError, UnicodeError) as exc:
-            raise InvalidScientificDataError(f"cannot inspect producer source: {relative}") from exc
-        for module_name in _first_party_imports(tree):
-            dependency = _module_path(workspace_root, module_name)
-            if dependency is not None and dependency not in visited:
-                pending.append(dependency)
-    return tuple(sorted(visited, key=lambda path: path.as_posix()))
-
-
-def _first_party_imports(tree: ast.AST) -> tuple[ModuleName, ...]:
-    modules: set[ModuleName] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            modules.update(_first_party_import_from(node))
-        elif isinstance(node, ast.Import):
-            modules.update(_first_party_import(node))
-    return tuple(sorted(modules))
-
-
-def _first_party_import_from(node: ast.ImportFrom) -> tuple[ModuleName, ...]:
-    return tuple(
-        ModuleName(module)
-        for module in (node.module,)
-        if module is not None and _is_first_party_module(ModuleName(module))
-    )
-
-
-def _first_party_import(node: ast.Import) -> tuple[ModuleName, ...]:
-    return tuple(
-        ModuleName(alias.name)
-        for alias in node.names
-        if _is_first_party_module(ModuleName(alias.name))
-    )
-
-
-def _is_first_party_module(module_name: ModuleName) -> bool:
-    return module_name.startswith(FirstPartyModule.ROOT) and not _non_scientific_module(module_name)
-
-
-def _non_scientific_module(module_name: ModuleName) -> bool:
-    return any(
-        module_name == prefix or module_name.startswith(f"{prefix}.")
-        for prefix in _NON_SCIENTIFIC_MODULE_PREFIXES
-    )
-
-
-def _module_path(workspace_root: Path, module_name: ModuleName) -> Path | None:
-    parts = module_name.split(".")
-    if not parts or parts[0] != FirstPartyModule.ROOT:
-        return None
-    file_candidate, package_candidate = module_source_candidates(module_name)
-    if (workspace_root / file_candidate).is_file():
-        return file_candidate
-    if (workspace_root / package_candidate).is_file():
-        return package_candidate
-    return None
-
-
-def audit_local_validity_targets(
-    static_dependencies: tuple[StaticComponentDependency, ...],
-    targets: tuple[LocalValidityTarget, ...],
-) -> LocalValidityAuditResult:
-    if not targets:
-        raise InvalidScientificDataError("local-validity audit requires at least one bound root")
-    static_pass = all(
-        static_dependency_audit(target.target_identity, static_dependencies) for target in targets
-    )
-    runtime_pass = True
-    violating: set[ArtifactKey] = set()
-    for target in targets:
-        audit = runtime_lineage_audit(
-            target.target_identity,
-            target.root_artifact_key,
-            target.lineage_artifacts,
-        )
-        runtime_pass = runtime_pass and audit.passed
-        violating.update(audit.violating_artifact_keys)
-    ordered = tuple(sorted(violating, key=str))
-    return LocalValidityAuditResult(
-        static_dependency_pass=static_pass,
-        runtime_lineage_pass=runtime_pass,
-        audited_root_count=len(targets),
-        foreign_scientific_parent_count=len(ordered),
-        violating_artifact_keys=ordered,
-        passed=static_pass and runtime_pass,
-    )
-
-
-def static_dependency_audit(
-    target_identity: LedgerIdentity,
-    dependencies: tuple[StaticComponentDependency, ...],
-) -> bool:
-    expected_components = {
-        ProducerComponentName(SourceFile.INFERENCE_CATEGORICAL),
-        ProducerComponentName(SourceFile.INFERENCE_CONFIDENCE),
-        ProducerComponentName(SourceFile.INFERENCE_ENVELOPE),
-        ProducerComponentName(SourceFile.INFERENCE_PROJECTION),
-        ProducerComponentName(SourceFile.INFERENCE_CERTIFICATION),
-    }
-    supplied_components = tuple(item.producer_component for item in dependencies)
-    if len(supplied_components) != len(set(supplied_components)):
-        return False
-    if set(supplied_components) != expected_components:
-        return False
-    if any(not dependency.scientific_input_classes for dependency in dependencies):
-        return False
-    return all(
-        client_id == target_identity.client_id
-        for dependency in dependencies
-        for client_id in dependency.scientific_client_ids
-    )
-
-
-def runtime_lineage_audit(
-    target_identity: LedgerIdentity,
-    root_artifact_key: ArtifactKey,
-    artifacts: tuple[RuntimeLineageArtifact, ...],
-) -> RuntimeLineageAudit:
-    by_key = {artifact.artifact_key: artifact for artifact in artifacts}
-    if len(by_key) != len(artifacts):
-        raise InvalidScientificDataError("runtime lineage contains duplicate artifact keys")
-    violating: set[ArtifactKey] = set()
-    visited: set[ArtifactKey] = set()
-    visiting: set[ArtifactKey] = set()
-
-    def visit(artifact_key: ArtifactKey) -> None:
-        if artifact_key in visited:
-            return
-        if artifact_key in visiting:
-            raise InvalidScientificDataError("runtime lineage parent graph contains a cycle")
-        artifact = by_key.get(artifact_key)
-        if artifact is None:
-            violating.add(artifact_key)
-            return
-        visiting.add(artifact_key)
-        identity_fields = (artifact.client_id, artifact.action_channel_id, artifact.epoch_id)
-        target_fields = (
-            target_identity.client_id,
-            target_identity.action_channel_id,
-            target_identity.epoch_id,
-        )
-        if any(value is not None for value in identity_fields) and identity_fields != target_fields:
-            violating.add(artifact.artifact_key)
-        if (
-            artifact.foreign_client_ids
-            or artifact.foreign_client_statistics
-            or artifact.foreign_model_updates
-            or artifact.cross_client_aggregate
-        ):
-            violating.add(artifact.artifact_key)
-        for parent_key in artifact.parent_artifact_keys:
-            visit(parent_key)
-        visiting.remove(artifact_key)
-        visited.add(artifact_key)
-
-    visit(root_artifact_key)
-    ordered = tuple(sorted(violating, key=str))
-    return RuntimeLineageAudit(passed=not ordered, violating_artifact_keys=ordered)
 
 
 def execute_scientific_cell(cell: PlannedCell, config: TrajCertConfig) -> DomainModel:
@@ -1705,7 +1192,7 @@ def _validate_upstream_completion(
         raise InvalidScientificDataError(
             "upstream completion must expose exactly one persisted scientific result"
         )
-    if completion.expected_artifact_count != 1 or len(index.artifacts) != 1:
+    if len(index.artifacts) != 1:
         raise InvalidScientificDataError(
             "upstream scientific cell must have exactly one authoritative result artifact"
         )
@@ -1757,7 +1244,6 @@ def _checkpoint_batch_valid(
         checkpoint.semantic_cell_key != cell.identity.semantic_cell_key
         or checkpoint.artifact_key != artifact_key
         or checkpoint.dependency_fingerprint != context.dependency_fingerprint
-        or checkpoint.provenance_fingerprint != context.provenance_fingerprint
         or checkpoint.cell_plan_digest != _cell_plan_digest(cell)
         or checkpoint.batch_index != batch_index
         or checkpoint.seed_index_start != seed_index_start
@@ -1802,7 +1288,6 @@ def _recover_batch[PayloadT: DomainModel](
         semantic_cell_key=cell.identity.semantic_cell_key,
         artifact_key=artifact_key,
         dependency_fingerprint=context.dependency_fingerprint,
-        provenance_fingerprint=context.provenance_fingerprint,
         cell_plan_digest=_cell_plan_digest(cell),
         batch_index=batch_index,
         seed_index_start=seed_index_start,
@@ -1911,9 +1396,6 @@ def execute_dispatched_cell(
         context.workspace_root / relative_path,
         result,
     )
-    _ = atomic_write_model(
-        cell_envelope_path(cell, context.workspace_root), context.reusable_artifact_envelope
-    )
     return CellExecutionResult(
         artifact_index=CellArtifactIndex(
             artifacts=(
@@ -1925,8 +1407,6 @@ def execute_dispatched_cell(
             )
         ),
         completed_seed_count=context.expected_seed_count,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
     )
 
 

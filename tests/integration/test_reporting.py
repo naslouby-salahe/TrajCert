@@ -25,7 +25,6 @@ from trajcert.storage import (
     ArtifactKey,
     DependencyFingerprint,
     DigestHex,
-    ProvenanceFingerprint,
     SpecificationDigest,
 )
 
@@ -174,5 +173,4 @@ def _lineage(path: Path) -> VerifiedSourceLineage:
         completion_sha256=DigestHex(_DIGEST),
         scientific_specification_digest=SpecificationDigest(_DIGEST),
         dependency_fingerprint=DependencyFingerprint(_DIGEST),
-        provenance_fingerprint=ProvenanceFingerprint(_DIGEST),
     )

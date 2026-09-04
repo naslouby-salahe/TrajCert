@@ -22,16 +22,6 @@ from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.catalog import (
-    PublicationSourceName,
-    SynthesisArtifactName,
-    publication_baseline_name,
-    publication_method_name,
-    publication_source_artifact_key,
-    publication_source_path,
-    synthesis_artifact_file,
-    synthesis_artifact_key,
-)
 from trajcert.experiments.mathematics import (
     ConvexityResult,
     IdentityResult,
@@ -45,10 +35,6 @@ from trajcert.experiments.runner import (
     CellExecutionResult,
     CellExecutor,
     ExecutionContext,
-    LocalValidityTarget,
-    StaticComponentDependency,
-    audit_local_validity_targets,
-    cell_envelope_path,
     read_verified_scientific_result,
     scientific_result_artifact_key,
     verified_upstream_completion_and_index,
@@ -57,11 +43,14 @@ from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, Safety
 from trajcert.experiments.sensitivity import PopulationUtilityResult, SequentialUtilityResult
 from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
-from trajcert.paths import (
-    ExperimentLeaf,
-    experiment_leaf,
-)
 from trajcert.provenance import BaselineName, CoordinateGrammar, MethodName
+from trajcert.reporting.publication_sources import (
+    PublicationSourceName,
+    publication_baseline_name,
+    publication_method_name,
+    publication_source_artifact_key,
+    publication_source_path,
+)
 from trajcert.reporting.source_data import (
     PARTITION_COHERENCE_POPULATION_LAWS,
     AnalysisType,
@@ -97,7 +86,6 @@ from trajcert.storage import (
     DependencyFingerprint,
     DigestHex,
     SemanticCellKey,
-    atomic_write_model,
     file_digest,
     model_digest,
     models_digest,
@@ -987,11 +975,6 @@ def _same_endpoint_timed_law() -> LawName:
     return LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING]
 
 
-class SynthesisLocalValidityInput(DomainModel):
-    static_dependencies: tuple[StaticComponentDependency, ...]
-    targets: tuple[LocalValidityTarget, ...]
-
-
 class SynthesisArtifactPaths(DomainModel):
     by_key: Mapping[ArtifactKey, Path]
 
@@ -1006,16 +989,11 @@ def synthesis_artifact_keys(cell: PlannedCell) -> tuple[ArtifactKey, ...]:
     return tuple(synthesis_artifact_paths(cell).keys())
 
 
-def local_validity_artifact_key() -> ArtifactKey:
-    return synthesis_artifact_key(SynthesisArtifactName.LOCAL_VALIDITY_AUDIT)
-
-
 def make_statistical_synthesis_executor(
     plan: ExperimentPlan,
-    locality: SynthesisLocalValidityInput,
 ) -> CellExecutor:
     def executor(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
-        return execute_statistical_synthesis(cell, context, plan, active_config.get(), locality)
+        return execute_statistical_synthesis(cell, context, plan, active_config.get())
 
     return executor
 
@@ -1025,7 +1003,6 @@ def execute_statistical_synthesis(
     context: ExecutionContext,
     plan: ExperimentPlan,
     config: TrajCertConfig,
-    locality: SynthesisLocalValidityInput,
 ) -> CellExecutionResult:
     _ = active_config.set(config)
     _validate_synthesis_cell(cell, context, plan)
@@ -1037,10 +1014,6 @@ def execute_statistical_synthesis(
     )
     evidence = build_synthesis_evidence(plan, context.workspace_root)
     publication = build_publication_source_rows(plan, context.workspace_root)
-    local_validity = audit_local_validity_targets(
-        locality.static_dependencies,
-        locality.targets,
-    )
     paths = synthesis_artifact_paths(cell)
     root = context.workspace_root
     digests = {
@@ -1049,10 +1022,6 @@ def execute_statistical_synthesis(
         )
         for source, rows in _publication_source_rows(evidence, publication).items()
     }
-    local_validity_key = local_validity_artifact_key()
-    digests[local_validity_key] = atomic_write_model(
-        root / paths[local_validity_key], local_validity
-    )
     entries = tuple(
         ArtifactIndexEntry(
             artifact_key=key,
@@ -1066,14 +1035,9 @@ def execute_statistical_synthesis(
             raise InvalidScientificDataError(
                 f"Statistical Synthesis artifact checksum mismatch: {entry.artifact_key}"
             )
-    _ = atomic_write_model(
-        cell_envelope_path(cell, context.workspace_root), context.reusable_artifact_envelope
-    )
     return CellExecutionResult(
         artifact_index=CellArtifactIndex(artifacts=entries),
         completed_seed_count=0,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
     )
 
 
@@ -1084,9 +1048,6 @@ def synthesis_artifact_paths(cell: PlannedCell) -> SynthesisArtifactPaths:
         publication_source_artifact_key(source): publication_source_path(source)
         for source in PublicationSourceName
     }
-    paths[local_validity_artifact_key()] = experiment_leaf(
-        cell.identity.experiment_slug, ExperimentLeaf.EVALUATION_AGGREGATES
-    ) / synthesis_artifact_file(SynthesisArtifactName.LOCAL_VALIDITY_AUDIT)
     return SynthesisArtifactPaths(by_key=paths)
 
 

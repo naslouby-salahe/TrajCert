@@ -15,8 +15,8 @@ import pyarrow as pa
 
 from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.catalog import PublicationColumn
 from trajcert.paths import PublicationExtension
+from trajcert.reporting.publication_sources import PublicationColumn
 from trajcert.reporting.source_data import (
     PublicationSourceName,
     VerifiedSourceData,
@@ -120,7 +120,7 @@ class Cross:
 @dataclass(frozen=True, slots=True)
 class Text:
     position: Point
-    value: FacetLabel
+    value: str
     size: PixelCount = 14
     anchor: TextAnchor = TextAnchor.START
 
@@ -139,7 +139,7 @@ type DrawCommand = Line | Circle | Cross | Text | Rectangle
 
 @dataclass(frozen=True, slots=True)
 class PlotDocument:
-    title: FacetLabel
+    title: str
     commands: tuple[DrawCommand, ...]
 
 
@@ -610,7 +610,7 @@ def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, Plo
     return lower - pad, upper + pad
 
 
-def _panel_frame(panel: Panel, title: FacetLabel) -> list[DrawCommand]:
+def _panel_frame(panel: Panel, title: str) -> list[DrawCommand]:
     return [
         Rectangle(panel.left, panel.top, panel.width, panel.height),
         Text(
@@ -622,7 +622,7 @@ def _panel_frame(panel: Panel, title: FacetLabel) -> list[DrawCommand]:
     ]
 
 
-def _base_commands(title: FacetLabel) -> list[DrawCommand]:
+def _base_commands(title: str) -> list[DrawCommand]:
     width = active_config.get().figure_layout.width
     return [Text(Point(width / 2.0, 38.0), title, size=22, anchor=TextAnchor.MIDDLE)]
 
@@ -727,33 +727,33 @@ def _svg_command(command: DrawCommand) -> SvgFragment:
         dash = ' stroke-dasharray="6 5"' if command.dashed else ""
         return SvgFragment(
             f'<line x1="{command.start.x:.3f}" y1="{command.start.y:.3f}" '
-            f'x2="{command.end.x:.3f}" y2="{command.end.y:.3f}" '
-            f'stroke="{FigureColor.STROKE}" stroke-width="{command.width:.2f}"{dash}/>'
+            + f'x2="{command.end.x:.3f}" y2="{command.end.y:.3f}" '
+            + f'stroke="{FigureColor.STROKE}" stroke-width="{command.width:.2f}"{dash}/>'
         )
     if isinstance(command, Circle):
         fill = FigureColor.BACKGROUND if command.hollow else FigureColor.STROKE
         return SvgFragment(
             f'<circle cx="{command.center.x:.3f}" cy="{command.center.y:.3f}" '
-            f'r="{command.radius:.2f}" fill="{fill}" stroke="{FigureColor.STROKE}"/>'
+            + f'r="{command.radius:.2f}" fill="{fill}" stroke="{FigureColor.STROKE}"/>'
         )
     if isinstance(command, Cross):
         x, y, r = command.center.x, command.center.y, command.radius
         return SvgFragment(
             f'<path d="M {x - r:.3f} {y - r:.3f} L {x + r:.3f} {y + r:.3f} '
-            f'M {x - r:.3f} {y + r:.3f} L {x + r:.3f} {y - r:.3f}" '
-            f'stroke="{FigureColor.STROKE}" stroke-width="1.5" fill="none"/>'
+            + f'M {x - r:.3f} {y + r:.3f} L {x + r:.3f} {y - r:.3f}" '
+            + f'stroke="{FigureColor.STROKE}" stroke-width="1.5" fill="none"/>'
         )
     if isinstance(command, Rectangle):
         fill = FigureColor.LIGHT if command.filled else "none"
         return SvgFragment(
             f'<rect x="{command.left:.3f}" y="{command.top:.3f}" '
-            f'width="{command.width:.3f}" height="{command.height:.3f}" '
-            f'fill="{fill}" stroke="{FigureColor.MUTED}" stroke-width="1"/>'
+            + f'width="{command.width:.3f}" height="{command.height:.3f}" '
+            + f'fill="{fill}" stroke="{FigureColor.MUTED}" stroke-width="1"/>'
         )
     return SvgFragment(
         f'<text x="{command.position.x:.3f}" y="{command.position.y:.3f}" '
-        f'font-family="sans-serif" font-size="{command.size}" text-anchor="{command.anchor}" '
-        f'fill="{FigureColor.STROKE}">{escape(command.value)}</text>'
+        + f'font-family="sans-serif" font-size="{command.size}" text-anchor="{command.anchor}" '
+        + f'fill="{FigureColor.STROKE}">{escape(command.value)}</text>'
     )
 
 

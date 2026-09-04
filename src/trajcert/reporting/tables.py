@@ -10,7 +10,7 @@ import pyarrow as pa
 
 from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.catalog import PublicationColumn
+from trajcert.reporting.publication_sources import PublicationColumn
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
     PublicationFormat,
@@ -74,7 +74,7 @@ def _csv_payload(table: pa.Table) -> bytes:
     for row in table.to_pylist():
         typed_row = cast(TableRow, row)
         writer.writerow(
-            _format_csv_value(ColumnName(column), typed_row[column])
+            _format_csv_value(ColumnName(column), typed_row[ColumnName(column)])
             for column in table.column_names
         )
     return stream.getvalue().encode("utf-8")

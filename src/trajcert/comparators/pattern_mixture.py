@@ -63,7 +63,7 @@ def fit_pattern_mixture(summary: ObservableSummary) -> PatternMixtureResult:
             objective=None,
             points=(),
             observation_access=ComparatorObservationAccess.REPEATED_ATTEMPT_SEQUENCE,
-                assumptions=ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE,
+            assumptions=ComparatorAssumption.REPEATED_ATTEMPT_PATTERN_MIXTURE,
         )
     indices = nonempty.astype(np.float64) + 1.0
     weights = masses[nonempty]

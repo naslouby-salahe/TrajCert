@@ -12,7 +12,6 @@ from trajcert.config import (
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
-    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     CheckpointRecord,
     ExecutionContext,
     cell_checkpoint_batch_path,
@@ -20,31 +19,18 @@ from trajcert.experiments.runner import (
     execute_dispatched_cell,
     execute_scientific_cell,
     expected_seed_count,
-    producer_component_digest,
-    scientific_dependency_digest,
     scientific_result_artifact_key,
-    scientific_result_path,
     scientific_specification_digest,
 )
 from trajcert.provenance import (
-    ArtifactOwner,
-    CodeCommit,
     EnvironmentDigest,
-    ExecutionGroup,
-    ProducerComponentName,
-    ReusableArtifactEnvelope,
-    SchemaName,
     dependency_fingerprint,
 )
 from trajcert.storage import (
-    DigestHex,
-    PlanDigest,
-    ProvenanceFingerprint,
     file_digest,
-    model_digest,
     read_model,
 )
-from trajcert.types import ExperimentName, PublicExecutionState
+from trajcert.types import ExperimentName
 
 _RUNTIME_STREAMS = 2
 _RUNTIME_EVENTS = 200
@@ -116,68 +102,17 @@ def _small_runtime_config(config: TrajCertConfig) -> TrajCertConfig:
 
 def _build_context(tmp_path: Path, plan: ExperimentPlan, cell: PlannedCell) -> ExecutionContext:
     specification = scientific_specification_digest()
-    component_digest = producer_component_digest(_REPO_ROOT, cell.identity.experiment_name)
-    dependency_specification = scientific_dependency_digest(
-        specification,
-        cell.identity.semantic_cell_key,
-        component_digest,
-    )
     dependency_material = cell_dependency_material(
-        tmp_path, plan, cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
+        tmp_path, plan, cell, specification, _ENVIRONMENT_DIGEST
     )
     dependency = dependency_fingerprint(dependency_material)
-    provenance = ProvenanceFingerprint("0" * _SHA256_HEX_LENGTH)
-    envelope = ReusableArtifactEnvelope(
-        artifact_key=scientific_result_artifact_key(cell),
-        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
-        producer_component=ProducerComponentName("test-component"),
-        semantic_cell_key=cell.identity.semantic_cell_key,
-        semantic_coordinates=cell.identity.coordinates,
-        experiment_name=cell.identity.experiment_name,
-        classification=cell.evidence_class,
-        execution_group=ExecutionGroup(str(provenance)),
-        scientific_specification_digest=specification,
-        scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=provenance,
-        dependency_fingerprint=dependency,
-        implementation_component_digest=component_digest,
-        environment_dependency_digest=_ENVIRONMENT_DIGEST,
-        plan_digest=DigestHex(plan.plan_digest),
-        cell_plan_digest=PlanDigest(str(model_digest(cell))),
-        status=PublicExecutionState.COMPLETED,
-        method_name=cell.identity.coordinates.method_name,
-        baseline_name=cell.identity.coordinates.baseline_name,
-        dataset_name=None,
-        dataset_checksum=None,
-        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
-        partition_name=cell.identity.coordinates.partition_name,
-        rho=cell.identity.coordinates.rho,
-        beta=cell.identity.coordinates.beta,
-        delta=cell.identity.coordinates.delta,
-        environment_lock_digest=_ENVIRONMENT_DIGEST,
-        code_commit=CodeCommit("commit"),
-        seed_set_keys=(),
-        parent_artifact_keys=tuple(parent.artifact_key for parent in dependency_material.parents),
-        parent_artifact_digests=tuple(
-            parent.scientific_content_digest for parent in dependency_material.parents
-        ),
-        input_paths=(),
-        canonical_active_path=scientific_result_path(cell),
-        schema_name=SchemaName("ReusableArtifactEnvelope"),
-        schema_version=1,
-    )
     return ExecutionContext(
         workspace_root=tmp_path,
         plan_digest=plan.plan_digest,
         scientific_specification_digest=specification,
-        scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=provenance,
         dependency_fingerprint=dependency,
-        manifest_digest=DigestHex(str(model_digest(cell))),
         required_artifact_keys=(scientific_result_artifact_key(cell),),
         expected_seed_count=expected_seed_count(cell.identity.experiment_name),
-        reusable_artifact_envelope=envelope,
     )
 
 

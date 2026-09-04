@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.runner import (
-    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     DependencyReadiness,
     ExecutionContext,
     FailureRecord,
@@ -16,7 +15,6 @@ from trajcert.experiments.runner import (
     cell_completion_path,
     cell_failure_path,
     cell_running_path,
-    scientific_result_path,
 )
 from trajcert.experiments.status import (
     CellStatus,
@@ -25,13 +23,6 @@ from trajcert.experiments.status import (
     inspect_cell_status,
 )
 from trajcert.provenance import (
-    ArtifactOwner,
-    CodeCommit,
-    EnvironmentDigest,
-    ExecutionGroup,
-    ProducerComponentName,
-    ReusableArtifactEnvelope,
-    SchemaName,
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantName,
@@ -41,9 +32,7 @@ from trajcert.storage import (
     CellArtifactIndex,
     CompletionRecord,
     DependencyFingerprint,
-    DigestHex,
     PlanDigest,
-    ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
     atomic_write_model,
@@ -76,60 +65,14 @@ def _cell(executable: bool = True, required: tuple[ExperimentName, ...] = ()) ->
     )
 
 
-def _envelope() -> ReusableArtifactEnvelope:
-    cell = _cell()
-    return ReusableArtifactEnvelope(
-        artifact_key=ArtifactKey("scientific-result|legacy-cell"),
-        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
-        producer_component=ProducerComponentName("test-component"),
-        semantic_cell_key=cell.identity.semantic_cell_key,
-        semantic_coordinates=cell.identity.coordinates,
-        experiment_name=cell.identity.experiment_name,
-        classification=cell.evidence_class,
-        execution_group=ExecutionGroup("execution-group"),
-        scientific_specification_digest=SpecificationDigest("spec-digest"),
-        scientific_dependency_digest=SpecificationDigest("dependency-digest"),
-        provenance_fingerprint=ProvenanceFingerprint("provenance-digest"),
-        dependency_fingerprint=DependencyFingerprint("fingerprint"),
-        implementation_component_digest=DigestHex("manifest-digest"),
-        environment_dependency_digest=EnvironmentDigest("env"),
-        plan_digest=DigestHex("plan-digest"),
-        cell_plan_digest=PlanDigest(str(model_digest(cell))),
-        status=PublicExecutionState.COMPLETED,
-        method_name=None,
-        baseline_name=None,
-        dataset_name=None,
-        dataset_checksum=None,
-        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
-        partition_name=cell.identity.coordinates.partition_name,
-        rho=None,
-        beta=None,
-        delta=None,
-        environment_lock_digest=EnvironmentDigest("env"),
-        code_commit=CodeCommit("commit"),
-        seed_set_keys=(),
-        parent_artifact_keys=(),
-        parent_artifact_digests=(),
-        input_paths=(),
-        canonical_active_path=scientific_result_path(cell),
-        schema_name=SchemaName("ReusableArtifactEnvelope"),
-        schema_version=1,
-    )
-
-
 def _context(workspace_root: Path) -> ExecutionContext:
     return ExecutionContext(
         workspace_root=workspace_root,
         plan_digest=PlanDigest("plan-digest"),
         scientific_specification_digest=SpecificationDigest("spec-digest"),
-        scientific_dependency_digest=SpecificationDigest("dependency-digest"),
-        provenance_fingerprint=ProvenanceFingerprint("provenance-digest"),
         dependency_fingerprint=DependencyFingerprint("fingerprint"),
-        manifest_digest=DigestHex("manifest-digest"),
         required_artifact_keys=(ArtifactKey("scientific-result|legacy-cell"),),
         expected_seed_count=0,
-        reusable_artifact_envelope=_envelope(),
     )
 
 
@@ -138,23 +81,12 @@ def _completed_record(cell: PlannedCell, context: ExecutionContext) -> Completio
         semantic_cell_key=cell.identity.semantic_cell_key,
         cell_plan_digest=PlanDigest(str(model_digest(cell))),
         scientific_specification_digest=context.scientific_specification_digest,
-        scientific_dependency_digest=context.scientific_dependency_digest,
-        provenance_fingerprint=context.provenance_fingerprint,
         dependency_fingerprint=context.dependency_fingerprint,
-        manifest_digest=context.manifest_digest,
         required_artifact_keys=context.required_artifact_keys,
         produced_artifact_keys=(),
-        expected_artifact_count=0,
         artifact_sha256_map=(),
         completed_seed_count=context.expected_seed_count,
         expected_seed_count=context.expected_seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
-        schema_validation_pass=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-        exit_status=0,
     )
 
 

@@ -40,7 +40,6 @@ DOMAIN_PARAMETER_NAMES = frozenset(
         "mean_bound_gain",
         "mean_certified_update_fraction_gain",
         "config_json",
-        "source_commit",
     }
 )
 SUPPRESSIONS = frozenset(
@@ -99,7 +98,6 @@ _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
         "_canonical_json_object",
         "_canonical_json_array",
         "_merge_size_fields",
-        "_write_reflected_json",
         # Free-text error/label messages: not domain identifiers.
         "validated_finite_vector",
         "_positive_tolerance",
@@ -107,13 +105,6 @@ _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
         # Generic text-processing infrastructure operating on arbitrary strings.
         "semantic_slug",
         "_format_number_token",
-        # Python source/module introspection: ast/import machinery, not domain data.
-        "_first_party_imports",
-        "_first_party_import_from",
-        "_first_party_import",
-        "_is_first_party_module",
-        "_non_scientific_module",
-        "_module_path",
         # Third-party (pyarrow) Protocol call signatures must match verbatim.
         "__call__",
         # Literal-registry boundary constructors: convert static registry text

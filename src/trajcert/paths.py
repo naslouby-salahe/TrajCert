@@ -15,7 +15,6 @@ from trajcert.types import (
     DecimalCoefficient,
     DecimalDigits,
     FixedNotationExponent,
-    ModuleName,
     NumericSign,
     PathCoordinateValue,
 )
@@ -122,26 +121,10 @@ class ArtifactFile(StrEnum):
     COMPLETION = "COMPLETED.json"
     RUNNING = "RUNNING.json"
     ARTIFACT_INDEX = "artifact_index.json"
-    ENVELOPE = "envelope.json"
     FAILURE = "failure.json"
     SCIENTIFIC_RESULT = "scientific_result.json"
-    METRICS = "metrics.json"
-    DIAGNOSTICS = "diagnostics.json"
-    CONFIGURATION = "configuration.json"
-    DATA = "data.json"
-    SEEDS = "seeds.json"
-    CODE = "code.json"
-    ENVIRONMENT = "environment.json"
-    DEPENDENCIES = "dependencies.json"
     REPORT_REPRODUCIBILITY = "report_reproducibility.json"
     SCIENTIFIC_INVENTORY = "scientific_inventory.json"
-
-
-class ArtifactPayloadField(StrEnum):
-    VALUE = "value"
-    EXPECTED_SEED_COUNT = "expected_seed_count"
-    COMPLETED_SEED_COUNT = "completed_seed_count"
-    MANIFEST_DIGEST = "manifest_digest"
 
 
 class PublicationExtension(StrEnum):
@@ -168,28 +151,6 @@ class PublicationSourceFile(StrEnum):
     FIGURE_RHO_SENSITIVITY = "figure_rho_sensitivity.parquet"
     FIGURE_FAILURE_BOUNDARIES = "figure_failure_boundaries.parquet"
     FIGURE_COMPUTATIONAL_SCALING = "figure_computational_scaling.parquet"
-
-
-class SynthesisArtifactFile(StrEnum):
-    LOCAL_VALIDITY_AUDIT = "local_validity_audit.json"
-
-
-class SourceFile(StrEnum):
-    EXPERIMENT_ANYTIME = "experiments/anytime.py"
-    EXPERIMENT_COMPARATOR_REDUCTION = "experiments/comparator_reduction.py"
-    EXPERIMENT_FAILURE_BOUNDARIES = "experiments/failure_boundaries.py"
-    EXPERIMENT_MATHEMATICS = "experiments/mathematics.py"
-    EXPERIMENT_SCALING = "experiments/scaling.py"
-    EXPERIMENT_SAFETY = "experiments/safety.py"
-    EXPERIMENT_SENSITIVITY = "experiments/sensitivity.py"
-    EXPERIMENT_SOLVER_VALIDATION = "experiments/solver_validation.py"
-    EXPERIMENT_SYNTHESIS = "experiments/synthesis.py"
-    EXPERIMENT_TIMING = "experiments/timing.py"
-    INFERENCE_CATEGORICAL = "inference/categorical.py"
-    INFERENCE_CONFIDENCE = "inference/confidence.py"
-    INFERENCE_ENVELOPE = "inference/envelope.py"
-    INFERENCE_PROJECTION = "inference/projection.py"
-    INFERENCE_CERTIFICATION = "inference/certification.py"
 
 
 class PlanArtifactFile(StrEnum):
@@ -324,15 +285,6 @@ def artifact_path(directory: Path, artifact: ArtifactFile) -> Path:
 def checkpoint_batch_file(batch_index: BatchIndex, *, result: bool = False) -> ArtifactFileName:
     suffix = "_result" if result else ""
     return ArtifactFileName(f"batch_{batch_index}{suffix}.json")
-
-
-def source_file_path(source_file: SourceFile) -> Path:
-    return Path("src") / "trajcert" / Path(source_file)
-
-
-def module_source_candidates(module_name: ModuleName) -> tuple[Path, Path]:
-    module_path = Path("src") / Path(*module_name.split("."))
-    return module_path.with_suffix(".py"), module_path / "__init__.py"
 
 
 def plan_artifact_path(artifact: PlanArtifactFile) -> Path:

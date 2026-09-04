@@ -20,7 +20,6 @@ from trajcert.config import (
 )
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
-from trajcert.data.ledger import LedgerIdentity
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import (
     AnytimeOperationalState,
@@ -45,9 +44,7 @@ from trajcert.experiments.mathematics import (
 )
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan
 from trajcert.experiments.runner import (
-    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     ExecutionContext,
-    LocalValidityTarget,
     cell_artifact_index_path,
     cell_completion_path,
     expected_seed_count,
@@ -78,10 +75,8 @@ from trajcert.experiments.solver_validation import (
 from trajcert.experiments.synthesis import (
     PairedSeries,
     SequentialUtilityEvidence,
-    SynthesisLocalValidityInput,
     build_synthesis_evidence,
     execute_statistical_synthesis,
-    local_validity_artifact_key,
     make_statistical_synthesis_executor,
     paired_series_from_sequential_utility,
     sequential_rho_utility_rows,
@@ -95,15 +90,8 @@ from trajcert.experiments.synthesis import (
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase
 from trajcert.provenance import (
-    ArtifactOwner,
     BaselineName,
-    CodeCommit,
-    EnvironmentDigest,
-    ExecutionGroup,
     MethodName,
-    ProducerComponentName,
-    ReusableArtifactEnvelope,
-    SchemaName,
 )
 from trajcert.reporting.source_data import AnalysisType, RhoUtilityMetricName
 from trajcert.storage import (
@@ -115,19 +103,14 @@ from trajcert.storage import (
     DependencyFingerprint,
     DigestHex,
     PlanDigest,
-    ProvenanceFingerprint,
     SpecificationDigest,
     canonical_model_bytes,
     model_digest,
 )
 from trajcert.types import (
-    ActionChannelId,
-    ClientId,
     CompatibilityRegime,
-    EpochId,
     FailureBoundaryLevel,
     HiddenMassInterval,
-    PublicExecutionState,
     RiskInterval,
     SafetyCaseName,
     SafetyRegime,
@@ -137,7 +120,7 @@ from trajcert.types import (
 
 _TEST_STREAM_COUNT = 2
 _THEOREM_EXPERIMENTS = 11
-_SYNTHESIS_ARTIFACT_COUNT = 17
+_SYNTHESIS_ARTIFACT_COUNT = 16
 _POPULATION_EVIDENCE_COUNT = 360
 _SEQUENTIAL_FAMILY_SIZE = 54
 _PAIRED_METRIC_COUNT = 3
@@ -307,7 +290,6 @@ def test_synthesis_artifact_paths_cover_all_keys(synthesis_plan: ExperimentPlan)
     cell = _synthesis_cell(synthesis_plan)
     paths = synthesis_artifact_paths(cell)
     assert tuple(paths.keys()) == synthesis_artifact_keys(cell)
-    assert str(paths[local_validity_artifact_key()]).endswith("local_validity_audit.json")
 
 
 def test_make_statistical_synthesis_executor_forwards_call(
@@ -316,7 +298,7 @@ def test_make_statistical_synthesis_executor_forwards_call(
     cell = _experiment_cell(synthesis_plan, "Population Sensitivity Utility")
     context = _execution_context(synthesis_plan, Path("/tmp"), DependencyFingerprint("unused"))
     _ = active_config.set(small_config)
-    executor = make_statistical_synthesis_executor(synthesis_plan, _synthesis_locality())
+    executor = make_statistical_synthesis_executor(synthesis_plan)
     with pytest.raises(InvalidScientificDataError, match="non-synthesis cell"):
         _ = executor(cell, context)
 
@@ -366,7 +348,7 @@ def test_execute_statistical_synthesis_writes_all_artifacts(
     cell = _synthesis_cell(synthesis_plan)
     context = _execution_context(synthesis_plan, synthesis_workspace, synthesis_fingerprint)
     result = execute_statistical_synthesis(
-        cell, context, synthesis_plan, small_config, _synthesis_locality()
+        cell, context, synthesis_plan, small_config
     )
     assert result.completed_seed_count == 0
     assert len(result.artifact_index.artifacts) == _SYNTHESIS_ARTIFACT_COUNT
@@ -380,9 +362,8 @@ def test_execute_statistical_synthesis_rejects_non_synthesis_cell(
 ) -> None:
     cell = _experiment_cell(synthesis_plan, "Population Sensitivity Utility")
     context = _execution_context(synthesis_plan, Path("/tmp"), DependencyFingerprint("unused"))
-    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="non-synthesis cell"):
-        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config)
 
 
 def test_execute_statistical_synthesis_rejects_planned_invalid_cell(
@@ -390,9 +371,8 @@ def test_execute_statistical_synthesis_rejects_planned_invalid_cell(
 ) -> None:
     cell = _synthesis_cell(synthesis_plan).model_copy(update={"executable": False})
     context = _execution_context(synthesis_plan, Path("/tmp"), DependencyFingerprint("unused"))
-    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="planned invalid"):
-        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config)
 
 
 def test_execute_statistical_synthesis_rejects_stale_plan_digest(
@@ -402,9 +382,8 @@ def test_execute_statistical_synthesis_rejects_stale_plan_digest(
     context = _execution_context(
         synthesis_plan, Path("/tmp"), DependencyFingerprint("unused")
     ).model_copy(update={"plan_digest": PlanDigest("stale")})
-    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="plan digest is stale"):
-        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config)
 
 
 def test_execute_statistical_synthesis_rejects_seeded_context(
@@ -414,9 +393,8 @@ def test_execute_statistical_synthesis_rejects_seeded_context(
     context = _execution_context(
         synthesis_plan, Path("/tmp"), DependencyFingerprint("unused")
     ).model_copy(update={"expected_seed_count": 1})
-    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="zero seeds"):
-        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config)
 
 
 def test_execute_statistical_synthesis_rejects_incomplete_artifact_contract(
@@ -426,9 +404,8 @@ def test_execute_statistical_synthesis_rejects_incomplete_artifact_contract(
     context = _execution_context(
         synthesis_plan, Path("/tmp"), DependencyFingerprint("unused")
     ).model_copy(update={"required_artifact_keys": (ArtifactKey("wrong"),)})
-    locality = _synthesis_locality()
     with pytest.raises(InvalidScientificDataError, match="required artifact contract"):
-        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config, locality)
+        _ = execute_statistical_synthesis(cell, context, synthesis_plan, small_config)
 
 
 def _small_synthesis_config() -> TrajCertConfig:
@@ -511,23 +488,12 @@ def _completion_record(
         semantic_cell_key=cell.identity.semantic_cell_key,
         cell_plan_digest=PlanDigest(str(model_digest(cell))),
         scientific_specification_digest=SpecificationDigest("spec"),
-        scientific_dependency_digest=SpecificationDigest("spec-dep"),
-        provenance_fingerprint=ProvenanceFingerprint("provenance"),
         dependency_fingerprint=DependencyFingerprint("dependency"),
-        manifest_digest=DigestHex("manifest"),
         required_artifact_keys=(result_key,),
         produced_artifact_keys=(result_key,),
-        expected_artifact_count=1,
         artifact_sha256_map=(ArtifactChecksum(artifact_key=result_key, sha256=result_digest),),
         completed_seed_count=seed_count,
         expected_seed_count=seed_count,
-        metrics_complete=True,
-        statistics_complete=True,
-        schema_validation_pass=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-        exit_status=0,
     )
 
 
@@ -587,50 +553,6 @@ def _same_endpoint_result_for(cell: PlannedCell) -> BaseModel | None:
     return None
 
 
-def _synthesis_envelope(
-    plan: ExperimentPlan, fingerprint: DependencyFingerprint
-) -> ReusableArtifactEnvelope:
-    cell = _synthesis_cell(plan)
-    return ReusableArtifactEnvelope(
-        artifact_key=scientific_result_artifact_key(cell),
-        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
-        producer_component=ProducerComponentName("test-component"),
-        semantic_cell_key=cell.identity.semantic_cell_key,
-        semantic_coordinates=cell.identity.coordinates,
-        experiment_name=cell.identity.experiment_name,
-        classification=cell.evidence_class,
-        execution_group=ExecutionGroup("execution-group"),
-        scientific_specification_digest=SpecificationDigest("spec"),
-        scientific_dependency_digest=SpecificationDigest("spec-dep"),
-        provenance_fingerprint=ProvenanceFingerprint("provenance"),
-        dependency_fingerprint=fingerprint,
-        implementation_component_digest=DigestHex("manifest"),
-        environment_dependency_digest=EnvironmentDigest("env"),
-        plan_digest=DigestHex("manifest"),
-        cell_plan_digest=PlanDigest(str(model_digest(cell))),
-        status=PublicExecutionState.COMPLETED,
-        method_name=None,
-        baseline_name=None,
-        dataset_name=None,
-        dataset_checksum=None,
-        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
-        partition_name=cell.identity.coordinates.partition_name,
-        rho=None,
-        beta=None,
-        delta=None,
-        environment_lock_digest=EnvironmentDigest("env"),
-        code_commit=CodeCommit("commit"),
-        seed_set_keys=(),
-        parent_artifact_keys=(),
-        parent_artifact_digests=(),
-        input_paths=(),
-        canonical_active_path=scientific_result_path(cell),
-        schema_name=SchemaName("ReusableArtifactEnvelope"),
-        schema_version=1,
-    )
-
-
 def _execution_context(
     plan: ExperimentPlan,
     workspace_root: Path,
@@ -640,30 +562,9 @@ def _execution_context(
         workspace_root=workspace_root,
         plan_digest=plan.plan_digest,
         scientific_specification_digest=SpecificationDigest("spec"),
-        scientific_dependency_digest=SpecificationDigest("spec-dep"),
-        provenance_fingerprint=ProvenanceFingerprint("provenance"),
         dependency_fingerprint=fingerprint,
-        manifest_digest=DigestHex("manifest"),
         required_artifact_keys=synthesis_artifact_keys(_synthesis_cell(plan)),
         expected_seed_count=0,
-        reusable_artifact_envelope=_synthesis_envelope(plan, fingerprint),
-    )
-
-
-def _synthesis_locality() -> SynthesisLocalValidityInput:
-    return SynthesisLocalValidityInput(
-        static_dependencies=(),
-        targets=(
-            LocalValidityTarget(
-                target_identity=LedgerIdentity(
-                    client_id=ClientId("synthetic-client"),
-                    action_channel_id=ActionChannelId("synthetic-channel"),
-                    epoch_id=EpochId("0"),
-                ),
-                root_artifact_key=ArtifactKey("publication-source|theorem-validation-summary"),
-                lineage_artifacts=(),
-            ),
-        ),
     )
 
 

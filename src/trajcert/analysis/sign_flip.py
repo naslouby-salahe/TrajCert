@@ -7,6 +7,7 @@ from trajcert.analysis.vectors import validated_finite_vector
 from trajcert.determinism import generator_for, permutation_namespace
 from trajcert.types import (
     DomainModel,
+    FailureMessage,
     FavorableCount,
     ObservedStatistic,
     Probability,
@@ -30,8 +31,8 @@ def one_sided_sign_flip(
 ) -> SignFlipResult:
     values = validated_finite_vector(
         differences,
-        "sign-flip inference requires a nonempty vector",
-        "sign-flip inference forbids NaN and infinity",
+        FailureMessage("sign-flip inference requires a nonempty vector"),
+        FailureMessage("sign-flip inference forbids NaN and infinity"),
     )
     observed = float(np.mean(values, dtype=np.float64))
     rng = generator_for(permutation_namespace(semantic_comparison_key), 0)

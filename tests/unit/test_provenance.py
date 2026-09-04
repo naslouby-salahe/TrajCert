@@ -5,26 +5,19 @@ from pydantic import ValidationError
 
 from trajcert.provenance import (
     ArtifactTypeName,
-    CodeCommit,
     DependencyMaterial,
     EnvironmentDigest,
     ParentArtifactIdentity,
-    ProvenanceMaterial,
     SemanticCellIdentity,
     SemanticCoordinates,
     dependency_fingerprint,
-    provenance_fingerprint,
 )
 from trajcert.storage import ArtifactKey, DigestHex, SpecificationDigest
 from trajcert.types import ExperimentName, LawName, PartitionName
 
 _HEX_LENGTH = 64
-_HEX_A = "a" * _HEX_LENGTH
 _HEX_C = "c" * _HEX_LENGTH
 _HEX_D = "d" * _HEX_LENGTH
-_HEX_I = "i" * _HEX_LENGTH
-_HEX_P = "p" * _HEX_LENGTH
-_HEX_Q = "q" * _HEX_LENGTH
 _HEX_S = "s" * _HEX_LENGTH
 _RHO = 0.5
 _BETA = 0.1
@@ -64,24 +57,9 @@ def _dependency_material() -> DependencyMaterial:
     return DependencyMaterial(
         artifact_type=ArtifactTypeName("model"),
         semantic_cell=_identity(),
-        scientific_dependency_digest=SpecificationDigest(_HEX_D),
-        implementation_component_digest=DigestHex(_HEX_I),
+        scientific_specification_digest=SpecificationDigest(_HEX_D),
         environment_dependency_digest=EnvironmentDigest("env"),
-        seed_manifest_digest=None,
         parents=(_parent_identity(),),
-        producer_specific_inputs=(),
-    )
-
-
-def _provenance_material() -> ProvenanceMaterial:
-    return ProvenanceMaterial(
-        scientific_specification_digest=SpecificationDigest(_HEX_S),
-        code_commit=CodeCommit("abc123"),
-        environment_lock_digest=EnvironmentDigest(_HEX_A),
-        dataset_preprocessing_digests=(),
-        partition_digest=DigestHex(_HEX_P),
-        seed_manifest_digests=(),
-        plan_digest=DigestHex(_HEX_Q),
     )
 
 
@@ -173,31 +151,21 @@ def test_semantic_cell_key_is_deterministic() -> None:
     assert first == second
 
 
-def test_dependency_material_seed_manifest_defaults_to_none() -> None:
+def test_dependency_material_constructs() -> None:
     material = _dependency_material()
-    assert material.seed_manifest_digest is None
     assert material.artifact_type == ArtifactTypeName("model")
+    assert (
+        material.scientific_specification_digest == SpecificationDigest(_HEX_D)
+    )
+    assert material.environment_dependency_digest == EnvironmentDigest("env")
     assert len(material.parents) == 1
-    assert material.producer_specific_inputs == ()
 
 
-def test_dependency_material_requires_seed_manifest_field() -> None:
+def test_dependency_material_requires_specification_digest() -> None:
     payload = _dependency_material().model_dump()
-    del payload["seed_manifest_digest"]
+    del payload["scientific_specification_digest"]
     with pytest.raises(ValidationError):
         _ = DependencyMaterial.model_validate(payload)
-
-
-def test_provenance_material_dataset_preprocessing_digests_default_empty() -> None:
-    material = _provenance_material()
-    assert material.dataset_preprocessing_digests == ()
-
-
-def test_provenance_material_requires_partition_digest() -> None:
-    payload = _provenance_material().model_dump()
-    del payload["partition_digest"]
-    with pytest.raises(ValidationError):
-        _ = ProvenanceMaterial.model_validate(payload)
 
 
 def test_dependency_fingerprint_is_deterministic_hex() -> None:
@@ -212,17 +180,3 @@ def test_dependency_fingerprint_is_content_sensitive() -> None:
     base = _dependency_material()
     changed = base.model_copy(update={"artifact_type": ArtifactTypeName("other")})
     assert dependency_fingerprint(base) != dependency_fingerprint(changed)
-
-
-def test_provenance_fingerprint_is_deterministic_hex() -> None:
-    material = _provenance_material()
-    first = provenance_fingerprint(material)
-    second = provenance_fingerprint(material)
-    assert first == second
-    assert len(first) == _HEX_LENGTH
-
-
-def test_provenance_fingerprint_is_content_sensitive() -> None:
-    base = _provenance_material()
-    changed = base.model_copy(update={"code_commit": CodeCommit("def456")})
-    assert provenance_fingerprint(base) != provenance_fingerprint(changed)

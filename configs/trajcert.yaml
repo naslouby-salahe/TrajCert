@@ -137,7 +137,7 @@ failure_boundary:
   optimizer_nodes: [1000, 5000, 20000, 100000, 500000, 1000000, 2000000]
   optimizer_sample_size: 500
   optimizer_information_margin: 0.01
-identifiers: {event_index_width: 6, git_sha1_hex_length: 40}
+identifiers: {event_index_width: 6}
 serialization: {max_fixed_notation_exponent: 21, min_fixed_notation_exponent: -6}
 determinism: {fixture_stream_index: 0}
 units: {nanoseconds_per_millisecond: 1000000.0}

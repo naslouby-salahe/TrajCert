@@ -4,12 +4,11 @@ from enum import StrEnum
 from pathlib import Path
 
 from trajcert.paths import ExperimentSlug
-from trajcert.provenance import CodeCommit, EnvironmentDigest
+from trajcert.provenance import EnvironmentDigest
 from trajcert.storage import (
     ArtifactKey,
     DependencyFingerprint,
     DigestHex,
-    ProvenanceFingerprint,
     SpecificationDigest,
 )
 from trajcert.types import ColumnName, DependencyAuthority, DomainModel
@@ -42,7 +41,6 @@ class VerifiedSourceLineage(DomainModel):
     completion_sha256: DigestHex
     scientific_specification_digest: SpecificationDigest
     dependency_fingerprint: DependencyFingerprint
-    provenance_fingerprint: ProvenanceFingerprint
 
 
 class RenderedPublicationArtifact(DomainModel):
@@ -60,7 +58,6 @@ class EnvironmentReproducibilityRecord(DomainModel):
 
 
 class PublicationReproducibilityRecord(DomainModel):
-    source_commit: CodeCommit
     configuration_path: Path
     configuration_sha256: DigestHex
     environment: EnvironmentReproducibilityRecord

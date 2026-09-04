@@ -27,12 +27,6 @@ from trajcert.experiments.anytime import (
     CoverageEvidenceResult,
     SequentialMethod,
 )
-from trajcert.experiments.catalog import (
-    PublicationColumn,
-    PublicationSourceName,
-    publication_columns,
-    publication_source_descriptors,
-)
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis, FailureBoundaryResult
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
 from trajcert.experiments.runner import read_verified_scientific_result
@@ -55,6 +49,10 @@ from trajcert.provenance import (
     CoordinateGrammar,
     SensitivityCoordinate,
     VariantName,
+)
+from trajcert.reporting.publication_sources import (
+    PublicationSourceName,
+    publication_source_descriptors,
 )
 from trajcert.schemas import (
     PublicationSourceDescriptor,
@@ -155,10 +153,6 @@ _WRITE_PARQUET = cast(_WriteParquet, pq.write_table)
 class AnalysisType(StrEnum):
     POPULATION = "POPULATION"
     SEQUENTIAL = "SEQUENTIAL"
-
-
-def _columns(*columns: PublicationColumn) -> tuple[ColumnName, ...]:
-    return publication_columns(*columns)
 
 
 class TheoremValidationSummaryRow(DomainModel):
@@ -1479,7 +1473,6 @@ def _verify_registered_lineage(
         completion_sha256=file_digest(completion_path),
         scientific_specification_digest=completion.scientific_specification_digest,
         dependency_fingerprint=completion.dependency_fingerprint,
-        provenance_fingerprint=completion.provenance_fingerprint,
     )
 
 

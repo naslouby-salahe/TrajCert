@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 from pathlib import Path
 
 import pyarrow as pa
@@ -13,13 +12,10 @@ from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
     cell_completion_path,
-    scientific_dependency_digest,
     scientific_specification_digest,
 )
 from trajcert.experiments.synthesis import (
-    local_validity_artifact_key,
     synthesis_artifact_keys,
-    synthesis_artifact_paths,
 )
 from trajcert.paths import ExperimentLeaf, experiment_leaf
 from trajcert.provenance import EnvironmentDigest
@@ -48,7 +44,6 @@ from trajcert.storage import (
     DependencyFingerprint,
     DigestHex,
     PlanDigest,
-    ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
     model_digest,
@@ -60,7 +55,6 @@ _RENDERED_COUNT = 3
 _SOURCE_COUNT = 2
 _ARTIFACTS_PER_SOURCE = 2
 _SHA256_HEX_LENGTH = 64
-_COMPONENT_DIGEST = DigestHex("0" * _SHA256_HEX_LENGTH)
 _SYNTHESIS_FINGERPRINT = DependencyFingerprint("synthesis-fingerprint")
 
 
@@ -233,23 +227,6 @@ def test_report_export_result_exposes_counts_and_reuse_flag(tmp_path: Path) -> N
 def _completed_workspace(tmp_path: Path) -> Path:
     workspace = _workspace_with_config(tmp_path)
     _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
-    _ = subprocess.run(("git", "init", "-q"), cwd=workspace, check=True)
-    _ = subprocess.run(("git", "add", "-A"), cwd=workspace, check=True)
-    _ = subprocess.run(
-        (
-            "git",
-            "-c",
-            "user.name=Test",
-            "-c",
-            "user.email=test@example.com",
-            "commit",
-            "-q",
-            "-m",
-            "init",
-        ),
-        cwd=workspace,
-        check=True,
-    )
     return workspace
 
 
@@ -278,7 +255,6 @@ def _verified_source(
             completion_sha256=DigestHex("0" * _SHA256_HEX_LENGTH),
             scientific_specification_digest=SpecificationDigest("specification"),
             dependency_fingerprint=DependencyFingerprint("dependency"),
-            provenance_fingerprint=ProvenanceFingerprint("provenance"),
         ),
     )
 
@@ -417,16 +393,6 @@ def test_export_report_rejects_missing_reproducibility_input(
         _ = export_report(workspace)
 
 
-def test_export_report_rejects_missing_source_commit(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    workspace = _workspace_with_config(tmp_path)
-    _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
-    _export_harness(monkeypatch, workspace)
-    with pytest.raises(InvalidScientificDataError, match="cannot resolve source commit"):
-        _ = export_report(workspace)
-
-
 def _duplicate_synthesis_cells(
     plan: ExperimentPlan, _name: ExperimentName
 ) -> tuple[PlannedCell, ...]:
@@ -444,16 +410,11 @@ def test_require_synthesis_completion_rejects_multiple_cells(
         export.require_synthesis_completion(tmp_path)
 
 
-def _fixed_component_digest(_workspace_root: Path, _experiment_name: ExperimentName) -> DigestHex:
-    return _COMPONENT_DIGEST
-
-
 def _fixed_dependency_fingerprint(
     _workspace_root: Path,
     _plan: ExperimentPlan,
     _cell: PlannedCell,
     _scientific_dependency: SpecificationDigest,
-    _implementation_component_digest: DigestHex,
     _environment_dependency_digest: EnvironmentDigest,
 ) -> DependencyFingerprint:
     return DependencyFingerprint("upstream-fingerprint")
@@ -472,32 +433,16 @@ def _matching_completion(
     dependency_fingerprint: DependencyFingerprint = _SYNTHESIS_FINGERPRINT,
 ) -> CompletionRecord:
     specification = scientific_specification_digest()
-    dependency_specification = scientific_dependency_digest(
-        specification,
-        cell.identity.semantic_cell_key,
-        _COMPONENT_DIGEST,
-    )
     return CompletionRecord(
         semantic_cell_key=cell.identity.semantic_cell_key,
         cell_plan_digest=PlanDigest(str(model_digest(cell))),
         scientific_specification_digest=specification,
-        scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=ProvenanceFingerprint("provenance"),
         dependency_fingerprint=dependency_fingerprint,
-        manifest_digest=DigestHex(str(model_digest(cell))),
         required_artifact_keys=synthesis_artifact_keys(cell),
         produced_artifact_keys=synthesis_artifact_keys(cell),
-        expected_artifact_count=len(synthesis_artifact_keys(cell)),
         artifact_sha256_map=artifact_sha256_map,
         completed_seed_count=0,
         expected_seed_count=0,
-        metrics_complete=True,
-        statistics_complete=True,
-        schema_validation_pass=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-        exit_status=0,
     )
 
 
@@ -515,7 +460,6 @@ def test_require_synthesis_completion_rejects_stale_completion(
     _ = active_config.set(config)
     cell = _synthesis_cell(config)
     monkeypatch.setattr(export, "_validate_upstream_completions", _noop_upstream_completions)
-    monkeypatch.setattr(export, "producer_component_digest", _fixed_component_digest)
     monkeypatch.setattr(export, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
     stale = _matching_completion(
         cell,
@@ -532,23 +476,12 @@ def _stale_completion(_path: Path, _model_type: type[CompletionRecord]) -> Compl
         semantic_cell_key=SemanticCellKey("stale-key"),
         cell_plan_digest=PlanDigest("stale-plan"),
         scientific_specification_digest=SpecificationDigest("stale-specification"),
-        scientific_dependency_digest=SpecificationDigest("stale-dependency"),
-        provenance_fingerprint=ProvenanceFingerprint("stale-provenance"),
         dependency_fingerprint=DependencyFingerprint("stale-fingerprint"),
-        manifest_digest=DigestHex("0" * _SHA256_HEX_LENGTH),
         required_artifact_keys=(),
         produced_artifact_keys=(),
-        expected_artifact_count=0,
         artifact_sha256_map=(),
         completed_seed_count=0,
         expected_seed_count=0,
-        metrics_complete=True,
-        statistics_complete=True,
-        schema_validation_pass=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-        exit_status=0,
     )
 
 
@@ -565,49 +498,12 @@ def test_require_synthesis_completion_rejects_stale_upstream(
 ) -> None:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     monkeypatch.setattr(export, "build_plan", _reordered_plan)
-    monkeypatch.setattr(export, "producer_component_digest", _fixed_component_digest)
     monkeypatch.setattr(export, "cell_dependency_fingerprint", _fixed_dependency_fingerprint)
     monkeypatch.setattr(export, "read_model", _stale_completion)
     _ = active_config.set(config)
     _ = (tmp_path / "uv.lock").write_text("locked\n", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError, match="upstream completion is stale"):
         export.require_synthesis_completion(tmp_path)
-
-
-def test_export_report_rejects_short_source_commit(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    workspace = _workspace_with_config(tmp_path)
-    _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
-    _export_harness(monkeypatch, workspace)
-
-    def _short_git_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
-        _ = (args, kwargs)
-        return subprocess.CompletedProcess(("git", "rev-parse", "HEAD"), 0, stdout="short")
-
-    monkeypatch.setattr(subprocess, "run", _short_git_run)
-    with pytest.raises(InvalidScientificDataError, match="full Git SHA-1"):
-        _ = export_report(workspace)
-
-
-def test_require_synthesis_completion_verifies_record_checksum(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    workspace = _workspace_with_config(tmp_path)
-    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
-    _ = active_config.set(config)
-    cell = _synthesis_cell(config)
-    monkeypatch.setattr(export, "_validate_upstream_completions", _noop_upstream_completions)
-    monkeypatch.setattr(export, "producer_component_digest", _fixed_component_digest)
-    monkeypatch.setattr(export, "synthesis_dependency_fingerprint", _synthesis_fingerprint)
-    audit_key = local_validity_artifact_key()
-    audit_path = workspace / synthesis_artifact_paths(cell)[audit_key]
-    audit_path.parent.mkdir(parents=True, exist_ok=True)
-    _ = audit_path.write_bytes(b"dummy-audit")
-    completion = _matching_completion(cell, artifact_sha256_map=())
-    _ = write_completion_last(cell_completion_path(cell, workspace).parent, completion)
-    with pytest.raises(InvalidScientificDataError, match="record checksum is stale"):
-        export.require_synthesis_completion(workspace)
 
 
 def test_validate_results_layout_accepts_missing_project_summary(tmp_path: Path) -> None:

@@ -4,7 +4,7 @@ import hashlib
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from trajcert.exceptions import SerializationError
 from trajcert.storage import (
@@ -16,7 +16,6 @@ from trajcert.storage import (
     DependencyFingerprint,
     DigestHex,
     PlanDigest,
-    ProvenanceFingerprint,
     SemanticCellKey,
     SpecificationDigest,
     atomic_write_bytes,
@@ -56,25 +55,14 @@ def _completion_record() -> CompletionRecord:
         semantic_cell_key=SemanticCellKey("k"),
         cell_plan_digest=PlanDigest(_HEX_C),
         scientific_specification_digest=SpecificationDigest(_HEX_S),
-        scientific_dependency_digest=SpecificationDigest(_HEX_SD),
-        provenance_fingerprint=ProvenanceFingerprint(_HEX_P),
         dependency_fingerprint=DependencyFingerprint(_HEX_DP),
-        manifest_digest=DigestHex(_HEX_M),
         required_artifact_keys=(ArtifactKey("a"),),
         produced_artifact_keys=(),
-        expected_artifact_count=0,
         artifact_sha256_map=(
             ArtifactChecksum(artifact_key=ArtifactKey("a"), sha256=DigestHex(_HEX_S)),
         ),
         completed_seed_count=0,
         expected_seed_count=1,
-        metrics_complete=True,
-        statistics_complete=True,
-        schema_validation_pass=True,
-        invariant_validation_pass=True,
-        dependency_validation_pass=True,
-        provenance_record_complete=True,
-        exit_status=0,
     )
 
 
@@ -167,32 +155,6 @@ def test_completion_record_round_trip(tmp_path: Path) -> None:
     assert path.is_file()
     assert digest == model_digest(record)
     assert read_model(path, CompletionRecord) == record
-
-
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [
-        ("metrics_complete", False),
-        ("statistics_complete", False),
-        ("schema_validation_pass", False),
-        ("invariant_validation_pass", False),
-        ("dependency_validation_pass", False),
-        ("provenance_record_complete", False),
-        ("exit_status", 1),
-    ],
-)
-def test_completion_record_rejects_non_verified_literals(field: str, value: object) -> None:
-    payload = _completion_record().model_dump()
-    payload[field] = value
-    with pytest.raises(ValidationError):
-        _ = CompletionRecord.model_validate(payload)
-
-
-def test_completion_record_requires_verified_literals() -> None:
-    payload = _completion_record().model_dump()
-    del payload["metrics_complete"]
-    with pytest.raises(ValidationError):
-        _ = CompletionRecord.model_validate(payload)
 
 
 def test_cell_artifact_index_round_trip(tmp_path: Path) -> None:

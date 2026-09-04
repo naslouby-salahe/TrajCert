@@ -7,7 +7,7 @@ from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
 from math import isfinite
 from pathlib import Path
-from typing import Literal, NewType, TypeVar
+from typing import NewType, TypeVar
 
 from pydantic import BaseModel, JsonValue, ValidationError
 
@@ -19,14 +19,13 @@ from trajcert.paths import (
     fsync_directory,
     long_path_safe,
 )
-from trajcert.types import Count, DomainModel, SeedCount
+from trajcert.types import DomainModel, SeedCount
 
 ArtifactKey = NewType("ArtifactKey", str)
 DigestHex = NewType("DigestHex", str)
 SemanticCellKey = NewType("SemanticCellKey", str)
 PlanDigest = NewType("PlanDigest", str)
 DependencyFingerprint = NewType("DependencyFingerprint", str)
-ProvenanceFingerprint = NewType("ProvenanceFingerprint", str)
 SpecificationDigest = NewType("SpecificationDigest", str)
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -52,23 +51,12 @@ class CompletionRecord(DomainModel):
     semantic_cell_key: SemanticCellKey
     cell_plan_digest: PlanDigest
     scientific_specification_digest: SpecificationDigest
-    scientific_dependency_digest: SpecificationDigest
-    provenance_fingerprint: ProvenanceFingerprint
     dependency_fingerprint: DependencyFingerprint
-    manifest_digest: DigestHex
     required_artifact_keys: tuple[ArtifactKey, ...]
     produced_artifact_keys: tuple[ArtifactKey, ...]
-    expected_artifact_count: Count
     artifact_sha256_map: tuple[ArtifactChecksum, ...]
     completed_seed_count: SeedCount
     expected_seed_count: SeedCount
-    metrics_complete: Literal[True]
-    statistics_complete: Literal[True]
-    schema_validation_pass: Literal[True]
-    invariant_validation_pass: Literal[True]
-    dependency_validation_pass: Literal[True]
-    provenance_record_complete: Literal[True]
-    exit_status: Literal[0]
 
 
 def canonical_model_bytes(model: BaseModel) -> bytes:

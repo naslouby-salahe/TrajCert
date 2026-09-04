@@ -9,7 +9,6 @@ from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
-    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     CellExecutionResult,
     DependencyReadiness,
     ExecutionContext,
@@ -17,39 +16,24 @@ from trajcert.experiments.runner import (
     cell_artifact_index_path,
     cell_completion_path,
     cell_dependency_fingerprint,
-    cell_dependency_material,
-    cell_envelope_path,
     cell_failure_path,
     cell_running_path,
     completion_is_compatible,
     execute_dispatched_cell,
     expected_seed_count,
-    producer_component_digest,
     run_cell,
-    scientific_dependency_digest,
     scientific_result_artifact_key,
     scientific_result_path,
     scientific_specification_digest,
 )
 from trajcert.provenance import (
-    ArtifactOwner,
-    CodeCommit,
     EnvironmentDigest,
-    ExecutionGroup,
-    ProducerComponentName,
-    ReusableArtifactEnvelope,
-    SchemaName,
 )
 from trajcert.storage import (
     CellArtifactIndex,
     CompletionRecord,
     DependencyFingerprint,
-    DigestHex,
-    PlanDigest,
-    ProvenanceFingerprint,
-    atomic_write_model,
     file_digest,
-    model_digest,
     read_model,
 )
 from trajcert.types import ExperimentName, PublicExecutionState, ReasonCode
@@ -89,70 +73,16 @@ def _build_context(
     cell: PlannedCell,
 ) -> ExecutionContext:
     specification = scientific_specification_digest()
-    component_digest = producer_component_digest(_REPO_ROOT, cell.identity.experiment_name)
-    dependency_specification = scientific_dependency_digest(
-        specification,
-        cell.identity.semantic_cell_key,
-        component_digest,
-    )
-    dependency_material = cell_dependency_material(
-        tmp_path, plan, cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
-    )
     dependency = cell_dependency_fingerprint(
-        tmp_path, plan, cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
-    )
-    provenance = ProvenanceFingerprint("0" * _SHA256_HEX_LENGTH)
-    envelope = ReusableArtifactEnvelope(
-        artifact_key=scientific_result_artifact_key(cell),
-        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
-        producer_component=ProducerComponentName("test-component"),
-        semantic_cell_key=cell.identity.semantic_cell_key,
-        semantic_coordinates=cell.identity.coordinates,
-        experiment_name=cell.identity.experiment_name,
-        classification=cell.evidence_class,
-        execution_group=ExecutionGroup(str(provenance)),
-        scientific_specification_digest=specification,
-        scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=provenance,
-        dependency_fingerprint=dependency,
-        implementation_component_digest=component_digest,
-        environment_dependency_digest=_ENVIRONMENT_DIGEST,
-        plan_digest=DigestHex(plan.plan_digest),
-        cell_plan_digest=PlanDigest(str(model_digest(cell))),
-        status=PublicExecutionState.COMPLETED,
-        method_name=cell.identity.coordinates.method_name,
-        baseline_name=cell.identity.coordinates.baseline_name,
-        dataset_name=None,
-        dataset_checksum=None,
-        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
-        partition_name=cell.identity.coordinates.partition_name,
-        rho=cell.identity.coordinates.rho,
-        beta=cell.identity.coordinates.beta,
-        delta=cell.identity.coordinates.delta,
-        environment_lock_digest=_ENVIRONMENT_DIGEST,
-        code_commit=CodeCommit("commit"),
-        seed_set_keys=(),
-        parent_artifact_keys=tuple(parent.artifact_key for parent in dependency_material.parents),
-        parent_artifact_digests=tuple(
-            parent.scientific_content_digest for parent in dependency_material.parents
-        ),
-        input_paths=(),
-        canonical_active_path=scientific_result_path(cell),
-        schema_name=SchemaName("ReusableArtifactEnvelope"),
-        schema_version=1,
+        tmp_path, plan, cell, specification, _ENVIRONMENT_DIGEST
     )
     return ExecutionContext(
         workspace_root=tmp_path,
         plan_digest=plan.plan_digest,
         scientific_specification_digest=specification,
-        scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=provenance,
         dependency_fingerprint=dependency,
-        manifest_digest=DigestHex(str(model_digest(cell))),
         required_artifact_keys=(scientific_result_artifact_key(cell),),
         expected_seed_count=expected_seed_count(cell.identity.experiment_name),
-        reusable_artifact_envelope=envelope,
     )
 
 
@@ -183,32 +113,6 @@ def test_run_cell_first_execution_persists_all_artifacts(
     assert cell_completion_path(inventory_cell, tmp_path).is_file()
     assert cell_artifact_index_path(inventory_cell, tmp_path).is_file()
     assert (tmp_path / scientific_result_path(inventory_cell)).is_file()
-    envelope_path = cell_envelope_path(inventory_cell, tmp_path)
-    assert envelope_path.is_file()
-    envelope = read_model(envelope_path, ReusableArtifactEnvelope)
-    assert envelope.semantic_cell_key == inventory_cell.identity.semantic_cell_key
-    assert envelope.dependency_fingerprint == context.dependency_fingerprint
-    assert envelope.status is PublicExecutionState.COMPLETED
-
-
-def test_run_cell_recomputes_when_persisted_envelope_is_stale(
-    tmp_path: Path, plan: ExperimentPlan, inventory_cell: PlannedCell
-) -> None:
-    context = _build_context(tmp_path, plan, inventory_cell)
-    executor = execute_dispatched_cell
-    _ = run_cell(inventory_cell, context, (), executor, False)
-    envelope_path = cell_envelope_path(inventory_cell, tmp_path)
-    stale = read_model(envelope_path, ReusableArtifactEnvelope).model_copy(
-        update={"dependency_fingerprint": DependencyFingerprint("f" * _SHA256_HEX_LENGTH)}
-    )
-    _ = atomic_write_model(envelope_path, stale)
-    completion_path = cell_completion_path(inventory_cell, tmp_path)
-    assert completion_is_compatible(inventory_cell, context, completion_path) is False
-    outcome = run_cell(inventory_cell, context, (), executor, False)
-    assert outcome.state is PublicExecutionState.COMPLETED
-    assert outcome.reused is False
-    refreshed = read_model(envelope_path, ReusableArtifactEnvelope)
-    assert refreshed.dependency_fingerprint == context.dependency_fingerprint
 
 
 def test_run_cell_second_call_reuses_without_invoking_executor(
@@ -369,14 +273,8 @@ def test_cell_dependency_fingerprint_reflects_upstream_completion(
     inventory_cell: PlannedCell,
 ) -> None:
     specification = scientific_specification_digest()
-    component_digest = producer_component_digest(_REPO_ROOT, legacy_cell.identity.experiment_name)
-    dependency_specification = scientific_dependency_digest(
-        specification,
-        legacy_cell.identity.semantic_cell_key,
-        component_digest,
-    )
     before = cell_dependency_fingerprint(
-        tmp_path, plan, legacy_cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
+        tmp_path, plan, legacy_cell, specification, _ENVIRONMENT_DIGEST
     )
 
     inventory_context = _build_context(tmp_path, plan, inventory_cell)
@@ -385,7 +283,7 @@ def test_cell_dependency_fingerprint_reflects_upstream_completion(
     assert outcome.state is PublicExecutionState.COMPLETED
 
     after = cell_dependency_fingerprint(
-        tmp_path, plan, legacy_cell, dependency_specification, component_digest, _ENVIRONMENT_DIGEST
+        tmp_path, plan, legacy_cell, specification, _ENVIRONMENT_DIGEST
     )
     assert before != after
 

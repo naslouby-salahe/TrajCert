@@ -45,7 +45,7 @@ def set_current_cell_key(semantic_cell_key: SemanticCellKey | None) -> None:
 
 def _current_cell_label() -> TelemetryLabel:
     key = _current_cell_key.get()
-    return _UNKNOWN_CELL_LABEL if key is None else key
+    return TelemetryLabel(_UNKNOWN_CELL_LABEL) if key is None else TelemetryLabel(key)
 
 
 class SearchProgress:
@@ -56,17 +56,17 @@ class SearchProgress:
     _log_interval_seconds: LogIntervalSeconds
 
     def __init__(self, phase: str, node_cap: int, log_interval_seconds: float = 5.0) -> None:
-        self._phase = phase
+        self._phase = TelemetryPhase(phase)
         self._node_cap = node_cap
-        self._started_at = time.monotonic()
+        self._started_at = TimestampSeconds(time.monotonic())
         self._last_logged_at = self._started_at
-        self._log_interval_seconds = log_interval_seconds
+        self._log_interval_seconds = LogIntervalSeconds(log_interval_seconds)
 
     def maybe_log(self, visited_nodes: int, queue_size: int, best_bound: float | None) -> None:
         now = time.monotonic()
         if now - self._last_logged_at < self._log_interval_seconds:
             return
-        self._last_logged_at = now
+        self._last_logged_at = TimestampSeconds(now)
         elapsed_seconds = now - self._started_at
         nodes_per_second = visited_nodes / elapsed_seconds if elapsed_seconds > 0.0 else 0.0
         _logger.info(
@@ -91,17 +91,17 @@ class StreamProgress:
     _log_interval_seconds: LogIntervalSeconds
 
     def __init__(self, stage: str, stream_count: int, log_interval_seconds: float = 5.0) -> None:
-        self._stage = stage
+        self._stage = TelemetryPhase(stage)
         self._stream_count = stream_count
-        self._started_at = time.monotonic()
+        self._started_at = TimestampSeconds(time.monotonic())
         self._last_logged_at = self._started_at
-        self._log_interval_seconds = log_interval_seconds
+        self._log_interval_seconds = LogIntervalSeconds(log_interval_seconds)
 
     def maybe_log(self, streams_done: int) -> None:
         now = time.monotonic()
         if now - self._last_logged_at < self._log_interval_seconds:
             return
-        self._last_logged_at = now
+        self._last_logged_at = TimestampSeconds(now)
         elapsed_seconds = now - self._started_at
         streams_per_second = streams_done / elapsed_seconds if elapsed_seconds > 0.0 else 0.0
         remaining_streams = self._stream_count - streams_done
@@ -131,7 +131,7 @@ class ExperimentProgress:
         self._experiment_name = experiment_name
         self._total_cells = total_cells
         self._completed_cells = 0
-        self._started_at = time.monotonic()
+        self._started_at = TimestampSeconds(time.monotonic())
         _logger.info(
             "experiment_started experiment=%s total_cells=%d",
             experiment_name,

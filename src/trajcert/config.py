@@ -36,7 +36,6 @@ from trajcert.types import (
     FigureMargin,
     FixedNotationExponent,
     GammaSensitivity,
-    GitSha1HexLength,
     GridColumnCount,
     GridPointCount,
     HazardProbability,
@@ -504,7 +503,6 @@ class FailureBoundaryConfig(ConfigModel):
 
 class IdentifiersConfig(ConfigModel):
     event_index_width: EventIndexWidth
-    git_sha1_hex_length: GitSha1HexLength
 
 
 class SerializationConfig(ConfigModel):

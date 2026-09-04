@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from trajcert.paths import ExperimentSlug
-from trajcert.provenance import CodeCommit, EnvironmentDigest
+from trajcert.provenance import EnvironmentDigest
 from trajcert.schemas import (
     EnvironmentReproducibilityRecord,
     PublicationFormat,
@@ -20,7 +20,6 @@ from trajcert.storage import (
     ArtifactKey,
     DependencyFingerprint,
     DigestHex,
-    ProvenanceFingerprint,
     SpecificationDigest,
 )
 from trajcert.types import ColumnName, DependencyAuthority
@@ -120,7 +119,6 @@ def _source_lineage() -> VerifiedSourceLineage:
         completion_sha256=DigestHex(_HEX_B),
         scientific_specification_digest=SpecificationDigest(_HEX_C),
         dependency_fingerprint=DependencyFingerprint(_HEX_D),
-        provenance_fingerprint=ProvenanceFingerprint(_HEX_E),
     )
 
 
@@ -132,7 +130,6 @@ def test_verified_source_lineage_constructs() -> None:
     assert lineage.completion_sha256 == DigestHex(_HEX_B)
     assert lineage.scientific_specification_digest == SpecificationDigest(_HEX_C)
     assert lineage.dependency_fingerprint == DependencyFingerprint(_HEX_D)
-    assert lineage.provenance_fingerprint == ProvenanceFingerprint(_HEX_E)
 
 
 def _rendered_artifact() -> RenderedPublicationArtifact:
@@ -176,7 +173,6 @@ def test_environment_reproducibility_record_rejects_extra_fields() -> None:
 
 def test_publication_reproducibility_record_constructs() -> None:
     record = PublicationReproducibilityRecord(
-        source_commit=CodeCommit("abc123"),
         configuration_path=Path("configs/trajcert.yaml"),
         configuration_sha256=DigestHex(_HEX_A),
         environment=EnvironmentReproducibilityRecord(
@@ -187,7 +183,6 @@ def test_publication_reproducibility_record_constructs() -> None:
         sources=(_source_lineage(),),
         rendered_artifacts=(_rendered_artifact(),),
     )
-    assert record.source_commit == "abc123"
     assert record.configuration_path == Path("configs/trajcert.yaml")
     assert len(record.sources) == 1
     assert len(record.rendered_artifacts) == 1

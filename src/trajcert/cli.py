@@ -14,11 +14,8 @@ from typing import cast
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH, SMOKE_CONFIG_OVERRIDES_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES, build_full_law, configured_laws
-from trajcert.data.ledger import LedgerIdentity
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import InvalidScientificDataError, TrajCertError
-from trajcert.experiments.catalog import experiment_names as catalog_experiment_names
-from trajcert.experiments.catalog import supports_batched_recovery
 from trajcert.experiments.plan import (
     ExperimentPlan,
     PlannedCell,
@@ -28,27 +25,19 @@ from trajcert.experiments.plan import (
     experiment_names,
 )
 from trajcert.experiments.runner import (
-    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
     CellExecutionResult,
     CellExecutor,
     CellRunOutcome,
     DependencyReadiness,
     ExecutionContext,
-    LocalValidityTarget,
-    RuntimeLineageArtifact,
-    ScientificInputClass,
     SmokeResult,
-    StaticComponentDependency,
     cell_dependency_material,
     dependency_block_reason,
     execute_dispatched_cell,
     expected_seed_count,
-    producer_component_digest,
     run_cell,
     run_smoke_fixtures,
-    scientific_dependency_digest,
     scientific_result_artifact_key,
-    scientific_result_path,
     scientific_specification_digest,
 )
 from trajcert.experiments.status import (
@@ -58,7 +47,6 @@ from trajcert.experiments.status import (
     inspect_cell_status,
 )
 from trajcert.experiments.synthesis import (
-    SynthesisLocalValidityInput,
     make_statistical_synthesis_executor,
     synthesis_artifact_keys,
     synthesis_dependency_fingerprint,
@@ -70,27 +58,18 @@ from trajcert.paths import (
     ExperimentLeaf,
     PlanArtifactFile,
     PreprocessingLeaf,
-    SourceFile,
     experiment_leaf,
     plan_artifact_path,
     preprocessing_leaf,
-    semantic_slug,
 )
 from trajcert.provenance import (
     EnvironmentDigest,
-    ParentArtifactIdentity,
-    ProducerComponentName,
-    ProvenanceMaterial,
-    ReusableArtifactEnvelopeInputs,
     dependency_fingerprint,
-    provenance_fingerprint,
-    reusable_artifact_envelope,
 )
 from trajcert.reporting.export import (
     LOCK_PATH,
     ReportExportResult,
     export_report,
-    source_commit,
     validate_results_layout,
 )
 from trajcert.reporting.figures import render_figure
@@ -101,23 +80,16 @@ from trajcert.reporting.source_data import (
 )
 from trajcert.reporting.tables import render_table
 from trajcert.storage import (
-    DigestHex,
-    PlanDigest,
     SemanticCellKey,
-    SpecificationDigest,
     atomic_write_model,
     file_digest,
-    model_digest,
 )
 from trajcert.telemetry import ExperimentProgress, configure_logging
 from trajcert.types import (
-    ActionChannelId,
     CliArgumentValue,
     CliCommand,
-    ClientId,
     Count,
     DomainModel,
-    EpochId,
     ExperimentName,
     LawName,
     PublicExecutionState,
@@ -169,12 +141,6 @@ class CliCheckState(StrEnum):
 
 class CliProcessStartMethod(StrEnum):
     SPAWN = "spawn"
-
-
-class CliSyntheticIdentity(StrEnum):
-    CLIENT_ID = "synthetic-client"
-    ACTION_CHANNEL_ID = "automatic-action"
-    STATIC_EPOCH_SUFFIX = "::static-epoch"
 
 
 class CliArguments(DomainModel):
@@ -332,9 +298,8 @@ def _parse_experiment_name(
         parser.error("experiment name must be a non-empty descriptive name")
     try:
         return ExperimentName(value)
-    except ValueError as exc:
+    except ValueError:
         parser.error(f"unknown experiment name: {value}")
-        raise AssertionError("ArgumentParser.error must terminate") from exc
 
 
 def _parse_dataset_name(parser: ArgumentParser, value: CliArgumentValue | None) -> LawName | None:
@@ -399,7 +364,6 @@ class DoctorResult(DomainModel):
     plan_valid: bool
     dependency_lock_valid: bool
     imports_valid: bool
-    source_control_valid: bool
     workspace_writable: bool
     publication_contract_valid: bool
     results_layout_valid: bool
@@ -424,7 +388,6 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         raise InvalidScientificDataError("uv.lock is missing or empty")
     for module_name in _REQUIRED_IMPORTS:
         _ = importlib.import_module(module_name)
-    _ = source_commit(workspace_root)
     _assert_workspace_writable(workspace_root)
     tables = table_source_descriptors()
     figures = figure_source_descriptors()
@@ -444,7 +407,6 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         plan_valid=True,
         dependency_lock_valid=True,
         imports_valid=True,
-        source_control_valid=True,
         workspace_writable=True,
         publication_contract_valid=True,
         results_layout_valid=True,
@@ -746,7 +708,7 @@ def _dependency_readiness(
 
 def _executor(name: ExperimentName, plan: ExperimentPlan) -> CellExecutor:
     if name is ExperimentName.STATISTICAL_SYNTHESIS:
-        return make_statistical_synthesis_executor(plan, _locality_input(plan))
+        return make_statistical_synthesis_executor(plan)
 
     def execute(cell: PlannedCell, context: ExecutionContext) -> CellExecutionResult:
         return execute_dispatched_cell(cell, context)
@@ -760,62 +722,28 @@ def _execution_context(
     workspace_root: Path,
 ) -> ExecutionContext:
     specification = scientific_specification_digest()
-    component_digest = producer_component_digest(workspace_root, cell.identity.experiment_name)
-    dependency_specification = scientific_dependency_digest(
-        specification,
-        cell.identity.semantic_cell_key,
-        component_digest,
-    )
     environment_digest = _environment_digest(workspace_root)
     if cell.identity.experiment_name is ExperimentName.STATISTICAL_SYNTHESIS:
         upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
         dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
         required = synthesis_artifact_keys(cell)
-        parents: tuple[ParentArtifactIdentity, ...] = ()
     else:
         dependency_material = cell_dependency_material(
             workspace_root,
             plan,
             cell,
-            dependency_specification,
-            component_digest,
+            specification,
             environment_digest,
         )
         dependency = dependency_fingerprint(dependency_material)
         required = (scientific_result_artifact_key(cell),)
-        parents = dependency_material.parents
-    provenance_material = _provenance_material(plan, workspace_root, environment_digest)
-    provenance = provenance_fingerprint(provenance_material)
-    envelope = reusable_artifact_envelope(
-        cell.identity,
-        ReusableArtifactEnvelopeInputs(
-            evidence_class=cell.evidence_class,
-            artifact_key=scientific_result_artifact_key(cell),
-            artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-            producer_component=ProducerComponentName(str(cell.identity.experiment_name)),
-            status=PublicExecutionState.COMPLETED,
-            canonical_active_path=scientific_result_path(cell),
-            cell_plan_digest=PlanDigest(model_digest(cell)),
-            scientific_dependency_digest=dependency_specification,
-            provenance_fingerprint=provenance,
-            dependency_fingerprint=dependency,
-            implementation_component_digest=component_digest,
-            environment_dependency_digest=environment_digest,
-            provenance_material=provenance_material,
-            parents=parents,
-        ),
-    )
     return ExecutionContext(
         workspace_root=workspace_root,
         plan_digest=plan.plan_digest,
         scientific_specification_digest=specification,
-        scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=provenance,
         dependency_fingerprint=dependency,
-        manifest_digest=model_digest(cell),
         required_artifact_keys=required,
         expected_seed_count=expected_seed_count(cell.identity.experiment_name),
-        reusable_artifact_envelope=envelope,
     )
 
 
@@ -824,127 +752,6 @@ def _environment_digest(workspace_root: Path) -> EnvironmentDigest:
     if not lock.is_file():
         raise InvalidScientificDataError("uv.lock is required for execution provenance")
     return EnvironmentDigest(file_digest(lock))
-
-
-def _provenance_material(
-    plan: ExperimentPlan,
-    workspace_root: Path,
-    environment_digest: EnvironmentDigest,
-) -> ProvenanceMaterial:
-    return ProvenanceMaterial(
-        scientific_specification_digest=SpecificationDigest(model_digest(active_config.get())),
-        code_commit=source_commit(workspace_root),
-        environment_lock_digest=environment_digest,
-        dataset_preprocessing_digests=(),
-        partition_digest=None,
-        seed_manifest_digests=(),
-        plan_digest=DigestHex(plan.plan_digest),
-    )
-
-
-def _locality_input(plan: ExperimentPlan) -> SynthesisLocalValidityInput:
-    client_id = ClientId(CliSyntheticIdentity.CLIENT_ID)
-    static_dependencies = _local_static_dependencies(client_id)
-    bound_cells = tuple(
-        cell
-        for experiment_name in _locality_experiments()
-        for cell in cells_for_experiment(plan, experiment_name)
-        if cell.executable
-    )
-    expected_roots = sum(
-        len(cells_for_experiment(plan, experiment_name))
-        for experiment_name in _locality_experiments()
-    )
-    if len(bound_cells) != expected_roots:
-        raise InvalidScientificDataError(
-            "local-validity audit does not cover every declared coverage/utility bound root"
-        )
-    targets = tuple(_local_validity_target(cell, client_id) for cell in bound_cells)
-    return SynthesisLocalValidityInput(
-        static_dependencies=static_dependencies,
-        targets=targets,
-    )
-
-
-def _locality_experiments() -> tuple[ExperimentName, ...]:
-    return tuple(name for name in catalog_experiment_names() if supports_batched_recovery(name))
-
-
-def _local_static_dependencies(
-    client_id: ClientId,
-) -> tuple[StaticComponentDependency, ...]:
-    contracts = (
-        (
-            SourceFile.INFERENCE_CATEGORICAL,
-            (
-                ScientificInputClass.TARGET_STREAM_EVENT_COUNT,
-                ScientificInputClass.TARGET_EPOCH_MANIFEST,
-                ScientificInputClass.TARGET_PARTITION_MANIFEST,
-            ),
-        ),
-        (
-            SourceFile.INFERENCE_CONFIDENCE,
-            (
-                ScientificInputClass.TARGET_STREAM_EVENT_COUNT,
-                ScientificInputClass.CONFIG_VALUES,
-                ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
-            ),
-        ),
-        (
-            SourceFile.INFERENCE_ENVELOPE,
-            (ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,),
-        ),
-        (
-            SourceFile.INFERENCE_PROJECTION,
-            (
-                ScientificInputClass.CONFIG_VALUES,
-                ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
-            ),
-        ),
-        (
-            SourceFile.INFERENCE_CERTIFICATION,
-            (
-                ScientificInputClass.CONFIG_VALUES,
-                ScientificInputClass.LOCAL_NUMERICAL_DEPENDENCY,
-            ),
-        ),
-    )
-    return tuple(
-        StaticComponentDependency(
-            producer_component=ProducerComponentName(component),
-            scientific_input_classes=input_classes,
-            scientific_client_ids=(client_id,),
-        )
-        for component, input_classes in contracts
-    )
-
-
-def _local_validity_target(
-    cell: PlannedCell,
-    client_id: ClientId,
-) -> LocalValidityTarget:
-    law_name = cell.identity.coordinates.synthetic_law_name
-    if law_name is None:
-        raise InvalidScientificDataError(
-            f"local bound cell lacks a synthetic law identity: {cell.identity.semantic_cell_key}"
-        )
-    identity = LedgerIdentity(
-        client_id=client_id,
-        action_channel_id=ActionChannelId(CliSyntheticIdentity.ACTION_CHANNEL_ID),
-        epoch_id=EpochId(f"{semantic_slug(law_name)}{CliSyntheticIdentity.STATIC_EPOCH_SUFFIX}"),
-    )
-    root_key = scientific_result_artifact_key(cell)
-    root = RuntimeLineageArtifact(
-        artifact_key=root_key,
-        client_id=identity.client_id,
-        action_channel_id=identity.action_channel_id,
-        epoch_id=identity.epoch_id,
-    )
-    return LocalValidityTarget(
-        target_identity=identity,
-        root_artifact_key=root_key,
-        lineage_artifacts=(root,),
-    )
 
 
 def _assert_workspace_writable(workspace_root: Path) -> None:

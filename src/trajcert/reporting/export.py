@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 import tempfile
 from dataclasses import dataclass
 from hashlib import sha256
@@ -12,19 +11,14 @@ from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
-    LocalValidityAuditResult,
     cell_completion_path,
     cell_dependency_fingerprint,
     expected_seed_count,
-    producer_component_digest,
-    scientific_dependency_digest,
     scientific_result_artifact_key,
     scientific_specification_digest,
 )
 from trajcert.experiments.synthesis import (
-    local_validity_artifact_key,
     synthesis_artifact_keys,
-    synthesis_artifact_paths,
     synthesis_dependency_fingerprint,
 )
 from trajcert.paths import (
@@ -41,7 +35,7 @@ from trajcert.paths import (
     results_publication_leaf,
     semantic_slug,
 )
-from trajcert.provenance import CodeCommit, EnvironmentDigest
+from trajcert.provenance import EnvironmentDigest
 from trajcert.reporting.source_data import (
     VerifiedSourceData,
     all_publication_source_descriptors,
@@ -56,7 +50,6 @@ from trajcert.schemas import (
     RenderedPublicationArtifact,
 )
 from trajcert.storage import (
-    ArtifactChecksum,
     CompletionRecord,
     DigestHex,
     PlanDigest,
@@ -310,7 +303,6 @@ def _write_reproducibility(
         if not required.is_file():
             raise InvalidScientificDataError(f"reproducibility input is missing: {required}")
     record = PublicationReproducibilityRecord(
-        source_commit=source_commit(workspace_root),
         configuration_path=PRODUCTION_CONFIG_PATH,
         configuration_sha256=file_digest(config_path),
         environment=EnvironmentReproducibilityRecord(
@@ -334,41 +326,24 @@ def require_synthesis_completion(workspace_root: Path) -> None:
     completion = read_model(cell_completion_path(cell, workspace_root), CompletionRecord)
     _validate_upstream_completions(workspace_root, plan, cell)
     specification = scientific_specification_digest()
-    component = producer_component_digest(workspace_root, cell.identity.experiment_name)
-    dependency_specification = scientific_dependency_digest(
-        specification,
-        cell.identity.semantic_cell_key,
-        component,
-    )
     upstream = tuple(item for item in plan.cells if item.identity != cell.identity)
     dependency = synthesis_dependency_fingerprint(upstream, workspace_root)
     required = synthesis_artifact_keys(cell)
     expected_plan_digest = PlanDigest(model_digest(cell))
-    expected_manifest_digest = model_digest(cell)
     checks = (
         completion.semantic_cell_key == cell.identity.semantic_cell_key,
         completion.cell_plan_digest == expected_plan_digest,
         completion.scientific_specification_digest == specification,
-        completion.scientific_dependency_digest == dependency_specification,
         completion.dependency_fingerprint == dependency,
-        completion.manifest_digest == expected_manifest_digest,
         completion.required_artifact_keys == required,
         completion.produced_artifact_keys == required,
-        completion.expected_artifact_count == len(required),
         completion.completed_seed_count == 0,
         completion.expected_seed_count == 0,
-        completion.metrics_complete,
-        completion.statistics_complete,
-        completion.schema_validation_pass,
-        completion.invariant_validation_pass,
-        completion.dependency_validation_pass,
-        completion.provenance_record_complete,
     )
     if not all(checks):
         raise InvalidScientificDataError(
             "Statistical Synthesis completion is stale, incomplete, or dependency-incompatible"
         )
-    _require_local_validity_pass(workspace_root, cell, completion)
 
 
 def _validate_upstream_completions(
@@ -386,81 +361,29 @@ def _validate_upstream_completions(
                 "Statistical Synthesis cannot consume a planned-invalid upstream cell"
             )
         completion = read_model(cell_completion_path(cell, workspace_root), CompletionRecord)
-        component = producer_component_digest(workspace_root, cell.identity.experiment_name)
-        dependency_specification = scientific_dependency_digest(
-            specification,
-            cell.identity.semantic_cell_key,
-            component,
-        )
         dependency = cell_dependency_fingerprint(
             workspace_root,
             plan,
             cell,
-            dependency_specification,
-            component,
+            specification,
             environment_digest,
         )
         required_key = scientific_result_artifact_key(cell)
         expected_plan_digest = PlanDigest(model_digest(cell))
-        expected_manifest_digest = model_digest(cell)
         checks = (
             completion.semantic_cell_key == cell.identity.semantic_cell_key,
             completion.cell_plan_digest == expected_plan_digest,
             completion.scientific_specification_digest == specification,
-            completion.scientific_dependency_digest == dependency_specification,
             completion.dependency_fingerprint == dependency,
-            completion.manifest_digest == expected_manifest_digest,
             completion.required_artifact_keys == (required_key,),
             completion.produced_artifact_keys == (required_key,),
-            completion.expected_artifact_count == 1,
             completion.expected_seed_count == expected_seed_count(cell.identity.experiment_name),
             completion.completed_seed_count == completion.expected_seed_count,
-            completion.metrics_complete,
-            completion.statistics_complete,
-            completion.schema_validation_pass,
-            completion.invariant_validation_pass,
-            completion.dependency_validation_pass,
-            completion.provenance_record_complete,
         )
         if not all(checks):
             raise InvalidScientificDataError(
                 f"upstream completion is stale or incompatible: {cell.identity.semantic_cell_key}"
             )
-
-
-def _require_local_validity_pass(
-    workspace_root: Path,
-    synthesis_cell: PlannedCell,
-    completion: CompletionRecord,
-) -> None:
-    audit_key = local_validity_artifact_key()
-    audit_path = workspace_root / synthesis_artifact_paths(synthesis_cell)[audit_key]
-    digest = file_digest(audit_path)
-    expected_checksum = ArtifactChecksum(artifact_key=audit_key, sha256=digest)
-    if expected_checksum not in completion.artifact_sha256_map:
-        raise InvalidScientificDataError("Statistical Synthesis record checksum is stale")
-    audit = read_model(audit_path, LocalValidityAuditResult)
-    if not audit.passed:
-        raise InvalidScientificDataError("Statistical Synthesis local-validity audit did not pass")
-
-
-def source_commit(workspace_root: Path) -> CodeCommit:
-    try:
-        result = subprocess.run(
-            ("git", "rev-parse", "HEAD"),
-            cwd=workspace_root,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise InvalidScientificDataError(
-            "cannot resolve source commit for reproducibility"
-        ) from exc
-    commit = result.stdout.strip()
-    if len(commit) != active_config.get().identifiers.git_sha1_hex_length:
-        raise InvalidScientificDataError("resolved source commit is not a full Git SHA-1")
-    return CodeCommit(commit)
 
 
 def replace_tree(staged: Path, target: Path, *, overwrite: bool) -> bool:

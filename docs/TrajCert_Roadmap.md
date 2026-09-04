@@ -3202,7 +3202,7 @@ Only compact verified reproducibility summaries are exported.
 
 # 13. Machine-Readable Schemas
 
-Schemas compose a shared envelope rather than duplicating provenance fields.
+Schemas compose a shared identity rather than duplicating provenance fields.
 
 ## 13.1 Canonical physical types
 
@@ -3235,47 +3235,22 @@ schema_version
 
 with current `schema_version=1`.
 
-## 13.2 Common envelope
+## 13.2 Common artifact identity
 
 Applicable scientific-cell and reusable artifacts inherit:
 
 ```text
 artifact_key
 artifact_type
-artifact_owner
-producer_component
 semantic_cell_key
 semantic_coordinates
 experiment_name
 classification
-execution_group
 scientific_specification_digest
-scientific_dependency_digest
-provenance_fingerprint
 dependency_fingerprint
-implementation_component_digest
 environment_dependency_digest
-plan_digest
 cell_plan_digest
 status
-method_name
-baseline_name
-dataset_name
-dataset_checksum
-synthetic_law_name
-partition_name
-rho
-beta
-delta
-environment_lock_digest
-code_commit
-seed_set_keys
-parent_artifact_keys
-parent_artifact_digests
-input_paths
-canonical_active_path
-schema_name
-schema_version
 ```
 
 Required common fields are non-null:
@@ -3283,17 +3258,10 @@ Required common fields are non-null:
 ```text
 artifact_key
 artifact_type
-artifact_owner
-producer_component
 scientific_specification_digest
-scientific_dependency_digest
-provenance_fingerprint
 dependency_fingerprint
-implementation_component_digest
 environment_dependency_digest
 status
-schema_name
-schema_version
 ```
 
 Cell-specific fields are non-null whenever applicable to the semantic cell.
@@ -3327,14 +3295,12 @@ expected_stream_count
 expected_artifact_schema
 expected_output_path
 upstream_artifact_types
-producer_component
 dependency_coordinates
 ```
 
 Canonical plan ordering:
 
 ```text
-execution_group
 experiment_name
 synthetic_law_name
 partition_name
@@ -3424,24 +3390,15 @@ Reusable artifact manifest:
 ```text
 artifact_key
 artifact_type
-artifact_owner
-producer_component
 dependency_fingerprint
-implementation_component_digest
 environment_dependency_digest
-scientific_dependency_digest
 semantic_coordinates
 parent_artifact_keys
 parent_artifact_digests
 scientific_content_digest
 payload_paths
 payload_sha256_map
-schema_name
-schema_version
 status
-created_timestamp
-validated_timestamp
-declared_downstream_consumers
 ```
 
 ## 13.4 Cell, execution, dependency, and provenance records
@@ -3489,38 +3446,23 @@ failed_semantic_cells
 invalid_semantic_cells
 stale_semantic_cells
 blocking_dependencies
-active_provenance_digest
+active_dependency_fingerprint
 last_execution_outcome
 results_export_state
-```
-
-The provenance fingerprint is SHA-256 of canonical JSON containing complete recorded lineage:
-
-```text
-scientific_specification_digest
-code_commit
-environment_lock_digest
-dataset/preprocessing checksums
-partition checksum
-seed-manifest checksums
-plan_digest
 ```
 
 The dependency fingerprint is SHA-256 of canonical JSON containing only material dependencies:
 
 ```text
 artifact_type
-applicable semantic coordinates
-scientific_dependency_digest
-implementation_component_digest
+semantic cell identity
+scientific_specification_digest
 environment_dependency_digest
-seed-manifest digest when stochastic
 parent artifact identities
 parent canonical scientific-content digests
-other producer-specific immutable inputs
 ```
 
-Repository commit, timestamps, unrelated plan rows, unrelated source files, tests, documentation, logging code, and report-only code are excluded from the dependency fingerprint unless they are material inputs to the producer.
+Repository commit, timestamps, unrelated plan rows, unrelated source files, tests, documentation, logging code, and report-only code are excluded from the dependency fingerprint unless they are material inputs to the producer. There is no separate provenance fingerprint layer; the dependency fingerprint is the single cell-reuse identity.
 
 ## 13.5 Scientific result records
 
@@ -3680,9 +3622,7 @@ Failure:
 failure_record_key
 semantic_cell_key
 dependency_fingerprint
-provenance_fingerprint
 failure_class
-execution_group
 reason_code
 message
 exception_type
@@ -3702,28 +3642,15 @@ A semantic cell is complete only when the atomically written ``COMPLETED.json`` 
 semantic_cell_key
 cell_plan_digest
 scientific_specification_digest
-scientific_dependency_digest
-provenance_fingerprint
 dependency_fingerprint
-manifest_digest
 required_artifact_keys
 produced_artifact_keys
-expected_artifact_count
 artifact_sha256_map
 completed_seed_count
 expected_seed_count
-metrics_complete
-statistics_complete
-schema_validation_pass
-invariant_validation_pass
-dependency_validation_pass
-provenance_record_complete
-exit_status
 ```
 
 It is written last.
-
-For a cell with no cell-level statistical artifact, `statistics_complete=true` means statistical output is not required at cell scope.
 
 Directory, checkpoint, log, partial payload, or stale completion-marker existence alone never constitutes completion.
 
@@ -3839,9 +3766,9 @@ The following component registrations are authoritative minimum sets. Imports fr
 | tables                        | §19                | `reporting/tables.py`                                                                        | Pandas, PyArrow                    | declared aggregate source data |
 | figures                       | §20                | `reporting/figures.py`                                                                       | Matplotlib, Pandas, PyArrow        | declared figure source data    |
 
-`scientific_dependency_digest` is computed from the exact named roadmap subsection text plus applicable configuration fragments.
+`scientific_specification_digest` is computed from the authoritative configuration.
 
-Changing an unrelated subsection does not invalidate an artifact.
+Changing an unrelated configuration value does not invalidate an artifact.
 
 ## 14.4 Selective invalidation boundaries
 
@@ -3918,7 +3845,6 @@ Each checkpoint records:
 semantic_cell_key
 artifact_key
 dependency_fingerprint
-provenance_fingerprint
 cell_plan_digest
 batch_index
 seed_index_start
@@ -3944,10 +3870,9 @@ Recovery:
 
 Read-only commands (`doctor`, `plan`, `status`) do not mutate active scientific artifacts.
 
-The reusable provenance envelope records:
+The executed-cell provenance record includes:
 
 ```text
-Git commit
 dependency-lock SHA-256
 Python implementation/version
 OS/kernel
@@ -3957,22 +3882,11 @@ arithmetic/threading environment variables
 input checksums
 semantic coordinates
 scientific specification digest
-scientific dependency digest
-implementation component digest
 environment dependency digest
 dependency fingerprint
 partition/law/dataset checksums
-seed-manifest checksums
 execution timestamps
 ```
-
-The source commit is obtained by:
-
-```text
-git rev-parse HEAD
-```
-
-If Git metadata is unavailable, `run` is blocked with `environment_or_prerequisite_block`.
 
 `The authoritative execution environment` fixes authoritative execution to CPU. GPU acceleration may not substitute for that environment.
 
@@ -4001,7 +3915,6 @@ trajcert report ["<descriptive experiment name>"] [--overwrite]
 No public flag exposes:
 
 ```text
-execution group
 seed
 rho
 beta
@@ -4979,7 +4892,7 @@ It:
 6. applies materiality;
 7. produces Tables 1, 7, 8, and 10 source data;
 8. produces cross-experiment Figure 1 source data;
-9. performs the local-validity audits in Section 21.11.
+9. relies on the per-stream data-isolation guarantee in Section 21.11.
 
 A scientific falsification or null does not block synthesis when execution is valid; it remains visible in the corresponding experiment results.
 
@@ -5626,70 +5539,21 @@ Scientific statement:
 
 > Core statistical validity uses no foreign-client information.
 
-Support requires two machine-readable audits.
+The invariant is enforced at the function/data boundary rather than by a
+runtime provenance graph:
 
-### Static dependency audit
+- Each categorical inference stream is carried by a `CategoricalState` bound
+  to exactly one `LedgerIdentity`
+  (`client_id` / `action_channel_id` / `epoch_id`).
+- `append_matured_event` refuses any `MaturedEvent` whose `LedgerIdentity`
+  differs from the state identity, raising a data-integrity error.
+- Confidence-sequence updates and the conservative projection consume only
+  that single state's local counts and its matching population summary; no
+  cross-client aggregate is ever formed.
 
-Inspect the registered parent DAG for the bound-producing components:
-
-```text
-inference/categorical.py
-inference/confidence.py
-inference/envelope.py
-inference/projection.py
-inference/certification.py
-```
-
-Allowed scientific input classes are only:
-
-```text
-target-stream event/count artifacts
-target epoch manifest
-target partition manifest
-config.py values
-local numerical dependencies
-```
-
-A parent scientific artifact carrying a different `client_id` than the target cell is forbidden.
-
-### Runtime input-lineage audit
-
-For every TrajCert local bound artifact, recursively traverse `parent_artifact_keys`.
-
-Every operational parent containing local-unit fields must satisfy exactly:
-
-```text
-client_id = target client_id
-action_channel_id = target action_channel_id
-epoch_id = target epoch_id
-```
-
-The lineage must contain no:
-
-```text
-foreign_client_ids
-foreign_client_statistics
-foreign_model_updates
-cross_client_aggregate
-```
-
-unless such a field is purely provenance text and is not a scientific parent input.
-
-Audit output:
-
-```text
-static_dependency_pass
-runtime_lineage_pass
-foreign_scientific_parent_count
-violating_artifact_keys
-pass
-```
-
-Any foreign scientific input reaching the local bound computation yields:
-
-```text
-NOT_SUPPORTED
-```
+Consequently a foreign client, action channel, or epoch cannot enter a local
+bound computation; such an input fails at the inference boundary as a
+data-integrity error rather than being silently aggregated.
 
 ## 21.12 Real-Trajectory Value
 
@@ -5773,13 +5637,11 @@ After affected artifacts are recomputed, Statistical Synthesis is rerun.
 A complete reproduction requires:
 
 ```text
-source commit
 requirements.lock
 this roadmap
 configs/trajcert.yaml
 deterministic synthetic generator
 deterministic seed derivation
-registered producer-component dependency map
 public CLI
 ```
 
@@ -5792,12 +5654,9 @@ results artifact
 -> semantic experiment cell
 -> dependency fingerprint
 -> parent artifact identities/digests
--> scientific dependency/configuration fragments
+-> scientific specification/configuration
 -> law/partition/dataset checksum
--> seed manifest when stochastic
--> producer implementation component digest
 -> relevant environment dependency digest
--> source commit provenance
 -> compact reproducibility metadata
 ```
 
@@ -5844,7 +5703,6 @@ Required deterministic/unit coverage includes:
 * numeric path rendering;
 * seed derivation and namespace construction;
 * dependency-fingerprint construction;
-* component-digest isolation;
 * balanced-prefix construction;
 * Hamilton apportionment;
 * CS endpoint outward inversion;
@@ -5857,7 +5715,7 @@ Required deterministic/unit coverage includes:
 * sign-flip statistic;
 * Holm ordering/ties;
 * deterministic quantiles;
-* completion/dependency/provenance validation.
+* completion/dependency validation.
 
 Required property checks, with deterministic Hypothesis settings:
 
@@ -5910,7 +5768,7 @@ Before reporting, reviewers verify:
 * **Sequential/statistical validity:** deployed sequential construction is time-uniform; independent stream is the Monte Carlo unit; Monte Carlo counts/tests/multiplicity/materiality are prespecified before scientific-support assessment; incompatible cells remain visible; undefined values are null; failed seeds are retained.
 * **Identity/recovery:** no duplicate active semantic result; each reusable artifact has one producer; partial outputs never become active evidence; checkpoints never cross dependency incompatibility; stale descendants are removed; caches never become evidence.
 * **Evidence lineage:** every table/figure has stable machine-readable source data; exports use completed verified evidence only; `results/` contains no caches/debug/failures/invalid/stale/partial/checkpoint artifacts.
-* **Local validity:** static dependency and runtime lineage audits in Section 21.11 pass.
+* **Local validity:** the per-stream data-isolation invariant in Section 21.11 holds.
 * **Execution completeness:** all 1,422 planned cells are accounted for as executable-completed, planned-invalid, or zero-cell nonapplicable according to their contracts; no mandatory executable cell is missing.
 
 This checklist guides review; it does not create a runtime artifact or block execution.
@@ -5965,7 +5823,6 @@ baseline
 rho
 beta
 delta
-execution group
 cache mode
 checkpoint mode
 scientific configuration

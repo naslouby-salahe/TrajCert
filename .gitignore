@@ -225,4 +225,5 @@ __marimo__/
 .worktrees/
 docs/.artifact-layout-audit/
 docs/.graphify-audit/
+docs/.architecture-cleanup/
 graphify-out/

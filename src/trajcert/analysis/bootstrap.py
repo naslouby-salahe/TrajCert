@@ -11,6 +11,7 @@ from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     ConfidenceLevel,
     DomainModel,
+    FailureMessage,
     PairedDifferenceValue,
     Probability,
     ResampleCount,
@@ -35,8 +36,8 @@ def paired_percentile_bootstrap(
 ) -> PercentileBootstrapInterval:
     values = validated_finite_vector(
         differences,
-        "paired statistics require a nonempty one-dimensional vector",
-        "paired statistics forbid NaN and infinity",
+        FailureMessage("paired statistics require a nonempty one-dimensional vector"),
+        FailureMessage("paired statistics forbid NaN and infinity"),
     )
     namespace = bootstrap_namespace(semantic_comparison_key)
     rng = generator_for(namespace, 0)
@@ -59,8 +60,8 @@ def paired_percentile_bootstrap(
 def linear_quantile(sorted_values: Vector, probability: Probability) -> PairedDifferenceValue:
     values = validated_finite_vector(
         sorted_values,
-        "paired statistics require a nonempty one-dimensional vector",
-        "paired statistics forbid NaN and infinity",
+        FailureMessage("paired statistics require a nonempty one-dimensional vector"),
+        FailureMessage("paired statistics forbid NaN and infinity"),
     )
     if np.any(values[:-1] > values[1:]):
         raise InvalidScientificDataError("linear quantile requires sorted values")

@@ -19,7 +19,6 @@ from trajcert.storage import (
     ArtifactKey,
     DependencyFingerprint,
     DigestHex,
-    ProvenanceFingerprint,
     SpecificationDigest,
     file_digest,
 )
@@ -96,7 +95,6 @@ def _table_source(
         completion_sha256=DigestHex(_DIGEST),
         scientific_specification_digest=SpecificationDigest(_DIGEST),
         dependency_fingerprint=DependencyFingerprint(_DIGEST),
-        provenance_fingerprint=ProvenanceFingerprint(_DIGEST),
     )
     return VerifiedSourceData(descriptor=descriptor, table=table, lineage=lineage)
 

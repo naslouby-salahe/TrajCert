@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -10,127 +9,28 @@ from trajcert import cli
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.experiments.plan import PlannedCell, build_plan, cells_for_experiment
+from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.experiments.runner import (
-    SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-    DependencyReadiness,
-    ExecutionContext,
+    cell_artifact_index_path,
     cell_dependency_fingerprint,
-    execute_dispatched_cell,
-    expected_seed_count,
-    producer_component_digest,
-    run_cell,
-    scientific_dependency_digest,
+    cell_dependency_material,
     scientific_result_artifact_key,
-    scientific_result_path,
     scientific_specification_digest,
 )
-from trajcert.provenance import (
-    ArtifactOwner,
-    CodeCommit,
-    EnvironmentDigest,
-    ExecutionGroup,
-    ProducerComponentName,
-    ProvenanceMaterial,
-    ReusableArtifactEnvelope,
-    SchemaName,
-    provenance_fingerprint,
-)
+from trajcert.provenance import EnvironmentDigest
 from trajcert.storage import (
-    DependencyFingerprint,
+    ArtifactIndexEntry,
+    CellArtifactIndex,
     DigestHex,
-    PlanDigest,
-    ProvenanceFingerprint,
-    SpecificationDigest,
+    atomic_write_model,
     file_digest,
-    model_digest,
 )
-from trajcert.types import ExperimentName, PublicExecutionState
+from trajcert.types import ExperimentName
 
 _REPO_ROOT = Path.cwd()
 _INVENTORY_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
-_LEGACY_CHECK_NAME = ExperimentName.PATH_INFORMATION_DECOMPOSITION
+_CHILD_NAME = ExperimentName.PATH_INFORMATION_DECOMPOSITION
 _ALTERNATE_ROOT_ATOL = 5.0e-11
-_PLACEHOLDER_PROVENANCE = ProvenanceFingerprint("0" * 64)
-
-
-def _placeholder_envelope(
-    cell: PlannedCell,
-    specification: SpecificationDigest,
-    dependency_specification: SpecificationDigest,
-    dependency: DependencyFingerprint,
-) -> ReusableArtifactEnvelope:
-    return ReusableArtifactEnvelope(
-        artifact_key=scientific_result_artifact_key(cell),
-        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
-        artifact_owner=ArtifactOwner(str(cell.identity.experiment_name)),
-        producer_component=ProducerComponentName("test-component"),
-        semantic_cell_key=cell.identity.semantic_cell_key,
-        semantic_coordinates=cell.identity.coordinates,
-        experiment_name=cell.identity.experiment_name,
-        classification=cell.evidence_class,
-        execution_group=ExecutionGroup("execution-group"),
-        scientific_specification_digest=specification,
-        scientific_dependency_digest=dependency_specification,
-        provenance_fingerprint=_PLACEHOLDER_PROVENANCE,
-        dependency_fingerprint=dependency,
-        implementation_component_digest=DigestHex(str(specification)),
-        environment_dependency_digest=EnvironmentDigest("env"),
-        plan_digest=DigestHex(str(specification)),
-        cell_plan_digest=PlanDigest(str(model_digest(cell))),
-        status=PublicExecutionState.COMPLETED,
-        method_name=cell.identity.coordinates.method_name,
-        baseline_name=cell.identity.coordinates.baseline_name,
-        dataset_name=None,
-        dataset_checksum=None,
-        synthetic_law_name=cell.identity.coordinates.synthetic_law_name,
-        partition_name=cell.identity.coordinates.partition_name,
-        rho=cell.identity.coordinates.rho,
-        beta=cell.identity.coordinates.beta,
-        delta=cell.identity.coordinates.delta,
-        environment_lock_digest=EnvironmentDigest("env"),
-        code_commit=CodeCommit("commit"),
-        seed_set_keys=(),
-        parent_artifact_keys=(),
-        parent_artifact_digests=(),
-        input_paths=(),
-        canonical_active_path=scientific_result_path(cell),
-        schema_name=SchemaName("ReusableArtifactEnvelope"),
-        schema_version=1,
-    )
-
-
-def _write_workspace_commit(workspace_root: Path) -> None:
-    _ = subprocess.run(
-        ("git", "init"),
-        cwd=workspace_root,
-        check=True,
-        capture_output=True,
-    )
-    _ = (workspace_root / "marker.txt").write_text(
-        "trajcert-integration-fixture\n", encoding="utf-8"
-    )
-    _ = subprocess.run(
-        ("git", "add", "-A"),
-        cwd=workspace_root,
-        check=True,
-        capture_output=True,
-    )
-    _ = subprocess.run(
-        (
-            "git",
-            "-c",
-            "user.email=trajcert-test@example.com",
-            "-c",
-            "user.name=TrajCert Test",
-            "commit",
-            "-m",
-            "fixture commit",
-        ),
-        cwd=workspace_root,
-        check=True,
-        capture_output=True,
-    )
 
 
 def _symlink_or_skip(link: Path, target: Path) -> None:
@@ -156,11 +56,10 @@ def _link_uv_lock(workspace_root: Path) -> None:
 def _valid_workspace(tmp_path: Path) -> Path:
     _link_source_and_config(tmp_path)
     _link_uv_lock(tmp_path)
-    _write_workspace_commit(tmp_path)
     return tmp_path
 
 
-def test_doctor_passes_on_a_fully_provisioned_workspace(tmp_path: Path) -> None:
+def test_doctor_passes_on_a_provisioned_workspace(tmp_path: Path) -> None:
     workspace_root = _valid_workspace(tmp_path)
     result = cli.doctor(workspace_root=workspace_root)
     assert result.passed is True
@@ -168,7 +67,6 @@ def test_doctor_passes_on_a_fully_provisioned_workspace(tmp_path: Path) -> None:
     assert result.plan_valid is True
     assert result.dependency_lock_valid is True
     assert result.imports_valid is True
-    assert result.source_control_valid is True
     assert result.workspace_writable is True
     assert result.publication_contract_valid is True
     assert result.results_layout_valid is True
@@ -176,39 +74,15 @@ def test_doctor_passes_on_a_fully_provisioned_workspace(tmp_path: Path) -> None:
 
 def test_doctor_rejects_missing_uv_lock(tmp_path: Path) -> None:
     _link_source_and_config(tmp_path)
-    _write_workspace_commit(tmp_path)
     with pytest.raises(InvalidScientificDataError):
         _ = cli.doctor(workspace_root=tmp_path)
 
 
 def test_doctor_rejects_empty_uv_lock(tmp_path: Path) -> None:
     _link_source_and_config(tmp_path)
-    _write_workspace_commit(tmp_path)
     _ = (tmp_path / "uv.lock").write_text("", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError):
         _ = cli.doctor(workspace_root=tmp_path)
-
-
-def test_doctor_rejects_git_repository_without_a_commit(tmp_path: Path) -> None:
-    _link_source_and_config(tmp_path)
-    _link_uv_lock(tmp_path)
-    _ = subprocess.run(
-        ("git", "init"),
-        cwd=tmp_path,
-        check=True,
-        capture_output=True,
-    )
-    with pytest.raises(InvalidScientificDataError):
-        _ = cli.doctor(workspace_root=tmp_path)
-
-
-def test_doctor_rejects_disallowed_results_layout(tmp_path: Path) -> None:
-    workspace_root = _valid_workspace(tmp_path)
-    forbidden = workspace_root / "results" / "project_summary" / "debug"
-    forbidden.mkdir(parents=True)
-    _ = (forbidden / "trace.txt").write_text("debug", encoding="utf-8")
-    with pytest.raises(InvalidScientificDataError, match="invalid artifact classes"):
-        _ = cli.doctor(workspace_root=workspace_root)
 
 
 def test_scientific_specification_digest_is_config_content_sensitive() -> None:
@@ -225,37 +99,6 @@ def test_scientific_specification_digest_is_config_content_sensitive() -> None:
     assert mutated_digest != first
 
 
-def test_producer_component_digest_is_deterministic_over_a_symlinked_tree(tmp_path: Path) -> None:
-    _symlink_or_skip(tmp_path / "src", (_REPO_ROOT / "src").resolve())
-    first = producer_component_digest(tmp_path, _LEGACY_CHECK_NAME)
-    second = producer_component_digest(tmp_path, _LEGACY_CHECK_NAME)
-    assert first == second
-
-
-def test_producer_component_digest_is_sensitive_to_real_file_content(tmp_path: Path) -> None:
-    unmutated_root = tmp_path / "unmutated"
-    mutated_root = tmp_path / "mutated"
-    _ = shutil.copytree(_REPO_ROOT / "src", unmutated_root / "src")
-    _ = shutil.copytree(_REPO_ROOT / "src", mutated_root / "src")
-    unmutated_digest = producer_component_digest(unmutated_root, _LEGACY_CHECK_NAME)
-    mathematics_path = mutated_root / "src" / "trajcert" / "experiments" / "mathematics.py"
-    original_text = mathematics_path.read_text(encoding="utf-8")
-    _ = mathematics_path.write_text(original_text + "\n", encoding="utf-8")
-    mutated_digest = producer_component_digest(mutated_root, _LEGACY_CHECK_NAME)
-    assert mutated_digest != unmutated_digest
-    reverted_root = tmp_path / "reverted"
-    _ = shutil.copytree(_REPO_ROOT / "src", reverted_root / "src")
-    reverted_digest = producer_component_digest(reverted_root, _LEGACY_CHECK_NAME)
-    assert reverted_digest == unmutated_digest
-
-
-def test_producer_component_digest_rejects_unknown_experiment_name(tmp_path: Path) -> None:
-    _symlink_or_skip(tmp_path / "src", (_REPO_ROOT / "src").resolve())
-    experiment_name = ExperimentName.REAL_TRAJECTORY_VALIDATION
-    with pytest.raises(InvalidScientificDataError):
-        _ = producer_component_digest(tmp_path, experiment_name)
-
-
 def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: Path) -> None:
     workspace_root = _valid_workspace(tmp_path)
     config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
@@ -263,7 +106,7 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
     plan = build_plan(config)
     child_cell = next(
         cell
-        for cell in cells_for_experiment(plan, _LEGACY_CHECK_NAME)
+        for cell in cells_for_experiment(plan, _CHILD_NAME)
         if cell.required_experiments == (_INVENTORY_NAME,)
     )
     parent_cell = next(
@@ -271,101 +114,61 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
     )
     specification = scientific_specification_digest()
     environment_digest = EnvironmentDigest(file_digest(workspace_root / "uv.lock"))
-    child_component_digest = producer_component_digest(
-        workspace_root, child_cell.identity.experiment_name
-    )
-    scientific_dependency = scientific_dependency_digest(
-        specification,
-        child_cell.identity.semantic_cell_key,
-        child_component_digest,
-    )
-    fingerprint_before = cell_dependency_fingerprint(
-        workspace_root,
-        plan,
-        child_cell,
-        scientific_dependency,
-        child_component_digest,
-        environment_digest,
+    before = cell_dependency_fingerprint(
+        workspace_root, plan, child_cell, specification, environment_digest
     )
 
-    parent_component_digest = producer_component_digest(
-        workspace_root, parent_cell.identity.experiment_name
-    )
-    parent_dependency_specification = scientific_dependency_digest(
-        specification,
-        parent_cell.identity.semantic_cell_key,
-        parent_component_digest,
-    )
-    parent_dependency_fingerprint = cell_dependency_fingerprint(
-        workspace_root,
-        plan,
-        parent_cell,
-        parent_dependency_specification,
-        parent_component_digest,
-        environment_digest,
-    )
-    parent_context = ExecutionContext(
-        workspace_root=workspace_root,
-        plan_digest=plan.plan_digest,
-        scientific_specification_digest=specification,
-        scientific_dependency_digest=parent_dependency_specification,
-        provenance_fingerprint=_PLACEHOLDER_PROVENANCE,
-        dependency_fingerprint=parent_dependency_fingerprint,
-        manifest_digest=DigestHex(str(specification)),
-        required_artifact_keys=(scientific_result_artifact_key(parent_cell),),
-        expected_seed_count=expected_seed_count(parent_cell.identity.experiment_name),
-        reusable_artifact_envelope=_placeholder_envelope(
-            parent_cell,
-            specification,
-            parent_dependency_specification,
-            parent_dependency_fingerprint,
-        ),
-    )
-    outcome = run_cell(
-        parent_cell,
-        parent_context,
-        (),
-        lambda cell, context: execute_dispatched_cell(cell, context),
-        overwrite=False,
-    )
-    assert outcome.state is PublicExecutionState.COMPLETED
-    assert outcome.completion_path.is_file()
-
-    fingerprint_after = cell_dependency_fingerprint(
-        workspace_root,
-        plan,
-        child_cell,
-        scientific_dependency,
-        child_component_digest,
-        environment_digest,
-    )
-    assert fingerprint_after != fingerprint_before
-
-    dependencies = (
-        DependencyReadiness(experiment_name=_INVENTORY_NAME, state=PublicExecutionState.COMPLETED),
-    )
-    assert dependencies[0].state is PublicExecutionState.COMPLETED
-
-
-def test_provenance_fingerprint_reflects_environment_lock_content(tmp_path: Path) -> None:
-    lock_a = tmp_path / "uv_a.lock"
-    lock_b = tmp_path / "uv_b.lock"
-    _ = lock_a.write_text("resolution one\n", encoding="utf-8")
-    _ = lock_b.write_text("resolution two\n", encoding="utf-8")
-
-    def _material(lock_path: Path) -> ProvenanceMaterial:
-        return ProvenanceMaterial(
-            scientific_specification_digest=SpecificationDigest("a" * 64),
-            code_commit=CodeCommit("b" * 40),
-            environment_lock_digest=EnvironmentDigest(str(file_digest(lock_path))),
-            dataset_preprocessing_digests=(),
-            partition_digest=None,
-            seed_manifest_digests=(),
-            plan_digest=DigestHex("c" * 64),
+    parent_key = scientific_result_artifact_key(parent_cell)
+    payload_digest = DigestHex("a" * 64)
+    index = CellArtifactIndex(
+        artifacts=(
+            ArtifactIndexEntry(
+                artifact_key=parent_key,
+                relative_path=Path("outputs/experiments/legacy-partition-incoherence-check")
+                / "test",
+                sha256=payload_digest,
+            ),
         )
+    )
+    _ = atomic_write_model(cell_artifact_index_path(parent_cell, workspace_root), index)
 
-    fingerprint_a = provenance_fingerprint(_material(lock_a))
-    fingerprint_a_repeat = provenance_fingerprint(_material(lock_a))
-    fingerprint_b = provenance_fingerprint(_material(lock_b))
-    assert fingerprint_a == fingerprint_a_repeat
-    assert fingerprint_a != fingerprint_b
+    after = cell_dependency_fingerprint(
+        workspace_root, plan, child_cell, specification, environment_digest
+    )
+    assert after != before
+
+
+def test_cell_dependency_material_embeds_parent_content_digest(tmp_path: Path) -> None:
+    workspace_root = _valid_workspace(tmp_path)
+    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
+    _ = active_config.set(config)
+    plan = build_plan(config)
+    child_cell = next(
+        cell
+        for cell in cells_for_experiment(plan, _CHILD_NAME)
+        if cell.required_experiments == (_INVENTORY_NAME,)
+    )
+    parent_cell = next(
+        cell for cell in cells_for_experiment(plan, _INVENTORY_NAME) if cell.executable
+    )
+    parent_key = scientific_result_artifact_key(parent_cell)
+    payload_digest = DigestHex("b" * 64)
+    index = CellArtifactIndex(
+        artifacts=(
+            ArtifactIndexEntry(
+                artifact_key=parent_key,
+                relative_path=Path("parent-result.json"),
+                sha256=payload_digest,
+            ),
+        )
+    )
+    _ = atomic_write_model(cell_artifact_index_path(parent_cell, workspace_root), index)
+    material = cell_dependency_material(
+        workspace_root,
+        plan,
+        child_cell,
+        scientific_specification_digest(),
+        EnvironmentDigest(file_digest(workspace_root / "uv.lock")),
+    )
+    assert material.parents
+    assert material.parents[0].scientific_content_digest == payload_digest

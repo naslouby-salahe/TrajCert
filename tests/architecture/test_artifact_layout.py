@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-import json
 import re
 import shutil
-import subprocess
 from pathlib import Path
-from typing import cast
-
-from pydantic import JsonValue
 
 from trajcert import cli
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.paths import ExperimentSlug, experiment_root, semantic_slug
-from trajcert.types import ColumnName, ExperimentName, PublicExecutionState
+from trajcert.types import ExperimentName, PublicExecutionState
 
 SOURCE_ROOT = Path(__file__).parents[2] / "src" / "trajcert"
 
@@ -83,18 +78,23 @@ def test_experiment_artifact_writes_use_typed_path_construction() -> None:
 
 
 def test_publication_source_filenames_are_centralized() -> None:
+    publication = (SOURCE_ROOT / "reporting" / "publication_sources.py").read_text(encoding="utf-8")
     catalog = (SOURCE_ROOT / "experiments" / "catalog.py").read_text(encoding="utf-8")
     synthesis = (SOURCE_ROOT / "experiments" / "synthesis.py").read_text(encoding="utf-8")
-    assert "PublicationSourceFile" in catalog
-    assert "SynthesisArtifactFile" in catalog
-    assert "synthesis_artifact_file" in synthesis
+    assert "PublicationSourceFile" in publication
+    assert "SynthesisArtifactFile" not in catalog
+    assert "SynthesisArtifactFile" not in synthesis
+    assert "synthesis_artifact_file" not in synthesis
+    assert "SynthesisArtifactName" not in synthesis
     assert '.parquet"' not in catalog
 
 
 def test_representative_short_experiment_run_produces_required_evidence(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
     result = cli.run_experiment(
-        "Legacy Partition Incoherence Check", workspace_root=workspace, max_workers=1
+        ExperimentName("Legacy Partition Incoherence Check"),
+        workspace_root=workspace,
+        max_workers=1,
     )
     assert result.state is PublicExecutionState.COMPLETED
 
@@ -106,50 +106,28 @@ def test_representative_short_experiment_run_produces_required_evidence(tmp_path
     assert any(path.is_file() for path in checkpoints), "no execution checkpoints were persisted"
 
 
-def test_representative_short_experiment_run_reflects_metrics_diagnostics_provenance(
-    tmp_path: Path,
-) -> None:
+def test_representative_short_experiment_run_produces_explicit_outcomes(tmp_path: Path) -> None:
     workspace = _git_workspace(tmp_path)
     result = cli.run_experiment(
-        "Legacy Partition Incoherence Check", workspace_root=workspace, max_workers=1
+        ExperimentName("Legacy Partition Incoherence Check"),
+        workspace_root=workspace,
+        max_workers=1,
     )
     assert result.state is PublicExecutionState.COMPLETED
 
     slug = ExperimentSlug(semantic_slug(ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK))
     root = workspace / experiment_root(slug)
 
-    metrics_files = [
-        path
-        for leaf in ("per_seed", "per_condition")
-        for path in (root / "metrics" / leaf).rglob("metrics.json")
-    ]
-    assert metrics_files, "no metrics.json was reflected"
-    for path in metrics_files:
-        payload = cast("dict[ColumnName, JsonValue]", json.loads(path.read_text(encoding="utf-8")))
-        for value in payload.values():
-            assert isinstance(value, (int, float))
-            assert not isinstance(value, bool)
+    result_files = list((root / "evaluations" / "records").rglob("scientific_result.json"))
+    assert result_files, "no scientific_result.json was produced"
+    completion_files = list((root / "checkpoints" / "execution").rglob("COMPLETED.json"))
+    assert completion_files, "no completion record was produced"
 
-    diagnostics_files = list((root / "diagnostics" / "scientific").rglob("diagnostics.json"))
-    assert diagnostics_files, "no diagnostics.json was reflected"
-    for path in diagnostics_files:
-        payload = cast("dict[ColumnName, JsonValue]", json.loads(path.read_text(encoding="utf-8")))
-        for value in payload.values():
-            assert isinstance(value, bool)
-
-    provenance_files = {
-        filename: list((root / "provenance" / directory).rglob(filename))
-        for directory, filename in (
-            ("configuration", "configuration.json"),
-            ("data", "data.json"),
-            ("seeds", "seeds.json"),
-            ("code", "code.json"),
-            ("environment", "environment.json"),
-            ("dependencies", "dependencies.json"),
-        )
-    }
-    for filename, files in provenance_files.items():
-        assert files, f"no {filename} was reflected"
+    # Metrics and diagnostics must be explicit outputs of the experiment/result
+    # model, never inferred from runtime primitive types.
+    assert not list((root / "metrics").rglob("metrics.json"))
+    assert not list((root / "diagnostics" / "scientific").rglob("diagnostics.json"))
+    assert not list((root / "provenance").rglob("*.json"))
 
 
 def test_report_never_imports_experiment_execution() -> None:
@@ -179,21 +157,4 @@ def _configured_workspace(tmp_path: Path) -> Path:
 def _git_workspace(tmp_path: Path) -> Path:
     workspace = _configured_workspace(tmp_path)
     _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
-    _ = subprocess.run(("git", "init", "-q"), cwd=workspace, check=True)
-    _ = subprocess.run(("git", "add", "-A"), cwd=workspace, check=True)
-    _ = subprocess.run(
-        (
-            "git",
-            "-c",
-            "user.name=Test",
-            "-c",
-            "user.email=test@example.com",
-            "commit",
-            "-q",
-            "-m",
-            "init",
-        ),
-        cwd=workspace,
-        check=True,
-    )
     return workspace
