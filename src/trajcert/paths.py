@@ -33,6 +33,13 @@ RESULTS_EXPERIMENTS_ROOT = RESULTS_ROOT / "experiments"
 PROJECT_SUMMARY_ROOT = RESULTS_ROOT / "project_summary"
 
 
+class PublicationLeaf(StrEnum):
+    FIGURES_MAIN = "figures/main"
+    FIGURES_SUPPLEMENTARY = "figures/supplementary"
+    TABLES_MAIN = "tables/main"
+    TABLES_SUPPLEMENTARY = "tables/supplementary"
+
+
 class ExperimentLeaf(StrEnum):
     ARTIFACTS_FITTED = "artifacts/fitted"
     ARTIFACTS_DERIVED = "artifacts/derived"
@@ -48,10 +55,10 @@ class ExperimentLeaf(StrEnum):
     STATISTICS_CONFIDENCE_INTERVALS = "statistics/confidence_intervals"
     STATISTICS_EFFECTS = "statistics/effects"
     STATISTICS_MULTIPLICITY = "statistics/multiplicity"
-    FIGURES_MAIN = "figures/main"
-    FIGURES_SUPPLEMENTARY = "figures/supplementary"
-    TABLES_MAIN = "tables/main"
-    TABLES_SUPPLEMENTARY = "tables/supplementary"
+    FIGURES_MAIN = PublicationLeaf.FIGURES_MAIN
+    FIGURES_SUPPLEMENTARY = PublicationLeaf.FIGURES_SUPPLEMENTARY
+    TABLES_MAIN = PublicationLeaf.TABLES_MAIN
+    TABLES_SUPPLEMENTARY = PublicationLeaf.TABLES_SUPPLEMENTARY
     CHECKPOINTS_EXECUTION = "checkpoints/execution"
     DIAGNOSTICS_SCIENTIFIC = "diagnostics/scientific"
     DIAGNOSTICS_NUMERICAL = "diagnostics/numerical"
@@ -67,10 +74,10 @@ class ExperimentLeaf(StrEnum):
 
 
 class ResultsExperimentLeaf(StrEnum):
-    FIGURES_MAIN = "figures/main"
-    FIGURES_SUPPLEMENTARY = "figures/supplementary"
-    TABLES_MAIN = "tables/main"
-    TABLES_SUPPLEMENTARY = "tables/supplementary"
+    FIGURES_MAIN = PublicationLeaf.FIGURES_MAIN
+    FIGURES_SUPPLEMENTARY = PublicationLeaf.FIGURES_SUPPLEMENTARY
+    TABLES_MAIN = PublicationLeaf.TABLES_MAIN
+    TABLES_SUPPLEMENTARY = PublicationLeaf.TABLES_SUPPLEMENTARY
     SOURCE_DATA_FIGURES = "source_data/figures"
     SOURCE_DATA_TABLES = "source_data/tables"
     METRICS_PRIMARY = "metrics/primary"
@@ -159,8 +166,8 @@ class PlanArtifactFile(StrEnum):
 
 
 class ResultsLeaf(StrEnum):
-    FIGURES_MAIN = "figures/main"
-    TABLES_MAIN = "tables/main"
+    FIGURES_MAIN = PublicationLeaf.FIGURES_MAIN
+    TABLES_MAIN = PublicationLeaf.TABLES_MAIN
     SOURCE_DATA_FIGURES = "source_data/figures"
     SOURCE_DATA_TABLES = "source_data/tables"
     REPRODUCIBILITY = "reproducibility"

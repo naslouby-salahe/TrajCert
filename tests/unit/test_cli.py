@@ -582,8 +582,9 @@ def test_smoke_passes_all_fixtures() -> None:
 
 
 def test_experiment_status_rejects_unknown_family() -> None:
+    unknown = cast(ExperimentName, cast(object, "Unknown Experiment"))
     with pytest.raises(InvalidScientificDataError, match="unknown experiment family"):
-        _ = workflows.experiment_status(cast(ExperimentName, cast(object, "Unknown Experiment")))
+        _ = workflows.experiment_status(unknown)
 
 
 def test_experiment_status_zero_declared_cells_is_invalid() -> None:
@@ -593,10 +594,9 @@ def test_experiment_status_zero_declared_cells_is_invalid() -> None:
 
 
 def test_report_rejects_unknown_experiment_name() -> None:
+    unknown = cast(ExperimentName, cast(object, "Unknown Experiment"))
     with pytest.raises(InvalidScientificDataError, match="unknown experiment family"):
-        _ = workflows.report(
-            experiment_name=cast(ExperimentName, cast(object, "Unknown Experiment"))
-        )
+        _ = workflows.report(experiment_name=unknown)
 
 
 def test_main_run_prints_execution_summary(
@@ -1138,7 +1138,6 @@ def test_run_experiment_rejects_missing_uv_lock(
         pytest.skip(f"symlink creation unavailable in this environment: {exc}")
     monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
+    experiment = ExperimentName("Anytime Implementation Hand Cases")
     with pytest.raises(InvalidScientificDataError, match=r"uv\.lock is required"):
-        _ = workflows.run_experiment(
-            ExperimentName("Anytime Implementation Hand Cases"), workspace_root=workspace
-        )
+        _ = workflows.run_experiment(experiment, workspace_root=workspace)

@@ -37,6 +37,7 @@ def test_coverage_stress_cells_match_authoritative_configuration() -> None:
     assert len(cells) == len(config.study_design.coverage_stress_cases)
     for cell, case in zip(cells, config.study_design.coverage_stress_cases, strict=True):
         variant = cell.identity.coordinates.variant_name
-        assert variant is not None and variant.name == case.name
+        assert variant is not None
+        assert variant.name == case.name
         assert cell.identity.coordinates.synthetic_law_name == LAW_DISPLAY_NAMES[case.law]
         assert cell.identity.coordinates.partition_name == partition_name(case.band_count)

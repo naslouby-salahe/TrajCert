@@ -551,18 +551,20 @@ def _required_experiments(
     precondition = EXPERIMENT_CATALOG[0].name
     policy = dependency_policy_for(name)
     if policy in {DependencyPolicy.ROOT, DependencyPolicy.NONAPPLICABLE}:
-        return ()
-    if policy is DependencyPolicy.SYNTHESIS:
+        required: tuple[ExperimentName, ...] = ()
+    elif policy is DependencyPolicy.SYNTHESIS:
         excluded = {
             name,
             ExperimentName.REAL_TRAJECTORY_VALIDATION,
             ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
         }
-        return tuple(
+        required = tuple(
             experiment_name
             for experiment_name in catalog_experiment_names()
             if experiment_name not in excluded
         )
-    if policy is DependencyPolicy.ROOT_PRECONDITION:
-        return (precondition,)
-    raise RuntimeError(f"unhandled dependency policy: {policy}")
+    elif policy is DependencyPolicy.ROOT_PRECONDITION:
+        required = (precondition,)
+    else:
+        raise RuntimeError(f"unhandled dependency policy: {policy}")
+    return required

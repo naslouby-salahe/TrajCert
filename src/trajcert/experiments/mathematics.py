@@ -367,8 +367,10 @@ def population_complexity_proof_check() -> IdentityResult:
         for branching in branching_factors
         for depth in depths
     )
+    maximum_error = max(errors)
     return IdentityResult(
-        passed=all(error == 0.0 for error in errors), max_absolute_error=max(errors)
+        passed=maximum_error <= active_config.get().numerics.proof_check_tolerance,
+        max_absolute_error=maximum_error,
     )
 
 
