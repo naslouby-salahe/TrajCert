@@ -6,6 +6,7 @@ from trajcert.experiments.catalog import (
     EXECUTION_HANDLER_BY_EXPERIMENT,
     EXPERIMENT_CATALOG,
     SEED_POLICY_BY_EXPERIMENT,
+    DependencyPolicy,
     experiment_names,
 )
 from trajcert.experiments.plan import experiment_names as planned_experiment_names
@@ -24,10 +25,7 @@ def test_planning_consumes_the_catalog_order() -> None:
 
 
 def test_catalog_owns_coordinate_dispatch_for_applicable_experiments() -> None:
-    nonapplicable = {
-        ExperimentName.REAL_TRAJECTORY_VALIDATION,
-        ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
-    }
+    nonapplicable = {ExperimentName.REAL_TRAJECTORY_VALIDATION}
     assert set(COORDINATE_HANDLER_BY_EXPERIMENT) == set(ExperimentName) - nonapplicable
 
 
@@ -40,8 +38,21 @@ def test_catalog_owns_seed_policy_for_every_experiment() -> None:
 
 
 def test_catalog_owns_execution_handler_for_every_applicable_experiment() -> None:
-    nonapplicable = {
-        ExperimentName.REAL_TRAJECTORY_VALIDATION,
-        ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
-    }
+    nonapplicable = {ExperimentName.REAL_TRAJECTORY_VALIDATION}
     assert set(EXECUTION_HANDLER_BY_EXPERIMENT) == set(ExperimentName) - nonapplicable
+
+
+def test_only_explicitly_nonapplicable_experiments_lack_runnable_handlers() -> None:
+    declared_nonapplicable = {
+        definition.name
+        for definition in EXPERIMENT_CATALOG
+        if definition.coordinate_handler is None or definition.execution_handler is None
+    }
+    assert declared_nonapplicable == {ExperimentName.REAL_TRAJECTORY_VALIDATION}
+    for definition in EXPERIMENT_CATALOG:
+        if definition.name in declared_nonapplicable:
+            assert definition.dependency_policy is DependencyPolicy.NONAPPLICABLE
+        else:
+            assert definition.coordinate_handler is not None
+            assert definition.execution_handler is not None
+            assert definition.dependency_policy is not DependencyPolicy.NONAPPLICABLE

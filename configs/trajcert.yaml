@@ -142,7 +142,7 @@ serialization: {max_fixed_notation_exponent: 21, min_fixed_notation_exponent: -6
 determinism: {fixture_stream_index: 0}
 units: {nanoseconds_per_millisecond: 1000000.0}
 smoke: {compatible_offset: 0.01, refinement_offset: 0.025, coverage_stress_events: 25, coarse_bands: 4, coverage_stress_bands: 2, fixture_count: 6}
-publication: {table_count: 8, figure_count: 8, p_value_display_threshold: 0.0001}
+publication: {table_count: 9, figure_count: 9, p_value_display_threshold: 0.0001}
 hand_cases:
   stream: 0
   diagnostic_node_cap: 1

@@ -30,6 +30,7 @@ from trajcert.experiments.artifacts import (
     scientific_result_artifact_key,
     verified_upstream_completion_and_index,
 )
+from trajcert.experiments.foreign_information import ForeignInformationNegativeControlResult
 from trajcert.experiments.mathematics import (
     ConvexityResult,
     IdentityResult,
@@ -54,6 +55,9 @@ from trajcert.reporting.publication_rows import (
     AnalysisType,
     CompatibilityFloorSourceEvidence,
     CompatibilitySafetyRow,
+    ForeignInformationEvidence,
+    ForeignInformationFigureRow,
+    ForeignInformationRow,
     PartitionCoherenceFigureRow,
     PartitionTimingEvidence,
     PartitionTimingRow,
@@ -71,6 +75,8 @@ from trajcert.reporting.publication_rows import (
     build_publication_source_rows,
     compatibility_safety_evidence,
     compatibility_safety_rows,
+    foreign_information_figure_rows,
+    foreign_information_rows,
     partition_coherence_figure_rows,
     partition_timing_rows,
     population_rho_utility_rows,
@@ -518,6 +524,8 @@ class SynthesisEvidenceBundle(DomainModel):
     rho_utility: tuple[RhoUtilityRow, ...]
     partition_coherence_figure: tuple[PartitionCoherenceFigureRow, ...]
     population_materiality: PopulationMaterialitySummary
+    foreign_information: tuple[ForeignInformationRow, ...]
+    foreign_information_figure: tuple[ForeignInformationFigureRow, ...]
 
 
 def _publication_source_rows(
@@ -531,6 +539,10 @@ def _publication_source_rows(
         PublicationSourceName.COMPATIBILITY_SAFETY: evidence.compatibility_safety,
         PublicationSourceName.ANYTIME_COVERAGE: publication.anytime_coverage,
         PublicationSourceName.RHO_UTILITY: evidence.rho_utility,
+        PublicationSourceName.FOREIGN_INFORMATION_NEGATIVE_CONTROL: evidence.foreign_information,
+        PublicationSourceName.FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL: (
+            evidence.foreign_information_figure
+        ),
         PublicationSourceName.FAILURE_BOUNDARIES: publication.failure_boundaries,
         PublicationSourceName.COMPUTATIONAL_SCALING: publication.computational_scaling,
         PublicationSourceName.FIGURE_PARTITION_COHERENCE: evidence.partition_coherence_figure,
@@ -568,6 +580,7 @@ def build_synthesis_evidence(
     )
     population_rows = population_rho_utility_rows(population_source)
     sequential_rows = sequential_rho_utility_rows(sequential_synthesis)
+    foreign_information_source = _foreign_information_evidence(plan, workspace_root)
     return SynthesisEvidenceBundle(
         theorem_validation=theorem_validation_summary_rows(
             _theorem_validation_observations(plan, workspace_root)
@@ -588,6 +601,8 @@ def build_synthesis_evidence(
             _same_endpoint_figure_evidence(plan, workspace_root),
         ),
         population_materiality=population_materiality,
+        foreign_information=foreign_information_rows(foreign_information_source),
+        foreign_information_figure=foreign_information_figure_rows(foreign_information_source),
     )
 
 
@@ -674,6 +689,21 @@ def _sharpness_evidence(
             result=read_verified_scientific_result(cell, workspace_root, SolverOracleComparison),
         )
         for cell in _cells(plan, ExperimentName.SHARPNESS_AGAINST_GENERIC_ORACLE)
+    )
+
+
+def _foreign_information_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[ForeignInformationEvidence, ...]:
+    return tuple(
+        ForeignInformationEvidence(
+            partition_name=_required_partition(cell),
+            result=read_verified_scientific_result(
+                cell, workspace_root, ForeignInformationNegativeControlResult
+            ),
+        )
+        for cell in _cells(plan, ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL)
     )
 
 

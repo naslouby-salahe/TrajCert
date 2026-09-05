@@ -27,6 +27,7 @@ class CoordinateHandler(StrEnum):
     POPULATION_SENSITIVITY_UTILITY = "population_sensitivity_utility"
     SEQUENTIAL_SENSITIVITY_UTILITY = "sequential_sensitivity_utility"
     FAILURE_BOUNDARY = "failure_boundary"
+    FOREIGN_INFORMATION_NEGATIVE_CONTROL = "foreign_information_negative_control"
     COMPUTATIONAL_SCALING = "computational_scaling"
     STATISTICAL_SYNTHESIS = "statistical_synthesis"
 
@@ -70,6 +71,7 @@ class ExecutionHandler(StrEnum):
     SUMMARY_COMPARATOR_REDUCTION = "summary_comparator_reduction"
     ANYTIME_PROJECTION_PROOF = "anytime_projection_proof"
     POPULATION_COMPLEXITY_PROOF = "population_complexity_proof"
+    FOREIGN_INFORMATION_NEGATIVE_CONTROL = "foreign_information_negative_control"
     SYNTHESIS = "synthesis"
 
 
@@ -312,10 +314,10 @@ EXPERIMENT_CATALOG: tuple[ExperimentDefinition, ...] = (
     _experiment(
         ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
         EvidenceClass.DIAGNOSTIC,
-        None,
-        DependencyPolicy.NONAPPLICABLE,
+        CoordinateHandler.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
+        DependencyPolicy.ROOT_PRECONDITION,
         SeedPolicy.NONE,
-        None,
+        ExecutionHandler.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
     ),
     _experiment(
         ExperimentName.COMPUTATIONAL_SCALING,

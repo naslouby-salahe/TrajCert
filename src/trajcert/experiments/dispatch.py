@@ -20,6 +20,10 @@ from trajcert.experiments.failure_boundaries import (
     evaluate_optimizer_node_budget,
     evaluate_terminal_selection_asymmetry,
 )
+from trajcert.experiments.foreign_information import (
+    evaluate_foreign_information_negative_control,
+    foreign_law_for,
+)
 from trajcert.experiments.mathematics import (
     anytime_projection_proof_check,
     endpoint_special_case_identity,
@@ -331,6 +335,24 @@ def _summary_comparator_reduction(cell: PlannedCell, summary: ObservableSummary)
     return evaluate_comparator_reduction(summary)
 
 
+def _summary_foreign_information_negative_control(
+    cell: PlannedCell, summary: ObservableSummary
+) -> DomainModel:
+    config = active_config.get()
+    local_law = law_from_name(cell.identity.coordinates.synthetic_law_name)
+    foreign_law = foreign_law_for(local_law.name)
+    rho = _rho_from_offset(summary, cell.identity.coordinates.sensitivity_coordinate)
+    return evaluate_foreign_information_negative_control(
+        summary,
+        local_law,
+        foreign_law,
+        rho,
+        config.numerics.root_atol,
+        config.numerics.identity_atol,
+        config.numerics.comparison_guard,
+    )
+
+
 def _dispatch_summary_handler(
     handler: Callable[[PlannedCell, ObservableSummary], DomainModel],
     summary_factory: Callable[[PlannedCell], ObservableSummary],
@@ -569,6 +591,11 @@ _EXECUTION_DISPATCH: dict[ExecutionHandler, Callable[[PlannedCell], DomainModel]
     ),
     ExecutionHandler.SUMMARY_COMPARATOR_REDUCTION: partial(
         _dispatch_summary_handler, _summary_comparator_reduction, _summary_from_coordinates
+    ),
+    ExecutionHandler.FOREIGN_INFORMATION_NEGATIVE_CONTROL: partial(
+        _dispatch_summary_handler,
+        _summary_foreign_information_negative_control,
+        _summary_from_coordinates,
     ),
     ExecutionHandler.ANYTIME_PROJECTION_PROOF: partial(
         _dispatch_cell_independent, anytime_projection_proof_check

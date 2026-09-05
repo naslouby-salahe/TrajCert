@@ -33,6 +33,8 @@ class PublicationSourceName(StrEnum):
     FIGURE_RHO_SENSITIVITY = "figure_rho_sensitivity"
     FIGURE_FAILURE_BOUNDARIES = "figure_failure_boundaries"
     FIGURE_COMPUTATIONAL_SCALING = "figure_computational_scaling"
+    FOREIGN_INFORMATION_NEGATIVE_CONTROL = "foreign_information_negative_control"
+    FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL = "figure_foreign_information_negative_control"
 
 
 class PublicationLabel(StrEnum):
@@ -152,6 +154,12 @@ class PublicationColumn(StrEnum):
     RELATIVE_UNRESOLVED_GAIN = auto()
     HOLM_ADJUSTED_P_VALUE = auto()
     HOLM_ADJUSTED_P = auto()
+    CONDITION = auto()
+    FOREIGN_LAW_NAME = auto()
+    SAFETY_REGIME = auto()
+    SPURIOUS_IMPROVEMENT = auto()
+    FOREIGN_SHARPNESS_GAIN = auto()
+    NAIVE_POOLED_SHARPNESS_GAIN = auto()
 
 
 def publication_columns(*columns: PublicationColumn) -> tuple[ColumnName, ...]:
@@ -546,6 +554,51 @@ PUBLICATION_SOURCE_CATALOG: tuple[PublicationSourceDefinition, ...] = (
             )
         ),
         publication_columns(*(PublicationColumn.K,)),
+    ),
+    _publication_source(
+        PublicationSourceName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
+        PublicationSourceFile.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
+        PublicationSourceRole.TABLE,
+        ExperimentName.STATISTICAL_SYNTHESIS,
+        publication_columns(
+            *(
+                PublicationColumn.LAW_NAME,
+                PublicationColumn.FOREIGN_LAW_NAME,
+                PublicationColumn.PARTITION_NAME,
+                PublicationColumn.CONDITION,
+                PublicationColumn.RHO,
+                PublicationColumn.BETA,
+                PublicationColumn.TAU,
+                PublicationColumn.COMPATIBILITY_STATE,
+                PublicationColumn.RISK_LOWER,
+                PublicationColumn.RISK_UPPER,
+                PublicationColumn.SAFETY_REGIME,
+                PublicationColumn.SPURIOUS_IMPROVEMENT,
+                PublicationColumn.RUNTIME_MS,
+            )
+        ),
+        publication_columns(
+            *(
+                PublicationColumn.LAW_NAME,
+                PublicationColumn.PARTITION_NAME,
+                PublicationColumn.RHO,
+                PublicationColumn.CONDITION,
+            )
+        ),
+    ),
+    _publication_source(
+        PublicationSourceName.FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL,
+        PublicationSourceFile.FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL,
+        PublicationSourceRole.FIGURE,
+        ExperimentName.STATISTICAL_SYNTHESIS,
+        publication_columns(
+            *(
+                PublicationColumn.LAW_NAME,
+                PublicationColumn.FOREIGN_SHARPNESS_GAIN,
+                PublicationColumn.NAIVE_POOLED_SHARPNESS_GAIN,
+            )
+        ),
+        publication_columns(*(PublicationColumn.LAW_NAME,)),
     ),
 )
 if {definition.name for definition in PUBLICATION_SOURCE_CATALOG} != set(PublicationSourceName):

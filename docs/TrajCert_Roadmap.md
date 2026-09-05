@@ -4061,10 +4061,10 @@ The plan defines the executable experiment families and their expected expansion
 | Utility analysis                        | Sequential Sensitivity Utility             | ROBUSTNESS       | 6 laws × 3 rho                         |        18 |
 | Failure-boundary analysis               | Failure Boundary Atlas                     | FAILURE_BOUNDARY | 9 axes × 7 levels                      |        63 |
 | Real-trajectory generalization          | Real-Trajectory Validation                 | GENERALIZATION   | absent                                 |         0 |
-| Foreign-information diagnostic          | Foreign-Information Negative Control       | DIAGNOSTIC       | absent                                 |         0 |
+| Foreign-information diagnostic          | Foreign-Information Negative Control       | DIAGNOSTIC       | 12 laws × 4 partitions × 5 offsets     |       240 |
 | Computational scaling                   | Computational Scaling                      | VALIDATION       | 8 K values                             |         8 |
 | Statistical synthesis                   | Statistical Synthesis                      | VALIDATION       | deterministic synthesis                |         1 |
-| **TOTAL**                               |                                            |                  |                                        | **1,422** |
+| **TOTAL**                               |                                            |                  |                                        | **1,662** |
 
 No experiment exists outside this plan.
 
@@ -4103,6 +4103,7 @@ Each deterministic cell requires one schema-valid primary result record unless o
 | Population Sensitivity Utility             | population bounds                                                      | utility result                                                                           |
 | Sequential Sensitivity Utility             | shared streams/projections                                             | paired per-stream parquet + per-condition aggregate                                      |
 | Failure Boundary Atlas                     | axis-specific inputs                                                   | boundary result                                                                          |
+| Foreign-Information Negative Control       | local + foreign population summaries                                   | paired true/foreign/naive-pooled negative-control result                                |
 | Computational Scaling                      | benchmark inputs                                                       | repetition parquet + summary result                                                      |
 | Statistical Synthesis                      | all required completed evidence                                        | synthesis record + cross-experiment source data                     |
 
@@ -4803,9 +4804,49 @@ For Table 11:
 
 ## 18.11 Planned nonapplicabilities
 
-`Real-Trajectory Validation` and `Foreign-Information Negative Control` have zero executable cells.
+`Real-Trajectory Validation` has zero executable cells.
 
-No current real-trajectory command or foreign-information mechanism exists.
+No current real-trajectory command exists.
+
+`Foreign-Information Negative Control` is a fully executable DIAGNOSTIC experiment; see §18.13 and §21.13.
+
+## 18.13 Foreign-Information Negative Control
+
+Coordinates: 12 laws × 4 configured partitions × the configured oracle-offset grid, identical in
+shape to `Production Solver vs Independent Oracle` (§18.0).
+
+For each `(law, partition, offset)` cell:
+
+* the local population summary and sensitivity budget `rho = tau(local) + offset` are computed
+  exactly as for the other law/partition/offset experiments;
+* a foreign law is selected deterministically as the next law in `ordered_laws` (cyclic), never the
+  local law itself;
+* `TRUE_LOCAL` evaluates the unmodified local summary;
+* `FOREIGN_PATH` replaces only the within-resolved-band harmful/correct shape with the foreign
+  law's band-weight shape, renormalized onto the local resolved harmful/correct totals and
+  unresolved mass, holding the partition, terminal horizon, `rho`, and solver tolerances fixed;
+* `NAIVE_POOLED` is a deliberately invalid comparator that pools the local and foreign laws'
+  full-law probabilities 50/50, mixing endpoint mass across client-like identities as a
+  methodological placebo;
+* each condition is solved with the production hidden-mass solver
+  (`solve_hidden_mass_interval`) and the population safety geometry
+  (`assess_safety_geometry`) at one risk budget fixed from the `TRUE_LOCAL` summary's interior
+  safety-frontier case (or the assumption-free boundary when the interior case is degenerate),
+  identical across all three conditions.
+
+Required authoritative cell output: one `ForeignInformationNegativeControlResult` per cell,
+persisted like every other direct-dispatch experiment.
+
+Support:
+
+```text
+foreign_spurious_improvement and naive_pooled_spurious_improvement are computed, not assumed
+```
+
+The expected scientific behavior is not that the foreign/naive conditions must fail; the diagnostic
+tests whether irrelevant trajectory information fails to create systematic certification
+improvement over the true local condition. A systematic pattern of spurious improvement would
+indicate a methodological defect and must be reported, not suppressed.
 
 ## 18.12 Computational scaling
 
@@ -5569,6 +5610,38 @@ Allowed manuscript statement:
 
 Real operational validation may not be implied.
 
+## 21.13 Foreign-Information Negative Control
+
+Scientific statement:
+
+> TrajCert's certification gains come from relevant trajectory information, not from arbitrary
+> extra information or increased input dimensionality.
+
+Design: for each `(law, partition, offset)` cell of §18.13, three paired conditions share the same
+local endpoint totals, partition, terminal horizon, sensitivity budget, risk budget, and solver
+tolerances: `TRUE_LOCAL` (the genuine local trajectory information), `FOREIGN_PATH` (the local
+endpoint mass re-expressed under a deterministically chosen foreign law's within-band timing
+shape), and `NAIVE_POOLED` (a deliberately invalid placebo that pools local and foreign full-law
+probabilities across client-like identities, contradicting §21.11).
+
+Support:
+
+```text
+foreign_spurious_improvement is computed per cell as: the foreign condition's safety regime
+outranks the true-local regime, or its certified interval is strictly narrower by more than
+numerics.identity_atol
+naive_pooled_spurious_improvement is computed identically for the naive-pooling placebo
+```
+
+The predicted result is that `FOREIGN_PATH` and `NAIVE_POOLED` do not systematically improve on
+`TRUE_LOCAL`; `FOREIGN_PATH` is expected to become `MODEL_INCOMPATIBLE` whenever the foreign law's
+timing information exceeds the local sensitivity budget, and `NAIVE_POOLED` is expected to distort
+the certified interval by mixing endpoint mass across client-like identities. A systematic pattern
+of spurious improvement across cells would contradict this statement and must be reported as a
+potential methodological defect (§21.11), not hidden or explained away.
+
+No scientific statement is removed or hidden because its result is unfavorable.
+
 # 22. Scientific Support Outcome Semantics
 
 These are interpretive reporting terms defined by this roadmap; they are not a registry, persisted schema, or runtime-generated state.
@@ -5810,7 +5883,9 @@ Reissuing the failed or downstream experiment command resumes from the nearest v
 
 Successful earlier and unrelated experiment results remain active unless one of their material dependencies changed.
 
-`Real-Trajectory Validation` and `Foreign-Information Negative Control` have no executable cells.
+`Real-Trajectory Validation` has no executable cells. `Foreign-Information Negative Control` is a
+fully executable, resumable, deterministic-coordinate experiment like every other direct-dispatch
+experiment in this table.
 
 At no point does the operator choose:
 

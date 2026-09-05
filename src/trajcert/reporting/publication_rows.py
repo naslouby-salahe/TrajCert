@@ -26,6 +26,10 @@ from trajcert.experiments.anytime import (
 )
 from trajcert.experiments.artifacts import read_verified_scientific_result
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis, FailureBoundaryResult
+from trajcert.experiments.foreign_information import (
+    ForeignInformationConditionLabel,
+    ForeignInformationNegativeControlResult,
+)
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
 from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
 from trajcert.experiments.scaling import ComputationalScalingResult
@@ -77,6 +81,7 @@ from trajcert.types import (
     RiskOffset,
     RiskValue,
     RuntimeMilliseconds,
+    SafetyRegime,
     ScientificState,
     SearchPredicate,
     SeedIndex,
@@ -1292,3 +1297,91 @@ def _rho_offset(cell: PlannedCell) -> SensitivityOffset:
 def _max_optional(values: Iterable[AbsoluteError | None]) -> AbsoluteError | None:
     finite = tuple(value for value in values if value is not None)
     return max(finite, default=None)
+
+
+class ForeignInformationEvidence(DomainModel):
+    partition_name: PartitionName
+    result: ForeignInformationNegativeControlResult
+
+
+class ForeignInformationRow(DomainModel):
+    law_name: LawName
+    foreign_law_name: LawName
+    partition_name: PartitionName
+    condition: ForeignInformationConditionLabel
+    rho: SensitivityBudget
+    beta: RiskBudget
+    tau: InformationNats | None
+    compatibility_state: CompatibilityRegime
+    risk_lower: RiskValue | None
+    risk_upper: RiskValue | None
+    safety_regime: SafetyRegime
+    spurious_improvement: SearchPredicate
+    runtime_ms: RuntimeMilliseconds
+
+
+class ForeignInformationFigureRow(DomainModel):
+    law_name: LawName
+    foreign_sharpness_gain: RiskValue
+    naive_pooled_sharpness_gain: RiskValue
+
+
+def foreign_information_rows(
+    evidence: tuple[ForeignInformationEvidence, ...],
+) -> tuple[ForeignInformationRow, ...]:
+    rows: list[ForeignInformationRow] = []
+    for item in evidence:
+        result = item.result
+        conditions = (
+            (ForeignInformationConditionLabel.TRUE_LOCAL, result.true_local, False),
+            (
+                ForeignInformationConditionLabel.FOREIGN_PATH,
+                result.foreign_path,
+                result.foreign_spurious_improvement,
+            ),
+            (
+                ForeignInformationConditionLabel.NAIVE_POOLED,
+                result.naive_pooled,
+                result.naive_pooled_spurious_improvement,
+            ),
+        )
+        for label, condition, spurious in conditions:
+            rows.append(
+                ForeignInformationRow(
+                    law_name=result.local_law_name,
+                    foreign_law_name=result.foreign_law_name,
+                    partition_name=item.partition_name,
+                    condition=label,
+                    rho=result.sensitivity_budget,
+                    beta=result.risk_budget,
+                    tau=condition.observed_timing_information,
+                    compatibility_state=condition.compatibility_regime,
+                    risk_lower=condition.risk_lower,
+                    risk_upper=condition.risk_upper,
+                    safety_regime=condition.safety_regime,
+                    spurious_improvement=spurious,
+                    runtime_ms=condition.runtime_seconds * 1000.0,
+                )
+            )
+    return tuple(rows)
+
+
+def foreign_information_figure_rows(
+    evidence: tuple[ForeignInformationEvidence, ...],
+) -> tuple[ForeignInformationFigureRow, ...]:
+    rows: list[ForeignInformationFigureRow] = []
+    for item in evidence:
+        result = item.result
+        true_upper = result.true_local.risk_upper
+        foreign_upper = result.foreign_path.risk_upper
+        naive_upper = result.naive_pooled.risk_upper
+        if true_upper is None or foreign_upper is None or naive_upper is None:
+            continue
+        rows.append(
+            ForeignInformationFigureRow(
+                law_name=result.local_law_name,
+                foreign_sharpness_gain=true_upper - foreign_upper,
+                naive_pooled_sharpness_gain=true_upper - naive_upper,
+            )
+        )
+    return tuple(rows)

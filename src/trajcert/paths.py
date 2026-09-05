@@ -150,6 +150,7 @@ class PublicationSourceFile(StrEnum):
     RHO_UTILITY = "rho_utility.parquet"
     FAILURE_BOUNDARIES = "failure_boundaries.parquet"
     COMPUTATIONAL_SCALING = "computational_scaling.parquet"
+    FOREIGN_INFORMATION_NEGATIVE_CONTROL = "foreign_information_negative_control.parquet"
     FIGURE_PARTITION_COHERENCE = "figure_partition_coherence.parquet"
     FIGURE_TIMING_VALUE = "figure_timing_value.parquet"
     FIGURE_INFORMATION_PROFILE = "figure_information_profile.parquet"
@@ -158,6 +159,9 @@ class PublicationSourceFile(StrEnum):
     FIGURE_RHO_SENSITIVITY = "figure_rho_sensitivity.parquet"
     FIGURE_FAILURE_BOUNDARIES = "figure_failure_boundaries.parquet"
     FIGURE_COMPUTATIONAL_SCALING = "figure_computational_scaling.parquet"
+    FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL = (
+        "figure_foreign_information_negative_control.parquet"
+    )
 
 
 class PlanArtifactFile(StrEnum):

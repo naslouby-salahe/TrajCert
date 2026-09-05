@@ -7,7 +7,7 @@ from trajcert.data.partitions import partition_name
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.types import ExperimentName
 
-_PRODUCTION_CELL_TOTAL = 1_426
+_PRODUCTION_CELL_TOTAL = 1_666
 
 
 def test_recovered_plan_has_no_configuration_gap_cells() -> None:

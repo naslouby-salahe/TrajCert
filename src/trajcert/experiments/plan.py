@@ -406,6 +406,20 @@ def _coordinates_sequential_sensitivity_utility() -> tuple[SemanticCoordinates, 
     )
 
 
+def _coordinates_foreign_information_negative_control() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
+    return tuple(
+        SemanticCoordinates(
+            synthetic_law_name=law,
+            partition_name=partition,
+            sensitivity_coordinate=_offset_coordinate(offset),
+        )
+        for law, partition, offset in product(
+            _law_names(), _partition_names(), config.study_design.oracle_offsets
+        )
+    )
+
+
 def _coordinates_computational_scaling() -> tuple[SemanticCoordinates, ...]:
     return tuple(
         SemanticCoordinates(scaling_band_count=band_count)
@@ -518,6 +532,9 @@ _COORDINATE_FACTORY: dict[CoordinateHandler, Callable[[], tuple[SemanticCoordina
     CoordinateHandler.POPULATION_SENSITIVITY_UTILITY: _coordinates_population_sensitivity_utility,
     CoordinateHandler.SEQUENTIAL_SENSITIVITY_UTILITY: _coordinates_sequential_sensitivity_utility,
     CoordinateHandler.FAILURE_BOUNDARY: _failure_boundary_coordinates,
+    CoordinateHandler.FOREIGN_INFORMATION_NEGATIVE_CONTROL: (
+        _coordinates_foreign_information_negative_control
+    ),
     CoordinateHandler.COMPUTATIONAL_SCALING: _coordinates_computational_scaling,
     CoordinateHandler.STATISTICAL_SYNTHESIS: _coordinates_statistical_synthesis,
 }
@@ -556,7 +573,6 @@ def _required_experiments(
         excluded = {
             name,
             ExperimentName.REAL_TRAJECTORY_VALIDATION,
-            ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
         }
         required = tuple(
             experiment_name

@@ -81,6 +81,7 @@ class FigureLabel(StrEnum):
     BETA = "beta"
     ANYTIME_DELTA = "anytime delta"
     ACCEPTANCE_LIMIT = "acceptance limit"
+    FOREIGN_INFORMATION_NEGATIVE_CONTROL = "Foreign-information negative control"
 
 
 def render_figure(source: VerifiedSourceData, destination_directory: Path) -> FigureRenderResult:
@@ -135,6 +136,9 @@ def _build_figure(name: PublicationSourceName, table: pa.Table) -> Figure:
         PublicationSourceName.FIGURE_RHO_SENSITIVITY: _rho_sensitivity,
         PublicationSourceName.FIGURE_FAILURE_BOUNDARIES: _failure_boundaries,
         PublicationSourceName.FIGURE_COMPUTATIONAL_SCALING: _computational_scaling,
+        PublicationSourceName.FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL: (
+            _foreign_information_negative_control
+        ),
     }
     try:
         return builders[name](table)
@@ -435,6 +439,36 @@ def _computational_scaling(table: pa.Table) -> Figure:
         _cross(right, x, y)
     _main_title(figure, FigureLabel.COMPUTATIONAL_SCALING)
     return figure
+
+
+def _foreign_information_negative_control(table: pa.Table) -> Figure:
+    rows = _rows(table)
+    foreign_gains = tuple(
+        _required_float(row, PublicationColumn.FOREIGN_SHARPNESS_GAIN) for row in rows
+    )
+    naive_gains = tuple(
+        _required_float(row, PublicationColumn.NAIVE_POOLED_SHARPNESS_GAIN) for row in rows
+    )
+    figure = _new_figure()
+    ax = _single_axis(figure)
+    _set_limits(ax, (*foreign_gains, *naive_gains, 0.0), (0.0, 1.0))
+    _set_title(ax, FigureLabel.FOREIGN_INFORMATION_NEGATIVE_CONTROL)
+    foreign_xs, foreign_ys = _ecdf(foreign_gains)
+    naive_xs, naive_ys = _ecdf(naive_gains)
+    ax.step(foreign_xs, foreign_ys, where="post", color=FigureColor.STROKE, linewidth=1.5)
+    ax.step(
+        naive_xs, naive_ys, where="post", color=FigureColor.MUTED, linewidth=1.5, linestyle="--"
+    )
+    ax.axvline(0.0, color=FigureColor.LIGHT, linestyle=":", linewidth=1.0)
+    _main_title(figure, FigureLabel.FOREIGN_INFORMATION_NEGATIVE_CONTROL)
+    return figure
+
+
+def _ecdf(values: tuple[PlotValue, ...]) -> tuple[tuple[PlotValue, ...], tuple[PlotValue, ...]]:
+    ordered = tuple(sorted(values))
+    count = len(ordered)
+    fractions = tuple((index + 1) / count for index in range(count))
+    return ordered, fractions
 
 
 def _new_figure() -> Figure:

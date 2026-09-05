@@ -20,7 +20,7 @@ from trajcert.provenance import (
 from trajcert.storage import PlanDigest
 from trajcert.types import EvidenceClass, ExperimentName, ReasonCode
 
-_EXPECTED_REGISTRY_TOTAL = 1427
+_EXPECTED_REGISTRY_TOTAL = 1667
 _EXPECTED_SCALING_CELL_COUNT = 2
 _PLAN_DIGEST = PlanDigest("digest")
 
@@ -83,10 +83,7 @@ def test_build_plan_marks_nonapplicable_experiments() -> None:
     plan = build_plan(_production_config())
     names = tuple(item.identity.semantic_cell_key for item in plan.cells)
     assert len(names) == len(set(names))
-    assert plan.nonapplicable_experiments == (
-        ExperimentName.REAL_TRAJECTORY_VALIDATION,
-        ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,
-    )
+    assert plan.nonapplicable_experiments == (ExperimentName.REAL_TRAJECTORY_VALIDATION,)
 
 
 def test_cells_for_experiment_filters_by_name() -> None:
@@ -103,6 +100,21 @@ def test_cells_for_experiment_filters_by_name() -> None:
 def test_cells_for_experiment_nonapplicable_name_is_empty() -> None:
     plan = build_plan(_production_config())
     assert cells_for_experiment(plan, ExperimentName.REAL_TRAJECTORY_VALIDATION) == ()
+
+
+def test_cells_for_experiment_foreign_information_negative_control_is_populated() -> None:
+    config = _production_config()
+    plan = build_plan(config)
+    cells = cells_for_experiment(plan, ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL)
+    expected_count = (
+        len(config.ordered_laws)
+        * len(config.grids.partitions)
+        * len(config.study_design.oracle_offsets)
+    )
+    assert len(cells) == expected_count
+    assert all(cell.executable for cell in cells)
+    keys = tuple(cell.identity.semantic_cell_key for cell in cells)
+    assert len(keys) == len(set(keys))
 
 
 def test_build_plan_adapts_to_configured_scaling_bands() -> None:

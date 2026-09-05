@@ -109,8 +109,8 @@ _TWO_OBSERVATIONS = 2
 _TWO_ROWS = 2
 _ONE_ROW = 1
 _POPULATION_LAW_COUNT = 3
-_TABLE_SOURCE_COUNT = 8
-_FIGURE_SOURCE_COUNT = 8
+_TABLE_SOURCE_COUNT = 9
+_FIGURE_SOURCE_COUNT = 9
 
 
 def _descriptor_for(name: PublicationSourceName) -> PublicationSourceDescriptor:

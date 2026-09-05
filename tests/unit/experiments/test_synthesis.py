@@ -38,6 +38,10 @@ from trajcert.experiments.failure_boundaries import (
     FailureBoundaryAxis,
     FailureBoundaryResult,
 )
+from trajcert.experiments.foreign_information import (
+    ForeignInformationCondition,
+    ForeignInformationNegativeControlResult,
+)
 from trajcert.experiments.mathematics import (
     ConvexityResult,
     EndpointDifferenceDirection,
@@ -115,6 +119,8 @@ from trajcert.types import (
     CompatibilityRegime,
     FailureBoundaryLevel,
     HiddenMassInterval,
+    LawName,
+    NumericStatus,
     RiskInterval,
     SafetyCaseName,
     SafetyRegime,
@@ -124,7 +130,7 @@ from trajcert.types import (
 
 _TEST_STREAM_COUNT = 2
 _THEOREM_EXPERIMENTS = 11
-_SYNTHESIS_ARTIFACT_COUNT = 16
+_SYNTHESIS_ARTIFACT_COUNT = 18
 _POPULATION_EVIDENCE_COUNT = 360
 _SEQUENTIAL_FAMILY_SIZE = 54
 _PAIRED_METRIC_COUNT = 3
@@ -533,6 +539,7 @@ def _result_factories() -> dict[str, Callable[[PlannedCell], BaseModel | None]]:
         "Safety-Boundary Identity": lambda _cell: _safety_boundary_result(),
         "Anytime Coverage Stress": _coverage_result,
         "Failure Boundary Atlas": lambda _cell: _failure_result(),
+        "Foreign-Information Negative Control": lambda _cell: _foreign_information_result(),
         "Computational Scaling": lambda cell: _scaling_result(
             int(active_config.get().grids.scaling_bands[cell.cell_ordinal - 1])
         ),
@@ -709,6 +716,45 @@ def _solver_result() -> SolverOracleComparison:
         max_endpoint_error=0.01,
         max_root_bracket_width=0.01,
         max_root_residual=0.01,
+    )
+
+
+def _foreign_information_condition(
+    *, resolved_harmful_mass: float, resolved_correct_mass: float, unresolved_mass: float
+) -> ForeignInformationCondition:
+    return ForeignInformationCondition(
+        resolved_harmful_mass=resolved_harmful_mass,
+        resolved_correct_mass=resolved_correct_mass,
+        unresolved_mass=unresolved_mass,
+        observed_timing_information=0.05,
+        compatibility_regime=CompatibilityRegime.COMPATIBLE_INTERVAL,
+        numeric_status=NumericStatus.FINITE,
+        hidden_mass_interval=HiddenMassInterval(lower=0.1, upper=0.2),
+        risk_lower=0.3,
+        risk_upper=0.4,
+        safety_regime=SafetyRegime.INTERIOR_SAFETY_FRONTIER,
+        safety_frontier=0.05,
+        runtime_seconds=0.001,
+    )
+
+
+def _foreign_information_result() -> ForeignInformationNegativeControlResult:
+    return ForeignInformationNegativeControlResult(
+        local_law_name=LawName("Local law"),
+        foreign_law_name=LawName("Foreign law"),
+        sensitivity_budget=0.05,
+        risk_budget=0.5,
+        true_local=_foreign_information_condition(
+            resolved_harmful_mass=0.2, resolved_correct_mass=0.5, unresolved_mass=0.3
+        ),
+        foreign_path=_foreign_information_condition(
+            resolved_harmful_mass=0.2, resolved_correct_mass=0.5, unresolved_mass=0.3
+        ),
+        naive_pooled=_foreign_information_condition(
+            resolved_harmful_mass=0.25, resolved_correct_mass=0.45, unresolved_mass=0.3
+        ),
+        foreign_spurious_improvement=False,
+        naive_pooled_spurious_improvement=False,
     )
 
 
