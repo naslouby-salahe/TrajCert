@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from collections.abc import Hashable, Iterable
+from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from itertools import product
@@ -17,6 +17,7 @@ from trajcert.config import active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition, partition_name
+from trajcert.data.real_trajectories import HitlIotEligibleEvent
 from trajcert.data.summaries import summarize_full_law
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import (
@@ -31,6 +32,7 @@ from trajcert.experiments.foreign_information import (
     ForeignInformationNegativeControlResult,
 )
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
+from trajcert.experiments.real_trajectory import RealTrajectoryCellResult
 from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
 from trajcert.experiments.scaling import ComputationalScalingResult
 from trajcert.experiments.sensitivity import PopulationUtilityResult
@@ -55,6 +57,7 @@ from trajcert.types import (
     AbsoluteError,
     AbsoluteTightening,
     AcceptanceUpperLimit,
+    AgeUnit,
     AnytimeConfidenceDelta,
     BandCount,
     CompatibilityRegime,
@@ -76,6 +79,7 @@ from trajcert.types import (
     PairedDifferenceValue,
     PartitionName,
     Probability,
+    RealTrajectoryStratumKind,
     RelativeUnresolvedGain,
     RiskBudget,
     RiskOffset,
@@ -90,6 +94,7 @@ from trajcert.types import (
     SensitivityOffset,
     SerializedConfigJson,
     StreamCount,
+    ToleranceValue,
 )
 
 TheoremName = NewType("TheoremName", str)
@@ -1364,6 +1369,124 @@ def foreign_information_rows(
                 )
             )
     return tuple(rows)
+
+
+class RealTrajectoryValidationRow(DomainModel):
+    stratum_kind: RealTrajectoryStratumKind
+    stratum_label: VariantName
+    horizon_seconds: AgeUnit
+    partition_name: PartitionName
+    stratum_size: Count
+    resolved_fraction: Probability
+    theta_true: Probability
+    tau: InformationNats | None
+    risk_lower: RiskValue | None
+    risk_upper: RiskValue | None
+    identified_width: Mass | None
+    scientific_state: ScientificState | None
+    safety_regime: SafetyRegime
+    oracle_containment: SearchPredicate | None
+
+
+class RealTrajectoryDecisionTimeFigureRow(DomainModel):
+    latent_error: SearchPredicate
+    decision_time: AgeUnit
+    ecdf: Probability
+
+
+class RealTrajectoryRefinementFigureRow(DomainModel):
+    partition_name: PartitionName
+    partition_band_count: BandCount
+    rho: SensitivityBudget
+    tau: InformationNats | None
+    risk_lower: RiskValue | None
+    risk_upper: RiskValue | None
+
+
+def real_trajectory_validation_rows(
+    results: tuple[RealTrajectoryCellResult, ...],
+) -> tuple[RealTrajectoryValidationRow, ...]:
+    rows: list[RealTrajectoryValidationRow] = []
+    for result in results:
+        point = result.rho_min_point
+        rows.append(
+            RealTrajectoryValidationRow(
+                stratum_kind=result.stratum_kind,
+                stratum_label=result.stratum_label,
+                horizon_seconds=result.horizon_seconds,
+                partition_name=result.partition_name,
+                stratum_size=result.accounting.stratum_size,
+                resolved_fraction=result.accounting.resolved_fraction,
+                theta_true=result.oracle.theta_true,
+                tau=result.tau,
+                risk_lower=None if point is None else point.risk_lower,
+                risk_upper=None if point is None else point.risk_upper,
+                identified_width=None if point is None else point.identified_width,
+                scientific_state=None if point is None else point.scientific_state,
+                safety_regime=result.safety_regime,
+                oracle_containment=result.oracle_containment_at_tau,
+            )
+        )
+    return tuple(rows)
+
+
+def real_trajectory_decision_time_figure_rows(
+    events: tuple[HitlIotEligibleEvent, ...],
+) -> tuple[RealTrajectoryDecisionTimeFigureRow, ...]:
+    for group_error in (False, True):
+        group = tuple(
+            event for event in events if (event.ml_prediction != event.is_attack) is group_error
+        )
+        if not group:
+            raise InvalidScientificDataError(
+                "real-trajectory decision-time figure requires both correct and harmful events"
+            )
+    rows: list[RealTrajectoryDecisionTimeFigureRow] = []
+    for group_error in (False, True):
+        group_times = sorted(
+            event.decision_time
+            for event in events
+            if (event.ml_prediction != event.is_attack) is group_error
+        )
+        count = len(group_times)
+        rows.extend(
+            RealTrajectoryDecisionTimeFigureRow(
+                latent_error=group_error,
+                decision_time=decision_time,
+                ecdf=(index + 1) / count,
+            )
+            for index, decision_time in enumerate(group_times)
+        )
+    return tuple(rows)
+
+
+def real_trajectory_refinement_figure_rows(
+    results: tuple[RealTrajectoryCellResult, ...],
+    figure_rho: SensitivityBudget,
+    comparison_guard: ToleranceValue,
+    band_counts: Mapping[PartitionName, BandCount],
+) -> tuple[RealTrajectoryRefinementFigureRow, ...]:
+    rows: list[RealTrajectoryRefinementFigureRow] = []
+    for result in results:
+        matching = tuple(
+            point
+            for point in result.rho_sweep
+            if abs(point.sensitivity_budget - figure_rho) <= comparison_guard
+        )
+        if not matching:
+            continue
+        point = matching[0]
+        rows.append(
+            RealTrajectoryRefinementFigureRow(
+                partition_name=result.partition_name,
+                partition_band_count=band_counts[result.partition_name],
+                rho=figure_rho,
+                tau=result.tau,
+                risk_lower=point.risk_lower,
+                risk_upper=point.risk_upper,
+            )
+        )
+    return tuple(sorted(rows, key=lambda row: row.partition_band_count))
 
 
 def foreign_information_figure_rows(

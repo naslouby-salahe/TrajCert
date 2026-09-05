@@ -20,6 +20,11 @@ from trajcert.config import (
 )
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
+from trajcert.data.real_trajectories import (
+    HitlIotEligibleEvent,
+    PreparedRealTrajectoryCohort,
+    RealTrajectoryEmpiricalOracle,
+)
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import (
     AnytimeOperationalState,
@@ -56,6 +61,11 @@ from trajcert.experiments.models import (
     ExecutionContext,
 )
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, build_plan
+from trajcert.experiments.real_trajectory import (
+    RealTrajectoryCellResult,
+    RealTrajectoryCohortAccounting,
+    RealTrajectoryRhoPoint,
+)
 from trajcert.experiments.runner import (
     expected_seed_count,
 )
@@ -97,9 +107,15 @@ from trajcert.experiments.synthesis import (
 )
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
 from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase
+from trajcert.paths import (
+    PreprocessingLeaf,
+    RealTrajectoryArtifactFile,
+    real_trajectory_preprocessing_path,
+)
 from trajcert.provenance import (
     BaselineName,
     MethodName,
+    VariantName,
 )
 from trajcert.reporting.publication_rows import AnalysisType, RhoUtilityMetricName
 from trajcert.storage import (
@@ -112,15 +128,21 @@ from trajcert.storage import (
     DigestHex,
     PlanDigest,
     SpecificationDigest,
+    atomic_write_model,
     canonical_model_bytes,
     model_digest,
 )
 from trajcert.types import (
+    AnnotatorExpertise,
+    ClientId,
     CompatibilityRegime,
     FailureBoundaryLevel,
     HiddenMassInterval,
+    HitlIotDeviceType,
     LawName,
     NumericStatus,
+    PartitionName,
+    RealTrajectoryStratumKind,
     RiskInterval,
     SafetyCaseName,
     SafetyRegime,
@@ -130,7 +152,7 @@ from trajcert.types import (
 
 _TEST_STREAM_COUNT = 2
 _THEOREM_EXPERIMENTS = 11
-_SYNTHESIS_ARTIFACT_COUNT = 18
+_SYNTHESIS_ARTIFACT_COUNT = 21
 _POPULATION_EVIDENCE_COUNT = 360
 _SEQUENTIAL_FAMILY_SIZE = 54
 _PAIRED_METRIC_COUNT = 3
@@ -154,7 +176,38 @@ def synthesis_workspace(
 ) -> Path:
     root = tmp_path_factory.mktemp("synthesis_workspace")
     _write_upstream_artifacts(synthesis_plan, root)
+    _write_real_trajectory_prepared_cohort(root)
     return root
+
+
+def _write_real_trajectory_prepared_cohort(root: Path) -> None:
+    cohort = PreparedRealTrajectoryCohort(
+        events=(
+            HitlIotEligibleEvent(
+                device_name=ClientId("camera_21"),
+                device_type=HitlIotDeviceType.CAMERA,
+                expertise=AnnotatorExpertise.EXPERT,
+                is_attack=False,
+                ml_prediction=False,
+                decision_time=10.0,
+                human_confidence=0.8,
+            ),
+            HitlIotEligibleEvent(
+                device_name=ClientId("camera_21"),
+                device_type=HitlIotDeviceType.CAMERA,
+                expertise=AnnotatorExpertise.EXPERT,
+                is_attack=True,
+                ml_prediction=False,
+                decision_time=20.0,
+                human_confidence=0.6,
+            ),
+        )
+    )
+    cohort_path = root / real_trajectory_preprocessing_path(
+        PreprocessingLeaf.PREPARED_REAL_TRAJECTORIES, RealTrajectoryArtifactFile.PREPARED_COHORT
+    )
+    cohort_path.parent.mkdir(parents=True, exist_ok=True)
+    _ = atomic_write_model(cohort_path, cohort)
 
 
 @pytest.fixture(scope="session")
@@ -540,6 +593,7 @@ def _result_factories() -> dict[str, Callable[[PlannedCell], BaseModel | None]]:
         "Anytime Coverage Stress": _coverage_result,
         "Failure Boundary Atlas": lambda _cell: _failure_result(),
         "Foreign-Information Negative Control": lambda _cell: _foreign_information_result(),
+        "Real-Trajectory Validation": lambda cell: _real_trajectory_result(cell),
         "Computational Scaling": lambda cell: _scaling_result(
             int(active_config.get().grids.scaling_bands[cell.cell_ordinal - 1])
         ),
@@ -755,6 +809,52 @@ def _foreign_information_result() -> ForeignInformationNegativeControlResult:
         ),
         foreign_spurious_improvement=False,
         naive_pooled_spurious_improvement=False,
+    )
+
+
+def _real_trajectory_rho_point(rho: float) -> RealTrajectoryRhoPoint:
+    return RealTrajectoryRhoPoint(
+        sensitivity_budget=rho,
+        compatibility_regime=CompatibilityRegime.COMPATIBLE_INTERVAL,
+        risk_lower=0.02,
+        risk_upper=0.03,
+        identified_width=0.01,
+        scientific_state=ScientificState.CERTIFIED,
+    )
+
+
+def _real_trajectory_result(cell: PlannedCell) -> RealTrajectoryCellResult:
+    coordinates = cell.identity.coordinates
+    variant = coordinates.variant_name
+    stratum_label = VariantName("pooled") if variant is None else VariantName(str(variant.name))
+    if stratum_label == "pooled":
+        stratum_kind = RealTrajectoryStratumKind.POOLED
+    elif stratum_label.startswith("device="):
+        stratum_kind = RealTrajectoryStratumKind.DEVICE
+    else:
+        stratum_kind = RealTrajectoryStratumKind.EXPERTISE
+    horizon = coordinates.censoring_horizon_seconds
+    return RealTrajectoryCellResult(
+        stratum_kind=stratum_kind,
+        stratum_label=stratum_label,
+        horizon_seconds=30.0 if horizon is None else horizon,
+        partition_name=coordinates.partition_name or PartitionName("8-band partition"),
+        accounting=RealTrajectoryCohortAccounting(
+            stratum_size=1000,
+            resolved_count=950,
+            unresolved_count=50,
+            resolved_fraction=0.95,
+            unresolved_fraction=0.05,
+        ),
+        oracle=RealTrajectoryEmpiricalOracle(theta_true=0.03, full_information_nats=0.01),
+        tau=0.002,
+        rho_min_point=_real_trajectory_rho_point(0.002),
+        rho_sweep=tuple(_real_trajectory_rho_point(rho) for rho in active_config.get().grids.rho),
+        oracle_comparison=_solver_result(),
+        risk_budget=0.05,
+        safety_regime=SafetyRegime.INTERIOR_SAFETY_FRONTIER,
+        safety_frontier=0.03,
+        oracle_containment_at_tau=True,
     )
 
 

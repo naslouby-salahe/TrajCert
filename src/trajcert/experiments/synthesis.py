@@ -24,6 +24,7 @@ from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
+from trajcert.data.real_trajectories import HitlIotEligibleEvent, PreparedRealTrajectoryCohort
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.artifacts import (
     read_verified_scientific_result,
@@ -45,10 +46,16 @@ from trajcert.experiments.models import (
     ExecutionContext,
 )
 from trajcert.experiments.plan import ExperimentPlan, PlannedCell, cells_for_experiment
+from trajcert.experiments.real_trajectory import RealTrajectoryCellResult
 from trajcert.experiments.safety import CompatibilityFloorBehaviorResult, SafetyCaseEvaluation
 from trajcert.experiments.sensitivity import PopulationUtilityResult, SequentialUtilityResult
 from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.experiments.timing import PartitionCoherenceResult, SameEndpointTimingResult
+from trajcert.paths import (
+    PreprocessingLeaf,
+    RealTrajectoryArtifactFile,
+    real_trajectory_preprocessing_path,
+)
 from trajcert.provenance import BaselineName, MethodName
 from trajcert.reporting.publication_rows import (
     PARTITION_COHERENCE_POPULATION_LAWS,
@@ -64,6 +71,9 @@ from trajcert.reporting.publication_rows import (
     PopulationFigureEvidence,
     PopulationUtilitySourceEvidence,
     PublicationSourceRows,
+    RealTrajectoryDecisionTimeFigureRow,
+    RealTrajectoryRefinementFigureRow,
+    RealTrajectoryValidationRow,
     RhoUtilityMetricName,
     RhoUtilityRow,
     SafetySourceEvidence,
@@ -80,6 +90,9 @@ from trajcert.reporting.publication_rows import (
     partition_coherence_figure_rows,
     partition_timing_rows,
     population_rho_utility_rows,
+    real_trajectory_decision_time_figure_rows,
+    real_trajectory_refinement_figure_rows,
+    real_trajectory_validation_rows,
     theorem_validation_summary_rows,
 )
 from trajcert.reporting.publication_sources import (
@@ -102,6 +115,7 @@ from trajcert.storage import (
     file_digest,
     model_digest,
     models_digest,
+    read_model,
 )
 from trajcert.types import (
     AbsoluteError,
@@ -116,6 +130,7 @@ from trajcert.types import (
     Ordinal,
     PartitionName,
     Probability,
+    RealTrajectoryStratumKind,
     SemanticComparisonKey,
     SensitivityBudget,
     Vector,
@@ -526,6 +541,9 @@ class SynthesisEvidenceBundle(DomainModel):
     population_materiality: PopulationMaterialitySummary
     foreign_information: tuple[ForeignInformationRow, ...]
     foreign_information_figure: tuple[ForeignInformationFigureRow, ...]
+    real_trajectory_validation: tuple[RealTrajectoryValidationRow, ...]
+    real_trajectory_decision_time_figure: tuple[RealTrajectoryDecisionTimeFigureRow, ...]
+    real_trajectory_refinement_figure: tuple[RealTrajectoryRefinementFigureRow, ...]
 
 
 def _publication_source_rows(
@@ -542,6 +560,13 @@ def _publication_source_rows(
         PublicationSourceName.FOREIGN_INFORMATION_NEGATIVE_CONTROL: evidence.foreign_information,
         PublicationSourceName.FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL: (
             evidence.foreign_information_figure
+        ),
+        PublicationSourceName.REAL_TRAJECTORY_VALIDATION: evidence.real_trajectory_validation,
+        PublicationSourceName.FIGURE_REAL_TRAJECTORY_DECISION_TIME: (
+            evidence.real_trajectory_decision_time_figure
+        ),
+        PublicationSourceName.FIGURE_REAL_TRAJECTORY_REFINEMENT: (
+            evidence.real_trajectory_refinement_figure
         ),
         PublicationSourceName.FAILURE_BOUNDARIES: publication.failure_boundaries,
         PublicationSourceName.COMPUTATIONAL_SCALING: publication.computational_scaling,
@@ -565,6 +590,7 @@ def build_synthesis_evidence(
     plan: ExperimentPlan,
     workspace_root: Path,
 ) -> SynthesisEvidenceBundle:
+    config = active_config.get()
     population_source = _population_utility_evidence(plan, workspace_root)
     sequential_source = _sequential_utility_evidence(plan, workspace_root)
     sequential_synthesis = synthesize_from_sequential_utility(sequential_source)
@@ -581,6 +607,13 @@ def build_synthesis_evidence(
     population_rows = population_rho_utility_rows(population_source)
     sequential_rows = sequential_rho_utility_rows(sequential_synthesis)
     foreign_information_source = _foreign_information_evidence(plan, workspace_root)
+    real_trajectory_source = _real_trajectory_evidence(plan, workspace_root)
+    real_trajectory_pooled_primary = _real_trajectory_pooled_primary_horizon_evidence(
+        real_trajectory_source
+    )
+    real_trajectory_band_counts = {
+        partition_name(value): value for value in config.grids.partitions
+    }
     return SynthesisEvidenceBundle(
         theorem_validation=theorem_validation_summary_rows(
             _theorem_validation_observations(plan, workspace_root)
@@ -603,6 +636,16 @@ def build_synthesis_evidence(
         population_materiality=population_materiality,
         foreign_information=foreign_information_rows(foreign_information_source),
         foreign_information_figure=foreign_information_figure_rows(foreign_information_source),
+        real_trajectory_validation=real_trajectory_validation_rows(real_trajectory_source),
+        real_trajectory_decision_time_figure=real_trajectory_decision_time_figure_rows(
+            _real_trajectory_prepared_events(workspace_root)
+        ),
+        real_trajectory_refinement_figure=real_trajectory_refinement_figure_rows(
+            real_trajectory_pooled_primary,
+            config.study_design.partition_coherence_figure_rho,
+            config.numerics.comparison_guard,
+            real_trajectory_band_counts,
+        ),
     )
 
 
@@ -705,6 +748,39 @@ def _foreign_information_evidence(
         )
         for cell in _cells(plan, ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL)
     )
+
+
+def _real_trajectory_evidence(
+    plan: ExperimentPlan,
+    workspace_root: Path,
+) -> tuple[RealTrajectoryCellResult, ...]:
+    return tuple(
+        read_verified_scientific_result(cell, workspace_root, RealTrajectoryCellResult)
+        for cell in _cells(plan, ExperimentName.REAL_TRAJECTORY_VALIDATION)
+    )
+
+
+def _real_trajectory_pooled_primary_horizon_evidence(
+    results: tuple[RealTrajectoryCellResult, ...],
+) -> tuple[RealTrajectoryCellResult, ...]:
+    config = active_config.get()
+    primary = config.real_trajectory.horizons.primary_seconds
+    guard = config.numerics.comparison_guard
+    return tuple(
+        result
+        for result in results
+        if result.stratum_kind is RealTrajectoryStratumKind.POOLED
+        and abs(result.horizon_seconds - primary) <= guard
+    )
+
+
+def _real_trajectory_prepared_events(
+    workspace_root: Path,
+) -> tuple[HitlIotEligibleEvent, ...]:
+    cohort_path = workspace_root / real_trajectory_preprocessing_path(
+        PreprocessingLeaf.PREPARED_REAL_TRAJECTORIES, RealTrajectoryArtifactFile.PREPARED_COHORT
+    )
+    return read_model(cohort_path, PreparedRealTrajectoryCohort).events
 
 
 def _safety_evidence(

@@ -29,9 +29,9 @@ from trajcert.storage import (
 )
 
 _DIGEST = "0" * 64
-_EXPECTED_TABLE_COUNT = 9
-_EXPECTED_FIGURE_COUNT = 9
-_EXPECTED_DISTINCT_SOURCE_COUNT = 18
+_EXPECTED_TABLE_COUNT = 10
+_EXPECTED_FIGURE_COUNT = 11
+_EXPECTED_DISTINCT_SOURCE_COUNT = 21
 
 
 def test_publication_contract_has_exact_eight_tables_and_eight_figures() -> None:
@@ -52,6 +52,7 @@ def test_publication_contract_has_exact_eight_tables_and_eight_figures() -> None
         "failure_boundaries",
         "computational_scaling",
         "foreign_information_negative_control",
+        "real_trajectory_validation",
     }
     assert {item.source_path.stem for item in figures} == {
         "figure_partition_coherence",
@@ -63,6 +64,8 @@ def test_publication_contract_has_exact_eight_tables_and_eight_figures() -> None
         "figure_failure_boundaries",
         "figure_computational_scaling",
         "figure_foreign_information_negative_control",
+        "figure_real_trajectory_decision_time",
+        "figure_real_trajectory_refinement",
     }
 
 

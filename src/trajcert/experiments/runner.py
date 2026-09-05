@@ -25,6 +25,7 @@ from trajcert.experiments.catalog import (
 )
 from trajcert.experiments.checkpointing import dispatch_with_batched_recovery
 from trajcert.experiments.dispatch import (
+    dispatch_real_trajectory_validation,
     execute_scientific_cell,
 )
 from trajcert.experiments.models import (
@@ -207,11 +208,12 @@ def execute_dispatched_cell(
             "dispatched cell execution requires exactly its scientific-result artifact"
         )
     relative_path = scientific_result_path(cell)
-    result = (
-        dispatch_with_batched_recovery(cell, context, artifact_key)
-        if supports_batched_recovery(cell.identity.experiment_name)
-        else execute_scientific_cell(cell, active_config.get())
-    )
+    if cell.identity.experiment_name is ExperimentName.REAL_TRAJECTORY_VALIDATION:
+        result = dispatch_real_trajectory_validation(cell, context.workspace_root)
+    elif supports_batched_recovery(cell.identity.experiment_name):
+        result = dispatch_with_batched_recovery(cell, context, artifact_key)
+    else:
+        result = execute_scientific_cell(cell, active_config.get())
     digest = atomic_write_model(
         context.workspace_root / relative_path,
         result,

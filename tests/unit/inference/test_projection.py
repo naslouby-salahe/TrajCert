@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from math import inf, isinf
+
 import numpy as np
 import pytest
+from flint import arb, ctx
 
 import trajcert.inference.projection as projection_module
 from tests.unit.conftest import categorical_state
@@ -117,6 +120,25 @@ def test_intrinsic_search_failure_propagates_as_numerical_error(
     monkeypatch.setattr(projection_module, "_intrinsic_step", fail)
     with pytest.raises(NumericalError, match="intrinsic search failed"):
         _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
+
+
+def test_arb_bound_helpers_return_infinities_for_indeterminate_values() -> None:
+    previous_precision = ctx.prec
+    ctx.prec = 128
+    try:
+        indeterminate = (arb(1e-300, 1e-250) / arb(1e-300)).log()
+        assert not indeterminate.is_finite()
+        assert projection_module._arb_lower(indeterminate) == -inf
+        assert projection_module._arb_upper(indeterminate) == inf
+    finally:
+        ctx.prec = previous_precision
+
+
+def test_mass_entropy_bounds_does_not_crash_on_near_degenerate_intervals() -> None:
+    lower, upper = projection_module._mass_entropy_bounds(1e-300, 1e-250, 1e-300, 1e-250)
+    assert lower >= 0.0
+    assert upper >= 0.0
+    assert not isinf(lower)
 
 
 def test_projection_search_failure_reports_arithmetic_fallback(

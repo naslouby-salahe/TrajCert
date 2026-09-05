@@ -587,12 +587,6 @@ def test_experiment_status_rejects_unknown_family() -> None:
         _ = workflows.experiment_status(unknown)
 
 
-def test_experiment_status_zero_declared_cells_is_invalid() -> None:
-    status = workflows.experiment_status(ExperimentName("Real-Trajectory Validation"))
-    assert status.state is PublicExecutionState.INVALID
-    assert status.total_cells == 0
-
-
 def test_report_rejects_unknown_experiment_name() -> None:
     unknown = cast(ExperimentName, cast(object, "Unknown Experiment"))
     with pytest.raises(InvalidScientificDataError, match="unknown experiment family"):

@@ -53,6 +53,7 @@ from trajcert.types import (
     PixelCount,
     Probability,
     RandomizationCount,
+    RawDatasetRoot,
     RefinementCandidateCount,
     RefinementStepCount,
     RelativeUnresolvedGain,
@@ -640,6 +641,24 @@ class HandCasesConfig(ConfigModel):
         return self
 
 
+class RealTrajectoryHorizonConfig(ConfigModel):
+    primary_seconds: TerminalHorizon
+    sensitivity_seconds: tuple[TerminalHorizon, ...]
+
+    @model_validator(mode="after")
+    def validate_horizons(self) -> RealTrajectoryHorizonConfig:
+        _require_unique(
+            (self.primary_seconds, *self.sensitivity_seconds),
+            ConfigFieldPath("real_trajectory.horizons"),
+        )
+        return self
+
+
+class RealTrajectoryConfig(ConfigModel):
+    dataset_root: RawDatasetRoot
+    horizons: RealTrajectoryHorizonConfig
+
+
 class FigureLayoutConfig(ConfigModel):
     width: PixelCount
     height: PixelCount
@@ -686,6 +705,7 @@ class TrajCertConfig(ConfigModel):
     publication: PublicationConfig
     hand_cases: HandCasesConfig
     figure_layout: FigureLayoutConfig
+    real_trajectory: RealTrajectoryConfig
 
     @field_validator("laws")
     @classmethod

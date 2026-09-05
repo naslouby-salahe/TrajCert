@@ -4,15 +4,20 @@ import logging
 import sys
 import time
 from contextvars import ContextVar
+from pathlib import Path
 from typing import Final
 
 from trajcert.storage import SemanticCellKey
 from trajcert.types import (
     Count,
+    DatasetChecksumHex,
+    DatasetVersionTag,
     ExperimentName,
     LogIntervalSeconds,
     ProvenSearchBound,
     PublicExecutionState,
+    RealTrajectoryDatasetName,
+    RealTrajectoryExclusionReason,
     TelemetryLabel,
     TelemetryPhase,
     TimestampSeconds,
@@ -49,6 +54,54 @@ def set_current_cell_key(semantic_cell_key: SemanticCellKey | None) -> None:
 def _current_cell_label() -> TelemetryLabel:
     key = _current_cell_key.get()
     return TelemetryLabel(_UNKNOWN_CELL_LABEL) if key is None else TelemetryLabel(key)
+
+
+class PreprocessingProgress:
+    def __init__(self, dataset_name: RealTrajectoryDatasetName) -> None:
+        self._dataset_name = dataset_name
+
+    def started(self) -> None:
+        _logger.info("preprocessing_started dataset=%s", self._dataset_name)
+
+    def dataset_located(
+        self, doi: DatasetVersionTag, dataset_sha256: DatasetChecksumHex, total_rows: Count
+    ) -> None:
+        _logger.info(
+            "dataset_located dataset=%s doi=%s dataset_sha256=%s total_rows=%d",
+            self._dataset_name,
+            doi,
+            dataset_sha256,
+            total_rows,
+        )
+
+    def schema_validated(self) -> None:
+        _logger.info("schema_validated dataset=%s", self._dataset_name)
+
+    def eligibility_computed(
+        self, candidate_rows: Count, eligible_rows: Count, excluded_rows: Count
+    ) -> None:
+        _logger.info(
+            "eligibility_computed dataset=%s candidate_rows=%d eligible_rows=%d excluded_rows=%d",
+            self._dataset_name,
+            candidate_rows,
+            eligible_rows,
+            excluded_rows,
+        )
+
+    def exclusion_breakdown(
+        self, counts: tuple[tuple[RealTrajectoryExclusionReason, Count], ...]
+    ) -> None:
+        for reason, count in counts:
+            if count > 0:
+                _logger.info(
+                    "eligibility_excluded dataset=%s reason=%s count=%d",
+                    self._dataset_name,
+                    reason,
+                    count,
+                )
+
+    def completed(self, target: Path) -> None:
+        _logger.info("preprocessing_completed dataset=%s target=%s", self._dataset_name, target)
 
 
 class SearchProgress:

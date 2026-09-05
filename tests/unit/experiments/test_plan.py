@@ -20,7 +20,7 @@ from trajcert.provenance import (
 from trajcert.storage import PlanDigest
 from trajcert.types import EvidenceClass, ExperimentName, ReasonCode
 
-_EXPECTED_REGISTRY_TOTAL = 1667
+_EXPECTED_REGISTRY_TOTAL = 1738
 _EXPECTED_SCALING_CELL_COUNT = 2
 _PLAN_DIGEST = PlanDigest("digest")
 
@@ -66,8 +66,8 @@ def test_planned_cell_accepts_valid_contracts() -> None:
 
 def test_build_plan_production_reproduces_cell_total() -> None:
     plan = build_plan(_production_config())
-    assert plan.planned_cell_count == _EXPECTED_REGISTRY_TOTAL - 1
-    assert plan.executable_cells == _EXPECTED_REGISTRY_TOTAL - 1
+    assert plan.planned_cell_count == _EXPECTED_REGISTRY_TOTAL
+    assert plan.executable_cells == _EXPECTED_REGISTRY_TOTAL
     assert plan.invalid_cells == 0
 
 
@@ -83,7 +83,7 @@ def test_build_plan_marks_nonapplicable_experiments() -> None:
     plan = build_plan(_production_config())
     names = tuple(item.identity.semantic_cell_key for item in plan.cells)
     assert len(names) == len(set(names))
-    assert plan.nonapplicable_experiments == (ExperimentName.REAL_TRAJECTORY_VALIDATION,)
+    assert plan.nonapplicable_experiments == ()
 
 
 def test_cells_for_experiment_filters_by_name() -> None:
@@ -97,9 +97,19 @@ def test_cells_for_experiment_filters_by_name() -> None:
     assert all(cell.executable for cell in cells)
 
 
-def test_cells_for_experiment_nonapplicable_name_is_empty() -> None:
-    plan = build_plan(_production_config())
-    assert cells_for_experiment(plan, ExperimentName.REAL_TRAJECTORY_VALIDATION) == ()
+def test_cells_for_experiment_real_trajectory_validation_is_populated() -> None:
+    config = _production_config()
+    plan = build_plan(config)
+    cells = cells_for_experiment(plan, ExperimentName.REAL_TRAJECTORY_VALIDATION)
+    horizons = 1 + len(config.real_trajectory.horizons.sensitivity_seconds)
+    pooled = horizons * len(config.grids.partitions)
+    device_strata = 12 * len(config.grids.partitions)
+    expertise_strata = 3 * len(config.grids.partitions)
+    expected_count = pooled + device_strata + expertise_strata
+    assert len(cells) == expected_count
+    assert all(cell.executable for cell in cells)
+    keys = tuple(cell.identity.semantic_cell_key for cell in cells)
+    assert len(keys) == len(set(keys))
 
 
 def test_cells_for_experiment_foreign_information_negative_control_is_populated() -> None:

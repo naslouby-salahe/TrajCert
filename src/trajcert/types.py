@@ -334,6 +334,47 @@ class SeedNamespaceRole(StrEnum):
     PERMUTATION = "Permutation"
 
 
+class RealTrajectoryDatasetName(StrEnum):
+    HITL_IOT = "hitl-iot"
+
+
+class HitlIotDeviceType(StrEnum):
+    TV = "tv"
+    THERMOSTAT = "thermostat"
+    DOORBELL = "doorbell"
+    SPEAKER = "speaker"
+    CAMERA = "camera"
+
+
+class AnnotatorExpertise(StrEnum):
+    EXPERT = "expert"
+    INTERMEDIATE = "intermediate"
+    NOVICE = "novice"
+
+
+class RealTrajectoryStratumKind(StrEnum):
+    POOLED = "pooled"
+    DEVICE = "device"
+    EXPERTISE = "expertise"
+
+
+class RealTrajectoryExclusionReason(StrEnum):
+    NOT_HUMAN_ANNOTATED = "NOT_HUMAN_ANNOTATED"
+    INVALID_DECISION_LATENCY = "INVALID_DECISION_LATENCY"
+    MISSING_GROUND_TRUTH = "MISSING_GROUND_TRUTH"
+    MISSING_AUTOMATIC_PREDICTION = "MISSING_AUTOMATIC_PREDICTION"
+    INVALID_DEVICE_IDENTITY = "INVALID_DEVICE_IDENTITY"
+    DUPLICATE_ANNOTATION = "DUPLICATE_ANNOTATION"
+
+
+RawDatasetRoot = NewType("RawDatasetRoot", str)
+DatasetVersionTag = NewType("DatasetVersionTag", str)
+DatasetChecksumHex = NewType("DatasetChecksumHex", str)
+DatasetFilename = NewType("DatasetFilename", str)
+DatasetColumnName = NewType("DatasetColumnName", str)
+RealTrajectoryStratumValue = NewType("RealTrajectoryStratumValue", str)
+
+
 class CliCommand(StrEnum):
     DOCTOR = "doctor"
     PREPROCESS = "preprocess"

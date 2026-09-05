@@ -1090,12 +1090,16 @@ def _arb_interval(lower: Mass, upper: Mass) -> arb:
 
 
 def _arb_lower(value: arb) -> ArbEndpointValue:
+    if not value.is_finite():
+        return -inf
     mantissa, exponent = value.lower().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, -inf)
 
 
 def _arb_upper(value: arb) -> ArbEndpointValue:
+    if not value.is_finite():
+        return inf
     mantissa, exponent = value.upper().man_exp()
     numeric = ldexp(float(int(mantissa)), int(exponent))
     return nextafter(numeric, inf)

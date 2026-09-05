@@ -11,6 +11,12 @@ from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH, SMOKE_CONFIG_OVERRIDES_PATH
 from trajcert.data.laws import build_full_law, configured_laws
 from trajcert.data.partitions import build_partition
+from trajcert.data.real_trajectories import (
+    PreparedRealTrajectoryCohort,
+    build_real_trajectory_eligibility,
+    validate_dataset_schema,
+    verify_dataset_integrity,
+)
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.artifacts import (
     cell_dependency_material,
@@ -56,9 +62,11 @@ from trajcert.paths import (
     ExperimentLeaf,
     PlanArtifactFile,
     PreprocessingLeaf,
+    RealTrajectoryArtifactFile,
     experiment_leaf,
     plan_artifact_path,
     preprocessing_leaf,
+    real_trajectory_preprocessing_path,
 )
 from trajcert.provenance import EnvironmentDigest, dependency_fingerprint
 from trajcert.reporting.export import (
@@ -75,13 +83,15 @@ from trajcert.reporting.source_data import (
 )
 from trajcert.reporting.tables import render_table
 from trajcert.storage import SemanticCellKey, atomic_write_model, file_digest
-from trajcert.telemetry import ExperimentProgress, configure_logging
+from trajcert.telemetry import ExperimentProgress, PreprocessingProgress, configure_logging
 from trajcert.types import (
     Count,
     DomainModel,
     ExperimentName,
     LawName,
     PublicExecutionState,
+    RawDatasetRoot,
+    RealTrajectoryDatasetName,
     ReasonCode,
     TimestampSeconds,
 )
@@ -171,12 +181,15 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
 
 
 def preprocess(
-    dataset_name: LawName | None = None,
+    dataset_name: LawName | RealTrajectoryDatasetName | None = None,
     *,
     workspace_root: Path | None = None,
     overwrite: bool = False,
 ) -> Path:
     workspace_root = workspace_root if workspace_root is not None else Path()
+    if isinstance(dataset_name, RealTrajectoryDatasetName):
+        _ = _load_config(workspace_root)
+        return _preprocess_real_trajectory(workspace_root, overwrite=overwrite)
     target = workspace_root / _PREPROCESS_PATH
     if not overwrite and target.is_file():
         return target
@@ -190,6 +203,55 @@ def preprocess(
     for parameters in selected:
         _ = build_full_law(parameters, finest)
     _ = atomic_write_model(target, config)
+    return target
+
+
+def _preprocess_real_trajectory(workspace_root: Path, *, overwrite: bool) -> Path:
+    dataset_name = RealTrajectoryDatasetName.HITL_IOT
+    target = workspace_root / real_trajectory_preprocessing_path(
+        PreprocessingLeaf.PREPARED_REAL_TRAJECTORIES, RealTrajectoryArtifactFile.PREPARED_COHORT
+    )
+    if not overwrite and target.is_file():
+        return target
+    progress = PreprocessingProgress(dataset_name)
+    progress.started()
+    config = active_config.get()
+    dataset_root = RawDatasetRoot(config.real_trajectory.dataset_root)
+    provenance = verify_dataset_integrity(dataset_root)
+    progress.dataset_located(provenance.doi, provenance.dataset_sha256, provenance.total_rows)
+    schema = validate_dataset_schema(dataset_root)
+    progress.schema_validated()
+    events, report = build_real_trajectory_eligibility(dataset_root)
+    progress.eligibility_computed(report.candidate_rows, report.eligible_rows, report.excluded_rows)
+    progress.exclusion_breakdown(
+        tuple((item.reason, item.count) for item in report.excluded_by_reason)
+    )
+    _ = atomic_write_model(
+        workspace_root
+        / real_trajectory_preprocessing_path(
+            PreprocessingLeaf.INVENTORIES_REAL_TRAJECTORIES,
+            RealTrajectoryArtifactFile.DATASET_PROVENANCE,
+        ),
+        provenance,
+    )
+    _ = atomic_write_model(
+        workspace_root
+        / real_trajectory_preprocessing_path(
+            PreprocessingLeaf.VALIDATION_TRAJECTORY_CONSISTENCY,
+            RealTrajectoryArtifactFile.SCHEMA_VALIDATION,
+        ),
+        schema,
+    )
+    _ = atomic_write_model(
+        workspace_root
+        / real_trajectory_preprocessing_path(
+            PreprocessingLeaf.INVENTORIES_REAL_TRAJECTORIES,
+            RealTrajectoryArtifactFile.ELIGIBILITY_REPORT,
+        ),
+        report,
+    )
+    _ = atomic_write_model(target, PreparedRealTrajectoryCohort(events=events))
+    progress.completed(target)
     return target
 
 

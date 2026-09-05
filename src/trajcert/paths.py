@@ -162,11 +162,27 @@ class PublicationSourceFile(StrEnum):
     FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL = (
         "figure_foreign_information_negative_control.parquet"
     )
+    REAL_TRAJECTORY_VALIDATION = "real_trajectory_validation.parquet"
+    FIGURE_REAL_TRAJECTORY_DECISION_TIME = "figure_real_trajectory_decision_time.parquet"
+    FIGURE_REAL_TRAJECTORY_REFINEMENT = "figure_real_trajectory_refinement.parquet"
 
 
 class PlanArtifactFile(StrEnum):
     EXPERIMENT_PLAN = "experiment_plan.json"
     DEPENDENCY_GRAPH = "dependency_graph.json"
+
+
+class RealTrajectoryArtifactFile(StrEnum):
+    DATASET_PROVENANCE = "hitl_iot_dataset_provenance.json"
+    ELIGIBILITY_REPORT = "hitl_iot_eligibility_report.json"
+    SCHEMA_VALIDATION = "hitl_iot_schema_validation.json"
+    PREPARED_COHORT = "hitl_iot_prepared_cohort.json"
+
+
+def real_trajectory_preprocessing_path(
+    leaf: PreprocessingLeaf, artifact: RealTrajectoryArtifactFile
+) -> Path:
+    return preprocessing_leaf(leaf) / artifact
 
 
 class ResultsLeaf(StrEnum):

@@ -23,6 +23,7 @@ from trajcert.storage import (
     canonical_model_bytes,
 )
 from trajcert.types import (
+    AgeUnit,
     AnytimeConfidenceDelta,
     BandCount,
     CaseIndex,
@@ -159,6 +160,7 @@ class SemanticCoordinates(DomainModel):
     seed_index: SeedIndex | None = None
     sensitivity_coordinate: SensitivityCoordinate | None = None
     variant_name: VariantCoordinate | None = None
+    censoring_horizon_seconds: AgeUnit | None = None
 
     @field_serializer("comparison_pair_name")
     def _serialize_comparison_pair(
@@ -277,6 +279,7 @@ class SemanticCellIdentity(DomainModel):
             ("beta", coordinates.beta),
             ("delta", coordinates.delta),
             ("gamma", coordinates.gamma),
+            ("horizon", coordinates.censoring_horizon_seconds),
         ):
             if value is not None:
                 values.append((CoordinateName(name), canonical_number_token(value)))

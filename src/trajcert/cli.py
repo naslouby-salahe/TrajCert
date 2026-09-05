@@ -33,6 +33,7 @@ from trajcert.types import (
     ExperimentName,
     LawName,
     PublicExecutionState,
+    RealTrajectoryDatasetName,
 )
 
 
@@ -71,7 +72,7 @@ class CliCheckState(StrEnum):
 class CliArguments(DomainModel):
     command: CliCommand
     experiment_name: ExperimentName | None
-    dataset_name: LawName | None
+    dataset_name: LawName | RealTrajectoryDatasetName | None
     overwrite: bool
 
 
@@ -214,7 +215,7 @@ def _experiment_name(arguments: CliArguments, *, required: bool) -> ExperimentNa
     return value
 
 
-def _dataset_name(arguments: CliArguments) -> LawName | None:
+def _dataset_name(arguments: CliArguments) -> LawName | RealTrajectoryDatasetName | None:
     return arguments.dataset_name
 
 
@@ -236,9 +237,15 @@ def _parse_experiment_name(
         parser.error(f"unknown experiment name: {value}")
 
 
-def _parse_dataset_name(parser: ArgumentParser, value: CliArgumentValue | None) -> LawName | None:
+def _parse_dataset_name(
+    parser: ArgumentParser, value: CliArgumentValue | None
+) -> LawName | RealTrajectoryDatasetName | None:
     if value is None:
         return None
+    try:
+        return RealTrajectoryDatasetName(value)
+    except ValueError:
+        pass
     if LawName(value) not in LAW_DISPLAY_NAMES.values():
         parser.error(f"unknown dataset name: {value}")
     return LawName(value)

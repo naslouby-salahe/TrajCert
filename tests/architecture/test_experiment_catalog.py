@@ -25,7 +25,7 @@ def test_planning_consumes_the_catalog_order() -> None:
 
 
 def test_catalog_owns_coordinate_dispatch_for_applicable_experiments() -> None:
-    nonapplicable = {ExperimentName.REAL_TRAJECTORY_VALIDATION}
+    nonapplicable: set[ExperimentName] = set()
     assert set(COORDINATE_HANDLER_BY_EXPERIMENT) == set(ExperimentName) - nonapplicable
 
 
@@ -38,7 +38,7 @@ def test_catalog_owns_seed_policy_for_every_experiment() -> None:
 
 
 def test_catalog_owns_execution_handler_for_every_applicable_experiment() -> None:
-    nonapplicable = {ExperimentName.REAL_TRAJECTORY_VALIDATION}
+    nonapplicable: set[ExperimentName] = set()
     assert set(EXECUTION_HANDLER_BY_EXPERIMENT) == set(ExperimentName) - nonapplicable
 
 
@@ -48,7 +48,7 @@ def test_only_explicitly_nonapplicable_experiments_lack_runnable_handlers() -> N
         for definition in EXPERIMENT_CATALOG
         if definition.coordinate_handler is None or definition.execution_handler is None
     }
-    assert declared_nonapplicable == {ExperimentName.REAL_TRAJECTORY_VALIDATION}
+    assert declared_nonapplicable == set()
     for definition in EXPERIMENT_CATALOG:
         if definition.name in declared_nonapplicable:
             assert definition.dependency_policy is DependencyPolicy.NONAPPLICABLE

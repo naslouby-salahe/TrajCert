@@ -114,7 +114,7 @@ The confirmatory claim names, exact wording, evidence gates, scopes, and failure
 
 The contribution does **not** claim invention of callback/repeated-attempt data, outcome-dependent timing as missing-data information, mutual information, entropy/divergence sensitivity generally, partial identification, sharp bounds generally, falsification/breakdown frontiers generally, data processing, confidence sequences/e-processes, delayed-outcome inference generally, active querying/abstention/selective acting, or federated evidence borrowing.
 
-It does **not** claim finite-sample minimax optimality; universal $\rho$ calibration; universal odds-ratio-to-$\rho$ conversion; continuous-time or unrestricted serial-drift validity; covariate-conditional validity; active-adjudication optimality; detector-training superiority; privacy protection; poisoning/Byzantine robustness; OOD/zero-day superiority; constrained-device deployment feasibility; or current real-trajectory validation.
+It does **not** claim finite-sample minimax optimality; universal $\rho$ calibration; universal odds-ratio-to-$\rho$ conversion; continuous-time or unrestricted serial-drift validity; covariate-conditional validity; active-adjudication optimality; detector-training superiority; privacy protection; poisoning/Byzantine robustness; OOD/zero-day superiority; constrained-device deployment feasibility; or prospective, live operational production-deployment validation (§21.12 evaluates retrospective empirical generalization on a released research dataset, not a live ledger).
 
 The theorem assumes trustworthy event IDs, issue/adjudication timestamps, terminal status, and resolved correctness labels. Tampering, malicious adjudicators/clients, poisoning, detector evasion, secure aggregation, and privacy leakage are outside scope; a data-integrity violation yields no certificate. Federation is unnecessary for local validity and foreign-client information does not enter the core inference procedure.
 
@@ -1029,14 +1029,12 @@ If the raw dataset differs from documented expectations:
 Current real-trajectory planning status is exactly:
 
 ```text
-NOT_IN_CURRENT_CONFIRMATORY_PLAN
+CONFIRMATORY_GENERALIZATION_EXECUTED
 ```
 
-Current confirmatory execution uses the synthetic benchmark defined under `laws`. `Real-Trajectory Validation` is a zero-cell planned nonapplicability, no current real-trajectory execution exists, and the Real-Trajectory Value claim remains `NOT_TESTED`.
+Confirmatory identity/theorem execution continues to use the synthetic benchmark defined under `laws`; the synthetic generator remains authoritative there, so generated and expected probability tables must agree within deterministic numerical tolerance. `Real-Trajectory Validation` is a separate, genuinely executable GENERALIZATION experiment layered on top of that synthetic core; it never substitutes for or modifies the synthetic identity checks.
 
-The synthetic generator is authoritative, so generated and expected probability tables must agree within deterministic numerical tolerance.
-
-A later separate real study is eligible only if the same action unit has:
+A real study is eligible only if the same action unit has:
 
 * immutable event identifier;
 * issue timestamp;
@@ -1050,7 +1048,23 @@ A later separate real study is eligible only if the same action unit has:
 
 If any required element must be fabricated or inferred from an unrelated timestamp, the source is ineligible.
 
-A future real study is a separate study and does not alter the current synthetic registry.
+`Real-Trajectory Validation` uses **HITL-IoT** (Wakili et al., *HITL-IoT: Human-in-the-Loop Intrusion Detection Dataset*, Zenodo, DOI `10.5281/zenodo.17862334`, pinned by SHA-256 checksum of the released `HITL-IoT_dataset.csv`). Its 127,845 network flows satisfy the eligibility list above as follows, using only the dataset's own recorded fields (never a fabricated or unrelated substitute):
+
+* immutable event identifier: the flow's `(timestamp, src_mac, dst_ip, src_port, dst_port)` tuple (verified unique in the raw release);
+* issue timestamp: `timestamp`;
+* automatic-action channel: the dataset's recorded `ml_prediction`, the sole automatic classifier decision present per flow;
+* adjudication completion timestamp: `decision_time`, the analyst's recorded decision latency in seconds, distinct from `timestamp` and never conflated with it;
+* binary correctness verdict: `L = (ml_prediction != is_attack)`, computed from the dataset's own ground-truth `is_attack` label, never from the analyst's `human_decision`;
+* operationally justified terminal horizon: `H = 30` seconds (primary), `H = 15` and `H = 60` seconds (sensitivity); see §18.14;
+* explicit unresolved-at-horizon versus missing-logging distinction: only the `human_reviewed = true` cohort (10,227 of 127,845 flows) is eligible; `human_reviewed = false` means "not selected for annotation," never "unresolved," and those flows are excluded from the trajectory cohort entirely, not folded into unresolved mass;
+* stable regime: one recorded automatic-prediction channel; analyst expertise (`expert` / `intermediate` / `novice`) is preserved as an explicit stratum rather than pooled away;
+* provenance: `decision_time` is a distinct dataset field from `timestamp`, documented by the dataset's own annotation protocol as analyst decision latency, not a network-capture artifact.
+
+Eligibility is computed once during `trajcert preprocess hitl-iot`, which records candidate/annotated/eligible/excluded counts and excluded-row reasons (`NOT_HUMAN_ANNOTATED`, `MISSING_GROUND_TRUTH`, `MISSING_AUTOMATIC_PREDICTION`, `INVALID_DEVICE_IDENTITY`, `INVALID_DECISION_LATENCY`, `DUPLICATE_ANNOTATION`) in a persisted eligibility report; on the pinned release all five data-quality exclusions are zero and the full annotated cohort (10,227 flows) is eligible.
+
+Fixed-horizon censoring is administrative, not a claim about naturally unresolved operational incidents: for a chosen horizon $H$, a flow with `decision_time <= H` is resolved and its correctness `L` is observable; a flow with `decision_time > H` is `retrospective fixed-horizon empirical trajectory validation` unresolved-through-$H$, and its `L` is withheld from the operational summary — it remains available only to the hidden empirical oracle (§18.14, §21.12). Changing the hidden `L` of any flow with `decision_time > H` while holding everything observable through $H$ fixed leaves the operational certificate unchanged by construction.
+
+This real study is layered on top of, and does not alter, the synthetic confirmatory registry.
 
 # 7. Baseline and Comparator Contracts
 
@@ -2760,10 +2774,10 @@ TrajCert/
 │   │   │   # Nine one-at-a-time failure-boundary axes.
 │   │   │
 │   │   ├── real-trajectory-validation/
-│   │   │   # Reserved registry location; currently zero executable cells.
+│   │   │   # Empirical GENERALIZATION check on HITL-IoT human adjudication trajectories.
 │   │   │
 │   │   ├── foreign-information-negative-control/
-│   │   │   # Reserved registry location; currently zero executable cells.
+│   │   │   # DIAGNOSTIC: true/foreign/naive-pooled negative-control comparison.
 │   │   │
 │   │   ├── computational-scaling/
 │   │   │   # Runtime/memory/root/node scaling across configured K values.
@@ -4060,11 +4074,11 @@ The plan defines the executable experiment families and their expected expansion
 | Utility analysis                        | Population Sensitivity Utility             | ROBUSTNESS       | 6 laws × 4 partitions × 15 rho         |       360 |
 | Utility analysis                        | Sequential Sensitivity Utility             | ROBUSTNESS       | 6 laws × 3 rho                         |        18 |
 | Failure-boundary analysis               | Failure Boundary Atlas                     | FAILURE_BOUNDARY | 9 axes × 7 levels                      |        63 |
-| Real-trajectory generalization          | Real-Trajectory Validation                 | GENERALIZATION   | absent                                 |         0 |
+| Real-trajectory generalization          | Real-Trajectory Validation                 | GENERALIZATION   | HITL-IoT: pooled×3 horizons×4 partitions + 12 devices×4 partitions + 3 expertise×4 partitions |        72 |
 | Foreign-information diagnostic          | Foreign-Information Negative Control       | DIAGNOSTIC       | 12 laws × 4 partitions × 5 offsets     |       240 |
 | Computational scaling                   | Computational Scaling                      | VALIDATION       | 8 K values                             |         8 |
 | Statistical synthesis                   | Statistical Synthesis                      | VALIDATION       | deterministic synthesis                |         1 |
-| **TOTAL**                               |                                            |                  |                                        | **1,662** |
+| **TOTAL**                               |                                            |                  |                                        | **1,738** |
 
 No experiment exists outside this plan.
 
@@ -4103,6 +4117,7 @@ Each deterministic cell requires one schema-valid primary result record unless o
 | Population Sensitivity Utility             | population bounds                                                      | utility result                                                                           |
 | Sequential Sensitivity Utility             | shared streams/projections                                             | paired per-stream parquet + per-condition aggregate                                      |
 | Failure Boundary Atlas                     | axis-specific inputs                                                   | boundary result                                                                          |
+| Real-Trajectory Validation                 | HITL-IoT prepared cohort (§6, §18.14)                                  | cohort accounting + rho-sweep + oracle result                                            |
 | Foreign-Information Negative Control       | local + foreign population summaries                                   | paired true/foreign/naive-pooled negative-control result                                |
 | Computational Scaling                      | benchmark inputs                                                       | repetition parquet + summary result                                                      |
 | Statistical Synthesis                      | all required completed evidence                                        | synthesis record + cross-experiment source data                     |
@@ -4804,11 +4819,10 @@ For Table 11:
 
 ## 18.11 Planned nonapplicabilities
 
-`Real-Trajectory Validation` has zero executable cells.
-
-No current real-trajectory command exists.
-
-`Foreign-Information Negative Control` is a fully executable DIAGNOSTIC experiment; see §18.13 and §21.13.
+No experiment in the catalog is currently a planned zero-cell nonapplicability. `Real-Trajectory
+Validation` is a fully executable GENERALIZATION experiment; see §18.14 and §21.12.
+`Foreign-Information Negative Control` is a fully executable DIAGNOSTIC experiment; see §18.13 and
+§21.13.
 
 ## 18.13 Foreign-Information Negative Control
 
@@ -4919,7 +4933,64 @@ peak_memory_mib =
 
 Empirical slopes are descriptive only.
 
-## 18.13 Statistical synthesis
+## 18.14 Real-Trajectory Validation
+
+Dataset: HITL-IoT (§6), pinned by SHA-256 checksum; see the eligibility and censoring protocol in
+§6 for the full field mapping, exclusion accounting, and leakage-isolation contract.
+
+Coordinates (72 cells total, purposeful and bounded rather than a full Cartesian sweep):
+
+* pooled stratum: 3 horizons (`H = 15, 30, 60` seconds) × 4 configured partitions
+  (8/4/2/1-band, identical hierarchy to every synthetic experiment) = 12 cells;
+* per-device stratum: 12 HITL-IoT devices × 4 partitions, primary horizon (`H = 30`) only = 48
+  cells;
+* per-expertise stratum: 3 analyst expertise levels (`expert`/`intermediate`/`novice`) × 4
+  partitions, primary horizon only = 12 cells.
+
+For each cell:
+
+1. filter the eligible cohort (§6) to the cell's stratum;
+2. bin each event's `decision_time` into the finest (8-band) equal-age partition over `[0, H]`
+   using the observed decision time, contributing to `harmful_by_band`/`correct_by_band` when
+   `decision_time <= H`, or to `unresolved_mass` when `decision_time > H` (§6 censoring
+   contract) — this reuses `build_partition`/`summarize_observable_masses` unchanged;
+3. deterministically coarsen to the target 4/2/1-band partition via the existing
+   `coarsen_summary`, identical to every synthetic experiment's refinement chain;
+4. sweep the existing authoritative `grids.rho` domain through `solve_hidden_mass_interval`,
+   classifying each point's scientific state (`CERTIFIED`/`UNCERTIFIED`/`MODEL_INCOMPATIBLE`/
+   `INTRINSICALLY_UNCERTIFIABLE`/`INSUFFICIENT_EVIDENCE`, the last gated by the existing
+   `minimum_evidence.matured_events`/`resolved_events` thresholds) — no new rho grid is
+   introduced;
+5. additionally solve at `rho = tau` exactly (`rho_min_point`) as the sharpest identified
+   certificate;
+6. compute `sharpness_against_generic_oracle` (existing function, unchanged) for one
+   arbitrary-precision oracle cross-check per cell;
+7. compute `assess_safety_geometry` at `budgets.risk` (the project's single authoritative risk
+   budget, reused rather than introducing a new one) for the population-level safety regime and
+   `rho_star`;
+8. compute the hidden empirical oracle (`theta_true`, full-information `I(L;J*)`) strictly
+   offline from the stratum's complete decision-time record, per the isolation contract in §6;
+   check whether `[rho_min_point.risk_lower, rho_min_point.risk_upper]` contains `theta_true`.
+
+Required authoritative cell output: one `RealTrajectoryCellResult` per cell, persisted like every
+other direct-dispatch experiment, containing cohort accounting (candidate/eligible/resolved/
+unresolved counts and fractions), the hidden empirical oracle, the full `rho` sweep, the
+sharpest (`rho = tau`) point, the oracle cross-check, and the safety/oracle-containment
+diagnostics above.
+
+Support:
+
+```text
+tau is computed, not assumed positive
+rho_min_point and oracle_containment_at_tau are computed, not assumed to certify or to contain theta_true
+```
+
+`Real-Trajectory Validation` never trains a detector: `ml_prediction` is the dataset's own
+recorded automatic decision. No hidden label from a `decision_time > H` event enters any
+observable quantity, coordinate selection, or rho selection (§6, §18 architecture invariant,
+enforced by a dedicated leakage-invariance test).
+
+## 18.15 Statistical synthesis
 
 `Statistical Synthesis` executes once after all required upstream experiments are complete.
 
@@ -5598,17 +5669,29 @@ data-integrity error rather than being silently aggregated.
 
 ## 21.12 Real-Trajectory Value
 
+Design: `Real-Trajectory Validation` (§18.14) evaluates this claim empirically on HITL-IoT (§6) —
+genuine human adjudication latency, the dataset's own recorded automatic prediction, and its own
+ground-truth label — rather than only theoretically/synthetically. It is a genuine, executable,
+empirical GENERALIZATION layer over the existing synthetic confirmatory core; it replaces no
+theory and no synthetic identity check.
+
 Current state:
 
 ```text
-NOT_TESTED
+PENDING_EXECUTION_EVIDENCE
 ```
 
-Allowed manuscript statement:
+This state is provisional pending the completed production execution and results audit. It must be
+replaced with one of the outcome states in §22, derived strictly from persisted evidence, once that
+run and audit are complete. No numerical result is asserted here in advance of that evidence.
 
-> TrajCert is theoretically and synthetically evaluated for the adjudication-trajectory setting; value on a genuine operational action-to-adjudication ledger remains to be established.
+Allowed manuscript statement while `PENDING_EXECUTION_EVIDENCE`:
 
-Real operational validation may not be implied.
+> TrajCert is theoretically and synthetically evaluated for the adjudication-trajectory setting; a genuine empirical evaluation on real human adjudication trajectories (HITL-IoT) is implemented and executable, with results reported from verified persisted evidence.
+
+Real operational (live production-deployment) validation is not claimed regardless of this
+empirical generalization outcome: HITL-IoT is a released research dataset evaluated under
+retrospective, fixed-horizon censoring (§6), not a live operational ledger.
 
 ## 21.13 Foreign-Information Negative Control
 
@@ -5883,9 +5966,9 @@ Reissuing the failed or downstream experiment command resumes from the nearest v
 
 Successful earlier and unrelated experiment results remain active unless one of their material dependencies changed.
 
-`Real-Trajectory Validation` has no executable cells. `Foreign-Information Negative Control` is a
-fully executable, resumable, deterministic-coordinate experiment like every other direct-dispatch
-experiment in this table.
+`Real-Trajectory Validation` and `Foreign-Information Negative Control` are both fully executable,
+resumable, deterministic-coordinate experiments like every other direct-dispatch experiment in this
+table.
 
 At no point does the operator choose:
 

@@ -10,6 +10,7 @@ from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
+from trajcert.data.real_trajectories import HITL_IOT_DEVICE_NAMES
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.catalog import (
     EXPERIMENT_CATALOG,
@@ -32,6 +33,7 @@ from trajcert.provenance import (
 )
 from trajcert.storage import PlanDigest, model_digest
 from trajcert.types import (
+    AnnotatorExpertise,
     Count,
     DomainModel,
     EvidenceClass,
@@ -406,6 +408,39 @@ def _coordinates_sequential_sensitivity_utility() -> tuple[SemanticCoordinates, 
     )
 
 
+def _coordinates_real_trajectory_validation() -> tuple[SemanticCoordinates, ...]:
+    config = active_config.get()
+    horizons = config.real_trajectory.horizons
+    primary = horizons.primary_seconds
+    all_horizons = (primary, *horizons.sensitivity_seconds)
+    partitions = _partition_names()
+    coordinates: list[SemanticCoordinates] = [
+        SemanticCoordinates(
+            variant_name=VariantCoordinate(name=VariantName("pooled")),
+            partition_name=partition,
+            censoring_horizon_seconds=horizon,
+        )
+        for horizon, partition in product(all_horizons, partitions)
+    ]
+    coordinates.extend(
+        SemanticCoordinates(
+            variant_name=VariantCoordinate(name=VariantName(f"device={device}")),
+            partition_name=partition,
+            censoring_horizon_seconds=primary,
+        )
+        for device, partition in product(HITL_IOT_DEVICE_NAMES, partitions)
+    )
+    coordinates.extend(
+        SemanticCoordinates(
+            variant_name=VariantCoordinate(name=VariantName(f"expertise={level}")),
+            partition_name=partition,
+            censoring_horizon_seconds=primary,
+        )
+        for level, partition in product(AnnotatorExpertise, partitions)
+    )
+    return tuple(coordinates)
+
+
 def _coordinates_foreign_information_negative_control() -> tuple[SemanticCoordinates, ...]:
     config = active_config.get()
     return tuple(
@@ -532,6 +567,7 @@ _COORDINATE_FACTORY: dict[CoordinateHandler, Callable[[], tuple[SemanticCoordina
     CoordinateHandler.POPULATION_SENSITIVITY_UTILITY: _coordinates_population_sensitivity_utility,
     CoordinateHandler.SEQUENTIAL_SENSITIVITY_UTILITY: _coordinates_sequential_sensitivity_utility,
     CoordinateHandler.FAILURE_BOUNDARY: _failure_boundary_coordinates,
+    CoordinateHandler.REAL_TRAJECTORY_VALIDATION: _coordinates_real_trajectory_validation,
     CoordinateHandler.FOREIGN_INFORMATION_NEGATIVE_CONTROL: (
         _coordinates_foreign_information_negative_control
     ),
@@ -570,10 +606,7 @@ def _required_experiments(
     if policy in {DependencyPolicy.ROOT, DependencyPolicy.NONAPPLICABLE}:
         required: tuple[ExperimentName, ...] = ()
     elif policy is DependencyPolicy.SYNTHESIS:
-        excluded = {
-            name,
-            ExperimentName.REAL_TRAJECTORY_VALIDATION,
-        }
+        excluded = {name}
         required = tuple(
             experiment_name
             for experiment_name in catalog_experiment_names()

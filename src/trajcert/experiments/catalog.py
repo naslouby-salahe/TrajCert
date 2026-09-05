@@ -27,6 +27,7 @@ class CoordinateHandler(StrEnum):
     POPULATION_SENSITIVITY_UTILITY = "population_sensitivity_utility"
     SEQUENTIAL_SENSITIVITY_UTILITY = "sequential_sensitivity_utility"
     FAILURE_BOUNDARY = "failure_boundary"
+    REAL_TRAJECTORY_VALIDATION = "real_trajectory_validation"
     FOREIGN_INFORMATION_NEGATIVE_CONTROL = "foreign_information_negative_control"
     COMPUTATIONAL_SCALING = "computational_scaling"
     STATISTICAL_SYNTHESIS = "statistical_synthesis"
@@ -71,6 +72,7 @@ class ExecutionHandler(StrEnum):
     SUMMARY_COMPARATOR_REDUCTION = "summary_comparator_reduction"
     ANYTIME_PROJECTION_PROOF = "anytime_projection_proof"
     POPULATION_COMPLEXITY_PROOF = "population_complexity_proof"
+    REAL_TRAJECTORY_VALIDATION = "real_trajectory_validation"
     FOREIGN_INFORMATION_NEGATIVE_CONTROL = "foreign_information_negative_control"
     SYNTHESIS = "synthesis"
 
@@ -306,10 +308,10 @@ EXPERIMENT_CATALOG: tuple[ExperimentDefinition, ...] = (
     _experiment(
         ExperimentName.REAL_TRAJECTORY_VALIDATION,
         EvidenceClass.GENERALIZATION,
-        None,
-        DependencyPolicy.NONAPPLICABLE,
+        CoordinateHandler.REAL_TRAJECTORY_VALIDATION,
+        DependencyPolicy.ROOT_PRECONDITION,
         SeedPolicy.NONE,
-        None,
+        ExecutionHandler.REAL_TRAJECTORY_VALIDATION,
     ),
     _experiment(
         ExperimentName.FOREIGN_INFORMATION_NEGATIVE_CONTROL,

@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
+from functools import lru_cache, partial
+from pathlib import Path
 
 from trajcert.config import CoverageStressCaseConfig, TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import TrajectoryPartition, build_partition, partition_name
+from trajcert.data.real_trajectories import (
+    PreparedRealTrajectoryCohort,
+    RealTrajectoryCohort,
+    cohort_from_events,
+)
 from trajcert.data.summaries import ObservableSummary, summarize_full_law
 from trajcert.exceptions import InvariantViolationError
 from trajcert.experiments.anytime import (
@@ -38,6 +44,12 @@ from trajcert.experiments.mathematics import (
     strict_timing_gain_identity,
 )
 from trajcert.experiments.plan import PlannedCell
+from trajcert.experiments.real_trajectory import (
+    RealTrajectoryCellResult,
+    RealTrajectoryNumericSettings,
+    RealTrajectoryPartitionRequest,
+    evaluate_real_trajectory_cell,
+)
 from trajcert.experiments.safety import (
     SafetyCaseEvaluation,
     compatibility_floor_behavior,
@@ -56,19 +68,30 @@ from trajcert.experiments.timing import (
 )
 from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import SafetyBudgetCase, safety_budget_cases
-from trajcert.paths import semantic_slug
+from trajcert.paths import (
+    PreprocessingLeaf,
+    RealTrajectoryArtifactFile,
+    real_trajectory_preprocessing_path,
+    semantic_slug,
+)
 from trajcert.provenance import (
     FailureBoundaryCoordinate,
+    SemanticCoordinates,
     SensitivityCoordinate,
     VariantCoordinate,
+    VariantName,
 )
+from trajcert.storage import read_model
 from trajcert.types import (
+    BandCount,
     CaseIndex,
     DomainModel,
     FailureBoundaryProbe,
     LawKey,
     LawName,
     PartitionName,
+    RealTrajectoryStratumKind,
+    RealTrajectoryStratumValue,
     SensitivityBudget,
 )
 
@@ -540,6 +563,79 @@ def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
     return evaluate_failure_boundary(coordinate.axis, _failure_boundary_probe(coordinate))
 
 
+@lru_cache(maxsize=1)
+def _cached_real_trajectory_cohort(cohort_path: Path) -> RealTrajectoryCohort:
+    prepared = read_model(cohort_path, PreparedRealTrajectoryCohort)
+    return cohort_from_events(prepared.events)
+
+
+def dispatch_real_trajectory_validation(
+    cell: PlannedCell, workspace_root: Path
+) -> RealTrajectoryCellResult:
+    config = active_config.get()
+    cohort_path = workspace_root / real_trajectory_preprocessing_path(
+        PreprocessingLeaf.PREPARED_REAL_TRAJECTORIES, RealTrajectoryArtifactFile.PREPARED_COHORT
+    )
+    cohort = _cached_real_trajectory_cohort(cohort_path.resolve())
+    coordinates = cell.identity.coordinates
+    stratum_kind, stratum_value, stratum_label = _real_trajectory_stratum(coordinates)
+    partition_target = coordinates.partition_name
+    if partition_target is None:
+        raise ScientificCellDispatchError("real-trajectory cell is missing its partition")
+    target_band_count = _band_count_for_partition_name(partition_target)
+    horizon = coordinates.censoring_horizon_seconds
+    if horizon is None:
+        raise ScientificCellDispatchError("real-trajectory cell is missing its horizon")
+    return evaluate_real_trajectory_cell(
+        cohort=cohort,
+        stratum_kind=stratum_kind,
+        stratum_label=stratum_label,
+        stratum_value=stratum_value,
+        horizon_seconds=horizon,
+        partition_request=RealTrajectoryPartitionRequest(
+            finest_bands=config.method.finest_bands, target_band_count=target_band_count
+        ),
+        rho_grid=tuple(config.grids.rho),
+        risk_budget=config.budgets.risk,
+        settings=RealTrajectoryNumericSettings(
+            root_atol=config.numerics.root_atol,
+            identity_atol=config.numerics.identity_atol,
+            comparison_guard=config.numerics.comparison_guard,
+            oracle_digits=config.numerics.oracle_digits,
+            oracle_bracket_width=config.numerics.oracle_bracket_width,
+            sharpness_diagnostic_offset=config.numerics.sharpness_diagnostic_offset,
+            minimum_matured_events=config.minimum_evidence.matured_events,
+            minimum_resolved_events=config.minimum_evidence.resolved_events,
+        ),
+    )
+
+
+def _real_trajectory_stratum(
+    coordinates: SemanticCoordinates,
+) -> tuple[RealTrajectoryStratumKind, RealTrajectoryStratumValue | None, VariantName]:
+    variant = coordinates.variant_name
+    if variant is None or variant.name is None:
+        raise ScientificCellDispatchError("real-trajectory cell is missing its stratum variant")
+    label = VariantName(str(variant.name))
+    if label == "pooled":
+        return RealTrajectoryStratumKind.POOLED, None, label
+    if label.startswith("device="):
+        value = RealTrajectoryStratumValue(label.removeprefix("device="))
+        return RealTrajectoryStratumKind.DEVICE, value, label
+    if label.startswith("expertise="):
+        value = RealTrajectoryStratumValue(label.removeprefix("expertise="))
+        return RealTrajectoryStratumKind.EXPERTISE, value, label
+    raise ScientificCellDispatchError(f"unknown real-trajectory stratum label: {label}")
+
+
+def _band_count_for_partition_name(name: PartitionName) -> BandCount:
+    config = active_config.get()
+    for bands in config.grids.partitions:
+        if partition_name(bands) == name:
+            return bands
+    raise ScientificCellDispatchError(f"unknown configured partition: {name}")
+
+
 _EXECUTION_DISPATCH: dict[ExecutionHandler, Callable[[PlannedCell], DomainModel]] = {
     ExecutionHandler.LEGACY_PARTITION_INCOHERENCE: _dispatch_legacy_partition_incoherence,
     ExecutionHandler.REFINEMENT_DOMINANCE: _dispatch_refinement_dominance_identity,
@@ -604,7 +700,10 @@ _EXECUTION_DISPATCH: dict[ExecutionHandler, Callable[[PlannedCell], DomainModel]
         _dispatch_cell_independent, population_complexity_proof_check
     ),
 }
-if set(_EXECUTION_DISPATCH) != set(ExecutionHandler) - {ExecutionHandler.SYNTHESIS}:
+_WORKSPACE_AWARE_HANDLERS = frozenset(
+    {ExecutionHandler.SYNTHESIS, ExecutionHandler.REAL_TRAJECTORY_VALIDATION}
+)
+if set(_EXECUTION_DISPATCH) != set(ExecutionHandler) - _WORKSPACE_AWARE_HANDLERS:
     raise RuntimeError("dispatch must define every direct execution handler exactly once")
 
 

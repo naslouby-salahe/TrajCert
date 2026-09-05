@@ -35,6 +35,9 @@ class PublicationSourceName(StrEnum):
     FIGURE_COMPUTATIONAL_SCALING = "figure_computational_scaling"
     FOREIGN_INFORMATION_NEGATIVE_CONTROL = "foreign_information_negative_control"
     FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL = "figure_foreign_information_negative_control"
+    REAL_TRAJECTORY_VALIDATION = "real_trajectory_validation"
+    FIGURE_REAL_TRAJECTORY_DECISION_TIME = "figure_real_trajectory_decision_time"
+    FIGURE_REAL_TRAJECTORY_REFINEMENT = "figure_real_trajectory_refinement"
 
 
 class PublicationLabel(StrEnum):
@@ -160,6 +163,17 @@ class PublicationColumn(StrEnum):
     SPURIOUS_IMPROVEMENT = auto()
     FOREIGN_SHARPNESS_GAIN = auto()
     NAIVE_POOLED_SHARPNESS_GAIN = auto()
+    STRATUM_KIND = auto()
+    STRATUM_LABEL = auto()
+    STRATUM_SIZE = auto()
+    RESOLVED_FRACTION = auto()
+    THETA_TRUE = auto()
+    SCIENTIFIC_STATE = auto()
+    ORACLE_CONTAINMENT = auto()
+    HORIZON_SECONDS = auto()
+    LATENT_ERROR = auto()
+    DECISION_TIME = auto()
+    ECDF = auto()
 
 
 def publication_columns(*columns: PublicationColumn) -> tuple[ColumnName, ...]:
@@ -599,6 +613,69 @@ PUBLICATION_SOURCE_CATALOG: tuple[PublicationSourceDefinition, ...] = (
             )
         ),
         publication_columns(*(PublicationColumn.LAW_NAME,)),
+    ),
+    _publication_source(
+        PublicationSourceName.REAL_TRAJECTORY_VALIDATION,
+        PublicationSourceFile.REAL_TRAJECTORY_VALIDATION,
+        PublicationSourceRole.TABLE,
+        ExperimentName.STATISTICAL_SYNTHESIS,
+        publication_columns(
+            *(
+                PublicationColumn.STRATUM_KIND,
+                PublicationColumn.STRATUM_LABEL,
+                PublicationColumn.HORIZON_SECONDS,
+                PublicationColumn.PARTITION_NAME,
+                PublicationColumn.STRATUM_SIZE,
+                PublicationColumn.RESOLVED_FRACTION,
+                PublicationColumn.THETA_TRUE,
+                PublicationColumn.TAU,
+                PublicationColumn.RISK_LOWER,
+                PublicationColumn.RISK_UPPER,
+                PublicationColumn.IDENTIFIED_WIDTH,
+                PublicationColumn.SCIENTIFIC_STATE,
+                PublicationColumn.SAFETY_REGIME,
+                PublicationColumn.ORACLE_CONTAINMENT,
+            )
+        ),
+        publication_columns(
+            *(
+                PublicationColumn.STRATUM_KIND,
+                PublicationColumn.STRATUM_LABEL,
+                PublicationColumn.HORIZON_SECONDS,
+                PublicationColumn.PARTITION_NAME,
+            )
+        ),
+    ),
+    _publication_source(
+        PublicationSourceName.FIGURE_REAL_TRAJECTORY_DECISION_TIME,
+        PublicationSourceFile.FIGURE_REAL_TRAJECTORY_DECISION_TIME,
+        PublicationSourceRole.FIGURE,
+        ExperimentName.STATISTICAL_SYNTHESIS,
+        publication_columns(
+            *(
+                PublicationColumn.LATENT_ERROR,
+                PublicationColumn.DECISION_TIME,
+                PublicationColumn.ECDF,
+            )
+        ),
+        publication_columns(*(PublicationColumn.LATENT_ERROR, PublicationColumn.DECISION_TIME)),
+    ),
+    _publication_source(
+        PublicationSourceName.FIGURE_REAL_TRAJECTORY_REFINEMENT,
+        PublicationSourceFile.FIGURE_REAL_TRAJECTORY_REFINEMENT,
+        PublicationSourceRole.FIGURE,
+        ExperimentName.STATISTICAL_SYNTHESIS,
+        publication_columns(
+            *(
+                PublicationColumn.PARTITION_NAME,
+                PublicationColumn.PARTITION_BAND_COUNT,
+                PublicationColumn.RHO,
+                PublicationColumn.TAU,
+                PublicationColumn.RISK_LOWER,
+                PublicationColumn.RISK_UPPER,
+            )
+        ),
+        publication_columns(*(PublicationColumn.PARTITION_BAND_COUNT,)),
     ),
 )
 if {definition.name for definition in PUBLICATION_SOURCE_CATALOG} != set(PublicationSourceName):

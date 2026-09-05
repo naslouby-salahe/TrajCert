@@ -82,7 +82,24 @@ study_design:
   timing_offsets: [0.005, 0.025, 0.1]
   population_rho_value_count: 15
   representative_stream_indices: [0, 1, 2, 3]
-numerics: {root_atol: 1.0e-12, identity_atol: 1.0e-10, comparison_guard: 1.0e-12, oracle_digits: 100, anytime_root_atol: 1.0e-12, outer_gap: 1.0e-06, outer_max_nodes: 2000000, arbitrary_precision_bits: 128, profile_grid_points: 1001, sharp_diagnostic_grid_points: 2001, oracle_bracket_width: 1.0e-14, projection_refinement_candidates: 20, projection_refinement_steps: 24, compatibility_floor_offset: 0.005, sharpness_diagnostic_offset: 0.05, log2_match_tolerance: 1.0e-15, proof_check_tolerance: 1.0e-15}
+numerics:
+  root_atol: 1.0e-12
+  identity_atol: 1.0e-10
+  comparison_guard: 1.0e-12
+  oracle_digits: 100
+  anytime_root_atol: 1.0e-12
+  outer_gap: 1.0e-06
+  outer_max_nodes: 2000000
+  arbitrary_precision_bits: 128
+  profile_grid_points: 1001
+  sharp_diagnostic_grid_points: 2001
+  oracle_bracket_width: 1.0e-14
+  projection_refinement_candidates: 20
+  projection_refinement_steps: 24
+  compatibility_floor_offset: 0.005
+  sharpness_diagnostic_offset: 0.05
+  log2_match_tolerance: 1.0e-15
+  proof_check_tolerance: 1.0e-15
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
   pattern_mixture:
@@ -106,7 +123,13 @@ comparators:
     stable_resistance_first_band: 0
     stable_resistance_second_band: 1
 sequential:
-  coverage: {streams: 5000, max_events: 500, checkpoint_every: 100, acceptance_upper_limit: 0.06, clopper_pearson_confidence: 0.95, batch_size: 100}
+  coverage:
+    streams: 5000
+    max_events: 500
+    checkpoint_every: 100
+    acceptance_upper_limit: 0.06
+    clopper_pearson_confidence: 0.95
+    batch_size: 100
   utility:
     streams: 500
     max_events: 2000
@@ -142,7 +165,7 @@ serialization: {max_fixed_notation_exponent: 21, min_fixed_notation_exponent: -6
 determinism: {fixture_stream_index: 0}
 units: {nanoseconds_per_millisecond: 1000000.0}
 smoke: {compatible_offset: 0.01, refinement_offset: 0.025, coverage_stress_events: 25, coarse_bands: 4, coverage_stress_bands: 2, fixture_count: 6}
-publication: {table_count: 9, figure_count: 9, p_value_display_threshold: 0.0001}
+publication: {table_count: 10, figure_count: 11, p_value_display_threshold: 0.0001}
 hand_cases:
   stream: 0
   diagnostic_node_cap: 1
@@ -157,3 +180,6 @@ hand_cases:
   simplex_boundary: {case_index: 9, harmful_mass_scale: 0.1, correct_mass_scale: 0.7, unresolved_mass: 0.2, hidden_terminal_harmful: 0.05, rho_margin: 0.01}
   optimizer_fallback: {case_index: 10, event_count: 500, rho_margin: 0.01}
 figure_layout: {width: 1400, height: 900, margin_left: 90.0, margin_right: 45.0, margin_top: 85.0, margin_bottom: 80.0, horizontal_panel_gap: 28.0, grid_panel_gap_x: 24.0, grid_panel_gap_y: 34.0, failure_boundary_grid_columns: 3, axis_padding_fraction: 0.05}
+real_trajectory:
+  dataset_root: /home/naslouby/Projects/datp-shared-data/raw/HITL-IoT
+  horizons: {primary_seconds: 30.0, sensitivity_seconds: [15.0, 60.0]}

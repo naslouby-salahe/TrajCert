@@ -82,6 +82,8 @@ class FigureLabel(StrEnum):
     ANYTIME_DELTA = "anytime delta"
     ACCEPTANCE_LIMIT = "acceptance limit"
     FOREIGN_INFORMATION_NEGATIVE_CONTROL = "Foreign-information negative control"
+    REAL_TRAJECTORY_DECISION_TIME = "Real human decision-time trajectory"
+    REAL_TRAJECTORY_REFINEMENT = "Real-trajectory endpoint vs trajectory refinement"
 
 
 def render_figure(source: VerifiedSourceData, destination_directory: Path) -> FigureRenderResult:
@@ -139,6 +141,8 @@ def _build_figure(name: PublicationSourceName, table: pa.Table) -> Figure:
         PublicationSourceName.FIGURE_FOREIGN_INFORMATION_NEGATIVE_CONTROL: (
             _foreign_information_negative_control
         ),
+        PublicationSourceName.FIGURE_REAL_TRAJECTORY_DECISION_TIME: _real_trajectory_decision_time,
+        PublicationSourceName.FIGURE_REAL_TRAJECTORY_REFINEMENT: _real_trajectory_refinement,
     }
     try:
         return builders[name](table)
@@ -469,6 +473,57 @@ def _ecdf(values: tuple[PlotValue, ...]) -> tuple[tuple[PlotValue, ...], tuple[P
     count = len(ordered)
     fractions = tuple((index + 1) / count for index in range(count))
     return ordered, fractions
+
+
+def _real_trajectory_decision_time(table: pa.Table) -> Figure:
+    rows = _rows(table)
+    correct = tuple(row for row in rows if not _required_bool(row, PublicationColumn.LATENT_ERROR))
+    harmful = tuple(row for row in rows if _required_bool(row, PublicationColumn.LATENT_ERROR))
+    correct_xs = tuple(_required_float(row, PublicationColumn.DECISION_TIME) for row in correct)
+    correct_ys = tuple(_required_float(row, PublicationColumn.ECDF) for row in correct)
+    harmful_xs = tuple(_required_float(row, PublicationColumn.DECISION_TIME) for row in harmful)
+    harmful_ys = tuple(_required_float(row, PublicationColumn.ECDF) for row in harmful)
+    figure = _new_figure()
+    ax = _single_axis(figure)
+    _set_limits(ax, (*correct_xs, *harmful_xs), (0.0, 1.0))
+    _set_title(ax, FigureLabel.REAL_TRAJECTORY_DECISION_TIME)
+    ax.step(correct_xs, correct_ys, where="post", color=FigureColor.STROKE, linewidth=1.5)
+    ax.step(
+        harmful_xs, harmful_ys, where="post", color=FigureColor.MUTED, linewidth=1.5, linestyle="--"
+    )
+    _main_title(figure, FigureLabel.REAL_TRAJECTORY_DECISION_TIME)
+    return figure
+
+
+def _real_trajectory_refinement(table: pa.Table) -> Figure:
+    rows = _rows(table)
+    xs = tuple(_required_float(row, PublicationColumn.PARTITION_BAND_COUNT) for row in rows)
+    finite_ys = tuple(
+        value
+        for row in rows
+        if (value := _optional_float(row, PublicationColumn.RISK_UPPER)) is not None
+    )
+    figure = _new_figure()
+    ax = _single_axis(figure)
+    _set_limits(ax, xs, finite_ys or (0.0, 1.0))
+    _set_title(ax, FigureLabel.REAL_TRAJECTORY_REFINEMENT)
+    compatible = tuple(
+        row for row in rows if _optional_float(row, PublicationColumn.RISK_UPPER) is not None
+    )
+    ax.plot(
+        tuple(_required_float(row, PublicationColumn.PARTITION_BAND_COUNT) for row in compatible),
+        tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in compatible),
+        color=FigureColor.STROKE,
+        linewidth=1.5,
+    )
+    for row in compatible:
+        _circle(
+            ax,
+            _required_float(row, PublicationColumn.PARTITION_BAND_COUNT),
+            _required_float(row, PublicationColumn.RISK_UPPER),
+        )
+    _main_title(figure, FigureLabel.REAL_TRAJECTORY_REFINEMENT)
+    return figure
 
 
 def _new_figure() -> Figure:
