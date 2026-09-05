@@ -295,6 +295,9 @@ class NumericsConfig(ConfigModel):
     sharpness_diagnostic_offset: ToleranceValue
     log2_match_tolerance: ToleranceValue
     proof_check_tolerance: ToleranceValue
+    resolved_entropy_optimizer_max_iterations: RefinementStepCount
+    resolved_entropy_optimizer_function_tolerance: ToleranceValue
+    resolved_entropy_optimizer_constraint_atol: ToleranceValue
 
 
 class LegacyPatternMixtureConfig(ConfigModel):

@@ -226,4 +226,5 @@ __marimo__/
 docs/.artifact-layout-audit/
 docs/.graphify-audit/
 docs/.architecture-cleanup/
+docs/.trajcert-execution-audit/
 graphify-out/

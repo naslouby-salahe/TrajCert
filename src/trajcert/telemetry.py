@@ -57,6 +57,8 @@ def _current_cell_label() -> TelemetryLabel:
 
 
 class PreprocessingProgress:
+    _dataset_name: RealTrajectoryDatasetName
+
     def __init__(self, dataset_name: RealTrajectoryDatasetName) -> None:
         self._dataset_name = dataset_name
 

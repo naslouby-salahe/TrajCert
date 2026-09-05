@@ -100,6 +100,9 @@ numerics:
   sharpness_diagnostic_offset: 0.05
   log2_match_tolerance: 1.0e-15
   proof_check_tolerance: 1.0e-15
+  resolved_entropy_optimizer_max_iterations: 200
+  resolved_entropy_optimizer_function_tolerance: 1.0e-14
+  resolved_entropy_optimizer_constraint_atol: 1.0e-09
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
   pattern_mixture:

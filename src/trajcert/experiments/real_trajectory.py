@@ -132,9 +132,7 @@ def evaluate_real_trajectory_cell(
     )
     safety = assess_safety_geometry(summary, risk_budget)
     rho_min_point = (
-        None
-        if tau is None
-        else _rho_point(summary, tau, risk_budget, matured, resolved, settings)
+        None if tau is None else _rho_point(summary, tau, risk_budget, matured, resolved, settings)
     )
     containment = _oracle_containment(rho_min_point, oracle.theta_true, settings.identity_atol)
     return RealTrajectoryCellResult(

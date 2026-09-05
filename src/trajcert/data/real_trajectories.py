@@ -358,10 +358,8 @@ def cohort_for_stratum(
         raise InvalidScientificDataError("non-pooled stratum requires a stratum value")
     if stratum_kind is RealTrajectoryStratumKind.DEVICE:
         mask = cohort.device_name == stratum_value
-    elif stratum_kind is RealTrajectoryStratumKind.EXPERTISE:
-        mask = cohort.expertise == stratum_value
     else:
-        raise InvalidScientificDataError(f"unknown real-trajectory stratum kind: {stratum_kind}")
+        mask = cohort.expertise == stratum_value
     if not bool(mask.any()):
         raise InvalidScientificDataError(f"stratum has no eligible events: {stratum_value}")
     return RealTrajectoryCohort(

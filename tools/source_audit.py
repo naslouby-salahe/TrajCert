@@ -150,6 +150,9 @@ _PRIMITIVE_BOUNDARY_EXEMPTIONS = frozenset(
         "_format_tex_value",
         "_format_scalar",
         "_escape_tex",
+        # scipy.optimize.minimize's objective-callback contract is float-returning
+        # by definition; the domain-typed result is produced at the call site.
+        "negative_resolved_entropy",
     }
 )
 

@@ -653,6 +653,9 @@ numerics:
   outer_gap: 1.0e-6
   outer_max_nodes: 2000000
   arbitrary_precision_bits: 128
+  resolved_entropy_optimizer_max_iterations: 200
+  resolved_entropy_optimizer_function_tolerance: 1.0e-14
+  resolved_entropy_optimizer_constraint_atol: 1.0e-9
 
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
@@ -1978,7 +1981,14 @@ The certified lower bound is computed by deterministic Arb branch-and-bound over
 4. maintain:
 
    * `global_lower` = minimum lower endpoint over all surviving boxes;
-   * `feasible_upper` = smallest verified point value found;
+   * `feasible_upper` = smallest verified point value found. For each candidate box, the
+     per-band $(A,G)$ split used to verify this point is chosen by maximizing bandwise
+     resolved entropy subject to the band capacity intervals and the box's $(A,G)$ totals
+     (via `numerics.resolved_entropy_optimizer_*`, a bounded SLSQP refinement), falling back
+     to the deterministic greedy allocation whenever the refinement fails to converge or does
+     not improve on it. This only tightens `feasible_upper` faster; it never changes what
+     counts as a valid feasible point, so the returned bound remains an equally valid proven
+     lower bound regardless of which allocation produced it;
 5. split by longest normalized $A/G$ width with tie order `A`, then `G`;
 6. stop when
    $$

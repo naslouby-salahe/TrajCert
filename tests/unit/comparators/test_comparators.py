@@ -93,16 +93,21 @@ def test_repeated_static_region_moves_mass_around_observed_frequencies() -> None
 
 
 def test_repeated_static_projection_terminates_at_node_cap() -> None:
+    numerics = active_config.get().numerics.model_copy(
+        update={
+            "root_atol": 1e-8,
+            "identity_atol": 1e-8,
+            "comparison_guard": 1e-12,
+            "arbitrary_precision_bits": 128,
+            "outer_gap": 1e-6,
+            "outer_max_nodes": 200,
+        }
+    )
     result = repeated_static_projection(
         _state((3, 0, 0, 2, 1)),
         0.05,
         0.05,
-        1e-8,
-        1e-8,
-        1e-12,
-        128,
-        1e-6,
-        200,
+        numerics,
     )
     assert result.termination_reason is ProjectionTerminationReason.NODE_CAP
     assert result.visited_nodes >= 1

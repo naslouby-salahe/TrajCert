@@ -10,7 +10,7 @@ from trajcert.experiments.timing import evaluate_partition_coherence
 from trajcert.inference.categorical import append_matured_event, initialize_categorical_state
 from trajcert.inference.confidence import CategoricalConfidenceRegion, confidence_sequence_update
 from trajcert.inference.envelope import singleton_summary_envelope
-from trajcert.inference.projection import project_upper_risk
+from trajcert.inference.projection import ResolvedEntropyOptimizerTolerances, project_upper_risk
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.information import observed_timing_information
 from trajcert.types import Count, DomainModel, LawKey
@@ -159,6 +159,11 @@ def _projection_smoke(parameters: LawParameters) -> bool:
         config.numerics.arbitrary_precision_bits,
         config.numerics.outer_gap,
         config.numerics.outer_max_nodes,
+        ResolvedEntropyOptimizerTolerances(
+            max_iterations=config.numerics.resolved_entropy_optimizer_max_iterations,
+            function_tolerance=config.numerics.resolved_entropy_optimizer_function_tolerance,
+            constraint_atol=config.numerics.resolved_entropy_optimizer_constraint_atol,
+        ),
     )
     error = abs(projection.proven_upper - population.latent_risk.upper)
     return error <= config.numerics.identity_atol

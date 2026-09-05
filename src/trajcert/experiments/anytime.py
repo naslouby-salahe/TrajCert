@@ -13,6 +13,7 @@ from trajcert.comparators.repeated_static import repeated_static_projection
 from trajcert.config import (
     CoverageStressCaseConfig,
     CoverageStressSensitivityReference,
+    NumericsConfig,
     active_config,
 )
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
@@ -55,6 +56,7 @@ from trajcert.inference.envelope import (
 from trajcert.inference.projection import (
     ProjectionResult,
     ProjectionTerminationReason,
+    ResolvedEntropyOptimizerTolerances,
     project_upper_risk,
 )
 from trajcert.math.bounds import sharp_risk_set
@@ -456,12 +458,7 @@ def _record_checkpoint_failures(
         state=state,
         anytime_delta=config.confidence.anytime_delta,
         sensitivity_budget=sensitivity_budget,
-        root_atol=config.numerics.root_atol,
-        identity_atol=config.numerics.identity_atol,
-        comparison_guard=config.numerics.comparison_guard,
-        arbitrary_precision_bits=config.numerics.arbitrary_precision_bits,
-        outer_gap=config.numerics.outer_gap,
-        outer_max_nodes=config.numerics.outer_max_nodes,
+        numerics=config.numerics,
     )
     if static.proven_upper < true_risk:
         failed[SequentialMethod.REPEATED_STATIC] = True
@@ -1202,6 +1199,16 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
     )
 
 
+def _resolved_entropy_optimizer_tolerances(
+    numerics: NumericsConfig,
+) -> ResolvedEntropyOptimizerTolerances:
+    return ResolvedEntropyOptimizerTolerances(
+        max_iterations=numerics.resolved_entropy_optimizer_max_iterations,
+        function_tolerance=numerics.resolved_entropy_optimizer_function_tolerance,
+        constraint_atol=numerics.resolved_entropy_optimizer_constraint_atol,
+    )
+
+
 def _project(
     envelope: ObservableSummaryEnvelope,
     sensitivity_budget: SensitivityBudget,
@@ -1218,6 +1225,9 @@ def _project(
         outer_gap=config.numerics.outer_gap,
         outer_max_nodes=(
             config.numerics.outer_max_nodes if outer_max_nodes is None else outer_max_nodes
+        ),
+        resolved_entropy_optimizer_tolerances=_resolved_entropy_optimizer_tolerances(
+            config.numerics
         ),
     )
 

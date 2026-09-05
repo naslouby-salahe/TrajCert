@@ -5,9 +5,14 @@ from enum import StrEnum
 from functools import cache
 from heapq import heappop, heappush
 from math import inf, ldexp, nextafter
+from typing import TYPE_CHECKING
 
 import numpy as np
 from flint import arb, ctx
+from scipy.optimize import minimize
+
+if TYPE_CHECKING:
+    from scipy.optimize import Constraint
 
 from trajcert.constants import ARB_INCUMBENT_BISECTION_ITERATIONS, ENTROPY_MAXIMIZING_PROBABILITY
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
@@ -19,6 +24,7 @@ from trajcert.telemetry import SearchProgress
 from trajcert.types import (
     ArbEndpointValue,
     ArbitraryPrecisionBits,
+    BandCount,
     ConvergenceGap,
     DomainModel,
     HeapSequenceNumber,
@@ -26,6 +32,7 @@ from trajcert.types import (
     Mass,
     OuterMaxNodes,
     ProvenSearchBound,
+    RefinementStepCount,
     RiskValue,
     SearchPredicate,
     SensitivityBudget,
@@ -114,6 +121,12 @@ class _IntrinsicSearchContext:
     comparison_guard: ToleranceValue
 
 
+class ResolvedEntropyOptimizerTolerances(DomainModel):
+    max_iterations: RefinementStepCount
+    function_tolerance: ToleranceValue
+    constraint_atol: ToleranceValue
+
+
 def project_upper_risk(
     envelope: ObservableSummaryEnvelope,
     sensitivity_budget: SensitivityBudget,
@@ -123,6 +136,7 @@ def project_upper_risk(
     arbitrary_precision_bits: ArbitraryPrecisionBits,
     outer_gap: ToleranceValue,
     outer_max_nodes: OuterMaxNodes,
+    resolved_entropy_optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> ProjectionResult:
     rho = sensitivity_budget
     if rho < 0.0:
@@ -148,7 +162,9 @@ def project_upper_risk(
     previous_precision = ctx.prec
     ctx.prec = precision_bits
     try:
-        compatibility = _compatibility_search(envelope, gap, node_cap)
+        compatibility = _compatibility_search(
+            envelope, gap, node_cap, resolved_entropy_optimizer_tolerances
+        )
         intrinsic = _intrinsic_search(envelope, rho, gap, node_cap, comparison_guard)
         projection = _projection_search(
             envelope,
@@ -376,6 +392,7 @@ def _compatibility_search(
     envelope: ObservableSummaryEnvelope,
     gap: ToleranceValue,
     node_cap: OuterMaxNodes,
+    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> _MinimumSearch:
     initial = _initial_box(envelope)
     queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]] = []
@@ -401,6 +418,7 @@ def _compatibility_search(
                 initial,
                 envelope,
                 gap,
+                optimizer_tolerances,
             )
             if completed is not None:
                 return completed
@@ -421,10 +439,11 @@ def _compatibility_step(
     initial: _Box,
     envelope: ObservableSummaryEnvelope,
     gap: ToleranceValue,
+    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> tuple[HeapSequenceNumber, InformationNats, _MinimumSearch | None]:
     if lower >= best_upper:
         return counter, best_upper, None
-    point_upper = _verified_compatibility_point(active, envelope)
+    point_upper = _verified_compatibility_point(active, envelope, optimizer_tolerances)
     if point_upper is not None:
         best_upper = min(best_upper, point_upper)
     if _compatibility_converged(lower, queue, best_upper, gap):
@@ -736,7 +755,9 @@ def _aggregate_midpoint(
 
 
 def _verified_compatibility_point(
-    box: _Box, envelope: ObservableSummaryEnvelope
+    box: _Box,
+    envelope: ObservableSummaryEnvelope,
+    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> InformationNats | None:
     point = _aggregate_midpoint(box, envelope)
     if point is None:
@@ -747,11 +768,91 @@ def _verified_compatibility_point(
     if harmful is None or correct is None:
         return None
     marginal_entropy = binary_entropy_from_masses(harmful_total, correct_total)
+    optimized_harmful, optimized_correct = _entropy_maximizing_allocation(
+        envelope.harmful_by_band,
+        envelope.correct_by_band,
+        harmful_total,
+        correct_total,
+        harmful,
+        correct,
+        optimizer_tolerances,
+    )
     resolved_entropy = sum(
         binary_entropy_from_masses(left, right)
-        for left, right in zip(harmful, correct, strict=True)
+        for left, right in zip(optimized_harmful, optimized_correct, strict=True)
     )
     return max(0.0, marginal_entropy - resolved_entropy)
+
+
+def _entropy_maximizing_allocation(
+    harmful_intervals: tuple[ScalarEnvelope, ...],
+    correct_intervals: tuple[ScalarEnvelope, ...],
+    harmful_total: Mass,
+    correct_total: Mass,
+    greedy_harmful: tuple[Mass, ...],
+    greedy_correct: tuple[Mass, ...],
+    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
+) -> tuple[tuple[Mass, ...], tuple[Mass, ...]]:
+    band_count = len(harmful_intervals)
+    bounds = [(interval.lower, interval.upper) for interval in harmful_intervals] + [
+        (interval.lower, interval.upper) for interval in correct_intervals
+    ]
+    x0 = np.asarray(list(greedy_harmful) + list(greedy_correct), dtype=np.float64)
+
+    def negative_resolved_entropy(x: np.ndarray) -> float:
+        harmful = x[:band_count]
+        correct = x[band_count:]
+        return -float(np.sum(binary_entropy_from_masses(harmful, correct)))
+
+    constraints: list[Constraint] = [
+        {"type": "eq", "fun": lambda x: float(np.sum(x[:band_count]) - harmful_total)},
+        {"type": "eq", "fun": lambda x: float(np.sum(x[band_count:]) - correct_total)},
+    ]
+    try:
+        result = minimize(
+            negative_resolved_entropy,
+            x0,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints,
+            options={
+                "maxiter": optimizer_tolerances.max_iterations,
+                "ftol": optimizer_tolerances.function_tolerance,
+            },
+        )
+    except (ValueError, FloatingPointError):
+        return greedy_harmful, greedy_correct
+    if not _allocation_feasible(
+        result.x, bounds, band_count, harmful_total, correct_total, optimizer_tolerances
+    ):
+        return greedy_harmful, greedy_correct
+    greedy_resolved_entropy = sum(
+        binary_entropy_from_masses(left, right)
+        for left, right in zip(greedy_harmful, greedy_correct, strict=True)
+    )
+    optimized_resolved_entropy = -float(result.fun)
+    if optimized_resolved_entropy <= greedy_resolved_entropy:
+        return greedy_harmful, greedy_correct
+    optimized_harmful = tuple(float(value) for value in result.x[:band_count])
+    optimized_correct = tuple(float(value) for value in result.x[band_count:])
+    return optimized_harmful, optimized_correct
+
+
+def _allocation_feasible(
+    x: np.ndarray,
+    bounds: list[tuple[Mass, Mass]],
+    band_count: BandCount,
+    harmful_total: Mass,
+    correct_total: Mass,
+    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
+) -> SearchPredicate:
+    atol = optimizer_tolerances.constraint_atol
+    for value, (lower, upper) in zip(x, bounds, strict=True):
+        if value < lower - atol or value > upper + atol:
+            return False
+    if abs(float(np.sum(x[:band_count])) - harmful_total) > atol:
+        return False
+    return abs(float(np.sum(x[band_count:])) - correct_total) <= atol
 
 
 def _verified_incumbent(

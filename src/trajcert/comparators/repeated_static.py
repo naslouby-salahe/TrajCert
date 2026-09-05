@@ -4,18 +4,20 @@ from math import sqrt
 
 from scipy.stats import norm
 
+from trajcert.config import NumericsConfig
 from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import CategoricalConfidenceRegion, ClosedProbabilityInterval
 from trajcert.inference.envelope import summary_envelope_from_confidence
-from trajcert.inference.projection import ProjectionResult, project_upper_risk
+from trajcert.inference.projection import (
+    ProjectionResult,
+    ResolvedEntropyOptimizerTolerances,
+    project_upper_risk,
+)
 from trajcert.types import (
     AnytimeConfidenceDelta,
-    ArbitraryPrecisionBits,
     Count,
     CriticalZScore,
-    OuterMaxNodes,
     SensitivityBudget,
-    ToleranceValue,
 )
 
 
@@ -38,24 +40,24 @@ def repeated_static_projection(
     state: CategoricalState,
     anytime_delta: AnytimeConfidenceDelta,
     sensitivity_budget: SensitivityBudget,
-    root_atol: ToleranceValue,
-    identity_atol: ToleranceValue,
-    comparison_guard: ToleranceValue,
-    arbitrary_precision_bits: ArbitraryPrecisionBits,
-    outer_gap: ToleranceValue,
-    outer_max_nodes: OuterMaxNodes,
+    numerics: NumericsConfig,
 ) -> ProjectionResult:
     region = repeated_static_region(state, anytime_delta)
     envelope = summary_envelope_from_confidence(state.partition, region)
     return project_upper_risk(
         envelope=envelope,
         sensitivity_budget=sensitivity_budget,
-        root_atol=root_atol,
-        identity_atol=identity_atol,
-        comparison_guard=comparison_guard,
-        arbitrary_precision_bits=arbitrary_precision_bits,
-        outer_gap=outer_gap,
-        outer_max_nodes=outer_max_nodes,
+        root_atol=numerics.root_atol,
+        identity_atol=numerics.identity_atol,
+        comparison_guard=numerics.comparison_guard,
+        arbitrary_precision_bits=numerics.arbitrary_precision_bits,
+        outer_gap=numerics.outer_gap,
+        outer_max_nodes=numerics.outer_max_nodes,
+        resolved_entropy_optimizer_tolerances=ResolvedEntropyOptimizerTolerances(
+            max_iterations=numerics.resolved_entropy_optimizer_max_iterations,
+            function_tolerance=numerics.resolved_entropy_optimizer_function_tolerance,
+            constraint_atol=numerics.resolved_entropy_optimizer_constraint_atol,
+        ),
     )
 
 

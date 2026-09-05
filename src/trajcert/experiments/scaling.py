@@ -21,6 +21,7 @@ from trajcert.data.synthetic import generate_balanced_prefix_ledger
 from trajcert.experiments.anytime import run_sequential_trace
 from trajcert.math.bounds import sharp_risk_set
 from trajcert.math.oracle import direct_mutual_information
+from trajcert.telemetry import configure_logging
 from trajcert.types import (
     BandCount,
     DomainModel,
@@ -164,6 +165,7 @@ def _worker(
     config_json: SerializedConfigJson,
 ) -> None:
     try:
+        configure_logging()
         config = TrajCertConfig.model_validate_json(config_json)
         _ = active_config.set(config)
         with threadpool_limits(limits=1):
