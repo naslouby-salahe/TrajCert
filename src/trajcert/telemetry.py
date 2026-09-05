@@ -47,6 +47,23 @@ def configure_logging() -> None:
     _logger.setLevel(logging.INFO)
 
 
+def attach_execution_log_file(path: Path) -> logging.Handler:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handler = logging.FileHandler(path)
+    handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s %(levelname)s pid=%(process)d %(message)s", _TIMESTAMP_FORMAT
+        )
+    )
+    _logger.addHandler(handler)
+    return handler
+
+
+def detach_execution_log_file(handler: logging.Handler) -> None:
+    _logger.removeHandler(handler)
+    handler.close()
+
+
 def set_current_cell_key(semantic_cell_key: SemanticCellKey | None) -> None:
     _ = _current_cell_key.set(semantic_cell_key)
 

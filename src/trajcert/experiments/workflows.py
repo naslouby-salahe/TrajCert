@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import multiprocessing
 import os
+import time
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from enum import StrEnum
 from pathlib import Path
@@ -60,6 +61,7 @@ from trajcert.paths import (
     RESULTS_ROOT,
     ArtifactFile,
     ExperimentLeaf,
+    ExperimentSlug,
     PlanArtifactFile,
     PreprocessingLeaf,
     RealTrajectoryArtifactFile,
@@ -67,6 +69,7 @@ from trajcert.paths import (
     plan_artifact_path,
     preprocessing_leaf,
     real_trajectory_preprocessing_path,
+    semantic_slug,
 )
 from trajcert.provenance import EnvironmentDigest, dependency_fingerprint
 from trajcert.reporting.export import (
@@ -83,8 +86,15 @@ from trajcert.reporting.source_data import (
 )
 from trajcert.reporting.tables import render_table
 from trajcert.storage import SemanticCellKey, atomic_write_model, file_digest
-from trajcert.telemetry import ExperimentProgress, PreprocessingProgress, configure_logging
+from trajcert.telemetry import (
+    ExperimentProgress,
+    PreprocessingProgress,
+    attach_execution_log_file,
+    configure_logging,
+    detach_execution_log_file,
+)
 from trajcert.types import (
+    ArtifactFileName,
     Count,
     DomainModel,
     ExperimentName,
@@ -305,18 +315,28 @@ def run_experiment(
     status_cache: dict[ExperimentName, ExperimentStatus] = {}
     dependencies = _dependency_readiness(plan, workspace_root, cells[0], status_cache)
     progress = ExperimentProgress(name, len(cells))
-    if name is ExperimentName.STATISTICAL_SYNTHESIS or max_workers == 1:
-        completed, reused, failed, blocked = _run_cells_sequentially(
-            cells, plan, workspace_root, dependencies, _executor(name, plan), overwrite, progress
-        )
-    else:
-        completed, reused, failed, blocked = _run_cells_in_parallel(
-            cells, plan, workspace_root, dependencies, overwrite, progress, max_workers
-        )
-    state = _run_state(len(cells), completed, failed, blocked)
-    progress.experiment_finished(state, completed, reused, failed, blocked)
-    if name is ExperimentName.STATISTICAL_SYNTHESIS and state is PublicExecutionState.COMPLETED:
-        _render_synthesis_publication_artifacts(workspace_root)
+    log_handler = attach_execution_log_file(workspace_root / _execution_log_path(name))
+    try:
+        if name is ExperimentName.STATISTICAL_SYNTHESIS or max_workers == 1:
+            completed, reused, failed, blocked = _run_cells_sequentially(
+                cells,
+                plan,
+                workspace_root,
+                dependencies,
+                _executor(name, plan),
+                overwrite,
+                progress,
+            )
+        else:
+            completed, reused, failed, blocked = _run_cells_in_parallel(
+                cells, plan, workspace_root, dependencies, overwrite, progress, max_workers
+            )
+        state = _run_state(len(cells), completed, failed, blocked)
+        progress.experiment_finished(state, completed, reused, failed, blocked)
+        if name is ExperimentName.STATISTICAL_SYNTHESIS and state is PublicExecutionState.COMPLETED:
+            _render_synthesis_publication_artifacts(workspace_root)
+    finally:
+        detach_execution_log_file(log_handler)
     return RunExperimentResult(
         experiment_name=name,
         state=state,
@@ -325,6 +345,12 @@ def run_experiment(
         failed_cells=failed,
         blocked_cells=blocked,
     )
+
+
+def _execution_log_path(name: ExperimentName) -> Path:
+    slug = ExperimentSlug(semantic_slug(name))
+    filename = ArtifactFileName(f"{time.strftime('%Y%m%dT%H%M%S')}.log")
+    return experiment_leaf(slug, ExperimentLeaf.LOGS_EXECUTION) / filename
 
 
 def _render_synthesis_publication_artifacts(workspace_root: Path) -> None:
