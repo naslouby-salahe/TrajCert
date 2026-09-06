@@ -326,7 +326,12 @@ def test_coverage_stress_batches_combine_to_match_single_run() -> None:
     partition = _partition(_HAND_CASE_BANDS)
     whole = anytime.run_coverage_stress(parameters, partition, _SENSITIVITY_BUDGET)
     first = anytime.coverage_stress_batch(
-        parameters, partition, _SENSITIVITY_BUDGET, range(0, 1), batch_index=0
+        parameters,
+        partition,
+        _SENSITIVITY_BUDGET,
+        config.budgets.risk,
+        range(0, 1),
+        batch_index=0,
     )
     assert first.seed_index_start == 0
     assert first.seed_index_stop_exclusive == 1

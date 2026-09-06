@@ -9,7 +9,7 @@ from trajcert.exceptions import SerializationError
 from trajcert.experiments.anytime import (
     CoverageBatchResult,
     combine_coverage_stress_batches,
-    coverage_evidence_from_base,
+    coverage_evidence_from_batches,
     coverage_stress_batch,
     resolve_coverage_stress_case,
 )
@@ -124,7 +124,7 @@ def _coverage_stress_cell_with_recovery(
 ) -> DomainModel:
     config = active_config.get()
     case = coverage_stress_case_config(cell, config)
-    parameters, partition, rho, _ = resolve_coverage_stress_case(case)
+    parameters, partition, rho, beta = resolve_coverage_stress_case(case)
     stream_count = config.sequential.coverage.streams
     batch_size = config.sequential.coverage.batch_size
     batches: list[CoverageBatchResult] = []
@@ -139,12 +139,12 @@ def _coverage_stress_cell_with_recovery(
                 seed_range.stop,
                 CoverageBatchResult,
                 lambda seed_range=seed_range, batch_index=batch_index: coverage_stress_batch(
-                    parameters, partition, rho, seed_range, batch_index
+                    parameters, partition, rho, beta, seed_range, batch_index
                 ),
             )
         )
     base = combine_coverage_stress_batches(parameters, tuple(batches))
-    return coverage_evidence_from_base(case, base)
+    return coverage_evidence_from_batches(case, base, tuple(batches))
 
 
 def _sequential_utility_cell_with_recovery(

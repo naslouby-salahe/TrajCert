@@ -475,15 +475,17 @@ def _partition_names() -> tuple[PartitionName, ...]:
 
 
 def _population_rho_values() -> tuple[SensitivityBudget, ...]:
-    values = tuple(active_config.get().grids.rho)
+    config = active_config.get()
+    values = tuple(config.grids.rho)
     binary_endpoint = float(BINARY_MAX_INFORMATION_NATS)
     if any(float(value) == binary_endpoint for value in values):
         rho_values = values
     else:
         rho_values = (*values, binary_endpoint)
-    if len(rho_values) != active_config.get().study_design.population_rho_value_count:
+    if len(rho_values) != config.study_design.population_rho_value_count:
         raise InvalidScientificDataError(
-            "Population Sensitivity Utility requires exactly 15 rho values"
+            "Population Sensitivity Utility requires exactly "
+            + f"{config.study_design.population_rho_value_count} rho values"
         )
     return rho_values
 

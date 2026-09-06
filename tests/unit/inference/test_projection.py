@@ -21,15 +21,8 @@ from trajcert.inference.envelope import (
 from trajcert.inference.projection import (
     ProjectionResult,
     ProjectionTerminationReason,
-    ResolvedEntropyOptimizerTolerances,
     project_upper_risk,
 )
-
-
-def _tolerances() -> ResolvedEntropyOptimizerTolerances:
-    return ResolvedEntropyOptimizerTolerances(
-        max_iterations=200, function_tolerance=1e-14, constraint_atol=1e-9
-    )
 
 
 def _singleton_envelope() -> ObservableSummaryEnvelope:
@@ -45,9 +38,7 @@ def _singleton_envelope() -> ObservableSummaryEnvelope:
 
 def test_project_upper_risk_singleton_envelope() -> None:
     envelope = _singleton_envelope()
-    result = project_upper_risk(
-        envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 1e-6, 2000000, _tolerances()
-    )
+    result = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 1e-6, 2000000)
 
     assert isinstance(result, ProjectionResult)
     assert result.termination_reason is ProjectionTerminationReason.EXACT_SINGLETON
@@ -68,9 +59,7 @@ def test_project_upper_risk_singleton_zero_resolved_mass_has_no_intrinsic_bound(
         resolved_correct=ScalarEnvelope(lower=0.0, upper=0.0),
         resolved_entropy=ScalarEnvelope(lower=0.0, upper=0.0),
     )
-    result = project_upper_risk(
-        envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 1e-8, 200_000, _tolerances()
-    )
+    result = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 1e-8, 200_000)
     assert result.termination_reason is ProjectionTerminationReason.EXACT_SINGLETON
     assert result.intrinsic_risk_lower_bound is None
 
@@ -78,15 +67,13 @@ def test_project_upper_risk_singleton_zero_resolved_mass_has_no_intrinsic_bound(
 def test_project_upper_risk_validates_arguments() -> None:
     envelope = _singleton_envelope()
     with pytest.raises(InvalidScientificDataError, match="nonnegative"):
-        _ = project_upper_risk(
-            envelope, -0.1, 1e-12, 1e-10, 1e-12, 128, 1e-6, 2000000, _tolerances()
-        )
+        _ = project_upper_risk(envelope, -0.1, 1e-12, 1e-10, 1e-12, 128, 1e-6, 2000000)
     with pytest.raises(InvalidScientificDataError, match="bit count"):
-        _ = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 0, 1e-6, 2000000, _tolerances())
+        _ = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 0, 1e-6, 2000000)
     with pytest.raises(InvalidScientificDataError, match="outer_max_nodes"):
-        _ = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 1e-6, 0, _tolerances())
+        _ = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 1e-6, 0)
     with pytest.raises(InvalidScientificDataError, match="outer_gap"):
-        _ = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 0.0, 2000000, _tolerances())
+        _ = project_upper_risk(envelope, 0.0, 1e-12, 1e-10, 1e-12, 128, 0.0, 2000000)
 
 
 def test_project_upper_risk_non_singleton_terminates_at_node_cap() -> None:
@@ -94,7 +81,7 @@ def test_project_upper_risk_non_singleton_terminates_at_node_cap() -> None:
     state = categorical_state((3, 0, 0, 2, 1), 2)
     confidence = raw_confidence_region(state, 0.05, 1e-6)
     envelope = summary_envelope_from_confidence(partition, confidence)
-    result = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1, _tolerances())
+    result = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
 
     assert result.termination_reason is ProjectionTerminationReason.NODE_CAP
     assert result.visited_nodes >= 1
@@ -119,7 +106,7 @@ def test_compatibility_search_failure_propagates_as_numerical_error(
 
     monkeypatch.setattr(projection_module, "_compatibility_step", fail)
     with pytest.raises(NumericalError, match="compatibility search failed"):
-        _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1, _tolerances())
+        _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
 
 
 def test_intrinsic_search_failure_propagates_as_numerical_error(
@@ -132,7 +119,7 @@ def test_intrinsic_search_failure_propagates_as_numerical_error(
 
     monkeypatch.setattr(projection_module, "_intrinsic_step", fail)
     with pytest.raises(NumericalError, match="intrinsic search failed"):
-        _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1, _tolerances())
+        _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
 
 
 def test_arb_bound_helpers_return_infinities_for_indeterminate_values() -> None:
@@ -166,6 +153,6 @@ def test_projection_search_failure_reports_arithmetic_fallback(
         raise ArithmeticError("injected projection failure")
 
     monkeypatch.setattr(projection_module, "_projection_step", fail)
-    result = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1, _tolerances())
+    result = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
     assert result.termination_reason is ProjectionTerminationReason.ARITHMETIC_FALLBACK
     assert 0.0 <= result.proven_upper <= 1.0

@@ -8,11 +8,7 @@ from trajcert.config import NumericsConfig
 from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import CategoricalConfidenceRegion, ClosedProbabilityInterval
 from trajcert.inference.envelope import summary_envelope_from_confidence
-from trajcert.inference.projection import (
-    ProjectionResult,
-    ResolvedEntropyOptimizerTolerances,
-    project_upper_risk,
-)
+from trajcert.inference.projection import ProjectionResult, project_upper_risk
 from trajcert.types import (
     AnytimeConfidenceDelta,
     Count,
@@ -53,11 +49,6 @@ def repeated_static_projection(
         arbitrary_precision_bits=numerics.arbitrary_precision_bits,
         outer_gap=numerics.outer_gap,
         outer_max_nodes=numerics.outer_max_nodes,
-        resolved_entropy_optimizer_tolerances=ResolvedEntropyOptimizerTolerances(
-            max_iterations=numerics.resolved_entropy_optimizer_max_iterations,
-            function_tolerance=numerics.resolved_entropy_optimizer_function_tolerance,
-            constraint_atol=numerics.resolved_entropy_optimizer_constraint_atol,
-        ),
     )
 
 

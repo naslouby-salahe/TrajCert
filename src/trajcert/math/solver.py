@@ -6,9 +6,13 @@ from math import ceil, isclose, isfinite, log2
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvariantViolationError, RootSolveError
 from trajcert.math.compatibility import CompatibilityAssessment, assess_compatibility
-from trajcert.math.information import information_profile
+from trajcert.math.information import (
+    information_profile_with_resolved_entropy,
+    resolved_timing_entropy,
+)
 from trajcert.types import (
     CompatibilityRegime,
+    EntropyValue,
     HiddenMassInterval,
     InformationResidual,
     IterationCount,
@@ -20,6 +24,15 @@ from trajcert.types import (
     ToleranceName,
     ToleranceValue,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class _SolveContext:
+    summary: ObservableSummary
+    rho: SensitivityBudget
+    resolved_entropy: EntropyValue
+    root_atol: ToleranceValue
+    identity_atol: ToleranceValue
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,9 +71,26 @@ def solve_hidden_mass_interval(
             "compatible nondegenerate case is missing its information minimum"
         )
     u_dagger = minimum.hidden_terminal_harmful_mass
+    context = _SolveContext(
+        summary=summary,
+        rho=rho,
+        resolved_entropy=resolved_timing_entropy(summary),
+        root_atol=root_tolerance,
+        identity_atol=identity_tolerance,
+    )
     if compatibility.regime is CompatibilityRegime.NO_UNRESOLVED_MASS:
-        lower = _exact_root(RootBranch.LOWER, 0.0, summary, rho, RootStatus.EXACT_BOUNDARY)
-        upper = _exact_root(RootBranch.UPPER, 0.0, summary, rho, RootStatus.EXACT_BOUNDARY)
+        lower = _exact_root(
+            context=context,
+            branch=RootBranch.LOWER,
+            hidden_mass=0.0,
+            status=RootStatus.EXACT_BOUNDARY,
+        )
+        upper = _exact_root(
+            context=context,
+            branch=RootBranch.UPPER,
+            hidden_mass=0.0,
+            status=RootStatus.EXACT_BOUNDARY,
+        )
         return HiddenMassSolveResult(
             compatibility=compatibility,
             interval=HiddenMassInterval(lower=0.0, upper=0.0),
@@ -68,8 +98,18 @@ def solve_hidden_mass_interval(
             upper_root=upper,
         )
     if compatibility.regime is CompatibilityRegime.MINIMUM_INFORMATION_SINGLETON:
-        lower = _exact_root(RootBranch.LOWER, u_dagger, summary, rho, RootStatus.MINIMUM_SINGLETON)
-        upper = _exact_root(RootBranch.UPPER, u_dagger, summary, rho, RootStatus.MINIMUM_SINGLETON)
+        lower = _exact_root(
+            context=context,
+            branch=RootBranch.LOWER,
+            hidden_mass=u_dagger,
+            status=RootStatus.MINIMUM_SINGLETON,
+        )
+        upper = _exact_root(
+            context=context,
+            branch=RootBranch.UPPER,
+            hidden_mass=u_dagger,
+            status=RootStatus.MINIMUM_SINGLETON,
+        )
         _require_residual(lower, identity_tolerance)
         _require_residual(upper, identity_tolerance)
         return HiddenMassSolveResult(
@@ -78,21 +118,8 @@ def solve_hidden_mass_interval(
             lower_root=lower,
             upper_root=upper,
         )
-    lower_root = _solve_lower_branch(
-        summary=summary,
-        rho=rho,
-        u_dagger=u_dagger,
-        root_atol=root_tolerance,
-        identity_atol=identity_tolerance,
-    )
-    upper_root = _solve_upper_branch(
-        summary=summary,
-        rho=rho,
-        u_dagger=u_dagger,
-        unresolved=unresolved,
-        root_atol=root_tolerance,
-        identity_atol=identity_tolerance,
-    )
+    lower_root = _solve_lower_branch(context=context, u_dagger=u_dagger)
+    upper_root = _solve_upper_branch(context=context, u_dagger=u_dagger, unresolved=unresolved)
     return HiddenMassSolveResult(
         compatibility=compatibility,
         interval=HiddenMassInterval(lower=lower_root.root, upper=upper_root.root),
@@ -101,80 +128,68 @@ def solve_hidden_mass_interval(
     )
 
 
-def _solve_lower_branch(
-    summary: ObservableSummary,
-    rho: SensitivityBudget,
-    u_dagger: Mass,
-    root_atol: ToleranceValue,
-    identity_atol: ToleranceValue,
-) -> RootBracket:
-    boundary_value = _profile_residual(summary, 0.0, rho)
+def _solve_lower_branch(*, context: _SolveContext, u_dagger: Mass) -> RootBracket:
+    boundary_value = _profile_residual(context, 0.0)
     if boundary_value <= 0.0:
-        return _exact_root(RootBranch.LOWER, 0.0, summary, rho, RootStatus.EXACT_BOUNDARY)
-    minimum_value = _profile_residual(summary, u_dagger, rho)
+        return _exact_root(
+            context=context,
+            branch=RootBranch.LOWER,
+            hidden_mass=0.0,
+            status=RootStatus.EXACT_BOUNDARY,
+        )
+    minimum_value = _profile_residual(context, u_dagger)
     if minimum_value >= 0.0:
         raise RootSolveError("lower branch does not contain a strict sign-changing root")
     return _bisect(
-        summary=summary,
-        rho=rho,
+        context=context,
         branch=RootBranch.LOWER,
         lower=0.0,
         upper=u_dagger,
         lower_residual=boundary_value,
         upper_residual=minimum_value,
-        root_atol=root_atol,
-        identity_atol=identity_atol,
     )
 
 
-def _solve_upper_branch(
-    summary: ObservableSummary,
-    rho: SensitivityBudget,
-    u_dagger: Mass,
-    unresolved: Mass,
-    root_atol: ToleranceValue,
-    identity_atol: ToleranceValue,
-) -> RootBracket:
-    boundary_value = _profile_residual(summary, unresolved, rho)
+def _solve_upper_branch(*, context: _SolveContext, u_dagger: Mass, unresolved: Mass) -> RootBracket:
+    boundary_value = _profile_residual(context, unresolved)
     if boundary_value <= 0.0:
-        return _exact_root(RootBranch.UPPER, unresolved, summary, rho, RootStatus.EXACT_BOUNDARY)
-    minimum_value = _profile_residual(summary, u_dagger, rho)
+        return _exact_root(
+            context=context,
+            branch=RootBranch.UPPER,
+            hidden_mass=unresolved,
+            status=RootStatus.EXACT_BOUNDARY,
+        )
+    minimum_value = _profile_residual(context, u_dagger)
     if minimum_value >= 0.0:
         raise RootSolveError("upper branch does not contain a strict sign-changing root")
     return _bisect(
-        summary=summary,
-        rho=rho,
+        context=context,
         branch=RootBranch.UPPER,
         lower=u_dagger,
         upper=unresolved,
         lower_residual=minimum_value,
         upper_residual=boundary_value,
-        root_atol=root_atol,
-        identity_atol=identity_atol,
     )
 
 
 def _bisect(
     *,
-    summary: ObservableSummary,
-    rho: SensitivityBudget,
+    context: _SolveContext,
     branch: RootBranch,
     lower: Mass,
     upper: Mass,
     lower_residual: InformationResidual,
     upper_residual: InformationResidual,
-    root_atol: ToleranceValue,
-    identity_atol: ToleranceValue,
 ) -> RootBracket:
     validate_initial_signs(branch, lower_residual, upper_residual)
     initial_width = upper - lower
-    iteration_cap = compute_iteration_cap(initial_width, root_atol)
+    iteration_cap = compute_iteration_cap(initial_width, context.root_atol)
     iterations = 0
-    while upper - lower > root_atol:
+    while upper - lower > context.root_atol:
         if iterations >= iteration_cap:
             raise RootSolveError("derived bisection iteration cap exhausted")
         midpoint = (lower + upper) / 2.0
-        residual = _profile_residual(summary, midpoint, rho)
+        residual = _profile_residual(context, midpoint)
         if isclose(residual, 0.0, rel_tol=0.0, abs_tol=0.0):
             lower = midpoint
             upper = midpoint
@@ -195,7 +210,7 @@ def _bisect(
         iterations += 1
     validate_final_signs(branch, lower_residual, upper_residual)
     root = (lower + upper) / 2.0
-    residual = abs(_profile_residual(summary, root, rho))
+    residual = abs(_profile_residual(context, root))
     result = RootBracket(
         branch=branch,
         status=RootStatus.BISECTION,
@@ -206,28 +221,29 @@ def _bisect(
         residual=residual,
         iterations=iterations,
     )
-    if result.width > root_atol:
+    if result.width > context.root_atol:
         raise RootSolveError("root bracket exceeds root_atol")
-    _require_residual(result, identity_atol)
+    _require_residual(result, context.identity_atol)
     return result
 
 
-def _profile_residual(
-    summary: ObservableSummary,
-    hidden_mass: Mass,
-    rho: SensitivityBudget,
-) -> InformationResidual:
-    return information_profile(summary, hidden_mass) - rho
+def _profile_residual(context: _SolveContext, hidden_mass: Mass) -> InformationResidual:
+    return (
+        information_profile_with_resolved_entropy(
+            context.summary, hidden_mass, context.resolved_entropy
+        )
+        - context.rho
+    )
 
 
 def _exact_root(
+    *,
+    context: _SolveContext,
     branch: RootBranch,
     hidden_mass: Mass,
-    summary: ObservableSummary,
-    rho: SensitivityBudget,
     status: RootStatus,
 ) -> RootBracket:
-    residual = abs(_profile_residual(summary, hidden_mass, rho))
+    residual = abs(_profile_residual(context, hidden_mass))
     return RootBracket(
         branch=branch,
         status=status,

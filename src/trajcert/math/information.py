@@ -64,15 +64,26 @@ def latent_risk(summary: ObservableSummary, hidden_terminal_harmful_mass: Mass) 
 def information_profile(
     summary: ObservableSummary, hidden_terminal_harmful_mass: Mass
 ) -> InformationNats:
+    return information_profile_with_resolved_entropy(
+        summary,
+        hidden_terminal_harmful_mass,
+        resolved_timing_entropy(summary),
+    )
+
+
+def information_profile_with_resolved_entropy(
+    summary: ObservableSummary,
+    hidden_terminal_harmful_mass: Mass,
+    resolved_entropy: EntropyValue,
+) -> InformationNats:
     hidden = _hidden_mass(summary, hidden_terminal_harmful_mass)
     harmful = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
-    timing_entropy = resolved_timing_entropy(summary)
     theta = harmful + hidden
     total_entropy = binary_entropy(theta)
     harmful_rate = (hidden / unresolved) if unresolved > 0.0 else None
     terminal_entropy = weighted_binary_entropy(unresolved, harmful_rate)
-    value = total_entropy - timing_entropy - terminal_entropy
+    value = total_entropy - resolved_entropy - terminal_entropy
     return _nonnegative_roundoff_guard(value)
 
 

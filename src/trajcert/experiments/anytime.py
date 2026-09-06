@@ -13,7 +13,6 @@ from trajcert.comparators.repeated_static import repeated_static_projection
 from trajcert.config import (
     CoverageStressCaseConfig,
     CoverageStressSensitivityReference,
-    NumericsConfig,
     active_config,
 )
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
@@ -56,7 +55,6 @@ from trajcert.inference.envelope import (
 from trajcert.inference.projection import (
     ProjectionResult,
     ProjectionTerminationReason,
-    ResolvedEntropyOptimizerTolerances,
     project_upper_risk,
 )
 from trajcert.math.bounds import sharp_risk_set
@@ -92,6 +90,7 @@ from trajcert.types import (
     RiskBudget,
     RiskValue,
     ScientificState,
+    SearchPredicate,
     SeedIndex,
     SensitivityBudget,
     StreamCount,
@@ -176,11 +175,19 @@ class MethodFailureCount(DomainModel):
     failures: Count
 
 
+class CoverageStreamCertification(DomainModel):
+    method_failures: tuple[MethodFailureCount, ...]
+    first_certified_matured: MedianEventCount
+    certified_fraction: Probability
+
+
 class CoverageBatchResult(DomainModel):
     batch_index: BatchIndex
     seed_index_start: SeedIndex
     seed_index_stop_exclusive: SeedIndex
     method_failures: tuple[MethodFailureCount, ...]
+    first_certified_matured: tuple[MedianEventCount, ...]
+    certified_update_fractions: tuple[Probability, ...]
 
 
 class CoverageMethodEvidence(DomainModel):
@@ -216,17 +223,6 @@ class CoverageEvidenceResult(DomainModel):
     methods: tuple[CoverageMethodEvidence, ...]
     representative_paths: tuple[AnytimePathEvidence, ...]
     primary_passed: bool
-
-
-class _StreamCertificationSummary(DomainModel):
-    first_certified_matured_count: Count | None
-    certified_fraction: Probability
-
-
-class _TrajectoryEvidenceSummary(DomainModel):
-    first_certified: tuple[MedianEventCount, ...]
-    certified_fractions: tuple[Probability, ...]
-    representative_paths: tuple[AnytimePathEvidence, ...]
 
 
 def run_sequential_trace(
@@ -307,6 +303,7 @@ def run_coverage_stress(
         parameters,
         partition,
         sensitivity_budget,
+        config.budgets.risk,
         stream_range=range(stream_count),
         batch_index=0,
     )
@@ -317,6 +314,7 @@ def coverage_stress_batch(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     sensitivity_budget: SensitivityBudget,
+    risk_budget: RiskBudget,
     stream_range: range,
     batch_index: BatchIndex,
 ) -> CoverageBatchResult:
@@ -330,19 +328,24 @@ def coverage_stress_batch(
         TelemetryPhase(f"coverage_stress_batch_{batch_index}"),
         len(stream_range),
     )
+    first_certified: list[MedianEventCount] = []
+    certified_fractions: list[Probability] = []
     for position, stream_index in enumerate(stream_range, start=1):
-        for method, did_fail in _coverage_stream_failures(
+        outcome = _coverage_stream_outcome(
             parameters,
             partition,
             sensitivity_budget,
+            risk_budget,
             assumption_valid,
             max_events,
             checkpoint_every,
             true_risk,
             stream_index,
-        ).items():
-            if did_fail:
-                failures[method] += 1
+        )
+        for entry in outcome.method_failures:
+            failures[entry.method] += entry.failures
+        first_certified.append(outcome.first_certified_matured)
+        certified_fractions.append(outcome.certified_fraction)
         stream_progress.maybe_log(position)
     return CoverageBatchResult(
         batch_index=batch_index,
@@ -351,6 +354,8 @@ def coverage_stress_batch(
         method_failures=tuple(
             MethodFailureCount(method=method, failures=count) for method, count in failures.items()
         ),
+        first_certified_matured=tuple(first_certified),
+        certified_update_fractions=tuple(certified_fractions),
     )
 
 
@@ -383,16 +388,48 @@ def combine_coverage_stress_batches(
     )
 
 
-def _coverage_stream_failures(
+def _coverage_checkpoint_violation_counts(
+    state: CategoricalState,
+    partition: TrajectoryPartition,
+    running: CategoricalConfidenceRegion,
+    ignorable: IgnorableDelayResult,
+    sensitivity_budget: SensitivityBudget,
+    assumption_valid: SearchPredicate,
+    true_risk: RiskValue,
+) -> tuple[ProjectionResult, tuple[MethodFailureCount, ...]]:
+    config = active_config.get()
+    envelope = summary_envelope_from_confidence(partition, running)
+    projection = _project(envelope, sensitivity_budget)
+    counts: list[MethodFailureCount] = []
+    if projection.proven_upper < true_risk:
+        counts.append(MethodFailureCount(method=SequentialMethod.TRAJCERT, failures=1))
+        counts.append(
+            MethodFailureCount(method=SequentialMethod.TIME_UNIFORM_PROJECTION, failures=1)
+        )
+    static = repeated_static_projection(
+        state=state,
+        anytime_delta=config.confidence.anytime_delta,
+        sensitivity_budget=sensitivity_budget,
+        numerics=config.numerics,
+    )
+    if static.proven_upper < true_risk:
+        counts.append(MethodFailureCount(method=SequentialMethod.REPEATED_STATIC, failures=1))
+    if assumption_valid and ignorable.interval is not None and ignorable.interval.upper < true_risk:
+        counts.append(MethodFailureCount(method=SequentialMethod.IGNORABLE_DELAY, failures=1))
+    return projection, tuple(counts)
+
+
+def _coverage_stream_outcome(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     sensitivity_budget: SensitivityBudget,
-    assumption_valid: bool,
+    risk_budget: RiskBudget,
+    assumption_valid: SearchPredicate,
     max_events: EventCount,
     checkpoint_every: EventCount,
     true_risk: RiskValue,
     stream_index: SeedIndex,
-) -> dict[SequentialMethod, bool]:
+) -> CoverageStreamCertification:
     config = active_config.get()
     ledger = generate_stochastic_ledger(
         parameters=parameters,
@@ -404,7 +441,10 @@ def _coverage_stream_failures(
     state = initialize_categorical_state(ledger.identity, partition)
     running: CategoricalConfidenceRegion | None = None
     ignorable_running: ClosedProbabilityInterval | None = None
-    failed = dict.fromkeys(SequentialMethod, False)
+    failed: list[MethodFailureCount] = []
+    eligible_updates = 0
+    certified_updates = 0
+    first_certified: MedianEventCount | None = None
     for position, event in enumerate(events, start=1):
         state = append_matured_event(state, event)
         update = confidence_sequence_update(
@@ -425,8 +465,7 @@ def _coverage_stream_failures(
             ignorable_running = ignorable.interval
         if position % checkpoint_every != 0 and position != max_events:
             continue
-        _record_checkpoint_failures(
-            failed,
+        projection, checkpoint_counts = _coverage_checkpoint_violation_counts(
             state,
             partition,
             running,
@@ -435,35 +474,32 @@ def _coverage_stream_failures(
             assumption_valid,
             true_risk,
         )
-    return failed
-
-
-def _record_checkpoint_failures(
-    failed: dict[SequentialMethod, bool],
-    state: CategoricalState,
-    partition: TrajectoryPartition,
-    running: CategoricalConfidenceRegion,
-    ignorable: IgnorableDelayResult,
-    sensitivity_budget: SensitivityBudget,
-    assumption_valid: bool,
-    true_risk: RiskValue,
-) -> None:
-    config = active_config.get()
-    envelope = summary_envelope_from_confidence(partition, running)
-    projection = _project(envelope, sensitivity_budget)
-    if projection.proven_upper < true_risk:
-        failed[SequentialMethod.TRAJCERT] = True
-        failed[SequentialMethod.TIME_UNIFORM_PROJECTION] = True
-    static = repeated_static_projection(
-        state=state,
-        anytime_delta=config.confidence.anytime_delta,
-        sensitivity_budget=sensitivity_budget,
-        numerics=config.numerics,
+        failed.extend(checkpoint_counts)
+        assessment = classify_certification(
+            state=state,
+            projection=projection,
+            sensitivity_budget=sensitivity_budget,
+            risk_budget=risk_budget,
+            minimum_matured_events=config.minimum_evidence.matured_events,
+            minimum_resolved_events=config.minimum_evidence.resolved_events,
+            comparison_guard=config.numerics.comparison_guard,
+        )
+        state_value = assessment.scientific_state
+        if state_value is None or state_value is ScientificState.INSUFFICIENT_EVIDENCE:
+            continue
+        eligible_updates += 1
+        if state_value is ScientificState.CERTIFIED:
+            certified_updates += 1
+            if first_certified is None:
+                first_certified = float(state.matured_count)
+    fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates
+    return CoverageStreamCertification(
+        method_failures=tuple(failed),
+        first_certified_matured=float(
+            max_events + 1 if first_certified is None else first_certified
+        ),
+        certified_fraction=fraction,
     )
-    if static.proven_upper < true_risk:
-        failed[SequentialMethod.REPEATED_STATIC] = True
-    if assumption_valid and ignorable.interval is not None and ignorable.interval.upper < true_risk:
-        failed[SequentialMethod.IGNORABLE_DELAY] = True
 
 
 def _coverage_method_result(
@@ -512,27 +548,40 @@ def resolve_coverage_stress_case(
 def evaluate_configured_coverage_stress(
     case: CoverageStressCaseConfig,
 ) -> CoverageEvidenceResult:
-    parameters, partition, rho, _ = resolve_coverage_stress_case(case)
-    base = run_coverage_stress(
-        parameters=parameters,
-        partition=partition,
-        sensitivity_budget=rho,
-    )
-    return coverage_evidence_from_base(case, base)
-
-
-def coverage_evidence_from_base(
-    case: CoverageStressCaseConfig,
-    base: CoverageStressResult,
-) -> CoverageEvidenceResult:
     config = active_config.get()
     parameters, partition, rho, beta = resolve_coverage_stress_case(case)
-    true_information = _true_information(parameters, partition)
-    trajectory_evidence = _trajcert_trajectory_evidence(
+    batch = coverage_stress_batch(
         parameters,
         partition,
         rho,
         beta,
+        stream_range=range(config.sequential.coverage.streams),
+        batch_index=0,
+    )
+    base = combine_coverage_stress_batches(parameters, (batch,))
+    return coverage_evidence_from_batches(case, base, (batch,))
+
+
+def coverage_evidence_from_batches(
+    case: CoverageStressCaseConfig,
+    base: CoverageStressResult,
+    batches: tuple[CoverageBatchResult, ...],
+) -> CoverageEvidenceResult:
+    config = active_config.get()
+    parameters, partition, rho, beta = resolve_coverage_stress_case(case)
+    true_information = _true_information(parameters, partition)
+    ordered_batches = tuple(sorted(batches, key=lambda batch: batch.batch_index))
+    first_certified = tuple(
+        value for batch in ordered_batches for value in batch.first_certified_matured
+    )
+    certified_fractions = tuple(
+        value for batch in ordered_batches for value in batch.certified_update_fractions
+    )
+    representative_paths = tuple(
+        item
+        for stream_index in config.study_design.representative_stream_indices
+        if stream_index < config.sequential.coverage.streams
+        for item in _representative_stream_evidence(parameters, partition, rho, beta, stream_index)
     )
     methods = tuple(
         _coverage_method_evidence(
@@ -541,16 +590,8 @@ def coverage_evidence_from_base(
             result.streams,
             result.anytime_failures,
             result.failure_rate,
-            (
-                trajectory_evidence.first_certified
-                if result.method is SequentialMethod.TRAJCERT
-                else ()
-            ),
-            (
-                trajectory_evidence.certified_fractions
-                if result.method is SequentialMethod.TRAJCERT
-                else ()
-            ),
+            (first_certified if result.method is SequentialMethod.TRAJCERT else ()),
+            (certified_fractions if result.method is SequentialMethod.TRAJCERT else ()),
         )
         for result in base.methods
     )
@@ -566,7 +607,7 @@ def coverage_evidence_from_base(
         delta=config.confidence.anytime_delta,
         acceptance_upper_limit=config.sequential.coverage.acceptance_upper_limit,
         methods=methods,
-        representative_paths=trajectory_evidence.representative_paths,
+        representative_paths=representative_paths,
         primary_passed=primary.criterion_pass,
     )
 
@@ -615,74 +656,30 @@ def _clopper_pearson_upper(failures: Count, streams: StreamCount) -> Probability
     )
 
 
-def _trajcert_trajectory_evidence(
+def _representative_stream_evidence(
     parameters: LawParameters,
     partition: TrajectoryPartition,
     rho: SensitivityBudget,
     beta: RiskBudget,
-) -> _TrajectoryEvidenceSummary:
+    stream_index: SeedIndex,
+) -> tuple[AnytimePathEvidence, ...]:
     config = active_config.get()
-    stream_count = config.sequential.coverage.streams
     max_events = config.sequential.coverage.max_events
-    checkpoint_every = config.sequential.coverage.checkpoint_every
-    first_certified: list[float] = []
-    certified_fractions: list[float] = []
-    representative: list[AnytimePathEvidence] = []
-    stream_progress = StreamProgress(TelemetryPhase("trajectory_evidence"), stream_count)
-    for stream_index in range(stream_count):
-        ledger = generate_stochastic_ledger(
-            parameters=parameters,
-            partition=partition,
-            stream_index=stream_index,
-            event_count=max_events,
-        )
-        trace = run_sequential_trace(
-            events=mature_ledger(ledger, partition),
-            identity=ledger.identity,
-            partition=partition,
-            sensitivity_budget=rho,
-            risk_budget=beta,
-            checkpoint_every=checkpoint_every,
-        )
-        summary = _stream_certification_summary(trace)
-        first_certified.append(
-            float(
-                max_events + 1
-                if summary.first_certified_matured_count is None
-                else summary.first_certified_matured_count
-            )
-        )
-        certified_fractions.append(summary.certified_fraction)
-        if stream_index in config.study_design.representative_stream_indices:
-            representative.extend(
-                _representative_path_evidence(parameters, beta, trace, stream_index)
-            )
-        stream_progress.maybe_log(stream_index + 1)
-    return _TrajectoryEvidenceSummary(
-        first_certified=tuple(first_certified),
-        certified_fractions=tuple(certified_fractions),
-        representative_paths=tuple(representative),
+    ledger = generate_stochastic_ledger(
+        parameters=parameters,
+        partition=partition,
+        stream_index=stream_index,
+        event_count=max_events,
     )
-
-
-def _stream_certification_summary(trace: SequentialTrace) -> _StreamCertificationSummary:
-    eligible = 0
-    certified = 0
-    first: int | None = None
-    for checkpoint in trace.checkpoints:
-        state = checkpoint.assessment.scientific_state
-        if state is None or state is ScientificState.INSUFFICIENT_EVIDENCE:
-            continue
-        eligible += 1
-        if state is not ScientificState.CERTIFIED:
-            continue
-        certified += 1
-        if first is None:
-            first = checkpoint.matured_count
-    return _StreamCertificationSummary(
-        first_certified_matured_count=first,
-        certified_fraction=(0.0 if eligible == 0 else certified / eligible),
+    trace = run_sequential_trace(
+        events=mature_ledger(ledger, partition),
+        identity=ledger.identity,
+        partition=partition,
+        sensitivity_budget=rho,
+        risk_budget=beta,
+        checkpoint_every=config.sequential.coverage.checkpoint_every,
     )
+    return _representative_path_evidence(parameters, beta, trace, stream_index)
 
 
 def _representative_path_evidence(
@@ -1199,16 +1196,6 @@ def _hand_case_optimizer_fallback(partition: TrajectoryPartition) -> HandCaseRes
     )
 
 
-def _resolved_entropy_optimizer_tolerances(
-    numerics: NumericsConfig,
-) -> ResolvedEntropyOptimizerTolerances:
-    return ResolvedEntropyOptimizerTolerances(
-        max_iterations=numerics.resolved_entropy_optimizer_max_iterations,
-        function_tolerance=numerics.resolved_entropy_optimizer_function_tolerance,
-        constraint_atol=numerics.resolved_entropy_optimizer_constraint_atol,
-    )
-
-
 def _project(
     envelope: ObservableSummaryEnvelope,
     sensitivity_budget: SensitivityBudget,
@@ -1225,9 +1212,6 @@ def _project(
         outer_gap=config.numerics.outer_gap,
         outer_max_nodes=(
             config.numerics.outer_max_nodes if outer_max_nodes is None else outer_max_nodes
-        ),
-        resolved_entropy_optimizer_tolerances=_resolved_entropy_optimizer_tolerances(
-            config.numerics
         ),
     )
 

@@ -653,9 +653,6 @@ numerics:
   outer_gap: 1.0e-6
   outer_max_nodes: 2000000
   arbitrary_precision_bits: 128
-  resolved_entropy_optimizer_max_iterations: 200
-  resolved_entropy_optimizer_function_tolerance: 1.0e-14
-  resolved_entropy_optimizer_constraint_atol: 1.0e-9
 
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
@@ -1913,7 +1910,11 @@ $$
    $$
    \min(1,A_{hi}+u_{hi});
 $$
-10. generate feasible incumbents from box midpoints;
+10. generate feasible incumbents from box midpoints and, when the initial box yields no
+    verified midpoint incumbent on a sufficiently loose envelope (resolved-harmful span above
+    `ARB_SEARCH_ROOT_SCAN_ENVELOPE_SPAN_FLOOR`), from sharp-set-verified aggregate candidates on
+    a deterministic `ARB_SEARCH_ROOT_SCAN_GRID_POINTS` by `ARB_SEARCH_ROOT_SCAN_GRID_POINTS` grid
+    across the envelope;
 11. for midpoint $(A,G)$, compute the maximal feasible $u$ with $C=C_U$ by deterministic upper-branch bisection using the same mathematical profile $S(A,G,C_U,u)$;
 12. the scalar incumbent bisection stops at `numerics.root_atol`;
 13. an incumbent is accepted only when direct Arb evaluation gives an upper bound on $S$ no greater than $\rho$; if the `root_atol`-bounded candidate from step 11 fails this direct Arb verification, re-bisect the same feasible hidden-mass interval by float64 midpoint bisection for a fixed 80 iterations — enough to exhaust float64's representable precision over any subinterval of $[0,1]$ ($2^{-80}$ is far below the float64 unit in the last place), so the exact count is immaterial once past that threshold — accepting the tightest verified-feasible point reached, consistent with the step-3 policy of invoking a conservative fallback rather than silently increasing precision;
@@ -1933,9 +1934,17 @@ A, then G, then u
     \le
     \texttt{numerics.outer_gap};
 $$
-20. stop at `numerics.outer_max_nodes` if not already converged.
+20. stop at `numerics.outer_max_nodes` if not already converged;
+21. each search may also stop deterministically by adaptive stall: once at least
+    `ARB_SEARCH_PROJECTION_STALL_MINIMUM_VISITED` nodes have been visited, if the governing
+    record (the proven queue upper capped by the largest verified feasible incumbent) has
+    improved by less than `ARB_SEARCH_PROJECTION_STALL_IMPROVEMENT_FLOOR` over the trailing
+    `ARB_SEARCH_PROJECTION_STALL_WINDOW_VISITED` visited nodes, end the search exactly as on node
+    budget exhaustion. Stall only fires when convergence to `numerics.outer_gap` is not being
+    achieved; any search that does converge stops first on the gap rule, so the stall never
+    changes a converged result.
 
-On node cap, arithmetic failure, or unresolved interval ambiguity:
+On node budget exhaustion, adaptive stall, arithmetic failure, or unresolved interval ambiguity:
 
 * return the current proven queue upper;
 * if no finite proven upper exists, return `1.0`;
@@ -1981,14 +1990,10 @@ The certified lower bound is computed by deterministic Arb branch-and-bound over
 4. maintain:
 
    * `global_lower` = minimum lower endpoint over all surviving boxes;
-   * `feasible_upper` = smallest verified point value found. For each candidate box, the
-     per-band $(A,G)$ split used to verify this point is chosen by maximizing bandwise
-     resolved entropy subject to the band capacity intervals and the box's $(A,G)$ totals
-     (via `numerics.resolved_entropy_optimizer_*`, a bounded SLSQP refinement), falling back
-     to the deterministic greedy allocation whenever the refinement fails to converge or does
-     not improve on it. This only tightens `feasible_upper` faster; it never changes what
-     counts as a valid feasible point, so the returned bound remains an equally valid proven
-     lower bound regardless of which allocation produced it;
+   * `feasible_upper` = smallest verified point value found, evaluated with the
+     deterministic greedy bandwise $(A,G)$ allocation on the candidate box; the point is a
+     valid feasible point by construction, so the returned bound remains an equally valid
+     proven lower bound;
 5. split by longest normalized $A/G$ width with tie order `A`, then `G`;
 6. stop when
    $$
@@ -1996,8 +2001,11 @@ The certified lower bound is computed by deterministic Arb branch-and-bound over
    \le
    \texttt{numerics.outer_gap};
 $$
-7. use the same node cap and exact Arb precision as Section 9.4;
-8. on node cap or ambiguity, return the current `global_lower`.
+7. use the same node cap and exact Arb precision as Section 9.4, and the Section 9.4 adaptive
+   stall with the decision-search thresholds `ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED`,
+   `ARB_SEARCH_DECISION_STALL_WINDOW_VISITED`, and
+   `ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR`;
+8. on stall, node cap, or ambiguity, return the current `global_lower`.
 
 The returned value is always a **proven lower bound**, even when the optimization did not converge to the requested gap.
 
@@ -2053,8 +2061,11 @@ $$
    ```text
    A, then G, then u
    ```
-8. use `numerics.outer_gap`, the Section 9.4 precision, and `numerics.outer_max_nodes`;
-9. on node cap or ambiguity, return the current conservative lower bound.
+8. use `numerics.outer_gap`, the Section 9.4 precision, `numerics.outer_max_nodes`, and the
+   Section 9.4 adaptive stall with the decision-search thresholds
+   `ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED`, `ARB_SEARCH_DECISION_STALL_WINDOW_VISITED`, and
+   `ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR`;
+9. on stall, node cap, or ambiguity, return the current conservative lower bound.
 
 `INTRINSICALLY_UNCERTIFIABLE` requires:
 

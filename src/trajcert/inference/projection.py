@@ -1,20 +1,27 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections import deque
+from dataclasses import dataclass, field
 from enum import StrEnum
 from functools import cache
 from heapq import heappop, heappush
 from math import inf, ldexp, nextafter
-from typing import TYPE_CHECKING
 
 import numpy as np
 from flint import arb, ctx
-from scipy.optimize import minimize
 
-if TYPE_CHECKING:
-    from scipy.optimize import Constraint
-
-from trajcert.constants import ARB_INCUMBENT_BISECTION_ITERATIONS, ENTROPY_MAXIMIZING_PROBABILITY
+from trajcert.constants import (
+    ARB_INCUMBENT_BISECTION_ITERATIONS,
+    ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR,
+    ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED,
+    ARB_SEARCH_DECISION_STALL_WINDOW_VISITED,
+    ARB_SEARCH_PROJECTION_STALL_IMPROVEMENT_FLOOR,
+    ARB_SEARCH_PROJECTION_STALL_MINIMUM_VISITED,
+    ARB_SEARCH_PROJECTION_STALL_WINDOW_VISITED,
+    ARB_SEARCH_ROOT_SCAN_ENVELOPE_SPAN_FLOOR,
+    ARB_SEARCH_ROOT_SCAN_GRID_POINTS,
+    ENTROPY_MAXIMIZING_PROBABILITY,
+)
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelope
@@ -24,7 +31,6 @@ from trajcert.telemetry import SearchProgress
 from trajcert.types import (
     ArbEndpointValue,
     ArbitraryPrecisionBits,
-    BandCount,
     ConvergenceGap,
     DomainModel,
     HeapSequenceNumber,
@@ -32,7 +38,6 @@ from trajcert.types import (
     Mass,
     OuterMaxNodes,
     ProvenSearchBound,
-    RefinementStepCount,
     RiskValue,
     SearchPredicate,
     SensitivityBudget,
@@ -121,10 +126,26 @@ class _IntrinsicSearchContext:
     comparison_guard: ToleranceValue
 
 
-class ResolvedEntropyOptimizerTolerances(DomainModel):
-    max_iterations: RefinementStepCount
-    function_tolerance: ToleranceValue
-    constraint_atol: ToleranceValue
+@dataclass(frozen=True, slots=True)
+class _SearchStall:
+    _min_visited: VisitedNodeCount
+    _window: VisitedNodeCount
+    _floor: ToleranceValue
+    _history: deque[tuple[VisitedNodeCount, RiskValue | InformationNats]] = field(
+        default_factory=deque
+    )
+
+    def should_stop(
+        self, visited: VisitedNodeCount, record: RiskValue | InformationNats
+    ) -> SearchPredicate:
+        self._history.append((visited, record))
+        while len(self._history) > self._window:
+            self._history.popleft()
+        if visited < self._min_visited or len(self._history) < self._window:
+            return False
+        oldest = self._history[0][1]
+        improvement = oldest - record
+        return 0.0 <= improvement < self._floor
 
 
 def project_upper_risk(
@@ -136,7 +157,6 @@ def project_upper_risk(
     arbitrary_precision_bits: ArbitraryPrecisionBits,
     outer_gap: ToleranceValue,
     outer_max_nodes: OuterMaxNodes,
-    resolved_entropy_optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> ProjectionResult:
     rho = sensitivity_budget
     if rho < 0.0:
@@ -162,9 +182,7 @@ def project_upper_risk(
     previous_precision = ctx.prec
     ctx.prec = precision_bits
     try:
-        compatibility = _compatibility_search(
-            envelope, gap, node_cap, resolved_entropy_optimizer_tolerances
-        )
+        compatibility = _compatibility_search(envelope, gap, node_cap)
         intrinsic = _intrinsic_search(envelope, rho, gap, node_cap, comparison_guard)
         projection = _projection_search(
             envelope,
@@ -243,6 +261,13 @@ def _projection_search(
     incumbent = _verified_incumbent(
         initial, envelope, rho, root_atol, identity_atol, comparison_guard
     )
+    if incumbent is None:
+        try:
+            incumbent = _scan_projection_incumbent(
+                envelope, initial, rho, root_atol, identity_atol, comparison_guard
+            )
+        except (ArithmeticError, ValueError, NumericalError):
+            incumbent = None
     context = _ProjectionSearchContext(
         initial=initial,
         envelope=envelope,
@@ -255,6 +280,11 @@ def _projection_search(
     visited: VisitedNodeCount = 0
     active: _Box | None = None
     progress = SearchProgress(TelemetryPhase("projection_search"), node_cap)
+    stall = _SearchStall(
+        ARB_SEARCH_PROJECTION_STALL_MINIMUM_VISITED,
+        ARB_SEARCH_PROJECTION_STALL_WINDOW_VISITED,
+        ARB_SEARCH_PROJECTION_STALL_IMPROVEMENT_FLOOR,
+    )
     try:
         while queue and visited < node_cap:
             active = heappop(queue)[2]
@@ -271,6 +301,9 @@ def _projection_search(
             if completed is not None:
                 return completed
             active = None
+            record = _queue_upper(queue, incumbent, None)
+            if stall.should_stop(visited, record):
+                return _final_projection(queue, incumbent, visited, None)
     except (ArithmeticError, ValueError, NumericalError):
         return _projection_fallback(queue, incumbent, visited, active)
     return _final_projection(queue, incumbent, visited, active)
@@ -392,7 +425,6 @@ def _compatibility_search(
     envelope: ObservableSummaryEnvelope,
     gap: ToleranceValue,
     node_cap: OuterMaxNodes,
-    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> _MinimumSearch:
     initial = _initial_box(envelope)
     queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]] = []
@@ -404,6 +436,11 @@ def _compatibility_search(
     visited: VisitedNodeCount = 0
     active: _Box | None = None
     progress = SearchProgress(TelemetryPhase("compatibility_search"), node_cap)
+    stall = _SearchStall(
+        ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED,
+        ARB_SEARCH_DECISION_STALL_WINDOW_VISITED,
+        ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR,
+    )
     try:
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)
@@ -418,16 +455,34 @@ def _compatibility_search(
                 initial,
                 envelope,
                 gap,
-                optimizer_tolerances,
             )
             if completed is not None:
                 return completed
             active = None
+            stalled = _compatibility_stall_final(queue, lower, best_upper, visited, stall, envelope)
+            if stalled is not None:
+                return stalled
     except NumericalError:
         raise
     except (ArithmeticError, ValueError) as exc:
         raise NumericalError("compatibility search failed on a numerical error") from exc
     return _compatibility_final(queue, best_upper, active, envelope)
+
+
+def _compatibility_stall_final(
+    queue: list[tuple[InformationNats, HeapSequenceNumber, _Box]],
+    lower: InformationNats,
+    best_upper: InformationNats,
+    visited: VisitedNodeCount,
+    stall: _SearchStall,
+    envelope: ObservableSummaryEnvelope,
+) -> _MinimumSearch | None:
+    if best_upper == inf:
+        return None
+    global_lower = min(lower, queue[0][0] if queue else lower)
+    if not stall.should_stop(visited, max(0.0, best_upper - global_lower)):
+        return None
+    return _compatibility_final(queue, best_upper, None, envelope)
 
 
 def _compatibility_step(
@@ -439,11 +494,10 @@ def _compatibility_step(
     initial: _Box,
     envelope: ObservableSummaryEnvelope,
     gap: ToleranceValue,
-    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> tuple[HeapSequenceNumber, InformationNats, _MinimumSearch | None]:
     if lower >= best_upper:
         return counter, best_upper, None
-    point_upper = _verified_compatibility_point(active, envelope, optimizer_tolerances)
+    point_upper = _verified_compatibility_point(active, envelope)
     if point_upper is not None:
         best_upper = min(best_upper, point_upper)
     if _compatibility_converged(lower, queue, best_upper, gap):
@@ -533,6 +587,11 @@ def _intrinsic_search(
     visited: VisitedNodeCount = 0
     active: _Box | None = None
     progress = SearchProgress(TelemetryPhase("intrinsic_search"), node_cap)
+    stall = _SearchStall(
+        ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED,
+        ARB_SEARCH_DECISION_STALL_WINDOW_VISITED,
+        ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR,
+    )
     try:
         while queue and visited < node_cap:
             lower, _, active = heappop(queue)
@@ -549,11 +608,29 @@ def _intrinsic_search(
             if completed is not None:
                 return completed
             active = None
+            stalled = _intrinsic_stall_final(queue, lower, best_upper, visited, stall)
+            if stalled is not None:
+                return stalled
     except NumericalError:
         raise
     except (ArithmeticError, ValueError) as exc:
         raise NumericalError("intrinsic search failed on a numerical error") from exc
     return _intrinsic_final(queue, best_upper, active)
+
+
+def _intrinsic_stall_final(
+    queue: list[tuple[RiskValue, HeapSequenceNumber, _Box]],
+    lower: RiskValue,
+    best_upper: RiskValue,
+    visited: VisitedNodeCount,
+    stall: _SearchStall,
+) -> _MinimumSearch | None:
+    if best_upper == inf:
+        return None
+    global_lower = min(lower, queue[0][0] if queue else lower)
+    if not stall.should_stop(visited, max(0.0, best_upper - global_lower)):
+        return None
+    return _intrinsic_final(queue, best_upper, None)
 
 
 def _intrinsic_step(
@@ -757,7 +834,6 @@ def _aggregate_midpoint(
 def _verified_compatibility_point(
     box: _Box,
     envelope: ObservableSummaryEnvelope,
-    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
 ) -> InformationNats | None:
     point = _aggregate_midpoint(box, envelope)
     if point is None:
@@ -768,91 +844,11 @@ def _verified_compatibility_point(
     if harmful is None or correct is None:
         return None
     marginal_entropy = binary_entropy_from_masses(harmful_total, correct_total)
-    optimized_harmful, optimized_correct = _entropy_maximizing_allocation(
-        envelope.harmful_by_band,
-        envelope.correct_by_band,
-        harmful_total,
-        correct_total,
-        harmful,
-        correct,
-        optimizer_tolerances,
-    )
     resolved_entropy = sum(
         binary_entropy_from_masses(left, right)
-        for left, right in zip(optimized_harmful, optimized_correct, strict=True)
+        for left, right in zip(harmful, correct, strict=True)
     )
     return max(0.0, marginal_entropy - resolved_entropy)
-
-
-def _entropy_maximizing_allocation(
-    harmful_intervals: tuple[ScalarEnvelope, ...],
-    correct_intervals: tuple[ScalarEnvelope, ...],
-    harmful_total: Mass,
-    correct_total: Mass,
-    greedy_harmful: tuple[Mass, ...],
-    greedy_correct: tuple[Mass, ...],
-    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
-) -> tuple[tuple[Mass, ...], tuple[Mass, ...]]:
-    band_count = len(harmful_intervals)
-    bounds = [(interval.lower, interval.upper) for interval in harmful_intervals] + [
-        (interval.lower, interval.upper) for interval in correct_intervals
-    ]
-    x0 = np.asarray(list(greedy_harmful) + list(greedy_correct), dtype=np.float64)
-
-    def negative_resolved_entropy(x: np.ndarray) -> float:
-        harmful = x[:band_count]
-        correct = x[band_count:]
-        return -float(np.sum(binary_entropy_from_masses(harmful, correct)))
-
-    constraints: list[Constraint] = [
-        {"type": "eq", "fun": lambda x: float(np.sum(x[:band_count]) - harmful_total)},
-        {"type": "eq", "fun": lambda x: float(np.sum(x[band_count:]) - correct_total)},
-    ]
-    try:
-        result = minimize(
-            negative_resolved_entropy,
-            x0,
-            method="SLSQP",
-            bounds=bounds,
-            constraints=constraints,
-            options={
-                "maxiter": optimizer_tolerances.max_iterations,
-                "ftol": optimizer_tolerances.function_tolerance,
-            },
-        )
-    except (ValueError, FloatingPointError):
-        return greedy_harmful, greedy_correct
-    if not _allocation_feasible(
-        result.x, bounds, band_count, harmful_total, correct_total, optimizer_tolerances
-    ):
-        return greedy_harmful, greedy_correct
-    greedy_resolved_entropy = sum(
-        binary_entropy_from_masses(left, right)
-        for left, right in zip(greedy_harmful, greedy_correct, strict=True)
-    )
-    optimized_resolved_entropy = -float(result.fun)
-    if optimized_resolved_entropy <= greedy_resolved_entropy:
-        return greedy_harmful, greedy_correct
-    optimized_harmful = tuple(float(value) for value in result.x[:band_count])
-    optimized_correct = tuple(float(value) for value in result.x[band_count:])
-    return optimized_harmful, optimized_correct
-
-
-def _allocation_feasible(
-    x: np.ndarray,
-    bounds: list[tuple[Mass, Mass]],
-    band_count: BandCount,
-    harmful_total: Mass,
-    correct_total: Mass,
-    optimizer_tolerances: ResolvedEntropyOptimizerTolerances,
-) -> SearchPredicate:
-    atol = optimizer_tolerances.constraint_atol
-    for value, (lower, upper) in zip(x, bounds, strict=True):
-        if value < lower - atol or value > upper + atol:
-            return False
-    if abs(float(np.sum(x[:band_count])) - harmful_total) > atol:
-        return False
-    return abs(float(np.sum(x[band_count:])) - correct_total) <= atol
 
 
 def _verified_incumbent(
@@ -867,6 +863,30 @@ def _verified_incumbent(
     if point is None:
         return None
     harmful, correct, unresolved = point
+    return _feasible_risk_at(
+        envelope,
+        box,
+        harmful,
+        correct,
+        unresolved,
+        rho,
+        root_atol,
+        identity_atol,
+        comparison_guard,
+    )
+
+
+def _feasible_risk_at(
+    envelope: ObservableSummaryEnvelope,
+    box: _Box,
+    harmful: Mass,
+    correct: Mass,
+    unresolved: Mass,
+    rho: SensitivityBudget,
+    root_atol: ToleranceValue,
+    identity_atol: ToleranceValue,
+    comparison_guard: ToleranceValue,
+) -> RiskValue | None:
     summary = _summary_at_aggregates(envelope, harmful, correct, unresolved, comparison_guard)
     if summary is None:
         return None
@@ -883,6 +903,45 @@ def _verified_incumbent(
         if hidden is None:
             return None
     return _unit(harmful + hidden)
+
+
+def _scan_projection_incumbent(
+    envelope: ObservableSummaryEnvelope,
+    box: _Box,
+    rho: SensitivityBudget,
+    root_atol: ToleranceValue,
+    identity_atol: ToleranceValue,
+    comparison_guard: ToleranceValue,
+) -> RiskValue | None:
+    resolved_span = envelope.resolved_harmful.upper - envelope.resolved_harmful.lower
+    if resolved_span <= ARB_SEARCH_ROOT_SCAN_ENVELOPE_SPAN_FLOOR:
+        return None
+    best: RiskValue | None = None
+    grid_points = ARB_SEARCH_ROOT_SCAN_GRID_POINTS
+    correct_span = envelope.resolved_correct.upper - envelope.resolved_correct.lower
+    for row in range(grid_points):
+        harmful = envelope.resolved_harmful.lower + resolved_span * ((row + 0.5) / grid_points)
+        for column in range(grid_points):
+            correct = envelope.resolved_correct.lower + correct_span * (
+                (column + 0.5) / grid_points
+            )
+            unresolved = 1.0 - harmful - correct
+            if not envelope.unresolved.lower <= unresolved <= envelope.unresolved.upper:
+                continue
+            candidate = _feasible_risk_at(
+                envelope,
+                box,
+                harmful,
+                correct,
+                unresolved,
+                rho,
+                root_atol,
+                identity_atol,
+                comparison_guard,
+            )
+            if candidate is not None and (best is None or candidate > best):
+                best = candidate
+    return best
 
 
 def _bisected_hidden_mass(
