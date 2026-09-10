@@ -10,7 +10,9 @@ from trajcert.provenance import (
     ParentArtifactIdentity,
     SemanticCellIdentity,
     SemanticCoordinates,
+    SourceIdentityDigest,
     dependency_fingerprint,
+    source_identity_digest,
 )
 from trajcert.storage import ArtifactKey, DigestHex, SpecificationDigest
 from trajcert.types import ExperimentName, LawName, PartitionName
@@ -58,6 +60,7 @@ def _dependency_material() -> DependencyMaterial:
         artifact_type=ArtifactTypeName("model"),
         semantic_cell=_identity(),
         scientific_specification_digest=SpecificationDigest(_HEX_D),
+        source_identity_digest=SourceIdentityDigest(_HEX_S),
         environment_dependency_digest=EnvironmentDigest("env"),
         parents=(_parent_identity(),),
     )
@@ -155,6 +158,7 @@ def test_dependency_material_constructs() -> None:
     material = _dependency_material()
     assert material.artifact_type == ArtifactTypeName("model")
     assert material.scientific_specification_digest == SpecificationDigest(_HEX_D)
+    assert material.source_identity_digest == SourceIdentityDigest(_HEX_S)
     assert material.environment_dependency_digest == EnvironmentDigest("env")
     assert len(material.parents) == 1
 
@@ -164,6 +168,27 @@ def test_dependency_material_requires_specification_digest() -> None:
     del payload["scientific_specification_digest"]
     with pytest.raises(ValidationError):
         _ = DependencyMaterial.model_validate(payload)
+
+
+def test_dependency_material_requires_source_identity_digest() -> None:
+    payload = _dependency_material().model_dump()
+    del payload["source_identity_digest"]
+    with pytest.raises(ValidationError):
+        _ = DependencyMaterial.model_validate(payload)
+
+
+def test_source_identity_digest_is_deterministic_hex() -> None:
+    first = source_identity_digest()
+    second = source_identity_digest()
+    assert first == second
+    assert len(first) == _HEX_LENGTH
+    assert set(first) <= set("0123456789abcdef")
+
+
+def test_dependency_fingerprint_is_source_identity_sensitive() -> None:
+    base = _dependency_material()
+    changed = base.model_copy(update={"source_identity_digest": SourceIdentityDigest("f" * 64)})
+    assert dependency_fingerprint(base) != dependency_fingerprint(changed)
 
 
 def test_dependency_fingerprint_is_deterministic_hex() -> None:

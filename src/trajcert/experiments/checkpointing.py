@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import multiprocessing
+import os
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor
+from enum import StrEnum
 from pathlib import Path
 
-from trajcert.config import active_config
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.partitions import build_partition
 from trajcert.exceptions import SerializationError
 from trajcert.experiments.anytime import (
@@ -33,7 +37,20 @@ from trajcert.experiments.sensitivity import (
     sequential_sensitivity_utility_batch,
 )
 from trajcert.storage import ArtifactKey, atomic_write_model, file_digest, read_model
-from trajcert.types import BatchIndex, BatchSize, DomainModel, SeedIndex, StreamCount
+from trajcert.telemetry import configure_logging
+from trajcert.types import (
+    BatchIndex,
+    BatchSize,
+    DomainModel,
+    SeedIndex,
+    SerializedConfigJson,
+    StreamCount,
+)
+
+
+class BatchWorkload(StrEnum):
+    COVERAGE_STRESS = "coverage_stress"
+    SEQUENTIAL_UTILITY = "sequential_utility"
 
 
 def batch_seed_ranges(total: StreamCount, batch_size: BatchSize) -> tuple[range, ...]:
@@ -119,17 +136,68 @@ def _recover_batch[PayloadT: DomainModel](
     return payload
 
 
-def _coverage_stress_cell_with_recovery(
-    cell: PlannedCell, context: ExecutionContext, artifact_key: ArtifactKey
+def _batch_payload_type(workload: BatchWorkload) -> type[DomainModel]:
+    if workload is BatchWorkload.COVERAGE_STRESS:
+        return CoverageBatchResult
+    return SequentialUtilityBatchResult
+
+
+def _compute_batch_payload(
+    workload: BatchWorkload,
+    cell: PlannedCell,
+    batch_index: BatchIndex,
+    seed_range: range,
 ) -> DomainModel:
     config = active_config.get()
-    case = coverage_stress_case_config(cell, config)
-    parameters, partition, rho, beta = resolve_coverage_stress_case(case)
-    stream_count = config.sequential.coverage.streams
-    batch_size = config.sequential.coverage.batch_size
-    batches: list[CoverageBatchResult] = []
-    for batch_index, seed_range in enumerate(batch_seed_ranges(stream_count, batch_size)):
-        batches.append(
+    if workload is BatchWorkload.COVERAGE_STRESS:
+        case = coverage_stress_case_config(cell, config)
+        parameters, partition, rho, beta = resolve_coverage_stress_case(case)
+        return coverage_stress_batch(parameters, partition, rho, beta, seed_range, batch_index)
+    parameters = law_from_name(cell.identity.coordinates.synthetic_law_name)
+    fine_partition = build_partition(
+        config.method.finest_bands,
+        config.method.finest_bands,
+        config.method.terminal_horizon,
+    )
+    return sequential_sensitivity_utility_batch(
+        parameters, fine_partition, direct_rho(cell), seed_range, batch_index
+    )
+
+
+def _batch_worker(
+    workload: BatchWorkload,
+    cell: PlannedCell,
+    context: ExecutionContext,
+    artifact_key: ArtifactKey,
+    batch_index: BatchIndex,
+    seed_range: range,
+    config_json: SerializedConfigJson,
+) -> DomainModel:
+    configure_logging()
+    _ = active_config.set(TrajCertConfig.model_validate_json(config_json))
+    return _recover_batch(
+        cell,
+        context,
+        artifact_key,
+        batch_index,
+        seed_range.start,
+        seed_range.stop,
+        _batch_payload_type(workload),
+        lambda: _compute_batch_payload(workload, cell, batch_index, seed_range),
+    )
+
+
+def _recovered_batches[PayloadT: DomainModel](
+    workload: BatchWorkload,
+    cell: PlannedCell,
+    context: ExecutionContext,
+    artifact_key: ArtifactKey,
+    seed_ranges: tuple[range, ...],
+    payload_type: type[PayloadT],
+    compute: Callable[[BatchIndex, range], PayloadT],
+) -> tuple[PayloadT, ...]:
+    if len(seed_ranges) <= 1:
+        return tuple(
             _recover_batch(
                 cell,
                 context,
@@ -137,14 +205,60 @@ def _coverage_stress_cell_with_recovery(
                 batch_index,
                 seed_range.start,
                 seed_range.stop,
-                CoverageBatchResult,
-                lambda seed_range=seed_range, batch_index=batch_index: coverage_stress_batch(
-                    parameters, partition, rho, beta, seed_range, batch_index
+                payload_type,
+                lambda batch_index=batch_index, seed_range=seed_range: compute(
+                    batch_index, seed_range
                 ),
             )
+            for batch_index, seed_range in enumerate(seed_ranges)
         )
-    base = combine_coverage_stress_batches(parameters, tuple(batches))
-    return coverage_evidence_from_batches(case, base, tuple(batches))
+    worker_count = min(len(seed_ranges), os.cpu_count() or 1)
+    config_json = active_config.get().serialized_json()
+    spawn_context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=worker_count, mp_context=spawn_context) as pool:
+        futures = tuple(
+            pool.submit(
+                _batch_worker,
+                workload,
+                cell,
+                context,
+                artifact_key,
+                batch_index,
+                seed_range,
+                config_json,
+            )
+            for batch_index, seed_range in enumerate(seed_ranges)
+        )
+        collected: list[PayloadT] = []
+        for future in futures:
+            payload = future.result()
+            if not isinstance(payload, payload_type):
+                raise ScientificCellDispatchError("parallel batch returned an unexpected payload")
+            collected.append(payload)
+        return tuple(collected)
+
+
+def _coverage_stress_cell_with_recovery(
+    cell: PlannedCell, context: ExecutionContext, artifact_key: ArtifactKey
+) -> DomainModel:
+    config = active_config.get()
+    case = coverage_stress_case_config(cell, config)
+    parameters, partition, rho, beta = resolve_coverage_stress_case(case)
+    batches = _recovered_batches(
+        BatchWorkload.COVERAGE_STRESS,
+        cell,
+        context,
+        artifact_key,
+        batch_seed_ranges(
+            config.sequential.coverage.streams, config.sequential.coverage.batch_size
+        ),
+        CoverageBatchResult,
+        lambda batch_index, seed_range: coverage_stress_batch(
+            parameters, partition, rho, beta, seed_range, batch_index
+        ),
+    )
+    base = combine_coverage_stress_batches(parameters, batches)
+    return coverage_evidence_from_batches(case, base, batches)
 
 
 def _sequential_utility_cell_with_recovery(
@@ -158,26 +272,18 @@ def _sequential_utility_cell_with_recovery(
         config.method.terminal_horizon,
     )
     sensitivity_budget = direct_rho(cell)
-    stream_count = config.sequential.utility.streams
-    batch_size = config.sequential.utility.batch_size
-    batches: list[SequentialUtilityBatchResult] = []
-    for batch_index, seed_range in enumerate(batch_seed_ranges(stream_count, batch_size)):
-        batches.append(
-            _recover_batch(
-                cell,
-                context,
-                artifact_key,
-                batch_index,
-                seed_range.start,
-                seed_range.stop,
-                SequentialUtilityBatchResult,
-                lambda seed_range=seed_range,
-                batch_index=batch_index: sequential_sensitivity_utility_batch(
-                    parameters, fine_partition, sensitivity_budget, seed_range, batch_index
-                ),
-            )
-        )
-    return combine_sequential_sensitivity_utility_batches(sensitivity_budget, tuple(batches))
+    batches = _recovered_batches(
+        BatchWorkload.SEQUENTIAL_UTILITY,
+        cell,
+        context,
+        artifact_key,
+        batch_seed_ranges(config.sequential.utility.streams, config.sequential.utility.batch_size),
+        SequentialUtilityBatchResult,
+        lambda batch_index, seed_range: sequential_sensitivity_utility_batch(
+            parameters, fine_partition, sensitivity_budget, seed_range, batch_index
+        ),
+    )
+    return combine_sequential_sensitivity_utility_batches(sensitivity_budget, batches)
 
 
 def dispatch_with_batched_recovery(

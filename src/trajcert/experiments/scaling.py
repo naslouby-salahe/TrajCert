@@ -136,7 +136,7 @@ def _isolated_measurement(target: ScalingTarget, band_count: BandCount) -> Scali
     parent_connection, child_connection = context.Pipe(duplex=False)
     process = context.Process(
         target=_worker,
-        args=(child_connection, target, band_count, _worker_config_json()),
+        args=(child_connection, target, band_count, active_config.get().serialized_json()),
     )
     process.start()
     child_connection.close()
@@ -150,12 +150,6 @@ def _isolated_measurement(target: ScalingTarget, band_count: BandCount) -> Scali
             envelope.failure or f"isolated scaling worker failed: {process.exitcode}"
         )
     return envelope.measurement
-
-
-def _worker_config_json() -> SerializedConfigJson:
-    config = active_config.get()
-    serializable = config.model_copy(update={"laws": dict(config.laws)})
-    return SerializedConfigJson(serializable.model_dump_json())
 
 
 def _worker(

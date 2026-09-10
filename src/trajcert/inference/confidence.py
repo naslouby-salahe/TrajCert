@@ -119,15 +119,16 @@ def _lower_root(
     threshold: Threshold,
     root_tolerance: ToleranceValue,
 ) -> Probability:
+    beta_term = _mixture_beta_term(successes, total)
     lower = 0.0
     upper = maximum_likelihood
-    if _root_function(successes, total, lower, threshold) <= 0.0:
+    if _root_function(successes, total, lower, threshold, beta_term) <= 0.0:
         return 0.0
-    if _root_function(successes, total, upper, threshold) > 0.0:
+    if _root_function(successes, total, upper, threshold, beta_term) > 0.0:
         raise NumericalError("lower confidence root is not sign-bracketed")
     while upper - lower > root_tolerance:
         midpoint = (lower + upper) / 2.0
-        if _root_function(successes, total, midpoint, threshold) > 0.0:
+        if _root_function(successes, total, midpoint, threshold, beta_term) > 0.0:
             lower = midpoint
         else:
             upper = midpoint
@@ -141,32 +142,41 @@ def _upper_root(
     threshold: Threshold,
     root_tolerance: ToleranceValue,
 ) -> Probability:
+    beta_term = _mixture_beta_term(successes, total)
     lower = maximum_likelihood
     upper = 1.0
-    if _root_function(successes, total, upper, threshold) <= 0.0:
+    if _root_function(successes, total, upper, threshold, beta_term) <= 0.0:
         return 1.0
-    if _root_function(successes, total, lower, threshold) > 0.0:
+    if _root_function(successes, total, lower, threshold, beta_term) > 0.0:
         raise NumericalError("upper confidence root is not sign-bracketed")
     while upper - lower > root_tolerance:
         midpoint = (lower + upper) / 2.0
-        if _root_function(successes, total, midpoint, threshold) <= 0.0:
+        if _root_function(successes, total, midpoint, threshold, beta_term) <= 0.0:
             lower = midpoint
         else:
             upper = midpoint
     return upper
 
 
+def _mixture_beta_term(successes: Count, total: Count) -> LogMixtureRatio:
+    failures = total - successes
+    return betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
+
+
 def _root_function(
-    successes: Count, total: Count, probability: Probability, threshold: Threshold
+    successes: Count,
+    total: Count,
+    probability: Probability,
+    threshold: Threshold,
+    beta_term: LogMixtureRatio,
 ) -> LogMixtureRatio:
-    return _log_mixture_likelihood_ratio(successes, total, probability) - threshold
+    return _log_mixture_likelihood_ratio(successes, total, probability, beta_term) - threshold
 
 
 def _log_mixture_likelihood_ratio(
-    successes: Count, total: Count, probability: Probability
+    successes: Count, total: Count, probability: Probability, beta_term: LogMixtureRatio
 ) -> LogMixtureRatio:
     failures = total - successes
-    beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
     if probability <= 0.0:
         return beta_term if successes == 0 else inf
     if probability >= 1.0:

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from functools import cache
 from hashlib import sha256
+from pathlib import Path
 from typing import NewType
 
 from pydantic import field_serializer, field_validator
@@ -63,6 +65,7 @@ SensitivityCoordinateMode = NewType("SensitivityCoordinateMode", str)
 VariantName = NewType("VariantName", str)
 ArtifactTypeName = NewType("ArtifactTypeName", str)
 EnvironmentDigest = NewType("EnvironmentDigest", str)
+SourceIdentityDigest = NewType("SourceIdentityDigest", str)
 NamedComparison = NewType("NamedComparison", str)
 ComparisonPairDisplay = NewType("ComparisonPairDisplay", str)
 
@@ -355,9 +358,22 @@ class DependencyMaterial(DomainModel):
     artifact_type: ArtifactTypeName
     semantic_cell: SemanticCellIdentity
     scientific_specification_digest: SpecificationDigest
+    source_identity_digest: SourceIdentityDigest
     environment_dependency_digest: EnvironmentDigest
     parents: tuple[ParentArtifactIdentity, ...]
 
 
 def dependency_fingerprint(material: DependencyMaterial) -> DependencyFingerprint:
     return DependencyFingerprint(sha256(canonical_model_bytes(material)).hexdigest())
+
+
+_PACKAGE_ROOT = Path(__file__).resolve().parent
+
+
+@cache
+def source_identity_digest() -> SourceIdentityDigest:
+    digest = sha256()
+    for path in sorted(_PACKAGE_ROOT.rglob("*.py")):
+        digest.update(path.relative_to(_PACKAGE_ROOT).as_posix().encode("utf-8"))
+        digest.update(path.read_bytes())
+    return SourceIdentityDigest(digest.hexdigest())

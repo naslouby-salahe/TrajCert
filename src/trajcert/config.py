@@ -65,6 +65,7 @@ from trajcert.types import (
     SeedIndex,
     SensitivityBudget,
     SensitivityOffset,
+    SerializedConfigJson,
     SignificanceLevel,
     SlopeValue,
     StreamCount,
@@ -719,6 +720,10 @@ class TrajCertConfig(ConfigModel):
     @field_serializer("laws")
     def serialize_laws(self, laws: Mapping[LawKey, LawConfig]) -> dict[LawKey, LawConfig]:
         return dict(laws)
+
+    def serialized_json(self) -> SerializedConfigJson:
+        serializable = self.model_copy(update={"laws": dict(self.laws)})
+        return SerializedConfigJson(serializable.model_dump_json())
 
     @model_validator(mode="after")
     def validate_cross_section_contracts(self) -> TrajCertConfig:

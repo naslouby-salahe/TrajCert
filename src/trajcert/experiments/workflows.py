@@ -24,6 +24,7 @@ from trajcert.experiments.artifacts import (
     scientific_result_artifact_key,
     scientific_specification_digest,
 )
+from trajcert.experiments.catalog import supports_batched_recovery
 from trajcert.experiments.models import (
     CellExecutionResult,
     CellExecutor,
@@ -176,7 +177,9 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         != config.publication.table_count + config.publication.figure_count
     ):
         raise InvalidScientificDataError(
-            "publication source contract must contain 8 tables and 8 figures"
+            "publication source contract must contain "
+            + f"{config.publication.table_count} tables and "
+            + f"{config.publication.figure_count} figures"
         )
     validate_results_layout(workspace_root)
     return DoctorResult(
@@ -317,7 +320,11 @@ def run_experiment(
     progress = ExperimentProgress(name, len(cells))
     log_handler = attach_execution_log_file(workspace_root / _execution_log_path(name))
     try:
-        if name is ExperimentName.STATISTICAL_SYNTHESIS or max_workers == 1:
+        if (
+            name is ExperimentName.STATISTICAL_SYNTHESIS
+            or max_workers == 1
+            or supports_batched_recovery(name)
+        ):
             completed, reused, failed, blocked = _run_cells_sequentially(
                 cells,
                 plan,

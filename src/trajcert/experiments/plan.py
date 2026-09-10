@@ -516,7 +516,7 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
     for axis_name, levels in configured_axes:
         if len(levels) != levels_per_axis:
             raise InvalidScientificDataError(
-                f"failure-boundary axis {axis_name} must contain exactly seven levels"
+                f"failure-boundary axis {axis_name} must contain exactly {levels_per_axis} levels"
             )
         coordinates.extend(
             SemanticCoordinates(

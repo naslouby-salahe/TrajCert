@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import inf, log
 from typing import overload
 
 import numpy as np
@@ -14,10 +15,13 @@ def xlogx(value: Probability) -> EntropyValue: ...
 @overload
 def xlogx(value: Vector) -> Vector: ...
 def xlogx(value: Probability | Vector) -> EntropyValue | Vector:
-    result = -entr(value)
     if isinstance(value, np.ndarray):
-        return result
-    return float(result)
+        return -entr(value)
+    if value == 0.0:
+        return 0.0
+    if value < 0.0:
+        return inf
+    return value * log(value)
 
 
 @overload
@@ -35,15 +39,20 @@ def binary_entropy_from_masses(harmful: Vector, correct: Vector) -> Vector: ...
 def binary_entropy_from_masses(
     harmful: Mass | Vector, correct: Mass | Vector
 ) -> EntropyValue | Vector:
-    is_vector = isinstance(harmful, np.ndarray) or isinstance(correct, np.ndarray)
+    if not isinstance(harmful, np.ndarray) and not isinstance(correct, np.ndarray):
+        total = harmful + correct
+        if total > 0.0:
+            probability = harmful / total
+            return -(xlogx(probability) + xlogx(1.0 - probability)) * total
+        return 0.0
     harmful_array = np.asarray(harmful, dtype=np.float64)
-    total = harmful_array + np.asarray(correct, dtype=np.float64)
+    total_array = harmful_array + np.asarray(correct, dtype=np.float64)
     with np.errstate(divide="ignore", invalid="ignore"):
-        p = harmful_array / total
-    entropy = np.where(total > 0, -(xlogx(p) + xlogx(1.0 - p)) * total, 0.0)
-    if is_vector:
-        return entropy
-    return float(entropy)
+        probability = harmful_array / total_array
+    entropy = np.where(
+        total_array > 0, -(xlogx(probability) + xlogx(1.0 - probability)) * total_array, 0.0
+    )
+    return entropy
 
 
 @overload

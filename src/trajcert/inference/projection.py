@@ -51,6 +51,7 @@ from trajcert.types import (
 class ProjectionTerminationReason(StrEnum):
     EXACT_SINGLETON = "EXACT_SINGLETON"
     CONVERGED = "CONVERGED"
+    STALLED = "STALLED"
     NODE_CAP = "NODE_CAP"
     ARITHMETIC_FALLBACK = "ARITHMETIC_FALLBACK"
 
@@ -303,10 +304,19 @@ def _projection_search(
             active = None
             record = _queue_upper(queue, incumbent, None)
             if stall.should_stop(visited, record):
-                return _final_projection(queue, incumbent, visited, None)
+                return _final_projection(
+                    queue,
+                    incumbent,
+                    visited,
+                    None,
+                    ProjectionTerminationReason.STALLED,
+                )
     except (ArithmeticError, ValueError, NumericalError):
         return _projection_fallback(queue, incumbent, visited, active)
-    return _final_projection(queue, incumbent, visited, active)
+    reason = (
+        ProjectionTerminationReason.NODE_CAP if queue else ProjectionTerminationReason.CONVERGED
+    )
+    return _final_projection(queue, incumbent, visited, active, reason)
 
 
 def _projection_step(
@@ -332,7 +342,17 @@ def _projection_step(
     if _box_resolution(active, context.initial) <= context.gap:
         counter += 1
         heappush(queue, (-active.objective_upper, counter, active))
-        return counter, incumbent, _final_projection(queue, incumbent, visited, None)
+        return (
+            counter,
+            incumbent,
+            _final_projection(
+                queue,
+                incumbent,
+                visited,
+                None,
+                ProjectionTerminationReason.CONVERGED,
+            ),
+        )
     counter = _enqueue_projection_children(
         queue, counter, active, context.initial, context.envelope, context.rho
     )
@@ -370,11 +390,9 @@ def _final_projection(
     incumbent: RiskValue | None,
     visited: VisitedNodeCount,
     active: _Box | None,
+    reason: ProjectionTerminationReason,
 ) -> _ProjectionSearch:
     proven = _queue_upper(queue, incumbent, active)
-    reason = (
-        ProjectionTerminationReason.CONVERGED if not queue else ProjectionTerminationReason.NODE_CAP
-    )
     return _ProjectionSearch(
         proven_upper=proven,
         incumbent=incumbent,
@@ -1227,10 +1245,7 @@ def _assumption_free_envelope_upper(envelope: ObservableSummaryEnvelope) -> Risk
 
 
 def _arb_exact(value: ArbEndpointValue) -> arb:
-    numerator, denominator = value.as_integer_ratio()
-    if denominator == 1:
-        return arb(numerator)
-    return arb(numerator) / arb(denominator)
+    return arb(value)
 
 
 @cache

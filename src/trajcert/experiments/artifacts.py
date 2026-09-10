@@ -27,6 +27,7 @@ from trajcert.provenance import (
     EnvironmentDigest,
     ParentArtifactIdentity,
     dependency_fingerprint,
+    source_identity_digest,
 )
 from trajcert.storage import (
     ArtifactChecksum,
@@ -225,6 +226,7 @@ def cell_dependency_material(
         artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
         semantic_cell=cell.identity,
         scientific_specification_digest=scientific_specification,
+        source_identity_digest=source_identity_digest(),
         environment_dependency_digest=environment_dependency_digest,
         parents=parent_identities,
     )
