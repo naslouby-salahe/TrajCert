@@ -544,10 +544,6 @@ confidence:
   anytime_delta: 0.05
   level: 0.95
   alpha: 0.05
-  sequence:
-    construction: jeffreys
-    components: [[0.5, 0.5]]
-    weights: [1.0]
 
 minimum_evidence:
   matured_events: 200
@@ -4715,20 +4711,9 @@ events, the same checkpoint grid, the same four method labels, the same comparat
 
 The realized time-uniform violation rate is a first-class reported quantity, not a diagnostic. For every primary cell the number of streams whose running simultaneous region became empty is counted, and that count is reported with the exact one-sided Clopper-Pearson upper limit at `sequential.coverage.clopper_pearson_confidence`, by exactly the same procedure that bounds every other method failure rate. The confidence-sequence construction itself appears as a method row alongside `TrajCert`, `Time-uniform observable-law projection`, `Repeated-static monitoring negative control` and `Ignorable-delay anytime reference`, together with its independent-stream count, empirical violation rate, exact upper limit and criterion verdict, so that the realized violation rate of the construction is directly comparable, row by row, with the certification failure rates of the methods that consume it.
 
-`confidence.sequence` fixes the time-uniform construction that supplies the per-category region.
-`construction: jeffreys` with the single component `(1/2, 1/2)` at unit weight is the reference and is
-bit-for-bit the construction described in §9.2. A `portfolio` construction is expressed as a convex
-combination of Beta components with predeclared weights; because a convex combination of martingales
-is a martingale, Ville's inequality and the `log(d/delta)` threshold are unchanged, so any such
-portfolio is admissible at the declared level. The portfolio is **not** adopted: measured against the
-reference on interval width it is uniformly non-improving, and at equal weights it is wider by up to
-4.7%, which would suppress realized violations by inflating intervals. The reference is therefore the
-shipped default, and the joint multinomial/Dirichlet-mixture construction is the remaining candidate
-because it addresses the union bound over the `d = 2K+1` categories rather than re-weighting the same
-marginal decomposition.
+The time-uniform construction that supplies the per-category region is fixed: the per-category Jeffreys beta-binomial mixture confidence sequence of §9.2 at the union-bound allocation $\alpha_j=\delta/d$. It is a single fixed scientific construction with no configuration knob — `confidence` carries only `anytime_delta`, `level` and `alpha`. No alternative construction, component shape, weight vector or joint concentration can be selected from the configuration file, so none can be selected after seeing an outcome. The Jeffreys shape parameter is the $\frac12$ written explicitly in the §9.2 formula: a mathematical constant of the fixed construction, hardcoded in the construction code and never an editable configuration value.
 
-Both alternatives have since been evaluated against the reference and **both are rejected on
-evidence**, with no level, tolerance or weighting altered to reach that conclusion:
+Three alternative constructions were implemented and evaluated against that reference, and **all three are rejected or deferred on evidence**, with no level, tolerance or weighting altered to reach any of those conclusions:
 
 * **Portfolio mixture.** Measured on interval width at six representative count pairs, no weighting
   is uniformly sharper than the single Jeffreys component. Equal weights over six components are
@@ -4736,7 +4721,11 @@ evidence**, with no level, tolerance or weighting altered to reach that conclusi
   the regime gain at every weighting tried; each auxiliary component wins only in its own regime
   (`(1/4,1)` at low `p`, `(1,1/4)` at high `p`). Concentrated weights are neutral (0.1-0.4% wider) and
   buy nothing. An equal-weight portfolio would suppress realized violations by inflating intervals,
-  which this programme forbids, so the arm is closed.
+  which this programme forbids, so the arm is closed. A subsequent exhaustive sweep of 64 single
+  Beta components settled the wider question: exactly one component in the whole family is
+  worst-case no wider than the reference, and that component is Jeffreys itself (ratio 1.0000), with
+  the runner-up `(0.35, 0.35)` 1.39% wider at worst. The prior-posterior Beta family is therefore
+  exhausted and the reference is at its optimum within it.
 * **Joint multinomial/Dirichlet-mixture sequence.** The joint region and its exact marginal
   projection were implemented and validated. On 600 multinomial draws at `n = 220`, `d = 17`,
   `delta = 0.05`, both constructions attain simultaneous coverage 1.0000 against a nominal 0.95, so
@@ -4745,12 +4734,24 @@ evidence**, with no level, tolerance or weighting altered to reach that conclusi
   mixture pays the log-evidence penalty of a 16-effective-dimensional Dirichlet-multinomial, and at
   this dimension and sample size that cost exceeds the saving from spending `delta` once instead of
   `delta/d`. The union bound is the sharper decomposition here.
+* **Robbins log-odds normal mixture.** For $\theta=\mathrm{logit}(p)$ with
+  $\psi(\theta)=\log(1+e^{\theta})$, the test martingale for the hypothesis $\theta_0$ is the normal
+  mixture $M_n(\theta_0)=\int\exp\big((\theta-\theta_0)S_n-n(\psi(\theta)-\psi(\theta_0))\big)\varphi(\theta;\theta_0,s^2)\,d\theta$.
+  Each integrand has expectation exactly one under $\theta_0$, so $M_n$ is a martingale and Ville's
+  inequality gives the same declared guarantee **for every $s>0$**; the scale is a design choice and
+  never a validity knob. On a 42-state grid (`n = 20...1000`, `p = 0.01...0.95`) it is uniformly
+  narrower than the reference from $s\ge0.65$, with worst-case width ratio 0.9977 at $s=0.65$,
+  0.9115 at the predeclared unit scale $s=1.0$, and 0.9038 at $s=1.10$-$1.30$; the mean ratio is
+  about 0.82. At $p=0.106875$, `n = 220`, $\alpha_j=\delta/d=0.002941$, over 4000 binomial draws
+  against a nominal coverage of 0.99706, empirical coverage is 0.9988-0.9995 with an exact one-sided
+  Clopper-Pearson upper bound on the violation rate of 0.00157-0.00263. It is therefore valid at the
+  declared level, **but it spends between roughly half and almost all of the $\alpha_j$ slack** rather
+  than banking it, and it changes the primary construction, so adopting it requires re-validating the
+  whole campaign and leaves its realized violation behaviour at campaign scale uncharacterised. The
+  reference's conservatism is currently what holds the realized violation rate at zero. The
+  construction is recorded as validated and available; it is **not** the shipped reference.
 
-The per-category Jeffreys union-bound construction therefore remains the shipped reference, and it is
-the best of the three constructions evaluated. Both constructions are materially conservative at
-`n = 220` (empirical coverage 1.0000 against nominal 0.95), so real slack exists; capturing it
-requires a construction better than either candidate and must not be obtained by loosening the
-declared level.
+The portfolio and joint Dirichlet arms were implemented only to evaluate them and have since been removed from the source, together with the `confidence.sequence` configuration block, so that no unevaluated or rejected construction survives as dead configuration surface. The per-category Jeffreys union-bound construction remains the shipped reference. All three constructions are materially conservative at `n = 220` (empirical coverage 1.0000 against nominal 0.95 for the reference and the joint arm), so real slack exists; capturing it requires a construction adopted together with a full campaign re-validation and must never be obtained by loosening the declared level.
 
 `confidence.anytime_delta = 0.05` is the primary familywise guarantee. Its sensitivity is reported on the reference construction over 400 multinomial draws at `n = 220`, `d = 17`, on identical draws: mean total interval width is 2.1876, 2.0781, 1.9924 and 1.9040 at `delta` = 0.01, 0.025, 0.05 and 0.10 respectively, while empirical simultaneous coverage is 1.0000 at every level. Width is correctly monotone in `delta`, and the construction is conservative at all four levels, which quantifies the available slack without licensing its capture by loosening the level. The alternative levels `0.01`, `0.025` and `0.10` are reported only as an explicitly labelled sensitivity analysis; the primary level is declared in advance and is never selected from observed performance.
 

@@ -117,12 +117,6 @@ def test_cross_section_validation_rejects_non_nested_partitions(tmp_path: Path) 
                 "anytime_delta": 0.1,
                 "level": 0.9,
                 "alpha": 0.2,
-                "sequence": {
-                    "construction": "jeffreys",
-                    "components": ((0.5, 0.5),),
-                    "weights": (1.0,),
-                    "joint_shape": 0.5,
-                },
             },
             "must equal",
         ),

@@ -39,9 +39,6 @@ UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
 OpenUnitFloat = Annotated[StrictFloat, Field(gt=0.0, lt=1.0, allow_inf_nan=False)]
 PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
 NonNegativeFloat = Annotated[StrictFloat, Field(ge=0.0, allow_inf_nan=False)]
-BetaShapeParameter = PositiveFloat
-MixtureWeight = Annotated[StrictFloat, Field(gt=0.0, le=1.0, allow_inf_nan=False)]
-BetaShapePair = tuple[BetaShapeParameter, BetaShapeParameter]
 FiniteFloat = Annotated[StrictFloat, Field(allow_inf_nan=False)]
 GammaSensitivity = Annotated[StrictFloat, Field(ge=1.0, allow_inf_nan=False)]
 PositiveInt = Annotated[StrictInt, Field(gt=0)]
@@ -194,12 +191,6 @@ class DomainModel(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(
         extra="forbid", frozen=True, validate_default=True, allow_inf_nan=False
     )
-
-
-class SequenceConstruction(StrEnum):
-    JEFFREYS = "jeffreys"
-    PORTFOLIO = "portfolio"
-    DIRICHLET_JOINT = "dirichlet_joint"
 
 
 class ScientificState(StrEnum):

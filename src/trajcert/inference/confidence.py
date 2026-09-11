@@ -1,26 +1,23 @@
 from __future__ import annotations
 
-from math import exp, inf, log, log1p
+from math import inf, log, log1p
 from typing import Self
 
 from pydantic import model_validator
-from scipy.special import betaln, gammaln
+from scipy.special import betaln
 
-from trajcert.config import active_config
 from trajcert.exceptions import (
     ConfidenceSequenceViolationError,
     InvalidScientificDataError,
     NumericalError,
 )
 from trajcert.inference.categorical import CategoricalState
-from trajcert.math.entropy import xlogx
 from trajcert.types import (
     AnytimeConfidenceDelta,
     Count,
     DomainModel,
     LogMixtureRatio,
     Probability,
-    SequenceConstruction,
     Threshold,
     ToleranceValue,
 )
@@ -67,7 +64,8 @@ def raw_confidence_region(
         raise InvalidScientificDataError("anytime delta must lie strictly between zero and one")
     counts = tuple(state.canonical_count_vector)
     total = state.matured_count
-    threshold, beta_terms = _sequence_constants(counts, total, delta)
+    threshold = log(len(counts) / delta)
+    beta_terms = tuple(_jeffreys_beta_term(count, total) for count in counts)
     intervals = tuple(
         _invert_category_count(count, total, threshold, root_tolerance, beta_term)
         for count, beta_term in zip(counts, beta_terms, strict=True)
@@ -75,32 +73,9 @@ def raw_confidence_region(
     return CategoricalConfidenceRegion(matured_count=total, intervals=intervals)
 
 
-def _sequence_constants(
-    counts: tuple[Count, ...], total: Count, delta: AnytimeConfidenceDelta
-) -> tuple[Threshold, tuple[LogMixtureRatio, ...]]:
-    construction = active_config.get().confidence.sequence.construction
-    if construction is SequenceConstruction.DIRICHLET_JOINT:
-        return _joint_sequence_constants(counts, total, delta)
-    return (
-        log(len(counts) / delta),
-        tuple(_mixture_beta_term(count, total) for count in counts),
-    )
-
-
-def _joint_sequence_constants(
-    counts: tuple[Count, ...], total: Count, delta: AnytimeConfidenceDelta
-) -> tuple[Threshold, tuple[LogMixtureRatio, ...]]:
-    shape = active_config.get().confidence.sequence.joint_shape
-    concentration = shape * len(counts)
-    log_evidence = gammaln(concentration) - gammaln(total + concentration)
-    log_evidence += sum(gammaln(count + shape) - gammaln(shape) for count in counts)
-    terms: list[LogMixtureRatio] = []
-    for index, count in enumerate(counts):
-        remainder = total - count
-        rest = sum(xlogx(other) for position, other in enumerate(counts) if position != index)
-        tail = 0.0 if remainder == 0 else remainder * log(remainder)
-        terms.append(log_evidence - rest + tail)
-    return -log(delta), tuple(terms)
+def _jeffreys_beta_term(successes: Count, total: Count) -> LogMixtureRatio:
+    failures = total - successes
+    return betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
 
 
 def confidence_sequence_update(
@@ -205,17 +180,6 @@ def _upper_root(
         else:
             upper = midpoint
     return upper
-
-
-def _mixture_beta_term(successes: Count, total: Count) -> LogMixtureRatio:
-    failures = total - successes
-    sequence = active_config.get().confidence.sequence
-    terms = tuple(
-        log(weight) + betaln(successes + shape, failures + spread) - betaln(shape, spread)
-        for (shape, spread), weight in zip(sequence.components, sequence.weights, strict=True)
-    )
-    peak = max(terms)
-    return peak + log(sum(exp(term - peak) for term in terms))
 
 
 def _root_function(
