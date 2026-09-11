@@ -1,19 +1,26 @@
 from __future__ import annotations
 
-from math import inf, log, log1p
+from math import exp, inf, log, log1p
 from typing import Self
 
 from pydantic import model_validator
-from scipy.special import betaln
+from scipy.special import betaln, gammaln
 
-from trajcert.exceptions import InvalidScientificDataError, NumericalError
+from trajcert.config import active_config
+from trajcert.exceptions import (
+    ConfidenceSequenceViolationError,
+    InvalidScientificDataError,
+    NumericalError,
+)
 from trajcert.inference.categorical import CategoricalState
+from trajcert.math.entropy import xlogx
 from trajcert.types import (
     AnytimeConfidenceDelta,
     Count,
     DomainModel,
     LogMixtureRatio,
     Probability,
+    SequenceConstruction,
     Threshold,
     ToleranceValue,
 )
@@ -58,14 +65,42 @@ def raw_confidence_region(
     delta = anytime_delta
     if delta <= 0.0 or delta >= 1.0:
         raise InvalidScientificDataError("anytime delta must lie strictly between zero and one")
-    counts = state.canonical_count_vector
-    category_count = len(counts)
-    threshold = log(category_count / delta)
+    counts = tuple(state.canonical_count_vector)
+    total = state.matured_count
+    threshold, beta_terms = _sequence_constants(counts, total, delta)
     intervals = tuple(
-        _invert_category_count(count, state.matured_count, threshold, root_tolerance)
-        for count in counts
+        _invert_category_count(count, total, threshold, root_tolerance, beta_term)
+        for count, beta_term in zip(counts, beta_terms, strict=True)
     )
-    return CategoricalConfidenceRegion(matured_count=state.matured_count, intervals=intervals)
+    return CategoricalConfidenceRegion(matured_count=total, intervals=intervals)
+
+
+def _sequence_constants(
+    counts: tuple[Count, ...], total: Count, delta: AnytimeConfidenceDelta
+) -> tuple[Threshold, tuple[LogMixtureRatio, ...]]:
+    construction = active_config.get().confidence.sequence.construction
+    if construction is SequenceConstruction.DIRICHLET_JOINT:
+        return _joint_sequence_constants(counts, total, delta)
+    return (
+        log(len(counts) / delta),
+        tuple(_mixture_beta_term(count, total) for count in counts),
+    )
+
+
+def _joint_sequence_constants(
+    counts: tuple[Count, ...], total: Count, delta: AnytimeConfidenceDelta
+) -> tuple[Threshold, tuple[LogMixtureRatio, ...]]:
+    shape = active_config.get().confidence.sequence.joint_shape
+    concentration = shape * len(counts)
+    log_evidence = gammaln(concentration) - gammaln(total + concentration)
+    log_evidence += sum(gammaln(count + shape) - gammaln(shape) for count in counts)
+    terms: list[LogMixtureRatio] = []
+    for index, count in enumerate(counts):
+        remainder = total - count
+        rest = sum(xlogx(other) for position, other in enumerate(counts) if position != index)
+        tail = 0.0 if remainder == 0 else remainder * log(remainder)
+        terms.append(log_evidence - rest + tail)
+    return -log(delta), tuple(terms)
 
 
 def confidence_sequence_update(
@@ -80,14 +115,23 @@ def confidence_sequence_update(
     if len(previous_running.intervals) != len(raw.intervals):
         raise NumericalError("running confidence region category dimension changed")
     intervals = tuple(
-        ClosedProbabilityInterval(
-            lower=max(previous.lower, current.lower),
-            upper=min(previous.upper, current.upper),
-        )
+        _intersect_running(previous, current)
         for previous, current in zip(previous_running.intervals, raw.intervals, strict=True)
     )
     running = CategoricalConfidenceRegion(matured_count=state.matured_count, intervals=intervals)
     return ConfidenceSequenceUpdate(raw=raw, running=running)
+
+
+def _intersect_running(
+    previous: ClosedProbabilityInterval, current: ClosedProbabilityInterval
+) -> ClosedProbabilityInterval:
+    lower = max(previous.lower, current.lower)
+    upper = min(previous.upper, current.upper)
+    if lower > upper:
+        raise ConfidenceSequenceViolationError(
+            "running confidence region intersection is empty at this prefix"
+        )
+    return ClosedProbabilityInterval(lower=lower, upper=upper)
 
 
 def _invert_category_count(
@@ -95,6 +139,7 @@ def _invert_category_count(
     matured_count: Count,
     threshold: Threshold,
     root_tolerance: ToleranceValue,
+    beta_term: LogMixtureRatio,
 ) -> ClosedProbabilityInterval:
     success_count = successes
     total = matured_count
@@ -105,10 +150,14 @@ def _invert_category_count(
     maximum_likelihood = success_count / total
     lower = 0.0
     if success_count > 0:
-        lower = _lower_root(success_count, total, maximum_likelihood, threshold, root_tolerance)
+        lower = _lower_root(
+            success_count, total, maximum_likelihood, threshold, root_tolerance, beta_term
+        )
     upper = 1.0
     if success_count < total:
-        upper = _upper_root(success_count, total, maximum_likelihood, threshold, root_tolerance)
+        upper = _upper_root(
+            success_count, total, maximum_likelihood, threshold, root_tolerance, beta_term
+        )
     return ClosedProbabilityInterval(lower=lower, upper=upper)
 
 
@@ -118,8 +167,8 @@ def _lower_root(
     maximum_likelihood: Probability,
     threshold: Threshold,
     root_tolerance: ToleranceValue,
+    beta_term: LogMixtureRatio,
 ) -> Probability:
-    beta_term = _mixture_beta_term(successes, total)
     lower = 0.0
     upper = maximum_likelihood
     if _root_function(successes, total, lower, threshold, beta_term) <= 0.0:
@@ -141,8 +190,8 @@ def _upper_root(
     maximum_likelihood: Probability,
     threshold: Threshold,
     root_tolerance: ToleranceValue,
+    beta_term: LogMixtureRatio,
 ) -> Probability:
-    beta_term = _mixture_beta_term(successes, total)
     lower = maximum_likelihood
     upper = 1.0
     if _root_function(successes, total, upper, threshold, beta_term) <= 0.0:
@@ -160,7 +209,13 @@ def _upper_root(
 
 def _mixture_beta_term(successes: Count, total: Count) -> LogMixtureRatio:
     failures = total - successes
-    return betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
+    sequence = active_config.get().confidence.sequence
+    terms = tuple(
+        log(weight) + betaln(successes + shape, failures + spread) - betaln(shape, spread)
+        for (shape, spread), weight in zip(sequence.components, sequence.weights, strict=True)
+    )
+    peak = max(terms)
+    return peak + log(sum(exp(term - peak) for term in terms))
 
 
 def _root_function(

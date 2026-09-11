@@ -22,6 +22,8 @@ from trajcert.types import (
     AxisPaddingFraction,
     BandCount,
     BatchSize,
+    BetaShapePair,
+    BetaShapeParameter,
     CaseIndex,
     CategoryIndex,
     CertifiedFractionGain,
@@ -44,6 +46,7 @@ from trajcert.types import (
     LawCount,
     LawKey,
     Mass,
+    MixtureWeight,
     NanosecondsPerMillisecond,
     OracleDigits,
     OrderedConfigValue,
@@ -65,6 +68,7 @@ from trajcert.types import (
     SeedIndex,
     SensitivityBudget,
     SensitivityOffset,
+    SequenceConstruction,
     SerializedConfigJson,
     SignificanceLevel,
     SlopeValue,
@@ -105,10 +109,34 @@ class BudgetsConfig(ConfigModel):
         return self
 
 
+class ConfidenceSequenceConfig(ConfigModel):
+    construction: SequenceConstruction
+    components: tuple[BetaShapePair, ...]
+    weights: tuple[MixtureWeight, ...]
+    joint_shape: BetaShapeParameter
+
+    @model_validator(mode="after")
+    def validate_mixture(self) -> ConfidenceSequenceConfig:
+        if not self.components:
+            raise ValueError("confidence sequence requires at least one mixture component")
+        if len(self.components) != len(self.weights):
+            raise ValueError("confidence sequence components and weights must have equal length")
+        if not isclose(sum(self.weights), 1.0, rel_tol=0.0, abs_tol=1e-12):
+            raise ValueError("confidence sequence mixture weights must sum to one")
+        if self.construction is SequenceConstruction.JEFFREYS and len(self.components) != 1:
+            raise ValueError("the Jeffreys reference construction takes exactly one component")
+        if self.construction is SequenceConstruction.DIRICHLET_JOINT and len(self.components) != 1:
+            raise ValueError(
+                "the joint Dirichlet construction takes exactly one reference component"
+            )
+        return self
+
+
 class ConfidenceConfig(ConfigModel):
     anytime_delta: AnytimeConfidenceDelta
     level: ConfidenceLevel
     alpha: SignificanceLevel
+    sequence: ConfidenceSequenceConfig
 
     @model_validator(mode="after")
     def validate_level_alpha_pair(self) -> ConfidenceConfig:

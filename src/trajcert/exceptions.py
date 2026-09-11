@@ -33,6 +33,10 @@ class RootSolveError(NumericalError):
     pass
 
 
+class ConfidenceSequenceViolationError(TrajCertError):
+    pass
+
+
 class InvariantViolationError(TrajCertError):
     pass
 

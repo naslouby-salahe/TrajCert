@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 from math import log
 from statistics import median
@@ -8,7 +9,11 @@ from statistics import median
 import numpy as np
 from scipy.stats import beta as beta_distribution
 
-from trajcert.comparators.ignorable_delay import IgnorableDelayResult, ignorable_delay_update
+from trajcert.comparators.ignorable_delay import (
+    IgnorableDelayResult,
+    IgnorableDelayStatus,
+    ignorable_delay_update,
+)
 from trajcert.comparators.repeated_static import repeated_static_projection
 from trajcert.config import (
     CoverageStressCaseConfig,
@@ -34,7 +39,11 @@ from trajcert.data.synthetic import (
     hamilton_apportionment,
     observable_category_probabilities,
 )
-from trajcert.exceptions import InvalidScientificDataError, InvariantViolationError
+from trajcert.exceptions import (
+    ConfidenceSequenceViolationError,
+    InvalidScientificDataError,
+    InvariantViolationError,
+)
 from trajcert.inference.categorical import (
     CategoricalState,
     append_matured_event,
@@ -100,6 +109,7 @@ from trajcert.types import (
 
 
 class SequentialMethod(StrEnum):
+    CONFIDENCE_SEQUENCE = "Time-uniform confidence sequence construction"
     TRAJCERT = "TrajCert"
     TIME_UNIFORM_PROJECTION = "Time-uniform observable-law projection"
     REPEATED_STATIC = "Repeated-static monitoring negative control"
@@ -179,6 +189,7 @@ class CoverageStreamCertification(DomainModel):
     method_failures: tuple[MethodFailureCount, ...]
     first_certified_matured: MedianEventCount
     certified_fraction: Probability
+    confidence_sequence_violated: bool
 
 
 class CoverageBatchResult(DomainModel):
@@ -188,6 +199,7 @@ class CoverageBatchResult(DomainModel):
     method_failures: tuple[MethodFailureCount, ...]
     first_certified_matured: tuple[MedianEventCount, ...]
     certified_update_fractions: tuple[Probability, ...]
+    confidence_sequence_violations: Count
 
 
 class CoverageMethodEvidence(DomainModel):
@@ -243,12 +255,15 @@ def run_sequential_trace(
     event_total = len(events)
     for position, event in enumerate(events, start=1):
         state = append_matured_event(state, event)
-        update = confidence_sequence_update(
-            state=state,
-            anytime_delta=config.confidence.anytime_delta,
-            root_tolerance=config.numerics.anytime_root_atol,
-            previous_running=running,
-        )
+        try:
+            update = confidence_sequence_update(
+                state=state,
+                anytime_delta=config.confidence.anytime_delta,
+                root_tolerance=config.numerics.anytime_root_atol,
+                previous_running=running,
+            )
+        except ConfidenceSequenceViolationError:
+            break
         running = update.running
         if position % checkpoint_every != 0 and position != event_total:
             continue
@@ -330,6 +345,7 @@ def coverage_stress_batch(
     )
     first_certified: list[MedianEventCount] = []
     certified_fractions: list[Probability] = []
+    sequence_violations = 0
     for position, stream_index in enumerate(stream_range, start=1):
         outcome = _coverage_stream_outcome(
             parameters,
@@ -344,6 +360,8 @@ def coverage_stress_batch(
         )
         for entry in outcome.method_failures:
             failures[entry.method] += entry.failures
+        if outcome.confidence_sequence_violated:
+            sequence_violations += 1
         first_certified.append(outcome.first_certified_matured)
         certified_fractions.append(outcome.certified_fraction)
         stream_progress.maybe_log(position)
@@ -356,6 +374,7 @@ def coverage_stress_batch(
         ),
         first_certified_matured=tuple(first_certified),
         certified_update_fractions=tuple(certified_fractions),
+        confidence_sequence_violations=sequence_violations,
     )
 
 
@@ -374,6 +393,9 @@ def combine_coverage_stress_batches(
     for batch in batches:
         for entry in batch.method_failures:
             failures[entry.method] += entry.failures
+    failures[SequentialMethod.CONFIDENCE_SEQUENCE] = sum(
+        batch.confidence_sequence_violations for batch in batches
+    )
     results = tuple(
         _coverage_method_result(method, assumption_valid, stream_count, failures)
         for method in SequentialMethod
@@ -391,21 +413,23 @@ def combine_coverage_stress_batches(
 def _coverage_checkpoint_violation_counts(
     state: CategoricalState,
     partition: TrajectoryPartition,
-    running: CategoricalConfidenceRegion,
+    running: CategoricalConfidenceRegion | None,
     ignorable: IgnorableDelayResult,
     sensitivity_budget: SensitivityBudget,
     assumption_valid: SearchPredicate,
     true_risk: RiskValue,
-) -> tuple[ProjectionResult, tuple[MethodFailureCount, ...]]:
+) -> tuple[ProjectionResult | None, tuple[MethodFailureCount, ...]]:
     config = active_config.get()
-    envelope = summary_envelope_from_confidence(partition, running)
-    projection = _project(envelope, sensitivity_budget)
     counts: list[MethodFailureCount] = []
-    if projection.proven_upper < true_risk:
-        counts.append(MethodFailureCount(method=SequentialMethod.TRAJCERT, failures=1))
-        counts.append(
-            MethodFailureCount(method=SequentialMethod.TIME_UNIFORM_PROJECTION, failures=1)
-        )
+    projection: ProjectionResult | None = None
+    if running is not None:
+        envelope = summary_envelope_from_confidence(partition, running)
+        projection = _project(envelope, sensitivity_budget)
+        if projection.proven_upper < true_risk:
+            counts.append(MethodFailureCount(method=SequentialMethod.TRAJCERT, failures=1))
+            counts.append(
+                MethodFailureCount(method=SequentialMethod.TIME_UNIFORM_PROJECTION, failures=1)
+            )
     static = repeated_static_projection(
         state=state,
         anytime_delta=config.confidence.anytime_delta,
@@ -417,6 +441,75 @@ def _coverage_checkpoint_violation_counts(
     if assumption_valid and ignorable.interval is not None and ignorable.interval.upper < true_risk:
         counts.append(MethodFailureCount(method=SequentialMethod.IGNORABLE_DELAY, failures=1))
     return projection, tuple(counts)
+
+
+@dataclass(frozen=True, slots=True)
+class _AnytimeRegionUpdate:
+    running: CategoricalConfidenceRegion | None
+    ignorable: IgnorableDelayResult
+    ignorable_running: ClosedProbabilityInterval | None
+    failures: tuple[MethodFailureCount, ...]
+    sequence_violated: bool
+    ignorable_violated: bool
+
+
+def _advance_anytime_regions(
+    state: CategoricalState,
+    running: CategoricalConfidenceRegion | None,
+    ignorable_running: ClosedProbabilityInterval | None,
+    ignorable: IgnorableDelayResult,
+    assumption_valid: SearchPredicate,
+    sequence_violated: bool,
+    ignorable_violated: bool,
+) -> _AnytimeRegionUpdate:
+    config = active_config.get()
+    failures: tuple[MethodFailureCount, ...] = ()
+    if not sequence_violated:
+        try:
+            update = confidence_sequence_update(
+                state=state,
+                anytime_delta=config.confidence.anytime_delta,
+                root_tolerance=config.numerics.anytime_root_atol,
+                previous_running=running,
+            )
+        except ConfidenceSequenceViolationError:
+            sequence_violated = True
+            running = None
+            failures = (
+                MethodFailureCount(method=SequentialMethod.CONFIDENCE_SEQUENCE, failures=1),
+                MethodFailureCount(method=SequentialMethod.TRAJCERT, failures=1),
+                MethodFailureCount(method=SequentialMethod.TIME_UNIFORM_PROJECTION, failures=1),
+            )
+        else:
+            running = update.running
+    if not ignorable_violated:
+        try:
+            ignorable = ignorable_delay_update(
+                state=state,
+                anytime_delta=config.confidence.anytime_delta,
+                root_tolerance=config.numerics.anytime_root_atol,
+                previous_running=ignorable_running,
+                assumption_valid=assumption_valid,
+            )
+        except ConfidenceSequenceViolationError:
+            ignorable_violated = True
+            ignorable_running = None
+            ignorable = ignorable.model_copy(update={"interval": None})
+            failures = (
+                *failures,
+                MethodFailureCount(method=SequentialMethod.IGNORABLE_DELAY, failures=1),
+            )
+        else:
+            if ignorable.interval is not None:
+                ignorable_running = ignorable.interval
+    return _AnytimeRegionUpdate(
+        running=running,
+        ignorable=ignorable,
+        ignorable_running=ignorable_running,
+        failures=failures,
+        sequence_violated=sequence_violated,
+        ignorable_violated=ignorable_violated,
+    )
 
 
 def _coverage_stream_outcome(
@@ -441,28 +534,34 @@ def _coverage_stream_outcome(
     state = initialize_categorical_state(ledger.identity, partition)
     running: CategoricalConfidenceRegion | None = None
     ignorable_running: ClosedProbabilityInterval | None = None
+    ignorable = IgnorableDelayResult(
+        status=IgnorableDelayStatus.APPLICABLE,
+        resolved_count=state.resolved_count,
+        interval=None,
+    )
     failed: list[MethodFailureCount] = []
     eligible_updates = 0
     certified_updates = 0
     first_certified: MedianEventCount | None = None
+    sequence_violated = False
+    ignorable_violated = False
     for position, event in enumerate(events, start=1):
         state = append_matured_event(state, event)
-        update = confidence_sequence_update(
-            state=state,
-            anytime_delta=config.confidence.anytime_delta,
-            root_tolerance=config.numerics.anytime_root_atol,
-            previous_running=running,
+        regions = _advance_anytime_regions(
+            state,
+            running,
+            ignorable_running,
+            ignorable,
+            assumption_valid,
+            sequence_violated,
+            ignorable_violated,
         )
-        running = update.running
-        ignorable = ignorable_delay_update(
-            state=state,
-            anytime_delta=config.confidence.anytime_delta,
-            root_tolerance=config.numerics.anytime_root_atol,
-            previous_running=ignorable_running,
-            assumption_valid=assumption_valid,
-        )
-        if ignorable.interval is not None:
-            ignorable_running = ignorable.interval
+        running = regions.running
+        ignorable = regions.ignorable
+        ignorable_running = regions.ignorable_running
+        sequence_violated = regions.sequence_violated
+        ignorable_violated = regions.ignorable_violated
+        failed.extend(regions.failures)
         if position % checkpoint_every != 0 and position != max_events:
             continue
         projection, checkpoint_counts = _coverage_checkpoint_violation_counts(
@@ -475,6 +574,8 @@ def _coverage_stream_outcome(
             true_risk,
         )
         failed.extend(checkpoint_counts)
+        if projection is None:
+            continue
         assessment = classify_certification(
             state=state,
             projection=projection,
@@ -499,6 +600,7 @@ def _coverage_stream_outcome(
             max_events + 1 if first_certified is None else first_certified
         ),
         certified_fraction=fraction,
+        confidence_sequence_violated=sequence_violated,
     )
 
 

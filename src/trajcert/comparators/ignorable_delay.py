@@ -5,6 +5,7 @@ from math import inf, log, log1p
 
 from scipy.special import betaln
 
+from trajcert.exceptions import ConfidenceSequenceViolationError
 from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.confidence import ClosedProbabilityInterval
 from trajcert.types import (
@@ -50,10 +51,13 @@ def ignorable_delay_update(
     if previous_running is None:
         running = raw
     else:
-        running = ClosedProbabilityInterval(
-            lower=max(previous_running.lower, raw.lower),
-            upper=min(previous_running.upper, raw.upper),
-        )
+        lower = max(previous_running.lower, raw.lower)
+        upper = min(previous_running.upper, raw.upper)
+        if lower > upper:
+            raise ConfidenceSequenceViolationError(
+                "running ignorable-delay interval intersection is empty at this prefix"
+            )
+        running = ClosedProbabilityInterval(lower=lower, upper=upper)
     return IgnorableDelayResult(
         status=IgnorableDelayStatus.APPLICABLE,
         resolved_count=total,

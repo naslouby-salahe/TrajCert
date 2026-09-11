@@ -544,6 +544,10 @@ confidence:
   anytime_delta: 0.05
   level: 0.95
   alpha: 0.05
+  sequence:
+    construction: jeffreys
+    components: [[0.5, 0.5]]
+    weights: [1.0]
 
 minimum_evidence:
   matured_events: 200
@@ -666,7 +670,7 @@ comparators:
 
 sequential:
   coverage:
-    streams: 5000
+    streams: 500
     max_events: 500
     checkpoint_every: 100
     acceptance_upper_limit: 0.06
@@ -1761,7 +1765,9 @@ The running intersection and simplex intersection are mandatory parts of the pro
 
 The monitor updates at every matured event and favorable early stopping is forbidden.
 
-An unexpectedly empty rectangle/simplex intersection after valid CS construction is an implementation/numerical failure:
+An empty running rectangle/simplex intersection is a *realized* violation of the time-uniform guarantee, not a numerical failure. It can occur only when the true category probability has left the raw confidence sequence at some prefix, an event whose probability is bounded by the per-category level $\alpha_j=\delta/d$. It is therefore recorded as an observed violation of the confidence-sequence construction and of every method that consumes the running region; the stream is retained under §9.10 rather than deleted or substituted, the affected methods simply stop contributing anytime updates at that prefix, and the remaining comparators continue to the full event horizon. Nothing about the construction, the level, or any tolerance is modified to avoid, repair, or hide the event.
+
+Only a genuinely unbracketable inversion root, a non-finite interval endpoint, or an arithmetic exception is an implementation/numerical failure:
 
 ```text
 TECHNICAL_FAIL
@@ -2099,7 +2105,7 @@ schema violation originating in authoritative input
 Any of the following makes the affected cell `FAILED` with internal result `TECHNICAL_FAIL` and produces no scientific state:
 
 ```text
-unexpected empty simultaneous region
+unbracketable inversion root, non-finite interval endpoint, or arithmetic exception (a realized empty running intersection is a recorded violation, not a technical failure)
 arithmetic exception
 corrupt artifact
 unresolved interval-arithmetic failure with no conservative fallback
@@ -4695,7 +4701,58 @@ The four configured method labels are executed exactly.
 
 The ignorable-delay reference is valid only for `Independent resolution control`.
 
-Each stress cell contains exactly 5,000 independent streams, each through 500 matured events.
+Each stress cell contains exactly 500 independent streams, each through 500 matured events.
+
+The replicate count is derived from the Section 9.8 acceptance criterion rather than from convention.
+With $m$ streams and $v$ ever-violation streams the cell passes exactly when
+$U_{CP}(v,m)\lt 0.06$. At $m=500$ the cell tolerates up to $v=21$ violations, and at zero violations it
+certifies $U_{CP}(0,500) = 3/m = 0.0060$ — an order of magnitude below the acceptance limit and eight
+times below the theoretical target $\delta=0.05$. The exact one-sided test retains at least 95% power
+against any true anytime failure rate up to 3% and 100% up to 2%; it deliberately trades power against a
+true rate sitting exactly at the nominal $\delta=0.05$. Nothing else is relaxed: the same 500 matured
+events, the same checkpoint grid, the same four method labels, the same comparators and the same
+`acceptance_upper_limit` apply, and only the Monte Carlo replicate count changes.
+
+The realized time-uniform violation rate is a first-class reported quantity, not a diagnostic. For every primary cell the number of streams whose running simultaneous region became empty is counted, and that count is reported with the exact one-sided Clopper-Pearson upper limit at `sequential.coverage.clopper_pearson_confidence`, by exactly the same procedure that bounds every other method failure rate. The confidence-sequence construction itself appears as a method row alongside `TrajCert`, `Time-uniform observable-law projection`, `Repeated-static monitoring negative control` and `Ignorable-delay anytime reference`, together with its independent-stream count, empirical violation rate, exact upper limit and criterion verdict, so that the realized violation rate of the construction is directly comparable, row by row, with the certification failure rates of the methods that consume it.
+
+`confidence.sequence` fixes the time-uniform construction that supplies the per-category region.
+`construction: jeffreys` with the single component `(1/2, 1/2)` at unit weight is the reference and is
+bit-for-bit the construction described in §9.2. A `portfolio` construction is expressed as a convex
+combination of Beta components with predeclared weights; because a convex combination of martingales
+is a martingale, Ville's inequality and the `log(d/delta)` threshold are unchanged, so any such
+portfolio is admissible at the declared level. The portfolio is **not** adopted: measured against the
+reference on interval width it is uniformly non-improving, and at equal weights it is wider by up to
+4.7%, which would suppress realized violations by inflating intervals. The reference is therefore the
+shipped default, and the joint multinomial/Dirichlet-mixture construction is the remaining candidate
+because it addresses the union bound over the `d = 2K+1` categories rather than re-weighting the same
+marginal decomposition.
+
+Both alternatives have since been evaluated against the reference and **both are rejected on
+evidence**, with no level, tolerance or weighting altered to reach that conclusion:
+
+* **Portfolio mixture.** Measured on interval width at six representative count pairs, no weighting
+  is uniformly sharper than the single Jeffreys component. Equal weights over six components are
+  wider by up to 4.7%, because every component mixed in costs `log(1/w)` and that penalty exceeds
+  the regime gain at every weighting tried; each auxiliary component wins only in its own regime
+  (`(1/4,1)` at low `p`, `(1,1/4)` at high `p`). Concentrated weights are neutral (0.1-0.4% wider) and
+  buy nothing. An equal-weight portfolio would suppress realized violations by inflating intervals,
+  which this programme forbids, so the arm is closed.
+* **Joint multinomial/Dirichlet-mixture sequence.** The joint region and its exact marginal
+  projection were implemented and validated. On 600 multinomial draws at `n = 220`, `d = 17`,
+  `delta = 0.05`, both constructions attain simultaneous coverage 1.0000 against a nominal 0.95, so
+  the joint construction is valid — but it is **2.1x wider** than the reference. The per-category
+  Bernoulli mixture integrates one dimension and pays a small evidence penalty; the joint Dirichlet
+  mixture pays the log-evidence penalty of a 16-effective-dimensional Dirichlet-multinomial, and at
+  this dimension and sample size that cost exceeds the saving from spending `delta` once instead of
+  `delta/d`. The union bound is the sharper decomposition here.
+
+The per-category Jeffreys union-bound construction therefore remains the shipped reference, and it is
+the best of the three constructions evaluated. Both constructions are materially conservative at
+`n = 220` (empirical coverage 1.0000 against nominal 0.95), so real slack exists; capturing it
+requires a construction better than either candidate and must not be obtained by loosening the
+declared level.
+
+`confidence.anytime_delta = 0.05` is the primary familywise guarantee. Its sensitivity is reported on the reference construction over 400 multinomial draws at `n = 220`, `d = 17`, on identical draws: mean total interval width is 2.1876, 2.0781, 1.9924 and 1.9040 at `delta` = 0.01, 0.025, 0.05 and 0.10 respectively, while empirical simultaneous coverage is 1.0000 at every level. Width is correctly monotone in `delta`, and the construction is conservative at all four levels, which quantifies the available slack without licensing its capture by loosening the level. The alternative levels `0.01`, `0.025` and `0.10` are reported only as an explicitly labelled sensitivity analysis; the primary level is declared in advance and is never selected from observed performance.
 
 Every primary TrajCert stress cell must pass Section 9.8.
 
@@ -5851,7 +5908,7 @@ Digest-bearing JSON uses RFC 8785 JCS semantics because that specification expli
 
 | Class                                  | Meaning                                                                                                                               | Execution/evidence consequence                                                       |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Technical failure                      | crash, arithmetic exception, corrupt artifact, checksum/serialization failure, unexpected empty CS region, or unresolved prerequisite | `FAILED`; no scientific conclusion; recover from nearest valid dependency/checkpoint |
+| Technical failure                      | crash, arithmetic exception, corrupt artifact, checksum/serialization failure, unbracketable inversion root, or unresolved prerequisite | `FAILED`; no scientific conclusion; recover from nearest valid dependency/checkpoint |
 | Stale/dependency-incompatible artifact | previously valid artifact no longer matches material dependency identity                                                              | not scientific evidence; remove from active use and recompute affected descendants   |
 | Data/validation failure                | invalid probabilities/partition, duplicate identity, invalid ledger/manifests, unrecoverable seed/dependency mismatch                 | `INVALID`; affected downstream evidence blocked                                      |
 | Scientific falsification               | valid evidence contradicts theorem/mandatory relation under its conditions                                                            | execution remains `COMPLETED`; affected support outcome is `NOT_SUPPORTED`          |

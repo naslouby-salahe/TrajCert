@@ -3,7 +3,13 @@ from __future__ import annotations
 import pytest
 
 from tests.unit.conftest import categorical_state
-from trajcert.exceptions import InvalidScientificDataError, NumericalError
+from trajcert.config import TrajCertConfig, active_config
+from trajcert.constants import PRODUCTION_CONFIG_PATH
+from trajcert.exceptions import (
+    ConfidenceSequenceViolationError,
+    InvalidScientificDataError,
+    NumericalError,
+)
 from trajcert.inference.confidence import (
     CategoricalConfidenceRegion,
     ClosedProbabilityInterval,
@@ -11,6 +17,7 @@ from trajcert.inference.confidence import (
     confidence_sequence_update,
     raw_confidence_region,
 )
+from trajcert.types import SequenceConstruction
 
 
 @pytest.mark.parametrize(
@@ -116,3 +123,44 @@ def test_confidence_sequence_update_narrows_running_region() -> None:
     running_interval = second.running.intervals[0]
     assert running_interval.lower >= first_interval.lower
     assert running_interval.upper <= first_interval.upper
+
+
+def test_confidence_sequence_update_reports_a_realized_running_violation() -> None:
+    state = categorical_state((2, 1, 0, 0, 0))
+    raw = raw_confidence_region(state, 0.05, 1e-6)
+    interior = raw.intervals[0]
+    violated = CategoricalConfidenceRegion(
+        matured_count=raw.matured_count,
+        intervals=(
+            ClosedProbabilityInterval(
+                lower=interior.upper + 1.0e-12, upper=interior.upper + 2.0e-12
+            ),
+            *(ClosedProbabilityInterval(lower=0.0, upper=1.0) for _ in raw.intervals[1:]),
+        ),
+    )
+    with pytest.raises(ConfidenceSequenceViolationError, match="intersection is empty"):
+        _ = confidence_sequence_update(state, 0.05, 1e-6, violated)
+
+
+def test_realized_violation_is_not_classified_as_a_numerical_error() -> None:
+    assert not issubclass(ConfidenceSequenceViolationError, NumericalError)
+    assert not issubclass(ConfidenceSequenceViolationError, InvalidScientificDataError)
+
+
+def test_portfolio_mixture_produces_valid_ordered_intervals() -> None:
+    base = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    sequence = base.confidence.sequence.model_copy(
+        update={
+            "construction": SequenceConstruction.PORTFOLIO,
+            "components": ((0.5, 0.5), (0.25, 1.0), (1.0, 0.25)),
+            "weights": (0.5, 0.25, 0.25),
+        }
+    )
+    config = base.model_copy(
+        update={"confidence": base.confidence.model_copy(update={"sequence": sequence})}
+    )
+    _ = active_config.set(config)
+    state = categorical_state((2, 1, 0, 0, 0))
+    region = raw_confidence_region(state, 0.05, 1e-9)
+    for interval in region.intervals:
+        assert 0.0 <= interval.lower <= interval.upper <= 1.0

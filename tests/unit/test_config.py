@@ -113,7 +113,17 @@ def test_cross_section_validation_rejects_non_nested_partitions(tmp_path: Path) 
         (BudgetsConfig, {"risk": 0.1, "information_nats": 1.0}, "cannot exceed"),
         (
             ConfidenceConfig,
-            {"anytime_delta": 0.1, "level": 0.9, "alpha": 0.2},
+            {
+                "anytime_delta": 0.1,
+                "level": 0.9,
+                "alpha": 0.2,
+                "sequence": {
+                    "construction": "jeffreys",
+                    "components": ((0.5, 0.5),),
+                    "weights": (1.0,),
+                    "joint_shape": 0.5,
+                },
+            },
             "must equal",
         ),
         (MinimumEvidenceConfig, {"matured_events": 2, "resolved_events": 3}, "cannot exceed"),
