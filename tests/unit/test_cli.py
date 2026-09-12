@@ -31,7 +31,6 @@ from trajcert.experiments.models import (
     ExecutionContext,
 )
 from trajcert.experiments.plan import (
-    DependencyGraphRecord,
     ExperimentPlan,
     PlannedCell,
     build_plan,
@@ -54,9 +53,6 @@ from trajcert.reporting.source_data import (
     table_source_descriptors,
 )
 from trajcert.schemas import PublicationSourceDescriptor, VerifiedSourceLineage
-from trajcert.storage import (
-    read_model,
-)
 from trajcert.types import (
     ArtifactKey,
     CliCommand,
@@ -559,20 +555,12 @@ def test_plan_view_matches_cell_count() -> None:
     assert plan.executable_cells + plan.invalid_cells == plan.planned_cell_count
 
 
-def test_plan_view_persists_shared_plan_artifacts(tmp_path: Path) -> None:
+def test_plan_view_is_read_only(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
     plan = workflows.plan_view(workspace_root=workspace)
     plans_root = workspace / "outputs" / "artifacts" / "derived" / "plans"
-    stored_plan = read_model(plans_root / "experiment_plan.json", ExperimentPlan)
-    assert stored_plan == plan
-    stored_graph = read_model(plans_root / "dependency_graph.json", DependencyGraphRecord)
-    assert len(stored_graph.edges) == len(experiment_names())
-    synthesis_edge = next(
-        edge
-        for edge in stored_graph.edges
-        if edge.experiment_name == ExperimentName.STATISTICAL_SYNTHESIS
-    )
-    assert len(synthesis_edge.required_experiments) > 0
+    assert plan.planned_cell_count > 0
+    assert not plans_root.exists()
 
 
 def test_smoke_passes_all_fixtures() -> None:
@@ -796,6 +784,9 @@ def test_run_experiment_aggregates_cell_outcomes(
     assert result.reused_cells == sum(1 for _state, reused in _HAND_CASE_OUTCOMES if reused)
     assert result.failed_cells == outcome_states.count(PublicExecutionState.FAILED)
     assert result.blocked_cells == outcome_states.count(PublicExecutionState.BLOCKED)
+    plans_root = workspace / "outputs" / "artifacts" / "derived" / "plans"
+    assert (plans_root / "experiment_plan.json").is_file()
+    assert (plans_root / "dependency_graph.json").is_file()
 
 
 @pytest.mark.parametrize(

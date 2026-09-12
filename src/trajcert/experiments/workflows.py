@@ -272,9 +272,7 @@ def _preprocess_real_trajectory(workspace_root: Path, *, overwrite: bool) -> Pat
 
 def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
     workspace_root = workspace_root if workspace_root is not None else Path()
-    plan = build_plan(_load_config(workspace_root))
-    _persist_plan_artifacts(workspace_root, plan)
-    return plan
+    return build_plan(_load_config(workspace_root))
 
 
 def _persist_plan_artifacts(workspace_root: Path, plan: ExperimentPlan) -> None:
@@ -306,6 +304,7 @@ def run_experiment(
     workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
     plan = build_plan(config)
+    _persist_plan_artifacts(workspace_root, plan)
     name = _known_experiment_name(experiment_name)
     cells = cells_for_experiment(plan, name)
     if not cells:
