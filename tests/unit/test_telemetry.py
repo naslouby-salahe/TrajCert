@@ -4,9 +4,8 @@ import logging
 
 import pytest
 
-from trajcert.storage import SemanticCellKey
 from trajcert.telemetry import ExperimentProgress, configure_logging
-from trajcert.types import ExperimentName, PublicExecutionState
+from trajcert.types import ExperimentName, PublicExecutionState, SemanticCellKey
 
 _CELL_KEY = SemanticCellKey("Partition Coherence::example")
 _STRESS_CELL_COUNT = 3

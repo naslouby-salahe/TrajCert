@@ -36,9 +36,10 @@ from trajcert.experiments.sensitivity import (
     combine_sequential_sensitivity_utility_batches,
     sequential_sensitivity_utility_batch,
 )
-from trajcert.storage import ArtifactKey, atomic_write_model, file_digest, read_model
+from trajcert.storage import atomic_write_model, file_digest, read_model
 from trajcert.telemetry import configure_logging
 from trajcert.types import (
+    ArtifactKey,
     BatchIndex,
     BatchSize,
     DomainModel,

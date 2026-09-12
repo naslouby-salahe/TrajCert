@@ -10,18 +10,8 @@ from math import inf, ldexp, nextafter
 import numpy as np
 from flint import arb, ctx
 
-from trajcert.constants import (
-    ARB_INCUMBENT_BISECTION_ITERATIONS,
-    ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR,
-    ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED,
-    ARB_SEARCH_DECISION_STALL_WINDOW_VISITED,
-    ARB_SEARCH_PROJECTION_STALL_IMPROVEMENT_FLOOR,
-    ARB_SEARCH_PROJECTION_STALL_MINIMUM_VISITED,
-    ARB_SEARCH_PROJECTION_STALL_WINDOW_VISITED,
-    ARB_SEARCH_ROOT_SCAN_ENVELOPE_SPAN_FLOOR,
-    ARB_SEARCH_ROOT_SCAN_GRID_POINTS,
-    ENTROPY_MAXIMIZING_PROBABILITY,
-)
+from trajcert.config import active_config
+from trajcert.constants import ENTROPY_MAXIMIZING_PROBABILITY
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
 from trajcert.exceptions import InvalidScientificDataError, NumericalError
 from trajcert.inference.envelope import ObservableSummaryEnvelope, ScalarEnvelope
@@ -281,10 +271,11 @@ def _projection_search(
     visited: VisitedNodeCount = 0
     active: _Box | None = None
     progress = SearchProgress(TelemetryPhase("projection_search"), node_cap)
+    policy = active_config.get().numerics.arb_search
     stall = _SearchStall(
-        ARB_SEARCH_PROJECTION_STALL_MINIMUM_VISITED,
-        ARB_SEARCH_PROJECTION_STALL_WINDOW_VISITED,
-        ARB_SEARCH_PROJECTION_STALL_IMPROVEMENT_FLOOR,
+        policy.projection_stall_minimum_visited,
+        policy.projection_stall_window_visited,
+        policy.projection_stall_improvement_floor,
     )
     try:
         while queue and visited < node_cap:
@@ -454,10 +445,11 @@ def _compatibility_search(
     visited: VisitedNodeCount = 0
     active: _Box | None = None
     progress = SearchProgress(TelemetryPhase("compatibility_search"), node_cap)
+    policy = active_config.get().numerics.arb_search
     stall = _SearchStall(
-        ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED,
-        ARB_SEARCH_DECISION_STALL_WINDOW_VISITED,
-        ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR,
+        policy.decision_stall_minimum_visited,
+        policy.decision_stall_window_visited,
+        policy.decision_stall_improvement_floor,
     )
     try:
         while queue and visited < node_cap:
@@ -605,10 +597,11 @@ def _intrinsic_search(
     visited: VisitedNodeCount = 0
     active: _Box | None = None
     progress = SearchProgress(TelemetryPhase("intrinsic_search"), node_cap)
+    policy = active_config.get().numerics.arb_search
     stall = _SearchStall(
-        ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED,
-        ARB_SEARCH_DECISION_STALL_WINDOW_VISITED,
-        ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR,
+        policy.decision_stall_minimum_visited,
+        policy.decision_stall_window_visited,
+        policy.decision_stall_improvement_floor,
     )
     try:
         while queue and visited < node_cap:
@@ -932,10 +925,11 @@ def _scan_projection_incumbent(
     comparison_guard: ToleranceValue,
 ) -> RiskValue | None:
     resolved_span = envelope.resolved_harmful.upper - envelope.resolved_harmful.lower
-    if resolved_span <= ARB_SEARCH_ROOT_SCAN_ENVELOPE_SPAN_FLOOR:
+    policy = active_config.get().numerics.arb_search
+    if resolved_span <= policy.root_scan_envelope_span_floor:
         return None
     best: RiskValue | None = None
-    grid_points = ARB_SEARCH_ROOT_SCAN_GRID_POINTS
+    grid_points = policy.root_scan_grid_points
     correct_span = envelope.resolved_correct.upper - envelope.resolved_correct.lower
     for row in range(grid_points):
         harmful = envelope.resolved_harmful.lower + resolved_span * ((row + 0.5) / grid_points)
@@ -977,7 +971,7 @@ def _bisected_hidden_mass(
     resolved_entropy = _resolved_bandwise_entropy_arb(summary)
     lower = max(hidden_lower, minimum_hidden)
     upper = hidden_upper
-    for _ in range(ARB_INCUMBENT_BISECTION_ITERATIONS):
+    for _ in range(active_config.get().numerics.arb_search.incumbent_bisection_iterations):
         candidate = (lower + upper) / 2.0
         if candidate in (lower, upper):
             break

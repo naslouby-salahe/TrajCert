@@ -22,9 +22,7 @@ from trajcert.paths import (
     semantic_cell_path,
 )
 from trajcert.provenance import (
-    ArtifactTypeName,
     DependencyMaterial,
-    EnvironmentDigest,
     ParentArtifactIdentity,
     dependency_fingerprint,
     source_identity_digest,
@@ -32,17 +30,21 @@ from trajcert.provenance import (
 from trajcert.storage import (
     ArtifactChecksum,
     ArtifactIndexEntry,
-    ArtifactKey,
     CellArtifactIndex,
     CompletionRecord,
-    DependencyFingerprint,
-    PlanDigest,
-    SpecificationDigest,
     file_digest,
     model_digest,
     read_model,
 )
-from trajcert.types import BatchIndex
+from trajcert.types import (
+    ArtifactKey,
+    ArtifactTypeName,
+    BatchIndex,
+    DependencyFingerprint,
+    EnvironmentDigest,
+    PlanDigest,
+    SpecificationDigest,
+)
 
 if TYPE_CHECKING:
     from trajcert.experiments.models import CellExecutionResult, ExecutionContext

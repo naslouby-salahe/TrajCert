@@ -3,15 +3,17 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from trajcert.paths import ExperimentSlug
-from trajcert.provenance import EnvironmentDigest
-from trajcert.storage import (
+from trajcert.types import (
     ArtifactKey,
+    ColumnName,
+    DependencyAuthority,
     DependencyFingerprint,
     DigestHex,
+    DomainModel,
+    EnvironmentDigest,
+    ExperimentSlug,
     SpecificationDigest,
 )
-from trajcert.types import ColumnName, DependencyAuthority, DomainModel
 
 
 class PublicationSourceRole(StrEnum):

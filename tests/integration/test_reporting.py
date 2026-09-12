@@ -21,12 +21,7 @@ from trajcert.reporting.source_data import (
 )
 from trajcert.reporting.tables import render_table
 from trajcert.schemas import VerifiedSourceLineage
-from trajcert.storage import (
-    ArtifactKey,
-    DependencyFingerprint,
-    DigestHex,
-    SpecificationDigest,
-)
+from trajcert.types import ArtifactKey, DependencyFingerprint, DigestHex, SpecificationDigest
 
 _DIGEST = "0" * 64
 _EXPECTED_TABLE_COUNT = 10

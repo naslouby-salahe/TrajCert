@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from trajcert.provenance import EnvironmentDigest
 from trajcert.reporting.source_data import figure_source_descriptors, table_source_descriptors
 from trajcert.schemas import EnvironmentReproducibilityRecord
-from trajcert.types import DependencyAuthority
+from trajcert.types import DependencyAuthority, EnvironmentDigest
 
 
 def test_uv_lock_is_the_only_dependency_lock_authority() -> None:
@@ -17,7 +16,7 @@ def test_uv_lock_is_the_only_dependency_lock_authority() -> None:
 
 def test_reproducibility_record_truthfully_represents_non_container_execution() -> None:
     record = EnvironmentReproducibilityRecord(
-        dependency_authority=DependencyAuthority("uv.lock"),
+        dependency_authority=DependencyAuthority.UV_LOCK,
         dependency_lock_path=Path("uv.lock"),
         environment_lock_digest=EnvironmentDigest("0" * 64),
     )

@@ -32,6 +32,7 @@ from trajcert.storage import atomic_write_bytes
 from trajcert.types import (
     ColumnName,
     FacetLabel,
+    FigureTitle,
     GridColumnCount,
     PanelCount,
     PlotValue,
@@ -166,7 +167,7 @@ def _partition_coherence(table: pa.Table) -> Figure:
         )
         ys = tuple(_required_float(row, PublicationColumn.PARTITION_BAND_COUNT) for row in selected)
         _set_limits(ax, xs, ys)
-        _set_title(ax, str(law))
+        _set_title(ax, FigureTitle(str(law)))
         for row in selected:
             lower = _required_float(row, PublicationColumn.RISK_LOWER)
             upper = _required_float(row, PublicationColumn.RISK_UPPER)
@@ -197,7 +198,7 @@ def _timing_value(table: pa.Table) -> Figure:
         xs = tuple(_required_float(row, PublicationColumn.DELTA_TAU) for row in selected)
         ys = tuple(_required_float(row, PublicationColumn.BOUND_GAIN) for row in selected)
         _set_limits(ax, (*xs, 0.0), ys)
-        _set_title(ax, f"{FigureLabel.RHO_OFFSET_PREFIX}{facet}")
+        _set_title(ax, FigureTitle(f"{FigureLabel.RHO_OFFSET_PREFIX}{facet}"))
         ax.axvline(0.0, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
         _scatter_markers(ax, xs, ys)
     _main_title(figure, FigureLabel.EXACT_TIMING_VALUE)
@@ -362,7 +363,7 @@ def _rho_sensitivity_law(ax: Axes, table: pa.Table, law: FacetLabel) -> None:
         if (value := _optional_float(row, PublicationColumn.RISK_UPPER)) is not None
     )
     _set_limits(ax, xs, finite_ys or (0.0, 1.0))
-    _set_title(ax, str(law))
+    _set_title(ax, FigureTitle(str(law)))
     for partition in sorted(
         {_required_facet_label(row, PublicationColumn.PARTITION_NAME) for row in rows}
     ):
@@ -410,7 +411,7 @@ def _failure_boundaries(table: pa.Table) -> Figure:
         xs = tuple(float(index) for index in range(len(rows)))
         ys = tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in rows)
         _set_limits(ax, xs, ys)
-        _set_title(ax, str(axis))
+        _set_title(ax, FigureTitle(str(axis)))
         ax.plot(xs, ys, color=FigureColor.STROKE, linewidth=1.5)
         for x, y in zip(xs, ys, strict=True):
             _circle(ax, x, y)
@@ -613,11 +614,11 @@ def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, Plo
     return lower - pad, upper + pad
 
 
-def _set_title(ax: Axes, title: str) -> None: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+def _set_title(ax: Axes, title: FigureTitle | FigureLabel) -> None:
     ax.set_title(title, fontsize=13, color=FigureColor.STROKE)
 
 
-def _main_title(figure: Figure, title: str) -> None: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+def _main_title(figure: Figure, title: FigureTitle | FigureLabel) -> None:
     figure.suptitle(title, fontsize=22, color=FigureColor.STROKE)
 
 

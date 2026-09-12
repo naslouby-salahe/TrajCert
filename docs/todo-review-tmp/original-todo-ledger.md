@@ -1,0 +1,21 @@
+# Original TODO ledger
+
+Source: deleted and modified lines in `git diff --unified=0 -- src/trajcert`, reviewed
+against both `HEAD` and the current tree. Repeated, verbatim per-item markers in one
+literal collection are represented by their complete original line ranges.
+
+| Original location and markers | Current implementation and assessment | Status / verification |
+|---|---|---|
+| `config.py:78-82, 788, 818, 855` — YAML primitives, raw merge map, and `statistics` string key | YAML is an external deserialization boundary. `RawYamlValue` is coerced immediately and Pydantic validates the domain configuration; the mapping is only used to merge serialized config documents. `statistics` is a serialization/config key, not an internal status/mode. | `CORRECTLY_FIXED`, `VERIFIED` by architecture and config tests. |
+| `constants.py:8-31` — seed grammar, partition labels, endpoint count, config paths, and all numerical search controls | Partition labels are `PartitionLabel`; config filenames are `ConfigFile`; seed grammar is `SeedMaterialGrammar`; the old forwarding seed constants were removed in this audit. Endpoint *selection* reads `active_config.method.endpoint_band_count`; `partition_name` recognizes the intrinsic one-band endpoint definition and remains a pure domain function. Numerical policies are validated config fields. Mathematical invariants remain constants. | `CORRECTLY_FIXED`, `VERIFIED` by config, partition, projection, safety, determinism, and constants tests. |
+| `data/real_trajectories.py:37-135, 267-328` — DOI, release files/digest, 12 devices, raw/identity/schema columns, named CSV columns, and primitive row coercions | Complete dataset contract is `RealTrajectoryDatasetConfig` loaded from YAML, with semantic aliases and containment validation. Ingestion obtains one typed contract, passes its columns to Polars at the boundary, and constructs typed events. No deleted collection was lost. | `CORRECTLY_FIXED`, `VERIFIED` by real-trajectory/preprocessing/workflow tests. |
+| `experiments/anytime.py:878, 1416`; `dispatch.py:620`; `plan.py:419` | Generated law text retains `LawName`; pooled stratum uses `RealTrajectoryStratumKind.POOLED` end-to-end; coordinate grammar is centralized. | `CORRECTLY_FIXED`, `VERIFIED` by planning/status/real-trajectory tests. |
+| `experiments/models.py:28-29` | Flat failure aliases were replaced with the structured `FailureDiagnostic` record using central semantic aliases. | `CORRECTLY_FIXED`, `VERIFIED` by runner/status/resume tests. |
+| `paths.py:24-33, 215-217, 313-340` | Dynamic slugs and tokens remain semantic aliases because they are generated/open-ended. Fixed workspace components, path grammar, and artifact names are local closed enums. Callers use those values directly. | `CORRECTLY_FIXED`, `VERIFIED` by paths/artifact-layout tests. |
+| `provenance.py:49-70, 142-144, 281-282`; `storage.py:22-29, 173` | Generated identifiers/digests moved to `types.py`; closed coordinate names/grammar are enums. JSON mapping is a named serialization-boundary type. No enum/string round trip remains in the modified paths. | `CORRECTLY_FIXED`, `VERIFIED` by provenance/storage/schema tests. |
+| `reporting/export.py:65,104,311`; `tables.py:42-43,134`; `figures.py:616,620`; `publication_rows.py:100-102,790`; `publication_sources.py` | Closed export/path labels use enums. Presentation functions retain explicit open rendering text types only where titles/TeX/table cells are external output. Compatibility and safety regimes are a union of their real enums, rather than `RegimeName(str)`. | `CORRECTLY_FIXED`, `VERIFIED` by reporting tests. |
+| `skeleton.py:22-59` | The prior literal leaves are completely represented by `ProjectSummaryLeaf`; skeleton iteration wires every member and `.gitkeep` is `SkeletonFile.GITKEEP`. | `CORRECTLY_FIXED`, `VERIFIED` by artifact-layout tests. |
+| `telemetry.py:27,29`; `types.py:12-37,148,152,371-375` | Closed telemetry labels are enums. The remaining aliases are open identifiers, diagnostics, dynamic labels, or external serialization data; they must not be falsely converted into closed enums. | `ANALYZED`, `CORRECTLY_FIXED`, `VERIFIED` by source audit and type tests. |
+
+Every deleted marker is accounted for by one of the complete source ranges above; none
+is merely removed to hide unfinished work.

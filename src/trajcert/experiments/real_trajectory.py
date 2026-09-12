@@ -15,7 +15,6 @@ from trajcert.experiments.solver_validation import SolverOracleComparison
 from trajcert.math.information import observed_timing_information
 from trajcert.math.safety import assess_safety_geometry
 from trajcert.math.solver import solve_hidden_mass_interval
-from trajcert.provenance import VariantName
 from trajcert.types import (
     AgeUnit,
     BandCount,
@@ -38,6 +37,7 @@ from trajcert.types import (
     ScientificState,
     SensitivityBudget,
     ToleranceValue,
+    VariantName,
 )
 
 

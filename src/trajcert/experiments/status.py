@@ -18,8 +18,15 @@ from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.runner import (
     dependency_block_reason,
 )
-from trajcert.storage import SemanticCellKey, read_model
-from trajcert.types import Count, DomainModel, ExperimentName, PublicExecutionState, ReasonCode
+from trajcert.storage import read_model
+from trajcert.types import (
+    Count,
+    DomainModel,
+    ExperimentName,
+    PublicExecutionState,
+    ReasonCode,
+    SemanticCellKey,
+)
 
 
 class CellStatus(DomainModel):

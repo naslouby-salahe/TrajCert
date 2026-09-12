@@ -10,6 +10,7 @@ import pyarrow as pa
 
 from trajcert.config import active_config
 from trajcert.exceptions import InvalidScientificDataError
+from trajcert.paths import PublicationExtension
 from trajcert.reporting.publication_sources import PublicationColumn
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
@@ -39,8 +40,8 @@ def render_table(source: VerifiedSourceData, destination_directory: Path) -> Tab
     if source.descriptor.source_role is not PublicationSourceRole.TABLE:
         raise InvalidScientificDataError("table renderer requires a table source descriptor")
     basename = source.descriptor.source_path.stem
-    csv_path = destination_directory / f"{basename}.csv" #TODO: should be enums not hardcoded strings
-    tex_path = destination_directory / f"{basename}.tex" #TODO: should be enums not hardcoded strings
+    csv_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.CSV}")
+    tex_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.TEX}")
     csv_digest = atomic_write_bytes(csv_path, _csv_payload(source.table))
     tex_digest = atomic_write_bytes(tex_path, _tex_payload(source.table))
     return TableRenderResult(
@@ -131,5 +132,5 @@ _TEX_ESCAPE_MAP = {
 }
 
 
-def _escape_tex(value: str) -> str: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+def _escape_tex(value: str) -> str:
     return "".join(_TEX_ESCAPE_MAP.get(character, character) for character in value)

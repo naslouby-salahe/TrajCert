@@ -34,9 +34,8 @@ from trajcert.experiments.models import (
     CellRunOutcome,
     DependencyReadiness,
     ExecutionContext,
+    FailureDiagnostic,
     FailureRecord,
-    FailureTraceback,
-    FailureType,
     RunningRecord,
 )
 from trajcert.experiments.plan import PlannedCell
@@ -48,17 +47,23 @@ from trajcert.storage import (
 )
 from trajcert.telemetry import set_current_cell_key
 from trajcert.types import (
+    ExceptionClassName,
     ExperimentName,
     FailureMessage,
     PublicExecutionState,
     ReasonCode,
     SeedCount,
+    TracebackText,
 )
 
 
-def _failure_traceback(exc: BaseException) -> FailureTraceback:
+def _failure_diagnostic(exc: BaseException) -> FailureDiagnostic:
     formatted = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-    return FailureTraceback(formatted)
+    return FailureDiagnostic(
+        exception_class=ExceptionClassName(type(exc).__name__),
+        message=FailureMessage(str(exc)),
+        traceback=TracebackText(formatted),
+    )
 
 
 def run_cell(
@@ -131,9 +136,7 @@ def run_cell(
             semantic_cell_key=cell.identity.semantic_cell_key,
             plan_digest=context.plan_digest,
             dependency_fingerprint=context.dependency_fingerprint,
-            failure_type=FailureType(type(exc).__name__),
-            message=FailureMessage(str(exc)),
-            traceback=_failure_traceback(exc),
+            diagnostic=_failure_diagnostic(exc),
             execution_state=PublicExecutionState.INVALID,
         )
         _ = atomic_write_model(failure_path, failure)
@@ -150,9 +153,7 @@ def run_cell(
             semantic_cell_key=cell.identity.semantic_cell_key,
             plan_digest=context.plan_digest,
             dependency_fingerprint=context.dependency_fingerprint,
-            failure_type=FailureType(type(exc).__name__),
-            message=FailureMessage(str(exc)),
-            traceback=_failure_traceback(exc),
+            diagnostic=_failure_diagnostic(exc),
             execution_state=PublicExecutionState.FAILED,
         )
         _ = atomic_write_model(failure_path, failure)

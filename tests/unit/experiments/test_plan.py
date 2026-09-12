@@ -15,10 +15,8 @@ from trajcert.provenance import (
     SemanticCellIdentity,
     SemanticCoordinates,
     VariantCoordinate,
-    VariantName,
 )
-from trajcert.storage import PlanDigest
-from trajcert.types import EvidenceClass, ExperimentName, ReasonCode
+from trajcert.types import EvidenceClass, ExperimentName, PlanDigest, ReasonCode, VariantName
 
 _EXPECTED_REGISTRY_TOTAL = 1738
 _EXPECTED_SCALING_CELL_COUNT = 2

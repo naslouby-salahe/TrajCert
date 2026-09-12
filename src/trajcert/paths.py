@@ -5,32 +5,47 @@ import sys
 from enum import StrEnum
 from math import isnan
 from pathlib import Path
-from typing import NewType
 
 from trajcert.config import active_config
 from trajcert.exceptions import SerializationError
 from trajcert.types import (
     ArtifactFileName,
     BatchIndex,
+    CoordinateName,
+    CoordinateToken,
     DecimalCoefficient,
     DecimalDigits,
+    ExperimentSlug,
     FixedNotationExponent,
     NumericSign,
     PathCoordinateValue,
 )
 
-_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
+_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"  # TODO: should be enum
 
-ExperimentSlug = NewType("ExperimentSlug", str) #TODO: convert to enum
-CoordinateName = NewType("CoordinateName", str) #TODO: convert to enum
-CoordinateToken = NewType("CoordinateToken", str) #TODO: convert to enum
+class WorkspacePathComponent(StrEnum):
+    OUTPUTS = "outputs"
+    RESULTS = "results"
+    ARTIFACTS = "artifacts"
+    EXPERIMENTS = "experiments"
+    PROJECT_SUMMARY = "project_summary"
+    PREPROCESSING = "preprocessing"
+    CACHE = "cache"
 
-OUTPUTS_ROOT = Path("outputs") #TODO: should be enums not hardcoded strings
-RESULTS_ROOT = Path("results") #TODO: should be enums not hardcoded strings
-ARTIFACTS_ROOT = OUTPUTS_ROOT / "artifacts" #TODO: should be enums not hardcoded strings
-EXPERIMENTS_ROOT = OUTPUTS_ROOT / "experiments" #TODO: should be enums not hardcoded strings
-RESULTS_EXPERIMENTS_ROOT = RESULTS_ROOT / "experiments" #TODO: should be enums not hardcoded strings
-PROJECT_SUMMARY_ROOT = RESULTS_ROOT / "project_summary" #TODO: should be enums not hardcoded strings
+
+class PathSyntax(StrEnum):
+    COORDINATE_ASSIGNMENT = "="
+    CHECKPOINT_BATCH_PREFIX = "batch_"
+    CHECKPOINT_RESULT_SUFFIX = "_result"
+    JSON_EXTENSION = ".json"
+
+
+OUTPUTS_ROOT = Path(WorkspacePathComponent.OUTPUTS)
+RESULTS_ROOT = Path(WorkspacePathComponent.RESULTS)
+ARTIFACTS_ROOT = OUTPUTS_ROOT / WorkspacePathComponent.ARTIFACTS
+EXPERIMENTS_ROOT = OUTPUTS_ROOT / WorkspacePathComponent.EXPERIMENTS
+RESULTS_EXPERIMENTS_ROOT = RESULTS_ROOT / WorkspacePathComponent.EXPERIMENTS
+PROJECT_SUMMARY_ROOT = RESULTS_ROOT / WorkspacePathComponent.PROJECT_SUMMARY
 
 
 class PublicationLeaf(StrEnum):
@@ -193,6 +208,26 @@ class ResultsLeaf(StrEnum):
     REPRODUCIBILITY = "reproducibility"
 
 
+class ProjectSummaryLeaf(StrEnum):
+    METRICS_PRIMARY = "metrics/primary"
+    METRICS_SUMMARY = "metrics/summary"
+    STATISTICS_COMPARISONS = "statistics/comparisons"
+    STATISTICS_CONFIDENCE_INTERVALS = "statistics/confidence_intervals"
+    STATISTICS_EFFECTS = "statistics/effects"
+    STATISTICS_MULTIPLICITY = "statistics/multiplicity"
+    REPRODUCIBILITY_CONFIGURATION = "reproducibility/configuration"
+    REPRODUCIBILITY_DATASETS = "reproducibility/datasets"
+    REPRODUCIBILITY_SEEDS = "reproducibility/seeds"
+    REPRODUCIBILITY_SOFTWARE = "reproducibility/software"
+    REPRODUCIBILITY_EVIDENCE = "reproducibility/evidence"
+    SOURCE_DATA_FIGURES = "source_data/figures"
+    SOURCE_DATA_TABLES = "source_data/tables"
+
+
+class SkeletonFile(StrEnum):
+    GITKEEP = ".gitkeep"
+
+
 def long_path_safe(path: Path) -> Path:
     if sys.platform != "win32":
         return path
@@ -212,9 +247,9 @@ def fsync_directory(directory: Path) -> None:
         os.close(descriptor)
 
 
-def semantic_slug(value: str) -> CoordinateToken: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+def semantic_slug(value: str) -> CoordinateToken:
     lowered = value.lower()
-    output: list[str] = [] #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    output: list[str] = []
     pending_separator = False
     for character in lowered:
         if character.isascii() and character.isalnum():
@@ -310,8 +345,10 @@ def artifact_path(directory: Path, artifact: ArtifactFile) -> Path:
 
 
 def checkpoint_batch_file(batch_index: BatchIndex, *, result: bool = False) -> ArtifactFileName:
-    suffix = "_result" if result else "" #TODO: should be enums not hardcoded strings
-    return ArtifactFileName(f"batch_{batch_index}{suffix}.json") #TODO: should be enums not hardcoded strings
+    suffix = PathSyntax.CHECKPOINT_RESULT_SUFFIX if result else ""
+    return ArtifactFileName(
+        f"{PathSyntax.CHECKPOINT_BATCH_PREFIX}{batch_index}{suffix}{PathSyntax.JSON_EXTENSION}"
+    )
 
 
 def plan_artifact_path(artifact: PlanArtifactFile) -> Path:
@@ -319,7 +356,7 @@ def plan_artifact_path(artifact: PlanArtifactFile) -> Path:
 
 
 def preprocessing_leaf(leaf: PreprocessingLeaf) -> Path:
-    return OUTPUTS_ROOT / "preprocessing" / Path(leaf) #TODO: should be enums not hardcoded strings
+    return OUTPUTS_ROOT / WorkspacePathComponent.PREPROCESSING / Path(leaf)
 
 
 def shared_artifact_path(category: SharedArtifactCategory) -> Path:
@@ -327,7 +364,7 @@ def shared_artifact_path(category: SharedArtifactCategory) -> Path:
 
 
 def cache_path(category: CacheCategory) -> Path:
-    return OUTPUTS_ROOT / "cache" / Path(category) #TODO: should be enums not hardcoded strings
+    return OUTPUTS_ROOT / WorkspacePathComponent.CACHE / Path(category)
 
 
 def semantic_cell_path(
@@ -337,5 +374,5 @@ def semantic_cell_path(
 ) -> Path:
     path = experiment_leaf(experiment_slug, leaf)
     for name, token in coordinates:
-        path = path / f"{name}={token}" #TODO: should be enums not hardcoded strings
+        path = path / f"{name}{PathSyntax.COORDINATE_ASSIGNMENT}{token}"
     return path

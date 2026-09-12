@@ -1,73 +1,53 @@
 from __future__ import annotations
 
-from enum import StrEnum
 from functools import cache
 from hashlib import sha256
 from pathlib import Path
-from typing import NewType
 
 from pydantic import field_serializer, field_validator
 
 from trajcert.experiments.failure_boundaries import FailureBoundaryAxis
-from trajcert.paths import (
-    CoordinateName,
-    CoordinateToken,
-    ExperimentSlug,
-    canonical_number_token,
-    semantic_slug,
-)
-from trajcert.storage import (
-    ArtifactKey,
-    DependencyFingerprint,
-    DigestHex,
-    SemanticCellKey,
-    SpecificationDigest,
-    canonical_model_bytes,
-)
+from trajcert.paths import canonical_number_token, semantic_slug
+from trajcert.storage import canonical_model_bytes
 from trajcert.types import (
     AgeUnit,
     AnytimeConfidenceDelta,
+    ArtifactKey,
+    ArtifactTypeName,
     BandCount,
+    BaselineName,
     CaseIndex,
+    ComparisonPairDisplay,
+    CoordinateGrammar,
+    CoordinateName,
+    CoordinateToken,
     Count,
+    DependencyFingerprint,
+    DigestHex,
     DomainModel,
+    EnvironmentDigest,
     EventCount,
     ExperimentName,
+    ExperimentSlug,
+    FailureBoundaryCoordinateDisplay,
     GammaCoordinate,
     LawName,
+    MethodName,
+    NamedComparison,
     OuterMaxNodes,
     PartitionName,
     Probability,
     RiskBudget,
     RiskOffset,
     SeedIndex,
+    SemanticCellKey,
     SensitivityBudget,
+    SensitivityCoordinateMode,
     SensitivityOffset,
+    SourceIdentityDigest,
+    SpecificationDigest,
+    VariantName,
 )
-
-
-class CoordinateGrammar(StrEnum):
-    ASSIGNMENT = "="
-    COMPARISON_PAIR = " -> "
-    HAND_CASE_PREFIX = "hand-case-"
-    LEGACY_Q_PREFIX = "q="
-    RHO_OFFSET_PREFIX = "rho-offset="
-    TERMINAL_Q1_PREFIX = "q1:"
-    TERMINAL_Q0_SEPARATOR = ",q0:"
-    NEGATIVE_PREFIX = "negative-"
-    NONNEGATIVE_PREFIX = "nonnegative-"
-
-
-MethodName = NewType("MethodName", str) #TODO: convert to enum
-BaselineName = NewType("BaselineName", str) #TODO: convert to enum
-FailureBoundaryCoordinateDisplay = NewType("FailureBoundaryCoordinateDisplay", str) #TODO: convert to enum
-SensitivityCoordinateMode = NewType("SensitivityCoordinateMode", str) #TODO: convert to enum
-VariantName = NewType("VariantName", str) #TODO: convert to enum
-ArtifactTypeName = NewType("ArtifactTypeName", str) #TODO: convert to enum
-EnvironmentDigest = NewType("EnvironmentDigest", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-SourceIdentityDigest = NewType("SourceIdentityDigest", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-NamedComparison = NewType("NamedComparison", str) #TODO: convert to enum
-ComparisonPairDisplay = NewType("ComparisonPairDisplay", str) #TODO: convert to enum
 
 
 class ComparisonPair(DomainModel):
@@ -104,30 +84,34 @@ class FailureBoundaryCoordinate(DomainModel):
         axis = self.axis
         if axis is FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY:
             return FailureBoundaryCoordinateDisplay(
-                f"{axis.value}={CoordinateGrammar.TERMINAL_Q1_PREFIX}{self.q1}{CoordinateGrammar.TERMINAL_Q0_SEPARATOR}{self.q0}"
+                f"{axis}{CoordinateGrammar.ASSIGNMENT}{CoordinateGrammar.TERMINAL_Q1_PREFIX}{self.q1}{CoordinateGrammar.TERMINAL_Q0_SEPARATOR}{self.q0}"
             )
         if axis is FailureBoundaryAxis.RISK_OFFSET:
             if self.finite_level is None:
                 raise ValueError("risk-offset coordinate is missing its level")
             numeric = float(self.finite_level)
-            prefix = "negative" if numeric < 0.0 else "nonnegative"
+            prefix = (
+                CoordinateGrammar.NEGATIVE_PREFIX
+                if numeric < 0.0
+                else CoordinateGrammar.NONNEGATIVE_PREFIX
+            )
             return FailureBoundaryCoordinateDisplay(
-                f"{axis.value}{CoordinateGrammar.ASSIGNMENT}{prefix}-{abs(numeric)}"
+                f"{axis}{CoordinateGrammar.ASSIGNMENT}{prefix}{abs(numeric)}"
             )
         if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
             return FailureBoundaryCoordinateDisplay(
-                f"{axis.value}{CoordinateGrammar.ASSIGNMENT}{self.node_count}"
+                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.node_count}"
             )
         if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
             return FailureBoundaryCoordinateDisplay(
-                f"{axis.value}{CoordinateGrammar.ASSIGNMENT}{self.event_count}"
+                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.event_count}"
             )
         if axis is FailureBoundaryAxis.PATH_RESOLUTION:
             return FailureBoundaryCoordinateDisplay(
-                f"{axis.value}{CoordinateGrammar.ASSIGNMENT}{self.band_count}"
+                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.band_count}"
             )
         return FailureBoundaryCoordinateDisplay(
-            f"{axis.value}{CoordinateGrammar.ASSIGNMENT}{self.finite_level}"
+            f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.finite_level}"
         )
 
 
@@ -139,9 +123,9 @@ class VariantCoordinate(DomainModel):
     @property
     def display(self) -> VariantName:
         if self.q is not None:
-            return VariantName(f"q={self.q}") #TODO: should be enums not hardcoded strings
+            return VariantName(f"{CoordinateGrammar.LEGACY_Q_PREFIX}{self.q}")
         if self.hand_case_index is not None:
-            return VariantName(f"hand-case-{self.hand_case_index:02d}") #TODO: should be enums not hardcoded strings
+            return VariantName(f"{CoordinateGrammar.HAND_CASE_PREFIX}{self.hand_case_index:02d}")
         if self.name is None:
             raise ValueError("variant coordinate is missing its payload")
         return VariantName(self.name)
@@ -260,61 +244,61 @@ class SemanticCellIdentity(DomainModel):
         values: list[tuple[CoordinateName, CoordinateToken]] = []
         coordinates = self.coordinates
         for name, value in (
-            ("law", coordinates.synthetic_law_name),
-            ("partition", coordinates.partition_name),
+            (CoordinateName.LAW, coordinates.synthetic_law_name),
+            (CoordinateName.PARTITION, coordinates.partition_name),
             (
-                "comparison",
+                CoordinateName.COMPARISON,
                 None
                 if coordinates.comparison_pair_name is None
                 else coordinates.comparison_pair_name.display,
             ),
-            ("method", coordinates.method_name),
-            ("baseline", coordinates.baseline_name),
+            (CoordinateName.METHOD, coordinates.method_name),
+            (CoordinateName.BASELINE, coordinates.baseline_name),
             (
-                "variant",
+                CoordinateName.VARIANT,
                 None if coordinates.variant_name is None else coordinates.variant_name.display,
             ),
         ):
             if value is not None:
-                values.append((CoordinateName(name), semantic_slug(value)))
+                values.append((name, semantic_slug(value)))
         for name, value in (
-            ("rho", coordinates.rho), #TODO: should be enums not hardcoded strings
-            ("beta", coordinates.beta), #TODO: should be enums not hardcoded strings
-            ("delta", coordinates.delta),
-            ("gamma", coordinates.gamma),
-            ("horizon", coordinates.censoring_horizon_seconds),
+            (CoordinateName.RHO, coordinates.rho),
+            (CoordinateName.BETA, coordinates.beta),
+            (CoordinateName.DELTA, coordinates.delta),
+            (CoordinateName.GAMMA, coordinates.gamma),
+            (CoordinateName.HORIZON, coordinates.censoring_horizon_seconds),
         ):
             if value is not None:
-                values.append((CoordinateName(name), canonical_number_token(value)))
+                values.append((name, canonical_number_token(value)))
         if coordinates.pattern_mixture_c is not None:
             values.append(
                 (
-                    CoordinateName("pattern-mixture-c"),
+                    CoordinateName.PATTERN_MIXTURE_C,
                     CoordinateToken(str(coordinates.pattern_mixture_c)),
                 )
             )
         if coordinates.failure_boundary_axis_and_level is not None:
             values.append(
                 (
-                    CoordinateName("failure-boundary"),
+                    CoordinateName.FAILURE_BOUNDARY,
                     semantic_slug(coordinates.failure_boundary_axis_and_level.display),
                 )
             )
         if coordinates.scaling_band_count is not None:
             values.append(
                 (
-                    CoordinateName("k"),
+                    CoordinateName.BAND_COUNT,
                     CoordinateToken(str(coordinates.scaling_band_count)),
                 )
             )
         if coordinates.seed_index is not None:
             values.append(
-                (CoordinateName("seed-index"), CoordinateToken(str(coordinates.seed_index)))
+                (CoordinateName.SEED_INDEX, CoordinateToken(str(coordinates.seed_index)))
             )
         if coordinates.sensitivity_coordinate is not None:
             values.append(
                 (
-                    CoordinateName("sensitivity"),
+                    CoordinateName.SENSITIVITY,
                     semantic_slug(coordinates.sensitivity_coordinate.display),
                 )
             )

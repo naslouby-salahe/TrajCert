@@ -33,7 +33,7 @@ from trajcert.types import (
     ToleranceValue,
 )
 
-_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"
+_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"  # TODO: should be enum
 
 
 class OracleBracket(DomainModel):

@@ -35,13 +35,11 @@ from trajcert.reporting.publication_rows import (
     PartitionTimingRow,
     PopulationFigureEvidence,
     PopulationUtilitySourceEvidence,
-    RegimeName,
     RhoUtilityMetricName,
     RhoUtilityRow,
     SafetySourceEvidence,
     SameEndpointFigureEvidence,
     SharpnessSourceEvidence,
-    TheoremName,
     TheoremValidationObservation,
     compatibility_safety_evidence,
     compatibility_safety_rows,
@@ -63,28 +61,29 @@ from trajcert.schemas import PublicationSourceDescriptor, PublicationSourceRole
 from trajcert.storage import (
     ArtifactChecksum,
     ArtifactIndexEntry,
-    ArtifactKey,
     CellArtifactIndex,
     CompletionRecord,
-    DependencyFingerprint,
-    DigestHex,
-    PlanDigest,
-    SemanticCellKey,
-    SpecificationDigest,
     atomic_write_model,
     file_digest,
 )
 from trajcert.types import (
+    ArtifactKey,
     CompatibilityRegime,
+    DependencyFingerprint,
+    DigestHex,
     DomainModel,
     LawKey,
     LawName,
     PartitionName,
+    PlanDigest,
     PositiveInt,
     ReasonCode,
     SafetyCaseName,
     SafetyRegime,
+    SemanticCellKey,
     SensitivityBudget,
+    SpecificationDigest,
+    TheoremName,
 )
 
 
@@ -463,15 +462,15 @@ def test_compatibility_safety_evidence_combines_sharpness_and_safety() -> None:
     sharpness_row, safety_row = evidence
     assert sharpness_row.rho == pytest.approx(0.05)
     assert sharpness_row.beta is None
-    assert sharpness_row.expected_regime == RegimeName("COMPATIBLE_INTERVAL")
-    assert sharpness_row.observed_regime == RegimeName("COMPATIBLE_INTERVAL")
+    assert sharpness_row.expected_regime is CompatibilityRegime.COMPATIBLE_INTERVAL
+    assert sharpness_row.observed_regime is CompatibilityRegime.COMPATIBLE_INTERVAL
     assert sharpness_row.oracle_error == pytest.approx(0.02)
     assert sharpness_row.passed is True
     assert safety_row.rho is None
     assert safety_row.beta == pytest.approx(0.05)
     assert safety_row.rho_star == pytest.approx(0.03)
-    assert safety_row.expected_regime == RegimeName("INTERIOR_SAFETY_FRONTIER")
-    assert safety_row.observed_regime == RegimeName("INTERIOR_SAFETY_FRONTIER")
+    assert safety_row.expected_regime is SafetyRegime.INTERIOR_SAFETY_FRONTIER
+    assert safety_row.observed_regime is SafetyRegime.INTERIOR_SAFETY_FRONTIER
     assert safety_row.oracle_error == pytest.approx(0.0)
 
 
@@ -545,8 +544,8 @@ def test_compatibility_safety_rows_maps_evidence_fields() -> None:
         risk_lower=0.1,
         risk_upper=0.4,
         rho_star=None,
-        expected_regime=RegimeName("COMPATIBLE_INTERVAL"),
-        observed_regime=RegimeName("COMPATIBLE_INTERVAL"),
+        expected_regime=CompatibilityRegime.COMPATIBLE_INTERVAL,
+        observed_regime=CompatibilityRegime.COMPATIBLE_INTERVAL,
         oracle_error=0.02,
         passed=True,
     )
@@ -556,7 +555,7 @@ def test_compatibility_safety_rows_maps_evidence_fields() -> None:
     assert row.law_name == LawName("law")
     assert row.rho == pytest.approx(0.05)
     assert row.beta is None
-    assert row.expected_regime == RegimeName("COMPATIBLE_INTERVAL")
+    assert row.expected_regime is CompatibilityRegime.COMPATIBLE_INTERVAL
     assert row.oracle_error == pytest.approx(0.02)
     assert row.passed is True
 

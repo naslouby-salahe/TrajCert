@@ -6,7 +6,6 @@ import pyarrow as pa
 import pytest
 
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.paths import ExperimentSlug
 from trajcert.reporting.figures import FigureRenderResult, render_figure, render_figures
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
@@ -16,13 +15,16 @@ from trajcert.schemas import (
     VerifiedSourceLineage,
 )
 from trajcert.storage import (
-    ArtifactKey,
-    DependencyFingerprint,
-    DigestHex,
-    SpecificationDigest,
     file_digest,
 )
-from trajcert.types import ColumnName
+from trajcert.types import (
+    ArtifactKey,
+    ColumnName,
+    DependencyFingerprint,
+    DigestHex,
+    ExperimentSlug,
+    SpecificationDigest,
+)
 
 _DIGEST = "0" * 64
 _TWO_SOURCES = 2

@@ -7,7 +7,7 @@ from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
 from math import isfinite
 from pathlib import Path
-from typing import NewType, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, JsonValue, ValidationError
 
@@ -19,14 +19,17 @@ from trajcert.paths import (
     fsync_directory,
     long_path_safe,
 )
-from trajcert.types import DomainModel, SeedCount
-
-ArtifactKey = NewType("ArtifactKey", str) #TODO: convert to enum
-DigestHex = NewType("DigestHex", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-SemanticCellKey = NewType("SemanticCellKey", str) #TODO: convert to enum
-PlanDigest = NewType("PlanDigest", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-DependencyFingerprint = NewType("DependencyFingerprint", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-SpecificationDigest = NewType("SpecificationDigest", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+from trajcert.types import (
+    ArtifactKey,
+    DependencyFingerprint,
+    DigestHex,
+    DomainModel,
+    JsonObject,
+    PlanDigest,
+    SeedCount,
+    SemanticCellKey,
+    SpecificationDigest,
+)
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 _CHECKSUM_CHUNK_BYTES = 1 << 20
@@ -170,7 +173,7 @@ def _canonical_json_number(value: int | float) -> str:
     return canonical_number_token(value)
 
 
-def _canonical_json_object(value: Mapping[str, JsonValue]) -> str: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+def _canonical_json_object(value: JsonObject) -> str:
     entries = [f"{_canonical_json(key)}:{_canonical_json(value[key])}" for key in sorted(value)]
     return "{" + ",".join(entries) + "}"
 

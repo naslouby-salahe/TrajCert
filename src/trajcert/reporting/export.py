@@ -28,7 +28,6 @@ from trajcert.paths import (
     RESULTS_EXPERIMENTS_ROOT,
     RESULTS_ROOT,
     ArtifactFile,
-    CoordinateToken,
     ExperimentLeaf,
     PublicationExtension,
     ResultsExperimentLeaf,
@@ -37,7 +36,6 @@ from trajcert.paths import (
     results_publication_leaf,
     semantic_slug,
 )
-from trajcert.provenance import EnvironmentDigest
 from trajcert.reporting.source_data import (
     VerifiedSourceData,
     all_publication_source_descriptors,
@@ -53,20 +51,26 @@ from trajcert.schemas import (
 )
 from trajcert.storage import (
     CompletionRecord,
-    DigestHex,
-    PlanDigest,
     atomic_write_model,
     file_digest,
     model_digest,
     read_model,
 )
-from trajcert.types import Count, DependencyAuthority, ExperimentName
+from trajcert.types import (
+    CoordinateToken,
+    Count,
+    DependencyAuthority,
+    DigestHex,
+    EnvironmentDigest,
+    ExperimentName,
+    PlanDigest,
+)
 
-LOCK_PATH = Path("uv.lock") #TODO: use enums instead of hardcoded strings
+LOCK_PATH = Path(DependencyAuthority.UV_LOCK)
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
 _ALLOWED_EXPERIMENT_CHILDREN = frozenset(
-    item.value.split("/", maxsplit=1)[0] for item in ResultsExperimentLeaf
+    item.split("/", maxsplit=1)[0] for item in ResultsExperimentLeaf
 )
 _ALLOWED_PROJECT_CHILDREN = _ALLOWED_EXPERIMENT_CHILDREN
 _TABLE_FORMATS = (PublicationFormat.CSV, PublicationFormat.TEX)
@@ -101,7 +105,7 @@ def export_report(
     with tempfile.TemporaryDirectory(prefix=".trajcert-report-", dir=workspace_root) as temporary:
         temporary_root = Path(temporary)
         if experiment_name is None:
-            staged_target = temporary_root / "results" #TODO: should be enums not hardcoded strings
+            staged_target = temporary_root / RESULTS_ROOT
             final_target = workspace_root / RESULTS_ROOT
             rendered = _render_complete_results_tree(
                 workspace_root,
@@ -308,7 +312,7 @@ def _write_reproducibility(
         configuration_path=PRODUCTION_CONFIG_PATH,
         configuration_sha256=file_digest(config_path),
         environment=EnvironmentReproducibilityRecord(
-            dependency_authority=DependencyAuthority("uv.lock"), #TODO: should be enum not hardcoded string
+            dependency_authority=DependencyAuthority.UV_LOCK,
             dependency_lock_path=LOCK_PATH,
             environment_lock_digest=EnvironmentDigest(file_digest(lock_path)),
         ),

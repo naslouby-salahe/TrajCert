@@ -5,15 +5,20 @@ from pathlib import Path
 
 from trajcert.paths import (
     ExperimentLeaf,
-    ExperimentSlug,
     PublicationSourceFile,
     experiment_leaf,
     semantic_slug,
 )
-from trajcert.provenance import BaselineName, MethodName
 from trajcert.schemas import PublicationSourceDescriptor, PublicationSourceRole
-from trajcert.storage import ArtifactKey
-from trajcert.types import ColumnName, DomainModel, ExperimentName
+from trajcert.types import (
+    ArtifactKey,
+    BaselineName,
+    ColumnName,
+    DomainModel,
+    ExperimentName,
+    ExperimentSlug,
+    MethodName,
+)
 
 
 class PublicationSourceName(StrEnum):

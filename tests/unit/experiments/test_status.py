@@ -14,9 +14,8 @@ from trajcert.experiments.artifacts import (
 from trajcert.experiments.models import (
     DependencyReadiness,
     ExecutionContext,
+    FailureDiagnostic,
     FailureRecord,
-    FailureTraceback,
-    FailureType,
 )
 from trajcert.experiments.plan import PlannedCell
 from trajcert.experiments.status import (
@@ -31,22 +30,24 @@ from trajcert.provenance import (
     VariantCoordinate,
 )
 from trajcert.storage import (
-    ArtifactKey,
     CellArtifactIndex,
     CompletionRecord,
-    DependencyFingerprint,
-    PlanDigest,
-    SemanticCellKey,
-    SpecificationDigest,
     atomic_write_model,
     model_digest,
 )
 from trajcert.types import (
+    ArtifactKey,
+    DependencyFingerprint,
     EvidenceClass,
+    ExceptionClassName,
     ExperimentName,
     FailureMessage,
+    PlanDigest,
     PublicExecutionState,
     ReasonCode,
+    SemanticCellKey,
+    SpecificationDigest,
+    TracebackText,
 )
 
 _EXPERIMENT_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
@@ -167,9 +168,11 @@ def test_inspect_cell_status_failed_with_matching_failure(tmp_path: Path) -> Non
         semantic_cell_key=cell.identity.semantic_cell_key,
         plan_digest=context.plan_digest,
         dependency_fingerprint=context.dependency_fingerprint,
-        failure_type=FailureType("RuntimeError"),
-        message=FailureMessage("boom"),
-        traceback=FailureTraceback("boom"),
+        diagnostic=FailureDiagnostic(
+            exception_class=ExceptionClassName("RuntimeError"),
+            message=FailureMessage("boom"),
+            traceback=TracebackText("boom"),
+        ),
         execution_state=PublicExecutionState.FAILED,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
@@ -185,9 +188,11 @@ def test_inspect_cell_status_invalid_with_data_validation_failure(tmp_path: Path
         semantic_cell_key=cell.identity.semantic_cell_key,
         plan_digest=context.plan_digest,
         dependency_fingerprint=context.dependency_fingerprint,
-        failure_type=FailureType("InvalidProbabilityError"),
-        message=FailureMessage("bad probability"),
-        traceback=FailureTraceback("bad probability"),
+        diagnostic=FailureDiagnostic(
+            exception_class=ExceptionClassName("InvalidProbabilityError"),
+            message=FailureMessage("bad probability"),
+            traceback=TracebackText("bad probability"),
+        ),
         execution_state=PublicExecutionState.INVALID,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)
@@ -212,9 +217,11 @@ def test_inspect_cell_status_ready_when_failure_digest_mismatches(tmp_path: Path
         semantic_cell_key=cell.identity.semantic_cell_key,
         plan_digest=stale.plan_digest,
         dependency_fingerprint=context.dependency_fingerprint,
-        failure_type=FailureType("RuntimeError"),
-        message=FailureMessage("boom"),
-        traceback=FailureTraceback("boom"),
+        diagnostic=FailureDiagnostic(
+            exception_class=ExceptionClassName("RuntimeError"),
+            message=FailureMessage("boom"),
+            traceback=TracebackText("boom"),
+        ),
         execution_state=PublicExecutionState.FAILED,
     )
     _ = atomic_write_model(cell_failure_path(cell, tmp_path), record)

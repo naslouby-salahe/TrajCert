@@ -17,15 +17,13 @@ from trajcert.experiments.artifacts import (
 )
 from trajcert.experiments.plan import build_plan, cells_for_experiment
 from trajcert.experiments.workflows import doctor
-from trajcert.provenance import EnvironmentDigest
 from trajcert.storage import (
     ArtifactIndexEntry,
     CellArtifactIndex,
-    DigestHex,
     atomic_write_model,
     file_digest,
 )
-from trajcert.types import ExperimentName
+from trajcert.types import DigestHex, EnvironmentDigest, ExperimentName
 
 _REPO_ROOT = Path.cwd()
 _INVENTORY_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK

@@ -7,7 +7,7 @@ from typing import Self
 import numpy as np
 from pydantic import model_validator
 
-from trajcert.constants import ENDPOINT_BAND_COUNT, ENDPOINT_PARTITION_NAME
+from trajcert.constants import ENDPOINT_PARTITION_NAME
 from trajcert.exceptions import InvalidPartitionError
 from trajcert.types import BandCount, BandIndex, DomainModel, PartitionName, TerminalHorizon, Vector
 
@@ -99,7 +99,9 @@ def partition_name(band_count: BandCount) -> PartitionName:
     bands = band_count
     if bands <= 0:
         raise InvalidPartitionError("partition band count must be positive")
-    if bands == ENDPOINT_BAND_COUNT:
+    # A one-band partition is intrinsically the endpoint-only partition. Runtime
+    # endpoint selection reads the validated configuration at its orchestration edge.
+    if bands == 1:
         return PartitionName(ENDPOINT_PARTITION_NAME)
     return PartitionName(f"{bands}-band partition")
 

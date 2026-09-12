@@ -27,15 +27,12 @@ from trajcert.experiments.runner import (
     execute_dispatched_cell,
     expected_seed_count,
 )
-from trajcert.provenance import (
-    EnvironmentDigest,
-    dependency_fingerprint,
-)
+from trajcert.provenance import dependency_fingerprint
 from trajcert.storage import (
     file_digest,
     read_model,
 )
-from trajcert.types import ExperimentName
+from trajcert.types import EnvironmentDigest, ExperimentName
 
 _RUNTIME_STREAMS = 2
 _RUNTIME_EVENTS = 200

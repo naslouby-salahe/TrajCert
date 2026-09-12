@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from itertools import product
 from pathlib import Path
-from typing import NewType
 
 import polars as pl
 from pydantic import Field
@@ -46,12 +45,6 @@ from trajcert.math.information import (
 from trajcert.math.safety import assess_safety_geometry
 from trajcert.provenance import (
     SensitivityCoordinate,
-    SensitivityCoordinateMode,
-    VariantName,
-)
-from trajcert.storage import (
-    ArtifactKey,
-    SemanticCellKey,
 )
 from trajcert.types import (
     AbsoluteError,
@@ -59,11 +52,13 @@ from trajcert.types import (
     AcceptanceUpperLimit,
     AgeUnit,
     AnytimeConfidenceDelta,
+    ArtifactKey,
     BandCount,
     CompatibilityRegime,
     ConvergenceGap,
     Count,
     DomainModel,
+    EvidenceFamilyLabel,
     ExperimentName,
     FailureBoundaryLevel,
     FailureMessage,
@@ -75,10 +70,12 @@ from trajcert.types import (
     MedianCount,
     MedianEventCount,
     MemoryMebibytes,
+    MethodDisplayName,
     ObservedStatistic,
     PairedDifferenceValue,
     PartitionName,
     Probability,
+    PublicationRegime,
     RealTrajectoryStratumKind,
     RelativeUnresolvedGain,
     RiskBudget,
@@ -89,17 +86,17 @@ from trajcert.types import (
     ScientificState,
     SearchPredicate,
     SeedIndex,
+    SemanticCellKey,
     SemanticComparisonKey,
     SensitivityBudget,
+    SensitivityCoordinateMode,
     SensitivityOffset,
     SerializedConfigJson,
     StreamCount,
+    TheoremName,
     ToleranceValue,
+    VariantName,
 )
-
-TheoremName = NewType("TheoremName", str) #TODO: convert to enum
-RegimeName = NewType("RegimeName", str) #TODO: convert to enum
-MethodDisplayName = NewType("MethodDisplayName", str) #TODO: convert to enum
 
 
 class RhoUtilityMetricName(StrEnum):
@@ -150,8 +147,8 @@ class CompatibilitySafetyRow(DomainModel):
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
     rho_star: InformationNats | None
-    expected_regime: RegimeName
-    observed_regime: RegimeName
+    expected_regime: PublicationRegime
+    observed_regime: PublicationRegime
     oracle_error: AbsoluteError | None
     passed: SearchPredicate = Field(serialization_alias="pass")
 
@@ -366,8 +363,8 @@ class CompatibilitySafetyEvidence(DomainModel):
     risk_lower: RiskValue | None
     risk_upper: RiskValue | None
     rho_star: InformationNats | None
-    expected_regime: RegimeName
-    observed_regime: RegimeName
+    expected_regime: PublicationRegime
+    observed_regime: PublicationRegime
     oracle_error: AbsoluteError | None
     passed: SearchPredicate
 
@@ -526,7 +523,9 @@ def partition_coherence_figure_rows(
     supplied_population = tuple(
         (item.law_name, item.partition_name) for item in population_evidence
     )
-    _require_exact_family("Figure 1 population", supplied_population, expected_population)
+    _require_exact_family(
+        EvidenceFamilyLabel.FIGURE_ONE_POPULATION, supplied_population, expected_population
+    )
     population_by_key = {(item.law_name, item.partition_name): item for item in population_evidence}
 
     timed_law = LAW_DISPLAY_NAMES[LawKey.SAME_ENDPOINT_WITH_TIMING]
@@ -535,7 +534,7 @@ def partition_coherence_figure_rows(
         (item.law_name, item.partition_name) for item in same_endpoint_evidence
     )
     _require_exact_family(
-        "Figure 1 same-endpoint",
+        EvidenceFamilyLabel.FIGURE_ONE_SAME_ENDPOINT,
         supplied_same_endpoint,
         expected_same_endpoint,
     )
@@ -695,8 +694,8 @@ def compatibility_safety_evidence(
                 risk_lower=None,
                 risk_upper=None,
                 rho_star=result.assessment.safety_frontier,
-                expected_regime=RegimeName(result.expected_regime),
-                observed_regime=RegimeName(result.assessment.regime),
+                expected_regime=result.expected_regime,
+                observed_regime=result.assessment.regime,
                 oracle_error=oracle_error,
                 passed=result.passed,
             )
@@ -746,8 +745,8 @@ def _solver_comparison_evidence(
         risk_lower=comparison.risk_lower,
         risk_upper=comparison.risk_upper,
         rho_star=None,
-        expected_regime=RegimeName(comparison.oracle_regime),
-        observed_regime=RegimeName(comparison.compatibility_regime),
+        expected_regime=comparison.oracle_regime,
+        observed_regime=comparison.compatibility_regime,
         oracle_error=comparison.max_endpoint_error,
         passed=comparison.passed,
     )
@@ -787,7 +786,7 @@ def _partition_timing_row(item: PartitionTimingEvidence) -> PartitionTimingRow:
 
 
 def _require_exact_family[KeyT: Hashable](
-    label: str, #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    label: EvidenceFamilyLabel,
     supplied: tuple[KeyT, ...],
     expected: tuple[KeyT, ...],
 ) -> None:

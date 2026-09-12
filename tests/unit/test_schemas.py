@@ -5,8 +5,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from trajcert.paths import ExperimentSlug
-from trajcert.provenance import EnvironmentDigest
 from trajcert.schemas import (
     EnvironmentReproducibilityRecord,
     PublicationFormat,
@@ -16,13 +14,16 @@ from trajcert.schemas import (
     RenderedPublicationArtifact,
     VerifiedSourceLineage,
 )
-from trajcert.storage import (
+from trajcert.types import (
     ArtifactKey,
+    ColumnName,
+    DependencyAuthority,
     DependencyFingerprint,
     DigestHex,
+    EnvironmentDigest,
+    ExperimentSlug,
     SpecificationDigest,
 )
-from trajcert.types import ColumnName, DependencyAuthority
 
 _HEX_LENGTH = 64
 _HEX_A = "a" * _HEX_LENGTH
@@ -152,7 +153,7 @@ def test_rendered_publication_artifact_constructs() -> None:
 
 def test_environment_reproducibility_record_constructs() -> None:
     record = EnvironmentReproducibilityRecord(
-        dependency_authority=DependencyAuthority("pypi"),
+        dependency_authority=DependencyAuthority.PYPI,
         dependency_lock_path=Path("lock.json"),
         environment_lock_digest=EnvironmentDigest(_HEX_A),
     )
@@ -176,7 +177,7 @@ def test_publication_reproducibility_record_constructs() -> None:
         configuration_path=Path("configs/trajcert.yaml"),
         configuration_sha256=DigestHex(_HEX_A),
         environment=EnvironmentReproducibilityRecord(
-            dependency_authority=DependencyAuthority("pypi"),
+            dependency_authority=DependencyAuthority.PYPI,
             dependency_lock_path=Path("lock.json"),
             environment_lock_digest=EnvironmentDigest(_HEX_B),
         ),

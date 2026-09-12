@@ -2,31 +2,29 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import NewType
 
 from trajcert.experiments.plan import PlannedCell
 from trajcert.storage import (
-    ArtifactKey,
     CellArtifactIndex,
-    DependencyFingerprint,
-    DigestHex,
-    PlanDigest,
-    SemanticCellKey,
-    SpecificationDigest,
 )
 from trajcert.types import (
+    ArtifactKey,
     BatchIndex,
+    DependencyFingerprint,
+    DigestHex,
     DomainModel,
+    ExceptionClassName,
     ExperimentName,
     FailureMessage,
+    PlanDigest,
     PublicExecutionState,
     ReasonCode,
     SeedCount,
     SeedIndex,
+    SemanticCellKey,
+    SpecificationDigest,
+    TracebackText,
 )
-
-FailureType = NewType("FailureType", str) #TODO: convert to enum
-FailureTraceback = NewType("FailureTraceback", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 
 
 class DependencyReadiness(DomainModel):
@@ -54,13 +52,17 @@ class RunningRecord(DomainModel):
     dependency_fingerprint: DependencyFingerprint
 
 
+class FailureDiagnostic(DomainModel):
+    exception_class: ExceptionClassName
+    message: FailureMessage
+    traceback: TracebackText
+
+
 class FailureRecord(DomainModel):
     semantic_cell_key: SemanticCellKey
     plan_digest: PlanDigest
     dependency_fingerprint: DependencyFingerprint
-    failure_type: FailureType
-    message: FailureMessage
-    traceback: FailureTraceback
+    diagnostic: FailureDiagnostic
     execution_state: PublicExecutionState
 
 

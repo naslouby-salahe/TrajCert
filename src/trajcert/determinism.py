@@ -6,15 +6,14 @@ import numpy as np
 
 from trajcert.constants import (
     SEED_DIGEST_BYTES,
-    SEED_FIELD_SEPARATOR,
     SEED_MODULUS,
-    SEED_PREFIX,
 )
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     BandCount,
     LawName,
     SeedIndex,
+    SeedMaterialGrammar,
     SeedNamespace,
     SeedNamespaceRole,
     SeedValue,
@@ -25,7 +24,9 @@ from trajcert.types import (
 def derive_seed(namespace: SeedNamespace, index: SeedIndex) -> SeedValue:
     if index < 0:
         raise InvalidScientificDataError("seed index must be zero-based and nonnegative")
-    material = SEED_FIELD_SEPARATOR.join((SEED_PREFIX, namespace, str(index))).encode("utf-8")
+    material = SeedMaterialGrammar.FIELD_SEPARATOR.join(
+        (SeedMaterialGrammar.PREFIX, namespace, str(index))
+    ).encode("utf-8")
     digest_prefix = sha256(material).digest()[:SEED_DIGEST_BYTES]
     seed = int.from_bytes(digest_prefix, byteorder="big", signed=False) % SEED_MODULUS
     return seed
@@ -43,7 +44,9 @@ def event_stream_namespace(law_name: LawName, band_count: BandCount) -> SeedName
     if band_count <= 0:
         raise InvalidScientificDataError("event-stream band count must be positive")
     return SeedNamespace(
-        f"{SeedNamespaceRole.EVENT_STREAM}{SEED_FIELD_SEPARATOR}law={law_name}{SEED_FIELD_SEPARATOR}K={band_count}"
+        SeedMaterialGrammar.FIELD_SEPARATOR.join(
+            (SeedNamespaceRole.EVENT_STREAM, f"law={law_name}", f"K={band_count}")
+        )
     )
 
 
@@ -64,4 +67,4 @@ def _descriptor_namespace(
         raise InvalidScientificDataError(
             "seed namespace descriptor cannot contain leading or trailing whitespace"
         )
-    return SeedNamespace(f"{role}{SEED_FIELD_SEPARATOR}{descriptor}")
+    return SeedNamespace(f"{role}{SeedMaterialGrammar.FIELD_SEPARATOR}{descriptor}")

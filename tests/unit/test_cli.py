@@ -55,21 +55,21 @@ from trajcert.reporting.source_data import (
 )
 from trajcert.schemas import PublicationSourceDescriptor, VerifiedSourceLineage
 from trajcert.storage import (
-    ArtifactKey,
-    DependencyFingerprint,
-    DigestHex,
-    PlanDigest,
-    SpecificationDigest,
     read_model,
 )
 from trajcert.types import (
+    ArtifactKey,
     CliCommand,
+    DependencyFingerprint,
+    DigestHex,
     EvidenceClass,
     ExperimentName,
     LawKey,
     LawName,
+    PlanDigest,
     PublicExecutionState,
     ReasonCode,
+    SpecificationDigest,
 )
 
 _FIXTURE_COUNT = 6

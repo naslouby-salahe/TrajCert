@@ -30,17 +30,19 @@ from trajcert.experiments.runner import (
     expected_seed_count,
     run_cell,
 )
-from trajcert.provenance import (
-    EnvironmentDigest,
-)
 from trajcert.storage import (
     CellArtifactIndex,
     CompletionRecord,
-    DependencyFingerprint,
     file_digest,
     read_model,
 )
-from trajcert.types import ExperimentName, PublicExecutionState, ReasonCode
+from trajcert.types import (
+    DependencyFingerprint,
+    EnvironmentDigest,
+    ExperimentName,
+    PublicExecutionState,
+    ReasonCode,
+)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SHA256_HEX_LENGTH = 64
@@ -258,8 +260,8 @@ def test_run_cell_failure_and_recovery(
     failure_path = cell_failure_path(inventory_cell, tmp_path)
     assert failure_path.is_file()
     failure = read_model(failure_path, FailureRecord)
-    assert failure.failure_type == "RuntimeError"
-    assert failure.message == "boom"
+    assert failure.diagnostic.exception_class == "RuntimeError"
+    assert failure.diagnostic.message == "boom"
     completion_path = cell_completion_path(inventory_cell, tmp_path)
     assert not completion_path.exists()
 

@@ -62,7 +62,6 @@ from trajcert.paths import (
     RESULTS_ROOT,
     ArtifactFile,
     ExperimentLeaf,
-    ExperimentSlug,
     PlanArtifactFile,
     PreprocessingLeaf,
     RealTrajectoryArtifactFile,
@@ -72,7 +71,7 @@ from trajcert.paths import (
     real_trajectory_preprocessing_path,
     semantic_slug,
 )
-from trajcert.provenance import EnvironmentDigest, dependency_fingerprint
+from trajcert.provenance import dependency_fingerprint
 from trajcert.reporting.export import (
     LOCK_PATH,
     ReportExportResult,
@@ -86,7 +85,7 @@ from trajcert.reporting.source_data import (
     table_source_descriptors,
 )
 from trajcert.reporting.tables import render_table
-from trajcert.storage import SemanticCellKey, atomic_write_model, file_digest
+from trajcert.storage import atomic_write_model, file_digest
 from trajcert.telemetry import (
     ExperimentProgress,
     PreprocessingProgress,
@@ -98,12 +97,15 @@ from trajcert.types import (
     ArtifactFileName,
     Count,
     DomainModel,
+    EnvironmentDigest,
     ExperimentName,
+    ExperimentSlug,
     LawName,
     PublicExecutionState,
     RawDatasetRoot,
     RealTrajectoryDatasetName,
     ReasonCode,
+    SemanticCellKey,
     TimestampSeconds,
 )
 

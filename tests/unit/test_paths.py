@@ -13,10 +13,7 @@ from trajcert.paths import (
     RESULTS_EXPERIMENTS_ROOT,
     RESULTS_ROOT,
     CacheCategory,
-    CoordinateName,
-    CoordinateToken,
     ExperimentLeaf,
-    ExperimentSlug,
     PreprocessingLeaf,
     ResultsExperimentLeaf,
     SharedArtifactCategory,
@@ -30,6 +27,7 @@ from trajcert.paths import (
     semantic_slug,
     shared_artifact_path,
 )
+from trajcert.types import CoordinateName, CoordinateToken, ExperimentSlug
 
 _SLUG_CASES: tuple[tuple[str, str], ...] = (
     ("Hello World!", "hello-world"),

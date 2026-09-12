@@ -8,13 +8,13 @@ from trajcert.experiments.real_trajectory import (
     RealTrajectoryPartitionRequest,
     evaluate_real_trajectory_cell,
 )
-from trajcert.provenance import VariantName
 from trajcert.types import (
     AnnotatorExpertise,
     ClientId,
     HitlIotDeviceType,
     RealTrajectoryStratumKind,
     ScientificState,
+    VariantName,
 )
 
 _SETTINGS = RealTrajectoryNumericSettings(

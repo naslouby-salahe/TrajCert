@@ -19,17 +19,17 @@ from trajcert.experiments.plan import PlannedCell
 from trajcert.provenance import SemanticCellIdentity, SemanticCoordinates, VariantCoordinate
 from trajcert.storage import (
     CompletionRecord,
-    DependencyFingerprint,
-    PlanDigest,
-    SpecificationDigest,
     read_model,
 )
 from trajcert.types import (
+    DependencyFingerprint,
     EvidenceClass,
     ExperimentName,
     PartitionName,
+    PlanDigest,
     PublicExecutionState,
     ReasonCode,
+    SpecificationDigest,
 )
 
 _HAND_CASE_EXPERIMENT = ExperimentName.ANYTIME_IMPLEMENTATION_HAND_CASES

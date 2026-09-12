@@ -25,11 +25,16 @@ from trajcert.types import (
     CaseIndex,
     CategoryIndex,
     CertifiedFractionGain,
+    ClientId,
     CoefficientValue,
     ConfidenceLevel,
     ConfigFieldPath,
     Count,
     CoverageStressCaseName,
+    DatasetChecksumHex,
+    DatasetColumnName,
+    DatasetFilename,
+    DatasetVersionTag,
     DomainModel,
     EventCount,
     EventIndexWidth,
@@ -54,6 +59,7 @@ from trajcert.types import (
     Probability,
     RandomizationCount,
     RawDatasetRoot,
+    RealTrajectoryDatasetName,
     RefinementCandidateCount,
     RefinementStepCount,
     RelativeUnresolvedGain,
@@ -62,6 +68,7 @@ from trajcert.types import (
     RhoValueCount,
     RiskBudget,
     RiskOffset,
+    RoundoffUlpCount,
     SeedIndex,
     SensitivityBudget,
     SensitivityOffset,
@@ -75,11 +82,11 @@ from trajcert.types import (
     WarmupRepetitionCount,
 )
 
-type YamlValue = ( #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+type YamlValue = (
     None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
 )
-type RawYamlScalar = None | bool | int | float | str #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "RawYamlValue"] #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+type RawYamlScalar = None | bool | int | float | str
+type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "RawYamlValue"]
 
 
 active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
@@ -91,7 +98,18 @@ class ConfigModel(DomainModel):
 
 class MethodConfig(ConfigModel):
     finest_bands: BandCount
+    endpoint_band_count: BandCount
     terminal_horizon: TerminalHorizon
+
+    @model_validator(mode="after")
+    def validate_endpoint_partition(self) -> MethodConfig:
+        if self.endpoint_band_count != 1:
+            raise ValueError(
+                "method.endpoint_band_count must define the one-band endpoint partition"
+            )
+        if self.endpoint_band_count > self.finest_bands:
+            raise ValueError("method.endpoint_band_count cannot exceed method.finest_bands")
+        return self
 
 
 class BudgetsConfig(ConfigModel):
@@ -296,6 +314,21 @@ class NumericsConfig(ConfigModel):
     sharpness_diagnostic_offset: ToleranceValue
     log2_match_tolerance: ToleranceValue
     proof_check_tolerance: ToleranceValue
+    information_roundoff_ulps: RoundoffUlpCount
+    resolved_harm_boundary_offset: ToleranceValue
+    arb_search: ArbSearchConfig
+
+
+class ArbSearchConfig(ConfigModel):
+    incumbent_bisection_iterations: IterationBudget
+    root_scan_grid_points: GridPointCount
+    root_scan_envelope_span_floor: ToleranceValue
+    projection_stall_minimum_visited: OuterMaxNodes
+    projection_stall_window_visited: OuterMaxNodes
+    projection_stall_improvement_floor: ToleranceValue
+    decision_stall_minimum_visited: OuterMaxNodes
+    decision_stall_window_visited: OuterMaxNodes
+    decision_stall_improvement_floor: ToleranceValue
 
 
 class LegacyPatternMixtureConfig(ConfigModel):
@@ -655,8 +688,47 @@ class RealTrajectoryHorizonConfig(ConfigModel):
         return self
 
 
+class RealTrajectoryColumnConfig(ConfigModel):
+    human_reviewed: DatasetColumnName
+    is_attack: DatasetColumnName
+    ml_prediction: DatasetColumnName
+    device_name: DatasetColumnName
+    device_type: DatasetColumnName
+    decision_time: DatasetColumnName
+    annotator_id: DatasetColumnName
+    human_confidence: DatasetColumnName
+
+
+class RealTrajectoryDatasetConfig(ConfigModel):
+    name: RealTrajectoryDatasetName
+    doi: DatasetVersionTag
+    data_filename: DatasetFilename
+    checksums_filename: DatasetFilename
+    sha256: DatasetChecksumHex
+    device_names: tuple[ClientId, ...]
+    raw_columns: tuple[DatasetColumnName, ...]
+    flow_identity_columns: tuple[DatasetColumnName, ...]
+    expected_schema: tuple[DatasetColumnName, ...]
+    columns: RealTrajectoryColumnConfig
+
+    @model_validator(mode="after")
+    def validate_dataset_contract(self) -> RealTrajectoryDatasetConfig:
+        if not self.device_names:
+            raise ValueError("real_trajectory.dataset.device_names must not be empty")
+        if not self.raw_columns or not self.expected_schema:
+            raise ValueError("real_trajectory dataset column contracts must not be empty")
+        if not set(self.raw_columns).issubset(self.expected_schema):
+            raise ValueError("raw_columns must be included in expected_schema")
+        if not set(self.flow_identity_columns).issubset(self.raw_columns):
+            raise ValueError("flow_identity_columns must be included in raw_columns")
+        if not set(self.columns.model_dump().values()).issubset(self.raw_columns):
+            raise ValueError("named trajectory columns must be included in raw_columns")
+        return self
+
+
 class RealTrajectoryConfig(ConfigModel):
     dataset_root: RawDatasetRoot
+    dataset: RealTrajectoryDatasetConfig
     horizons: RealTrajectoryHorizonConfig
 
 
@@ -785,7 +857,7 @@ class TrajCertConfig(ConfigModel):
         sequential["utility"] = _merge_size_fields(
             cast(dict[str, YamlValue], sequential["utility"]), overrides.sequential.utility
         )
-        merged["statistics"] = _merge_size_fields(merged["statistics"], overrides.statistics) #TODO: should be enums not hardcoded strings
+        merged["statistics"] = _merge_size_fields(merged["statistics"], overrides.statistics)
         merged["benchmark"] = _merge_size_fields(merged["benchmark"], overrides.benchmark)
         try:
             return cls.model_validate(merged)
@@ -815,7 +887,7 @@ def _execution_size_overrides(overrides_path: Path) -> ExecutionSizeOverrides | 
         raise ConfigurationError(str(exc)) from exc
 
 
-def _merge_size_fields(base: dict[str, YamlValue], overrides: ConfigModel) -> dict[str, YamlValue]: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+def _merge_size_fields(base: dict[str, YamlValue], overrides: ConfigModel) -> dict[str, YamlValue]:
     override_values = cast(dict[str, YamlValue], overrides.model_dump(mode="json"))
     return {**base, **{name: value for name, value in override_values.items() if value is not None}}
 
@@ -852,7 +924,7 @@ def _coerce_yaml_value(value: RawYamlValue) -> YamlValue:
         return value
     if isinstance(value, list):
         return tuple(_coerce_yaml_value(item) for item in value)
-    result: dict[str, YamlValue] = {} #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    result: dict[str, YamlValue] = {}
     for key, item in value.items():
         if not isinstance(key, str):
             raise ConfigurationError("configuration mapping keys must be strings")

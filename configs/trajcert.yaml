@@ -1,5 +1,5 @@
 schema_version: 1
-method: {finest_bands: 8, terminal_horizon: 8}
+method: {finest_bands: 8, endpoint_band_count: 1, terminal_horizon: 8}
 budgets: {risk: 0.05, information_nats: 0.05}
 confidence:
   anytime_delta: 0.05
@@ -103,6 +103,9 @@ numerics:
   sharpness_diagnostic_offset: 0.05
   log2_match_tolerance: 1.0e-15
   proof_check_tolerance: 1.0e-15
+  information_roundoff_ulps: 32.0
+  resolved_harm_boundary_offset: 0.005
+  arb_search: {incumbent_bisection_iterations: 80, root_scan_grid_points: 12, root_scan_envelope_span_floor: 0.15, projection_stall_minimum_visited: 20000, projection_stall_window_visited: 15000, projection_stall_improvement_floor: 1.0e-4, decision_stall_minimum_visited: 3000, decision_stall_window_visited: 2000, decision_stall_improvement_floor: 1.0e-6}
 comparators:
   legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
   pattern_mixture:
@@ -185,4 +188,15 @@ hand_cases:
 figure_layout: {width: 1400, height: 900, margin_left: 90.0, margin_right: 45.0, margin_top: 85.0, margin_bottom: 80.0, horizontal_panel_gap: 28.0, grid_panel_gap_x: 24.0, grid_panel_gap_y: 34.0, failure_boundary_grid_columns: 3, axis_padding_fraction: 0.05}
 real_trajectory:
   dataset_root: /home/naslouby/Projects/datp-shared-data/raw/HITL-IoT
+  dataset:
+    name: hitl-iot
+    doi: 10.5281/zenodo.17862334
+    data_filename: HITL-IoT_dataset.csv
+    checksums_filename: HITL-IoT_checksums.txt
+    sha256: 162121f804c2e177dddae4fb9c91e70045aaccaa6e918adde25fc7964acb0c04
+    device_names: [camera_21, camera_22, camera_26, doorbell_30, doorbell_31, speaker_23, speaker_24, speaker_27, thermostat_20, thermostat_25, tv_28, tv_29]
+    raw_columns: [timestamp, src_mac, dst_ip, src_port, dst_port, device_name, device_type, is_attack, ml_prediction, human_reviewed, human_decision, human_confidence, decision_time, annotator_id]
+    flow_identity_columns: [timestamp, src_mac, dst_ip, src_port, dst_port]
+    expected_schema: [timestamp, hour, day_of_week, is_weekend, src_ip, dst_ip, src_mac, dst_mac, packet_size, ttl, is_internal_dst, is_localhost, protocol, src_port, dst_port, is_well_known_port, is_registered_port, is_dynamic_port, device_name, device_type, device_thermostat, device_camera, device_speaker, duration, bytes_sent, bytes_received, bytes_ratio, bytes_per_second, packet_rate, is_business_hours, is_night, protocol_tcp, protocol_udp, connection_frequency, baseline_deviation, bytes_sent_mean_5, bytes_sent_std_5, bytes_sent_mean_10, bytes_sent_std_10, bytes_sent_mean_20, bytes_sent_std_20, connection_frequency_5, connection_frequency_10, is_attack, attack_type, risk_score, ml_confidence, ml_prediction, human_reviewed, human_decision, human_confidence, decision_time, ml_human_agreement, annotator_id]
+    columns: {human_reviewed: human_reviewed, is_attack: is_attack, ml_prediction: ml_prediction, device_name: device_name, device_type: device_type, decision_time: decision_time, annotator_id: annotator_id, human_confidence: human_confidence}
   horizons: {primary_seconds: 30.0, sensitivity_seconds: [15.0, 60.0]}

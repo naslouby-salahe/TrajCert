@@ -79,7 +79,6 @@ from trajcert.provenance import (
     SemanticCoordinates,
     SensitivityCoordinate,
     VariantCoordinate,
-    VariantName,
 )
 from trajcert.storage import read_model
 from trajcert.types import (
@@ -93,6 +92,7 @@ from trajcert.types import (
     RealTrajectoryStratumKind,
     RealTrajectoryStratumValue,
     SensitivityBudget,
+    VariantName,
 )
 
 
@@ -616,8 +616,8 @@ def _real_trajectory_stratum(
     variant = coordinates.variant_name
     if variant is None or variant.name is None:
         raise ScientificCellDispatchError("real-trajectory cell is missing its stratum variant")
-    label = VariantName(str(variant.name))
-    if label == "pooled": #TODO: should be enum, not hardcoded string
+    label = variant.name
+    if label == RealTrajectoryStratumKind.POOLED:
         return RealTrajectoryStratumKind.POOLED, None, label
     if label.startswith("device="):
         value = RealTrajectoryStratumValue(label.removeprefix("device="))

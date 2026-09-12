@@ -6,35 +6,93 @@ from typing import Annotated, ClassVar, NewType
 
 import numpy as np
 from numpy.typing import NDArray
-from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, StrictFloat, StrictInt
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    GetCoreSchemaHandler,
+    JsonValue,
+    StrictFloat,
+    StrictInt,
+)
 from pydantic_core import core_schema
 
-ActionChannelId = NewType("ActionChannelId", str) #TODO: convert to enum
-ArtifactFileName = NewType("ArtifactFileName", str) #TODO: convert to enum
-ClientId = NewType("ClientId", str)
-CliArgumentValue = NewType("CliArgumentValue", str) #TODO: convert to enum
-ColumnName = NewType("ColumnName", str) #TODO: convert to enum
-ConfigFieldPath = NewType("ConfigFieldPath", str) #TODO: convert to enum
-FacetLabel = NewType("FacetLabel", str) #TODO: convert to enum
-DecimalCoefficient = NewType("DecimalCoefficient", str) #TODO: convert to enum
-DecimalDigits = NewType("DecimalDigits", str) #TODO: convert to enum
-DependencyAuthority = NewType("DependencyAuthority", str) #TODO: convert to enum
-EpochId = NewType("EpochId", str) #TODO: convert to enum
-EventId = NewType("EventId", str)
-FailureBoundaryLevel = NewType("FailureBoundaryLevel", str) #TODO: convert to enum
-FailureMessage = NewType("FailureMessage", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-LawName = NewType("LawName", str) #TODO: convert to enum
-NumericSign = NewType("NumericSign", str) #TODO: convert to enum
-PartitionName = NewType("PartitionName", str) #TODO: convert to enum
-TelemetryLabel = NewType("TelemetryLabel", str) #TODO: convert to enum
-ToleranceName = NewType("ToleranceName", str) #TODO: convert to enum
-TelemetryPhase = NewType("TelemetryPhase", str) #TODO: convert to enum
-TimestampSeconds = NewType("TimestampSeconds", float)
-LogIntervalSeconds = NewType("LogIntervalSeconds", float)
-SeedNamespace = NewType("SeedNamespace", str) #TODO: convert to enum
-SemanticComparisonKey = NewType("SemanticComparisonKey", str) #TODO: convert to enum
-SerializedConfigJson = NewType("SerializedConfigJson", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
-SvgFragment = NewType("SvgFragment", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+"""Semantic aliases for open-ended identifiers and external text boundaries.
+
+These values are intentionally distinct ``NewType`` contracts rather than enums:
+their values are generated from data, user input, or serialized artifacts and are
+therefore not a closed vocabulary.
+"""
+
+ActionChannelId = NewType("ActionChannelId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ArtifactFileName = NewType("ArtifactFileName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ArtifactKey = NewType("ArtifactKey", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ArtifactTypeName = NewType("ArtifactTypeName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+BaselineName = NewType("BaselineName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ComparisonPairDisplay = NewType("ComparisonPairDisplay", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+
+
+class CoordinateName(StrEnum):
+    LAW = "law"
+    PARTITION = "partition"
+    COMPARISON = "comparison"
+    METHOD = "method"
+    BASELINE = "baseline"
+    VARIANT = "variant"
+    RHO = "rho"
+    BETA = "beta"
+    DELTA = "delta"
+    GAMMA = "gamma"
+    HORIZON = "horizon"
+    PATTERN_MIXTURE_C = "pattern-mixture-c"
+    FAILURE_BOUNDARY = "failure-boundary"
+    BAND_COUNT = "k"
+    SEED_INDEX = "seed-index"
+    SENSITIVITY = "sensitivity"
+
+
+CoordinateToken = NewType("CoordinateToken", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ClientId = NewType("ClientId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+CliArgumentValue = NewType("CliArgumentValue", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ColumnName = NewType("ColumnName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ConfigFieldPath = NewType("ConfigFieldPath", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+FacetLabel = NewType("FacetLabel", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+DependencyFingerprint = NewType("DependencyFingerprint", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+DecimalCoefficient = NewType("DecimalCoefficient", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+DecimalDigits = NewType("DecimalDigits", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+DigestHex = NewType("DigestHex", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+EnvironmentDigest = NewType("EnvironmentDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+EpochId = NewType("EpochId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ExperimentSlug = NewType("ExperimentSlug", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+EventId = NewType("EventId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+FailureBoundaryCoordinateDisplay = NewType("FailureBoundaryCoordinateDisplay", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+FailureBoundaryLevel = NewType("FailureBoundaryLevel", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+FailureMessage = NewType("FailureMessage", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+FigureTitle = NewType("FigureTitle", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ExceptionClassName = NewType("ExceptionClassName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+TracebackText = NewType("TracebackText", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+LawName = NewType("LawName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+MethodName = NewType("MethodName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+MethodDisplayName = NewType("MethodDisplayName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+NamedComparison = NewType("NamedComparison", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+NumericSign = NewType("NumericSign", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+PartitionName = NewType("PartitionName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+PlanDigest = NewType("PlanDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SemanticCellKey = NewType("SemanticCellKey", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SensitivityCoordinateMode = NewType("SensitivityCoordinateMode", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SerializedConfigJson = NewType("SerializedConfigJson", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SourceIdentityDigest = NewType("SourceIdentityDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SvgFragment = NewType("SvgFragment", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+TelemetryLabel = NewType("TelemetryLabel", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+ToleranceName = NewType("ToleranceName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+TheoremName = NewType("TheoremName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+TelemetryPhase = NewType("TelemetryPhase", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+TimestampSeconds = NewType("TimestampSeconds", float)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+LogIntervalSeconds = NewType("LogIntervalSeconds", float)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SeedNamespace = NewType("SeedNamespace", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SemanticComparisonKey = NewType("SemanticComparisonKey", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SpecificationDigest = NewType("SpecificationDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+VariantName = NewType("VariantName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
 OpenUnitFloat = Annotated[StrictFloat, Field(gt=0.0, lt=1.0, allow_inf_nan=False)]
 PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
@@ -132,6 +190,7 @@ RepetitionCount = PositiveInt
 ResampleCount = PositiveInt
 RhoValueCount = PositiveInt
 RiskBoundGain = FiniteFloat
+RoundoffUlpCount = PositiveFloat
 RiskOffset = FiniteFloat
 RuntimeMilliseconds = NonNegativeFloat
 RuntimeNanoseconds = NonNegativeInt
@@ -145,12 +204,14 @@ VisitedNodeCount = NonNegativeInt
 StreamCount = PositiveInt
 WarmupRepetitionCount = NonNegativeInt
 
-CoverageStressCaseName = NewType("CoverageStressCaseName", str) #TODO: convert to enum
+CoverageStressCaseName = NewType("CoverageStressCaseName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 
 LogMixtureRatio = FiniteFloat
 Threshold = FiniteFloat
-type TabularCellValue = None | bool | int | float | str #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+# CSV and TeX serialization accept JSON-like scalar cells at the rendering boundary.
+type TabularCellValue = None | bool | int | float | str
 TableRow = Mapping[ColumnName, TabularCellValue]
+type JsonObject = Mapping[str, JsonValue]
 
 
 class NDArrayFloat64Annotation:
@@ -226,6 +287,52 @@ class ReasonCode(StrEnum):
 
 class TextEncoding(StrEnum):
     UTF8 = "utf-8"
+
+
+class ConfigFile(StrEnum):
+    PRODUCTION = "configs/trajcert.yaml"
+    SMOKE_OVERRIDES = "configs/smoke.yaml"
+    TEST_OVERRIDES = "configs/tests.yaml"
+
+
+class SeedMaterialGrammar(StrEnum):
+    PREFIX = "TrajCert"
+    FIELD_SEPARATOR = "|"
+
+
+class DependencyAuthority(StrEnum):
+    PYPI = "pypi"
+    UV_LOCK = "uv.lock"
+
+
+class CoordinateGrammar(StrEnum):
+    ASSIGNMENT = "="
+    COMPARISON_PAIR = " -> "
+    HAND_CASE_PREFIX = "hand-case-"
+    LEGACY_Q_PREFIX = "q="
+    RHO_OFFSET_PREFIX = "rho-offset="
+    TERMINAL_Q1_PREFIX = "q1:"
+    TERMINAL_Q0_SEPARATOR = ",q0:"
+    NEGATIVE_PREFIX = "negative-"
+    NONNEGATIVE_PREFIX = "nonnegative-"
+
+
+class EvidenceFamilyLabel(StrEnum):
+    FIGURE_ONE_POPULATION = "Figure 1 population"
+    FIGURE_ONE_SAME_ENDPOINT = "Figure 1 same-endpoint"
+
+
+class PartitionLabel(StrEnum):
+    ENDPOINT_ONLY = "Endpoint-only partition"
+    TERMINAL = "infinity"
+
+
+class TelemetryLoggerName(StrEnum):
+    TRAJCERT = "trajcert"
+
+
+class TelemetryFallbackLabel(StrEnum):
+    UNKNOWN_CELL = "unknown"
 
 
 class EvidenceClass(StrEnum):
@@ -320,6 +427,9 @@ class SafetyRegime(StrEnum):
     ASSUMPTION_FREE_SAFE = "ASSUMPTION_FREE_SAFE"
 
 
+type PublicationRegime = CompatibilityRegime | SafetyRegime
+
+
 class SafetyCaseName(StrEnum):
     BELOW_RESOLVED_HARMFUL_MASS = "Below resolved harmful mass"
     BETWEEN_RESOLVED_MASS_AND_INTRINSIC_BOUNDARY = "Between resolved mass and intrinsic boundary"
@@ -367,12 +477,13 @@ class RealTrajectoryExclusionReason(StrEnum):
     DUPLICATE_ANNOTATION = "DUPLICATE_ANNOTATION"
 
 
-RawDatasetRoot = NewType("RawDatasetRoot", str)
-DatasetVersionTag = NewType("DatasetVersionTag", str) #TODO: convert to enum
-DatasetChecksumHex = NewType("DatasetChecksumHex", str)
-DatasetFilename = NewType("DatasetFilename", str) #TODO: convert to enum
-DatasetColumnName = NewType("DatasetColumnName", str) #TODO: convert to enum
-RealTrajectoryStratumValue = NewType("RealTrajectoryStratumValue", str) #TODO: convert to enum
+RawDatasetRoot = NewType("RawDatasetRoot", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+# Dataset contract values originate in the configured external release and are open-ended.
+DatasetVersionTag = NewType("DatasetVersionTag", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+DatasetChecksumHex = NewType("DatasetChecksumHex", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+DatasetFilename = NewType("DatasetFilename", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+DatasetColumnName = NewType("DatasetColumnName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+RealTrajectoryStratumValue = NewType("RealTrajectoryStratumValue", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 
 
 class CliCommand(StrEnum):

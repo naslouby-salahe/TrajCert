@@ -10,14 +10,8 @@ from trajcert.exceptions import SerializationError
 from trajcert.storage import (
     ArtifactChecksum,
     ArtifactIndexEntry,
-    ArtifactKey,
     CellArtifactIndex,
     CompletionRecord,
-    DependencyFingerprint,
-    DigestHex,
-    PlanDigest,
-    SemanticCellKey,
-    SpecificationDigest,
     atomic_write_bytes,
     atomic_write_model,
     canonical_model_bytes,
@@ -27,6 +21,14 @@ from trajcert.storage import (
     models_digest,
     read_model,
     write_completion_last,
+)
+from trajcert.types import (
+    ArtifactKey,
+    DependencyFingerprint,
+    DigestHex,
+    PlanDigest,
+    SemanticCellKey,
+    SpecificationDigest,
 )
 
 _HEX_LENGTH = 64

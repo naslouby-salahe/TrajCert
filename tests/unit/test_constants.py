@@ -9,18 +9,17 @@ from trajcert.constants import (
     BINARY_MAX_INFORMATION_NATS,
     ENDPOINT_PARTITION_NAME,
     PRODUCTION_CONFIG_PATH,
-    SEED_FIELD_SEPARATOR,
     SEED_MODULUS,
-    SEED_PREFIX,
     TERMINAL_CATEGORY_NAME,
 )
+from trajcert.types import SeedMaterialGrammar
 
 _SEED_MODULUS_EXPECTED = 1 << 63
 
 
 def test_schema_and_seed_constants_are_pinned() -> None:
-    assert SEED_PREFIX == "TrajCert"
-    assert SEED_FIELD_SEPARATOR == "|"
+    assert SeedMaterialGrammar.PREFIX == "TrajCert"
+    assert SeedMaterialGrammar.FIELD_SEPARATOR == "|"
     assert SEED_MODULUS == _SEED_MODULUS_EXPECTED
 
 

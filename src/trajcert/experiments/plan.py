@@ -10,7 +10,7 @@ from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
-from trajcert.data.real_trajectories import HITL_IOT_DEVICE_NAMES
+from trajcert.data.real_trajectories import hitl_iot_device_names
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.catalog import (
     EXPERIMENT_CATALOG,
@@ -24,14 +24,12 @@ from trajcert.experiments.failure_boundaries import FailureBoundaryAxis
 from trajcert.provenance import (
     ComparisonPair,
     FailureBoundaryCoordinate,
-    NamedComparison,
     SemanticCellIdentity,
     SemanticCoordinates,
     SensitivityCoordinate,
     VariantCoordinate,
-    VariantName,
 )
-from trajcert.storage import PlanDigest, model_digest
+from trajcert.storage import model_digest
 from trajcert.types import (
     AnnotatorExpertise,
     Count,
@@ -40,11 +38,15 @@ from trajcert.types import (
     ExperimentName,
     FailureBoundaryProbe,
     LawName,
+    NamedComparison,
     Ordinal,
     PartitionName,
+    PlanDigest,
+    RealTrajectoryStratumKind,
     ReasonCode,
     SensitivityBudget,
     SensitivityOffset,
+    VariantName,
 )
 
 
@@ -416,7 +418,7 @@ def _coordinates_real_trajectory_validation() -> tuple[SemanticCoordinates, ...]
     partitions = _partition_names()
     coordinates: list[SemanticCoordinates] = [
         SemanticCoordinates(
-            variant_name=VariantCoordinate(name=VariantName("pooled")), #TODO: should be enum, not hardcoded string
+            variant_name=VariantCoordinate(name=VariantName(RealTrajectoryStratumKind.POOLED)),
             partition_name=partition,
             censoring_horizon_seconds=horizon,
         )
@@ -428,7 +430,7 @@ def _coordinates_real_trajectory_validation() -> tuple[SemanticCoordinates, ...]
             partition_name=partition,
             censoring_horizon_seconds=primary,
         )
-        for device, partition in product(HITL_IOT_DEVICE_NAMES, partitions)
+        for device, partition in product(hitl_iot_device_names(), partitions)
     )
     coordinates.extend(
         SemanticCoordinates(

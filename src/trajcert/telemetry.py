@@ -7,7 +7,6 @@ from contextvars import ContextVar
 from pathlib import Path
 from typing import Final
 
-from trajcert.storage import SemanticCellKey
 from trajcert.types import (
     Count,
     DatasetChecksumHex,
@@ -18,18 +17,19 @@ from trajcert.types import (
     PublicExecutionState,
     RealTrajectoryDatasetName,
     RealTrajectoryExclusionReason,
+    SemanticCellKey,
+    TelemetryFallbackLabel,
     TelemetryLabel,
+    TelemetryLoggerName,
     TelemetryPhase,
     TimestampSeconds,
     VisitedNodeCount,
 )
 
-_LOGGER_NAME: Final[str] = "trajcert" #TODO: should be enum not hardcoded string
 _TIMESTAMP_FORMAT: Final[str] = "%Y-%m-%dT%H:%M:%S"
-_UNKNOWN_CELL_LABEL: Final[str] = "unknown" #TODO: should be enum, not hardcoded string
 _DEFAULT_LOG_INTERVAL_SECONDS: Final[LogIntervalSeconds] = LogIntervalSeconds(5.0)
 
-_logger = logging.getLogger(_LOGGER_NAME)
+_logger = logging.getLogger(TelemetryLoggerName.TRAJCERT)
 _current_cell_key: ContextVar[SemanticCellKey | None] = ContextVar("current_cell_key", default=None)
 
 
@@ -70,7 +70,9 @@ def set_current_cell_key(semantic_cell_key: SemanticCellKey | None) -> None:
 
 def _current_cell_label() -> TelemetryLabel:
     key = _current_cell_key.get()
-    return TelemetryLabel(_UNKNOWN_CELL_LABEL) if key is None else TelemetryLabel(key)
+    if key is None:
+        return TelemetryLabel(TelemetryFallbackLabel.UNKNOWN_CELL)
+    return TelemetryLabel(key)
 
 
 class PreprocessingProgress:

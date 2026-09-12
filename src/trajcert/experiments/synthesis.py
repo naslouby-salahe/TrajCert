@@ -21,7 +21,6 @@ from trajcert.analysis.metrics import PracticalMetric, numeric_first_certificati
 from trajcert.analysis.multiplicity import MultiplicityTest, holm_adjust, require_family_size
 from trajcert.analysis.sign_flip import SignFlipResult, one_sided_sign_flip
 from trajcert.config import TrajCertConfig, active_config
-from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
 from trajcert.data.real_trajectories import HitlIotEligibleEvent, PreparedRealTrajectoryCohort
@@ -56,7 +55,6 @@ from trajcert.paths import (
     RealTrajectoryArtifactFile,
     real_trajectory_preprocessing_path,
 )
-from trajcert.provenance import BaselineName, MethodName
 from trajcert.reporting.publication_rows import (
     PARTITION_COHERENCE_POPULATION_LAWS,
     AnalysisType,
@@ -79,7 +77,6 @@ from trajcert.reporting.publication_rows import (
     SafetySourceEvidence,
     SameEndpointFigureEvidence,
     SharpnessSourceEvidence,
-    TheoremName,
     TheoremValidationObservation,
     TheoremValidationSummaryRow,
     build_publication_source_rows,
@@ -107,11 +104,7 @@ from trajcert.reporting.source_data import (
 )
 from trajcert.storage import (
     ArtifactIndexEntry,
-    ArtifactKey,
     CellArtifactIndex,
-    DependencyFingerprint,
-    DigestHex,
-    SemanticCellKey,
     file_digest,
     model_digest,
     models_digest,
@@ -119,20 +112,27 @@ from trajcert.storage import (
 )
 from trajcert.types import (
     AbsoluteError,
+    ArtifactKey,
     BandCount,
+    BaselineName,
+    DependencyFingerprint,
+    DigestHex,
     DomainModel,
     ExperimentName,
     FamilySize,
     InequalityMargin,
     LawKey,
     LawName,
+    MethodName,
     ObservedStatistic,
     Ordinal,
     PartitionName,
     Probability,
     RealTrajectoryStratumKind,
+    SemanticCellKey,
     SemanticComparisonKey,
     SensitivityBudget,
+    TheoremName,
     Vector,
 )
 
@@ -501,7 +501,7 @@ def sequential_rho_utility_rows(
     synthesis: TrajectoryOperationalGainSynthesis,
 ) -> tuple[RhoUtilityRow, ...]:
     fine_partition = partition_name(active_config.get().method.finest_bands)
-    endpoint_partition = partition_name(ENDPOINT_BAND_COUNT)
+    endpoint_partition = partition_name(active_config.get().method.endpoint_band_count)
     return tuple(
         RhoUtilityRow(
             analysis_type=AnalysisType.SEQUENTIAL,

@@ -6,8 +6,8 @@ from pathlib import Path
 
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.experiments.workflows import run_experiment
-from trajcert.paths import ExperimentSlug, experiment_root, semantic_slug
-from trajcert.types import ExperimentName, PublicExecutionState
+from trajcert.paths import experiment_root, semantic_slug
+from trajcert.types import ExperimentName, ExperimentSlug, PublicExecutionState
 
 SOURCE_ROOT = Path(__file__).parents[2] / "src" / "trajcert"
 

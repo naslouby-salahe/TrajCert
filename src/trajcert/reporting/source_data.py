@@ -26,16 +26,16 @@ from trajcert.schemas import (
 )
 from trajcert.storage import (
     ArtifactChecksum,
-    ArtifactKey,
     CellArtifactIndex,
     CompletionRecord,
-    DigestHex,
     atomic_replace,
     file_digest,
     read_model,
 )
 from trajcert.types import (
+    ArtifactKey,
     ColumnName,
+    DigestHex,
     DomainModel,
     TableRow,
     TabularCellValue,

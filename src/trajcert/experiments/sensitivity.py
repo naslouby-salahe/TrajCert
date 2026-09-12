@@ -4,7 +4,6 @@ from statistics import mean
 
 from trajcert.analysis.metrics import population_gain
 from trajcert.config import active_config
-from trajcert.constants import ENDPOINT_BAND_COUNT
 from trajcert.data.laws import LawParameters
 from trajcert.data.maturity import mature_ledger
 from trajcert.data.partitions import TrajectoryPartition, build_partition
@@ -165,7 +164,7 @@ def sequential_sensitivity_utility_batch(
         raise ValueError("sequential utility requires the configured finest partition")
     endpoint_partition = build_partition(
         finest_band_count=fine_partition.finest_band_count,
-        band_count=ENDPOINT_BAND_COUNT,
+        band_count=config.method.endpoint_band_count,
         terminal_horizon=fine_partition.terminal_horizon,
     )
     stream_progress = StreamProgress(

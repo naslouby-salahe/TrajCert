@@ -18,7 +18,6 @@ from trajcert.experiments.synthesis import (
     synthesis_artifact_keys,
 )
 from trajcert.paths import ExperimentLeaf, experiment_leaf
-from trajcert.provenance import EnvironmentDigest
 from trajcert.reporting import export
 from trajcert.reporting.export import (
     ReportExportResult,
@@ -39,17 +38,20 @@ from trajcert.schemas import (
 )
 from trajcert.storage import (
     ArtifactChecksum,
-    ArtifactKey,
     CompletionRecord,
-    DependencyFingerprint,
-    DigestHex,
-    PlanDigest,
-    SemanticCellKey,
-    SpecificationDigest,
     model_digest,
     write_completion_last,
 )
-from trajcert.types import ExperimentName
+from trajcert.types import (
+    ArtifactKey,
+    DependencyFingerprint,
+    DigestHex,
+    EnvironmentDigest,
+    ExperimentName,
+    PlanDigest,
+    SemanticCellKey,
+    SpecificationDigest,
+)
 
 _RENDERED_COUNT = 3
 _SOURCE_COUNT = 2

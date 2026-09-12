@@ -4,18 +4,24 @@ import pytest
 from pydantic import ValidationError
 
 from trajcert.provenance import (
-    ArtifactTypeName,
     DependencyMaterial,
-    EnvironmentDigest,
     ParentArtifactIdentity,
     SemanticCellIdentity,
     SemanticCoordinates,
-    SourceIdentityDigest,
     dependency_fingerprint,
     source_identity_digest,
 )
-from trajcert.storage import ArtifactKey, DigestHex, SpecificationDigest
-from trajcert.types import ExperimentName, LawName, PartitionName
+from trajcert.types import (
+    ArtifactKey,
+    ArtifactTypeName,
+    DigestHex,
+    EnvironmentDigest,
+    ExperimentName,
+    LawName,
+    PartitionName,
+    SourceIdentityDigest,
+    SpecificationDigest,
+)
 
 _HEX_LENGTH = 64
 _HEX_C = "c" * _HEX_LENGTH

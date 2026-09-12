@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-from trajcert.constants import RESOLVED_HARM_BOUNDARY_OFFSET
+from trajcert.config import active_config
 from trajcert.data.summaries import ObservableSummary
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.math.information import information_profile, minimum_information_point
@@ -74,13 +74,14 @@ def assess_safety_geometry(summary: ObservableSummary, risk_budget: RiskBudget) 
 
 def safety_budget_cases(summary: ObservableSummary) -> tuple[SafetyBudgetCase, ...]:
     harmful = summary.resolved_harmful_mass
+    boundary_offset = active_config.get().numerics.resolved_harm_boundary_offset
     theta_max = harmful + summary.unresolved_mass
     minimum = minimum_information_point(summary)
     if minimum is None:
         return (
             SafetyBudgetCase(
                 name=SafetyCaseName.BELOW_RESOLVED_HARMFUL_MASS,
-                risk_budget=max(0.0, harmful - RESOLVED_HARM_BOUNDARY_OFFSET),
+                risk_budget=max(0.0, harmful - boundary_offset),
                 valid=True,
                 invalid_reason=None,
             ),
@@ -114,7 +115,7 @@ def safety_budget_cases(summary: ObservableSummary) -> tuple[SafetyBudgetCase, .
     return (
         SafetyBudgetCase(
             name=SafetyCaseName.BELOW_RESOLVED_HARMFUL_MASS,
-            risk_budget=max(0.0, harmful - RESOLVED_HARM_BOUNDARY_OFFSET),
+            risk_budget=max(0.0, harmful - boundary_offset),
             valid=True,
             invalid_reason=None,
         ),

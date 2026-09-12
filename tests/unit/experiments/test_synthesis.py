@@ -112,42 +112,40 @@ from trajcert.paths import (
     RealTrajectoryArtifactFile,
     real_trajectory_preprocessing_path,
 )
-from trajcert.provenance import (
-    BaselineName,
-    MethodName,
-    VariantName,
-)
 from trajcert.reporting.publication_rows import AnalysisType, RhoUtilityMetricName
 from trajcert.storage import (
     ArtifactChecksum,
     ArtifactIndexEntry,
-    ArtifactKey,
     CellArtifactIndex,
     CompletionRecord,
-    DependencyFingerprint,
-    DigestHex,
-    PlanDigest,
-    SpecificationDigest,
     atomic_write_model,
     canonical_model_bytes,
     model_digest,
 )
 from trajcert.types import (
     AnnotatorExpertise,
+    ArtifactKey,
+    BaselineName,
     ClientId,
     CompatibilityRegime,
+    DependencyFingerprint,
+    DigestHex,
     FailureBoundaryLevel,
     HiddenMassInterval,
     HitlIotDeviceType,
     LawName,
+    MethodName,
     NumericStatus,
     PartitionName,
+    PlanDigest,
     RealTrajectoryStratumKind,
     RiskInterval,
     SafetyCaseName,
     SafetyRegime,
     ScientificState,
     SemanticComparisonKey,
+    SpecificationDigest,
+    VariantName,
 )
 
 _TEST_STREAM_COUNT = 2
