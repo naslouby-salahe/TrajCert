@@ -177,7 +177,7 @@ def _partition_coherence(table: pa.Table) -> Figure:
             _circle(ax, upper, band)
             label = f"{FigureLabel.TAU_PREFIX}{_required_float(row, PublicationColumn.TAU):.4g}"
             ax.text(
-                (lower + upper) / 2.0,  # TODO: should be constant
+                (lower + upper) / 2.0,
                 band,
                 label,
                 fontsize=11,
@@ -197,9 +197,9 @@ def _timing_value(table: pa.Table) -> Figure:
         selected = _matching_rows(table, PublicationColumn.RHO_OFFSET, facet)
         xs = tuple(_required_float(row, PublicationColumn.DELTA_TAU) for row in selected)
         ys = tuple(_required_float(row, PublicationColumn.BOUND_GAIN) for row in selected)
-        _set_limits(ax, (*xs, 0.0), ys)  # TODO: should be constant
+        _set_limits(ax, (*xs, 0.0), ys)
         _set_title(ax, FigureTitle(f"{FigureLabel.RHO_OFFSET_PREFIX}{facet}"))
-        ax.axvline(0.0, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
+        ax.axvline(0.0, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
         _scatter_markers(ax, xs, ys)
     _main_title(figure, FigureLabel.EXACT_TIMING_VALUE)
     return figure
@@ -223,7 +223,7 @@ def _information_profile(table: pa.Table) -> Figure:
     ):
         value = _optional_float(first, column)
         if value is not None:
-            ax.axvline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
+            ax.axvline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
             ax.text(
                 value, top, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE
             )
@@ -234,14 +234,14 @@ def _information_profile(table: pa.Table) -> Figure:
     ):
         value = _optional_float(first, column)
         if value is not None:
-            ax.axhline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
+            ax.axhline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
             ax.text(
                 left, value, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE
             )
     feasible_lower = _optional_float(first, PublicationColumn.FEASIBLE_LOWER)
     feasible_upper = _optional_float(first, PublicationColumn.FEASIBLE_UPPER)
     if feasible_lower is not None and feasible_upper is not None:
-        width = max(1.0, feasible_upper - feasible_lower)  # TODO: should be constant
+        width = max(1.0, feasible_upper - feasible_lower)
         ax.add_patch(
             Rectangle(
                 (feasible_lower, bottom),
@@ -302,7 +302,7 @@ def _anytime_paths(table: pa.Table) -> Figure:
         (PublicationColumn.BETA, FigureLabel.BETA),
     ):
         y = _required_float(first, column)
-        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
+        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
         ax.text(right, y, label, fontsize=11, ha="right", va="bottom", color=FigureColor.STROKE)
     _main_title(figure, FigureLabel.REPRESENTATIVE_ANYTIME_CERTIFICATES)
     return figure
@@ -338,7 +338,7 @@ def _anytime_coverage(table: pa.Table) -> Figure:
         (PublicationColumn.ACCEPTANCE_UPPER_LIMIT, FigureLabel.ACCEPTANCE_LIMIT),
     ):
         y = _required_float(first, column)
-        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
+        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
         ax.text(left, y, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE)
     _main_title(figure, FigureLabel.ANYTIME_STRESS_VALIDITY)
     return figure
@@ -362,7 +362,7 @@ def _rho_sensitivity_law(ax: Axes, table: pa.Table, law: FacetLabel) -> None:
         for row in rows
         if (value := _optional_float(row, PublicationColumn.RISK_UPPER)) is not None
     )
-    _set_limits(ax, xs, finite_ys or (0.0, 1.0))  # TODO: should be constant
+    _set_limits(ax, xs, finite_ys or (0.0, 1.0))
     _set_title(ax, FigureTitle(str(law)))
     for partition in sorted(
         {_required_facet_label(row, PublicationColumn.PARTITION_NAME) for row in rows}

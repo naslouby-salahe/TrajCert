@@ -41,17 +41,17 @@ def summarize_paired_differences(differences: Vector) -> PairedEffectSummary:
         raise InvalidScientificDataError("paired effect summary forbids NaN and infinity")
     estimate = float(np.mean(values, dtype=np.float64))
     standard_deviation = float(np.std(values, ddof=1, dtype=np.float64))
-    if standard_deviation > 0.0:  # TODO: should be constant
+    if standard_deviation > 0.0:
         effect = estimate / standard_deviation
         status = StandardizedEffectStatus.FINITE
-    elif estimate > 0.0:  # TODO: should be constant
+    elif estimate > 0.0:
         effect = None
         status = StandardizedEffectStatus.POSITIVE_INFINITY
-    elif estimate < 0.0:  # TODO: should be constant
+    elif estimate < 0.0:
         effect = None
         status = StandardizedEffectStatus.NEGATIVE_INFINITY
     else:
-        effect = 0.0  # TODO: should be constant
+        effect = 0.0
         status = StandardizedEffectStatus.FINITE
     return PairedEffectSummary(
         n_pairs=values.size,

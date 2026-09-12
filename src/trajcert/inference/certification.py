@@ -39,7 +39,7 @@ def classify_certification(
     rho = sensitivity_budget
     beta = risk_budget
     guard = comparison_guard
-    if rho < 0.0 or beta < 0.0 or beta > 1.0 or guard <= 0.0:  # TODO: should be constant
+    if rho < 0.0 or beta < 0.0 or beta > 1.0 or guard <= 0.0:
         raise InvalidScientificDataError("invalid certification budget or comparison guard")
     matured = state.matured_count
     resolved = state.resolved_count

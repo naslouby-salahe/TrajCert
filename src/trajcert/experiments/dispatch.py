@@ -88,6 +88,7 @@ from trajcert.types import (
     FailureBoundaryProbe,
     LawKey,
     LawName,
+    OuterMaxNodes,
     PartitionName,
     RealTrajectoryStratumKind,
     RealTrajectoryStratumValue,
@@ -548,6 +549,12 @@ def _coverage_stress_case(cell: PlannedCell) -> DomainModel:
     return evaluate_configured_coverage_stress(case)
 
 
+def _node_budget_level(level: FailureBoundaryProbe) -> OuterMaxNodes:
+    if not isinstance(level, int):
+        raise ScientificCellDispatchError("optimizer-node coordinate must carry a node budget")
+    return level
+
+
 def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
     coordinate = cell.identity.coordinates.failure_boundary_axis_and_level
     if coordinate is None:
@@ -557,9 +564,7 @@ def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
             raise ScientificCellDispatchError("terminal-selection coordinate is missing q1/q0")
         return evaluate_terminal_selection_asymmetry(q1=coordinate.q1, q0=coordinate.q0)
     if coordinate.axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
-        if coordinate.node_count is None:
-            raise ScientificCellDispatchError("optimizer-node coordinate is missing its budget")
-        return evaluate_optimizer_node_budget(coordinate.node_count)
+        return evaluate_optimizer_node_budget(_node_budget_level(coordinate.level))
     return evaluate_failure_boundary(coordinate.axis, _failure_boundary_probe(coordinate))
 
 
@@ -708,14 +713,4 @@ if set(_EXECUTION_DISPATCH) != set(ExecutionHandler) - _WORKSPACE_AWARE_HANDLERS
 
 
 def _failure_boundary_probe(coordinate: FailureBoundaryCoordinate) -> FailureBoundaryProbe:
-    if coordinate.axis is FailureBoundaryAxis.PATH_RESOLUTION:
-        if coordinate.band_count is None:
-            raise ScientificCellDispatchError("path-resolution coordinate is missing its bands")
-        return coordinate.band_count
-    if coordinate.axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
-        if coordinate.event_count is None:
-            raise ScientificCellDispatchError("sample-size coordinate is missing its count")
-        return coordinate.event_count
-    if coordinate.finite_level is None:
-        raise ScientificCellDispatchError("failure-boundary coordinate is missing its level")
-    return coordinate.finite_level
+    return coordinate.level

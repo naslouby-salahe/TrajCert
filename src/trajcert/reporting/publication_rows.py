@@ -12,7 +12,11 @@ import polars as pl
 from pydantic import Field
 
 from trajcert.analysis.metrics import PracticalMetric
-from trajcert.config import active_config
+from trajcert.config import (
+    CoverageStressCaseConfig,
+    CoverageStressSensitivityReference,
+    active_config,
+)
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition, partition_name
@@ -61,7 +65,6 @@ from trajcert.types import (
     EvidenceFamilyLabel,
     ExperimentName,
     FailureBoundaryLevel,
-    FailureMessage,
     InequalityMargin,
     InformationNats,
     LawKey,
@@ -82,7 +85,9 @@ from trajcert.types import (
     RiskOffset,
     RiskValue,
     RuntimeMilliseconds,
+    RuntimeSeconds,
     SafetyRegime,
+    ScientificInterpretation,
     ScientificState,
     SearchPredicate,
     SeedIndex,
@@ -118,7 +123,7 @@ class TheoremValidationSummaryRow(DomainModel):
     minimum_inequality_margin: InequalityMargin | None
     all_cases_pass: SearchPredicate
     primary_artifact: ArtifactKey
-    scientific_consequence: FailureMessage
+    scientific_consequence: ScientificInterpretation
 
 
 class PartitionTimingRow(DomainModel):
@@ -238,7 +243,7 @@ class FailureBoundaryRow(DomainModel):
     operational_state: ScientificState
     optimizer_gap: ConvergenceGap | None
     runtime_ms: RuntimeMilliseconds | None
-    scientific_interpretation: FailureMessage
+    scientific_interpretation: ScientificInterpretation
 
 
 class ComputationalScalingRow(DomainModel):
@@ -482,13 +487,13 @@ def theorem_validation_summary_rows(
 
 def _theorem_scientific_consequence(
     theorem_name: TheoremName, case_count: Count, all_cases_pass: SearchPredicate
-) -> FailureMessage:
+) -> ScientificInterpretation:
     if all_cases_pass:
-        return FailureMessage(
+        return ScientificInterpretation(
             f"{theorem_name}: all {case_count} case(s) validated within tolerance; "
             + "the theorem holds under configured conditions"
         )
-    return FailureMessage(
+    return ScientificInterpretation(
         f"{theorem_name}: at least one of {case_count} case(s) violated the theorem's "
         + "mandatory relation; evidence falsifies the theorem under configured conditions"
     )
@@ -834,7 +839,7 @@ def _solver_comparison_groups(
     for cell in _cells(plan, ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE):
         partition = _required_partition(cell)
         offset = cell.identity.coordinates.sensitivity_coordinate or SensitivityCoordinate(
-            offset=0.0  # TODO: should be constant
+            offset=0.0
         )
         grouped[(partition, offset)].append(
             read_verified_scientific_result(cell, workspace_root, SolverOracleComparison)
@@ -949,19 +954,41 @@ def _coverage_rows(
     return tuple(rows)
 
 
+def _runtime_milliseconds(seconds: RuntimeSeconds) -> RuntimeMilliseconds:
+    return seconds * (1e6 / active_config.get().units.nanoseconds_per_millisecond)
+
+
+def _principal_coverage_stress_case() -> CoverageStressCaseConfig:
+    config = active_config.get()
+    matching = tuple(
+        case
+        for case in config.study_design.coverage_stress_cases
+        if case.law is LawKey.TIMING_TERMINAL_HARMFUL_LATE
+        and case.band_count == config.method.finest_bands
+        and case.sensitivity_reference is CoverageStressSensitivityReference.TRUE_INFORMATION
+        and case.beta_offset is None
+    )
+    if len(matching) != 1:
+        raise InvalidScientificDataError(
+            "Figure 4 requires exactly one configured principal anytime coverage stress case"
+        )
+    return matching[0]
+
+
 def _anytime_path_rows(
     evidence: tuple[tuple[PlannedCell, CoverageEvidenceResult], ...],
 ) -> tuple[AnytimePathFigureRow, ...]:
     config = active_config.get()
-    target_law = LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE]
+    case = _principal_coverage_stress_case()
+    target_law = LAW_DISPLAY_NAMES[case.law]
     matches: list[CoverageEvidenceResult] = []
     for cell, result in evidence:
         if cell.identity.coordinates.synthetic_law_name != target_law:
             continue
-        if result.band_count != config.method.finest_bands:
+        if result.band_count != case.band_count:
             continue
         if (
-            abs(result.rho - (result.true_mutual_information + 0.01))  # TODO: should be constant
+            abs(result.rho - (result.true_mutual_information + case.rho_offset))
             > config.numerics.comparison_guard
         ):
             continue
@@ -1070,7 +1097,7 @@ def _controlled_value_json(result: FailureBoundaryResult) -> SerializedConfigJso
     )
 
 
-def _state_interpretation(state: ScientificState) -> FailureMessage:
+def _state_interpretation(state: ScientificState) -> ScientificInterpretation:
     interpretations = {
         ScientificState.CERTIFIED: "risk upper is within the configured budget",
         ScientificState.UNCERTIFIED: "valid evidence does not certify the configured budget",
@@ -1082,7 +1109,7 @@ def _state_interpretation(state: ScientificState) -> FailureMessage:
         ),
         ScientificState.INSUFFICIENT_EVIDENCE: "evidence-count gates are not satisfied",
     }
-    return FailureMessage(interpretations[state])
+    return ScientificInterpretation(interpretations[state])
 
 
 def _scaling_results(
@@ -1103,10 +1130,14 @@ def _scaling_rows(
     return tuple(
         ComputationalScalingRow(
             K=result.band_count,
-            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,  # TODO: should be constant
-            population_iqr_runtime_ms=result.population.iqr_runtime_seconds * 1000.0,  # TODO: should be constant
-            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,  # TODO: should be constant
-            outer_iqr_runtime_ms=result.outer_projection.iqr_runtime_seconds * 1000.0,  # TODO: should be constant
+            population_median_runtime_ms=_runtime_milliseconds(
+                result.population.median_runtime_seconds
+            ),
+            population_iqr_runtime_ms=_runtime_milliseconds(result.population.iqr_runtime_seconds),
+            outer_median_runtime_ms=_runtime_milliseconds(
+                result.outer_projection.median_runtime_seconds
+            ),
+            outer_iqr_runtime_ms=_runtime_milliseconds(result.outer_projection.iqr_runtime_seconds),
             peak_memory_mib=result.peak_memory_mib,
             median_root_iterations=result.population.median_root_iterations,
             median_outer_nodes=result.outer_projection.median_outer_nodes,
@@ -1122,8 +1153,12 @@ def _scaling_figure_rows(
     return tuple(
         ComputationalScalingFigureRow(
             K=result.band_count,
-            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,  # TODO: should be constant
-            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,  # TODO: should be constant
+            population_median_runtime_ms=_runtime_milliseconds(
+                result.population.median_runtime_seconds
+            ),
+            outer_median_runtime_ms=_runtime_milliseconds(
+                result.outer_projection.median_runtime_seconds
+            ),
             median_outer_nodes=result.outer_projection.median_outer_nodes,
         )
         for result in results
@@ -1245,7 +1280,7 @@ def _information_profile_rows(
     resolved_harmful = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
     u_beta_value = beta - resolved_harmful
-    u_beta = u_beta_value if 0.0 <= u_beta_value <= unresolved else None  # TODO: should be constant
+    u_beta = u_beta_value if 0.0 <= u_beta_value <= unresolved else None
     safety = assess_safety_geometry(summary, beta)
     rho_star = None if safety.safety_frontier is None else safety.safety_frontier
     feasible_lower = (
@@ -1259,8 +1294,8 @@ def _information_profile_rows(
         else population_result.risk_upper - resolved_harmful
     )
     rows: list[InformationProfileFigureRow] = []
-    for index in range(1001):  # TODO: should be constant
-        u = unresolved * index / 1000.0  # TODO: should be constant
+    for index in range(1001):
+        u = unresolved * index / 1000.0
         rows.append(
             InformationProfileFigureRow(
                 u=u,
@@ -1364,7 +1399,7 @@ def foreign_information_rows(
                     risk_upper=condition.risk_upper,
                     safety_regime=condition.safety_regime,
                     spurious_improvement=spurious,
-                    runtime_ms=condition.runtime_seconds * 1000.0,
+                    runtime_ms=_runtime_milliseconds(condition.runtime_seconds),
                 )
             )
     return tuple(rows)

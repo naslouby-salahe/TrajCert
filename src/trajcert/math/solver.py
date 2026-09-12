@@ -49,8 +49,8 @@ def solve_hidden_mass_interval(
     root_atol: ToleranceValue,
     identity_atol: ToleranceValue,
 ) -> HiddenMassSolveResult:
-    root_tolerance = _positive_tolerance(root_atol, ToleranceName("root_atol"))
-    identity_tolerance = _positive_tolerance(identity_atol, ToleranceName("identity_atol"))
+    root_tolerance = _positive_tolerance(root_atol, ToleranceName.ROOT_ABSOLUTE)
+    identity_tolerance = _positive_tolerance(identity_atol, ToleranceName.IDENTITY_ABSOLUTE)
     compatibility = assess_compatibility(summary, sensitivity_budget)
     rho = sensitivity_budget
     unresolved = summary.unresolved_mass

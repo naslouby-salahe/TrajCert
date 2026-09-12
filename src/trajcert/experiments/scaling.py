@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from enum import StrEnum
 from multiprocessing import get_context
 from multiprocessing.connection import Connection
@@ -30,10 +29,12 @@ from trajcert.types import (
     LawKey,
     MedianCount,
     MemoryMebibytes,
+    PlatformName,
     RuntimeNanoseconds,
     RuntimeSeconds,
     SerializedConfigJson,
     VisitedNodeCount,
+    current_platform,
     mass_tuple,
 )
 
@@ -185,7 +186,7 @@ def _worker(
     connection.close()
 
 
-if sys.platform == "win32":  # TODO: should be enum
+if current_platform() is PlatformName.WIN32:
 
     def _peak_resident_set_mib() -> MemoryMebibytes:
         peak_wset = cast(int, psutil.Process().memory_info().peak_wset)

@@ -21,6 +21,7 @@ from trajcert.telemetry import StreamProgress
 from trajcert.types import (
     AbsoluteTightening,
     BatchIndex,
+    BatchPhasePrefix,
     CertifiedUpdateFractionGain,
     CompatibilityRegime,
     Count,
@@ -33,7 +34,7 @@ from trajcert.types import (
     ScientificState,
     SeedIndex,
     SensitivityBudget,
-    TelemetryPhase,
+    batch_phase,
 )
 
 
@@ -168,7 +169,7 @@ def sequential_sensitivity_utility_batch(
         terminal_horizon=fine_partition.terminal_horizon,
     )
     stream_progress = StreamProgress(
-        TelemetryPhase(f"sequential_utility_batch_{batch_index}"),
+        batch_phase(BatchPhasePrefix.SEQUENTIAL_UTILITY, batch_index),
         len(stream_range),
     )
     collected: list[SequentialStreamUtility] = []

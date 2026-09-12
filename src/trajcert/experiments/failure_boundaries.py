@@ -28,10 +28,12 @@ from trajcert.types import (
     OuterMaxNodes,
     Probability,
     RiskBudget,
+    RiskOffset,
     RiskValue,
     RuntimeMilliseconds,
     ScientificState,
     SensitivityBudget,
+    TimingContrast,
     mass_tuple,
 )
 
@@ -72,7 +74,7 @@ def evaluate_failure_boundary(
 ) -> FailureBoundaryResult:
     config = active_config.get()
     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
-        return _finite_sample_size(int(level))
+        return _finite_sample_size(_sample_size_level(level))
     if axis in {
         FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
         FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET,
@@ -82,13 +84,14 @@ def evaluate_failure_boundary(
     summary = _summary(parameters, partition)
     tau = _tau(summary)
     if axis is FailureBoundaryAxis.INFORMATION_MARGIN:
-        rho = (tau or 0.0) + level
+        rho = (tau or 0.0) + _information_margin_level(level)
     if axis is FailureBoundaryAxis.RISK_OFFSET:
         minimum = minimum_information_point(summary)
+        offset = _risk_offset_level(level)
         if minimum is None:
-            beta = max(0.0, min(1.0, level))
+            beta = max(0.0, min(1.0, offset))
         else:
-            beta = max(0.0, min(1.0, minimum.latent_risk + level))
+            beta = max(0.0, min(1.0, minimum.latent_risk + offset))
     solved = sharp_risk_set(
         summary=summary,
         sensitivity_budget=rho,
@@ -244,19 +247,56 @@ def _population_coordinate(
     rho = config.budgets.information_nats
     beta = config.budgets.risk
     if axis is FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY:
-        parameters = parameters.model_copy(update={"q1": level, "q0": level})
+        severity = _probability_level(axis, level)
+        parameters = parameters.model_copy(update={"q1": severity, "q0": severity})
     elif axis is FailureBoundaryAxis.TIMING_CONTRAST:
-        contrast = level
+        contrast = _timing_contrast_level(level)
         parameters = parameters.model_copy(
             update={"lambda1": contrast / 2.0, "lambda0": -contrast / 2.0}
         )
     elif axis is FailureBoundaryAxis.HARMFUL_PREVALENCE:
-        parameters = parameters.model_copy(update={"theta": level})
+        parameters = parameters.model_copy(update={"theta": _probability_level(axis, level)})
     elif axis is FailureBoundaryAxis.PATH_RESOLUTION:
-        bands = int(level)
+        bands = _band_count_level(level)
     elif axis not in {FailureBoundaryAxis.INFORMATION_MARGIN, FailureBoundaryAxis.RISK_OFFSET}:
         raise ValueError(f"unsupported population failure-boundary axis: {axis}")
     return parameters, _partition(bands), rho, beta
+
+
+def _probability_level(axis: FailureBoundaryAxis, level: FailureBoundaryProbe) -> Probability:
+    if not isinstance(level, float):
+        raise ValueError(f"{axis} probe must be a probability")
+    return level
+
+
+def _timing_contrast_level(level: FailureBoundaryProbe) -> TimingContrast:
+    if not isinstance(level, float):
+        raise ValueError("timing-contrast probe must be a contrast magnitude")
+    return level
+
+
+def _information_margin_level(level: FailureBoundaryProbe) -> InformationNats:
+    if not isinstance(level, float):
+        raise ValueError("information-margin probe must be an information magnitude")
+    return level
+
+
+def _risk_offset_level(level: FailureBoundaryProbe) -> RiskOffset:
+    if not isinstance(level, float):
+        raise ValueError("risk-offset probe must be a finite level")
+    return level
+
+
+def _band_count_level(level: FailureBoundaryProbe) -> BandCount:
+    if not isinstance(level, int):
+        raise ValueError("path-resolution probe must be a band count")
+    return level
+
+
+def _sample_size_level(level: FailureBoundaryProbe) -> EventCount:
+    if not isinstance(level, int):
+        raise ValueError("matured-sample-size probe must be an event count")
+    return level
 
 
 def _base_parameters() -> LawParameters:

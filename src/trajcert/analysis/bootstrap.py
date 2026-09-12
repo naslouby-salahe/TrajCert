@@ -38,18 +38,18 @@ def paired_percentile_bootstrap(
         FailureMessage("paired statistics forbid NaN and infinity"),
     )
     namespace = bootstrap_namespace(semantic_comparison_key)
-    rng = generator_for(namespace, 0)  # TODO: should be constant
+    rng = generator_for(namespace, 0)
     pair_count = values.size
     bootstrap_means = np.empty(resample_count, dtype=np.float64)
     for index in range(resample_count):
-        sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)  # TODO: should be constant
+        sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)
         bootstrap_means[index] = np.mean(values[sampled], dtype=np.float64)
     bootstrap_means.sort()
-    alpha = 1.0 - confidence_level  # TODO: should be constant
+    alpha = 1.0 - confidence_level
     return PercentileBootstrapInterval(
         estimate=float(np.mean(values, dtype=np.float64)),
-        lower=linear_quantile(bootstrap_means, alpha / 2.0),  # TODO: should be constant
-        upper=linear_quantile(bootstrap_means, 1.0 - alpha / 2.0),  # TODO: should be constant
+        lower=linear_quantile(bootstrap_means, alpha / 2.0),
+        upper=linear_quantile(bootstrap_means, 1.0 - alpha / 2.0),
         confidence_level=confidence_level,
         resample_count=resample_count,
     )

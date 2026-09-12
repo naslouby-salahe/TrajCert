@@ -71,22 +71,34 @@ def _bernoulli_interval(
     delta: AnytimeConfidenceDelta,
     root_tolerance: ToleranceValue,
 ) -> ClosedProbabilityInterval:
-    if total == 0:  # TODO: should be constant
-        return ClosedProbabilityInterval(lower=0.0, upper=1.0)  # TODO: should be constant
-    threshold = log(1.0 / delta)  # TODO: should be constant
+    if total == 0:
+        return ClosedProbabilityInterval(lower=0.0, upper=1.0)
+    threshold = log(1.0 / delta)
     maximum_likelihood = successes / total
     lower = (
-        0.0  # TODO: should be constant
-        if successes == 0  # TODO: should be constant
+        0.0
+        if successes == 0
         else _root(
-            successes, total, 0.0, maximum_likelihood, threshold, root_tolerance, RootBranch.LOWER  # TODO: should be constant
+            successes,
+            total,
+            0.0,
+            maximum_likelihood,
+            threshold,
+            root_tolerance,
+            RootBranch.LOWER,
         )
     )
     upper = (
-        1.0  # TODO: should be constant
-        if successes == total  # TODO: should be constant
+        1.0
+        if successes == total
         else _root(
-            successes, total, maximum_likelihood, 1.0, threshold, root_tolerance, RootBranch.UPPER  # TODO: should be constant
+            successes,
+            total,
+            maximum_likelihood,
+            1.0,
+            threshold,
+            root_tolerance,
+            RootBranch.UPPER,
         )
     )
     return ClosedProbabilityInterval(lower=lower, upper=upper)
@@ -102,14 +114,14 @@ def _root(
     branch: RootBranch,
 ) -> Probability:
     while upper - lower > tolerance:
-        midpoint = (lower + upper) / 2.0  # TODO: should be constant
+        midpoint = (lower + upper) / 2.0
         residual = _log_mixture_ratio(successes, total, midpoint) - threshold
         if branch is RootBranch.LOWER:
-            if residual > 0.0:  # TODO: should be constant
+            if residual > 0.0:
                 lower = midpoint
             else:
                 upper = midpoint
-        elif residual <= 0.0:  # TODO: should be constant
+        elif residual <= 0.0:
             lower = midpoint
         else:
             upper = midpoint
@@ -118,9 +130,9 @@ def _root(
 
 def _log_mixture_ratio(successes: Count, total: Count, probability: Probability) -> LogMixtureRatio:
     failures = total - successes
-    beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)  # TODO: should be constant
-    if probability <= 0.0:  # TODO: should be constant
-        return beta_term if successes == 0 else inf  # TODO: should be constant
-    if probability >= 1.0:  # TODO: should be constant
-        return beta_term if failures == 0 else inf  # TODO: should be constant
+    beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
+    if probability <= 0.0:
+        return beta_term if successes == 0 else inf
+    if probability >= 1.0:
+        return beta_term if failures == 0 else inf
     return beta_term - successes * log(probability) - failures * log1p(-probability)

@@ -33,7 +33,7 @@ from trajcert.types import (
     ToleranceValue,
 )
 
-_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"  # TODO: should be enum
+_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"
 
 
 class OracleBracket(DomainModel):
@@ -87,7 +87,7 @@ class ProjectionOracleInput(DomainModel):
             + sum(interval.upper for interval in self.correct_by_band)
             + self.unresolved.upper
         )
-        if lower_sum > 1.0 or upper_sum < 1.0:  # TODO: should be constant
+        if lower_sum > 1.0 or upper_sum < 1.0:
             raise ValueError("projection-oracle rectangle has empty simplex intersection")
         return self
 
@@ -158,23 +158,23 @@ def population_law_masses(
     lambda0 = mpf(repr(parameters.lambda0))
     harmful_weights = _oracle_band_weights(band_count, lambda1)
     correct_weights = _oracle_band_weights(band_count, lambda0)
-    harmful_resolved_mass = theta * (mpf(1) - q1)  # TODO: should be constant
-    correct_resolved_mass = (mpf(1) - theta) * (mpf(1) - q0)  # TODO: should be constant
+    harmful_resolved_mass = theta * (mpf(1) - q1)
+    correct_resolved_mass = (mpf(1) - theta) * (mpf(1) - q0)
     harmful = tuple(harmful_resolved_mass * weight for weight in harmful_weights)
     correct = tuple(correct_resolved_mass * weight for weight in correct_weights)
-    unresolved = theta * q1 + (mpf(1) - theta) * q0  # TODO: should be constant
+    unresolved = theta * q1 + (mpf(1) - theta) * q0
     return harmful, correct, unresolved
 
 
 def _oracle_band_weights(band_count: BandCount, slope: mpf) -> tuple[mpf, ...]:
     bands = band_count
-    if bands <= 0:  # TODO: should be constant
+    if bands <= 0:
         raise InvalidScientificDataError("band count must be positive")
-    center = (mpf(bands) + mpf(1)) / mpf(2)  # TODO: should be constant
+    center = (mpf(bands) + mpf(1)) / mpf(2)
     logits = tuple(slope * (mpf(index) - center) for index in range(1, bands + 1))
     maximum = max(logits)
     unnormalized = tuple(exp(value - maximum) for value in logits)
-    total = sum(unnormalized, mpf(0))  # TODO: should be constant
+    total = sum(unnormalized, mpf(0))
     return tuple(value / total for value in unnormalized)
 
 
@@ -217,7 +217,7 @@ def feasible_projection_lower_oracle(
     if digits <= 0:
         raise InvalidScientificDataError(_ORACLE_PRECISION_MUST_BE_POSITIVE)
     previous_precision = ctx.prec
-    ctx.prec = max(previous_precision, ceil(digits * log2(10.0)))  # TODO: should be constant
+    ctx.prec = max(previous_precision, ceil(digits * log2(10.0)))
     try:
         sensitivity = _arb_exact_float(sensitivity_budget)
         harmful_lower = sum(interval.lower for interval in oracle_input.harmful_by_band)
@@ -292,7 +292,7 @@ def direct_mutual_information(
             mpf(repr(unresolved)),
             mpf(repr(hidden_terminal_harmful)),
         )
-        return max(0.0, float(value))  # TODO: should be constant
+        return max(0.0, float(value))
     finally:
         mp.dps = previous_digits
 
@@ -307,11 +307,11 @@ def _solve_information_oracle_data(
     bracket_width: mpf,
     comparison_guard: mpf,
 ) -> InformationOracleResult:
-    minimum_search_width = min(bracket_width, mpf(10) ** -(digits - 2))  # TODO: should be constant
+    minimum_search_width = min(bracket_width, mpf(10) ** -(digits - 2))
     minimum_bracket = _golden_minimum(harmful, correct, unresolved, minimum_search_width)
-    minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)  # TODO: should be constant
+    minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
     minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
-    equality_tolerance = max(mpf(10) ** (-floor(digits / 2)), comparison_guard)  # TODO: should be constant
+    equality_tolerance = max(mpf(10) ** (-floor(digits / 2)), comparison_guard)
     if rho < minimum_information - equality_tolerance:
         return _result(
             harmful_total,

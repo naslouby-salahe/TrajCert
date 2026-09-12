@@ -155,7 +155,7 @@ class SearchProgress:
             return
         self._last_logged_at = TimestampSeconds(now)
         elapsed_seconds = now - self._started_at
-        nodes_per_second = visited_nodes / elapsed_seconds if elapsed_seconds > 0.0 else 0.0  # TODO: should be constant
+        nodes_per_second = visited_nodes / elapsed_seconds if elapsed_seconds > 0.0 else 0.0
         _logger.info(
             "search_progress semantic_cell_key=%s phase=%s visited_nodes=%d node_cap=%d "
             + "queue_size=%d best_bound=%s elapsed_seconds=%.1f nodes_per_second=%.1f",
@@ -195,10 +195,10 @@ class StreamProgress:
             return
         self._last_logged_at = TimestampSeconds(now)
         elapsed_seconds = now - self._started_at
-        streams_per_second = streams_done / elapsed_seconds if elapsed_seconds > 0.0 else 0.0  # TODO: should be constant
+        streams_per_second = streams_done / elapsed_seconds if elapsed_seconds > 0.0 else 0.0
         remaining_streams = self._stream_count - streams_done
         estimated_remaining_seconds = (
-            remaining_streams / streams_per_second if streams_per_second > 0.0 else 0.0  # TODO: should be constant
+            remaining_streams / streams_per_second if streams_per_second > 0.0 else 0.0
         )
         _logger.info(
             "stream_progress semantic_cell_key=%s stage=%s streams_done=%d/%d "

@@ -26,15 +26,14 @@ from trajcert.types import (
     DigestHex,
     DomainModel,
     EnvironmentDigest,
-    EventCount,
     ExperimentName,
     ExperimentSlug,
     FailureBoundaryCoordinateDisplay,
+    FailureBoundaryProbe,
     GammaCoordinate,
     LawName,
     MethodName,
     NamedComparison,
-    OuterMaxNodes,
     PartitionName,
     Probability,
     RiskBudget,
@@ -72,10 +71,7 @@ class SensitivityCoordinate(DomainModel):
 
 class FailureBoundaryCoordinate(DomainModel):
     axis: FailureBoundaryAxis
-    finite_level: RiskOffset | None = None
-    node_count: OuterMaxNodes | None = None
-    event_count: EventCount | None = None
-    band_count: BandCount | None = None
+    level: FailureBoundaryProbe
     q1: Probability | None = None
     q0: Probability | None = None
 
@@ -87,32 +83,16 @@ class FailureBoundaryCoordinate(DomainModel):
                 f"{axis}{CoordinateGrammar.ASSIGNMENT}{CoordinateGrammar.TERMINAL_Q1_PREFIX}{self.q1}{CoordinateGrammar.TERMINAL_Q0_SEPARATOR}{self.q0}"
             )
         if axis is FailureBoundaryAxis.RISK_OFFSET:
-            if self.finite_level is None:
-                raise ValueError("risk-offset coordinate is missing its level")
-            numeric = float(self.finite_level)
+            numeric = float(self.level)
             prefix = (
                 CoordinateGrammar.NEGATIVE_PREFIX
-                if numeric < 0.0  # TODO: should be constant
+                if numeric < 0.0
                 else CoordinateGrammar.NONNEGATIVE_PREFIX
             )
             return FailureBoundaryCoordinateDisplay(
                 f"{axis}{CoordinateGrammar.ASSIGNMENT}{prefix}{abs(numeric)}"
             )
-        if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
-            return FailureBoundaryCoordinateDisplay(
-                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.node_count}"
-            )
-        if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
-            return FailureBoundaryCoordinateDisplay(
-                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.event_count}"
-            )
-        if axis is FailureBoundaryAxis.PATH_RESOLUTION:
-            return FailureBoundaryCoordinateDisplay(
-                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.band_count}"
-            )
-        return FailureBoundaryCoordinateDisplay(
-            f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.finite_level}"
-        )
+        return FailureBoundaryCoordinateDisplay(f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.level}")
 
 
 class VariantCoordinate(DomainModel):
@@ -292,9 +272,7 @@ class SemanticCellIdentity(DomainModel):
                 )
             )
         if coordinates.seed_index is not None:
-            values.append(
-                (CoordinateName.SEED_INDEX, CoordinateToken(str(coordinates.seed_index)))
-            )
+            values.append((CoordinateName.SEED_INDEX, CoordinateToken(str(coordinates.seed_index))))
         if coordinates.sensitivity_coordinate is not None:
             values.append(
                 (
@@ -312,25 +290,22 @@ def _failure_boundary_from_parts(
         q1_text, sep, q0_text = value_text.partition(CoordinateGrammar.TERMINAL_Q0_SEPARATOR)
         if not sep or not q1_text.startswith(CoordinateGrammar.TERMINAL_Q1_PREFIX):
             raise ValueError("invalid terminal-selection coordinate")
-        return FailureBoundaryCoordinate(
-            axis=axis,
-            q1=float(q1_text.removeprefix(CoordinateGrammar.TERMINAL_Q1_PREFIX)),
-            q0=float(q0_text),
-        )
+        q1 = float(q1_text.removeprefix(CoordinateGrammar.TERMINAL_Q1_PREFIX))
+        return FailureBoundaryCoordinate(axis=axis, level=q1, q1=q1, q0=float(q0_text))
     if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
-        return FailureBoundaryCoordinate(axis=axis, node_count=int(value_text))
+        return FailureBoundaryCoordinate(axis=axis, level=int(value_text))
     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
-        return FailureBoundaryCoordinate(axis=axis, event_count=int(value_text))
+        return FailureBoundaryCoordinate(axis=axis, level=int(value_text))
     if axis is FailureBoundaryAxis.PATH_RESOLUTION:
-        return FailureBoundaryCoordinate(axis=axis, band_count=int(value_text))
+        return FailureBoundaryCoordinate(axis=axis, level=int(value_text))
     if axis is FailureBoundaryAxis.RISK_OFFSET:
         negative = value_text.startswith(CoordinateGrammar.NEGATIVE_PREFIX)
         prefix = (
             CoordinateGrammar.NEGATIVE_PREFIX if negative else CoordinateGrammar.NONNEGATIVE_PREFIX
         )
         numeric = float(value_text.removeprefix(prefix))
-        return FailureBoundaryCoordinate(axis=axis, finite_level=-numeric if negative else numeric)
-    return FailureBoundaryCoordinate(axis=axis, finite_level=float(value_text))
+        return FailureBoundaryCoordinate(axis=axis, level=-numeric if negative else numeric)
+    return FailureBoundaryCoordinate(axis=axis, level=float(value_text))
 
 
 class ParentArtifactIdentity(DomainModel):

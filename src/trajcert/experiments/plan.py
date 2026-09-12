@@ -531,6 +531,7 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
             SemanticCoordinates(
                 failure_boundary_axis_and_level=FailureBoundaryCoordinate(
                     axis=FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
+                    level=q1,
                     q1=q1,
                     q0=q0,
                 )
@@ -585,13 +586,7 @@ if set(_COORDINATE_FACTORY) != set(CoordinateHandler):
 def _failure_boundary_coordinate(
     axis: FailureBoundaryAxis, level: FailureBoundaryProbe
 ) -> FailureBoundaryCoordinate:
-    if axis is FailureBoundaryAxis.PATH_RESOLUTION:
-        return FailureBoundaryCoordinate(axis=axis, band_count=int(level))
-    if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
-        return FailureBoundaryCoordinate(axis=axis, event_count=int(level))
-    if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
-        return FailureBoundaryCoordinate(axis=axis, node_count=int(level))
-    return FailureBoundaryCoordinate(axis=axis, finite_level=float(level))
+    return FailureBoundaryCoordinate(axis=axis, level=level)
 
 
 def _offset_coordinate(offset: SensitivityOffset) -> SensitivityCoordinate:

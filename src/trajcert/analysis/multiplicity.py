@@ -38,12 +38,13 @@ def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ..
     )
     family_size = len(ordered)
     adjusted_by_identity: dict[tuple[SemanticComparisonKey, PracticalMetric], Probability] = {}
-    running_maximum = 0.0  # TODO: should be constant
+    running_maximum = 0.0
     for rank, record in enumerate(ordered, start=1):
         scaled = (family_size - rank + 1) * record.raw_p_value
         running_maximum = max(running_maximum, scaled)
         adjusted_by_identity[(record.semantic_comparison_key, record.metric_name)] = min(
-            1.0, running_maximum  # TODO: should be constant
+            1.0,
+            running_maximum,
         )
     return tuple(
         HolmAdjustedTest(

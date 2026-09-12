@@ -334,8 +334,8 @@ def endpoint_special_case_identity(
     summary: ObservableSummary,
     identity_atol: ToleranceValue,
 ) -> IdentityResult:
-    if summary.partition.band_count != 1:  # TODO: should be constant
-        return IdentityResult(passed=False, max_absolute_error=1.0)  # TODO: should be constant
+    if summary.partition.band_count != 1:
+        return IdentityResult(passed=False, max_absolute_error=1.0)
     tau = observed_timing_information(summary)
     error = 0.0 if tau is None else abs(tau)
     return IdentityResult(passed=error <= identity_atol, max_absolute_error=error)

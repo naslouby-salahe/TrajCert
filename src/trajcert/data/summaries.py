@@ -53,14 +53,14 @@ def summarize_observable_masses(
     harmful_total = np.sum(harmful_by_band)
     correct_total = np.sum(correct_by_band)
     total = harmful_total + correct_total + unresolved_mass
-    if abs(total - 1.0) > guard:  # TODO: should be constant
+    if abs(total - 1.0) > guard:
         raise InvalidProbabilityError(
             "observable masses do not sum to one within the configured comparison guard"
         )
     band_mass = harmful_by_band + correct_by_band
     harmful_rate = tuple(
         (
-            None if (total_band := harmful + correct) <= 0.0 else harmful / total_band  # TODO: should be constant
+            None if (total_band := harmful + correct) <= 0.0 else harmful / total_band
             for harmful, correct in zip(harmful_by_band, correct_by_band, strict=True)
         )
     )

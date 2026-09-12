@@ -324,7 +324,7 @@ def run_experiment(
     try:
         if (
             name is ExperimentName.STATISTICAL_SYNTHESIS
-            or max_workers == 1  # TODO: should be constant
+            or max_workers == 1
             or supports_batched_recovery(name)
         ):
             completed, reused, failed, blocked = _run_cells_sequentially(

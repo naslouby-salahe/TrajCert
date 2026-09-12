@@ -83,6 +83,7 @@ from trajcert.types import (
     AnytimeConfidenceDelta,
     BandCount,
     BatchIndex,
+    BatchPhasePrefix,
     CaseIndex,
     CategoryIndex,
     ClientId,
@@ -105,7 +106,7 @@ from trajcert.types import (
     SeedIndex,
     SensitivityBudget,
     StreamCount,
-    TelemetryPhase,
+    batch_phase,
     mass_tuple,
 )
 
@@ -342,7 +343,7 @@ def coverage_stress_batch(
     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
     failures = dict.fromkeys(SequentialMethod, 0)
     stream_progress = StreamProgress(
-        TelemetryPhase(f"coverage_stress_batch_{batch_index}"),
+        batch_phase(BatchPhasePrefix.COVERAGE_STRESS, batch_index),
         len(stream_range),
     )
     first_certified: list[MedianEventCount] = []
@@ -595,7 +596,7 @@ def _coverage_stream_outcome(
             certified_updates += 1
             if first_certified is None:
                 first_certified = float(state.matured_count)
-    fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates  # TODO: should be constant
+    fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates
     return CoverageStreamCertification(
         method_failures=tuple(failed),
         first_certified_matured=float(
@@ -748,8 +749,8 @@ def _coverage_method_evidence(
 def _clopper_pearson_upper(failures: Count, streams: StreamCount) -> Probability:
     if streams <= 0 or failures < 0 or failures > streams:
         raise InvalidScientificDataError("invalid binomial counts for exact coverage limit")
-    if failures == streams:  # TODO: should be constant
-        return 1.0  # TODO: should be constant
+    if failures == streams:
+        return 1.0
     config = active_config.get()
     return float(
         beta_distribution.ppf(
@@ -869,12 +870,12 @@ def _minimum_information_completion(
     theta = minimum.latent_risk
     hidden_harmful = minimum.hidden_terminal_harmful_mass
     unresolved = summary.unresolved_mass
-    if theta <= 0.0 or theta >= 1.0:  # TODO: should be constant
+    if theta <= 0.0 or theta >= 1.0:
         raise InvalidScientificDataError(
             "minimum-information completion requires interior latent risk"
         )
     q1 = hidden_harmful / theta
-    q0 = (unresolved - hidden_harmful) / (1.0 - theta)  # TODO: should be constant
+    q0 = (unresolved - hidden_harmful) / (1.0 - theta)
     return parameters.model_copy(
         update={
             "name": LawName(f"Minimum-information completion of {parameters.name}"),
@@ -933,7 +934,7 @@ def _risk_budget(
         raise InvalidScientificDataError(
             "near-certification coverage stress requires a compatible true-law bound"
         )
-    return min(1.0, solved.latent_risk.upper + case.beta_offset)  # TODO: should be constant
+    return min(1.0, solved.latent_risk.upper + case.beta_offset)
 
 
 def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseResult:
@@ -1019,7 +1020,7 @@ def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseRes
     if tau_value is None:
         raise ValueError("model-incompatible hand case requires positive resolved mass")
     tau = tau_value
-    rho = tau - min(case.rho_margin, tau / 2.0)  # TODO: should be constant
+    rho = tau - min(case.rho_margin, tau / 2.0)
     projection = _project(singleton_summary_envelope(summary), rho)
     assessment = _singleton_assessment(partition, projection, rho, config.budgets.risk)
     return _state_result(

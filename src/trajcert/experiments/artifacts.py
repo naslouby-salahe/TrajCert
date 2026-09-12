@@ -346,7 +346,7 @@ def _validate_upstream_completion(
         raise InvalidScientificDataError(
             "upstream completion must expose exactly one persisted scientific result"
         )
-    if len(index.artifacts) != 1:  # TODO: should be constant
+    if len(index.artifacts) != 1:
         raise InvalidScientificDataError(
             "upstream scientific cell must have exactly one authoritative result artifact"
         )

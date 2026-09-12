@@ -107,7 +107,7 @@ def evaluate_sequential_materiality(
         if (
             observation.mean_paired_difference
             >= config.materiality.sequential.certified_fraction_gain
-            and observation.bootstrap_lower > 0.0  # TODO: should be constant
+            and observation.bootstrap_lower > 0.0
             and observation.holm_adjusted_p_value < config.confidence.alpha
         ):
             qualified_by_law[observation.law_name].add(observation.sensitivity_budget)

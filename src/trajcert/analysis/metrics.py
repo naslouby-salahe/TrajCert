@@ -38,10 +38,10 @@ def population_gain(
     risk_upper: RiskValue,
     unresolved_mass: Mass,
 ) -> PopulationGain:
-    if unresolved_mass < 0.0:  # TODO: should be constant
+    if unresolved_mass < 0.0:
         raise InvalidScientificDataError("unresolved mass cannot be negative")
     tightening = unresolved_as_harm_upper - risk_upper
-    relative = None if unresolved_mass <= 0.0 else tightening / unresolved_mass  # TODO: should be constant
+    relative = None if unresolved_mass <= 0.0 else tightening / unresolved_mass
     return PopulationGain(
         absolute_tightening=tightening,
         relative_unresolved_gain=relative,

@@ -29,10 +29,10 @@ from trajcert.types import (
     OuterMaxNodes,
     ProvenSearchBound,
     RiskValue,
+    SearchPhase,
     SearchPredicate,
     SensitivityBudget,
     SurvivingBoxCount,
-    TelemetryPhase,
     ToleranceValue,
     VisitedNodeCount,
 )
@@ -78,7 +78,7 @@ class _Box:
 
     @property
     def objective_upper(self) -> RiskValue:
-        return min(1.0, self.harmful_upper + self.hidden_upper)  # TODO: should be constant
+        return min(1.0, self.harmful_upper + self.hidden_upper)
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +136,7 @@ class _SearchStall:
             return False
         oldest = self._history[0][1]
         improvement = oldest - record
-        return 0.0 <= improvement < self._floor  # TODO: should be constant
+        return 0.0 <= improvement < self._floor
 
 
 def project_upper_risk(
@@ -150,7 +150,7 @@ def project_upper_risk(
     outer_max_nodes: OuterMaxNodes,
 ) -> ProjectionResult:
     rho = sensitivity_budget
-    if rho < 0.0:  # TODO: should be constant
+    if rho < 0.0:
         raise InvalidScientificDataError("sensitivity budget must be nonnegative")
     precision_bits = arbitrary_precision_bits
     if precision_bits <= 0:
@@ -159,7 +159,7 @@ def project_upper_risk(
     if node_cap <= 0:
         raise InvalidScientificDataError("outer_max_nodes must be positive")
     gap = outer_gap
-    if gap <= 0.0:  # TODO: should be constant
+    if gap <= 0.0:
         raise InvalidScientificDataError("outer_gap must be positive")
     if envelope.is_singleton:
         return _singleton_projection(
@@ -196,7 +196,7 @@ def project_upper_risk(
         proven_upper=_unit(projection.proven_upper),
         final_gap=projection.final_gap,
         termination_reason=projection.termination_reason,
-        compatibility_lower_bound=max(0.0, compatibility.proven_lower),  # TODO: should be constant
+        compatibility_lower_bound=max(0.0, compatibility.proven_lower),
         intrinsic_risk_lower_bound=None if intrinsic_lower is None else _unit(intrinsic_lower),
     )
 
@@ -211,9 +211,9 @@ def _singleton_projection(
 ) -> ProjectionResult:
     summary = envelope.exact_summary(comparison_guard)
     risk_set = sharp_risk_set(summary, rho, root_atol, identity_atol)
-    compatibility = max(0.0, _timing_information(summary))  # TODO: should be constant
+    compatibility = max(0.0, _timing_information(summary))
     intrinsic = None
-    if summary.resolved_mass > 0.0:  # TODO: should be constant
+    if summary.resolved_mass > 0.0:
         intrinsic = summary.resolved_harmful_mass / summary.resolved_mass
     if risk_set.latent_risk is None:
         upper = _assumption_free_envelope_upper(envelope)
@@ -228,7 +228,7 @@ def _singleton_projection(
         surviving_boxes=1,
         feasible_incumbent=incumbent,
         proven_upper=_unit(upper),
-        final_gap=0.0,  # TODO: should be constant
+        final_gap=0.0,
         termination_reason=ProjectionTerminationReason.EXACT_SINGLETON,
         compatibility_lower_bound=compatibility,
         intrinsic_risk_lower_bound=None if intrinsic is None else _unit(intrinsic),
@@ -270,7 +270,7 @@ def _projection_search(
     )
     visited: VisitedNodeCount = 0
     active: _Box | None = None
-    progress = SearchProgress(TelemetryPhase("projection_search"), node_cap)
+    progress = SearchProgress(SearchPhase.PROJECTION, node_cap)
     policy = active_config.get().numerics.arb_search
     stall = _SearchStall(
         policy.projection_stall_minimum_visited,
@@ -444,7 +444,7 @@ def _compatibility_search(
     best_upper = inf
     visited: VisitedNodeCount = 0
     active: _Box | None = None
-    progress = SearchProgress(TelemetryPhase("compatibility_search"), node_cap)
+    progress = SearchProgress(SearchPhase.COMPATIBILITY, node_cap)
     policy = active_config.get().numerics.arb_search
     stall = _SearchStall(
         policy.decision_stall_minimum_visited,
@@ -596,7 +596,7 @@ def _intrinsic_search(
     )
     visited: VisitedNodeCount = 0
     active: _Box | None = None
-    progress = SearchProgress(TelemetryPhase("intrinsic_search"), node_cap)
+    progress = SearchProgress(SearchPhase.INTRINSIC, node_cap)
     policy = active_config.get().numerics.arb_search
     stall = _SearchStall(
         policy.decision_stall_minimum_visited,

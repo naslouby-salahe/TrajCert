@@ -189,7 +189,7 @@ def _sample_event(
         category = ObservableCategoryProbability(
             band_index=None,
             correctness_label=None,
-            probability=0.0,  # TODO: should be constant
+            probability=0.0,
         )
     else:
         weights = harmful_weights if harmful else correct_weights
@@ -197,7 +197,7 @@ def _sample_event(
         category = ObservableCategoryProbability(
             band_index=band_index,
             correctness_label=OutcomeLabel.HARMFUL if harmful else OutcomeLabel.CORRECT,
-            probability=0.0,  # TODO: should be constant
+            probability=0.0,
         )
     return _event_from_observable_category(
         parameters.name,
@@ -261,10 +261,10 @@ def _validate_probability_vector(probabilities: tuple[Probability, ...]) -> None
     if not probabilities:
         raise InvalidProbabilityError("category probability vector cannot be empty")
     values = np.asarray(probabilities, dtype=np.float64)
-    if np.any(~np.isfinite(values)) or np.any(values < 0.0) or np.any(values > 1.0):  # TODO: should be constant
+    if np.any(~np.isfinite(values)) or np.any(values < 0.0) or np.any(values > 1.0):
         raise InvalidProbabilityError("category probabilities must be finite and lie in [0, 1]")
     guard = active_config.get().numerics.comparison_guard
-    if abs(np.sum(values) - 1.0) > guard:  # TODO: should be constant
+    if abs(np.sum(values) - 1.0) > guard:
         raise InvalidProbabilityError(
             "category probabilities do not sum to one within comparison_guard"
         )

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
 from enum import StrEnum
 from math import isnan
 from pathlib import Path
@@ -19,9 +18,12 @@ from trajcert.types import (
     FixedNotationExponent,
     NumericSign,
     PathCoordinateValue,
+    PlatformName,
+    current_platform,
 )
 
-_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"  # TODO: should be enum
+_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
+
 
 class WorkspacePathComponent(StrEnum):
     OUTPUTS = "outputs"
@@ -229,7 +231,7 @@ class SkeletonFile(StrEnum):
 
 
 def long_path_safe(path: Path) -> Path:
-    if sys.platform != "win32":  # TODO: should be enum
+    if current_platform() is not PlatformName.WIN32:
         return path
     resolved = path.resolve()
     if str(resolved).startswith(_WINDOWS_EXTENDED_LENGTH_PREFIX):
@@ -238,7 +240,7 @@ def long_path_safe(path: Path) -> Path:
 
 
 def fsync_directory(directory: Path) -> None:
-    if sys.platform == "win32":  # TODO: should be enum
+    if current_platform() is PlatformName.WIN32:
         return
     descriptor = os.open(directory, os.O_RDONLY)
     try:
@@ -269,14 +271,16 @@ def canonical_number_token(value: PathCoordinateValue) -> CoordinateToken:
     if isnan(value) or value in (float("inf"), float("-inf")):
         raise SerializationError("semantic numeric path coordinate must be finite")
     if not value:
-        return CoordinateToken("0")  # TODO: should be enum
+        return CoordinateToken("0")
     sign, coefficient, exponent = _parsed_coefficient(value)
     integer, fractional = _split_coefficient(coefficient)
-    digits = DecimalDigits((integer + fractional).lstrip("0") or "0")  # TODO: should be enum
+    digits = DecimalDigits((integer + fractional).lstrip("0") or "0")
     decimal_position = _decimal_position(integer, fractional)
     n = decimal_position + exponent
-    digits = DecimalDigits(digits.rstrip("0") or "0")  # TODO: should be enum
-    return CoordinateToken(sign + _format_number_token(digits, n))
+    digits = DecimalDigits(digits.rstrip("0") or "0")
+    magnitude = _format_number_token(digits, n)
+    prefix = "" if sign is NumericSign.NON_NEGATIVE else sign
+    return CoordinateToken(prefix + magnitude)
 
 
 def _parsed_coefficient(
@@ -284,10 +288,10 @@ def _parsed_coefficient(
 ) -> tuple[NumericSign, DecimalCoefficient, FixedNotationExponent]:
     representation = repr(value)
     if representation.startswith("-"):
-        sign = NumericSign("-")
+        sign = NumericSign.NEGATIVE
         representation = representation[1:]
     else:
-        sign = NumericSign("")
+        sign = NumericSign.NON_NEGATIVE
     if "e" in representation or "E" in representation:
         coefficient, exponent_text = representation.lower().split("e", maxsplit=1)
         return sign, DecimalCoefficient(coefficient), int(exponent_text)
@@ -302,7 +306,7 @@ def _split_coefficient(coefficient: DecimalCoefficient) -> tuple[DecimalDigits, 
 
 
 def _decimal_position(integer: DecimalDigits, fractional: DecimalDigits) -> FixedNotationExponent:
-    if integer == "0":  # TODO: should be enum
+    if integer == "0":
         leading_fraction_zeros = len(fractional) - len(fractional.lstrip("0"))
         return -leading_fraction_zeros
     return len(integer.lstrip("0"))
