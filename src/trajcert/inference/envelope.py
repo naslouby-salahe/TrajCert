@@ -146,8 +146,8 @@ def _subset_interval(
     complement_upper = sum(
         interval.upper for index, interval in enumerate(intervals) if index not in selected_set
     )
-    lower = max(direct_lower, 1.0 - complement_upper, 0.0)
-    upper = min(direct_upper, 1.0 - complement_lower, 1.0)
+    lower = max(direct_lower, 1.0 - complement_upper, 0.0)  # TODO: should be constant
+    upper = min(direct_upper, 1.0 - complement_lower, 1.0)  # TODO: should be constant
     if lower > upper:
         raise NumericalError("confidence rectangle yields an empty aggregate interval")
     return ClosedProbabilityInterval(lower=lower, upper=upper)
@@ -166,10 +166,10 @@ def _resolved_entropy_envelope(
         for left, right in zip(harmful, correct, strict=True)
     )
     resolved_mass_upper = min(
-        1.0,
+        1.0,  # TODO: should be constant
         sum(left.upper + right.upper for left, right in zip(harmful, correct, strict=True)),
     )
-    upper = min(coordinate_upper, resolved_mass_upper * log(2.0), log(2.0))
+    upper = min(coordinate_upper, resolved_mass_upper * log(2.0), log(2.0))  # TODO: should be constant
     return ScalarEnvelope(lower=lower, upper=upper)
 
 

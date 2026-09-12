@@ -23,11 +23,11 @@ def repeated_static_region(
 ) -> CategoricalConfidenceRegion:
     total = state.matured_count
     dimension = len(state.canonical_count_vector)
-    if total == 0:
-        intervals = tuple(ClosedProbabilityInterval(lower=0.0, upper=1.0) for _ in range(dimension))
+    if total == 0:  # TODO: should be constant
+        intervals = tuple(ClosedProbabilityInterval(lower=0.0, upper=1.0) for _ in range(dimension))  # TODO: should be constant
         return CategoricalConfidenceRegion(matured_count=0, intervals=intervals)
     delta = anytime_delta
-    z = float(norm.ppf(1.0 - delta / (2.0 * dimension)))
+    z = float(norm.ppf(1.0 - delta / (2.0 * dimension)))  # TODO: should be constant
     intervals = tuple(_wilson_interval(count, total, z) for count in state.canonical_count_vector)
     return CategoricalConfidenceRegion(matured_count=state.matured_count, intervals=intervals)
 
@@ -57,14 +57,14 @@ def _wilson_interval(
 ) -> ClosedProbabilityInterval:
     proportion = successes / total
     z_squared = z * z
-    denominator = 1.0 + z_squared / total
-    center = (proportion + z_squared / (2.0 * total)) / denominator
+    denominator = 1.0 + z_squared / total  # TODO: should be constant
+    center = (proportion + z_squared / (2.0 * total)) / denominator  # TODO: should be constant
     half = (
         z
         / denominator
-        * sqrt(proportion * (1.0 - proportion) / total + z_squared / (4.0 * total * total))
+        * sqrt(proportion * (1.0 - proportion) / total + z_squared / (4.0 * total * total))  # TODO: should be constant
     )
     return ClosedProbabilityInterval(
-        lower=max(0.0, center - half),
-        upper=min(1.0, center + half),
+        lower=max(0.0, center - half),  # TODO: should be constant
+        upper=min(1.0, center + half),  # TODO: should be constant
     )

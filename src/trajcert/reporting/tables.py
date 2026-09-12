@@ -112,7 +112,7 @@ def _format_scalar(column: ColumnName, value: TabularCellValue) -> str:
         return "true" if value else "false"
     if isinstance(value, float):
         threshold = active_config.get().publication.p_value_display_threshold
-        if column in _P_VALUE_COLUMNS and 0.0 <= value < threshold:
+        if column in _P_VALUE_COLUMNS and 0.0 <= value < threshold:  # TODO: should be constant
             return f"<{threshold!r}"
         return repr(value)
     return str(value)

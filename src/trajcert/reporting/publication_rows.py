@@ -834,7 +834,7 @@ def _solver_comparison_groups(
     for cell in _cells(plan, ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE):
         partition = _required_partition(cell)
         offset = cell.identity.coordinates.sensitivity_coordinate or SensitivityCoordinate(
-            offset=0.0
+            offset=0.0  # TODO: should be constant
         )
         grouped[(partition, offset)].append(
             read_verified_scientific_result(cell, workspace_root, SolverOracleComparison)
@@ -961,7 +961,7 @@ def _anytime_path_rows(
         if result.band_count != config.method.finest_bands:
             continue
         if (
-            abs(result.rho - (result.true_mutual_information + 0.01))
+            abs(result.rho - (result.true_mutual_information + 0.01))  # TODO: should be constant
             > config.numerics.comparison_guard
         ):
             continue
@@ -1103,10 +1103,10 @@ def _scaling_rows(
     return tuple(
         ComputationalScalingRow(
             K=result.band_count,
-            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,
-            population_iqr_runtime_ms=result.population.iqr_runtime_seconds * 1000.0,
-            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,
-            outer_iqr_runtime_ms=result.outer_projection.iqr_runtime_seconds * 1000.0,
+            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,  # TODO: should be constant
+            population_iqr_runtime_ms=result.population.iqr_runtime_seconds * 1000.0,  # TODO: should be constant
+            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,  # TODO: should be constant
+            outer_iqr_runtime_ms=result.outer_projection.iqr_runtime_seconds * 1000.0,  # TODO: should be constant
             peak_memory_mib=result.peak_memory_mib,
             median_root_iterations=result.population.median_root_iterations,
             median_outer_nodes=result.outer_projection.median_outer_nodes,
@@ -1122,8 +1122,8 @@ def _scaling_figure_rows(
     return tuple(
         ComputationalScalingFigureRow(
             K=result.band_count,
-            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,
-            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,
+            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,  # TODO: should be constant
+            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,  # TODO: should be constant
             median_outer_nodes=result.outer_projection.median_outer_nodes,
         )
         for result in results
@@ -1245,7 +1245,7 @@ def _information_profile_rows(
     resolved_harmful = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
     u_beta_value = beta - resolved_harmful
-    u_beta = u_beta_value if 0.0 <= u_beta_value <= unresolved else None
+    u_beta = u_beta_value if 0.0 <= u_beta_value <= unresolved else None  # TODO: should be constant
     safety = assess_safety_geometry(summary, beta)
     rho_star = None if safety.safety_frontier is None else safety.safety_frontier
     feasible_lower = (
@@ -1259,8 +1259,8 @@ def _information_profile_rows(
         else population_result.risk_upper - resolved_harmful
     )
     rows: list[InformationProfileFigureRow] = []
-    for index in range(1001):
-        u = unresolved * index / 1000.0
+    for index in range(1001):  # TODO: should be constant
+        u = unresolved * index / 1000.0  # TODO: should be constant
         rows.append(
             InformationProfileFigureRow(
                 u=u,

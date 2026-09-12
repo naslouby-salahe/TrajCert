@@ -185,7 +185,7 @@ def _worker(
     connection.close()
 
 
-if sys.platform == "win32":
+if sys.platform == "win32":  # TODO: should be enum
 
     def _peak_resident_set_mib() -> MemoryMebibytes:
         peak_wset = cast(int, psutil.Process().memory_info().peak_wset)

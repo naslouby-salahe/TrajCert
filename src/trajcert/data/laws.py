@@ -71,12 +71,12 @@ def resolved_band_weights(band_count: BandCount, slope: SlopeValue) -> Vector:
     if bands <= 0:
         raise InvalidScientificDataError("band count must be positive")
     indices = np.arange(1, bands + 1, dtype=np.float64)
-    center = (bands + 1) / 2.0
+    center = (bands + 1) / 2.0  # TODO: should be constant
     logits = slope * (indices - center)
     shifted_logits = logits - logits.max()
     unnormalized_weights = np.asarray(np.exp(shifted_logits), dtype=np.float64)
     total_weight = float(unnormalized_weights.sum())
-    if not isfinite(total_weight) or total_weight <= 0.0:
+    if not isfinite(total_weight) or total_weight <= 0.0:  # TODO: should be constant
         raise InvalidScientificDataError("law band weights could not be normalized")
     return unnormalized_weights / total_weight
 
@@ -87,13 +87,13 @@ def build_full_law(parameters: LawParameters, band_count: BandCount) -> FullLawP
     theta = parameters.theta
     q1 = parameters.q1
     q0 = parameters.q0
-    harmful_resolved_mass = theta * (1.0 - q1)
-    correct_resolved_mass = (1.0 - theta) * (1.0 - q0)
+    harmful_resolved_mass = theta * (1.0 - q1)  # TODO: should be constant
+    correct_resolved_mass = (1.0 - theta) * (1.0 - q0)  # TODO: should be constant
     return FullLawProbabilities(
         harmful_resolved=harmful_resolved_mass * harmful_weights,
         correct_resolved=correct_resolved_mass * correct_weights,
         terminal_harmful=theta * q1,
-        terminal_correct=(1.0 - theta) * q0,
+        terminal_correct=(1.0 - theta) * q0,  # TODO: should be constant
     )
 
 

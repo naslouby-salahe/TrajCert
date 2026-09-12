@@ -78,7 +78,7 @@ class _Box:
 
     @property
     def objective_upper(self) -> RiskValue:
-        return min(1.0, self.harmful_upper + self.hidden_upper)
+        return min(1.0, self.harmful_upper + self.hidden_upper)  # TODO: should be constant
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +136,7 @@ class _SearchStall:
             return False
         oldest = self._history[0][1]
         improvement = oldest - record
-        return 0.0 <= improvement < self._floor
+        return 0.0 <= improvement < self._floor  # TODO: should be constant
 
 
 def project_upper_risk(
@@ -150,7 +150,7 @@ def project_upper_risk(
     outer_max_nodes: OuterMaxNodes,
 ) -> ProjectionResult:
     rho = sensitivity_budget
-    if rho < 0.0:
+    if rho < 0.0:  # TODO: should be constant
         raise InvalidScientificDataError("sensitivity budget must be nonnegative")
     precision_bits = arbitrary_precision_bits
     if precision_bits <= 0:
@@ -159,7 +159,7 @@ def project_upper_risk(
     if node_cap <= 0:
         raise InvalidScientificDataError("outer_max_nodes must be positive")
     gap = outer_gap
-    if gap <= 0.0:
+    if gap <= 0.0:  # TODO: should be constant
         raise InvalidScientificDataError("outer_gap must be positive")
     if envelope.is_singleton:
         return _singleton_projection(
@@ -196,7 +196,7 @@ def project_upper_risk(
         proven_upper=_unit(projection.proven_upper),
         final_gap=projection.final_gap,
         termination_reason=projection.termination_reason,
-        compatibility_lower_bound=max(0.0, compatibility.proven_lower),
+        compatibility_lower_bound=max(0.0, compatibility.proven_lower),  # TODO: should be constant
         intrinsic_risk_lower_bound=None if intrinsic_lower is None else _unit(intrinsic_lower),
     )
 
@@ -211,9 +211,9 @@ def _singleton_projection(
 ) -> ProjectionResult:
     summary = envelope.exact_summary(comparison_guard)
     risk_set = sharp_risk_set(summary, rho, root_atol, identity_atol)
-    compatibility = max(0.0, _timing_information(summary))
+    compatibility = max(0.0, _timing_information(summary))  # TODO: should be constant
     intrinsic = None
-    if summary.resolved_mass > 0.0:
+    if summary.resolved_mass > 0.0:  # TODO: should be constant
         intrinsic = summary.resolved_harmful_mass / summary.resolved_mass
     if risk_set.latent_risk is None:
         upper = _assumption_free_envelope_upper(envelope)
@@ -228,7 +228,7 @@ def _singleton_projection(
         surviving_boxes=1,
         feasible_incumbent=incumbent,
         proven_upper=_unit(upper),
-        final_gap=0.0,
+        final_gap=0.0,  # TODO: should be constant
         termination_reason=ProjectionTerminationReason.EXACT_SINGLETON,
         compatibility_lower_bound=compatibility,
         intrinsic_risk_lower_bound=None if intrinsic is None else _unit(intrinsic),

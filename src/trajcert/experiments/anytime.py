@@ -595,7 +595,7 @@ def _coverage_stream_outcome(
             certified_updates += 1
             if first_certified is None:
                 first_certified = float(state.matured_count)
-    fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates
+    fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates  # TODO: should be constant
     return CoverageStreamCertification(
         method_failures=tuple(failed),
         first_certified_matured=float(
@@ -748,8 +748,8 @@ def _coverage_method_evidence(
 def _clopper_pearson_upper(failures: Count, streams: StreamCount) -> Probability:
     if streams <= 0 or failures < 0 or failures > streams:
         raise InvalidScientificDataError("invalid binomial counts for exact coverage limit")
-    if failures == streams:
-        return 1.0
+    if failures == streams:  # TODO: should be constant
+        return 1.0  # TODO: should be constant
     config = active_config.get()
     return float(
         beta_distribution.ppf(
@@ -869,12 +869,12 @@ def _minimum_information_completion(
     theta = minimum.latent_risk
     hidden_harmful = minimum.hidden_terminal_harmful_mass
     unresolved = summary.unresolved_mass
-    if theta <= 0.0 or theta >= 1.0:
+    if theta <= 0.0 or theta >= 1.0:  # TODO: should be constant
         raise InvalidScientificDataError(
             "minimum-information completion requires interior latent risk"
         )
     q1 = hidden_harmful / theta
-    q0 = (unresolved - hidden_harmful) / (1.0 - theta)
+    q0 = (unresolved - hidden_harmful) / (1.0 - theta)  # TODO: should be constant
     return parameters.model_copy(
         update={
             "name": LawName(f"Minimum-information completion of {parameters.name}"),
@@ -933,7 +933,7 @@ def _risk_budget(
         raise InvalidScientificDataError(
             "near-certification coverage stress requires a compatible true-law bound"
         )
-    return min(1.0, solved.latent_risk.upper + case.beta_offset)
+    return min(1.0, solved.latent_risk.upper + case.beta_offset)  # TODO: should be constant
 
 
 def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseResult:
@@ -1019,7 +1019,7 @@ def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseRes
     if tau_value is None:
         raise ValueError("model-incompatible hand case requires positive resolved mass")
     tau = tau_value
-    rho = tau - min(case.rho_margin, tau / 2.0)
+    rho = tau - min(case.rho_margin, tau / 2.0)  # TODO: should be constant
     projection = _project(singleton_summary_envelope(summary), rho)
     assessment = _singleton_assessment(partition, projection, rho, config.budgets.risk)
     return _state_result(

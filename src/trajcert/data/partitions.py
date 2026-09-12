@@ -64,7 +64,7 @@ def _validate_partition_shape(
         raise InvalidPartitionError(
             "partition must be a deterministic coarsening of the finest partition"
         )
-    if not isfinite(horizon) or horizon <= 0.0:
+    if not isfinite(horizon) or horizon <= 0.0:  # TODO: should be constant
         raise InvalidPartitionError("terminal horizon must be finite and positive")
     if len(boundaries) != bands:
         raise InvalidPartitionError("partition boundary count does not match band count")
@@ -78,9 +78,9 @@ def build_partition(
     finest = finest_band_count
     bands = band_count
     horizon = terminal_horizon
-    if finest <= 0 or bands <= 0 or bands > finest or (finest % bands != 0):
+    if finest <= 0 or bands <= 0 or bands > finest or (finest % bands != 0):  # TODO: should be constant
         raise InvalidPartitionError("invalid finest/coarse partition relationship")
-    if not isfinite(horizon) or horizon <= 0.0:
+    if not isfinite(horizon) or horizon <= 0.0:  # TODO: should be constant
         raise InvalidPartitionError("terminal horizon must be finite and positive")
 
     boundaries = tuple(horizon * band_index / bands for band_index in range(1, bands + 1))

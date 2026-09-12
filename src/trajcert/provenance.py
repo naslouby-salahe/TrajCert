@@ -92,7 +92,7 @@ class FailureBoundaryCoordinate(DomainModel):
             numeric = float(self.finite_level)
             prefix = (
                 CoordinateGrammar.NEGATIVE_PREFIX
-                if numeric < 0.0
+                if numeric < 0.0  # TODO: should be constant
                 else CoordinateGrammar.NONNEGATIVE_PREFIX
             )
             return FailureBoundaryCoordinateDisplay(

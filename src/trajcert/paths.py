@@ -229,7 +229,7 @@ class SkeletonFile(StrEnum):
 
 
 def long_path_safe(path: Path) -> Path:
-    if sys.platform != "win32":
+    if sys.platform != "win32":  # TODO: should be enum
         return path
     resolved = path.resolve()
     if str(resolved).startswith(_WINDOWS_EXTENDED_LENGTH_PREFIX):
@@ -238,7 +238,7 @@ def long_path_safe(path: Path) -> Path:
 
 
 def fsync_directory(directory: Path) -> None:
-    if sys.platform == "win32":
+    if sys.platform == "win32":  # TODO: should be enum
         return
     descriptor = os.open(directory, os.O_RDONLY)
     try:
@@ -269,13 +269,13 @@ def canonical_number_token(value: PathCoordinateValue) -> CoordinateToken:
     if isnan(value) or value in (float("inf"), float("-inf")):
         raise SerializationError("semantic numeric path coordinate must be finite")
     if not value:
-        return CoordinateToken("0")
+        return CoordinateToken("0")  # TODO: should be enum
     sign, coefficient, exponent = _parsed_coefficient(value)
     integer, fractional = _split_coefficient(coefficient)
-    digits = DecimalDigits((integer + fractional).lstrip("0") or "0")
+    digits = DecimalDigits((integer + fractional).lstrip("0") or "0")  # TODO: should be enum
     decimal_position = _decimal_position(integer, fractional)
     n = decimal_position + exponent
-    digits = DecimalDigits(digits.rstrip("0") or "0")
+    digits = DecimalDigits(digits.rstrip("0") or "0")  # TODO: should be enum
     return CoordinateToken(sign + _format_number_token(digits, n))
 
 
@@ -302,7 +302,7 @@ def _split_coefficient(coefficient: DecimalCoefficient) -> tuple[DecimalDigits, 
 
 
 def _decimal_position(integer: DecimalDigits, fractional: DecimalDigits) -> FixedNotationExponent:
-    if integer == "0":
+    if integer == "0":  # TODO: should be enum
         leading_fraction_zeros = len(fractional) - len(fractional.lstrip("0"))
         return -leading_fraction_zeros
     return len(integer.lstrip("0"))

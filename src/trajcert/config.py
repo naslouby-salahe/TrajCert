@@ -103,7 +103,7 @@ class MethodConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_endpoint_partition(self) -> MethodConfig:
-        if self.endpoint_band_count != 1:
+        if self.endpoint_band_count != 1:  # TODO: should be constant
             raise ValueError(
                 "method.endpoint_band_count must define the one-band endpoint partition"
             )
@@ -130,7 +130,7 @@ class ConfidenceConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_level_alpha_pair(self) -> ConfidenceConfig:
-        if not isclose(self.level, 1.0 - self.alpha, rel_tol=0.0, abs_tol=1e-12):
+        if not isclose(self.level, 1.0 - self.alpha, rel_tol=0.0, abs_tol=1e-12):  # TODO: should be constant
             raise ValueError("confidence.level must equal 1 - confidence.alpha")
         return self
 
@@ -193,9 +193,9 @@ class LegacyPartitionIncoherenceConfig(ConfigModel):
         _require_strictly_increasing(
             self.q, ConfigFieldPath("study_design.legacy_partition_incoherence.q")
         )
-        if not isclose(sum(self.latent_outcome_probabilities), 1.0, rel_tol=0.0, abs_tol=1e-12):
+        if not isclose(sum(self.latent_outcome_probabilities), 1.0, rel_tol=0.0, abs_tol=1e-12):  # TODO: should be constant
             raise ValueError("legacy latent outcome probabilities must sum exactly to one")
-        if any(value <= 0.0 for value in self.latent_outcome_probabilities):
+        if any(value <= 0.0 for value in self.latent_outcome_probabilities):  # TODO: should be constant
             raise ValueError("legacy latent outcome probabilities must be positive")
         return self
 

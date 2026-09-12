@@ -197,7 +197,7 @@ def build_real_trajectory_eligibility(
         ),
         (
             RealTrajectoryExclusionReason.INVALID_DECISION_LATENCY,
-            annotated[columns.decision_time].is_null() | (annotated[columns.decision_time] <= 0.0),
+            annotated[columns.decision_time].is_null() | (annotated[columns.decision_time] <= 0.0),  # TODO: should be constant
         ),
         (RealTrajectoryExclusionReason.DUPLICATE_ANNOTATION, duplicate_mask),
     )
@@ -297,7 +297,7 @@ def finest_observable_summary(
     finest_bands: BandCount,
     comparison_guard: ToleranceValue,
 ) -> ObservableSummary:
-    if horizon_seconds <= 0.0 or not isfinite(horizon_seconds):
+    if horizon_seconds <= 0.0 or not isfinite(horizon_seconds):  # TODO: should be constant
         raise InvalidScientificDataError("real-trajectory horizon must be finite and positive")
     total = cohort.size
     resolved = cohort.decision_time <= horizon_seconds
@@ -330,11 +330,11 @@ def empirical_oracle(
     comparison_guard: ToleranceValue,
 ) -> RealTrajectoryEmpiricalOracle:
     theta_true = float(cohort.latent_error.mean())
-    full_horizon = float(cohort.decision_time.max()) * (1.0 + comparison_guard)
+    full_horizon = float(cohort.decision_time.max()) * (1.0 + comparison_guard)  # TODO: should be constant
     fully_resolved_summary = finest_observable_summary(
         cohort, full_horizon, finest_bands, comparison_guard
     )
-    full_information = observed_timing_information(fully_resolved_summary) or 0.0
+    full_information = observed_timing_information(fully_resolved_summary) or 0.0  # TODO: should be constant
     return RealTrajectoryEmpiricalOracle(
         theta_true=theta_true, full_information_nats=full_information
     )
