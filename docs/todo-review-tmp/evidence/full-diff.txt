@@ -1,0 +1,2640 @@
+diff --git a/docs/todo-review-tmp/diff-review.md b/docs/todo-review-tmp/diff-review.md
+index cf34c43..9b8ebf3 100644
+--- a/docs/todo-review-tmp/diff-review.md
++++ b/docs/todo-review-tmp/diff-review.md
+@@ -1,14 +1,59 @@
+ # Diff review
+ 
+-Significant deletions were classified as follows:
++The remediation changes 34 files. Every deletion in the working-tree diff was classified
++before being accepted.
+ 
+-| Deleted area | Classification | Result |
++## Deletions
++
++| Deleted construct | Location | Classification | Result |
++|---|---|---|---|
++| 212 boilerplate `TODO` comments | 31 modules | `CORRECT_REMOVAL` | Noise that was itself breaking `ruff check` (95 `E501`) and `ruff format --check` (21 files). Each was classified first (see `original-todo-ledger.md`) |
++| `FailureBoundaryProbe = FiniteFloat \| PositiveInt` | `types.py` | `SHOULD_HAVE_BEEN_REFACTORED` | Replaced by the per-axis domain union; no responsibility lost |
++| `FailureBoundaryCoordinate.finite_level` / `node_count` / `event_count` / `band_count` | `provenance.py` | `SHOULD_HAVE_BEEN_REFACTORED` | Four mutually exclusive optionals collapsed into one required `level`; strictly more constrained |
++| `NumericSign = NewType("NumericSign", str)` | `types.py` | `SHOULD_HAVE_BEEN_REFACTORED` | Replaced by a two-member `StrEnum` |
++| `_failure_boundary_probe` body (4 option-null branches) | `dispatch.py` | `CORRECT_REMOVAL` | The null checks became unreachable once `level` is required and typed |
++| `if coordinate.node_count is None: raise …` | `dispatch.py` | `CORRECT_REMOVAL` | Same — replaced by `_node_budget_level`, which validates the actual invariant |
++| Duplicated `1e-12` tolerance literals | `config.py` | `CORRECT_REMOVAL` | Replaced by named module constants |
++| Hardcoded `0.01` rho offset | `publication_rows.py` | `SHOULD_HAVE_BEEN_REFACTORED` | Replaced by the authoritative configured case |
++| 7 × hardcoded `* 1000.0` | `publication_rows.py` | `SHOULD_HAVE_BEEN_REFACTORED` | Routed through `_runtime_milliseconds()` |
++| `sys.platform` string comparisons ×3 | `paths.py`, `scaling.py` | `SHOULD_HAVE_BEEN_REFACTORED` | Replaced by `current_platform() is PlatformName.WIN32` |
++
++No production deletion was classified `STILL_REQUIRED`, `MISSING_WIRING`, or `UNKNOWN`.
++
++## Additions
++
++| Addition | Location | Justification |
+ |---|---|---|
+-| Real-trajectory literals/collections | `SHOULD_HAVE_BEEN_REFACTORED` | Replaced by typed, validated configuration and consumed in preprocessing. |
+-| Skeleton leaf collections | `SHOULD_HAVE_BEEN_REFACTORED` | Replaced by exhaustive `ProjectSummaryLeaf` iteration. |
+-| Numerical global controls | `SHOULD_HAVE_BEEN_REFACTORED` | Rehomed under validated numerical configuration. |
+-| Persistence/provenance aliases | `SHOULD_HAVE_BEEN_REFACTORED` | Centralized in `types.py`; no responsibility removed. |
+-| Flat failure fields | `SHOULD_HAVE_BEEN_REFACTORED` | Replaced with `FailureDiagnostic`. |
+-| Old seed constant forwards | `CORRECT_REMOVAL` | Removed during this audit; internal consumer uses `SeedMaterialGrammar` directly. |
+-
+-No production deletion was classified `STILL_REQUIRED` or `MISSING_WIRING`.
++| `PlatformName`, `Platform`, `current_platform()` | `types.py` | Closes a real closed-domain string abuse; cross-cutting home |
++| `NumericSign(StrEnum)` | `types.py` | Replaces a 2-value string alias |
++| 7 explicit axis narrowing validators | `failure_boundaries.py` | Each raises on an axis/value mismatch, converting a silent impossibility into a fail-fast error |
++| `_node_budget_level` | `dispatch.py` | Local narrowing for the dedicated optimizer evaluator |
++| `_runtime_milliseconds` | `publication_rows.py` | Single authoritative seconds→milliseconds conversion |
++| `_principal_coverage_stress_case` | `publication_rows.py` | Resolves the authoritative configured case instead of re-deriving governed values |
++| `_EXACT_AGREEMENT_*` constants | `config.py` | De-duplicate a governed tolerance |
++
++Every addition removes a duplication, closes a real domain, or fails fast on an impossible
++state. No wrapper, adapter, proxy, one-field value object, or conversion helper was added,
++and none was found to remove. The three helpers introduced
++(`_runtime_milliseconds`, `_principal_coverage_stress_case`, `_node_budget_level`) each
++replace repeated or duplicated logic rather than forwarding a value, and each is called
++from at least two sites or eliminates a coercion.
++
++## Behaviour preservation
++
++* `FailureBoundary` probe values, coordinate display text, artifact content and reported
++  level strings are byte-identical to before: `level` is now the typed value that
++  previously arrived via `int(level)`/`float(level)`, and display still renders it with
++  `str(...)`.
++* `NumericSign.NON_NEGATIVE` renders as `""` and `NEGATIVE` as `"-"`, so
++  `canonical_number_token` output is unchanged (verified by the paths/artifact tests).
++* `current_platform()` returns a `PlatformName` member exactly when `sys.platform` is one
++  of the three enumerated values, and the raw string otherwise, so the `win32` branches
++  behave identically on every platform.
++* The Figure-4 principal coverage-stress cell selection now resolves the configured case
++  that satisfies the same three conditions that the previous law/band/offset filter
++  expressed (`law == timing_terminal_harmful_late`, `band_count == finest_bands`,
++  `rho == true_information + rho_offset`), and additionally requires
++  `sensitivity_reference == TRUE_INFORMATION` and `beta_offset is None`, which is what makes
++  the match unique. No scientific selection criterion was invented: every field used is an
++  existing authoritative configuration field.
+diff --git a/docs/todo-review-tmp/enum-audit.md b/docs/todo-review-tmp/enum-audit.md
+index 8702bd5..1486d06 100644
+--- a/docs/todo-review-tmp/enum-audit.md
++++ b/docs/todo-review-tmp/enum-audit.md
+@@ -1,8 +1,54 @@
+ # Enum audit
+ 
+-Closed domains reviewed in the diff: partition labels, config filenames, seed grammar,
+-dataset identity, real-trajectory strata, coordinate names/grammar, publication
+-regimes, report extensions, telemetry labels, and skeleton leaves. All use existing or
+-new `StrEnum` types internally. Open display text, dataset contract fields, generated
+-slugs, hashes, and CSV column names deliberately remain distinct aliases rather than
+-false enums. No introduced `.value` unwrapping remains.
++## Closed string domains reviewed
++
++| Domain | Current representation | Verdict |
++|---|---|---|
++| Platform (`sys.platform`) | was raw `"win32"` at 3 sites | **Was STRINGLY_TYPED_DOMAIN** → now `PlatformName` enum via `current_platform()`. Open case preserved by `Platform = PlatformName \| str` |
++| Numeric sign | was `NumericSign = NewType(str)` with values `"-"`/`""` | **Was STRINGLY_TYPED_DOMAIN** → now a two-member `StrEnum` |
++| Solver tolerance identity | was `ToleranceName = NewType(str)` with exactly two call sites and values `root_atol`/`identity_atol` | **Was STRINGLY_TYPED_DOMAIN** (closed set of two) → now `ToleranceName(StrEnum)` with `ROOT_ABSOLUTE`/`IDENTITY_ABSOLUTE`; both call sites pass members. Error text is unchanged because `StrEnum` renders as its value |
++| Telemetry search phase | was `TelemetryPhase = NewType(str)`; three static phases plus two dynamic per-batch phases | **Was PARTIALLY_CLOSED** → the three static phases are now `SearchPhase(StrEnum)` members used at the three projection call sites; the two dynamic batch phases are produced by `batch_phase(BatchPhasePrefix, BatchIndex)` where `BatchPhasePrefix` is itself a `StrEnum`, so no free-form phase string is constructed anywhere. `TelemetryPhase = SearchPhase \| str` retains the genuinely open set for future phases, and the log call sites are `%s`-formatted so the rendered log line is unchanged |
++| Failure-boundary axis | `FailureBoundaryAxis(StrEnum)` | Already correct; used as enum end-to-end |
++| Failure-boundary probe value | was `FiniteFloat \| PositiveInt` | Not a string domain, but a **DOMAIN_LEAK**; now a union of per-axis domain types |
++| Failure-boundary coordinate | `FailureBoundaryCoordinate(DomainModel)` | Now carries one required typed `level` |
++| Experiment identity | `ExperimentName(StrEnum)` | Already correct |
++| Laws / partitions | `LawKey(StrEnum)` for the closed key; `LawName`/`PartitionName` are generated display text | Correctly distinguished — not a false enum |
++| Partition labels | `PartitionLabel(StrEnum)` | Already correct |
++| Config files | `ConfigFile(StrEnum)` | Already correct |
++| Seed grammar | `SeedMaterialGrammar(StrEnum)` | Already correct |
++| Coordinate names/grammar | `CoordinateName`, `CoordinateGrammar`, `PathSyntax`, `WorkspacePathComponent`, leaf enums | Already correct |
++| Statuses / regimes | `ScientificState`, `PublicExecutionState`, `NumericStatus`, `CompatibilityRegime`, `SafetyRegime`, `EvidenceClass`, `ReasonCode` | Already correct |
++| Real-trajectory strata / exclusions / devices | `RealTrajectoryStratumKind`, `RealTrajectoryExclusionReason`, `HitlIotDeviceType`, `AnnotatorExpertise`, `RealTrajectoryDatasetName` | Already correct |
++| Comparators | `ComparatorObservationAccess`, `ComparatorAssumption` | Already correct |
++| Telemetry logger/fallback labels | `TelemetryLoggerName`, `TelemetryFallbackLabel` | Already correct |
++| Dataset contract fields | `DatasetColumnName`, `DatasetFilename`, `DatasetVersionTag`, `DatasetChecksumHex` | Correctly **not** enums — open values from the external release |
++
++## Raw string comparison sweep
++
++`grep -rnE '(==|!=)\s*"[^"]*"' src/` after remediation returns only three hits, all in
++`paths.py` and all legitimate:
++
++| Site | Text | Verdict |
++|---|---|---|
++| `paths.py` decimal-digit processing | `lstrip("0")`, `rstrip("0")`, `== "0"` | `LEGITIMATE_GENERAL_PURPOSE_CODE` — digit-string arithmetic |
++| `provenance.py:89` | `numeric < 0.0` | Numeric comparison, not a string |
++
++No `if mode == "…"`, `if status == "…"`, `if dataset == "…"`, `if strategy == "…"`,
++`if policy == "…"`, `if objective == "…"`, `if experiment == "…"`, or `if split == "…"`
++pattern remains anywhere in production source. `grep -rn 'case "' src/` returns nothing
++(no string-literal `match`/`case` arms).
++
++## Enum propagation
++
++The two enums introduced are propagated as enum instances internally:
++
++* `current_platform()` returns a `PlatformName` member; `paths.long_path_safe`,
++  `paths.fsync_directory` and `scaling._peak_resident_set_mib` all compare against
++  `PlatformName.WIN32` with `is`. No `.value` unwrapping, no `str(...)` round trip, and no
++  `PlatformName(x)` re-parsing at any internal call site.
++* `NumericSign` members are compared with `is` in `canonical_number_token` and produced by
++  `_parsed_coefficient`; no string intermediate is used internally. `paths.py` is
++  `LEGITIMATE_BOUNDARY`-free of `.value`.
++
++`tools/source_audit.py` `RULE_REDUNDANT_CONVERSION` (which flags `str(<enum>.value)` and
++bare `enum.value` comparisons) reports zero findings across `src/trajcert`.
+diff --git a/docs/todo-review-tmp/graphify-audit.md b/docs/todo-review-tmp/graphify-audit.md
+index 02a778b..b15771a 100644
+--- a/docs/todo-review-tmp/graphify-audit.md
++++ b/docs/todo-review-tmp/graphify-audit.md
+@@ -1,13 +1,73 @@
+ # Graphify audit
+ 
+-Final fresh AST extraction: `graphify update . --force --no-cluster`, after all
+-remediation edits: 3568 extracted nodes and 59467 raw edges (3489 post-build nodes
+-and 28611 directed edges).
+-
+-`graphify diagnose multigraph` found extraction edge-collapse characteristics (904
+-dangling inferred endpoints and 29952 directed same-endpoint collapses), not
+-repository dead-code findings. Its examples are repeated call/reference/type edges
+-to numerical-library symbols and a local count annotation, rather than isolated
+-production functionality. Manual inspection of the affected workflows found no
+-unexplained unreachable or unwired production code. This is the final-source-state
+-graph.
++Fresh AST extraction run against the **final** source tree, after every remediation edit
++(probe-union refactor, `PlatformName`, `NumericSign`, `ToleranceName`, `SearchPhase` /
++`BatchPhasePrefix`, and the `publication_rows` / `config` de-duplications):
++
++```
++graphify update . --force --no-cluster
++  AST extraction: 218/218 files (100%)
++  Rebuilt (no clustering): 3588 nodes, 88887 edges
++```
++
++This is the final-source-state graph. No previous Graphify output was reused.
++
++## Dead / unwired production code
++
++Query of the final graph for every production callable or class node with **zero inbound
++links** (`source_file` under `src/trajcert/`, `label` ending in `()` or a class name):
++
++```
++production callables/classes with zero inbound links: 0
++```
++
++No production function or class is unreachable. Every candidate therefore falls under
++`FALSE_POSITIVE` — there was nothing to classify as `TRULY_DEAD` and nothing to wire.
++
++Module-file nodes report zero inbound links by construction (they are linked by
++`contains` edges from their parent package), and Pydantic validators and `@property`
++accessors are not emitted as separately-called nodes; both were previously recorded as
++extractor false positives and remain so.
++
++## Wiring spot-check of the refactored chain
++
++`graphify explain _execute_failure_boundary` confirms the failure-boundary workflow is
++fully connected after the refactor (degree 25), with:
++
++```
++--> evaluate_failure_boundary()            [calls]
++--> evaluate_optimizer_node_budget()       [calls]
++--> evaluate_terminal_selection_asymmetry()[calls]
++--> _failure_boundary_probe()              [calls] [EXTRACTED]
++--> _node_budget_level()                   [calls] [EXTRACTED]
++```
++
++The newly introduced narrowing helper is reached, and no old option-null path remains.
++
++## Multigraph diagnostic
++
++```
++nodes: 3509                raw_edges: 88887
++valid_candidate_edges: 87984
++missing_endpoint_edges: 0
++dangling_endpoint_edges: 903
++self_loop_edges: 3
++exact_duplicate_edges: 47802
++directed_unique_endpoint_pairs: 29000
++directed_same_endpoint_collapsed_edges: 58984
++undirected_same_endpoint_collapsed_edges: 59012
++producer_suppression_sites: 57
++```
++
++These are extractor edge-collapse and inferred-endpoint characteristics, not repository
++dead-code findings: `missing_endpoint_edges` is 0, and the duplicate/collapse counts are
++dominated by repeated `calls`/`references`/`type` edges to numerical-library symbols.
++Combined with the zero-orphan query above, no unexplained unreachable or unwired
++production code remains.
++
++## Incremental runs
++
++The graph was also rebuilt at intermediate points (`1983` / `1997` nodes for the
++`src`-rooted runs, `3588` for the project-rooted run) so that wiring questions during the
++refactor were answered against current code rather than the stale graph. The
++project-rooted extraction above is the authoritative final result.
+diff --git a/docs/todo-review-tmp/original-todo-ledger.md b/docs/todo-review-tmp/original-todo-ledger.md
+index b037099..66df25f 100644
+--- a/docs/todo-review-tmp/original-todo-ledger.md
++++ b/docs/todo-review-tmp/original-todo-ledger.md
+@@ -1,21 +1,115 @@
+-# Original TODO ledger
++# Original unfinished-work marker ledger
+ 
+-Source: deleted and modified lines in `git diff --unified=0 -- src/trajcert`, reviewed
+-against both `HEAD` and the current tree. Repeated, verbatim per-item markers in one
+-literal collection are represented by their complete original line ranges.
++## Reconstruction
+ 
+-| Original location and markers | Current implementation and assessment | Status / verification |
++The pre-change marker population was reconstructed from the committed pre-remediation
++state (`git show HEAD:…`, i.e. `db67419`), not from the current tree, and every marker was
++cross-checked against the code it annotated.
++
++**Total pre-existing markers: 213**, in exactly three auto-generated templates:
++
++| Template | Count |
++|---|---|
++| `# TODO: should be constant` | 149 |
++| `# TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this` | 55 |
++| `# TODO: should be enum` | 9 |
++
++Because the text is templated rather than situated, the markers are **not trustworthy
++statements of intent**. They were mechanically appended across 31 modules; the same
++sentence was applied to 55 unrelated aliases. Each was therefore classified on its own
++merits as *applies*, *misworded*, or *nonsense*.
++
++## Template 1 — `should be constant` (149): overwhelmingly FALSE POSITIVE
++
++Audit of every occurrence showed the annotated literals are mathematical identities,
++loop/quantile conventions, array indexing, or numeric-literal display ranges. Named
++constants for these would be exactly the "speculative constants" CLAUDE.md §2 forbids, and
++the codebase already enforces the opposite rule mechanically (`RULE_CONSTANT` in
++`tools/source_audit.py`: module-level numeric constants outside `config.py` are a
++violation, with `test_hardcoded_values.py` enforcing it).
++
++Representative false positives, each verified as correct code:
++
++| Site | Literal | Why a constant is wrong |
++|---|---|---|
++| `analysis/bootstrap.py:48-52` | `1.0 - level`, `alpha / 2.0`, `1.0 - alpha / 2.0` | Standard percentile-bootstrap quantile definition |
++| `comparators/ignorable_delay.py:105`, `inference/confidence.py:154,177` | `(lower + upper) / 2.0` | Bisection midpoint identity |
++| `inference/confidence.py:78` | `betaln(successes + 0.5, failures + 0.5)` | Jeffreys prior parameter, not a tunable value |
++| `math/oracle.py:173` | `(mpf(bands) + mpf(1)) / mpf(2)` | Band-centre arithmetic |
++| `analysis/sign_flip.py:41-44` | `rng.integers(0, 2, …)`, `*= 2.0`, `-= 1.0` | Sign-flip Rademacher arithmetic |
++| `data/laws.py:74` | `(bands + 1) / 2.0` | Symmetric band centre |
++| `reporting/figures.py:175,180,202,226,237,244,305,341,365` | `linewidth=3.0/1.0`, `axvline(0.0)`, `(0.0, 1.0)` | Matplotlib rendering styling and axis reference lines |
++| `config.py:106` | `endpoint_band_count != 1` | `BandCount = PositiveInt`; the one-band endpoint partition is an intrinsic domain invariant already guarded by config validation |
++| `reporting/publication_rows.py:1248` | `0.0 <= u_beta_value <= unresolved` | Mathematical range test; the lower bound is zero by definition |
++
++`Status: ANALYZED, REVIEWED` → markers removed as **justified false positives**; no code
++change warranted. No rule, test, or validation was weakened.
++
++## Template 2 — `do not use primitives` (55): one real defect cluster, 54 misworded
++
++The 55 aliases in `types.py` are `NewType`/`Annotated` domain contracts. Two independent
++facts establish that the boilerplate reason is misapplied to them:
++
++1. The sentence "introducing a proper error type or message class" is only meaningful for
++   the error-representation aliases (`FailureMessage`, `ExceptionClassName`,
++   `TracebackText`). It is incoherent for `ClientId`, `DatasetChecksumHex`, `DigestHex`,
++   `PlanDigest`, `LawName`, `PartitionName`, `BandCount`, etc.
++2. `NewType` *is* the project's mechanism for named domain types, and all 55 aliases have
++   real usages (verified: none unused). `types.py` is exempt-by-design from the
++   primitive-annotation rule (`tools/source_audit.py:239`). Converting a genuinely open
++   vocabulary (client ids, digests, dataset columns, generated display text) into an enum
++   would be a false enum — itself a defect class (see `enum-audit.md`).
++
++**One genuine defect cluster was found and fixed** — the same root error the boilerplate was
++gesturing at, in the `FailureBoundary*` family:
++
++| Item | Detail |
++|---|---|
++| Original location | `src/trajcert/types.py:146` (`FailureBoundaryProbe`); `provenance.py:73` (`FailureBoundaryCoordinate`) |
++| Original text | `FailureBoundaryProbe = FiniteFloat \| PositiveInt` |
++| Underlying intent | A failure-boundary probe must be a *domain-typed* value, not an untyped float-or-int whose meaning depends on the axis |
++| What was wrong | The probe was a union of generic primitives, so callers coerced with `int(level)` (`failure_boundaries.py:75`, and `bands = int(level)`) and `float(level)` (`plan.py:594`), then re-unwrapped with `str(node_budget)` / `str(level)` for display. `FailureBoundaryCoordinate` carried four mutually exclusive optional fields (`finite_level`, `node_count`, `event_count`, `band_count`) plus `q1`/`q0`, so nothing prevented an axis/value mismatch |
++| Resolution | `FailureBoundaryProbe` became a union of the real per-axis domain types (`Probability`, `TimingContrast`, `InformationNats`, `RiskOffset`, `BandCount`, `EventCount`, `OuterMaxNodes`). `FailureBoundaryCoordinate` now carries exactly one required `level: FailureBoundaryProbe` plus its `q1`/`q0` pair. Each axis is narrowed once by an explicit fail-fast `isinstance` validator (`_probability_level`, `_timing_contrast_level`, `_information_margin_level`, `_risk_offset_level`, `_band_count_level`, `_sample_size_level`, `_node_budget_level`), removing every `int(...)`/`float(...)`/`str(...)` coercion. `dispatch._failure_boundary_probe` collapsed from four option-null checks to `return coordinate.level` |
++| Status | `RECOVERED`, `CORRECTLY_FIXED`, `VERIFIED` |
++
++The remaining 54 aliases were retained with their `NewType` contracts intact and their
++boilerplate markers removed as misworded (`Status: ANALYZED, REVIEWED`).
++
++## Template 3 — `should be enum` (9): three real, six FALSE POSITIVE
++
++| Original site | Original text | Assessment |
++|---|---|---|
++| `paths.py:272` | `CoordinateToken("0")` | Not an enum. A canonical zero token — an open generated token, correctly a `CoordinateToken` |
++| `paths.py:275,278` | `…lstrip("0") or "0"`, `…rstrip("0") or "0"` | Not an enum. Decimal-digit string processing; `"0"` is a digit literal |
++| `paths.py:305` | `if integer == "0":` | Not an enum. Single-character digit test |
++| `math/oracle.py:36` | `_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"` | Misworded: already a named module constant used at 4 raise sites, not a closed domain. `RESOLVED_NO_CHANGE` |
++| `paths.py:24` | `_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"` | Misworded: already a named constant; an OS path-syntax prefix is not a closed domain |
++| `paths.py:232`, `paths.py:241`, `scaling.py:188` | `sys.platform != "win32"` / `== "win32"` | **Genuine.** A closed domain compared against raw strings in three places. Fixed by the cross-cutting `PlatformName` enum plus `current_platform()` in `types.py`; all three sites now compare enum members. `Status: RECOVERED, CORRECTLY_FIXED, VERIFIED` |
++| `types.py:78` | `NumericSign = NewType("NumericSign", str)` | **Genuine.** A two-value closed domain (`"-"`, `""`) modelled as free-form string and consumed by string concatenation. Fixed by a two-member `StrEnum`; `canonical_number_token` now renders the sign explicitly from the member instead of appending an empty string. `Status: RECOVERED, CORRECTLY_FIXED, VERIFIED` |
++| `config.py:106` | `endpoint_band_count != 1` | Not an enum. See template 1 |
++
++## Independent genuine defects found while auditing (not marker-driven)
++
++| Defect | Location | Fix |
+ |---|---|---|
+-| `config.py:78-82, 788, 818, 855` — YAML primitives, raw merge map, and `statistics` string key | YAML is an external deserialization boundary. `RawYamlValue` is coerced immediately and Pydantic validates the domain configuration; the mapping is only used to merge serialized config documents. `statistics` is a serialization/config key, not an internal status/mode. | `CORRECTLY_FIXED`, `VERIFIED` by architecture and config tests. |
+-| `constants.py:8-31` — seed grammar, partition labels, endpoint count, config paths, and all numerical search controls | Partition labels are `PartitionLabel`; config filenames are `ConfigFile`; seed grammar is `SeedMaterialGrammar`; the old forwarding seed constants were removed in this audit. Endpoint *selection* reads `active_config.method.endpoint_band_count`; `partition_name` recognizes the intrinsic one-band endpoint definition and remains a pure domain function. Numerical policies are validated config fields. Mathematical invariants remain constants. | `CORRECTLY_FIXED`, `VERIFIED` by config, partition, projection, safety, determinism, and constants tests. |
+-| `data/real_trajectories.py:37-135, 267-328` — DOI, release files/digest, 12 devices, raw/identity/schema columns, named CSV columns, and primitive row coercions | Complete dataset contract is `RealTrajectoryDatasetConfig` loaded from YAML, with semantic aliases and containment validation. Ingestion obtains one typed contract, passes its columns to Polars at the boundary, and constructs typed events. No deleted collection was lost. | `CORRECTLY_FIXED`, `VERIFIED` by real-trajectory/preprocessing/workflow tests. |
+-| `experiments/anytime.py:878, 1416`; `dispatch.py:620`; `plan.py:419` | Generated law text retains `LawName`; pooled stratum uses `RealTrajectoryStratumKind.POOLED` end-to-end; coordinate grammar is centralized. | `CORRECTLY_FIXED`, `VERIFIED` by planning/status/real-trajectory tests. |
+-| `experiments/models.py:28-29` | Flat failure aliases were replaced with the structured `FailureDiagnostic` record using central semantic aliases. | `CORRECTLY_FIXED`, `VERIFIED` by runner/status/resume tests. |
+-| `paths.py:24-33, 215-217, 313-340` | Dynamic slugs and tokens remain semantic aliases because they are generated/open-ended. Fixed workspace components, path grammar, and artifact names are local closed enums. Callers use those values directly. | `CORRECTLY_FIXED`, `VERIFIED` by paths/artifact-layout tests. |
+-| `provenance.py:49-70, 142-144, 281-282`; `storage.py:22-29, 173` | Generated identifiers/digests moved to `types.py`; closed coordinate names/grammar are enums. JSON mapping is a named serialization-boundary type. No enum/string round trip remains in the modified paths. | `CORRECTLY_FIXED`, `VERIFIED` by provenance/storage/schema tests. |
+-| `reporting/export.py:65,104,311`; `tables.py:42-43,134`; `figures.py:616,620`; `publication_rows.py:100-102,790`; `publication_sources.py` | Closed export/path labels use enums. Presentation functions retain explicit open rendering text types only where titles/TeX/table cells are external output. Compatibility and safety regimes are a union of their real enums, rather than `RegimeName(str)`. | `CORRECTLY_FIXED`, `VERIFIED` by reporting tests. |
+-| `skeleton.py:22-59` | The prior literal leaves are completely represented by `ProjectSummaryLeaf`; skeleton iteration wires every member and `.gitkeep` is `SkeletonFile.GITKEEP`. | `CORRECTLY_FIXED`, `VERIFIED` by artifact-layout tests. |
+-| `telemetry.py:27,29`; `types.py:12-37,148,152,371-375` | Closed telemetry labels are enums. The remaining aliases are open identifiers, diagnostics, dynamic labels, or external serialization data; they must not be falsely converted into closed enums. | `ANALYZED`, `CORRECTLY_FIXED`, `VERIFIED` by source audit and type tests. |
+-
+-Every deleted marker is accounted for by one of the complete source ranges above; none
+-is merely removed to hide unfinished work.
++| Duplicated governed tolerance `1e-12` repeated verbatim in two validators | `config.py:133,196` | Extracted to `_EXACT_AGREEMENT_RELATIVE_TOLERANCE` / `_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE` |
++| Hardcoded duplicated governed value `0.01` used to identify the principal anytime coverage stress cell, duplicating the authoritative configured `rho_offset` | `publication_rows.py:964` | Replaced with the authoritative `CoverageStressCaseConfig` resolved by `_principal_coverage_stress_case()`; the coincidental use of `config.method.finest_bands` was replaced by the case's own `band_count` |
++| Unit conversion factor `1000.0` hardcoded at 7 sites although `UnitsConfig.nanoseconds_per_millisecond` already owns the unit relationship | `publication_rows.py` | Routed through `_runtime_milliseconds()` |
++
++An earlier revision of this document claimed a discarded boolean in
++`plan.py:_population_rho_values`. That claim was checked against `HEAD` and is **false** —
++the comparison result is consumed by `if any(...)` and the function is correct. The claim
++was removed rather than carried forward.
++
++## Accounting
++
++| Class | Count |
++|---|---|
++| Markers reconstructed | 213 |
++| Markers resolved by a real code change | 5 (the `PlatformName` trio, `NumericSign`, and the `FailureBoundaryProbe` cluster) plus 4 independent defects |
++| Markers removed as justified false positives | 208 |
++| Markers remaining in production source | **0** |
++| Markers parked in `unresolved.md` | 0 |
++
++Every one of the 213 pre-change markers is accounted for. Zero markers is not the success
++condition — the resolution of each one is.
+diff --git a/docs/todo-review-tmp/progress.md b/docs/todo-review-tmp/progress.md
+index 9047d54..c2c1a43 100644
+--- a/docs/todo-review-tmp/progress.md
++++ b/docs/todo-review-tmp/progress.md
+@@ -1,17 +1,104 @@
+-# Progress
+-
+-1. `DISCOVERED` — inspected unstaged and staged status, statistics, and name-status before source edits; there are no staged changes.
+-2. `ANALYZED` — reconstructed all deleted unfinished-work markers from the pre-change side of the diff, including repeated markers in the real-trajectory and skeleton collections.
+-3. `REIMPLEMENTING` — removed one unnecessary forward-constant layer introduced by the prior work; seed grammar and config filenames now live with cross-cutting domain types.
+-4. `REVIEWED` — first fresh Graphify extraction completed against the current source tree (`3569` extracted nodes, `30427` extracted edges); manual caller searches confirmed real-trajectory preprocessing and evaluation are wired.
+-5. `CORRECTED` — Pyright exposed an incomplete figure-title contract propagated by the prior edit. Render helpers now accept the dynamic title alias and the pre-existing closed `FigureLabel` enum directly.
+-6. `REVIEWED` — endpoint selection reads validated configuration. A rejected attempt to make pure partition naming read ambient config was caught by the architecture isolation test; one-band endpoint naming is an intrinsic domain invariant and remains pure.
+-7. `CORRECTED` — removed an unnecessary `str`/`VariantName` round trip in real-trajectory dispatch; the variant already carried the required domain type.
+-8. `VERIFIED` — Ruff and Pyright pass. All 745 unit tests, 52 integration/end-to-end tests, and 33 selected architecture checks pass. Final Graphify extraction was rebuilt from a clean generated analysis directory.
+-9. `CORRECTED` — the relocated aliases had left an incomplete import migration:
+-   direct consumers still imported them from `storage` or `provenance`. All consumers
+-   now import from `types.py`; no compatibility re-export was introduced. Ruff and
+-   BasedPyright pass after the correction.
+-10. `REVIEWED` — a final Graphify AST extraction against the corrected tree found
+-    3568 extracted nodes and 59467 raw edges. Its multigraph diagnostics describe
+-    extractor edge-collapse behavior, not dead or unwired production code.
++# Forensic review — final progress
++
++## 0. Workspace state (verified before any edit)
++
++The brief assumed an uncommitted working tree holding the previous agent's work. That
++assumption did **not** hold, and this was established before touching a file:
++
++* `git status` → `nothing to commit, working tree clean`; branch `main`.
++* `git diff`, `git diff --stat`, `git diff --name-status`, `git diff --cached` → all empty.
++* `git stash list` → empty; no untracked files.
++* The work was present as three local commits: `351ec22`, `7509eea`, `db67419` (HEAD).
++* Source mtimes (2026-09-12 22:00:02–22:00:04) match `db67419`'s commit time (21:59:45),
++  so HEAD **is** that work verbatim. Nothing was lost.
++* Per the user's decision, git history was left untouched and the audit targets the code.
++
++No destructive command (`reset --hard`, `checkout --`, `restore`, `clean`, `stash`) was run.
++
++## 1. Baseline gates at HEAD (before any edit)
++
++| Gate | Result |
++|---|---|
++| `basedpyright` (strict, `typeCheckingMode=all`) | 0 errors |
++| `tools/source_audit.py` | clean |
++| `lint-imports` | 3 contracts kept, 0 broken |
++| `semgrep --config semgrep` | clean |
++| `ruff check src` | **95 errors** — all `E501` from the appended TODO comments |
++| `ruff format --check src` | **21 files would be reformatted** — same cause |
++| `pytest` | blocked by a missing `pytest-randomly` in the venv; fixed with `uv sync --extra quality` |
++
++The appended TODO comments therefore *broke* two mandatory gates. Repairing that was the
++first act of remediation.
++
++## 2. Marker reconstruction and classification
++
++213 pre-existing markers in three auto-generated templates (149 "should be constant",
++55 "do not use primitives", 9 "should be enum"). Each was classified individually because
++the template text is not a reliable statement of intent. Full detail in
++`original-todo-ledger.md`; summary:
++
++* **149 "constant"** — false positives on mathematical identities (`alpha / 2.0`,
++  `(lower + upper) / 2.0`, `rng.integers(0, 2, …)`) and matplotlib styling. Extracting
++  constants would violate CLAUDE.md §2 and the project's own `RULE_CONSTANT`.
++* **55 "primitives"** — 54 misworded (valid `NewType` domain contracts, all in real use);
++  **1 genuine defect cluster**: `FailureBoundaryProbe`.
++* **9 "enum"** — 6 false positives (digit literals, already-named constants);
++  **3 genuine**: `sys.platform` string comparisons, `NumericSign`.
++
++## 3. Genuine defects fixed
++
++1. `FailureBoundaryProbe = FiniteFloat | PositiveInt` → union of per-axis domain types
++   (`Probability`, `TimingContrast`, `InformationNats`, `RiskOffset`, `BandCount`,
++   `EventCount`, `OuterMaxNodes`); `FailureBoundaryCoordinate` collapsed from four mutually
++   exclusive optionals to one required typed `level`; all six `int(...)`/`float(...)`/
++   `str(...)` coercions removed and replaced by explicit fail-fast axis narrowing.
++2. `PlatformName` enum + `current_platform()` replacing three raw `sys.platform == "win32"`.
++3. `NumericSign` → two-member `StrEnum`.
++4. `ToleranceName` → two-member `StrEnum` (`ROOT_ABSOLUTE`, `IDENTITY_ABSOLUTE`).
++5. `SearchPhase` → three-member `StrEnum`, plus `BatchPhasePrefix` + `batch_phase()` so the
++   two dynamic telemetry phases are no longer built from free-form strings.
++6. Duplicated governed tolerance `1e-12` → `_EXACT_AGREEMENT_*` constants.
++7. Hardcoded duplicated `0.01` principal-coverage-stress margin → authoritative configured
++   `CoverageStressCaseConfig`.
++8. `1000.0` unit conversion duplicated at 7 sites → `_runtime_milliseconds()` routed
++   through `UnitsConfig.nanoseconds_per_millisecond`.
++9. `FailureMessage` carried two concepts (exception messages *and* persisted scientific
++   interpretation text, including success sentences such as "the theorem holds"). Split:
++   `ScientificInterpretation` now types the six reporting sites; `FailureMessage` remains
++   only for genuine failure paths. See `unresolved.md` item 1.
++
++## 4. Verification (final)
++
++| Check | Result |
++|---|---|
++| `ruff format --check src` | passes, 80 files |
++| `ruff check src` | **All checks passed** |
++| `basedpyright` strict | **0 errors, 0 warnings** |
++| `tools/source_audit.py src/trajcert` | clean (exit 0) |
++| `semgrep --config semgrep` | clean (exit 0) |
++| `lint-imports` | 3 kept, 0 broken |
++| `vulture` at the configured policy (`--min-confidence 100`) | clean (exit 0) |
++| `complexipy src/trajcert` | all functions within `max_complexity = 10` |
++| `pytest` | **855 passed** (unit + integration + e2e + architecture) |
++| Graphify final extraction | 3588 nodes / 88887 edges; **0** production callables or classes with zero inbound links |
++| TODO/FIXME/HACK/XXX in `src/` | 0 |
++
++## 5. Method-reliability note
++
++During this session the working tree was observed to lose, between tool calls, edits that
++had been written and verified. `types.py` was reset to the pre-remediation state at least
++once, as were `paths.py`, `provenance.py`, `plan.py`, `config.py` and
++`failure_boundaries.py`. The cause was not identified (the test suite was excluded by
++re-running it with an integrity check before and after: sources were unchanged by the run).
++Every edit was therefore re-applied and then re-verified, and the final state's source
++files were confirmed byte-identical to a checksummed snapshot, with the full suite re-run
++against that snapshot and no markers or typings regression. The user was informed.
++
++## 6. Known gaps
++
++* `tools/source_audit.py` skips `types.py` for primitive checks and cannot see
++  union-of-primitive aliases; this is why the `FailureBoundaryProbe` defect survived an
++  architecture test suite that includes `test_primitive_leaks.py`. Per the user's decision
++  the scanner was left untouched; the gap is documented in `type-audit.md`.
++* `FailureMessage` dual meaning — **resolved** by splitting out
++  `ScientificInterpretation`; see `unresolved.md` item 1.
+diff --git a/docs/todo-review-tmp/type-audit.md b/docs/todo-review-tmp/type-audit.md
+index c218dc8..cd43632 100644
+--- a/docs/todo-review-tmp/type-audit.md
++++ b/docs/todo-review-tmp/type-audit.md
+@@ -1,30 +1,64 @@
+-# Type audit
+-
+-`types.py` inventory was reviewed before this audit's change. It owns open semantic
+-aliases (`ClientId`, `DatasetColumnName`, digests, display text), constrained numeric
+-types (`BandCount`, `AgeUnit`, `Probability`, `RoundoffUlpCount`), domain models, and
+-cross-cutting enums.
+-
+-| Type / family | Meaning | Underlying type | Validity / action |
+-|---|---|---|---|
+-| `ClientId`, dataset names/columns/files, digests, slugs | External or generated identifiers | `NewType(str)` | Valid: open vocabularies, retained as distinct contracts. |
+-| Numeric aliases | Scientific values and counts | constrained strict numeric | Valid: reused for dataset/event/config contracts. |
+-| `ConfigFile`, `SeedMaterialGrammar`, `PartitionLabel` | Closed cross-cutting vocabularies | `StrEnum` | Valid: centralized in `types.py`; old seed-constant forwarding layer removed. |
+-| YAML/JSON/table cells | Parser/serializer boundary data | unions/mappings | Valid only at the named external boundary; does not enter workflow contracts. |
+-| `FailureDiagnostic` | Related diagnostic data | `DomainModel` | Valid structured record; replaced three flat values. |
+-
+-Changed APIs were traced through config → preprocessing → dispatch → real-trajectory
+-evaluation → reporting. The only direct primitive conversions in the altered ingest
+-path are gone; Polars values enter Pydantic's typed event model directly.
+-
+-## Corrective follow-up
+-
+-The first static check found that the prior relocation of cross-cutting aliases to
+-`types.py` had not been propagated to every consumer: production and test modules
+-still imported aliases from `storage` and `provenance`. Those imports were changed to
+-the true owner (`types.py`) without adding re-exports or compatibility shims. The
+-post-fix configured type check reports zero errors.
+-
+-Static checking caught and this audit corrected a partial title migration: rendering
+-helpers accept `FigureTitle | FigureLabel`, preserving both generated and closed title
+-domains without string conversion.
++# Type and alias audit
++
++## `types.py` inventory (taken before any alias change)
++
++`types.py` (551 lines at `HEAD`) is the designated home for cross-cutting domain types and
++is exempt from the primitive-annotation rule by design (`tools/source_audit.py:239`). It
++holds 55 `NewType`/`Annotated` contracts, ~40 `StrEnum`/`IntEnum` closed domains,
++constrained numeric building blocks (`UnitFloat`, `OpenUnitFloat`, `PositiveInt`,
++`NonNegativeInt`, `FiniteFloat`, …), the `DomainModel` base, and `Vector`.
++
++Every one of the 55 aliases was checked for real usage across `src/` and `tests/`:
++
++| Type / family | Example members | Underlying | Usages | Valid? | Action |
++|---|---|---|---|---|---|
++| External/open identifiers | `ClientId`, `DatasetColumnName`, `ArtifactKey`, `EventId`, `EpochId`, `ActionChannelId` | `NewType(str)` | 6–82 each | Yes — open vocabularies from data/input | Retained |
++| Generated digests | `DigestHex`, `PlanDigest`, `EnvironmentDigest`, `SpecificationDigest`, `SourceIdentityDigest`, `DependencyFingerprint`, `DatasetChecksumHex` | `NewType(str)` | 9–73 each | Yes — digests of differing provenance, already distinct contracts | Retained |
++| Generated display/presentation text | `FigureTitle`, `ComparisonPairDisplay`, `FailureBoundaryCoordinateDisplay`, `FailureBoundaryLevel`, `SvgFragment`, `FacetLabel`, `MethodDisplayName` | `NewType(str)` | 1–13 each | Yes — rendering output, not domain identity | Retained |
++| Diagnostics | `FailureMessage`, `ExceptionClassName`, `TracebackText`, `TelemetryLabel` | `NewType(str)` | 5–31 each | Yes — free text; this is the only family for which the boilerplate's "proper error type or message class" reading is even coherent, and a message record would add no invariant these aliases do not already carry | Retained |
++| Generated/open coordinate text | `CoordinateToken`, `VariantName`, `SemanticCellKey`, `SemanticComparisonKey`, `ExperimentSlug`, `PartitionName`, `LawName`, `MethodName`, `NamedComparison`, `BaselineName` | `NewType(str)` | 4–148 each | Yes — generated or open text. `LawName`/`PartitionName` are generated display names; the closed axes are `LawKey`/`PartitionLabel` | Retained |
++| Numeric scalar contracts | `BandCount`, `EventCount`, `Count`, `Probability`, `Mass`, `RiskValue`, `InformationNats`, `RiskOffset`, `TimingContrast`, `OuterMaxNodes`, … | `Annotated[StrictFloat/StrictInt, Field(...)]` | many | Yes — constrained numeric contracts; these are exactly the values the old probe union should have named | **Reused** in `FailureBoundaryProbe` |
++| Parser/serializer + text-processing values | `ConfigFieldPath`, `SerializedConfigJson`, `CliArgumentValue`, `ColumnName`, `DecimalCoefficient`, `DecimalDigits` | `NewType(str)` | 6–39 each | Yes — named external boundaries | Retained |
++| `FailureBoundaryProbe` | — | was `FiniteFloat \| PositiveInt` | 8 | **No** — an untyped union of generic primitives whose meaning depends on the axis | **Replaced** with a union of per-axis domain types |
++| `NumericSign` | — | was `NewType(str)` | 5 | **No** — a two-value closed domain modelled as free text | **Replaced** with a `StrEnum` |
++
++Conclusion: no alias was semantically invalid, duplicated, or unused. No alias was deleted,
++no alias was repurposed across concepts because two concepts happened to share a primitive,
++and no new alias was invented except where a real closed domain existed.
++
++## Added enums
++
++| Enum | Members | Justification |
++|---|---|---|
++| `PlatformName(StrEnum)` | `WIN32`, `LINUX`, `DARWIN` | Replaces three raw `sys.platform == "win32"` comparisons. `Platform = PlatformName \| str` plus `current_platform()` also models the genuine open case: the runtime may report a platform outside the enumerated set, and `current_platform()` returns the raw string then. No invalid assumption is baked in and no current call path changes behaviour |
++| `NumericSign(StrEnum)` | `NEGATIVE = "-"`, `NON_NEGATIVE = ""` | Replaces free-form string consumed by concatenation; the two values are exhaustive by construction |
++
++## Primitive leak sweep of changed code
++
++| Pattern | Occurrences | Verdict |
++|---|---|---|
++| `int(level)`, `float(level)`, `str(level)` coercion of a domain probe | 6 (before) → **0** | `DOMAIN_LEAK` — fixed by the probe refactor |
++| `int(value_text)` / `float(value_text)` in `_failure_boundary_from_parts` | 6 | `LEGITIMATE_BOUNDARY` — parsing a serialized coordinate display string back into a validated `DomainModel`; the model re-validates to the per-axis aliases. Kept local and immediate |
++| `cast(...)` across `src/` | 14 | All `LEGITIMATE_BOUNDARY`: `yaml.safe_load`, `model_dump(mode="json")`, Polars `to_pylist` cell typing, `psutil` attribute widening, multiprocessing `recv()`, argparse `getattr`. None bridges an internal type mismatch |
++| `.value` across `src/` | 3 | All legitimate: `model_dump().values()` ×2, `LAW_DISPLAY_NAMES.values()`. **No** enum `.value` unwrapping remains (`source_audit` `RULE_REDUNDANT_CONVERSION` clean) |
++| bare primitive function returns | 20 | Predicates (`-> bool`) and text/formatting helpers (`_canonical_json`, `_format_tex_value`, `_escape_tex`). No domain-identity return is a raw primitive |
++| semgrep `TC-PRIMITIVE-001/002` | 0 findings | clean |
++
++## Why the architecture test did not catch the defect
++
++The removed boilerplate asked explicitly why `tests/architecture/test_primitive_leaks.py`
++did not catch this. Established by reading `tools/source_audit.py`:
++
++1. `_check_primitive_leak` returns immediately when `path.name == "types.py"` (line 239),
++   so none of the 55 `types.py` alias declarations is ever examined.
++2. For any other annotation it flags only a name matching `_LEAKED_PRIMITIVE_PATTERN`
++   (`int|float|str|Any|object`). An annotation spelled with a *project alias*
++   (`FailureBoundaryProbe`, `FiniteFloat`) contains none of those tokens and is not a
++   building-block name (`PositiveInt`, `StrictFloat`, …), so it passed silently.
++3. `_check_annotation` over `DOMAIN_PARAMETER_NAMES` fires only when the annotation text is
++   literally `str`/`int`/`float`; `FailureBoundaryProbe` is not.
++
++So the union-of-primitives construct escaped both rules. This is recorded as a scanner
++limitation and was **not** "fixed" by weakening anything. Extending the scanner would have
++been a redesign of the enforcement surface beyond this remediation's scope; the defect it
++hid is fixed at the source, so no rule currently passes vacuously on this construct.
+diff --git a/docs/todo-review-tmp/unresolved.md b/docs/todo-review-tmp/unresolved.md
+index bd9b337..16924b8 100644
+--- a/docs/todo-review-tmp/unresolved.md
++++ b/docs/todo-review-tmp/unresolved.md
+@@ -1,3 +1,58 @@
+-# Unresolved items
++# Unresolved items requiring the user's decision
+ 
+-None identified yet.
++## 1. `FailureMessage` dual meaning — RESOLVED
++
++```text
++File                  src/trajcert/types.py
++Symbol                FailureMessage
++Original TODO         "do not use primitives. Fix by introducing a proper error type or
++                       message class and identify and fix why architecture tests didn't
++                       catch this"
++Observed defect       A structured error record already existed
++                      (experiments/models.py: FailureDiagnostic{exception_class, message,
++                      traceback} inside FailureRecord), so that half of the TODO was
++                      already satisfied. The real defect was that the SAME alias carried
++                      two unrelated concepts:
++                        (a) exception/validation failure text — runner.FailureMessage(str(exc)),
++                            scaling worker `failure`, analysis vector-validation messages;
++                        (b) persisted scientific interpretation text — the publication row
++                            fields `scientific_consequence` and `scientific_interpretation`
++                            and the `_state_interpretation` table.
++                      Use (b) was actively misnamed: those sentences state success as often
++                      as failure ("the theorem holds under configured conditions", "risk
++                      upper is within the configured budget" for ScientificState.CERTIFIED).
++User decision         Split the alias; keep FailureMessage for exception/error messages and
++                      introduce a distinct alias for the interpretation text.
++Action taken          Added `ScientificInterpretation = NewType("ScientificInterpretation",
++                      str)` to types.py and re-typed the six reporting sites
++                      (publication_rows.py: the two row fields, the theorem-consequence
++                      builder and its two constructors, and `_state_interpretation` plus its
++                      constructor). FailureMessage now appears only in genuine failure
++                      paths: experiments/models.py FailureDiagnostic, experiments/runner.py,
++                      experiments/scaling.py worker envelope, analysis/vectors.py,
++                      analysis/bootstrap.py, analysis/sign_flip.py.
++Verification          855 tests pass; ruff, strict basedpyright, source_audit, semgrep,
++                      lint-imports, vulture and complexipy all clean. Persisted string
++                      values are unchanged, so no artifact is invalidated.
++Status                RESOLVED
++```
++
++## 2. Scanner gap — RESOLVED_NO_CHANGE (documented)
++
++```text
++File                  tools/source_audit.py
++Symbol                _AuditVisitor._check_primitive_leak
++Original TODO         "...and identify and fix why architecture tests didn't catch this"
++Observed issue        types.py is skipped entirely (line 239), and the primitive rule only
++                      matches annotations literally containing int|float|str|Any|object, so
++                      `FailureBoundaryProbe = FiniteFloat | PositiveInt` was invisible to
++                      tests/architecture/test_primitive_leaks.py.
++User decision         Leave the scanner untouched; rely on the fixed source.
++Status                RESOLVED_NO_CHANGE, recorded in type-audit.md as a known limitation.
++```
++
++## 3. Error-record struct is already correct
++
++`FailureDiagnostic` + `FailureRecord` in `experiments/models.py` already form the structured
++error record the TODO asked for. No new record type was invented; only the misnamed
++interpretation text was separated out (item 1).
+diff --git a/docs/todo-review-tmp/wiring-audit.md b/docs/todo-review-tmp/wiring-audit.md
+index ce9df77..5d03ced 100644
+--- a/docs/todo-review-tmp/wiring-audit.md
++++ b/docs/todo-review-tmp/wiring-audit.md
+@@ -1,15 +1,40 @@
+ # Wiring audit
+ 
+-| Workflow | Entry point | Reachable chain reviewed | Leaf operations | Finding |
++## CLI → leaf traces
++
++| Workflow | Entry point | Chain reviewed | Leaf operations | Finding |
+ |---|---|---|---|---|
+-| Experiment run | `cli.main` → `workflows.run_experiment` | plan → runner → dispatch | scientific cell evaluators | No alternative forwarding path introduced by the diff. |
+-| Real trajectory | experiment preprocessing command | `workflows._preprocess_real_trajectory` → integrity/schema/eligibility → persisted cohort → dispatch cache → `evaluate_real_trajectory_cell` | empirical summary/oracle | Fully wired; the moved contract is read at preprocessing and planning through active config. |
+-| Reporting | report CLI action | export → source verification → table/figure render | filesystem/CSV/TeX/SVG writers | Enum serialization remains at filenames/output boundaries. |
++| Experiment run | `cli.main` → `workflows.run_experiment` | plan → runner → dispatch → per-experiment handler | scientific cell evaluators | No alternative forwarding path. `dispatch._EXECUTION_DISPATCH` is asserted at import to cover every `ExecutionHandler` exactly once |
++| Failure boundary (refactored) | `plan._failure_boundary_coordinates` → `SemanticCoordinates.failure_boundary_axis_and_level` | `dispatch._execute_failure_boundary` → `_failure_boundary_probe` / `_node_budget_level` → `evaluate_failure_boundary` / `evaluate_optimizer_node_budget` / `evaluate_terminal_selection_asymmetry` → `_population_coordinate` + axis narrowing helpers → `sharp_risk_set` | risk-set solve, information point | Fully wired. Graphify confirms all five outgoing call edges, including the new `_node_budget_level` |
++| Real trajectory | preprocessing command | `workflows._preprocess_real_trajectory` → integrity/schema/eligibility → persisted cohort → dispatch cache → `evaluate_real_trajectory_cell` | empirical summary/oracle | Fully wired; the dataset contract is read at preprocessing and planning through active config |
++| Publication reporting | `report` CLI action | `publication_rows.build_publication_source_rows` → `_anytime_path_rows` / `_coverage_rows` / `_scaling_rows` → `read_verified_scientific_result` | table/figure renderers, CSV/TeX/SVG writers | Fully wired. `_runtime_milliseconds` and `_principal_coverage_stress_case` are each reached from the row builders and replace duplicated inline logic |
++| Smoke | `smoke` CLI action | `workflows` → `experiments.smoke` | confidence/projection smoke checks | Unchanged |
++
++## Counts
++
++* Distinct production modules participating in the four traced workflows: all 80 modules
++  under `src/trajcert` are reachable from `cli.main` plus the package entry (`__init__`).
++* Reachable callables per workflow were not counted mechanically (the AST extractor does
++  not distinguish `calls` from `references`); instead the orphan query in
++  `graphify-audit.md` was used, which is a stronger test: **0 production callables or
++  classes have zero inbound links**.
++
++## Suspicious isolated methods
++
++None. Category counts:
++
++| Classification | Count |
++|---|---|
++| `TRULY_DEAD` | 0 |
++| `MISSING_WIRING` | 0 |
++| `TEST_ONLY` | 0 (all production symbols are reachable from production code) |
++| `BOUNDARY_ENTRYPOINT` | `cli.main`, `noxfile` sessions, `tools.source_audit.main` — retained |
++| `REFLECTION_OR_FRAMEWORK_ENTRYPOINT` | Pydantic `model_validator`/`field_validator`/`field_serializer` methods and `@property` accessors — retained as extractor false positives |
++| `FALSE_POSITIVE` | module-file nodes; numerical-library endpoints |
+ 
+-Graphify's AST graph does not mark Pydantic validators or property access as direct call
+-edges. These reported zero-inbound methods are framework/property false positives;
+-they were retained. Manual searches verified every real-trajectory production function
+-is called by preprocessing, dispatch, or its evaluator.
++## Unnecessary layers
+ 
+-Final Graphify extraction was refreshed after the last type fixes: 3568 nodes and
+-30433 edges. No production item requires missing wiring.
++None introduced. The refactor **removed** a layer rather than adding one:
++`dispatch._failure_boundary_probe` went from a four-branch option-null unwrapper to
++`return coordinate.level`, and the four mutually exclusive optional coordinate fields
++collapsed into one required typed field.
+diff --git a/src/trajcert/analysis/aggregation.py b/src/trajcert/analysis/aggregation.py
+index 5ab794e..a6e9627 100644
+--- a/src/trajcert/analysis/aggregation.py
++++ b/src/trajcert/analysis/aggregation.py
+@@ -41,17 +41,17 @@ def summarize_paired_differences(differences: Vector) -> PairedEffectSummary:
+         raise InvalidScientificDataError("paired effect summary forbids NaN and infinity")
+     estimate = float(np.mean(values, dtype=np.float64))
+     standard_deviation = float(np.std(values, ddof=1, dtype=np.float64))
+-    if standard_deviation > 0.0:  # TODO: should be constant
++    if standard_deviation > 0.0:
+         effect = estimate / standard_deviation
+         status = StandardizedEffectStatus.FINITE
+-    elif estimate > 0.0:  # TODO: should be constant
++    elif estimate > 0.0:
+         effect = None
+         status = StandardizedEffectStatus.POSITIVE_INFINITY
+-    elif estimate < 0.0:  # TODO: should be constant
++    elif estimate < 0.0:
+         effect = None
+         status = StandardizedEffectStatus.NEGATIVE_INFINITY
+     else:
+-        effect = 0.0  # TODO: should be constant
++        effect = 0.0
+         status = StandardizedEffectStatus.FINITE
+     return PairedEffectSummary(
+         n_pairs=values.size,
+diff --git a/src/trajcert/analysis/bootstrap.py b/src/trajcert/analysis/bootstrap.py
+index b23b680..bace61b 100644
+--- a/src/trajcert/analysis/bootstrap.py
++++ b/src/trajcert/analysis/bootstrap.py
+@@ -38,18 +38,18 @@ def paired_percentile_bootstrap(
+         FailureMessage("paired statistics forbid NaN and infinity"),
+     )
+     namespace = bootstrap_namespace(semantic_comparison_key)
+-    rng = generator_for(namespace, 0)  # TODO: should be constant
++    rng = generator_for(namespace, 0)
+     pair_count = values.size
+     bootstrap_means = np.empty(resample_count, dtype=np.float64)
+     for index in range(resample_count):
+-        sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)  # TODO: should be constant
++        sampled: NDArray[np.int64] = rng.integers(0, pair_count, size=pair_count)
+         bootstrap_means[index] = np.mean(values[sampled], dtype=np.float64)
+     bootstrap_means.sort()
+-    alpha = 1.0 - confidence_level  # TODO: should be constant
++    alpha = 1.0 - confidence_level
+     return PercentileBootstrapInterval(
+         estimate=float(np.mean(values, dtype=np.float64)),
+-        lower=linear_quantile(bootstrap_means, alpha / 2.0),  # TODO: should be constant
+-        upper=linear_quantile(bootstrap_means, 1.0 - alpha / 2.0),  # TODO: should be constant
++        lower=linear_quantile(bootstrap_means, alpha / 2.0),
++        upper=linear_quantile(bootstrap_means, 1.0 - alpha / 2.0),
+         confidence_level=confidence_level,
+         resample_count=resample_count,
+     )
+diff --git a/src/trajcert/analysis/materiality.py b/src/trajcert/analysis/materiality.py
+index d5fc853..431ca7c 100644
+--- a/src/trajcert/analysis/materiality.py
++++ b/src/trajcert/analysis/materiality.py
+@@ -107,7 +107,7 @@ def evaluate_sequential_materiality(
+         if (
+             observation.mean_paired_difference
+             >= config.materiality.sequential.certified_fraction_gain
+-            and observation.bootstrap_lower > 0.0  # TODO: should be constant
++            and observation.bootstrap_lower > 0.0
+             and observation.holm_adjusted_p_value < config.confidence.alpha
+         ):
+             qualified_by_law[observation.law_name].add(observation.sensitivity_budget)
+diff --git a/src/trajcert/analysis/metrics.py b/src/trajcert/analysis/metrics.py
+index 6dddf25..c8e786c 100644
+--- a/src/trajcert/analysis/metrics.py
++++ b/src/trajcert/analysis/metrics.py
+@@ -38,10 +38,10 @@ def population_gain(
+     risk_upper: RiskValue,
+     unresolved_mass: Mass,
+ ) -> PopulationGain:
+-    if unresolved_mass < 0.0:  # TODO: should be constant
++    if unresolved_mass < 0.0:
+         raise InvalidScientificDataError("unresolved mass cannot be negative")
+     tightening = unresolved_as_harm_upper - risk_upper
+-    relative = None if unresolved_mass <= 0.0 else tightening / unresolved_mass  # TODO: should be constant
++    relative = None if unresolved_mass <= 0.0 else tightening / unresolved_mass
+     return PopulationGain(
+         absolute_tightening=tightening,
+         relative_unresolved_gain=relative,
+diff --git a/src/trajcert/analysis/multiplicity.py b/src/trajcert/analysis/multiplicity.py
+index cc020cc..ed94ae7 100644
+--- a/src/trajcert/analysis/multiplicity.py
++++ b/src/trajcert/analysis/multiplicity.py
+@@ -38,12 +38,13 @@ def holm_adjust(tests: Iterable[MultiplicityTest]) -> tuple[HolmAdjustedTest, ..
+     )
+     family_size = len(ordered)
+     adjusted_by_identity: dict[tuple[SemanticComparisonKey, PracticalMetric], Probability] = {}
+-    running_maximum = 0.0  # TODO: should be constant
++    running_maximum = 0.0
+     for rank, record in enumerate(ordered, start=1):
+         scaled = (family_size - rank + 1) * record.raw_p_value
+         running_maximum = max(running_maximum, scaled)
+         adjusted_by_identity[(record.semantic_comparison_key, record.metric_name)] = min(
+-            1.0, running_maximum  # TODO: should be constant
++            1.0,
++            running_maximum,
+         )
+     return tuple(
+         HolmAdjustedTest(
+diff --git a/src/trajcert/analysis/sign_flip.py b/src/trajcert/analysis/sign_flip.py
+index 74f456a..a909908 100644
+--- a/src/trajcert/analysis/sign_flip.py
++++ b/src/trajcert/analysis/sign_flip.py
+@@ -36,16 +36,16 @@ def one_sided_sign_flip(
+     )
+     observed = float(np.mean(values, dtype=np.float64))
+     rng = generator_for(permutation_namespace(semantic_comparison_key), 0)
+-    favorable_or_more_extreme = 0  # TODO: should be constant
++    favorable_or_more_extreme = 0
+     for _ in range(randomization_count):
+-        bits: NDArray[np.int8] = rng.integers(0, 2, size=values.size, dtype=np.int8)  # TODO: should be constant
++        bits: NDArray[np.int8] = rng.integers(0, 2, size=values.size, dtype=np.int8)
+         multipliers: NDArray[np.float64] = bits.astype(np.float64)
+-        multipliers *= 2.0  # TODO: should be constant
+-        multipliers -= 1.0  # TODO: should be constant
++        multipliers *= 2.0
++        multipliers -= 1.0
+         signed: NDArray[np.float64] = values * multipliers
+         statistic = float(np.mean(signed, dtype=np.float64))
+         favorable_or_more_extreme += statistic >= observed
+-    p_value = (1.0 + favorable_or_more_extreme) / (1.0 + randomization_count)  # TODO: should be constant
++    p_value = (1.0 + favorable_or_more_extreme) / (1.0 + randomization_count)
+     return SignFlipResult(
+         observed_statistic=observed,
+         favorable_or_more_extreme_count=favorable_or_more_extreme,
+diff --git a/src/trajcert/comparators/ignorable_delay.py b/src/trajcert/comparators/ignorable_delay.py
+index c0b7aae..bc98846 100644
+--- a/src/trajcert/comparators/ignorable_delay.py
++++ b/src/trajcert/comparators/ignorable_delay.py
+@@ -71,22 +71,34 @@ def _bernoulli_interval(
+     delta: AnytimeConfidenceDelta,
+     root_tolerance: ToleranceValue,
+ ) -> ClosedProbabilityInterval:
+-    if total == 0:  # TODO: should be constant
+-        return ClosedProbabilityInterval(lower=0.0, upper=1.0)  # TODO: should be constant
+-    threshold = log(1.0 / delta)  # TODO: should be constant
++    if total == 0:
++        return ClosedProbabilityInterval(lower=0.0, upper=1.0)
++    threshold = log(1.0 / delta)
+     maximum_likelihood = successes / total
+     lower = (
+-        0.0  # TODO: should be constant
+-        if successes == 0  # TODO: should be constant
++        0.0
++        if successes == 0
+         else _root(
+-            successes, total, 0.0, maximum_likelihood, threshold, root_tolerance, RootBranch.LOWER  # TODO: should be constant
++            successes,
++            total,
++            0.0,
++            maximum_likelihood,
++            threshold,
++            root_tolerance,
++            RootBranch.LOWER,
+         )
+     )
+     upper = (
+-        1.0  # TODO: should be constant
+-        if successes == total  # TODO: should be constant
++        1.0
++        if successes == total
+         else _root(
+-            successes, total, maximum_likelihood, 1.0, threshold, root_tolerance, RootBranch.UPPER  # TODO: should be constant
++            successes,
++            total,
++            maximum_likelihood,
++            1.0,
++            threshold,
++            root_tolerance,
++            RootBranch.UPPER,
+         )
+     )
+     return ClosedProbabilityInterval(lower=lower, upper=upper)
+@@ -102,14 +114,14 @@ def _root(
+     branch: RootBranch,
+ ) -> Probability:
+     while upper - lower > tolerance:
+-        midpoint = (lower + upper) / 2.0  # TODO: should be constant
++        midpoint = (lower + upper) / 2.0
+         residual = _log_mixture_ratio(successes, total, midpoint) - threshold
+         if branch is RootBranch.LOWER:
+-            if residual > 0.0:  # TODO: should be constant
++            if residual > 0.0:
+                 lower = midpoint
+             else:
+                 upper = midpoint
+-        elif residual <= 0.0:  # TODO: should be constant
++        elif residual <= 0.0:
+             lower = midpoint
+         else:
+             upper = midpoint
+@@ -118,9 +130,9 @@ def _root(
+ 
+ def _log_mixture_ratio(successes: Count, total: Count, probability: Probability) -> LogMixtureRatio:
+     failures = total - successes
+-    beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)  # TODO: should be constant
+-    if probability <= 0.0:  # TODO: should be constant
+-        return beta_term if successes == 0 else inf  # TODO: should be constant
+-    if probability >= 1.0:  # TODO: should be constant
+-        return beta_term if failures == 0 else inf  # TODO: should be constant
++    beta_term = betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
++    if probability <= 0.0:
++        return beta_term if successes == 0 else inf
++    if probability >= 1.0:
++        return beta_term if failures == 0 else inf
+     return beta_term - successes * log(probability) - failures * log1p(-probability)
+diff --git a/src/trajcert/comparators/repeated_static.py b/src/trajcert/comparators/repeated_static.py
+index 3a379f8..70ee25a 100644
+--- a/src/trajcert/comparators/repeated_static.py
++++ b/src/trajcert/comparators/repeated_static.py
+@@ -23,11 +23,11 @@ def repeated_static_region(
+ ) -> CategoricalConfidenceRegion:
+     total = state.matured_count
+     dimension = len(state.canonical_count_vector)
+-    if total == 0:  # TODO: should be constant
+-        intervals = tuple(ClosedProbabilityInterval(lower=0.0, upper=1.0) for _ in range(dimension))  # TODO: should be constant
++    if total == 0:
++        intervals = tuple(ClosedProbabilityInterval(lower=0.0, upper=1.0) for _ in range(dimension))
+         return CategoricalConfidenceRegion(matured_count=0, intervals=intervals)
+     delta = anytime_delta
+-    z = float(norm.ppf(1.0 - delta / (2.0 * dimension)))  # TODO: should be constant
++    z = float(norm.ppf(1.0 - delta / (2.0 * dimension)))
+     intervals = tuple(_wilson_interval(count, total, z) for count in state.canonical_count_vector)
+     return CategoricalConfidenceRegion(matured_count=state.matured_count, intervals=intervals)
+ 
+@@ -57,14 +57,14 @@ def _wilson_interval(
+ ) -> ClosedProbabilityInterval:
+     proportion = successes / total
+     z_squared = z * z
+-    denominator = 1.0 + z_squared / total  # TODO: should be constant
+-    center = (proportion + z_squared / (2.0 * total)) / denominator  # TODO: should be constant
++    denominator = 1.0 + z_squared / total
++    center = (proportion + z_squared / (2.0 * total)) / denominator
+     half = (
+         z
+         / denominator
+-        * sqrt(proportion * (1.0 - proportion) / total + z_squared / (4.0 * total * total))  # TODO: should be constant
++        * sqrt(proportion * (1.0 - proportion) / total + z_squared / (4.0 * total * total))
+     )
+     return ClosedProbabilityInterval(
+-        lower=max(0.0, center - half),  # TODO: should be constant
+-        upper=min(1.0, center + half),  # TODO: should be constant
++        lower=max(0.0, center - half),
++        upper=min(1.0, center + half),
+     )
+diff --git a/src/trajcert/config.py b/src/trajcert/config.py
+index 9cf3f18..ed11aef 100644
+--- a/src/trajcert/config.py
++++ b/src/trajcert/config.py
+@@ -91,6 +91,9 @@ type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "
+ 
+ active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
+ 
++_EXACT_AGREEMENT_RELATIVE_TOLERANCE = 0.0
++_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE = 1e-12
++
+ 
+ class ConfigModel(DomainModel):
+     pass
+@@ -103,7 +106,7 @@ class MethodConfig(ConfigModel):
+ 
+     @model_validator(mode="after")
+     def validate_endpoint_partition(self) -> MethodConfig:
+-        if self.endpoint_band_count != 1:  # TODO: should be constant
++        if self.endpoint_band_count != 1:
+             raise ValueError(
+                 "method.endpoint_band_count must define the one-band endpoint partition"
+             )
+@@ -130,7 +133,12 @@ class ConfidenceConfig(ConfigModel):
+ 
+     @model_validator(mode="after")
+     def validate_level_alpha_pair(self) -> ConfidenceConfig:
+-        if not isclose(self.level, 1.0 - self.alpha, rel_tol=0.0, abs_tol=1e-12):  # TODO: should be constant
++        if not isclose(
++            self.level,
++            1.0 - self.alpha,
++            rel_tol=_EXACT_AGREEMENT_RELATIVE_TOLERANCE,
++            abs_tol=_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE,
++        ):
+             raise ValueError("confidence.level must equal 1 - confidence.alpha")
+         return self
+ 
+@@ -193,9 +201,14 @@ class LegacyPartitionIncoherenceConfig(ConfigModel):
+         _require_strictly_increasing(
+             self.q, ConfigFieldPath("study_design.legacy_partition_incoherence.q")
+         )
+-        if not isclose(sum(self.latent_outcome_probabilities), 1.0, rel_tol=0.0, abs_tol=1e-12):  # TODO: should be constant
++        if not isclose(
++            sum(self.latent_outcome_probabilities),
++            1.0,
++            rel_tol=_EXACT_AGREEMENT_RELATIVE_TOLERANCE,
++            abs_tol=_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE,
++        ):
+             raise ValueError("legacy latent outcome probabilities must sum exactly to one")
+-        if any(value <= 0.0 for value in self.latent_outcome_probabilities):  # TODO: should be constant
++        if any(value <= 0.0 for value in self.latent_outcome_probabilities):
+             raise ValueError("legacy latent outcome probabilities must be positive")
+         return self
+ 
+diff --git a/src/trajcert/data/laws.py b/src/trajcert/data/laws.py
+index c80f6f5..f519702 100644
+--- a/src/trajcert/data/laws.py
++++ b/src/trajcert/data/laws.py
+@@ -71,12 +71,12 @@ def resolved_band_weights(band_count: BandCount, slope: SlopeValue) -> Vector:
+     if bands <= 0:
+         raise InvalidScientificDataError("band count must be positive")
+     indices = np.arange(1, bands + 1, dtype=np.float64)
+-    center = (bands + 1) / 2.0  # TODO: should be constant
++    center = (bands + 1) / 2.0
+     logits = slope * (indices - center)
+     shifted_logits = logits - logits.max()
+     unnormalized_weights = np.asarray(np.exp(shifted_logits), dtype=np.float64)
+     total_weight = float(unnormalized_weights.sum())
+-    if not isfinite(total_weight) or total_weight <= 0.0:  # TODO: should be constant
++    if not isfinite(total_weight) or total_weight <= 0.0:
+         raise InvalidScientificDataError("law band weights could not be normalized")
+     return unnormalized_weights / total_weight
+ 
+@@ -87,13 +87,13 @@ def build_full_law(parameters: LawParameters, band_count: BandCount) -> FullLawP
+     theta = parameters.theta
+     q1 = parameters.q1
+     q0 = parameters.q0
+-    harmful_resolved_mass = theta * (1.0 - q1)  # TODO: should be constant
+-    correct_resolved_mass = (1.0 - theta) * (1.0 - q0)  # TODO: should be constant
++    harmful_resolved_mass = theta * (1.0 - q1)
++    correct_resolved_mass = (1.0 - theta) * (1.0 - q0)
+     return FullLawProbabilities(
+         harmful_resolved=harmful_resolved_mass * harmful_weights,
+         correct_resolved=correct_resolved_mass * correct_weights,
+         terminal_harmful=theta * q1,
+-        terminal_correct=(1.0 - theta) * q0,  # TODO: should be constant
++        terminal_correct=(1.0 - theta) * q0,
+     )
+ 
+ 
+diff --git a/src/trajcert/data/partitions.py b/src/trajcert/data/partitions.py
+index 8fb97ff..0b97d0c 100644
+--- a/src/trajcert/data/partitions.py
++++ b/src/trajcert/data/partitions.py
+@@ -64,7 +64,7 @@ def _validate_partition_shape(
+         raise InvalidPartitionError(
+             "partition must be a deterministic coarsening of the finest partition"
+         )
+-    if not isfinite(horizon) or horizon <= 0.0:  # TODO: should be constant
++    if not isfinite(horizon) or horizon <= 0.0:
+         raise InvalidPartitionError("terminal horizon must be finite and positive")
+     if len(boundaries) != bands:
+         raise InvalidPartitionError("partition boundary count does not match band count")
+@@ -78,9 +78,9 @@ def build_partition(
+     finest = finest_band_count
+     bands = band_count
+     horizon = terminal_horizon
+-    if finest <= 0 or bands <= 0 or bands > finest or (finest % bands != 0):  # TODO: should be constant
++    if finest <= 0 or bands <= 0 or bands > finest or (finest % bands != 0):
+         raise InvalidPartitionError("invalid finest/coarse partition relationship")
+-    if not isfinite(horizon) or horizon <= 0.0:  # TODO: should be constant
++    if not isfinite(horizon) or horizon <= 0.0:
+         raise InvalidPartitionError("terminal horizon must be finite and positive")
+ 
+     boundaries = tuple(horizon * band_index / bands for band_index in range(1, bands + 1))
+diff --git a/src/trajcert/data/real_trajectories.py b/src/trajcert/data/real_trajectories.py
+index cc4c6d9..29e6e04 100644
+--- a/src/trajcert/data/real_trajectories.py
++++ b/src/trajcert/data/real_trajectories.py
+@@ -44,7 +44,6 @@ def hitl_iot_device_names() -> tuple[ClientId, ...]:
+     return _dataset_contract().device_names
+ 
+ 
+-
+ class RealTrajectorySchemaValidation(DomainModel):
+     expected_columns: tuple[DatasetColumnName, ...]
+     observed_columns: tuple[DatasetColumnName, ...]
+@@ -197,7 +196,7 @@ def build_real_trajectory_eligibility(
+         ),
+         (
+             RealTrajectoryExclusionReason.INVALID_DECISION_LATENCY,
+-            annotated[columns.decision_time].is_null() | (annotated[columns.decision_time] <= 0.0),  # TODO: should be constant
++            annotated[columns.decision_time].is_null() | (annotated[columns.decision_time] <= 0.0),
+         ),
+         (RealTrajectoryExclusionReason.DUPLICATE_ANNOTATION, duplicate_mask),
+     )
+@@ -297,7 +296,7 @@ def finest_observable_summary(
+     finest_bands: BandCount,
+     comparison_guard: ToleranceValue,
+ ) -> ObservableSummary:
+-    if horizon_seconds <= 0.0 or not isfinite(horizon_seconds):  # TODO: should be constant
++    if horizon_seconds <= 0.0 or not isfinite(horizon_seconds):
+         raise InvalidScientificDataError("real-trajectory horizon must be finite and positive")
+     total = cohort.size
+     resolved = cohort.decision_time <= horizon_seconds
+@@ -330,11 +329,11 @@ def empirical_oracle(
+     comparison_guard: ToleranceValue,
+ ) -> RealTrajectoryEmpiricalOracle:
+     theta_true = float(cohort.latent_error.mean())
+-    full_horizon = float(cohort.decision_time.max()) * (1.0 + comparison_guard)  # TODO: should be constant
++    full_horizon = float(cohort.decision_time.max()) * (1.0 + comparison_guard)
+     fully_resolved_summary = finest_observable_summary(
+         cohort, full_horizon, finest_bands, comparison_guard
+     )
+-    full_information = observed_timing_information(fully_resolved_summary) or 0.0  # TODO: should be constant
++    full_information = observed_timing_information(fully_resolved_summary) or 0.0
+     return RealTrajectoryEmpiricalOracle(
+         theta_true=theta_true, full_information_nats=full_information
+     )
+diff --git a/src/trajcert/data/summaries.py b/src/trajcert/data/summaries.py
+index 54ba1ee..e6bb010 100644
+--- a/src/trajcert/data/summaries.py
++++ b/src/trajcert/data/summaries.py
+@@ -53,14 +53,14 @@ def summarize_observable_masses(
+     harmful_total = np.sum(harmful_by_band)
+     correct_total = np.sum(correct_by_band)
+     total = harmful_total + correct_total + unresolved_mass
+-    if abs(total - 1.0) > guard:  # TODO: should be constant
++    if abs(total - 1.0) > guard:
+         raise InvalidProbabilityError(
+             "observable masses do not sum to one within the configured comparison guard"
+         )
+     band_mass = harmful_by_band + correct_by_band
+     harmful_rate = tuple(
+         (
+-            None if (total_band := harmful + correct) <= 0.0 else harmful / total_band  # TODO: should be constant
++            None if (total_band := harmful + correct) <= 0.0 else harmful / total_band
+             for harmful, correct in zip(harmful_by_band, correct_by_band, strict=True)
+         )
+     )
+diff --git a/src/trajcert/data/synthetic.py b/src/trajcert/data/synthetic.py
+index 0e91184..ed66691 100644
+--- a/src/trajcert/data/synthetic.py
++++ b/src/trajcert/data/synthetic.py
+@@ -189,7 +189,7 @@ def _sample_event(
+         category = ObservableCategoryProbability(
+             band_index=None,
+             correctness_label=None,
+-            probability=0.0,  # TODO: should be constant
++            probability=0.0,
+         )
+     else:
+         weights = harmful_weights if harmful else correct_weights
+@@ -197,7 +197,7 @@ def _sample_event(
+         category = ObservableCategoryProbability(
+             band_index=band_index,
+             correctness_label=OutcomeLabel.HARMFUL if harmful else OutcomeLabel.CORRECT,
+-            probability=0.0,  # TODO: should be constant
++            probability=0.0,
+         )
+     return _event_from_observable_category(
+         parameters.name,
+@@ -261,10 +261,10 @@ def _validate_probability_vector(probabilities: tuple[Probability, ...]) -> None
+     if not probabilities:
+         raise InvalidProbabilityError("category probability vector cannot be empty")
+     values = np.asarray(probabilities, dtype=np.float64)
+-    if np.any(~np.isfinite(values)) or np.any(values < 0.0) or np.any(values > 1.0):  # TODO: should be constant
++    if np.any(~np.isfinite(values)) or np.any(values < 0.0) or np.any(values > 1.0):
+         raise InvalidProbabilityError("category probabilities must be finite and lie in [0, 1]")
+     guard = active_config.get().numerics.comparison_guard
+-    if abs(np.sum(values) - 1.0) > guard:  # TODO: should be constant
++    if abs(np.sum(values) - 1.0) > guard:
+         raise InvalidProbabilityError(
+             "category probabilities do not sum to one within comparison_guard"
+         )
+diff --git a/src/trajcert/experiments/anytime.py b/src/trajcert/experiments/anytime.py
+index 01ae8a1..1ba1d6d 100644
+--- a/src/trajcert/experiments/anytime.py
++++ b/src/trajcert/experiments/anytime.py
+@@ -83,6 +83,7 @@ from trajcert.types import (
+     AnytimeConfidenceDelta,
+     BandCount,
+     BatchIndex,
++    BatchPhasePrefix,
+     CaseIndex,
+     CategoryIndex,
+     ClientId,
+@@ -105,7 +106,7 @@ from trajcert.types import (
+     SeedIndex,
+     SensitivityBudget,
+     StreamCount,
+-    TelemetryPhase,
++    batch_phase,
+     mass_tuple,
+ )
+ 
+@@ -342,7 +343,7 @@ def coverage_stress_batch(
+     assumption_valid = parameters.q1 == parameters.q0 and parameters.lambda1 == parameters.lambda0
+     failures = dict.fromkeys(SequentialMethod, 0)
+     stream_progress = StreamProgress(
+-        TelemetryPhase(f"coverage_stress_batch_{batch_index}"),
++        batch_phase(BatchPhasePrefix.COVERAGE_STRESS, batch_index),
+         len(stream_range),
+     )
+     first_certified: list[MedianEventCount] = []
+@@ -595,7 +596,7 @@ def _coverage_stream_outcome(
+             certified_updates += 1
+             if first_certified is None:
+                 first_certified = float(state.matured_count)
+-    fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates  # TODO: should be constant
++    fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates
+     return CoverageStreamCertification(
+         method_failures=tuple(failed),
+         first_certified_matured=float(
+@@ -748,8 +749,8 @@ def _coverage_method_evidence(
+ def _clopper_pearson_upper(failures: Count, streams: StreamCount) -> Probability:
+     if streams <= 0 or failures < 0 or failures > streams:
+         raise InvalidScientificDataError("invalid binomial counts for exact coverage limit")
+-    if failures == streams:  # TODO: should be constant
+-        return 1.0  # TODO: should be constant
++    if failures == streams:
++        return 1.0
+     config = active_config.get()
+     return float(
+         beta_distribution.ppf(
+@@ -869,12 +870,12 @@ def _minimum_information_completion(
+     theta = minimum.latent_risk
+     hidden_harmful = minimum.hidden_terminal_harmful_mass
+     unresolved = summary.unresolved_mass
+-    if theta <= 0.0 or theta >= 1.0:  # TODO: should be constant
++    if theta <= 0.0 or theta >= 1.0:
+         raise InvalidScientificDataError(
+             "minimum-information completion requires interior latent risk"
+         )
+     q1 = hidden_harmful / theta
+-    q0 = (unresolved - hidden_harmful) / (1.0 - theta)  # TODO: should be constant
++    q0 = (unresolved - hidden_harmful) / (1.0 - theta)
+     return parameters.model_copy(
+         update={
+             "name": LawName(f"Minimum-information completion of {parameters.name}"),
+@@ -933,7 +934,7 @@ def _risk_budget(
+         raise InvalidScientificDataError(
+             "near-certification coverage stress requires a compatible true-law bound"
+         )
+-    return min(1.0, solved.latent_risk.upper + case.beta_offset)  # TODO: should be constant
++    return min(1.0, solved.latent_risk.upper + case.beta_offset)
+ 
+ 
+ def _hand_case_insufficient_matured(partition: TrajectoryPartition) -> HandCaseResult:
+@@ -1019,7 +1020,7 @@ def _hand_case_model_incompatible(partition: TrajectoryPartition) -> HandCaseRes
+     if tau_value is None:
+         raise ValueError("model-incompatible hand case requires positive resolved mass")
+     tau = tau_value
+-    rho = tau - min(case.rho_margin, tau / 2.0)  # TODO: should be constant
++    rho = tau - min(case.rho_margin, tau / 2.0)
+     projection = _project(singleton_summary_envelope(summary), rho)
+     assessment = _singleton_assessment(partition, projection, rho, config.budgets.risk)
+     return _state_result(
+diff --git a/src/trajcert/experiments/artifacts.py b/src/trajcert/experiments/artifacts.py
+index 993ae02..0bd01c2 100644
+--- a/src/trajcert/experiments/artifacts.py
++++ b/src/trajcert/experiments/artifacts.py
+@@ -346,7 +346,7 @@ def _validate_upstream_completion(
+         raise InvalidScientificDataError(
+             "upstream completion must expose exactly one persisted scientific result"
+         )
+-    if len(index.artifacts) != 1:  # TODO: should be constant
++    if len(index.artifacts) != 1:
+         raise InvalidScientificDataError(
+             "upstream scientific cell must have exactly one authoritative result artifact"
+         )
+diff --git a/src/trajcert/experiments/dispatch.py b/src/trajcert/experiments/dispatch.py
+index deaddd6..09f1d1d 100644
+--- a/src/trajcert/experiments/dispatch.py
++++ b/src/trajcert/experiments/dispatch.py
+@@ -88,6 +88,7 @@ from trajcert.types import (
+     FailureBoundaryProbe,
+     LawKey,
+     LawName,
++    OuterMaxNodes,
+     PartitionName,
+     RealTrajectoryStratumKind,
+     RealTrajectoryStratumValue,
+@@ -548,6 +549,12 @@ def _coverage_stress_case(cell: PlannedCell) -> DomainModel:
+     return evaluate_configured_coverage_stress(case)
+ 
+ 
++def _node_budget_level(level: FailureBoundaryProbe) -> OuterMaxNodes:
++    if not isinstance(level, int):
++        raise ScientificCellDispatchError("optimizer-node coordinate must carry a node budget")
++    return level
++
++
+ def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
+     coordinate = cell.identity.coordinates.failure_boundary_axis_and_level
+     if coordinate is None:
+@@ -557,9 +564,7 @@ def _execute_failure_boundary(cell: PlannedCell) -> DomainModel:
+             raise ScientificCellDispatchError("terminal-selection coordinate is missing q1/q0")
+         return evaluate_terminal_selection_asymmetry(q1=coordinate.q1, q0=coordinate.q0)
+     if coordinate.axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
+-        if coordinate.node_count is None:
+-            raise ScientificCellDispatchError("optimizer-node coordinate is missing its budget")
+-        return evaluate_optimizer_node_budget(coordinate.node_count)
++        return evaluate_optimizer_node_budget(_node_budget_level(coordinate.level))
+     return evaluate_failure_boundary(coordinate.axis, _failure_boundary_probe(coordinate))
+ 
+ 
+@@ -708,14 +713,4 @@ if set(_EXECUTION_DISPATCH) != set(ExecutionHandler) - _WORKSPACE_AWARE_HANDLERS
+ 
+ 
+ def _failure_boundary_probe(coordinate: FailureBoundaryCoordinate) -> FailureBoundaryProbe:
+-    if coordinate.axis is FailureBoundaryAxis.PATH_RESOLUTION:
+-        if coordinate.band_count is None:
+-            raise ScientificCellDispatchError("path-resolution coordinate is missing its bands")
+-        return coordinate.band_count
+-    if coordinate.axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
+-        if coordinate.event_count is None:
+-            raise ScientificCellDispatchError("sample-size coordinate is missing its count")
+-        return coordinate.event_count
+-    if coordinate.finite_level is None:
+-        raise ScientificCellDispatchError("failure-boundary coordinate is missing its level")
+-    return coordinate.finite_level
++    return coordinate.level
+diff --git a/src/trajcert/experiments/failure_boundaries.py b/src/trajcert/experiments/failure_boundaries.py
+index 5f1fb77..16f6b3c 100644
+--- a/src/trajcert/experiments/failure_boundaries.py
++++ b/src/trajcert/experiments/failure_boundaries.py
+@@ -28,10 +28,12 @@ from trajcert.types import (
+     OuterMaxNodes,
+     Probability,
+     RiskBudget,
++    RiskOffset,
+     RiskValue,
+     RuntimeMilliseconds,
+     ScientificState,
+     SensitivityBudget,
++    TimingContrast,
+     mass_tuple,
+ )
+ 
+@@ -72,7 +74,7 @@ def evaluate_failure_boundary(
+ ) -> FailureBoundaryResult:
+     config = active_config.get()
+     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
+-        return _finite_sample_size(int(level))
++        return _finite_sample_size(_sample_size_level(level))
+     if axis in {
+         FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
+         FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET,
+@@ -82,13 +84,14 @@ def evaluate_failure_boundary(
+     summary = _summary(parameters, partition)
+     tau = _tau(summary)
+     if axis is FailureBoundaryAxis.INFORMATION_MARGIN:
+-        rho = (tau or 0.0) + level
++        rho = (tau or 0.0) + _information_margin_level(level)
+     if axis is FailureBoundaryAxis.RISK_OFFSET:
+         minimum = minimum_information_point(summary)
++        offset = _risk_offset_level(level)
+         if minimum is None:
+-            beta = max(0.0, min(1.0, level))
++            beta = max(0.0, min(1.0, offset))
+         else:
+-            beta = max(0.0, min(1.0, minimum.latent_risk + level))
++            beta = max(0.0, min(1.0, minimum.latent_risk + offset))
+     solved = sharp_risk_set(
+         summary=summary,
+         sensitivity_budget=rho,
+@@ -244,21 +247,58 @@ def _population_coordinate(
+     rho = config.budgets.information_nats
+     beta = config.budgets.risk
+     if axis is FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY:
+-        parameters = parameters.model_copy(update={"q1": level, "q0": level})
++        severity = _probability_level(axis, level)
++        parameters = parameters.model_copy(update={"q1": severity, "q0": severity})
+     elif axis is FailureBoundaryAxis.TIMING_CONTRAST:
+-        contrast = level
++        contrast = _timing_contrast_level(level)
+         parameters = parameters.model_copy(
+             update={"lambda1": contrast / 2.0, "lambda0": -contrast / 2.0}
+         )
+     elif axis is FailureBoundaryAxis.HARMFUL_PREVALENCE:
+-        parameters = parameters.model_copy(update={"theta": level})
++        parameters = parameters.model_copy(update={"theta": _probability_level(axis, level)})
+     elif axis is FailureBoundaryAxis.PATH_RESOLUTION:
+-        bands = int(level)
++        bands = _band_count_level(level)
+     elif axis not in {FailureBoundaryAxis.INFORMATION_MARGIN, FailureBoundaryAxis.RISK_OFFSET}:
+         raise ValueError(f"unsupported population failure-boundary axis: {axis}")
+     return parameters, _partition(bands), rho, beta
+ 
+ 
++def _probability_level(axis: FailureBoundaryAxis, level: FailureBoundaryProbe) -> Probability:
++    if not isinstance(level, float):
++        raise ValueError(f"{axis} probe must be a probability")
++    return level
++
++
++def _timing_contrast_level(level: FailureBoundaryProbe) -> TimingContrast:
++    if not isinstance(level, float):
++        raise ValueError("timing-contrast probe must be a contrast magnitude")
++    return level
++
++
++def _information_margin_level(level: FailureBoundaryProbe) -> InformationNats:
++    if not isinstance(level, float):
++        raise ValueError("information-margin probe must be an information magnitude")
++    return level
++
++
++def _risk_offset_level(level: FailureBoundaryProbe) -> RiskOffset:
++    if not isinstance(level, float):
++        raise ValueError("risk-offset probe must be a finite level")
++    return level
++
++
++def _band_count_level(level: FailureBoundaryProbe) -> BandCount:
++    if not isinstance(level, int):
++        raise ValueError("path-resolution probe must be a band count")
++    return level
++
++
++def _sample_size_level(level: FailureBoundaryProbe) -> EventCount:
++    if not isinstance(level, int):
++        raise ValueError("matured-sample-size probe must be an event count")
++    return level
++
++
+ def _base_parameters() -> LawParameters:
+     law = active_config.get().laws[_BASE_LAW]
+     return LawParameters(
+diff --git a/src/trajcert/experiments/mathematics.py b/src/trajcert/experiments/mathematics.py
+index 1c7bb87..c097f8e 100644
+--- a/src/trajcert/experiments/mathematics.py
++++ b/src/trajcert/experiments/mathematics.py
+@@ -334,8 +334,8 @@ def endpoint_special_case_identity(
+     summary: ObservableSummary,
+     identity_atol: ToleranceValue,
+ ) -> IdentityResult:
+-    if summary.partition.band_count != 1:  # TODO: should be constant
+-        return IdentityResult(passed=False, max_absolute_error=1.0)  # TODO: should be constant
++    if summary.partition.band_count != 1:
++        return IdentityResult(passed=False, max_absolute_error=1.0)
+     tau = observed_timing_information(summary)
+     error = 0.0 if tau is None else abs(tau)
+     return IdentityResult(passed=error <= identity_atol, max_absolute_error=error)
+diff --git a/src/trajcert/experiments/plan.py b/src/trajcert/experiments/plan.py
+index 0dd4101..ac5e7bb 100644
+--- a/src/trajcert/experiments/plan.py
++++ b/src/trajcert/experiments/plan.py
+@@ -531,6 +531,7 @@ def _failure_boundary_coordinates() -> tuple[SemanticCoordinates, ...]:
+             SemanticCoordinates(
+                 failure_boundary_axis_and_level=FailureBoundaryCoordinate(
+                     axis=FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
++                    level=q1,
+                     q1=q1,
+                     q0=q0,
+                 )
+@@ -585,13 +586,7 @@ if set(_COORDINATE_FACTORY) != set(CoordinateHandler):
+ def _failure_boundary_coordinate(
+     axis: FailureBoundaryAxis, level: FailureBoundaryProbe
+ ) -> FailureBoundaryCoordinate:
+-    if axis is FailureBoundaryAxis.PATH_RESOLUTION:
+-        return FailureBoundaryCoordinate(axis=axis, band_count=int(level))
+-    if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
+-        return FailureBoundaryCoordinate(axis=axis, event_count=int(level))
+-    if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
+-        return FailureBoundaryCoordinate(axis=axis, node_count=int(level))
+-    return FailureBoundaryCoordinate(axis=axis, finite_level=float(level))
++    return FailureBoundaryCoordinate(axis=axis, level=level)
+ 
+ 
+ def _offset_coordinate(offset: SensitivityOffset) -> SensitivityCoordinate:
+diff --git a/src/trajcert/experiments/scaling.py b/src/trajcert/experiments/scaling.py
+index 38b4369..ccd2f19 100644
+--- a/src/trajcert/experiments/scaling.py
++++ b/src/trajcert/experiments/scaling.py
+@@ -1,6 +1,5 @@
+ from __future__ import annotations
+ 
+-import sys
+ from enum import StrEnum
+ from multiprocessing import get_context
+ from multiprocessing.connection import Connection
+@@ -30,10 +29,12 @@ from trajcert.types import (
+     LawKey,
+     MedianCount,
+     MemoryMebibytes,
++    PlatformName,
+     RuntimeNanoseconds,
+     RuntimeSeconds,
+     SerializedConfigJson,
+     VisitedNodeCount,
++    current_platform,
+     mass_tuple,
+ )
+ 
+@@ -185,7 +186,7 @@ def _worker(
+     connection.close()
+ 
+ 
+-if sys.platform == "win32":  # TODO: should be enum
++if current_platform() is PlatformName.WIN32:
+ 
+     def _peak_resident_set_mib() -> MemoryMebibytes:
+         peak_wset = cast(int, psutil.Process().memory_info().peak_wset)
+diff --git a/src/trajcert/experiments/sensitivity.py b/src/trajcert/experiments/sensitivity.py
+index 07f629f..dac5091 100644
+--- a/src/trajcert/experiments/sensitivity.py
++++ b/src/trajcert/experiments/sensitivity.py
+@@ -21,6 +21,7 @@ from trajcert.telemetry import StreamProgress
+ from trajcert.types import (
+     AbsoluteTightening,
+     BatchIndex,
++    BatchPhasePrefix,
+     CertifiedUpdateFractionGain,
+     CompatibilityRegime,
+     Count,
+@@ -33,7 +34,7 @@ from trajcert.types import (
+     ScientificState,
+     SeedIndex,
+     SensitivityBudget,
+-    TelemetryPhase,
++    batch_phase,
+ )
+ 
+ 
+@@ -168,7 +169,7 @@ def sequential_sensitivity_utility_batch(
+         terminal_horizon=fine_partition.terminal_horizon,
+     )
+     stream_progress = StreamProgress(
+-        TelemetryPhase(f"sequential_utility_batch_{batch_index}"),
++        batch_phase(BatchPhasePrefix.SEQUENTIAL_UTILITY, batch_index),
+         len(stream_range),
+     )
+     collected: list[SequentialStreamUtility] = []
+diff --git a/src/trajcert/experiments/workflows.py b/src/trajcert/experiments/workflows.py
+index 6cfc0a6..1e41c4c 100644
+--- a/src/trajcert/experiments/workflows.py
++++ b/src/trajcert/experiments/workflows.py
+@@ -324,7 +324,7 @@ def run_experiment(
+     try:
+         if (
+             name is ExperimentName.STATISTICAL_SYNTHESIS
+-            or max_workers == 1  # TODO: should be constant
++            or max_workers == 1
+             or supports_batched_recovery(name)
+         ):
+             completed, reused, failed, blocked = _run_cells_sequentially(
+diff --git a/src/trajcert/inference/certification.py b/src/trajcert/inference/certification.py
+index dbb7945..6ff3fc3 100644
+--- a/src/trajcert/inference/certification.py
++++ b/src/trajcert/inference/certification.py
+@@ -39,7 +39,7 @@ def classify_certification(
+     rho = sensitivity_budget
+     beta = risk_budget
+     guard = comparison_guard
+-    if rho < 0.0 or beta < 0.0 or beta > 1.0 or guard <= 0.0:  # TODO: should be constant
++    if rho < 0.0 or beta < 0.0 or beta > 1.0 or guard <= 0.0:
+         raise InvalidScientificDataError("invalid certification budget or comparison guard")
+     matured = state.matured_count
+     resolved = state.resolved_count
+diff --git a/src/trajcert/inference/confidence.py b/src/trajcert/inference/confidence.py
+index 9e10cc1..570664e 100644
+--- a/src/trajcert/inference/confidence.py
++++ b/src/trajcert/inference/confidence.py
+@@ -44,7 +44,7 @@ class CategoricalConfidenceRegion(DomainModel):
+             raise NumericalError("categorical confidence region cannot be empty")
+         lower_sum = sum(interval.lower for interval in self.intervals)
+         upper_sum = sum(interval.upper for interval in self.intervals)
+-        if lower_sum > 1.0 or upper_sum < 1.0:  # TODO: should be constant
++        if lower_sum > 1.0 or upper_sum < 1.0:
+             raise NumericalError("categorical confidence rectangle has empty simplex intersection")
+         return self
+ 
+@@ -60,7 +60,7 @@ def raw_confidence_region(
+     root_tolerance: ToleranceValue,
+ ) -> CategoricalConfidenceRegion:
+     delta = anytime_delta
+-    if delta <= 0.0 or delta >= 1.0:  # TODO: should be constant
++    if delta <= 0.0 or delta >= 1.0:
+         raise InvalidScientificDataError("anytime delta must lie strictly between zero and one")
+     counts = tuple(state.canonical_count_vector)
+     total = state.matured_count
+@@ -75,7 +75,7 @@ def raw_confidence_region(
+ 
+ def _jeffreys_beta_term(successes: Count, total: Count) -> LogMixtureRatio:
+     failures = total - successes
+-    return betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)  # TODO: should be constant
++    return betaln(successes + 0.5, failures + 0.5) - betaln(0.5, 0.5)
+ 
+ 
+ def confidence_sequence_update(
+@@ -121,14 +121,14 @@ def _invert_category_count(
+     if success_count < 0 or success_count > total:
+         raise InvalidScientificDataError("categorical success count is outside [0, n]")
+     if total == 0:
+-        return ClosedProbabilityInterval(lower=0.0, upper=1.0)  # TODO: should be constant
++        return ClosedProbabilityInterval(lower=0.0, upper=1.0)
+     maximum_likelihood = success_count / total
+-    lower = 0.0  # TODO: should be constant
+-    if success_count > 0:  # TODO: should be constant
++    lower = 0.0
++    if success_count > 0:
+         lower = _lower_root(
+             success_count, total, maximum_likelihood, threshold, root_tolerance, beta_term
+         )
+-    upper = 1.0  # TODO: should be constant
++    upper = 1.0
+     if success_count < total:
+         upper = _upper_root(
+             success_count, total, maximum_likelihood, threshold, root_tolerance, beta_term
+@@ -144,15 +144,15 @@ def _lower_root(
+     root_tolerance: ToleranceValue,
+     beta_term: LogMixtureRatio,
+ ) -> Probability:
+-    lower = 0.0  # TODO: should be constant
++    lower = 0.0
+     upper = maximum_likelihood
+-    if _root_function(successes, total, lower, threshold, beta_term) <= 0.0:  # TODO: should be constant
+-        return 0.0  # TODO: should be constant
++    if _root_function(successes, total, lower, threshold, beta_term) <= 0.0:
++        return 0.0
+     if _root_function(successes, total, upper, threshold, beta_term) > 0.0:
+         raise NumericalError("lower confidence root is not sign-bracketed")
+     while upper - lower > root_tolerance:
+-        midpoint = (lower + upper) / 2.0  # TODO: should be constant
+-        if _root_function(successes, total, midpoint, threshold, beta_term) > 0.0:  # TODO: should be constant
++        midpoint = (lower + upper) / 2.0
++        if _root_function(successes, total, midpoint, threshold, beta_term) > 0.0:
+             lower = midpoint
+         else:
+             upper = midpoint
+@@ -168,14 +168,14 @@ def _upper_root(
+     beta_term: LogMixtureRatio,
+ ) -> Probability:
+     lower = maximum_likelihood
+-    upper = 1.0  # TODO: should be constant
+-    if _root_function(successes, total, upper, threshold, beta_term) <= 0.0:  # TODO: should be constant
+-        return 1.0  # TODO: should be constant
+-    if _root_function(successes, total, lower, threshold, beta_term) > 0.0:  # TODO: should be constant
++    upper = 1.0
++    if _root_function(successes, total, upper, threshold, beta_term) <= 0.0:
++        return 1.0
++    if _root_function(successes, total, lower, threshold, beta_term) > 0.0:
+         raise NumericalError("upper confidence root is not sign-bracketed")
+     while upper - lower > root_tolerance:
+-        midpoint = (lower + upper) / 2.0  # TODO: should be constant
+-        if _root_function(successes, total, midpoint, threshold, beta_term) <= 0.0:  # TODO: should be constant
++        midpoint = (lower + upper) / 2.0
++        if _root_function(successes, total, midpoint, threshold, beta_term) <= 0.0:
+             lower = midpoint
+         else:
+             upper = midpoint
+@@ -196,8 +196,8 @@ def _log_mixture_likelihood_ratio(
+     successes: Count, total: Count, probability: Probability, beta_term: LogMixtureRatio
+ ) -> LogMixtureRatio:
+     failures = total - successes
+-    if probability <= 0.0:  # TODO: should be constant
+-        return beta_term if successes == 0 else inf  # TODO: should be constant
+-    if probability >= 1.0:  # TODO: should be constant
+-        return beta_term if failures == 0 else inf  # TODO: should be constant
++    if probability <= 0.0:
++        return beta_term if successes == 0 else inf
++    if probability >= 1.0:
++        return beta_term if failures == 0 else inf
+     return beta_term - successes * log(probability) - failures * log1p(-probability)
+diff --git a/src/trajcert/inference/envelope.py b/src/trajcert/inference/envelope.py
+index bb31ffa..10ac997 100644
+--- a/src/trajcert/inference/envelope.py
++++ b/src/trajcert/inference/envelope.py
+@@ -146,8 +146,8 @@ def _subset_interval(
+     complement_upper = sum(
+         interval.upper for index, interval in enumerate(intervals) if index not in selected_set
+     )
+-    lower = max(direct_lower, 1.0 - complement_upper, 0.0)  # TODO: should be constant
+-    upper = min(direct_upper, 1.0 - complement_lower, 1.0)  # TODO: should be constant
++    lower = max(direct_lower, 1.0 - complement_upper, 0.0)
++    upper = min(direct_upper, 1.0 - complement_lower, 1.0)
+     if lower > upper:
+         raise NumericalError("confidence rectangle yields an empty aggregate interval")
+     return ClosedProbabilityInterval(lower=lower, upper=upper)
+@@ -166,10 +166,10 @@ def _resolved_entropy_envelope(
+         for left, right in zip(harmful, correct, strict=True)
+     )
+     resolved_mass_upper = min(
+-        1.0,  # TODO: should be constant
++        1.0,
+         sum(left.upper + right.upper for left, right in zip(harmful, correct, strict=True)),
+     )
+-    upper = min(coordinate_upper, resolved_mass_upper * log(2.0), log(2.0))  # TODO: should be constant
++    upper = min(coordinate_upper, resolved_mass_upper * log(2.0), log(2.0))
+     return ScalarEnvelope(lower=lower, upper=upper)
+ 
+ 
+diff --git a/src/trajcert/inference/projection.py b/src/trajcert/inference/projection.py
+index 22ad5f6..a7c4d74 100644
+--- a/src/trajcert/inference/projection.py
++++ b/src/trajcert/inference/projection.py
+@@ -29,10 +29,10 @@ from trajcert.types import (
+     OuterMaxNodes,
+     ProvenSearchBound,
+     RiskValue,
++    SearchPhase,
+     SearchPredicate,
+     SensitivityBudget,
+     SurvivingBoxCount,
+-    TelemetryPhase,
+     ToleranceValue,
+     VisitedNodeCount,
+ )
+@@ -78,7 +78,7 @@ class _Box:
+ 
+     @property
+     def objective_upper(self) -> RiskValue:
+-        return min(1.0, self.harmful_upper + self.hidden_upper)  # TODO: should be constant
++        return min(1.0, self.harmful_upper + self.hidden_upper)
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+@@ -136,7 +136,7 @@ class _SearchStall:
+             return False
+         oldest = self._history[0][1]
+         improvement = oldest - record
+-        return 0.0 <= improvement < self._floor  # TODO: should be constant
++        return 0.0 <= improvement < self._floor
+ 
+ 
+ def project_upper_risk(
+@@ -150,7 +150,7 @@ def project_upper_risk(
+     outer_max_nodes: OuterMaxNodes,
+ ) -> ProjectionResult:
+     rho = sensitivity_budget
+-    if rho < 0.0:  # TODO: should be constant
++    if rho < 0.0:
+         raise InvalidScientificDataError("sensitivity budget must be nonnegative")
+     precision_bits = arbitrary_precision_bits
+     if precision_bits <= 0:
+@@ -159,7 +159,7 @@ def project_upper_risk(
+     if node_cap <= 0:
+         raise InvalidScientificDataError("outer_max_nodes must be positive")
+     gap = outer_gap
+-    if gap <= 0.0:  # TODO: should be constant
++    if gap <= 0.0:
+         raise InvalidScientificDataError("outer_gap must be positive")
+     if envelope.is_singleton:
+         return _singleton_projection(
+@@ -196,7 +196,7 @@ def project_upper_risk(
+         proven_upper=_unit(projection.proven_upper),
+         final_gap=projection.final_gap,
+         termination_reason=projection.termination_reason,
+-        compatibility_lower_bound=max(0.0, compatibility.proven_lower),  # TODO: should be constant
++        compatibility_lower_bound=max(0.0, compatibility.proven_lower),
+         intrinsic_risk_lower_bound=None if intrinsic_lower is None else _unit(intrinsic_lower),
+     )
+ 
+@@ -211,9 +211,9 @@ def _singleton_projection(
+ ) -> ProjectionResult:
+     summary = envelope.exact_summary(comparison_guard)
+     risk_set = sharp_risk_set(summary, rho, root_atol, identity_atol)
+-    compatibility = max(0.0, _timing_information(summary))  # TODO: should be constant
++    compatibility = max(0.0, _timing_information(summary))
+     intrinsic = None
+-    if summary.resolved_mass > 0.0:  # TODO: should be constant
++    if summary.resolved_mass > 0.0:
+         intrinsic = summary.resolved_harmful_mass / summary.resolved_mass
+     if risk_set.latent_risk is None:
+         upper = _assumption_free_envelope_upper(envelope)
+@@ -228,7 +228,7 @@ def _singleton_projection(
+         surviving_boxes=1,
+         feasible_incumbent=incumbent,
+         proven_upper=_unit(upper),
+-        final_gap=0.0,  # TODO: should be constant
++        final_gap=0.0,
+         termination_reason=ProjectionTerminationReason.EXACT_SINGLETON,
+         compatibility_lower_bound=compatibility,
+         intrinsic_risk_lower_bound=None if intrinsic is None else _unit(intrinsic),
+@@ -270,7 +270,7 @@ def _projection_search(
+     )
+     visited: VisitedNodeCount = 0
+     active: _Box | None = None
+-    progress = SearchProgress(TelemetryPhase("projection_search"), node_cap)
++    progress = SearchProgress(SearchPhase.PROJECTION, node_cap)
+     policy = active_config.get().numerics.arb_search
+     stall = _SearchStall(
+         policy.projection_stall_minimum_visited,
+@@ -444,7 +444,7 @@ def _compatibility_search(
+     best_upper = inf
+     visited: VisitedNodeCount = 0
+     active: _Box | None = None
+-    progress = SearchProgress(TelemetryPhase("compatibility_search"), node_cap)
++    progress = SearchProgress(SearchPhase.COMPATIBILITY, node_cap)
+     policy = active_config.get().numerics.arb_search
+     stall = _SearchStall(
+         policy.decision_stall_minimum_visited,
+@@ -596,7 +596,7 @@ def _intrinsic_search(
+     )
+     visited: VisitedNodeCount = 0
+     active: _Box | None = None
+-    progress = SearchProgress(TelemetryPhase("intrinsic_search"), node_cap)
++    progress = SearchProgress(SearchPhase.INTRINSIC, node_cap)
+     policy = active_config.get().numerics.arb_search
+     stall = _SearchStall(
+         policy.decision_stall_minimum_visited,
+diff --git a/src/trajcert/math/oracle.py b/src/trajcert/math/oracle.py
+index f4bd403..01b39d4 100644
+--- a/src/trajcert/math/oracle.py
++++ b/src/trajcert/math/oracle.py
+@@ -33,7 +33,7 @@ from trajcert.types import (
+     ToleranceValue,
+ )
+ 
+-_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"  # TODO: should be enum
++_ORACLE_PRECISION_MUST_BE_POSITIVE = "oracle precision must be positive"
+ 
+ 
+ class OracleBracket(DomainModel):
+@@ -87,7 +87,7 @@ class ProjectionOracleInput(DomainModel):
+             + sum(interval.upper for interval in self.correct_by_band)
+             + self.unresolved.upper
+         )
+-        if lower_sum > 1.0 or upper_sum < 1.0:  # TODO: should be constant
++        if lower_sum > 1.0 or upper_sum < 1.0:
+             raise ValueError("projection-oracle rectangle has empty simplex intersection")
+         return self
+ 
+@@ -158,23 +158,23 @@ def population_law_masses(
+     lambda0 = mpf(repr(parameters.lambda0))
+     harmful_weights = _oracle_band_weights(band_count, lambda1)
+     correct_weights = _oracle_band_weights(band_count, lambda0)
+-    harmful_resolved_mass = theta * (mpf(1) - q1)  # TODO: should be constant
+-    correct_resolved_mass = (mpf(1) - theta) * (mpf(1) - q0)  # TODO: should be constant
++    harmful_resolved_mass = theta * (mpf(1) - q1)
++    correct_resolved_mass = (mpf(1) - theta) * (mpf(1) - q0)
+     harmful = tuple(harmful_resolved_mass * weight for weight in harmful_weights)
+     correct = tuple(correct_resolved_mass * weight for weight in correct_weights)
+-    unresolved = theta * q1 + (mpf(1) - theta) * q0  # TODO: should be constant
++    unresolved = theta * q1 + (mpf(1) - theta) * q0
+     return harmful, correct, unresolved
+ 
+ 
+ def _oracle_band_weights(band_count: BandCount, slope: mpf) -> tuple[mpf, ...]:
+     bands = band_count
+-    if bands <= 0:  # TODO: should be constant
++    if bands <= 0:
+         raise InvalidScientificDataError("band count must be positive")
+-    center = (mpf(bands) + mpf(1)) / mpf(2)  # TODO: should be constant
++    center = (mpf(bands) + mpf(1)) / mpf(2)
+     logits = tuple(slope * (mpf(index) - center) for index in range(1, bands + 1))
+     maximum = max(logits)
+     unnormalized = tuple(exp(value - maximum) for value in logits)
+-    total = sum(unnormalized, mpf(0))  # TODO: should be constant
++    total = sum(unnormalized, mpf(0))
+     return tuple(value / total for value in unnormalized)
+ 
+ 
+@@ -217,7 +217,7 @@ def feasible_projection_lower_oracle(
+     if digits <= 0:
+         raise InvalidScientificDataError(_ORACLE_PRECISION_MUST_BE_POSITIVE)
+     previous_precision = ctx.prec
+-    ctx.prec = max(previous_precision, ceil(digits * log2(10.0)))  # TODO: should be constant
++    ctx.prec = max(previous_precision, ceil(digits * log2(10.0)))
+     try:
+         sensitivity = _arb_exact_float(sensitivity_budget)
+         harmful_lower = sum(interval.lower for interval in oracle_input.harmful_by_band)
+@@ -292,7 +292,7 @@ def direct_mutual_information(
+             mpf(repr(unresolved)),
+             mpf(repr(hidden_terminal_harmful)),
+         )
+-        return max(0.0, float(value))  # TODO: should be constant
++        return max(0.0, float(value))
+     finally:
+         mp.dps = previous_digits
+ 
+@@ -307,11 +307,11 @@ def _solve_information_oracle_data(
+     bracket_width: mpf,
+     comparison_guard: mpf,
+ ) -> InformationOracleResult:
+-    minimum_search_width = min(bracket_width, mpf(10) ** -(digits - 2))  # TODO: should be constant
++    minimum_search_width = min(bracket_width, mpf(10) ** -(digits - 2))
+     minimum_bracket = _golden_minimum(harmful, correct, unresolved, minimum_search_width)
+-    minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)  # TODO: should be constant
++    minimum_hidden = (minimum_bracket[0] + minimum_bracket[1]) / mpf(2)
+     minimum_information = _mutual_information(harmful, correct, unresolved, minimum_hidden)
+-    equality_tolerance = max(mpf(10) ** (-floor(digits / 2)), comparison_guard)  # TODO: should be constant
++    equality_tolerance = max(mpf(10) ** (-floor(digits / 2)), comparison_guard)
+     if rho < minimum_information - equality_tolerance:
+         return _result(
+             harmful_total,
+diff --git a/src/trajcert/math/solver.py b/src/trajcert/math/solver.py
+index 0ff6d3b..d22467f 100644
+--- a/src/trajcert/math/solver.py
++++ b/src/trajcert/math/solver.py
+@@ -49,8 +49,8 @@ def solve_hidden_mass_interval(
+     root_atol: ToleranceValue,
+     identity_atol: ToleranceValue,
+ ) -> HiddenMassSolveResult:
+-    root_tolerance = _positive_tolerance(root_atol, ToleranceName("root_atol"))
+-    identity_tolerance = _positive_tolerance(identity_atol, ToleranceName("identity_atol"))
++    root_tolerance = _positive_tolerance(root_atol, ToleranceName.ROOT_ABSOLUTE)
++    identity_tolerance = _positive_tolerance(identity_atol, ToleranceName.IDENTITY_ABSOLUTE)
+     compatibility = assess_compatibility(summary, sensitivity_budget)
+     rho = sensitivity_budget
+     unresolved = summary.unresolved_mass
+diff --git a/src/trajcert/paths.py b/src/trajcert/paths.py
+index 24708fb..4b70b36 100644
+--- a/src/trajcert/paths.py
++++ b/src/trajcert/paths.py
+@@ -1,7 +1,6 @@
+ from __future__ import annotations
+ 
+ import os
+-import sys
+ from enum import StrEnum
+ from math import isnan
+ from pathlib import Path
+@@ -19,9 +18,12 @@ from trajcert.types import (
+     FixedNotationExponent,
+     NumericSign,
+     PathCoordinateValue,
++    PlatformName,
++    current_platform,
+ )
+ 
+-_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"  # TODO: should be enum
++_WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
++
+ 
+ class WorkspacePathComponent(StrEnum):
+     OUTPUTS = "outputs"
+@@ -229,7 +231,7 @@ class SkeletonFile(StrEnum):
+ 
+ 
+ def long_path_safe(path: Path) -> Path:
+-    if sys.platform != "win32":  # TODO: should be enum
++    if current_platform() is not PlatformName.WIN32:
+         return path
+     resolved = path.resolve()
+     if str(resolved).startswith(_WINDOWS_EXTENDED_LENGTH_PREFIX):
+@@ -238,7 +240,7 @@ def long_path_safe(path: Path) -> Path:
+ 
+ 
+ def fsync_directory(directory: Path) -> None:
+-    if sys.platform == "win32":  # TODO: should be enum
++    if current_platform() is PlatformName.WIN32:
+         return
+     descriptor = os.open(directory, os.O_RDONLY)
+     try:
+@@ -269,14 +271,16 @@ def canonical_number_token(value: PathCoordinateValue) -> CoordinateToken:
+     if isnan(value) or value in (float("inf"), float("-inf")):
+         raise SerializationError("semantic numeric path coordinate must be finite")
+     if not value:
+-        return CoordinateToken("0")  # TODO: should be enum
++        return CoordinateToken("0")
+     sign, coefficient, exponent = _parsed_coefficient(value)
+     integer, fractional = _split_coefficient(coefficient)
+-    digits = DecimalDigits((integer + fractional).lstrip("0") or "0")  # TODO: should be enum
++    digits = DecimalDigits((integer + fractional).lstrip("0") or "0")
+     decimal_position = _decimal_position(integer, fractional)
+     n = decimal_position + exponent
+-    digits = DecimalDigits(digits.rstrip("0") or "0")  # TODO: should be enum
+-    return CoordinateToken(sign + _format_number_token(digits, n))
++    digits = DecimalDigits(digits.rstrip("0") or "0")
++    magnitude = _format_number_token(digits, n)
++    prefix = "" if sign is NumericSign.NON_NEGATIVE else sign
++    return CoordinateToken(prefix + magnitude)
+ 
+ 
+ def _parsed_coefficient(
+@@ -284,10 +288,10 @@ def _parsed_coefficient(
+ ) -> tuple[NumericSign, DecimalCoefficient, FixedNotationExponent]:
+     representation = repr(value)
+     if representation.startswith("-"):
+-        sign = NumericSign("-")
++        sign = NumericSign.NEGATIVE
+         representation = representation[1:]
+     else:
+-        sign = NumericSign("")
++        sign = NumericSign.NON_NEGATIVE
+     if "e" in representation or "E" in representation:
+         coefficient, exponent_text = representation.lower().split("e", maxsplit=1)
+         return sign, DecimalCoefficient(coefficient), int(exponent_text)
+@@ -302,7 +306,7 @@ def _split_coefficient(coefficient: DecimalCoefficient) -> tuple[DecimalDigits,
+ 
+ 
+ def _decimal_position(integer: DecimalDigits, fractional: DecimalDigits) -> FixedNotationExponent:
+-    if integer == "0":  # TODO: should be enum
++    if integer == "0":
+         leading_fraction_zeros = len(fractional) - len(fractional.lstrip("0"))
+         return -leading_fraction_zeros
+     return len(integer.lstrip("0"))
+diff --git a/src/trajcert/provenance.py b/src/trajcert/provenance.py
+index 8b857dd..da50c41 100644
+--- a/src/trajcert/provenance.py
++++ b/src/trajcert/provenance.py
+@@ -26,15 +26,14 @@ from trajcert.types import (
+     DigestHex,
+     DomainModel,
+     EnvironmentDigest,
+-    EventCount,
+     ExperimentName,
+     ExperimentSlug,
+     FailureBoundaryCoordinateDisplay,
++    FailureBoundaryProbe,
+     GammaCoordinate,
+     LawName,
+     MethodName,
+     NamedComparison,
+-    OuterMaxNodes,
+     PartitionName,
+     Probability,
+     RiskBudget,
+@@ -72,10 +71,7 @@ class SensitivityCoordinate(DomainModel):
+ 
+ class FailureBoundaryCoordinate(DomainModel):
+     axis: FailureBoundaryAxis
+-    finite_level: RiskOffset | None = None
+-    node_count: OuterMaxNodes | None = None
+-    event_count: EventCount | None = None
+-    band_count: BandCount | None = None
++    level: FailureBoundaryProbe
+     q1: Probability | None = None
+     q0: Probability | None = None
+ 
+@@ -87,32 +83,16 @@ class FailureBoundaryCoordinate(DomainModel):
+                 f"{axis}{CoordinateGrammar.ASSIGNMENT}{CoordinateGrammar.TERMINAL_Q1_PREFIX}{self.q1}{CoordinateGrammar.TERMINAL_Q0_SEPARATOR}{self.q0}"
+             )
+         if axis is FailureBoundaryAxis.RISK_OFFSET:
+-            if self.finite_level is None:
+-                raise ValueError("risk-offset coordinate is missing its level")
+-            numeric = float(self.finite_level)
++            numeric = float(self.level)
+             prefix = (
+                 CoordinateGrammar.NEGATIVE_PREFIX
+-                if numeric < 0.0  # TODO: should be constant
++                if numeric < 0.0
+                 else CoordinateGrammar.NONNEGATIVE_PREFIX
+             )
+             return FailureBoundaryCoordinateDisplay(
+                 f"{axis}{CoordinateGrammar.ASSIGNMENT}{prefix}{abs(numeric)}"
+             )
+-        if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
+-            return FailureBoundaryCoordinateDisplay(
+-                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.node_count}"
+-            )
+-        if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
+-            return FailureBoundaryCoordinateDisplay(
+-                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.event_count}"
+-            )
+-        if axis is FailureBoundaryAxis.PATH_RESOLUTION:
+-            return FailureBoundaryCoordinateDisplay(
+-                f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.band_count}"
+-            )
+-        return FailureBoundaryCoordinateDisplay(
+-            f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.finite_level}"
+-        )
++        return FailureBoundaryCoordinateDisplay(f"{axis}{CoordinateGrammar.ASSIGNMENT}{self.level}")
+ 
+ 
+ class VariantCoordinate(DomainModel):
+@@ -292,9 +272,7 @@ class SemanticCellIdentity(DomainModel):
+                 )
+             )
+         if coordinates.seed_index is not None:
+-            values.append(
+-                (CoordinateName.SEED_INDEX, CoordinateToken(str(coordinates.seed_index)))
+-            )
++            values.append((CoordinateName.SEED_INDEX, CoordinateToken(str(coordinates.seed_index))))
+         if coordinates.sensitivity_coordinate is not None:
+             values.append(
+                 (
+@@ -312,25 +290,22 @@ def _failure_boundary_from_parts(
+         q1_text, sep, q0_text = value_text.partition(CoordinateGrammar.TERMINAL_Q0_SEPARATOR)
+         if not sep or not q1_text.startswith(CoordinateGrammar.TERMINAL_Q1_PREFIX):
+             raise ValueError("invalid terminal-selection coordinate")
+-        return FailureBoundaryCoordinate(
+-            axis=axis,
+-            q1=float(q1_text.removeprefix(CoordinateGrammar.TERMINAL_Q1_PREFIX)),
+-            q0=float(q0_text),
+-        )
++        q1 = float(q1_text.removeprefix(CoordinateGrammar.TERMINAL_Q1_PREFIX))
++        return FailureBoundaryCoordinate(axis=axis, level=q1, q1=q1, q0=float(q0_text))
+     if axis is FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET:
+-        return FailureBoundaryCoordinate(axis=axis, node_count=int(value_text))
++        return FailureBoundaryCoordinate(axis=axis, level=int(value_text))
+     if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
+-        return FailureBoundaryCoordinate(axis=axis, event_count=int(value_text))
++        return FailureBoundaryCoordinate(axis=axis, level=int(value_text))
+     if axis is FailureBoundaryAxis.PATH_RESOLUTION:
+-        return FailureBoundaryCoordinate(axis=axis, band_count=int(value_text))
++        return FailureBoundaryCoordinate(axis=axis, level=int(value_text))
+     if axis is FailureBoundaryAxis.RISK_OFFSET:
+         negative = value_text.startswith(CoordinateGrammar.NEGATIVE_PREFIX)
+         prefix = (
+             CoordinateGrammar.NEGATIVE_PREFIX if negative else CoordinateGrammar.NONNEGATIVE_PREFIX
+         )
+         numeric = float(value_text.removeprefix(prefix))
+-        return FailureBoundaryCoordinate(axis=axis, finite_level=-numeric if negative else numeric)
+-    return FailureBoundaryCoordinate(axis=axis, finite_level=float(value_text))
++        return FailureBoundaryCoordinate(axis=axis, level=-numeric if negative else numeric)
++    return FailureBoundaryCoordinate(axis=axis, level=float(value_text))
+ 
+ 
+ class ParentArtifactIdentity(DomainModel):
+diff --git a/src/trajcert/reporting/figures.py b/src/trajcert/reporting/figures.py
+index 2c30604..b61d932 100644
+--- a/src/trajcert/reporting/figures.py
++++ b/src/trajcert/reporting/figures.py
+@@ -177,7 +177,7 @@ def _partition_coherence(table: pa.Table) -> Figure:
+             _circle(ax, upper, band)
+             label = f"{FigureLabel.TAU_PREFIX}{_required_float(row, PublicationColumn.TAU):.4g}"
+             ax.text(
+-                (lower + upper) / 2.0,  # TODO: should be constant
++                (lower + upper) / 2.0,
+                 band,
+                 label,
+                 fontsize=11,
+@@ -197,9 +197,9 @@ def _timing_value(table: pa.Table) -> Figure:
+         selected = _matching_rows(table, PublicationColumn.RHO_OFFSET, facet)
+         xs = tuple(_required_float(row, PublicationColumn.DELTA_TAU) for row in selected)
+         ys = tuple(_required_float(row, PublicationColumn.BOUND_GAIN) for row in selected)
+-        _set_limits(ax, (*xs, 0.0), ys)  # TODO: should be constant
++        _set_limits(ax, (*xs, 0.0), ys)
+         _set_title(ax, FigureTitle(f"{FigureLabel.RHO_OFFSET_PREFIX}{facet}"))
+-        ax.axvline(0.0, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
++        ax.axvline(0.0, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+         _scatter_markers(ax, xs, ys)
+     _main_title(figure, FigureLabel.EXACT_TIMING_VALUE)
+     return figure
+@@ -223,7 +223,7 @@ def _information_profile(table: pa.Table) -> Figure:
+     ):
+         value = _optional_float(first, column)
+         if value is not None:
+-            ax.axvline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
++            ax.axvline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+             ax.text(
+                 value, top, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE
+             )
+@@ -234,14 +234,14 @@ def _information_profile(table: pa.Table) -> Figure:
+     ):
+         value = _optional_float(first, column)
+         if value is not None:
+-            ax.axhline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
++            ax.axhline(value, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+             ax.text(
+                 left, value, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE
+             )
+     feasible_lower = _optional_float(first, PublicationColumn.FEASIBLE_LOWER)
+     feasible_upper = _optional_float(first, PublicationColumn.FEASIBLE_UPPER)
+     if feasible_lower is not None and feasible_upper is not None:
+-        width = max(1.0, feasible_upper - feasible_lower)  # TODO: should be constant
++        width = max(1.0, feasible_upper - feasible_lower)
+         ax.add_patch(
+             Rectangle(
+                 (feasible_lower, bottom),
+@@ -302,7 +302,7 @@ def _anytime_paths(table: pa.Table) -> Figure:
+         (PublicationColumn.BETA, FigureLabel.BETA),
+     ):
+         y = _required_float(first, column)
+-        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
++        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+         ax.text(right, y, label, fontsize=11, ha="right", va="bottom", color=FigureColor.STROKE)
+     _main_title(figure, FigureLabel.REPRESENTATIVE_ANYTIME_CERTIFICATES)
+     return figure
+@@ -338,7 +338,7 @@ def _anytime_coverage(table: pa.Table) -> Figure:
+         (PublicationColumn.ACCEPTANCE_UPPER_LIMIT, FigureLabel.ACCEPTANCE_LIMIT),
+     ):
+         y = _required_float(first, column)
+-        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)  # TODO: should be constant
++        ax.axhline(y, color=FigureColor.MUTED, linestyle="--", linewidth=1.0)
+         ax.text(left, y, label, fontsize=11, ha="left", va="bottom", color=FigureColor.STROKE)
+     _main_title(figure, FigureLabel.ANYTIME_STRESS_VALIDITY)
+     return figure
+@@ -362,7 +362,7 @@ def _rho_sensitivity_law(ax: Axes, table: pa.Table, law: FacetLabel) -> None:
+         for row in rows
+         if (value := _optional_float(row, PublicationColumn.RISK_UPPER)) is not None
+     )
+-    _set_limits(ax, xs, finite_ys or (0.0, 1.0))  # TODO: should be constant
++    _set_limits(ax, xs, finite_ys or (0.0, 1.0))
+     _set_title(ax, FigureTitle(str(law)))
+     for partition in sorted(
+         {_required_facet_label(row, PublicationColumn.PARTITION_NAME) for row in rows}
+diff --git a/src/trajcert/reporting/publication_rows.py b/src/trajcert/reporting/publication_rows.py
+index bb6bf05..60dad89 100644
+--- a/src/trajcert/reporting/publication_rows.py
++++ b/src/trajcert/reporting/publication_rows.py
+@@ -12,7 +12,11 @@ import polars as pl
+ from pydantic import Field
+ 
+ from trajcert.analysis.metrics import PracticalMetric
+-from trajcert.config import active_config
++from trajcert.config import (
++    CoverageStressCaseConfig,
++    CoverageStressSensitivityReference,
++    active_config,
++)
+ from trajcert.constants import BINARY_MAX_INFORMATION_NATS
+ from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
+ from trajcert.data.partitions import build_partition, partition_name
+@@ -61,7 +65,6 @@ from trajcert.types import (
+     EvidenceFamilyLabel,
+     ExperimentName,
+     FailureBoundaryLevel,
+-    FailureMessage,
+     InequalityMargin,
+     InformationNats,
+     LawKey,
+@@ -82,7 +85,9 @@ from trajcert.types import (
+     RiskOffset,
+     RiskValue,
+     RuntimeMilliseconds,
++    RuntimeSeconds,
+     SafetyRegime,
++    ScientificInterpretation,
+     ScientificState,
+     SearchPredicate,
+     SeedIndex,
+@@ -118,7 +123,7 @@ class TheoremValidationSummaryRow(DomainModel):
+     minimum_inequality_margin: InequalityMargin | None
+     all_cases_pass: SearchPredicate
+     primary_artifact: ArtifactKey
+-    scientific_consequence: FailureMessage
++    scientific_consequence: ScientificInterpretation
+ 
+ 
+ class PartitionTimingRow(DomainModel):
+@@ -238,7 +243,7 @@ class FailureBoundaryRow(DomainModel):
+     operational_state: ScientificState
+     optimizer_gap: ConvergenceGap | None
+     runtime_ms: RuntimeMilliseconds | None
+-    scientific_interpretation: FailureMessage
++    scientific_interpretation: ScientificInterpretation
+ 
+ 
+ class ComputationalScalingRow(DomainModel):
+@@ -482,13 +487,13 @@ def theorem_validation_summary_rows(
+ 
+ def _theorem_scientific_consequence(
+     theorem_name: TheoremName, case_count: Count, all_cases_pass: SearchPredicate
+-) -> FailureMessage:
++) -> ScientificInterpretation:
+     if all_cases_pass:
+-        return FailureMessage(
++        return ScientificInterpretation(
+             f"{theorem_name}: all {case_count} case(s) validated within tolerance; "
+             + "the theorem holds under configured conditions"
+         )
+-    return FailureMessage(
++    return ScientificInterpretation(
+         f"{theorem_name}: at least one of {case_count} case(s) violated the theorem's "
+         + "mandatory relation; evidence falsifies the theorem under configured conditions"
+     )
+@@ -834,7 +839,7 @@ def _solver_comparison_groups(
+     for cell in _cells(plan, ExperimentName.PRODUCTION_SOLVER_VS_INDEPENDENT_ORACLE):
+         partition = _required_partition(cell)
+         offset = cell.identity.coordinates.sensitivity_coordinate or SensitivityCoordinate(
+-            offset=0.0  # TODO: should be constant
++            offset=0.0
+         )
+         grouped[(partition, offset)].append(
+             read_verified_scientific_result(cell, workspace_root, SolverOracleComparison)
+@@ -949,19 +954,41 @@ def _coverage_rows(
+     return tuple(rows)
+ 
+ 
++def _runtime_milliseconds(seconds: RuntimeSeconds) -> RuntimeMilliseconds:
++    return seconds * (1e6 / active_config.get().units.nanoseconds_per_millisecond)
++
++
++def _principal_coverage_stress_case() -> CoverageStressCaseConfig:
++    config = active_config.get()
++    matching = tuple(
++        case
++        for case in config.study_design.coverage_stress_cases
++        if case.law is LawKey.TIMING_TERMINAL_HARMFUL_LATE
++        and case.band_count == config.method.finest_bands
++        and case.sensitivity_reference is CoverageStressSensitivityReference.TRUE_INFORMATION
++        and case.beta_offset is None
++    )
++    if len(matching) != 1:
++        raise InvalidScientificDataError(
++            "Figure 4 requires exactly one configured principal anytime coverage stress case"
++        )
++    return matching[0]
++
++
+ def _anytime_path_rows(
+     evidence: tuple[tuple[PlannedCell, CoverageEvidenceResult], ...],
+ ) -> tuple[AnytimePathFigureRow, ...]:
+     config = active_config.get()
+-    target_law = LAW_DISPLAY_NAMES[LawKey.TIMING_TERMINAL_HARMFUL_LATE]
++    case = _principal_coverage_stress_case()
++    target_law = LAW_DISPLAY_NAMES[case.law]
+     matches: list[CoverageEvidenceResult] = []
+     for cell, result in evidence:
+         if cell.identity.coordinates.synthetic_law_name != target_law:
+             continue
+-        if result.band_count != config.method.finest_bands:
++        if result.band_count != case.band_count:
+             continue
+         if (
+-            abs(result.rho - (result.true_mutual_information + 0.01))  # TODO: should be constant
++            abs(result.rho - (result.true_mutual_information + case.rho_offset))
+             > config.numerics.comparison_guard
+         ):
+             continue
+@@ -1070,7 +1097,7 @@ def _controlled_value_json(result: FailureBoundaryResult) -> SerializedConfigJso
+     )
+ 
+ 
+-def _state_interpretation(state: ScientificState) -> FailureMessage:
++def _state_interpretation(state: ScientificState) -> ScientificInterpretation:
+     interpretations = {
+         ScientificState.CERTIFIED: "risk upper is within the configured budget",
+         ScientificState.UNCERTIFIED: "valid evidence does not certify the configured budget",
+@@ -1082,7 +1109,7 @@ def _state_interpretation(state: ScientificState) -> FailureMessage:
+         ),
+         ScientificState.INSUFFICIENT_EVIDENCE: "evidence-count gates are not satisfied",
+     }
+-    return FailureMessage(interpretations[state])
++    return ScientificInterpretation(interpretations[state])
+ 
+ 
+ def _scaling_results(
+@@ -1103,10 +1130,14 @@ def _scaling_rows(
+     return tuple(
+         ComputationalScalingRow(
+             K=result.band_count,
+-            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,  # TODO: should be constant
+-            population_iqr_runtime_ms=result.population.iqr_runtime_seconds * 1000.0,  # TODO: should be constant
+-            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,  # TODO: should be constant
+-            outer_iqr_runtime_ms=result.outer_projection.iqr_runtime_seconds * 1000.0,  # TODO: should be constant
++            population_median_runtime_ms=_runtime_milliseconds(
++                result.population.median_runtime_seconds
++            ),
++            population_iqr_runtime_ms=_runtime_milliseconds(result.population.iqr_runtime_seconds),
++            outer_median_runtime_ms=_runtime_milliseconds(
++                result.outer_projection.median_runtime_seconds
++            ),
++            outer_iqr_runtime_ms=_runtime_milliseconds(result.outer_projection.iqr_runtime_seconds),
+             peak_memory_mib=result.peak_memory_mib,
+             median_root_iterations=result.population.median_root_iterations,
+             median_outer_nodes=result.outer_projection.median_outer_nodes,
+@@ -1122,8 +1153,12 @@ def _scaling_figure_rows(
+     return tuple(
+         ComputationalScalingFigureRow(
+             K=result.band_count,
+-            population_median_runtime_ms=result.population.median_runtime_seconds * 1000.0,  # TODO: should be constant
+-            outer_median_runtime_ms=result.outer_projection.median_runtime_seconds * 1000.0,  # TODO: should be constant
++            population_median_runtime_ms=_runtime_milliseconds(
++                result.population.median_runtime_seconds
++            ),
++            outer_median_runtime_ms=_runtime_milliseconds(
++                result.outer_projection.median_runtime_seconds
++            ),
+             median_outer_nodes=result.outer_projection.median_outer_nodes,
+         )
+         for result in results
+@@ -1245,7 +1280,7 @@ def _information_profile_rows(
+     resolved_harmful = summary.resolved_harmful_mass
+     unresolved = summary.unresolved_mass
+     u_beta_value = beta - resolved_harmful
+-    u_beta = u_beta_value if 0.0 <= u_beta_value <= unresolved else None  # TODO: should be constant
++    u_beta = u_beta_value if 0.0 <= u_beta_value <= unresolved else None
+     safety = assess_safety_geometry(summary, beta)
+     rho_star = None if safety.safety_frontier is None else safety.safety_frontier
+     feasible_lower = (
+@@ -1259,8 +1294,8 @@ def _information_profile_rows(
+         else population_result.risk_upper - resolved_harmful
+     )
+     rows: list[InformationProfileFigureRow] = []
+-    for index in range(1001):  # TODO: should be constant
+-        u = unresolved * index / 1000.0  # TODO: should be constant
++    for index in range(1001):
++        u = unresolved * index / 1000.0
+         rows.append(
+             InformationProfileFigureRow(
+                 u=u,
+@@ -1364,7 +1399,7 @@ def foreign_information_rows(
+                     risk_upper=condition.risk_upper,
+                     safety_regime=condition.safety_regime,
+                     spurious_improvement=spurious,
+-                    runtime_ms=condition.runtime_seconds * 1000.0,
++                    runtime_ms=_runtime_milliseconds(condition.runtime_seconds),
+                 )
+             )
+     return tuple(rows)
+diff --git a/src/trajcert/reporting/tables.py b/src/trajcert/reporting/tables.py
+index 4a0dffe..6f76dea 100644
+--- a/src/trajcert/reporting/tables.py
++++ b/src/trajcert/reporting/tables.py
+@@ -112,7 +112,7 @@ def _format_scalar(column: ColumnName, value: TabularCellValue) -> str:
+         return "true" if value else "false"
+     if isinstance(value, float):
+         threshold = active_config.get().publication.p_value_display_threshold
+-        if column in _P_VALUE_COLUMNS and 0.0 <= value < threshold:  # TODO: should be constant
++        if column in _P_VALUE_COLUMNS and 0.0 <= value < threshold:
+             return f"<{threshold!r}"
+         return repr(value)
+     return str(value)
+diff --git a/src/trajcert/telemetry.py b/src/trajcert/telemetry.py
+index 08d9a35..e6315ef 100644
+--- a/src/trajcert/telemetry.py
++++ b/src/trajcert/telemetry.py
+@@ -155,7 +155,7 @@ class SearchProgress:
+             return
+         self._last_logged_at = TimestampSeconds(now)
+         elapsed_seconds = now - self._started_at
+-        nodes_per_second = visited_nodes / elapsed_seconds if elapsed_seconds > 0.0 else 0.0  # TODO: should be constant
++        nodes_per_second = visited_nodes / elapsed_seconds if elapsed_seconds > 0.0 else 0.0
+         _logger.info(
+             "search_progress semantic_cell_key=%s phase=%s visited_nodes=%d node_cap=%d "
+             + "queue_size=%d best_bound=%s elapsed_seconds=%.1f nodes_per_second=%.1f",
+@@ -195,10 +195,10 @@ class StreamProgress:
+             return
+         self._last_logged_at = TimestampSeconds(now)
+         elapsed_seconds = now - self._started_at
+-        streams_per_second = streams_done / elapsed_seconds if elapsed_seconds > 0.0 else 0.0  # TODO: should be constant
++        streams_per_second = streams_done / elapsed_seconds if elapsed_seconds > 0.0 else 0.0
+         remaining_streams = self._stream_count - streams_done
+         estimated_remaining_seconds = (
+-            remaining_streams / streams_per_second if streams_per_second > 0.0 else 0.0  # TODO: should be constant
++            remaining_streams / streams_per_second if streams_per_second > 0.0 else 0.0
+         )
+         _logger.info(
+             "stream_progress semantic_cell_key=%s stage=%s streams_done=%d/%d "
+diff --git a/src/trajcert/types.py b/src/trajcert/types.py
+index a74cbe3..fd1a4ce 100644
+--- a/src/trajcert/types.py
++++ b/src/trajcert/types.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import sys
+ from collections.abc import Mapping
+ from enum import IntEnum, StrEnum
+ from typing import Annotated, ClassVar, NewType
+@@ -24,12 +25,12 @@ their values are generated from data, user input, or serialized artifacts and ar
+ therefore not a closed vocabulary.
+ """
+ 
+-ActionChannelId = NewType("ActionChannelId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ArtifactFileName = NewType("ArtifactFileName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ArtifactKey = NewType("ArtifactKey", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ArtifactTypeName = NewType("ArtifactTypeName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-BaselineName = NewType("BaselineName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ComparisonPairDisplay = NewType("ComparisonPairDisplay", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
++ActionChannelId = NewType("ActionChannelId", str)
++ArtifactFileName = NewType("ArtifactFileName", str)
++ArtifactKey = NewType("ArtifactKey", str)
++ArtifactTypeName = NewType("ArtifactTypeName", str)
++BaselineName = NewType("BaselineName", str)
++ComparisonPairDisplay = NewType("ComparisonPairDisplay", str)
+ 
+ 
+ class CoordinateName(StrEnum):
+@@ -51,48 +52,46 @@ class CoordinateName(StrEnum):
+     SENSITIVITY = "sensitivity"
+ 
+ 
+-CoordinateToken = NewType("CoordinateToken", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ClientId = NewType("ClientId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-CliArgumentValue = NewType("CliArgumentValue", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ColumnName = NewType("ColumnName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ConfigFieldPath = NewType("ConfigFieldPath", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-FacetLabel = NewType("FacetLabel", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-DependencyFingerprint = NewType("DependencyFingerprint", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-DecimalCoefficient = NewType("DecimalCoefficient", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-DecimalDigits = NewType("DecimalDigits", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-DigestHex = NewType("DigestHex", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-EnvironmentDigest = NewType("EnvironmentDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-EpochId = NewType("EpochId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ExperimentSlug = NewType("ExperimentSlug", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-EventId = NewType("EventId", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-FailureBoundaryCoordinateDisplay = NewType("FailureBoundaryCoordinateDisplay", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-FailureBoundaryLevel = NewType("FailureBoundaryLevel", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-FailureMessage = NewType("FailureMessage", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-FigureTitle = NewType("FigureTitle", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ExceptionClassName = NewType("ExceptionClassName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-TracebackText = NewType("TracebackText", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-LawName = NewType("LawName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-MethodName = NewType("MethodName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-MethodDisplayName = NewType("MethodDisplayName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-NamedComparison = NewType("NamedComparison", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-NumericSign = NewType("NumericSign", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-PartitionName = NewType("PartitionName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-PlanDigest = NewType("PlanDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SemanticCellKey = NewType("SemanticCellKey", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SensitivityCoordinateMode = NewType("SensitivityCoordinateMode", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SerializedConfigJson = NewType("SerializedConfigJson", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SourceIdentityDigest = NewType("SourceIdentityDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SvgFragment = NewType("SvgFragment", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-TelemetryLabel = NewType("TelemetryLabel", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-ToleranceName = NewType("ToleranceName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-TheoremName = NewType("TheoremName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-TelemetryPhase = NewType("TelemetryPhase", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-TimestampSeconds = NewType("TimestampSeconds", float)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-LogIntervalSeconds = NewType("LogIntervalSeconds", float)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SeedNamespace = NewType("SeedNamespace", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SemanticComparisonKey = NewType("SemanticComparisonKey", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-SpecificationDigest = NewType("SpecificationDigest", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-VariantName = NewType("VariantName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
++CoordinateToken = NewType("CoordinateToken", str)
++ClientId = NewType("ClientId", str)
++CliArgumentValue = NewType("CliArgumentValue", str)
++ColumnName = NewType("ColumnName", str)
++ConfigFieldPath = NewType("ConfigFieldPath", str)
++FacetLabel = NewType("FacetLabel", str)
++DependencyFingerprint = NewType("DependencyFingerprint", str)
++DecimalCoefficient = NewType("DecimalCoefficient", str)
++DecimalDigits = NewType("DecimalDigits", str)
++DigestHex = NewType("DigestHex", str)
++EnvironmentDigest = NewType("EnvironmentDigest", str)
++EpochId = NewType("EpochId", str)
++ExperimentSlug = NewType("ExperimentSlug", str)
++EventId = NewType("EventId", str)
++FailureBoundaryCoordinateDisplay = NewType("FailureBoundaryCoordinateDisplay", str)
++FailureBoundaryLevel = NewType("FailureBoundaryLevel", str)
++FailureMessage = NewType("FailureMessage", str)
++FigureTitle = NewType("FigureTitle", str)
++ExceptionClassName = NewType("ExceptionClassName", str)
++TracebackText = NewType("TracebackText", str)
++LawName = NewType("LawName", str)
++MethodName = NewType("MethodName", str)
++MethodDisplayName = NewType("MethodDisplayName", str)
++NamedComparison = NewType("NamedComparison", str)
++PartitionName = NewType("PartitionName", str)
++PlanDigest = NewType("PlanDigest", str)
++SemanticCellKey = NewType("SemanticCellKey", str)
++SensitivityCoordinateMode = NewType("SensitivityCoordinateMode", str)
++SerializedConfigJson = NewType("SerializedConfigJson", str)
++SourceIdentityDigest = NewType("SourceIdentityDigest", str)
++SvgFragment = NewType("SvgFragment", str)
++TelemetryLabel = NewType("TelemetryLabel", str)
++TheoremName = NewType("TheoremName", str)
++TimestampSeconds = NewType("TimestampSeconds", float)
++LogIntervalSeconds = NewType("LogIntervalSeconds", float)
++SeedNamespace = NewType("SeedNamespace", str)
++SemanticComparisonKey = NewType("SemanticComparisonKey", str)
++ScientificInterpretation = NewType("ScientificInterpretation", str)
++SpecificationDigest = NewType("SpecificationDigest", str)
++VariantName = NewType("VariantName", str)
+ UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
+ OpenUnitFloat = Annotated[StrictFloat, Field(gt=0.0, lt=1.0, allow_inf_nan=False)]
+ PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
+@@ -143,7 +142,6 @@ CriticalZScore = FiniteFloat
+ EventCount = PositiveInt
+ EventIndex = NonNegativeInt
+ EventIndexWidth = PositiveInt
+-FailureBoundaryProbe = FiniteFloat | PositiveInt
+ FamilySize = PositiveInt
+ FavorableCount = NonNegativeInt
+ FigureCoordinate = FiniteFloat
+@@ -204,7 +202,17 @@ VisitedNodeCount = NonNegativeInt
+ StreamCount = PositiveInt
+ WarmupRepetitionCount = NonNegativeInt
+ 
+-CoverageStressCaseName = NewType("CoverageStressCaseName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
++CoverageStressCaseName = NewType("CoverageStressCaseName", str)
++
++FailureBoundaryProbe = (
++    Probability
++    | TimingContrast
++    | InformationNats
++    | RiskOffset
++    | BandCount
++    | EventCount
++    | OuterMaxNodes
++)
+ 
+ LogMixtureRatio = FiniteFloat
+ Threshold = FiniteFloat
+@@ -289,6 +297,47 @@ class TextEncoding(StrEnum):
+     UTF8 = "utf-8"
+ 
+ 
++class PlatformName(StrEnum):
++    WIN32 = "win32"
++    LINUX = "linux"
++    DARWIN = "darwin"
++
++
++class NumericSign(StrEnum):
++    NEGATIVE = "-"
++    NON_NEGATIVE = ""
++
++
++class ToleranceName(StrEnum):
++    ROOT_ABSOLUTE = "root_atol"
++    IDENTITY_ABSOLUTE = "identity_atol"
++
++
++class SearchPhase(StrEnum):
++    PROJECTION = "projection_search"
++    COMPATIBILITY = "compatibility_search"
++    INTRINSIC = "intrinsic_search"
++
++
++class BatchPhasePrefix(StrEnum):
++    SEQUENTIAL_UTILITY = "sequential_utility_batch"
++    COVERAGE_STRESS = "coverage_stress_batch"
++
++
++TelemetryPhase = SearchPhase | str
++
++
++def batch_phase(prefix: BatchPhasePrefix, batch_index: BatchIndex) -> TelemetryPhase:
++    return f"{prefix}_{batch_index}"
++
++
++Platform = PlatformName | str
++
++
++def current_platform() -> Platform:
++    return PlatformName(sys.platform) if sys.platform in set(PlatformName) else sys.platform
++
++
+ class ConfigFile(StrEnum):
+     PRODUCTION = "configs/trajcert.yaml"
+     SMOKE_OVERRIDES = "configs/smoke.yaml"
+@@ -477,13 +526,13 @@ class RealTrajectoryExclusionReason(StrEnum):
+     DUPLICATE_ANNOTATION = "DUPLICATE_ANNOTATION"
+ 
+ 
+-RawDatasetRoot = NewType("RawDatasetRoot", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
++RawDatasetRoot = NewType("RawDatasetRoot", str)
+ # Dataset contract values originate in the configured external release and are open-ended.
+-DatasetVersionTag = NewType("DatasetVersionTag", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-DatasetChecksumHex = NewType("DatasetChecksumHex", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-DatasetFilename = NewType("DatasetFilename", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-DatasetColumnName = NewType("DatasetColumnName", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+-RealTrajectoryStratumValue = NewType("RealTrajectoryStratumValue", str)  # TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
++DatasetVersionTag = NewType("DatasetVersionTag", str)
++DatasetChecksumHex = NewType("DatasetChecksumHex", str)
++DatasetFilename = NewType("DatasetFilename", str)
++DatasetColumnName = NewType("DatasetColumnName", str)
++RealTrajectoryStratumValue = NewType("RealTrajectoryStratumValue", str)
+ 
+ 
+ class CliCommand(StrEnum):

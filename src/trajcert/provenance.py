@@ -161,7 +161,7 @@ class SemanticCoordinates(DomainModel):
         if value is None or isinstance(value, SensitivityCoordinate):
             return value
         prefix = CoordinateGrammar.RHO_OFFSET_PREFIX
-        return SensitivityCoordinate(offset=float(str(value)[len(prefix) :]))
+        return SensitivityCoordinate(offset=float(value[len(prefix) :]))
 
     @field_serializer("failure_boundary_axis_and_level")
     def _serialize_failure_boundary(
@@ -176,7 +176,7 @@ class SemanticCoordinates(DomainModel):
     ) -> FailureBoundaryCoordinate | None:
         if value is None or isinstance(value, FailureBoundaryCoordinate):
             return value
-        text = str(value)
+        text = value
         axis_text, separator, value_text = text.partition(CoordinateGrammar.ASSIGNMENT)
         if not separator:
             raise ValueError("invalid failure-boundary coordinate")
@@ -195,7 +195,7 @@ class SemanticCoordinates(DomainModel):
     ) -> VariantCoordinate | None:
         if value is None or isinstance(value, VariantCoordinate):
             return value
-        text = str(value)
+        text = value
         if text.startswith(CoordinateGrammar.LEGACY_Q_PREFIX):
             return VariantCoordinate(q=float(text.removeprefix(CoordinateGrammar.LEGACY_Q_PREFIX)))
         if text.startswith(CoordinateGrammar.HAND_CASE_PREFIX):

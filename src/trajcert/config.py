@@ -508,22 +508,25 @@ class FailureBoundaryConfig(ConfigModel):
 
     @model_validator(mode="after")
     def validate_axes(self) -> FailureBoundaryConfig:
-        axes: tuple[tuple[str, tuple[Hashable, ...]], ...] = (
-            ("unresolvedness", self.unresolvedness),
-            ("timing_contrast", self.timing_contrast),
-            ("prevalence", self.prevalence),
-            ("bands", self.bands),
-            ("information_margin", self.information_margin),
-            ("risk_offset", self.risk_offset),
-            ("sample_size", self.sample_size),
-            ("terminal_selection_asymmetry", self.terminal_selection_asymmetry),
-            ("optimizer_nodes", self.optimizer_nodes),
+        axes: tuple[tuple[ConfigFieldPath, tuple[Hashable, ...]], ...] = (
+            (ConfigFieldPath("failure_boundary.unresolvedness"), self.unresolvedness),
+            (ConfigFieldPath("failure_boundary.timing_contrast"), self.timing_contrast),
+            (ConfigFieldPath("failure_boundary.prevalence"), self.prevalence),
+            (ConfigFieldPath("failure_boundary.bands"), self.bands),
+            (ConfigFieldPath("failure_boundary.information_margin"), self.information_margin),
+            (ConfigFieldPath("failure_boundary.risk_offset"), self.risk_offset),
+            (ConfigFieldPath("failure_boundary.sample_size"), self.sample_size),
+            (
+                ConfigFieldPath("failure_boundary.terminal_selection_asymmetry"),
+                self.terminal_selection_asymmetry,
+            ),
+            (ConfigFieldPath("failure_boundary.optimizer_nodes"), self.optimizer_nodes),
         )
         level_count = len(axes[0][1])
-        for name, values in axes:
+        for field_path, values in axes:
             if len(values) != level_count:
-                raise ValueError(f"failure_boundary.{name} must contain {level_count} levels")
-            _require_unique(values, ConfigFieldPath(f"failure_boundary.{name}"))
+                raise ValueError(f"{field_path} must contain {level_count} levels")
+            _require_unique(values, field_path)
         _require_strictly_increasing(
             self.unresolvedness, ConfigFieldPath("failure_boundary.unresolvedness")
         )

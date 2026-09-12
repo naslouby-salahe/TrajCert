@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import polars as pl
+from numpy.typing import NDArray
 
 from trajcert.config import RealTrajectoryDatasetConfig, active_config
 from trajcert.data.partitions import build_partition
@@ -104,11 +105,11 @@ class HitlIotEligibleEvent(DomainModel):
 
 @dataclass(frozen=True, slots=True)
 class RealTrajectoryCohort:
-    device_name: np.ndarray
-    device_type: np.ndarray
-    expertise: np.ndarray
-    latent_error: np.ndarray
-    decision_time: np.ndarray
+    device_name: NDArray[np.str_]
+    device_type: NDArray[np.str_]
+    expertise: NDArray[np.str_]
+    latent_error: NDArray[np.bool_]
+    decision_time: NDArray[np.float64]
 
     @property
     def size(self) -> Count:
@@ -217,15 +218,18 @@ def build_real_trajectory_eligibility(
     eligible_rows = eligible.height
 
     device_counts = tuple(
-        (ClientId(row[columns.device_name]), row["len"])
-        for row in eligible.group_by(columns.device_name).len().sort(columns.device_name).to_dicts()
+        (ClientId(device_name), count)
+        for device_name, count in eligible.group_by(columns.device_name)
+        .len()
+        .sort(columns.device_name)
+        .iter_rows()
     )
     expertise_counts = tuple(
-        (AnnotatorExpertise(row[columns.annotator_id]), row["len"])
-        for row in eligible.group_by(columns.annotator_id)
+        (AnnotatorExpertise(annotator_id), count)
+        for annotator_id, count in eligible.group_by(columns.annotator_id)
         .len()
         .sort(columns.annotator_id)
-        .to_dicts()
+        .iter_rows()
     )
     report = RealTrajectoryEligibilityReport(
         total_dataset_rows=total_rows,
@@ -237,17 +241,36 @@ def build_real_trajectory_eligibility(
         device_eligible_counts=device_counts,
         expertise_eligible_counts=expertise_counts,
     )
+    event_rows = eligible.select(
+        (
+            columns.device_name,
+            columns.device_type,
+            columns.annotator_id,
+            columns.is_attack,
+            columns.ml_prediction,
+            columns.decision_time,
+            columns.human_confidence,
+        )
+    ).iter_rows()
     events = tuple(
         HitlIotEligibleEvent(
-            device_name=ClientId(row[columns.device_name]),
-            device_type=HitlIotDeviceType(row[columns.device_type]),
-            expertise=AnnotatorExpertise(row[columns.annotator_id]),
-            is_attack=row[columns.is_attack],
-            ml_prediction=row[columns.ml_prediction],
-            decision_time=row[columns.decision_time],
-            human_confidence=row[columns.human_confidence],
+            device_name=ClientId(device_name),
+            device_type=HitlIotDeviceType(device_type),
+            expertise=AnnotatorExpertise(annotator_id),
+            is_attack=is_attack,
+            ml_prediction=ml_prediction,
+            decision_time=decision_time,
+            human_confidence=human_confidence,
         )
-        for row in eligible.to_dicts()
+        for (
+            device_name,
+            device_type,
+            annotator_id,
+            is_attack,
+            ml_prediction,
+            decision_time,
+            human_confidence,
+        ) in event_rows
     )
     return events, report
 
@@ -256,9 +279,9 @@ def cohort_from_events(events: tuple[HitlIotEligibleEvent, ...]) -> RealTrajecto
     if not events:
         raise InvalidScientificDataError("real-trajectory cohort requires at least one event")
     return RealTrajectoryCohort(
-        device_name=np.array([event.device_name for event in events], dtype=object),
-        device_type=np.array([event.device_type for event in events], dtype=object),
-        expertise=np.array([event.expertise for event in events], dtype=object),
+        device_name=np.array([event.device_name for event in events], dtype=np.str_),
+        device_type=np.array([event.device_type for event in events], dtype=np.str_),
+        expertise=np.array([event.expertise for event in events], dtype=np.str_),
         latent_error=np.array(
             [event.ml_prediction != event.is_attack for event in events], dtype=bool
         ),

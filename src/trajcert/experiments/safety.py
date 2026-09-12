@@ -25,6 +25,7 @@ from trajcert.types import (
     SafetyCaseName,
     SafetyRegime,
     SensitivityBudget,
+    SensitivityProbeBudget,
     ToleranceValue,
 )
 
@@ -80,7 +81,7 @@ def compatibility_floor_behavior(
 ) -> CompatibilityFloorBehaviorResult:
     tau_value = observed_timing_information(summary)
     tau = 0.0 if tau_value is None else tau_value
-    definitions: tuple[tuple[CompatibilitySweepLabel, float], ...] = (
+    definitions: tuple[tuple[CompatibilitySweepLabel, SensitivityProbeBudget], ...] = (
         (CompatibilitySweepLabel.BELOW, tau - compatibility_floor_offset),
         (CompatibilitySweepLabel.AT, tau),
         (CompatibilitySweepLabel.ABOVE, tau + compatibility_floor_offset),

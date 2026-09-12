@@ -19,3 +19,16 @@ rules:
           - pattern: "def $F(..., $X: dict[str, object], ...): ..."
           - pattern: "def $F(..., $X: Any, ...): ..."
           - pattern: "cast(Any, ...)"
+  - id: TC-PRIMITIVE-003
+    languages: [python]
+    severity: ERROR
+    message: Generic numeric building blocks are canonical only in trajcert/types.py.
+    paths:
+      exclude:
+        - "**/types.py"
+    pattern-regex: "(?<![A-Za-z0-9_])(StrictInt|StrictFloat|NonNegativeInt|PositiveInt|NonNegativeFloat|PositiveFloat|UnitInterval|OpenUnitInterval|FiniteFloat|SignedInt)(?![A-Za-z0-9_])"
+  - id: TC-PRIMITIVE-004
+    languages: [python]
+    severity: ERROR
+    message: Anonymous Polars to_dicts() rows cross a domain boundary as dict[str, Any].
+    pattern: $FRAME.to_dicts()

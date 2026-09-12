@@ -17,6 +17,7 @@ from trajcert.types import (
     LawName,
     Mass,
     NumericStatus,
+    Ordinal,
     RiskBudget,
     RiskValue,
     RuntimeSeconds,
@@ -33,12 +34,12 @@ class ForeignInformationConditionLabel(StrEnum):
     NAIVE_POOLED = "naive_pooled"
 
 
-_SAFETY_REGIME_RANK: dict[SafetyRegime, int] = {
-    SafetyRegime.NO_RESOLVED_MASS: -1,
-    SafetyRegime.RESOLVED_HARM_EXCEEDS_BUDGET: 0,
-    SafetyRegime.INTRINSICALLY_UNCERTIFIABLE: 1,
-    SafetyRegime.INTERIOR_SAFETY_FRONTIER: 2,
-    SafetyRegime.ASSUMPTION_FREE_SAFE: 3,
+_SAFETY_REGIME_SEVERITY: dict[SafetyRegime, Ordinal] = {
+    SafetyRegime.NO_RESOLVED_MASS: 1,
+    SafetyRegime.RESOLVED_HARM_EXCEEDS_BUDGET: 2,
+    SafetyRegime.INTRINSICALLY_UNCERTIFIABLE: 3,
+    SafetyRegime.INTERIOR_SAFETY_FRONTIER: 4,
+    SafetyRegime.ASSUMPTION_FREE_SAFE: 5,
 }
 
 
@@ -209,7 +210,10 @@ def _is_spurious_improvement(
     other: ForeignInformationCondition,
     identity_atol: ToleranceValue,
 ) -> bool:
-    if _SAFETY_REGIME_RANK[other.safety_regime] > _SAFETY_REGIME_RANK[true_local.safety_regime]:
+    if (
+        _SAFETY_REGIME_SEVERITY[other.safety_regime]
+        > _SAFETY_REGIME_SEVERITY[true_local.safety_regime]
+    ):
         return True
     if true_local.hidden_mass_interval is not None and other.hidden_mass_interval is not None:
         true_width = true_local.hidden_mass_interval.width

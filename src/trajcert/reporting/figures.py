@@ -167,7 +167,7 @@ def _partition_coherence(table: pa.Table) -> Figure:
         )
         ys = tuple(_required_float(row, PublicationColumn.PARTITION_BAND_COUNT) for row in selected)
         _set_limits(ax, xs, ys)
-        _set_title(ax, FigureTitle(str(law)))
+        _set_title(ax, FigureTitle(law))
         for row in selected:
             lower = _required_float(row, PublicationColumn.RISK_LOWER)
             upper = _required_float(row, PublicationColumn.RISK_UPPER)
@@ -363,7 +363,7 @@ def _rho_sensitivity_law(ax: Axes, table: pa.Table, law: FacetLabel) -> None:
         if (value := _optional_float(row, PublicationColumn.RISK_UPPER)) is not None
     )
     _set_limits(ax, xs, finite_ys or (0.0, 1.0))
-    _set_title(ax, FigureTitle(str(law)))
+    _set_title(ax, FigureTitle(law))
     for partition in sorted(
         {_required_facet_label(row, PublicationColumn.PARTITION_NAME) for row in rows}
     ):
@@ -411,7 +411,7 @@ def _failure_boundaries(table: pa.Table) -> Figure:
         xs = tuple(float(index) for index in range(len(rows)))
         ys = tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in rows)
         _set_limits(ax, xs, ys)
-        _set_title(ax, FigureTitle(str(axis)))
+        _set_title(ax, FigureTitle(axis))
         ax.plot(xs, ys, color=FigureColor.STROKE, linewidth=1.5)
         for x, y in zip(xs, ys, strict=True):
             _circle(ax, x, y)

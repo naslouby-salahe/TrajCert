@@ -441,18 +441,8 @@ def theorem_validation_summary_rows(
         {
             "theorem_name": [observation.theorem_name for observation in observations],
             "passed": [observation.passed for observation in observations],
-            "absolute_error": [
-                float(observation.absolute_error)
-                if observation.absolute_error is not None
-                else None
-                for observation in observations
-            ],
-            "inequality_margin": [
-                float(observation.inequality_margin)
-                if observation.inequality_margin is not None
-                else None
-                for observation in observations
-            ],
+            "absolute_error": [observation.absolute_error for observation in observations],
+            "inequality_margin": [observation.inequality_margin for observation in observations],
             "primary_artifact": [observation.primary_artifact for observation in observations],
         }
     )

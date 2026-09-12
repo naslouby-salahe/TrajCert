@@ -35,6 +35,7 @@ from trajcert.storage import (
 from trajcert.types import (
     ArtifactKey,
     ColumnName,
+    Count,
     DigestHex,
     DomainModel,
     TableRow,
@@ -44,7 +45,7 @@ from trajcert.types import (
 __all__ = ["PublicationSourceName"]
 
 
-_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT: Final[int] = 2
+_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT: Final[Count] = 2
 
 
 @dataclass(frozen=True, slots=True)

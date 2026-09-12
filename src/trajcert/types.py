@@ -194,6 +194,7 @@ RuntimeMilliseconds = NonNegativeFloat
 RuntimeNanoseconds = NonNegativeInt
 RuntimeSeconds = NonNegativeFloat
 SensitivityOffset = NonNegativeFloat
+SensitivityProbeBudget = FiniteFloat
 SignificanceLevel = OpenUnitFloat
 StandardizedEffectSize = FiniteFloat
 SurvivingBoxCount = NonNegativeInt
