@@ -75,11 +75,11 @@ from trajcert.types import (
     WarmupRepetitionCount,
 )
 
-type YamlValue = (
+type YamlValue = ( #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
 )
-type RawYamlScalar = None | bool | int | float | str
-type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "RawYamlValue"]
+type RawYamlScalar = None | bool | int | float | str #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "RawYamlValue"] #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 
 
 active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
@@ -785,7 +785,7 @@ class TrajCertConfig(ConfigModel):
         sequential["utility"] = _merge_size_fields(
             cast(dict[str, YamlValue], sequential["utility"]), overrides.sequential.utility
         )
-        merged["statistics"] = _merge_size_fields(merged["statistics"], overrides.statistics)
+        merged["statistics"] = _merge_size_fields(merged["statistics"], overrides.statistics) #TODO: should be enums not hardcoded strings
         merged["benchmark"] = _merge_size_fields(merged["benchmark"], overrides.benchmark)
         try:
             return cls.model_validate(merged)
@@ -815,7 +815,7 @@ def _execution_size_overrides(overrides_path: Path) -> ExecutionSizeOverrides | 
         raise ConfigurationError(str(exc)) from exc
 
 
-def _merge_size_fields(base: dict[str, YamlValue], overrides: ConfigModel) -> dict[str, YamlValue]:
+def _merge_size_fields(base: dict[str, YamlValue], overrides: ConfigModel) -> dict[str, YamlValue]: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     override_values = cast(dict[str, YamlValue], overrides.model_dump(mode="json"))
     return {**base, **{name: value for name, value in override_values.items() if value is not None}}
 
@@ -852,7 +852,7 @@ def _coerce_yaml_value(value: RawYamlValue) -> YamlValue:
         return value
     if isinstance(value, list):
         return tuple(_coerce_yaml_value(item) for item in value)
-    result: dict[str, YamlValue] = {}
+    result: dict[str, YamlValue] = {} #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     for key, item in value.items():
         if not isinstance(key, str):
             raise ConfigurationError("configuration mapping keys must be strings")

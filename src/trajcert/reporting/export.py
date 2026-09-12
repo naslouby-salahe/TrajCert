@@ -62,7 +62,7 @@ from trajcert.storage import (
 )
 from trajcert.types import Count, DependencyAuthority, ExperimentName
 
-LOCK_PATH = Path("uv.lock")
+LOCK_PATH = Path("uv.lock") #TODO: use enums instead of hardcoded strings
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
 _ALLOWED_EXPERIMENT_CHILDREN = frozenset(
@@ -101,7 +101,7 @@ def export_report(
     with tempfile.TemporaryDirectory(prefix=".trajcert-report-", dir=workspace_root) as temporary:
         temporary_root = Path(temporary)
         if experiment_name is None:
-            staged_target = temporary_root / "results"
+            staged_target = temporary_root / "results" #TODO: should be enums not hardcoded strings
             final_target = workspace_root / RESULTS_ROOT
             rendered = _render_complete_results_tree(
                 workspace_root,
@@ -308,7 +308,7 @@ def _write_reproducibility(
         configuration_path=PRODUCTION_CONFIG_PATH,
         configuration_sha256=file_digest(config_path),
         environment=EnvironmentReproducibilityRecord(
-            dependency_authority=DependencyAuthority("uv.lock"),
+            dependency_authority=DependencyAuthority("uv.lock"), #TODO: should be enum not hardcoded string
             dependency_lock_path=LOCK_PATH,
             environment_lock_digest=EnvironmentDigest(file_digest(lock_path)),
         ),

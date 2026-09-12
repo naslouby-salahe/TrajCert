@@ -21,29 +21,29 @@ from trajcert.paths import (
 )
 from trajcert.types import ExperimentName
 
-_PROJECT_SUMMARY_METRICS_LEAVES: tuple[str, ...] = (
-    "metrics/primary",
-    "metrics/summary",
+_PROJECT_SUMMARY_METRICS_LEAVES: tuple[str, ...] = ( #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    "metrics/primary", #TODO: should be enums not hardcoded strings
+    "metrics/summary", #TODO: should be enums not hardcoded strings
 )
 
-_PROJECT_SUMMARY_STATISTICS_LEAVES: tuple[str, ...] = (
-    "statistics/comparisons",
-    "statistics/confidence_intervals",
-    "statistics/effects",
-    "statistics/multiplicity",
+_PROJECT_SUMMARY_STATISTICS_LEAVES: tuple[str, ...] = ( #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    "statistics/comparisons", #TODO: should be enums not hardcoded strings
+    "statistics/confidence_intervals", #TODO: should be enums not hardcoded strings
+    "statistics/effects", #TODO: should be enums not hardcoded strings
+    "statistics/multiplicity", #TODO: should be enums not hardcoded strings
 )
 
-_PROJECT_SUMMARY_REPRODUCIBILITY_LEAVES: tuple[str, ...] = (
-    "reproducibility/configuration",
-    "reproducibility/datasets",
-    "reproducibility/seeds",
-    "reproducibility/software",
-    "reproducibility/evidence",
+_PROJECT_SUMMARY_REPRODUCIBILITY_LEAVES: tuple[str, ...] = ( #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    "reproducibility/configuration", #TODO: should be enums not hardcoded strings
+    "reproducibility/datasets", #TODO: should be enums not hardcoded strings
+    "reproducibility/seeds", #TODO: should be enums not hardcoded strings
+    "reproducibility/software", #TODO: should be enums not hardcoded strings
+    "reproducibility/evidence", #TODO: should be enums not hardcoded strings
 )
 
-_PROJECT_SUMMARY_SOURCE_DATA_LEAVES: tuple[str, ...] = (
-    "source_data/figures",
-    "source_data/tables",
+_PROJECT_SUMMARY_SOURCE_DATA_LEAVES: tuple[str, ...] = ( #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    "source_data/figures", #TODO: should be enums not hardcoded strings
+    "source_data/tables", #TODO: should be enums not hardcoded strings
 )
 
 _PROJECT_SUMMARY_FIGURE_TABLE_LEAVES: tuple[ResultsExperimentLeaf, ...] = (
@@ -56,7 +56,7 @@ _PROJECT_SUMMARY_FIGURE_TABLE_LEAVES: tuple[ResultsExperimentLeaf, ...] = (
 
 def _ensure_leaf_directory(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
-    (path / ".gitkeep").touch(exist_ok=True)
+    (path / ".gitkeep").touch(exist_ok=True) #TODO: should be enums not hardcoded strings
 
 
 def _experiment_slugs() -> tuple[ExperimentSlug, ...]:

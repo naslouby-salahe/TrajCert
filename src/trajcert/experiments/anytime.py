@@ -875,7 +875,7 @@ def _minimum_information_completion(
     q0 = (unresolved - hidden_harmful) / (1.0 - theta)
     return parameters.model_copy(
         update={
-            "name": type(parameters.name)(f"Minimum-information completion of {parameters.name}"),
+            "name": type(parameters.name)(f"Minimum-information completion of {parameters.name}"), #TODO: should be enums not hardcoded strings
             "theta": theta,
             "q1": q1,
             "q0": q0,
@@ -1413,7 +1413,7 @@ def _hand_identity(case_index: CaseIndex) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId("hand-case-client"),
         action_channel_id=ActionChannelId("hand-case-action"),
-        epoch_id=EpochId(f"hand-case-{case_index:02d}"),
+        epoch_id=EpochId(f"hand-case-{case_index:02d}"), #TODO: should be enums not hardcoded strings
     )
 
 

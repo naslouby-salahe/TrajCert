@@ -97,9 +97,9 @@ from trajcert.types import (
     ToleranceValue,
 )
 
-TheoremName = NewType("TheoremName", str)
-RegimeName = NewType("RegimeName", str)
-MethodDisplayName = NewType("MethodDisplayName", str)
+TheoremName = NewType("TheoremName", str) #TODO: convert to enum
+RegimeName = NewType("RegimeName", str) #TODO: convert to enum
+MethodDisplayName = NewType("MethodDisplayName", str) #TODO: convert to enum
 
 
 class RhoUtilityMetricName(StrEnum):
@@ -787,7 +787,7 @@ def _partition_timing_row(item: PartitionTimingEvidence) -> PartitionTimingRow:
 
 
 def _require_exact_family[KeyT: Hashable](
-    label: str,
+    label: str, #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     supplied: tuple[KeyT, ...],
     expected: tuple[KeyT, ...],
 ) -> None:

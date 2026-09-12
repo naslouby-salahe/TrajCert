@@ -613,11 +613,11 @@ def _expanded_bounds(lower: PlotValue, upper: PlotValue) -> tuple[PlotValue, Plo
     return lower - pad, upper + pad
 
 
-def _set_title(ax: Axes, title: str) -> None:
+def _set_title(ax: Axes, title: str) -> None: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     ax.set_title(title, fontsize=13, color=FigureColor.STROKE)
 
 
-def _main_title(figure: Figure, title: str) -> None:
+def _main_title(figure: Figure, title: str) -> None: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     figure.suptitle(title, fontsize=22, color=FigureColor.STROKE)
 
 

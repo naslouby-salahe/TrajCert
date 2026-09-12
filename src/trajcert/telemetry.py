@@ -24,9 +24,9 @@ from trajcert.types import (
     VisitedNodeCount,
 )
 
-_LOGGER_NAME: Final[str] = "trajcert"
+_LOGGER_NAME: Final[str] = "trajcert" #TODO: should be enum not hardcoded string
 _TIMESTAMP_FORMAT: Final[str] = "%Y-%m-%dT%H:%M:%S"
-_UNKNOWN_CELL_LABEL: Final[str] = "unknown"
+_UNKNOWN_CELL_LABEL: Final[str] = "unknown" #TODO: should be enum, not hardcoded string
 _DEFAULT_LOG_INTERVAL_SECONDS: Final[LogIntervalSeconds] = LogIntervalSeconds(5.0)
 
 _logger = logging.getLogger(_LOGGER_NAME)

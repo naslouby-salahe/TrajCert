@@ -617,7 +617,7 @@ def _real_trajectory_stratum(
     if variant is None or variant.name is None:
         raise ScientificCellDispatchError("real-trajectory cell is missing its stratum variant")
     label = VariantName(str(variant.name))
-    if label == "pooled":
+    if label == "pooled": #TODO: should be enum, not hardcoded string
         return RealTrajectoryStratumKind.POOLED, None, label
     if label.startswith("device="):
         value = RealTrajectoryStratumValue(label.removeprefix("device="))

@@ -34,86 +34,86 @@ from trajcert.types import (
     ToleranceValue,
 )
 
-HITL_IOT_DOI = DatasetVersionTag("10.5281/zenodo.17862334")
-HITL_IOT_DATASET_FILENAME = "HITL-IoT_dataset.csv"
-HITL_IOT_CHECKSUMS_FILENAME = "HITL-IoT_checksums.txt"
+HITL_IOT_DOI = DatasetVersionTag("10.5281/zenodo.17862334") #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+HITL_IOT_DATASET_FILENAME = "HITL-IoT_dataset.csv" #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+HITL_IOT_CHECKSUMS_FILENAME = "HITL-IoT_checksums.txt" #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
 HITL_IOT_EXPECTED_DATASET_SHA256 = DatasetChecksumHex(
-    "162121f804c2e177dddae4fb9c91e70045aaccaa6e918adde25fc7964acb0c04"
+    "162121f804c2e177dddae4fb9c91e70045aaccaa6e918adde25fc7964acb0c04" #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
 )
 
 HITL_IOT_DEVICE_NAMES: tuple[ClientId, ...] = tuple(
     ClientId(name)
     for name in (
-        "camera_21",
-        "camera_22",
-        "camera_26",
-        "doorbell_30",
-        "doorbell_31",
-        "speaker_23",
-        "speaker_24",
-        "speaker_27",
-        "thermostat_20",
-        "thermostat_25",
-        "tv_28",
-        "tv_29",
+        "camera_21", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "camera_22", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "camera_26", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "doorbell_30", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "doorbell_31", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "speaker_23", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "speaker_24", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "speaker_27", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "thermostat_20", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "thermostat_25", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "tv_28", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        "tv_29", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
     )
 )
 
 _RAW_COLUMNS = (
-    "timestamp",
-    "src_mac",
-    "dst_ip",
-    "src_port",
-    "dst_port",
-    "device_name",
-    "device_type",
-    "is_attack",
-    "ml_prediction",
-    "human_reviewed",
-    "human_decision",
-    "human_confidence",
-    "decision_time",
-    "annotator_id",
+    "timestamp", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "src_mac", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "dst_ip", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "src_port", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "dst_port", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "device_name", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "device_type", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_attack", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "ml_prediction", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "human_reviewed", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "human_decision", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "human_confidence", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "decision_time", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "annotator_id", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
 )
 
-_FLOW_IDENTITY_COLUMNS = ("timestamp", "src_mac", "dst_ip", "src_port", "dst_port")
+_FLOW_IDENTITY_COLUMNS = ("timestamp", "src_mac", "dst_ip", "src_port", "dst_port") #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
 
-HITL_IOT_EXPECTED_SCHEMA: tuple[str, ...] = (
-    "timestamp",
-    "hour",
-    "day_of_week",
-    "is_weekend",
-    "src_ip",
-    "dst_ip",
-    "src_mac",
-    "dst_mac",
-    "packet_size",
-    "ttl",
-    "is_internal_dst",
-    "is_localhost",
-    "protocol",
-    "src_port",
-    "dst_port",
-    "is_well_known_port",
-    "is_registered_port",
-    "is_dynamic_port",
-    "device_name",
-    "device_type",
-    "device_thermostat",
-    "device_camera",
-    "device_speaker",
-    "duration",
-    "bytes_sent",
-    "bytes_received",
-    "bytes_ratio",
-    "bytes_per_second",
-    "packet_rate",
-    "is_business_hours",
-    "is_night",
-    "protocol_tcp",
-    "protocol_udp",
-    "connection_frequency",
-    "baseline_deviation",
+HITL_IOT_EXPECTED_SCHEMA: tuple[str, ...] = ( #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+    "timestamp", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "hour", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "day_of_week", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_weekend", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "src_ip", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "dst_ip", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "src_mac", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "dst_mac", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "packet_size", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "ttl", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_internal_dst", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_localhost", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "protocol", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "src_port", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "dst_port", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_well_known_port", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_registered_port", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_dynamic_port", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "device_name", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "device_type", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "device_thermostat", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "device_camera", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "device_speaker", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "duration", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "bytes_sent", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "bytes_received", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "bytes_ratio", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "bytes_per_second", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "packet_rate", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_business_hours", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "is_night", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "protocol_tcp", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "protocol_udp", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "connection_frequency", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "baseline_deviation", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
     "bytes_sent_mean_5",
     "bytes_sent_std_5",
     "bytes_sent_mean_10",
@@ -122,17 +122,17 @@ HITL_IOT_EXPECTED_SCHEMA: tuple[str, ...] = (
     "bytes_sent_std_20",
     "connection_frequency_5",
     "connection_frequency_10",
-    "is_attack",
-    "attack_type",
-    "risk_score",
-    "ml_confidence",
-    "ml_prediction",
-    "human_reviewed",
-    "human_decision",
-    "human_confidence",
-    "decision_time",
-    "ml_human_agreement",
-    "annotator_id",
+    "is_attack", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "attack_type", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "risk_score", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "ml_confidence", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "ml_prediction", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "human_reviewed", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "human_decision", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "human_confidence", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "decision_time", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "ml_human_agreement", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+    "annotator_id", #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
 )
 
 
@@ -264,23 +264,23 @@ def build_real_trajectory_eligibility(
     dataset_path = root / HITL_IOT_DATASET_FILENAME
     frame = pl.read_csv(dataset_path, columns=list(_RAW_COLUMNS))
     total_rows = frame.height
-    annotated = frame.filter(pl.col("human_reviewed"))
+    annotated = frame.filter(pl.col("human_reviewed")) #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
     candidate_rows = annotated.height
 
     duplicate_mask = annotated.select(list(_FLOW_IDENTITY_COLUMNS)).is_duplicated()
     checks: tuple[tuple[RealTrajectoryExclusionReason, pl.Series], ...] = (
-        (RealTrajectoryExclusionReason.MISSING_GROUND_TRUTH, annotated["is_attack"].is_null()),
+        (RealTrajectoryExclusionReason.MISSING_GROUND_TRUTH, annotated["is_attack"].is_null()), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
         (
             RealTrajectoryExclusionReason.MISSING_AUTOMATIC_PREDICTION,
-            annotated["ml_prediction"].is_null(),
+            annotated["ml_prediction"].is_null(), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
         ),
         (
             RealTrajectoryExclusionReason.INVALID_DEVICE_IDENTITY,
-            annotated["device_name"].is_null() | (annotated["device_name"].str.len_chars() == 0),
+            annotated["device_name"].is_null() | (annotated["device_name"].str.len_chars() == 0), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
         ),
         (
             RealTrajectoryExclusionReason.INVALID_DECISION_LATENCY,
-            annotated["decision_time"].is_null() | (annotated["decision_time"] <= 0.0),
+            annotated["decision_time"].is_null() | (annotated["decision_time"] <= 0.0), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
         ),
         (RealTrajectoryExclusionReason.DUPLICATE_ANNOTATION, duplicate_mask),
     )
@@ -301,12 +301,12 @@ def build_real_trajectory_eligibility(
     eligible_rows = eligible.height
 
     device_counts = tuple(
-        (ClientId(row["device_name"]), int(row["len"]))
-        for row in eligible.group_by("device_name").len().sort("device_name").to_dicts()
+        (ClientId(row["device_name"]), int(row["len"])) #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        for row in eligible.group_by("device_name").len().sort("device_name").to_dicts() #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
     )
     expertise_counts = tuple(
-        (AnnotatorExpertise(row["annotator_id"]), int(row["len"]))
-        for row in eligible.group_by("annotator_id").len().sort("annotator_id").to_dicts()
+        (AnnotatorExpertise(row["annotator_id"]), int(row["len"])) #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+        for row in eligible.group_by("annotator_id").len().sort("annotator_id").to_dicts() #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
     )
     report = RealTrajectoryEligibilityReport(
         total_dataset_rows=total_rows,
@@ -320,13 +320,13 @@ def build_real_trajectory_eligibility(
     )
     events = tuple(
         HitlIotEligibleEvent(
-            device_name=ClientId(row["device_name"]),
-            device_type=HitlIotDeviceType(row["device_type"]),
-            expertise=AnnotatorExpertise(row["annotator_id"]),
-            is_attack=bool(row["is_attack"]),
-            ml_prediction=bool(row["ml_prediction"]),
-            decision_time=float(row["decision_time"]),
-            human_confidence=float(row["human_confidence"]),
+            device_name=ClientId(row["device_name"]), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+            device_type=HitlIotDeviceType(row["device_type"]), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+            expertise=AnnotatorExpertise(row["annotator_id"]), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+            is_attack=bool(row["is_attack"]), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+            ml_prediction=bool(row["ml_prediction"]), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+            decision_time=float(row["decision_time"]), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
+            human_confidence=float(row["human_confidence"]), #TODO: should be retrieved from yml and accessed through config. Identify any similar issues and fix it
         )
         for row in eligible.to_dicts()
     )

@@ -416,7 +416,7 @@ def _coordinates_real_trajectory_validation() -> tuple[SemanticCoordinates, ...]
     partitions = _partition_names()
     coordinates: list[SemanticCoordinates] = [
         SemanticCoordinates(
-            variant_name=VariantCoordinate(name=VariantName("pooled")),
+            variant_name=VariantCoordinate(name=VariantName("pooled")), #TODO: should be enum, not hardcoded string
             partition_name=partition,
             censoring_horizon_seconds=horizon,
         )

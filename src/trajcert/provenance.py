@@ -58,16 +58,16 @@ class CoordinateGrammar(StrEnum):
     NONNEGATIVE_PREFIX = "nonnegative-"
 
 
-MethodName = NewType("MethodName", str)
-BaselineName = NewType("BaselineName", str)
-FailureBoundaryCoordinateDisplay = NewType("FailureBoundaryCoordinateDisplay", str)
-SensitivityCoordinateMode = NewType("SensitivityCoordinateMode", str)
-VariantName = NewType("VariantName", str)
-ArtifactTypeName = NewType("ArtifactTypeName", str)
-EnvironmentDigest = NewType("EnvironmentDigest", str)
-SourceIdentityDigest = NewType("SourceIdentityDigest", str)
-NamedComparison = NewType("NamedComparison", str)
-ComparisonPairDisplay = NewType("ComparisonPairDisplay", str)
+MethodName = NewType("MethodName", str) #TODO: convert to enum
+BaselineName = NewType("BaselineName", str) #TODO: convert to enum
+FailureBoundaryCoordinateDisplay = NewType("FailureBoundaryCoordinateDisplay", str) #TODO: convert to enum
+SensitivityCoordinateMode = NewType("SensitivityCoordinateMode", str) #TODO: convert to enum
+VariantName = NewType("VariantName", str) #TODO: convert to enum
+ArtifactTypeName = NewType("ArtifactTypeName", str) #TODO: convert to enum
+EnvironmentDigest = NewType("EnvironmentDigest", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SourceIdentityDigest = NewType("SourceIdentityDigest", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+NamedComparison = NewType("NamedComparison", str) #TODO: convert to enum
+ComparisonPairDisplay = NewType("ComparisonPairDisplay", str) #TODO: convert to enum
 
 
 class ComparisonPair(DomainModel):
@@ -139,9 +139,9 @@ class VariantCoordinate(DomainModel):
     @property
     def display(self) -> VariantName:
         if self.q is not None:
-            return VariantName(f"q={self.q}")
+            return VariantName(f"q={self.q}") #TODO: should be enums not hardcoded strings
         if self.hand_case_index is not None:
-            return VariantName(f"hand-case-{self.hand_case_index:02d}")
+            return VariantName(f"hand-case-{self.hand_case_index:02d}") #TODO: should be enums not hardcoded strings
         if self.name is None:
             raise ValueError("variant coordinate is missing its payload")
         return VariantName(self.name)
@@ -278,8 +278,8 @@ class SemanticCellIdentity(DomainModel):
             if value is not None:
                 values.append((CoordinateName(name), semantic_slug(value)))
         for name, value in (
-            ("rho", coordinates.rho),
-            ("beta", coordinates.beta),
+            ("rho", coordinates.rho), #TODO: should be enums not hardcoded strings
+            ("beta", coordinates.beta), #TODO: should be enums not hardcoded strings
             ("delta", coordinates.delta),
             ("gamma", coordinates.gamma),
             ("horizon", coordinates.censoring_horizon_seconds),

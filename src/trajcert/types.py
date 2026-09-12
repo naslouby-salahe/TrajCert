@@ -9,32 +9,32 @@ from numpy.typing import NDArray
 from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, StrictFloat, StrictInt
 from pydantic_core import core_schema
 
-ActionChannelId = NewType("ActionChannelId", str)
-ArtifactFileName = NewType("ArtifactFileName", str)
+ActionChannelId = NewType("ActionChannelId", str) #TODO: convert to enum
+ArtifactFileName = NewType("ArtifactFileName", str) #TODO: convert to enum
 ClientId = NewType("ClientId", str)
-CliArgumentValue = NewType("CliArgumentValue", str)
-ColumnName = NewType("ColumnName", str)
-ConfigFieldPath = NewType("ConfigFieldPath", str)
-FacetLabel = NewType("FacetLabel", str)
-DecimalCoefficient = NewType("DecimalCoefficient", str)
-DecimalDigits = NewType("DecimalDigits", str)
-DependencyAuthority = NewType("DependencyAuthority", str)
-EpochId = NewType("EpochId", str)
+CliArgumentValue = NewType("CliArgumentValue", str) #TODO: convert to enum
+ColumnName = NewType("ColumnName", str) #TODO: convert to enum
+ConfigFieldPath = NewType("ConfigFieldPath", str) #TODO: convert to enum
+FacetLabel = NewType("FacetLabel", str) #TODO: convert to enum
+DecimalCoefficient = NewType("DecimalCoefficient", str) #TODO: convert to enum
+DecimalDigits = NewType("DecimalDigits", str) #TODO: convert to enum
+DependencyAuthority = NewType("DependencyAuthority", str) #TODO: convert to enum
+EpochId = NewType("EpochId", str) #TODO: convert to enum
 EventId = NewType("EventId", str)
-FailureBoundaryLevel = NewType("FailureBoundaryLevel", str)
-FailureMessage = NewType("FailureMessage", str)
-LawName = NewType("LawName", str)
-NumericSign = NewType("NumericSign", str)
-PartitionName = NewType("PartitionName", str)
-TelemetryLabel = NewType("TelemetryLabel", str)
-ToleranceName = NewType("ToleranceName", str)
-TelemetryPhase = NewType("TelemetryPhase", str)
+FailureBoundaryLevel = NewType("FailureBoundaryLevel", str) #TODO: convert to enum
+FailureMessage = NewType("FailureMessage", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+LawName = NewType("LawName", str) #TODO: convert to enum
+NumericSign = NewType("NumericSign", str) #TODO: convert to enum
+PartitionName = NewType("PartitionName", str) #TODO: convert to enum
+TelemetryLabel = NewType("TelemetryLabel", str) #TODO: convert to enum
+ToleranceName = NewType("ToleranceName", str) #TODO: convert to enum
+TelemetryPhase = NewType("TelemetryPhase", str) #TODO: convert to enum
 TimestampSeconds = NewType("TimestampSeconds", float)
 LogIntervalSeconds = NewType("LogIntervalSeconds", float)
-SeedNamespace = NewType("SeedNamespace", str)
-SemanticComparisonKey = NewType("SemanticComparisonKey", str)
-SerializedConfigJson = NewType("SerializedConfigJson", str)
-SvgFragment = NewType("SvgFragment", str)
+SeedNamespace = NewType("SeedNamespace", str) #TODO: convert to enum
+SemanticComparisonKey = NewType("SemanticComparisonKey", str) #TODO: convert to enum
+SerializedConfigJson = NewType("SerializedConfigJson", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
+SvgFragment = NewType("SvgFragment", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 UnitFloat = Annotated[StrictFloat, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
 OpenUnitFloat = Annotated[StrictFloat, Field(gt=0.0, lt=1.0, allow_inf_nan=False)]
 PositiveFloat = Annotated[StrictFloat, Field(gt=0.0, allow_inf_nan=False)]
@@ -145,11 +145,11 @@ VisitedNodeCount = NonNegativeInt
 StreamCount = PositiveInt
 WarmupRepetitionCount = NonNegativeInt
 
-CoverageStressCaseName = NewType("CoverageStressCaseName", str)
+CoverageStressCaseName = NewType("CoverageStressCaseName", str) #TODO: convert to enum
 
 LogMixtureRatio = FiniteFloat
 Threshold = FiniteFloat
-type TabularCellValue = None | bool | int | float | str
+type TabularCellValue = None | bool | int | float | str #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 TableRow = Mapping[ColumnName, TabularCellValue]
 
 
@@ -368,11 +368,11 @@ class RealTrajectoryExclusionReason(StrEnum):
 
 
 RawDatasetRoot = NewType("RawDatasetRoot", str)
-DatasetVersionTag = NewType("DatasetVersionTag", str)
+DatasetVersionTag = NewType("DatasetVersionTag", str) #TODO: convert to enum
 DatasetChecksumHex = NewType("DatasetChecksumHex", str)
-DatasetFilename = NewType("DatasetFilename", str)
-DatasetColumnName = NewType("DatasetColumnName", str)
-RealTrajectoryStratumValue = NewType("RealTrajectoryStratumValue", str)
+DatasetFilename = NewType("DatasetFilename", str) #TODO: convert to enum
+DatasetColumnName = NewType("DatasetColumnName", str) #TODO: convert to enum
+RealTrajectoryStratumValue = NewType("RealTrajectoryStratumValue", str) #TODO: convert to enum
 
 
 class CliCommand(StrEnum):

@@ -21,16 +21,16 @@ from trajcert.types import (
 
 _WINDOWS_EXTENDED_LENGTH_PREFIX = "\\\\?\\"
 
-ExperimentSlug = NewType("ExperimentSlug", str)
-CoordinateName = NewType("CoordinateName", str)
-CoordinateToken = NewType("CoordinateToken", str)
+ExperimentSlug = NewType("ExperimentSlug", str) #TODO: convert to enum
+CoordinateName = NewType("CoordinateName", str) #TODO: convert to enum
+CoordinateToken = NewType("CoordinateToken", str) #TODO: convert to enum
 
-OUTPUTS_ROOT = Path("outputs")
-RESULTS_ROOT = Path("results")
-ARTIFACTS_ROOT = OUTPUTS_ROOT / "artifacts"
-EXPERIMENTS_ROOT = OUTPUTS_ROOT / "experiments"
-RESULTS_EXPERIMENTS_ROOT = RESULTS_ROOT / "experiments"
-PROJECT_SUMMARY_ROOT = RESULTS_ROOT / "project_summary"
+OUTPUTS_ROOT = Path("outputs") #TODO: should be enums not hardcoded strings
+RESULTS_ROOT = Path("results") #TODO: should be enums not hardcoded strings
+ARTIFACTS_ROOT = OUTPUTS_ROOT / "artifacts" #TODO: should be enums not hardcoded strings
+EXPERIMENTS_ROOT = OUTPUTS_ROOT / "experiments" #TODO: should be enums not hardcoded strings
+RESULTS_EXPERIMENTS_ROOT = RESULTS_ROOT / "experiments" #TODO: should be enums not hardcoded strings
+PROJECT_SUMMARY_ROOT = RESULTS_ROOT / "project_summary" #TODO: should be enums not hardcoded strings
 
 
 class PublicationLeaf(StrEnum):
@@ -212,9 +212,9 @@ def fsync_directory(directory: Path) -> None:
         os.close(descriptor)
 
 
-def semantic_slug(value: str) -> CoordinateToken:
+def semantic_slug(value: str) -> CoordinateToken: #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     lowered = value.lower()
-    output: list[str] = []
+    output: list[str] = [] #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
     pending_separator = False
     for character in lowered:
         if character.isascii() and character.isalnum():
@@ -310,8 +310,8 @@ def artifact_path(directory: Path, artifact: ArtifactFile) -> Path:
 
 
 def checkpoint_batch_file(batch_index: BatchIndex, *, result: bool = False) -> ArtifactFileName:
-    suffix = "_result" if result else ""
-    return ArtifactFileName(f"batch_{batch_index}{suffix}.json")
+    suffix = "_result" if result else "" #TODO: should be enums not hardcoded strings
+    return ArtifactFileName(f"batch_{batch_index}{suffix}.json") #TODO: should be enums not hardcoded strings
 
 
 def plan_artifact_path(artifact: PlanArtifactFile) -> Path:
@@ -319,7 +319,7 @@ def plan_artifact_path(artifact: PlanArtifactFile) -> Path:
 
 
 def preprocessing_leaf(leaf: PreprocessingLeaf) -> Path:
-    return OUTPUTS_ROOT / "preprocessing" / Path(leaf)
+    return OUTPUTS_ROOT / "preprocessing" / Path(leaf) #TODO: should be enums not hardcoded strings
 
 
 def shared_artifact_path(category: SharedArtifactCategory) -> Path:
@@ -327,7 +327,7 @@ def shared_artifact_path(category: SharedArtifactCategory) -> Path:
 
 
 def cache_path(category: CacheCategory) -> Path:
-    return OUTPUTS_ROOT / "cache" / Path(category)
+    return OUTPUTS_ROOT / "cache" / Path(category) #TODO: should be enums not hardcoded strings
 
 
 def semantic_cell_path(
@@ -337,5 +337,5 @@ def semantic_cell_path(
 ) -> Path:
     path = experiment_leaf(experiment_slug, leaf)
     for name, token in coordinates:
-        path = path / f"{name}={token}"
+        path = path / f"{name}={token}" #TODO: should be enums not hardcoded strings
     return path

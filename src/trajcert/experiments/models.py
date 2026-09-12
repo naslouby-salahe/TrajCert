@@ -25,8 +25,8 @@ from trajcert.types import (
     SeedIndex,
 )
 
-FailureType = NewType("FailureType", str)
-FailureTraceback = NewType("FailureTraceback", str)
+FailureType = NewType("FailureType", str) #TODO: convert to enum
+FailureTraceback = NewType("FailureTraceback", str) #TODO: do not use primitives. Fix by introducing a proper error type or message class and identify and fix why architecture tests didn't catch this
 
 
 class DependencyReadiness(DomainModel):
