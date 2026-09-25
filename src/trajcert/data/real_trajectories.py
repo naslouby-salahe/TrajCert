@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from hashlib import sha256
 from math import isfinite
 from pathlib import Path
@@ -22,7 +23,11 @@ from trajcert.types import (
     Count,
     DatasetChecksumHex,
     DatasetColumnName,
+    DatasetComparisonStatus,
+    DatasetFieldMappingStatus,
     DatasetFilename,
+    DatasetSourceReference,
+    DatasetTimestamp,
     DatasetVersionTag,
     DomainModel,
     HitlIotDeviceType,
@@ -71,10 +76,40 @@ def validate_dataset_schema(dataset_root: RawDatasetRoot) -> RealTrajectorySchem
 
 class RealTrajectoryDatasetProvenance(DomainModel):
     dataset_name: RealTrajectoryDatasetName
-    doi: DatasetVersionTag
+    source_reference: DatasetSourceReference
     dataset_filename: DatasetFilename
     dataset_sha256: DatasetChecksumHex
     total_rows: Count
+
+
+class RealTrajectoryDatasetStructure(DomainModel):
+    dataset_filename: DatasetFilename
+    file_count: Count
+    row_count: Count
+    ground_truth_attack_rows: Count
+    human_reviewed_rows: Count
+    entity_ids: tuple[ClientId, ...]
+    raw_schema: tuple[DatasetColumnName, ...]
+    flow_identity_columns: tuple[DatasetColumnName, ...]
+    decision_time_column: DatasetColumnName
+
+
+class RealTrajectoryDatasetInventory(DomainModel):
+    expected_source_release: DatasetVersionTag | None
+    source_documentation_reference: DatasetSourceReference
+    primary_publication_reference: DatasetVersionTag | None
+    documented_expected_value: RealTrajectoryDatasetStructure
+    observed_raw_dataset_value: RealTrajectoryDatasetStructure
+    reviewed_attack_rows: Count
+    reviewed_attack_model_error_rows: Count
+    reviewed_attack_model_error_rate: Probability | None
+    unreviewed_attack_rows: Count
+    unreviewed_attack_model_error_rows: Count
+    unreviewed_attack_model_error_rate: Probability | None
+    observed_timestamp_start: DatasetTimestamp
+    observed_timestamp_end: DatasetTimestamp
+    discrepancy_status: DatasetComparisonStatus
+    field_mapping_status: DatasetFieldMappingStatus
 
 
 class RealTrajectoryExclusionCount(DomainModel):
@@ -135,8 +170,8 @@ def verify_dataset_integrity(dataset_root: RawDatasetRoot) -> RealTrajectoryData
     actual_digest = DatasetChecksumHex(sha256(dataset_path.read_bytes()).hexdigest())
     if actual_digest != dataset.sha256:
         raise DataIntegrityError(
-            "HITL-IoT dataset checksum mismatch against the pinned Zenodo release "
-            + f"({dataset.doi}): expected {dataset.sha256}, got {actual_digest}"
+            "HITL-IoT dataset checksum mismatch against the configured external file identity "
+            + f"for {dataset.source_reference}: expected {dataset.sha256}, got {actual_digest}"
         )
     if checksums_path.is_file():
         recorded = _parse_checksums_file(checksums_path)
@@ -148,10 +183,129 @@ def verify_dataset_integrity(dataset_root: RawDatasetRoot) -> RealTrajectoryData
     total_rows = pl.scan_csv(dataset_path).select(pl.len()).collect().item()
     return RealTrajectoryDatasetProvenance(
         dataset_name=dataset.name,
-        doi=dataset.doi,
+        source_reference=dataset.source_reference,
         dataset_filename=dataset.data_filename,
         dataset_sha256=actual_digest,
         total_rows=total_rows,
+    )
+
+
+def inventory_real_trajectory_dataset(
+    dataset_root: RawDatasetRoot,
+) -> RealTrajectoryDatasetInventory:
+    dataset = _dataset_contract()
+    dataset_path = Path(dataset_root) / dataset.data_filename
+    observed_columns = tuple(
+        DatasetColumnName(name) for name in pl.scan_csv(dataset_path).collect_schema().names()
+    )
+    observed_entity_ids = tuple(
+        ClientId(device_name)
+        for (device_name,) in pl.read_csv(dataset_path, columns=[dataset.columns.device_name])
+        .unique()
+        .sort(dataset.columns.device_name)
+        .iter_rows()
+    )
+    observed_counts = (
+        pl.scan_csv(dataset_path)
+        .select(
+            pl.col(dataset.columns.is_attack).sum().alias("ground_truth_attack_rows"),
+            pl.col(dataset.columns.human_reviewed).sum().alias("human_reviewed_rows"),
+            (pl.col(dataset.columns.human_reviewed) & pl.col(dataset.columns.is_attack))
+            .sum()
+            .alias("reviewed_attack_rows"),
+            (
+                pl.col(dataset.columns.human_reviewed)
+                & pl.col(dataset.columns.is_attack)
+                & (pl.col(dataset.columns.ml_prediction) != pl.col(dataset.columns.is_attack))
+            )
+            .sum()
+            .alias("reviewed_attack_model_error_rows"),
+            (~pl.col(dataset.columns.human_reviewed) & pl.col(dataset.columns.is_attack))
+            .sum()
+            .alias("unreviewed_attack_rows"),
+            (
+                ~pl.col(dataset.columns.human_reviewed)
+                & pl.col(dataset.columns.is_attack)
+                & (pl.col(dataset.columns.ml_prediction) != pl.col(dataset.columns.is_attack))
+            )
+            .sum()
+            .alias("unreviewed_attack_model_error_rows"),
+        )
+        .collect()
+        .row(0, named=True)
+    )
+    timestamp_range = (
+        pl.scan_csv(dataset_path)
+        .select(
+            pl.col("timestamp").min().alias("start"),
+            pl.col("timestamp").max().alias("end"),
+        )
+        .collect()
+        .row(0, named=True)
+    )
+    observed_structure = RealTrajectoryDatasetStructure(
+        dataset_filename=DatasetFilename(dataset_path.name),
+        file_count=len((dataset_path,)),
+        row_count=pl.scan_csv(dataset_path).select(pl.len()).collect().item(),
+        ground_truth_attack_rows=int(observed_counts["ground_truth_attack_rows"]),
+        human_reviewed_rows=int(observed_counts["human_reviewed_rows"]),
+        entity_ids=observed_entity_ids,
+        raw_schema=observed_columns,
+        flow_identity_columns=tuple(
+            column for column in dataset.flow_identity_columns if column in observed_columns
+        ),
+        decision_time_column=dataset.columns.decision_time,
+    )
+    documented_structure = RealTrajectoryDatasetStructure(
+        dataset_filename=dataset.data_filename,
+        file_count=len((dataset.data_filename,)),
+        row_count=dataset.documented_total_rows,
+        ground_truth_attack_rows=dataset.documented_ground_truth_attack_rows,
+        human_reviewed_rows=dataset.documented_human_reviewed_rows,
+        entity_ids=dataset.device_names,
+        raw_schema=dataset.expected_schema,
+        flow_identity_columns=dataset.flow_identity_columns,
+        decision_time_column=dataset.columns.decision_time,
+    )
+    matched = documented_structure == observed_structure
+    reviewed_attack_rows = int(observed_counts["reviewed_attack_rows"])
+    reviewed_attack_errors = int(observed_counts["reviewed_attack_model_error_rows"])
+    unreviewed_attack_rows = int(observed_counts["unreviewed_attack_rows"])
+    unreviewed_attack_errors = int(observed_counts["unreviewed_attack_model_error_rows"])
+    return RealTrajectoryDatasetInventory(
+        expected_source_release=None,
+        source_documentation_reference=dataset.source_reference,
+        primary_publication_reference=None,
+        documented_expected_value=documented_structure,
+        observed_raw_dataset_value=observed_structure,
+        reviewed_attack_rows=reviewed_attack_rows,
+        reviewed_attack_model_error_rows=reviewed_attack_errors,
+        reviewed_attack_model_error_rate=(
+            reviewed_attack_errors / reviewed_attack_rows if reviewed_attack_rows > 0 else None
+        ),
+        unreviewed_attack_rows=unreviewed_attack_rows,
+        unreviewed_attack_model_error_rows=unreviewed_attack_errors,
+        unreviewed_attack_model_error_rate=(
+            unreviewed_attack_errors / unreviewed_attack_rows
+            if unreviewed_attack_rows > 0
+            else None
+        ),
+        observed_timestamp_start=DatasetTimestamp(
+            datetime.fromisoformat(str(timestamp_range["start"]))
+        ),
+        observed_timestamp_end=DatasetTimestamp(
+            datetime.fromisoformat(str(timestamp_range["end"]))
+        ),
+        discrepancy_status=(
+            DatasetComparisonStatus.MATCHED
+            if matched
+            else DatasetComparisonStatus.OBSERVED_DEVIATION
+        ),
+        field_mapping_status=(
+            DatasetFieldMappingStatus.IDENTICAL
+            if set(dataset.raw_columns).issubset(observed_columns)
+            else DatasetFieldMappingStatus.REQUIRES_REVIEW
+        ),
     )
 
 

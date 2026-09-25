@@ -307,7 +307,7 @@ EXPERIMENT_CATALOG: tuple[ExperimentDefinition, ...] = (
     ),
     _experiment(
         ExperimentName.REAL_TRAJECTORY_VALIDATION,
-        EvidenceClass.GENERALIZATION,
+        EvidenceClass.DIAGNOSTIC,
         CoordinateHandler.REAL_TRAJECTORY_VALIDATION,
         DependencyPolicy.ROOT_PRECONDITION,
         SeedPolicy.NONE,

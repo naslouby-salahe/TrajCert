@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from trajcert.data.partitions import build_partition
@@ -9,6 +11,7 @@ from trajcert.data.real_trajectories import (
     cohort_from_events,
     empirical_oracle,
     finest_observable_summary,
+    inventory_real_trajectory_dataset,
     resolved_count,
 )
 from trajcert.data.summaries import coarsen_summary
@@ -16,7 +19,9 @@ from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     AnnotatorExpertise,
     ClientId,
+    DatasetComparisonStatus,
     HitlIotDeviceType,
+    RawDatasetRoot,
     RealTrajectoryStratumKind,
     RealTrajectoryStratumValue,
 )
@@ -37,6 +42,39 @@ def _event(
         decision_time=decision_time,
         human_confidence=0.8,
     )
+
+
+def test_dataset_inventory_records_observed_label_and_time_deviations(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "HITL-IoT_dataset.csv"
+    dataset_path.write_text(
+        "\n".join(
+            [
+                "timestamp,device_name,is_attack,ml_prediction,human_reviewed,decision_time",
+                "2024-01-15T00:00:15,camera_21,false,false,true,10.0",
+                "2024-01-16T00:00:00,camera_21,true,false,true,10.0",
+                "2024-01-20T00:00:00,tv_29,true,false,false,0.0",
+                "2024-01-21T23:59:51,tv_29,true,true,false,0.0",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    inventory = inventory_real_trajectory_dataset(RawDatasetRoot(str(tmp_path)))
+
+    assert inventory.discrepancy_status is DatasetComparisonStatus.OBSERVED_DEVIATION
+    assert inventory.observed_raw_dataset_value.ground_truth_attack_rows == 3
+    assert inventory.observed_raw_dataset_value.human_reviewed_rows == 2
+    assert inventory.reviewed_attack_rows == 1
+    assert inventory.reviewed_attack_model_error_rows == 1
+    assert inventory.reviewed_attack_model_error_rate == pytest.approx(1.0)
+    assert inventory.unreviewed_attack_rows == 2
+    assert inventory.unreviewed_attack_model_error_rows == 1
+    assert inventory.unreviewed_attack_model_error_rate == pytest.approx(0.5)
+    assert inventory.expected_source_release is None
+    assert inventory.source_documentation_reference.endswith("/CHANGELOG.md")
+    assert inventory.observed_timestamp_start.isoformat() == "2024-01-15T00:00:15"
+    assert inventory.observed_timestamp_end.isoformat() == "2024-01-21T23:59:51"
 
 
 def test_horizon_boundary_is_inclusive() -> None:

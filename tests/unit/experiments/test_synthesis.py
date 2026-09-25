@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable
+from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 
@@ -23,6 +23,8 @@ from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.real_trajectories import (
     HitlIotEligibleEvent,
     PreparedRealTrajectoryCohort,
+    RealTrajectoryDatasetInventory,
+    RealTrajectoryDatasetStructure,
     RealTrajectoryEmpiricalOracle,
 )
 from trajcert.exceptions import InvalidScientificDataError
@@ -110,6 +112,7 @@ from trajcert.math.safety import SafetyAssessment, SafetyBudgetCase
 from trajcert.paths import (
     PreprocessingLeaf,
     RealTrajectoryArtifactFile,
+    long_path_safe,
     real_trajectory_preprocessing_path,
 )
 from trajcert.reporting.publication_rows import AnalysisType, RhoUtilityMetricName
@@ -129,6 +132,11 @@ from trajcert.types import (
     ClientId,
     CompatibilityRegime,
     DependencyFingerprint,
+    DatasetComparisonStatus,
+    DatasetFilename,
+    DatasetFieldMappingStatus,
+    DatasetSourceReference,
+    DatasetTimestamp,
     DigestHex,
     FailureBoundaryLevel,
     HiddenMassInterval,
@@ -170,12 +178,53 @@ def synthesis_plan(small_config: TrajCertConfig) -> ExperimentPlan:
 @pytest.fixture(scope="session")
 def synthesis_workspace(
     synthesis_plan: ExperimentPlan,
+    small_config: TrajCertConfig,
     tmp_path_factory: TempPathFactory,
 ) -> Path:
     root = tmp_path_factory.mktemp("synthesis_workspace")
     _write_upstream_artifacts(synthesis_plan, root)
     _write_real_trajectory_prepared_cohort(root)
+    _ = active_config.set(small_config)
+    _write_real_trajectory_dataset_inventory(root)
     return root
+
+
+def _write_real_trajectory_dataset_inventory(root: Path) -> None:
+    dataset = active_config.get().real_trajectory.dataset
+    structure = RealTrajectoryDatasetStructure(
+        dataset_filename=DatasetFilename(dataset.data_filename),
+        file_count=1,
+        row_count=2,
+        ground_truth_attack_rows=1,
+        human_reviewed_rows=2,
+        entity_ids=(ClientId("camera_21"),),
+        raw_schema=dataset.expected_schema,
+        flow_identity_columns=dataset.flow_identity_columns,
+        decision_time_column=dataset.columns.decision_time,
+    )
+    inventory = RealTrajectoryDatasetInventory(
+        expected_source_release=None,
+        source_documentation_reference=DatasetSourceReference(dataset.source_reference),
+        primary_publication_reference=None,
+        documented_expected_value=structure,
+        observed_raw_dataset_value=structure,
+        reviewed_attack_rows=1,
+        reviewed_attack_model_error_rows=1,
+        reviewed_attack_model_error_rate=1.0,
+        unreviewed_attack_rows=1,
+        unreviewed_attack_model_error_rows=0,
+        unreviewed_attack_model_error_rate=0.0,
+        observed_timestamp_start=DatasetTimestamp(datetime(2024, 1, 15, 0, 0, 15)),
+        observed_timestamp_end=DatasetTimestamp(datetime(2024, 1, 15, 0, 0, 16)),
+        discrepancy_status=DatasetComparisonStatus.MATCHED,
+        field_mapping_status=DatasetFieldMappingStatus.IDENTICAL,
+    )
+    inventory_path = root / real_trajectory_preprocessing_path(
+        PreprocessingLeaf.INVENTORIES_REAL_TRAJECTORIES,
+        RealTrajectoryArtifactFile.DATASET_INVENTORY,
+    )
+    inventory_path.parent.mkdir(parents=True, exist_ok=True)
+    _ = atomic_write_model(inventory_path, inventory)
 
 
 def _write_real_trajectory_prepared_cohort(root: Path) -> None:
@@ -398,6 +447,13 @@ def test_build_synthesis_evidence_assembles_complete_bundle(
     assert len(bundle.rho_utility) == _POPULATION_EVIDENCE_COUNT + _SEQUENTIAL_FAMILY_SIZE
     assert len(bundle.partition_coherence_figure) == _FIGURE_COHERENCE_ROW_COUNT
     assert len(bundle.compatibility_safety) > 0
+    diagnostic_row = bundle.real_trajectory_validation[0]
+    assert diagnostic_row.reviewed_attack_rows == 1
+    assert diagnostic_row.reviewed_attack_model_error_rows == 1
+    assert diagnostic_row.reviewed_attack_model_error_rate == pytest.approx(1.0)
+    assert diagnostic_row.unreviewed_attack_rows == 1
+    assert diagnostic_row.unreviewed_attack_model_error_rows == 0
+    assert diagnostic_row.unreviewed_attack_model_error_rate == pytest.approx(0.0)
 
 
 def test_execute_statistical_synthesis_writes_all_artifacts(
@@ -501,18 +557,10 @@ def _upstream_cells(plan: ExperimentPlan) -> tuple[PlannedCell, ...]:
     return tuple(cell for cell in plan.cells if cell.identity != synthesis.identity)
 
 
-def _long_path_safe(path: Path) -> Path:
-    if sys.platform != "win32":
-        return path
-    resolved = path.resolve()
-    prefix = "\\\\?\\"
-    return resolved if str(resolved).startswith(prefix) else Path(f"{prefix}{resolved}")
-
-
 def _write_upstream_artifacts(plan: ExperimentPlan, root: Path) -> None:
     for cell in _upstream_cells(plan):
         payload = _result_payload(cell)
-        result_path = _long_path_safe(root / scientific_result_path(cell))
+        result_path = long_path_safe(root / scientific_result_path(cell))
         result_path.parent.mkdir(parents=True, exist_ok=True)
         _ = result_path.write_bytes(payload)
         result_key = scientific_result_artifact_key(cell)
@@ -526,11 +574,11 @@ def _write_upstream_artifacts(plan: ExperimentPlan, root: Path) -> None:
                 ),
             )
         )
-        index_path = _long_path_safe(cell_artifact_index_path(cell, root))
+        index_path = long_path_safe(cell_artifact_index_path(cell, root))
         index_path.parent.mkdir(parents=True, exist_ok=True)
         _ = index_path.write_bytes(canonical_model_bytes(index))
         completion = _completion_record(cell, active_config.get(), result_key, digest)
-        completion_path = _long_path_safe(cell_completion_path(cell, root))
+        completion_path = long_path_safe(cell_completion_path(cell, root))
         completion_path.parent.mkdir(parents=True, exist_ok=True)
         _ = completion_path.write_bytes(canonical_model_bytes(completion))
 

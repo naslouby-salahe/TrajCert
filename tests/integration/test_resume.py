@@ -47,7 +47,7 @@ from trajcert.types import (
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SHA256_HEX_LENGTH = 64
 _INVENTORY_NAME = ExperimentName.LEGACY_PARTITION_INCOHERENCE_CHECK
-_ENVIRONMENT_DIGEST = EnvironmentDigest(file_digest(_REPO_ROOT / "uv.lock"))
+_ENVIRONMENT_DIGEST = EnvironmentDigest(file_digest(_REPO_ROOT / "requirements.lock"))
 _LEGACY_INCOHERENCE_NAME = ExperimentName.PATH_INFORMATION_DECOMPOSITION
 _EXECUTOR_INVOCATIONS_AFTER_OVERWRITE = 2
 

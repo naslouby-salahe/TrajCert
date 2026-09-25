@@ -21,7 +21,7 @@ _RESULTS_WRITE_SURFACE_NAMES = (*_RESULTS_ROOT_NAMES, "results_experiment_leaf")
 _RESULTS_WRITE_SURFACE_PATTERN = re.compile(
     r"\b(?:" + "|".join(_RESULTS_WRITE_SURFACE_NAMES) + r")\b"
 )
-_WRITABILITY_PROBE_EXEMPT = {"cli.py", "skeleton.py", "workflows.py"}
+_WRITABILITY_PROBE_EXEMPT = {"cli.py", "workflows.py"}
 
 _OUTPUTS_EXPERIMENTS_LITERAL_PATTERN = re.compile(r"""(["'])outputs/experiments(?:/[^"']*)?\1""")
 
@@ -156,5 +156,5 @@ def _configured_workspace(tmp_path: Path) -> Path:
 
 def _git_workspace(tmp_path: Path) -> Path:
     workspace = _configured_workspace(tmp_path)
-    _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
+    _ = (workspace / "requirements.lock").write_text("locked\n", encoding="utf-8")
     return workspace

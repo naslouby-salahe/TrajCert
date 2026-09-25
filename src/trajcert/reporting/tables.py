@@ -62,12 +62,6 @@ def render_table(source: VerifiedSourceData, destination_directory: Path) -> Tab
     )
 
 
-def render_tables(
-    sources: tuple[VerifiedSourceData, ...], destination_directory: Path
-) -> tuple[TableRenderResult, ...]:
-    return tuple(render_table(source, destination_directory) for source in sources)
-
-
 def _csv_payload(table: pa.Table) -> bytes:
     stream = io.StringIO(newline="")
     writer = csv.writer(stream, lineterminator="\n")

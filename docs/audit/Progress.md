@@ -1,0 +1,30 @@
+# Audit Progress
+
+## Completed
+
+- Read the supplied task brief and preserved the explicit boundary against public scientific experiment runs.
+- Reviewed mathematical summaries, entropy/information constraints, solver, sharpness oracle, safety logic, sequential confidence sequence and projection, state precedence, statistics, preprocessing, experiment catalog/plan/dispatch, artifact/reporting routes, configuration, and architecture constraints. See the detailed ledger in [`docs/.audit/independent-audit.md`](../.audit/independent-audit.md) and [wiring audit](../.audit/wiring.md).
+- Recomputed a census from the external raw HITL-IoT CSV, recorded the source checksum and observed-versus-documented count discrepancy, and verified the prepared-cache reuse path.
+- Updated the real-trajectory experiment evidence class and roadmap/report labels to diagnostic-only language. Added documented-versus-observed label counts and raw timestamp bounds to preprocessing inventory, with a focused regression test.
+- Clarified in the README and roadmap that synthetic laws are the primary experiment inputs and the optional HITL-IoT CSV is external, not bundled. Removed an unverified Zenodo release assertion from configuration, provenance, and checksum errors; the audited bytes remain identified by SHA-256.
+- Added reviewed/unreviewed attack error counts and rates to the raw inventory and diagnostic table schema. Narrowed the twelve per-condition coverage intervals to conditionwise implementation/falsification diagnostics and explicitly rejected a joint familywise interpretation.
+- Added the audit index, decisions, reviewer assessment, POC results, and this progress file. The canonical 254-row requirement matrix is [`docs/Audit Matrix.md`](../Audit%20Matrix.md); its domain totals reconcile to 254. The former major power/precision item is now prospectively resolved as `STAT-026` with explicit assumptions and limitations.
+- Closed `STAT-026` prospectively without changing the claim gate: retained the 0.05 observed-effect materiality cutoff, one-sided nonpositive-mean sign-flip null, and 54-test Holm family; fixed 0.07 before campaign execution as a rounded methodological planning alternative informed by pre-campaign precision/power analysis, and targeted 80% complete three-law-gate power; selected 6,000 streams per law/rho condition, giving 83.3959% modeled power. The exact design-only integration accounts for the observed-effect filter, 10,000 paired-bootstrap resamples, 20,000 sign flips, and the conservative first Holm cutoff under worst-case bounded paired differences; power is 12.90% at the 0.05 boundary. No utility campaign or pilot was run. The canonical matrix records this rationale; HITL-IoT remains diagnostic.
+- Fixed Windows extended-UNC construction in `long_path_safe` to produce the required `\\?\UNC\...` form; the 46 focused path tests cover UNC, drive-letter, and already-extended paths. Earlier Windows-hosted path failures are superseded by final Linux validation.
+- Reran the exact `DESIGN_ONLY` sequential utility calculation against current configuration: planning alternative 0.07, target 80% complete three-law-gate power, minimum n=5,272, selected n=6,000, and modeled full-gate power 83.3959%. No utility campaign or pilot was run.
+- Closed the final pre-campaign micro-audit: the Same Endpoint, Different Timing family contains 24 executable cells (4 partitions × 6 configured rho values), not 20; the canonical matrix and a plan regression test now reflect the configured grid. Total plan size remains 1,738 cells.
+- Reconciled sign-flip validity with the implemented raw-mean procedure and primary literature. Under independent bounded paired stream differences and the stated Lindeberg/variance conditions, the one-sided mean-null test is asymptotically valid; finite-sample validity for a general mean-zero null would require sign symmetry. Holm tolerates arbitrary dependence among valid inputs, so the fixed 54-test family’s control is asymptotic here. See [`sign-flip-validity.md`](../.audit/sign-flip-validity.md).
+- Did not run `trajcert run` or use inherited result directories as fresh evidence.
+
+## Validation evidence
+
+- Final Linux `nox -s tests`: 893 passed in 172.94 seconds; coverage gate passed at 91.49%. Fourteen warnings were third-party matplotlib/pyparsing deprecations. The final focused micro-audit regression selection passed 117 tests in 21.25 seconds; the earlier focused UNC-path regression run passed 46 tests in 1.21 seconds.
+- Final Linux `nox -s quality`: PASS in 42 seconds. Ruff format/lint, BasedPyright (0 diagnostics), Semgrep (79 files, 0 findings), import contracts (3 kept/0 broken), source audit, complexity, Vulture, Deptry, and pip-audit passed. The local TrajCert package was skipped by pip-audit because it is not on PyPI; no known dependency vulnerabilities were found.
+- Final safe CLI checks: doctor PASS; plan 1,738 executable / 0 invalid cells; smoke PASS (6/6); status 0 complete, 0 failed, 29 blocked, 0 running; report correctly refused missing evidence with exit 30. Real HITL-IoT preprocessing validated the pinned checksum/schema and 127,845-row inventory (10,227 eligible, 117,618 excluded); the immediate rerun reused the prepared cohort.
+- Focused raw-data and configuration tests passed: 34 tests. Real `hitl-iot` preprocessing completed and a subsequent invocation reused the verified prepared cohort.
+- Focused regression set covering configuration, planning, sequential utility, bootstrap, sign flip, multiplicity, materiality, synthesis, source data, and execution wiring passed: 149 tests. An additional HITL evidence classification subset passed: 27 tests.
+
+## Remaining before publication
+
+- Before campaign execution, retain the design-only assumptions alongside the execution protocol. The alternative is a methodological target, not an empirical domain claim.
+- Before submission, recheck the closest-work search and citations, preserve the external-data discrepancy/selection disclosure, and keep the pointwise coverage scope and synthetic-versus-diagnostic labels visible.

@@ -123,6 +123,22 @@ def _coverage_config() -> TrajCertConfig:
     return configured
 
 
+def _coverage_result(
+    parameters: LawParameters,
+    partition: TrajectoryPartition,
+) -> anytime.CoverageStressResult:
+    config = active_config.get()
+    batch = anytime.coverage_stress_batch(
+        parameters,
+        partition,
+        _SENSITIVITY_BUDGET,
+        config.budgets.risk,
+        range(config.sequential.coverage.streams),
+        batch_index=0,
+    )
+    return anytime.combine_coverage_stress_batches(parameters, (batch,))
+
+
 def _trace_events() -> tuple[tuple[MaturedEvent, ...], LedgerIdentity]:
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     parameters = _parameters(config.laws[_PRINCIPAL_LAW], _PRINCIPAL_LAW)
@@ -298,9 +314,7 @@ def test_run_anytime_hand_case_simplex_boundary_within_identity_tolerance() -> N
 def test_run_coverage_stress_reports_all_methods_for_assumption_valid_law() -> None:
     config = _coverage_config()
     parameters = _parameters(config.laws[LawKey.NO_PATH_DEPENDENCE], LawKey.NO_PATH_DEPENDENCE)
-    result = anytime.run_coverage_stress(
-        parameters, _partition(_HAND_CASE_BANDS), _SENSITIVITY_BUDGET
-    )
+    result = _coverage_result(parameters, _partition(_HAND_CASE_BANDS))
     assert result.primary_passed is True
     assert len(result.methods) == len(tuple(anytime.SequentialMethod))
     assert all(method.applicable for method in result.methods)
@@ -310,9 +324,7 @@ def test_run_coverage_stress_reports_all_methods_for_assumption_valid_law() -> N
 def test_run_coverage_stress_marks_ignorable_delay_inapplicable_for_violated_assumption() -> None:
     config = _coverage_config()
     parameters = _parameters(config.laws[_ASSUMPTION_VIOLATED_LAW], _ASSUMPTION_VIOLATED_LAW)
-    result = anytime.run_coverage_stress(
-        parameters, _partition(_HAND_CASE_BANDS), _SENSITIVITY_BUDGET
-    )
+    result = _coverage_result(parameters, _partition(_HAND_CASE_BANDS))
     ignorable = next(
         item for item in result.methods if item.method is anytime.SequentialMethod.IGNORABLE_DELAY
     )
@@ -324,7 +336,7 @@ def test_coverage_stress_batches_combine_to_match_single_run() -> None:
     config = _coverage_config()
     parameters = _parameters(config.laws[LawKey.NO_PATH_DEPENDENCE], LawKey.NO_PATH_DEPENDENCE)
     partition = _partition(_HAND_CASE_BANDS)
-    whole = anytime.run_coverage_stress(parameters, partition, _SENSITIVITY_BUDGET)
+    whole = _coverage_result(parameters, partition)
     first = anytime.coverage_stress_batch(
         parameters,
         partition,

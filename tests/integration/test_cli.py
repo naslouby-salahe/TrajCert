@@ -111,13 +111,21 @@ def test_doctor_prints_compact_pass(
             dependency_lock_valid=True,
             imports_valid=True,
             workspace_writable=True,
+            dataset_valid=True,
             publication_contract_valid=True,
             results_layout_valid=True,
         ),
     )
     monkeypatch.setattr(sys, "argv", ["trajcert", "doctor"])
     cli.main()
-    assert capsys.readouterr().out == "TrajCert doctor: PASS\n"
+    output = capsys.readouterr().out
+    assert cli.CliCheckState.PASS in output
+    assert f"{cli.CliDoctorField.WORKSPACE}=" in output
+    assert f"{cli.CliDoctorField.ENVIRONMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.DATASET}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.EXPERIMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.ARTIFACT_DAG}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.NEXT_ACTION}={cli.CliDoctorValue.PREPROCESS}" in output
 
 
 def test_cli_doctor_validates_inputs_and_reports_success(
@@ -125,4 +133,11 @@ def test_cli_doctor_validates_inputs_and_reports_success(
 ) -> None:
     monkeypatch.setattr("sys.argv", ["trajcert", "doctor"])
     cli.main()
-    assert capsys.readouterr().out == "TrajCert doctor: PASS\n"
+    output = capsys.readouterr().out
+    assert cli.CliCheckState.PASS in output
+    assert f"{cli.CliDoctorField.WORKSPACE}=" in output
+    assert f"{cli.CliDoctorField.ENVIRONMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.DATASET}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.EXPERIMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.ARTIFACT_DAG}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.NEXT_ACTION}={cli.CliDoctorValue.PREPROCESS}" in output

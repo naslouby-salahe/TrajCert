@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Mapping
+from datetime import datetime
 from enum import IntEnum, StrEnum
 from typing import Annotated, ClassVar, NewType
 
@@ -352,7 +353,7 @@ class SeedMaterialGrammar(StrEnum):
 
 class DependencyAuthority(StrEnum):
     PYPI = "pypi"
-    UV_LOCK = "uv.lock"
+    REQUIREMENTS_LOCK = "requirements.lock"
 
 
 class CoordinateGrammar(StrEnum):
@@ -498,6 +499,16 @@ class RealTrajectoryDatasetName(StrEnum):
     HITL_IOT = "hitl-iot"
 
 
+class DatasetComparisonStatus(StrEnum):
+    MATCHED = "MATCHED"
+    OBSERVED_DEVIATION = "OBSERVED_DEVIATION"
+
+
+class DatasetFieldMappingStatus(StrEnum):
+    IDENTICAL = "IDENTICAL"
+    REQUIRES_REVIEW = "REQUIRES_REVIEW"
+
+
 class HitlIotDeviceType(StrEnum):
     TV = "tv"
     THERMOSTAT = "thermostat"
@@ -528,8 +539,10 @@ class RealTrajectoryExclusionReason(StrEnum):
 
 
 RawDatasetRoot = NewType("RawDatasetRoot", str)
-# Dataset contract values originate in the configured external release and are open-ended.
+# Dataset release tags are optional because some external sources expose no verifiable release.
 DatasetVersionTag = NewType("DatasetVersionTag", str)
+DatasetSourceReference = NewType("DatasetSourceReference", str)
+DatasetTimestamp = NewType("DatasetTimestamp", datetime)
 DatasetChecksumHex = NewType("DatasetChecksumHex", str)
 DatasetFilename = NewType("DatasetFilename", str)
 DatasetColumnName = NewType("DatasetColumnName", str)

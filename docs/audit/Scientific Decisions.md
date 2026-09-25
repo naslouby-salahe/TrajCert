@@ -1,0 +1,27 @@
+# Scientific Decisions
+
+## Central contribution
+
+The defensible contribution is a setting-specific framework for sharp partial identification of binary terminal risk under a fixed mutual-information sensitivity constraint, with a trajectory of categorical resolution states. The proposed results combine an exact one-dimensional risk interval, nesting under coarsening, conditions under which informative categorical resolution states strictly lower the sharp risk upper endpoint, and a conservative time-uniform projection from observable-law confidence sequences to a local upper-risk certificate.
+
+These pieces build on established ideas. Mutual information, partial identification, sharp bounds, data processing, callback/nonresponse models, informative-coarsening pattern-mixture analysis, bounded-selection sensitivity, and confidence sequences are not individually new here. Shardell and El-Kamary's coarsening work is a close conceptual neighbor; the current comparison distinguishes its pattern-mixture restrictions and target from the fixed mutual-information path budget and terminal-risk interval. Describe the contribution as the precise integration and proved results under the stated terminal-censoring model. Avoid “first” or broad novelty claims; the scoped literature search does not establish priority or absence of equivalent work.
+
+## Evidence boundary
+
+The primary evidence is mathematical and synthetic. Synthetic streams establish behavior under declared laws and assumptions; they do not establish performance on physical devices or under deployment drift. HITL-IoT is an external, optional retrospective diagnostic input. Its raw file is outside the TrajCert repository, its local source points to a sibling shared-data directory, and available provenance does not verify annotation collection. Do not call this human validation, external validation, or generalization evidence.
+
+The raw census found 127,845 rows and 10,227 reviewed rows. The source README documents 19,215 attack rows, while the inspected CSV contains 19,177. Preserve both values in the inventory and disclose the deviation; do not edit source data to force agreement. Reviewed attack rows have a 16.96% model-error rate versus 6.12% in unreviewed attack rows. Thus the reviewed cohort is selected and cannot support an all-flow error-rate claim.
+
+TrajCert does not distribute this CSV. The audited file was supplied from an external shared-data directory and is pinned by its SHA-256. The previously configured Zenodo DOI could not be verified, so configuration now links to the source repository changelog and leaves upstream release identity unset. The checksum establishes file-byte identity only.
+
+## Sensitivity and decision thresholds
+
+The sensitivity parameter `rho` is an assumption, not an empirically calibrated quantity. Present results across the declared grid and state that practical plausibility requires domain knowledge not supplied by this project. Population and sequential utility thresholds are operational materiality labels; report continuous effects and heterogeneity even when a thresholded claim is `NULL_RESULT`.
+
+The 12 coverage stress conditions currently use per-condition 95% Clopper–Pearson diagnostics. Their conjunction is not a single 95% familywise statement. Report each condition separately and treat these simulations as falsification evidence. The theorem and its assumptions carry the formal guarantee. If the paper needs a campaign-wide empirical coverage claim, define multiplicity and power before running the campaign.
+
+For sequential utility, an independently generated synthetic event stream is the replication unit; the finest-path and endpoint methods share that exact stream. The configured count is 6,000 per law/rho condition. The 54 tests (6 laws × 3 rho values × 3 metrics) remain one Holm family at one-sided alpha 0.05. The observed-effect materiality cutoff remains an absolute 0.05 gain; the inferential null is E[D] <= 0 against E[D] > 0. The 0.07 planning alternative was fixed before campaign execution as a rounded methodological sensitivity informed by pre-campaign precision/power analysis. It is not empirically domain-validated, a minimum worthwhile application effect, or evidence of effectiveness. The target is 80% power for the complete three-law gate; exact design-only integration gives 83.3959% at the selected count, with 12.90% at the materiality boundary, under the worst-case paired {-1,+1} model, configured bootstrap/sign-flip settings, and conservative first Holm cutoff. Sign-flip p-values are asymptotically valid, not finite-sample exact without symmetry; fixed-family Holm control is asymptotic under valid individual p-values and permits rho dependence. See Sequential Utility Power Design and docs/.audit/sign-flip-validity.md. No utility campaign or pilot was run, and the materiality threshold was not changed.
+
+## Dataset adapter disposition
+
+Keep the HITL-IoT route as `DIAGNOSTIC` evidence and retain its source inventory, checksums, eligibility checks, and prepared-cohort support. The adapter can test whether the implementation handles recorded latency data; it cannot establish real-human provenance or external effectiveness. A future external-validation claim requires a citable release, verified annotation protocol and collection provenance, a justified sampling design, and independent temporal or entity-level replication.

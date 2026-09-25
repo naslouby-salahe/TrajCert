@@ -228,7 +228,7 @@ def test_report_export_result_exposes_counts_and_reuse_flag(tmp_path: Path) -> N
 
 def _completed_workspace(tmp_path: Path) -> Path:
     workspace = _workspace_with_config(tmp_path)
-    _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
+    _ = (workspace / "requirements.lock").write_text("locked\n", encoding="utf-8")
     return workspace
 
 
@@ -503,7 +503,7 @@ def test_require_synthesis_completion_rejects_stale_upstream(
     monkeypatch.setattr(export, "cell_dependency_fingerprint", _fixed_dependency_fingerprint)
     monkeypatch.setattr(export, "read_model", _stale_completion)
     _ = active_config.set(config)
-    _ = (tmp_path / "uv.lock").write_text("locked\n", encoding="utf-8")
+    _ = (tmp_path / "requirements.lock").write_text("locked\n", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError, match="upstream completion is stale"):
         export.require_synthesis_completion(tmp_path)
 

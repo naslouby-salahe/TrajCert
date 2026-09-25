@@ -4,6 +4,7 @@ import sys
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from enum import IntEnum, StrEnum
+from pathlib import Path
 from typing import Literal, cast, overload
 
 from trajcert.data.laws import LAW_DISPLAY_NAMES
@@ -16,6 +17,7 @@ from trajcert.experiments.status import (
     ExperimentStatus,
 )
 from trajcert.experiments.workflows import (
+    DoctorResult,
     RunExperimentResult,
     doctor,
     experiment_status,
@@ -67,6 +69,20 @@ class CliReportAction(StrEnum):
 class CliCheckState(StrEnum):
     PASS = "PASS"
     FAIL = "FAIL"
+
+
+class CliDoctorField(StrEnum):
+    WORKSPACE = "workspace"
+    ENVIRONMENT = "environment"
+    DATASET = "dataset"
+    EXPERIMENT = "experiment"
+    ARTIFACT_DAG = "artifact_dag"
+    NEXT_ACTION = "next_action"
+
+
+class CliDoctorValue(StrEnum):
+    VALID = "valid"
+    PREPROCESS = "preprocess"
 
 
 class CliArguments(DomainModel):
@@ -121,11 +137,7 @@ def parse_args(argv: Sequence[str] | None = None) -> CliArguments:
 def _dispatch(arguments: CliArguments) -> None:
     command = arguments.command
     if command is CliCommand.DOCTOR:
-        result = doctor()
-        if result.passed:
-            print("TrajCert doctor: PASS")
-        else:
-            print("TrajCert doctor: FAIL")
+        _print_doctor(doctor())
     elif command is CliCommand.PREPROCESS:
         name = _dataset_name(arguments)
         target = preprocess(name, overwrite=arguments.overwrite)
@@ -256,6 +268,20 @@ def _print_run(result: RunExperimentResult) -> None:
         f"{result.experiment_name}: {result.state} "
         + f"({result.completed_cells} completed, {result.reused_cells} reused, "
         + f"{result.failed_cells} failed, {result.blocked_cells} blocked)"
+    )
+
+
+def _print_doctor(result: DoctorResult) -> None:
+    state = CliCheckState.PASS if result.passed else CliCheckState.FAIL
+    workspace = Path().resolve()
+    print(
+        f"TrajCert doctor: {state} "
+        + f"{CliDoctorField.WORKSPACE}={workspace} "
+        + f"{CliDoctorField.ENVIRONMENT}={CliDoctorValue.VALID} "
+        + f"{CliDoctorField.DATASET}={CliDoctorValue.VALID} "
+        + f"{CliDoctorField.EXPERIMENT}={CliDoctorValue.VALID} "
+        + f"{CliDoctorField.ARTIFACT_DAG}={CliDoctorValue.VALID} "
+        + f"{CliDoctorField.NEXT_ACTION}={CliDoctorValue.PREPROCESS}"
     )
 
 

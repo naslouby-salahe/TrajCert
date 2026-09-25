@@ -7,7 +7,7 @@ import pytest
 
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.reporting.source_data import VerifiedSourceData
-from trajcert.reporting.tables import TableRenderResult, render_table, render_tables
+from trajcert.reporting.tables import TableRenderResult, render_table
 from trajcert.schemas import (
     PublicationFormat,
     PublicationSourceDescriptor,
@@ -155,21 +155,6 @@ def test_render_table_rejects_non_table_descriptor(tmp_path: Path) -> None:
     source = _table_source(("label",), table, source_role=PublicationSourceRole.FIGURE)
     with pytest.raises(InvalidScientificDataError, match="requires a table source descriptor"):
         _ = render_table(source, tmp_path)
-
-
-def test_render_tables_renders_one_result_per_source(tmp_path: Path) -> None:
-    first = pa.Table.from_pydict({"label": ["a"]})
-    second = pa.Table.from_pydict({"label": ["b"]})
-    sources = (
-        _table_source(("label",), first, stem="protocol_constants"),
-        _table_source(("label",), second, stem="synthetic_laws"),
-    )
-    results = render_tables(sources, tmp_path)
-    assert len(results) == _SOURCE_COUNT
-    assert results[0].csv.destination_path.name == "protocol_constants.csv"
-    assert results[0].csv.destination_path.read_bytes() == b"label\na\n"
-    assert results[1].tex.destination_path.name == "synthetic_laws.tex"
-    assert results[1].csv.destination_path.read_bytes() == b"label\nb\n"
 
 
 def test_render_table_is_byte_deterministic_across_directories(tmp_path: Path) -> None:

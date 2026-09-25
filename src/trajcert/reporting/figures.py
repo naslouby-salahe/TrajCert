@@ -83,8 +83,8 @@ class FigureLabel(StrEnum):
     ANYTIME_DELTA = "anytime delta"
     ACCEPTANCE_LIMIT = "acceptance limit"
     FOREIGN_INFORMATION_NEGATIVE_CONTROL = "Foreign-information negative control"
-    REAL_TRAJECTORY_DECISION_TIME = "Real human decision-time trajectory"
-    REAL_TRAJECTORY_REFINEMENT = "Real-trajectory endpoint vs trajectory refinement"
+    REAL_TRAJECTORY_DECISION_TIME = "HITL-IoT recorded decision latency"
+    REAL_TRAJECTORY_REFINEMENT = "HITL-IoT endpoint vs latency refinement"
 
 
 def render_figure(source: VerifiedSourceData, destination_directory: Path) -> FigureRenderResult:
@@ -121,12 +121,6 @@ def render_figure(source: VerifiedSourceData, destination_directory: Path) -> Fi
             publication_format=PublicationFormat.PNG,
         ),
     )
-
-
-def render_figures(
-    sources: tuple[VerifiedSourceData, ...], destination_directory: Path
-) -> tuple[FigureRenderResult, ...]:
-    return tuple(render_figure(source, destination_directory) for source in sources)
 
 
 def _build_figure(name: PublicationSourceName, table: pa.Table) -> Figure:
@@ -379,6 +373,18 @@ def _rho_sensitivity_partition(ax: Axes, rows: tuple[TableRow, ...], partition: 
     compatible = tuple(
         row for row in selected if _optional_float(row, PublicationColumn.RISK_UPPER) is not None
     )
+    rho_min_values = {
+        value
+        for row in selected
+        if (value := _optional_float(row, PublicationColumn.RHO_MIN)) is not None
+    }
+    if len(rho_min_values) == 1:
+        ax.axvline(
+            next(iter(rho_min_values)),
+            color=FigureColor.MUTED,
+            linestyle=":",
+            linewidth=1.0,
+        )
     ax.plot(
         tuple(_required_float(row, PublicationColumn.RHO) for row in compatible),
         tuple(_required_float(row, PublicationColumn.RISK_UPPER) for row in compatible),

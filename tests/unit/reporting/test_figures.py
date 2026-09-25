@@ -6,7 +6,7 @@ import pyarrow as pa
 import pytest
 
 from trajcert.exceptions import InvalidScientificDataError
-from trajcert.reporting.figures import FigureRenderResult, render_figure, render_figures
+from trajcert.reporting.figures import FigureRenderResult, render_figure
 from trajcert.reporting.source_data import VerifiedSourceData
 from trajcert.schemas import (
     PublicationFormat,
@@ -275,6 +275,8 @@ def test_rho_sensitivity_renderer_maps_missing_risk_to_cross(tmp_path: Path) -> 
         {
             "law_name": ["law", "law"],
             "rho": [0.1, 0.2],
+            "rho_min": [0.15, 0.15],
+            "rho_compatibility_margin": [-0.05, 0.05],
             "risk_upper": [0.3, None],
             "partition_name": ["8-band partition", "8-band partition"],
             "rho_is_log2": [True, False],
@@ -330,34 +332,6 @@ def test_figure_svg_escapes_text_values(tmp_path: Path) -> None:
     svg = result.svg.destination_path.read_text(encoding="utf-8")
     assert "A&lt;&amp;B" in svg
     assert "A<&B" not in svg
-
-
-def test_render_figures_returns_one_result_per_source(tmp_path: Path) -> None:
-    first = _source(
-        "figure_computational_scaling",
-        pa.Table.from_pydict(
-            {
-                "K": [1.0],
-                "population_median_runtime_ms": [1.0],
-                "outer_median_runtime_ms": [2.0],
-                "median_outer_nodes": [10.0],
-            }
-        ),
-    )
-    second = _source(
-        "figure_anytime_coverage",
-        pa.Table.from_pydict(
-            {
-                "clopper_pearson_upper_95": [0.4],
-                "criterion_pass": [True],
-                "delta": [0.05],
-                "acceptance_upper_limit": [0.45],
-            }
-        ),
-    )
-    results = render_figures((first, second), tmp_path)
-    assert len(results) == _TWO_SOURCES
-    assert all(result.svg.destination_path.exists() for result in results)
 
 
 def test_figure_render_is_byte_deterministic(tmp_path: Path) -> None:

@@ -7,20 +7,20 @@ from trajcert.schemas import EnvironmentReproducibilityRecord
 from trajcert.types import DependencyAuthority, EnvironmentDigest
 
 
-def test_uv_lock_is_the_only_dependency_lock_authority() -> None:
+def test_requirements_lock_is_the_only_dependency_lock_authority() -> None:
     assert Path("pyproject.toml").is_file()
-    assert Path("uv.lock").is_file()
-    assert Path("uv.lock").stat().st_size > 0
-    assert not Path("requirements.lock").exists()
+    assert Path("requirements.lock").is_file()
+    assert Path("requirements.lock").stat().st_size > 0
+    assert not Path("uv.lock").exists()
 
 
 def test_reproducibility_record_truthfully_represents_non_container_execution() -> None:
     record = EnvironmentReproducibilityRecord(
-        dependency_authority=DependencyAuthority.UV_LOCK,
-        dependency_lock_path=Path("uv.lock"),
+        dependency_authority=DependencyAuthority.REQUIREMENTS_LOCK,
+        dependency_lock_path=Path("requirements.lock"),
         environment_lock_digest=EnvironmentDigest("0" * 64),
     )
-    assert record.dependency_authority == "uv.lock"
+    assert record.dependency_authority == "requirements.lock"
 
 
 def test_all_publication_sources_are_authoritative_outputs_not_results() -> None:

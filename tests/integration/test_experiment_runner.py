@@ -39,7 +39,7 @@ _RUNTIME_EVENTS = 200
 _RUNTIME_CHECKPOINT = 100
 _RUNTIME_OUTER_NODE_CAP = 100
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_ENVIRONMENT_DIGEST = EnvironmentDigest(file_digest(_REPO_ROOT / "uv.lock"))
+_ENVIRONMENT_DIGEST = EnvironmentDigest(file_digest(_REPO_ROOT / "requirements.lock"))
 _SHA256_HEX_LENGTH = 64
 
 

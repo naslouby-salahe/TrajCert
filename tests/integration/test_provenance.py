@@ -47,13 +47,13 @@ def _link_source_and_config(workspace_root: Path) -> None:
     )
 
 
-def _link_uv_lock(workspace_root: Path) -> None:
-    _ = shutil.copyfile(_REPO_ROOT / "uv.lock", workspace_root / "uv.lock")
+def _link_requirements_lock(workspace_root: Path) -> None:
+    _ = shutil.copyfile(_REPO_ROOT / "requirements.lock", workspace_root / "requirements.lock")
 
 
 def _valid_workspace(tmp_path: Path) -> Path:
     _link_source_and_config(tmp_path)
-    _link_uv_lock(tmp_path)
+    _link_requirements_lock(tmp_path)
     return tmp_path
 
 
@@ -70,15 +70,15 @@ def test_doctor_passes_on_a_provisioned_workspace(tmp_path: Path) -> None:
     assert result.results_layout_valid is True
 
 
-def test_doctor_rejects_missing_uv_lock(tmp_path: Path) -> None:
+def test_doctor_rejects_missing_requirements_lock(tmp_path: Path) -> None:
     _link_source_and_config(tmp_path)
     with pytest.raises(InvalidScientificDataError):
         _ = doctor(workspace_root=tmp_path)
 
 
-def test_doctor_rejects_empty_uv_lock(tmp_path: Path) -> None:
+def test_doctor_rejects_empty_requirements_lock(tmp_path: Path) -> None:
     _link_source_and_config(tmp_path)
-    _ = (tmp_path / "uv.lock").write_text("", encoding="utf-8")
+    _ = (tmp_path / "requirements.lock").write_text("", encoding="utf-8")
     with pytest.raises(InvalidScientificDataError):
         _ = doctor(workspace_root=tmp_path)
 
@@ -111,7 +111,7 @@ def test_cell_dependency_fingerprint_changes_after_parent_completion(tmp_path: P
         cell for cell in cells_for_experiment(plan, _INVENTORY_NAME) if cell.executable
     )
     specification = scientific_specification_digest()
-    environment_digest = EnvironmentDigest(file_digest(workspace_root / "uv.lock"))
+    environment_digest = EnvironmentDigest(file_digest(workspace_root / "requirements.lock"))
     before = cell_dependency_fingerprint(
         workspace_root, plan, child_cell, specification, environment_digest
     )
@@ -166,7 +166,7 @@ def test_cell_dependency_material_embeds_parent_content_digest(tmp_path: Path) -
         plan,
         child_cell,
         scientific_specification_digest(),
-        EnvironmentDigest(file_digest(workspace_root / "uv.lock")),
+        EnvironmentDigest(file_digest(workspace_root / "requirements.lock")),
     )
     assert material.parents
     assert material.parents[0].scientific_content_digest == payload_digest

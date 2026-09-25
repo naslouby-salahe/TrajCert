@@ -10,15 +10,22 @@ from pathlib import Path
 
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH, SMOKE_CONFIG_OVERRIDES_PATH
-from trajcert.data.laws import build_full_law, configured_laws
+from trajcert.data.laws import (
+    LawParameters,
+    build_full_law,
+    configured_laws,
+    prepared_synthetic_law,
+)
 from trajcert.data.partitions import build_partition
 from trajcert.data.real_trajectories import (
     PreparedRealTrajectoryCohort,
     build_real_trajectory_eligibility,
+    inventory_real_trajectory_dataset,
     validate_dataset_schema,
     verify_dataset_integrity,
 )
-from trajcert.exceptions import InvalidScientificDataError
+from trajcert.data.synthetic import observable_category_probabilities
+from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.artifacts import (
     cell_dependency_material,
     scientific_result_artifact_key,
@@ -85,7 +92,12 @@ from trajcert.reporting.source_data import (
     table_source_descriptors,
 )
 from trajcert.reporting.tables import render_table
-from trajcert.storage import atomic_write_model, file_digest
+from trajcert.schemas import (
+    PreparedSyntheticLawArtifact,
+    RealTrajectoryPreprocessingInventory,
+    SyntheticPreprocessingInventory,
+)
+from trajcert.storage import atomic_write_model, file_digest, read_model
 from trajcert.telemetry import (
     ExperimentProgress,
     PreprocessingProgress,
@@ -96,6 +108,7 @@ from trajcert.telemetry import (
 from trajcert.types import (
     ArtifactFileName,
     Count,
+    DatasetChecksumHex,
     DomainModel,
     EnvironmentDigest,
     ExperimentName,
@@ -145,6 +158,7 @@ class DoctorResult(DomainModel):
     dependency_lock_valid: bool
     imports_valid: bool
     workspace_writable: bool
+    dataset_valid: bool
     publication_contract_valid: bool
     results_layout_valid: bool
 
@@ -163,9 +177,10 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         _ = build_full_law(parameters, finest)
     for bands in config.grids.partitions:
         _ = build_partition(finest, bands, config.method.terminal_horizon)
+    _ = verify_dataset_integrity(RawDatasetRoot(config.real_trajectory.dataset_root))
     lock_path = workspace_root / LOCK_PATH
     if not lock_path.is_file() or lock_path.stat().st_size == 0:
-        raise InvalidScientificDataError("uv.lock is missing or empty")
+        raise InvalidScientificDataError("requirements.lock is missing or empty")
     for module_name in _REQUIRED_IMPORTS:
         _ = importlib.import_module(module_name)
     _assert_workspace_writable(workspace_root)
@@ -190,6 +205,7 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
         dependency_lock_valid=True,
         imports_valid=True,
         workspace_writable=True,
+        dataset_valid=True,
         publication_contract_valid=True,
         results_layout_valid=True,
     )
@@ -205,9 +221,6 @@ def preprocess(
     if isinstance(dataset_name, RealTrajectoryDatasetName):
         _ = _load_config(workspace_root)
         return _preprocess_real_trajectory(workspace_root, overwrite=overwrite)
-    target = workspace_root / _PREPROCESS_PATH
-    if not overwrite and target.is_file():
-        return target
     config = _load_config(workspace_root)
     finest = config.method.finest_bands
     selected = tuple(
@@ -215,10 +228,67 @@ def preprocess(
         for parameters in configured_laws()
         if dataset_name is None or parameters.name == dataset_name
     )
+    target = workspace_root / _PREPROCESS_PATH
+    if not overwrite and _synthetic_preprocessing_is_current(target, workspace_root, selected):
+        return target
+    prepared: list[PreparedSyntheticLawArtifact] = []
+    partitions = tuple(
+        build_partition(finest, bands, config.method.terminal_horizon)
+        for bands in config.grids.partitions
+    )
     for parameters in selected:
-        _ = build_full_law(parameters, finest)
-    _ = atomic_write_model(target, config)
+        full_law = build_full_law(parameters, finest)
+        _ = observable_category_probabilities(full_law)
+        manifest = prepared_synthetic_law(parameters, full_law, partitions)
+        relative_path = _synthetic_law_manifest_path(parameters.name)
+        digest = atomic_write_model(workspace_root / relative_path, manifest)
+        prepared.append(
+            PreparedSyntheticLawArtifact(
+                law_name=parameters.name,
+                relative_path=relative_path,
+                sha256=digest,
+            )
+        )
+    _ = atomic_write_model(
+        target,
+        SyntheticPreprocessingInventory(
+            scientific_specification_digest=scientific_specification_digest(),
+            prepared_laws=tuple(prepared),
+        ),
+    )
     return target
+
+
+def _synthetic_law_manifest_path(law_name: LawName) -> Path:
+    return (
+        preprocessing_leaf(PreprocessingLeaf.PREPARED_LAWS)
+        / semantic_slug(law_name)
+        / ArtifactFile.SCIENTIFIC_INVENTORY
+    )
+
+
+def _synthetic_preprocessing_is_current(
+    target: Path,
+    workspace_root: Path,
+    selected: tuple[LawParameters, ...],
+) -> bool:
+    if not target.is_file():
+        return False
+    try:
+        inventory = read_model(target, SyntheticPreprocessingInventory)
+    except SerializationError:
+        return False
+    selected_names = tuple(parameters.name for parameters in selected)
+    if (
+        inventory.scientific_specification_digest != scientific_specification_digest()
+        or tuple(item.law_name for item in inventory.prepared_laws) != selected_names
+    ):
+        return False
+    return all(
+        (workspace_root / item.relative_path).is_file()
+        and file_digest(workspace_root / item.relative_path) == item.sha256
+        for item in inventory.prepared_laws
+    )
 
 
 def _preprocess_real_trajectory(workspace_root: Path, *, overwrite: bool) -> Path:
@@ -226,14 +296,28 @@ def _preprocess_real_trajectory(workspace_root: Path, *, overwrite: bool) -> Pat
     target = workspace_root / real_trajectory_preprocessing_path(
         PreprocessingLeaf.PREPARED_REAL_TRAJECTORIES, RealTrajectoryArtifactFile.PREPARED_COHORT
     )
-    if not overwrite and target.is_file():
-        return target
-    progress = PreprocessingProgress(dataset_name)
-    progress.started()
     config = active_config.get()
     dataset_root = RawDatasetRoot(config.real_trajectory.dataset_root)
     provenance = verify_dataset_integrity(dataset_root)
-    progress.dataset_located(provenance.doi, provenance.dataset_sha256, provenance.total_rows)
+    inventory_path = workspace_root / _real_trajectory_preprocessing_inventory_path(dataset_name)
+    if not overwrite and _real_trajectory_preprocessing_is_current(
+        target, inventory_path, provenance.dataset_sha256
+    ):
+        return target
+    progress = PreprocessingProgress(dataset_name)
+    progress.started()
+    progress.dataset_located(
+        provenance.source_reference, provenance.dataset_sha256, provenance.total_rows
+    )
+    inventory = inventory_real_trajectory_dataset(dataset_root)
+    _ = atomic_write_model(
+        workspace_root
+        / real_trajectory_preprocessing_path(
+            PreprocessingLeaf.INVENTORIES_REAL_TRAJECTORIES,
+            RealTrajectoryArtifactFile.DATASET_INVENTORY,
+        ),
+        inventory,
+    )
     schema = validate_dataset_schema(dataset_root)
     progress.schema_validated()
     events, report = build_real_trajectory_eligibility(dataset_root)
@@ -265,9 +349,46 @@ def _preprocess_real_trajectory(workspace_root: Path, *, overwrite: bool) -> Pat
         ),
         report,
     )
-    _ = atomic_write_model(target, PreparedRealTrajectoryCohort(events=events))
+    prepared_digest = atomic_write_model(target, PreparedRealTrajectoryCohort(events=events))
+    _ = atomic_write_model(
+        inventory_path,
+        RealTrajectoryPreprocessingInventory(
+            scientific_specification_digest=scientific_specification_digest(),
+            dataset_sha256=provenance.dataset_sha256,
+            prepared_cohort_sha256=prepared_digest,
+        ),
+    )
     progress.completed(target)
     return target
+
+
+def _real_trajectory_preprocessing_inventory_path(
+    dataset_name: RealTrajectoryDatasetName,
+) -> Path:
+    return (
+        preprocessing_leaf(PreprocessingLeaf.METADATA_PREPARATION_RECORDS)
+        / semantic_slug(dataset_name)
+        / ArtifactFile.SCIENTIFIC_INVENTORY
+    )
+
+
+def _real_trajectory_preprocessing_is_current(
+    target: Path,
+    inventory_path: Path,
+    dataset_sha256: DatasetChecksumHex,
+) -> bool:
+    if not target.is_file() or not inventory_path.is_file():
+        return False
+    try:
+        inventory = read_model(inventory_path, RealTrajectoryPreprocessingInventory)
+        _ = read_model(target, PreparedRealTrajectoryCohort)
+    except SerializationError:
+        return False
+    return (
+        inventory.scientific_specification_digest == scientific_specification_digest()
+        and inventory.dataset_sha256 == dataset_sha256
+        and inventory.prepared_cohort_sha256 == file_digest(target)
+    )
 
 
 def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
@@ -478,8 +599,14 @@ def report(
     overwrite: bool = False,
 ) -> ReportExportResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
+    _ = _load_config(workspace_root)
     validated_name = None if experiment_name is None else _known_experiment_name(experiment_name)
-    return export_report(workspace_root, experiment_name=validated_name, overwrite=overwrite)
+    try:
+        return export_report(workspace_root, experiment_name=validated_name, overwrite=overwrite)
+    except SerializationError as error:
+        raise InvalidScientificDataError(
+            "report evidence is missing, unreadable, or incomplete"
+        ) from error
 
 
 def _load_config(workspace_root: Path) -> TrajCertConfig:
@@ -603,7 +730,7 @@ def _execution_context(
 def _environment_digest(workspace_root: Path) -> EnvironmentDigest:
     lock = workspace_root / LOCK_PATH
     if not lock.is_file():
-        raise InvalidScientificDataError("uv.lock is required for execution provenance")
+        raise InvalidScientificDataError("requirements.lock is required for execution provenance")
     return EnvironmentDigest(file_digest(lock))
 
 

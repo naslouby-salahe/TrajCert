@@ -10,7 +10,7 @@ from typing import Final
 from trajcert.types import (
     Count,
     DatasetChecksumHex,
-    DatasetVersionTag,
+    DatasetSourceReference,
     ExperimentName,
     LogIntervalSeconds,
     ProvenSearchBound,
@@ -85,12 +85,15 @@ class PreprocessingProgress:
         _logger.info("preprocessing_started dataset=%s", self._dataset_name)
 
     def dataset_located(
-        self, doi: DatasetVersionTag, dataset_sha256: DatasetChecksumHex, total_rows: Count
+        self,
+        source_reference: DatasetSourceReference,
+        dataset_sha256: DatasetChecksumHex,
+        total_rows: Count,
     ) -> None:
         _logger.info(
-            "dataset_located dataset=%s doi=%s dataset_sha256=%s total_rows=%d",
+            "dataset_located dataset=%s source_reference=%s dataset_sha256=%s total_rows=%d",
             self._dataset_name,
-            doi,
+            source_reference,
             dataset_sha256,
             total_rows,
         )

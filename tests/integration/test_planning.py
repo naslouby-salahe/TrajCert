@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from trajcert.config import TrajCertConfig
+from math import ceil
+
+from trajcert.config import TrajCertConfig, active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
+from trajcert.experiments.checkpointing import batch_seed_ranges
 from trajcert.experiments.plan import build_plan, cells_for_experiment
+from trajcert.experiments.runner import expected_seed_count
 from trajcert.types import ExperimentName
 
 _PRODUCTION_CELL_TOTAL = 1_738
@@ -28,6 +32,22 @@ def test_sequential_utility_family_is_fully_planned() -> None:
     assert len(cells) == expected_count
     assert all(cell.executable for cell in cells)
     assert {cell.identity.coordinates.rho for cell in cells} == set(config.sequential.utility.rho)
+
+
+def test_utility_stream_count_drives_execution_seed_batches() -> None:
+    config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
+    token = active_config.set(config)
+    try:
+        count = expected_seed_count(ExperimentName.SEQUENTIAL_SENSITIVITY_UTILITY)
+        batches = batch_seed_ranges(count, config.sequential.utility.batch_size)
+    finally:
+        active_config.reset(token)
+
+    assert count == config.sequential.utility.streams
+    assert len(batches) == ceil(count / config.sequential.utility.batch_size)
+    assert batches[0].start == 0
+    assert batches[-1].stop == count
+    assert all(left.stop == right.start for left, right in zip(batches, batches[1:]))
 
 
 def test_coverage_stress_cells_match_authoritative_configuration() -> None:

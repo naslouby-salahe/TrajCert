@@ -310,24 +310,6 @@ def run_anytime_hand_case(
     return _HAND_CASE_HANDLERS[HAND_CASE_ORDER[case_index - 1]](partition)
 
 
-def run_coverage_stress(
-    parameters: LawParameters,
-    partition: TrajectoryPartition,
-    sensitivity_budget: SensitivityBudget,
-) -> CoverageStressResult:
-    config = active_config.get()
-    stream_count = config.sequential.coverage.streams
-    batch = coverage_stress_batch(
-        parameters,
-        partition,
-        sensitivity_budget,
-        config.budgets.risk,
-        stream_range=range(stream_count),
-        batch_index=0,
-    )
-    return combine_coverage_stress_batches(parameters, (batch,))
-
-
 def coverage_stress_batch(
     parameters: LawParameters,
     partition: TrajectoryPartition,

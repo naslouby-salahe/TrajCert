@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
-from trajcert.config import TrajCertConfig, active_config
+from trajcert.config import active_config
 from trajcert.constants import PRODUCTION_CONFIG_PATH
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.experiments.artifacts import (
@@ -66,7 +66,7 @@ from trajcert.types import (
     PlanDigest,
 )
 
-LOCK_PATH = Path(DependencyAuthority.UV_LOCK)
+LOCK_PATH = Path(DependencyAuthority.REQUIREMENTS_LOCK)
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
 _ALLOWED_EXPERIMENT_CHILDREN = frozenset(
@@ -97,8 +97,6 @@ def export_report(
     experiment_name: ExperimentName | None = None,
     overwrite: bool = False,
 ) -> ReportExportResult:
-    config = TrajCertConfig.from_yaml(workspace_root / PRODUCTION_CONFIG_PATH)
-    _ = active_config.set(config)
     require_synthesis_completion(workspace_root)
     descriptors = _selected_descriptors(experiment_name)
     sources = tuple(read_verified_source_data(workspace_root, item) for item in descriptors)
@@ -312,7 +310,7 @@ def _write_reproducibility(
         configuration_path=PRODUCTION_CONFIG_PATH,
         configuration_sha256=file_digest(config_path),
         environment=EnvironmentReproducibilityRecord(
-            dependency_authority=DependencyAuthority.UV_LOCK,
+            dependency_authority=DependencyAuthority.REQUIREMENTS_LOCK,
             dependency_lock_path=LOCK_PATH,
             environment_lock_digest=EnvironmentDigest(file_digest(lock_path)),
         ),

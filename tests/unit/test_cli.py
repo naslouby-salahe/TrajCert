@@ -15,11 +15,10 @@ from trajcert import cli
 from trajcert.cli import CliArguments, CliExitCode
 from trajcert.config import TrajCertConfig
 from trajcert.constants import PRODUCTION_CONFIG_PATH
-from trajcert.data.laws import LAW_DISPLAY_NAMES
+from trajcert.data.laws import LAW_DISPLAY_NAMES, PreparedSyntheticLaw
 from trajcert.exceptions import (
     ConfigurationError,
     InvalidScientificDataError,
-    SerializationError,
 )
 from trajcert.experiments import workflows
 from trajcert.experiments.artifacts import scientific_result_artifact_key
@@ -52,7 +51,11 @@ from trajcert.reporting.source_data import (
     figure_source_descriptors,
     table_source_descriptors,
 )
-from trajcert.schemas import PublicationSourceDescriptor, VerifiedSourceLineage
+from trajcert.schemas import (
+    PublicationSourceDescriptor,
+    SyntheticPreprocessingInventory,
+    VerifiedSourceLineage,
+)
 from trajcert.types import (
     ArtifactKey,
     CliCommand,
@@ -162,6 +165,7 @@ def _fake_doctor_fail() -> DoctorResult:
         dependency_lock_valid=True,
         imports_valid=True,
         workspace_writable=True,
+        dataset_valid=True,
         publication_contract_valid=True,
         results_layout_valid=True,
     )
@@ -193,6 +197,7 @@ def _passing_doctor() -> DoctorResult:
         dependency_lock_valid=True,
         imports_valid=True,
         workspace_writable=True,
+        dataset_valid=True,
         publication_contract_valid=True,
         results_layout_valid=True,
     )
@@ -210,7 +215,7 @@ def _reused_report(*, experiment_name: str | None, overwrite: bool) -> ReportExp
 
 def _git_workspace(tmp_path: Path) -> Path:
     workspace = _configured_workspace(tmp_path)
-    _ = (workspace / "uv.lock").write_text("locked\n", encoding="utf-8")
+    _ = (workspace / "requirements.lock").write_text("locked\n", encoding="utf-8")
     return workspace
 
 
@@ -469,6 +474,7 @@ def test_doctor_result_passes_only_when_all_checks_pass() -> None:
         dependency_lock_valid=True,
         imports_valid=True,
         workspace_writable=True,
+        dataset_valid=True,
         publication_contract_valid=True,
         results_layout_valid=True,
     )
@@ -482,6 +488,7 @@ def test_doctor_result_fails_when_any_check_fails() -> None:
         dependency_lock_valid=False,
         imports_valid=True,
         workspace_writable=True,
+        dataset_valid=True,
         publication_contract_valid=True,
         results_layout_valid=True,
     )
@@ -493,13 +500,13 @@ def test_doctor_rejects_workspace_without_configuration(tmp_path: Path) -> None:
         _ = workflows.doctor(workspace_root=tmp_path)
 
 
-def test_doctor_rejects_missing_dependency_lock(tmp_path: Path) -> None:
+def test_doctor_rejects_missing_requirements_lock(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
-    with pytest.raises(InvalidScientificDataError, match=r"uv\.lock is missing or empty"):
+    with pytest.raises(InvalidScientificDataError, match=r"requirements\.lock is missing or empty"):
         _ = workflows.doctor(workspace_root=workspace)
 
 
-def test_preprocess_writes_configuration_artifact(tmp_path: Path) -> None:
+def test_preprocess_writes_validated_synthetic_law_artifacts(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
     target = workflows.preprocess(workspace_root=workspace)
     expected = (
@@ -509,8 +516,25 @@ def test_preprocess_writes_configuration_artifact(tmp_path: Path) -> None:
     )
     assert target == expected
     assert target.is_file()
-    stored = TrajCertConfig.model_validate_json(target.read_text(encoding="utf-8"))
-    assert stored == TrajCertConfig.from_yaml(workspace / PRODUCTION_CONFIG_PATH)
+    stored = SyntheticPreprocessingInventory.model_validate_json(target.read_text(encoding="utf-8"))
+    config = TrajCertConfig.from_yaml(workspace / PRODUCTION_CONFIG_PATH)
+    assert stored.scientific_specification_digest
+    assert len(stored.prepared_laws) == len(config.ordered_laws)
+    for item in stored.prepared_laws:
+        manifest = PreparedSyntheticLaw.model_validate_json(
+            (workspace / item.relative_path).read_text(encoding="utf-8")
+        )
+        total = (
+            sum(manifest.harmful_resolved)
+            + sum(manifest.correct_resolved)
+            + manifest.terminal_harmful
+            + manifest.terminal_correct
+        )
+        assert total == pytest.approx(1.0)
+        assert (
+            tuple(partition.band_count for partition in manifest.partitions)
+            == config.grids.partitions
+        )
 
 
 def test_preprocess_with_dataset_name_validates_only_that_law(tmp_path: Path) -> None:
@@ -518,6 +542,8 @@ def test_preprocess_with_dataset_name_validates_only_that_law(tmp_path: Path) ->
     dataset_name = str(LAW_DISPLAY_NAMES[LawKey.NO_PATH_DEPENDENCE])
     target = workflows.preprocess(LawName(dataset_name), workspace_root=workspace)
     assert target.is_file()
+    stored = SyntheticPreprocessingInventory.model_validate_json(target.read_text(encoding="utf-8"))
+    assert tuple(item.law_name for item in stored.prepared_laws) == (LawName(dataset_name),)
 
 
 def test_main_preprocess_rejects_unknown_dataset_name(
@@ -545,8 +571,20 @@ def test_preprocess_overwrite_forces_recompute(tmp_path: Path) -> None:
     _ = first.write_bytes(b"stale")
     second = workflows.preprocess(workspace_root=workspace, overwrite=True)
     assert second == first
-    stored = TrajCertConfig.model_validate_json(second.read_text(encoding="utf-8"))
-    assert stored == TrajCertConfig.from_yaml(workspace / PRODUCTION_CONFIG_PATH)
+    stored = SyntheticPreprocessingInventory.model_validate_json(second.read_text(encoding="utf-8"))
+    assert stored.scientific_specification_digest
+
+
+def test_preprocess_rebuilds_when_a_law_manifest_is_missing(tmp_path: Path) -> None:
+    workspace = _configured_workspace(tmp_path)
+    inventory_path = workflows.preprocess(workspace_root=workspace)
+    inventory = SyntheticPreprocessingInventory.model_validate_json(
+        inventory_path.read_text(encoding="utf-8")
+    )
+    missing = workspace / inventory.prepared_laws[0].relative_path
+    missing.unlink()
+    _ = workflows.preprocess(workspace_root=workspace)
+    assert missing.is_file()
 
 
 def test_plan_view_matches_cell_count() -> None:
@@ -670,7 +708,14 @@ def test_main_doctor_prints_failure(
     monkeypatch.setattr(cli, "doctor", _fake_doctor_fail)
     monkeypatch.setattr(sys, "argv", ["trajcert", "doctor"])
     cli.main()
-    assert capsys.readouterr().out == "TrajCert doctor: FAIL\n"
+    output = capsys.readouterr().out
+    assert cli.CliCheckState.FAIL in output
+    assert f"{cli.CliDoctorField.WORKSPACE}=" in output
+    assert f"{cli.CliDoctorField.ENVIRONMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.DATASET}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.EXPERIMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.ARTIFACT_DAG}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.NEXT_ACTION}={cli.CliDoctorValue.PREPROCESS}" in output
 
 
 def test_main_report_prints_rendered_summary(
@@ -724,7 +769,14 @@ def test_main_doctor_prints_pass(
     monkeypatch.setattr(cli, "doctor", _passing_doctor)
     monkeypatch.setattr(sys, "argv", ["trajcert", "doctor"])
     cli.main()
-    assert capsys.readouterr().out == "TrajCert doctor: PASS\n"
+    output = capsys.readouterr().out
+    assert cli.CliCheckState.PASS in output
+    assert f"{cli.CliDoctorField.WORKSPACE}=" in output
+    assert f"{cli.CliDoctorField.ENVIRONMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.DATASET}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.EXPERIMENT}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.ARTIFACT_DAG}={cli.CliDoctorValue.VALID}" in output
+    assert f"{cli.CliDoctorField.NEXT_ACTION}={cli.CliDoctorValue.PREPROCESS}" in output
 
 
 def test_main_report_prints_reused_summary(
@@ -1069,7 +1121,7 @@ def test_executor_dispatches_ordinary_cell_through_run_cell(
 
 def test_report_requires_completed_synthesis(tmp_path: Path) -> None:
     workspace = _configured_workspace(tmp_path)
-    with pytest.raises(SerializationError, match="cannot read artifact"):
+    with pytest.raises(InvalidScientificDataError, match="report evidence is missing"):
         _ = workflows.report(workspace_root=workspace)
 
 
@@ -1113,7 +1165,7 @@ def test_doctor_rejects_incomplete_publication_sources(
         _ = workflows.doctor(workspace_root=workspace)
 
 
-def test_run_experiment_rejects_missing_uv_lock(
+def test_run_experiment_rejects_missing_requirements_lock(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     workspace = _configured_workspace(tmp_path)
@@ -1124,5 +1176,5 @@ def test_run_experiment_rejects_missing_uv_lock(
     monkeypatch.setattr(workflows, "_dependency_readiness", _no_dependencies)
     monkeypatch.setattr(workflows, "run_cell", _completed_run_cell)
     experiment = ExperimentName("Anytime Implementation Hand Cases")
-    with pytest.raises(InvalidScientificDataError, match=r"uv\.lock is required"):
+    with pytest.raises(InvalidScientificDataError, match=r"requirements\.lock is required"):
         _ = workflows.run_experiment(experiment, workspace_root=workspace)

@@ -60,5 +60,5 @@ def test_resolved_band_weights_reject_non_positive_band_count() -> None:
 
 
 def test_resolved_band_weights_reject_non_normalizable_slope() -> None:
-    with pytest.raises(InvalidScientificDataError):
+    with pytest.raises(InvalidScientificDataError, match="slope must be finite"):
         _ = resolved_band_weights(4, float("inf"))

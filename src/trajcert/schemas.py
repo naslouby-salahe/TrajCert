@@ -6,14 +6,33 @@ from pathlib import Path
 from trajcert.types import (
     ArtifactKey,
     ColumnName,
+    DatasetChecksumHex,
     DependencyAuthority,
     DependencyFingerprint,
     DigestHex,
     DomainModel,
     EnvironmentDigest,
     ExperimentSlug,
+    LawName,
     SpecificationDigest,
 )
+
+
+class PreparedSyntheticLawArtifact(DomainModel):
+    law_name: LawName
+    relative_path: Path
+    sha256: DigestHex
+
+
+class SyntheticPreprocessingInventory(DomainModel):
+    scientific_specification_digest: SpecificationDigest
+    prepared_laws: tuple[PreparedSyntheticLawArtifact, ...]
+
+
+class RealTrajectoryPreprocessingInventory(DomainModel):
+    scientific_specification_digest: SpecificationDigest
+    dataset_sha256: DatasetChecksumHex
+    prepared_cohort_sha256: DigestHex
 
 
 class PublicationSourceRole(StrEnum):

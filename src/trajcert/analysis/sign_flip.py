@@ -29,6 +29,14 @@ def one_sided_sign_flip(
     semantic_comparison_key: SemanticComparisonKey,
     randomization_count: RandomizationCount,
 ) -> SignFlipResult:
+    """Return a plus-one upper-tail sign-flip p-value for the paired mean.
+
+    A zero-mean null alone does not make this test finite-sample exact. Under
+    independent stream-level differences, a one-sided mean-null test is asymptotically
+    valid with finite variance, Lindeberg, and positive limiting variance; finite-sample
+    validity additionally requires sign-flip invariance. See
+    docs/.audit/sign-flip-validity.md and Hemerik, Goeman, and Finos (2020).
+    """
     values = validated_finite_vector(
         differences,
         FailureMessage("sign-flip inference requires a nonempty vector"),

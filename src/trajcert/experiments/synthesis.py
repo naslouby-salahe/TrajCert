@@ -23,7 +23,11 @@ from trajcert.analysis.sign_flip import SignFlipResult, one_sided_sign_flip
 from trajcert.config import TrajCertConfig, active_config
 from trajcert.data.laws import LAW_DISPLAY_NAMES
 from trajcert.data.partitions import partition_name
-from trajcert.data.real_trajectories import HitlIotEligibleEvent, PreparedRealTrajectoryCohort
+from trajcert.data.real_trajectories import (
+    HitlIotEligibleEvent,
+    PreparedRealTrajectoryCohort,
+    RealTrajectoryDatasetInventory,
+)
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.artifacts import (
     read_verified_scientific_result,
@@ -608,6 +612,7 @@ def build_synthesis_evidence(
     sequential_rows = sequential_rho_utility_rows(sequential_synthesis)
     foreign_information_source = _foreign_information_evidence(plan, workspace_root)
     real_trajectory_source = _real_trajectory_evidence(plan, workspace_root)
+    real_trajectory_inventory = _real_trajectory_inventory(workspace_root)
     real_trajectory_pooled_primary = _real_trajectory_pooled_primary_horizon_evidence(
         real_trajectory_source
     )
@@ -636,7 +641,9 @@ def build_synthesis_evidence(
         population_materiality=population_materiality,
         foreign_information=foreign_information_rows(foreign_information_source),
         foreign_information_figure=foreign_information_figure_rows(foreign_information_source),
-        real_trajectory_validation=real_trajectory_validation_rows(real_trajectory_source),
+        real_trajectory_validation=real_trajectory_validation_rows(
+            real_trajectory_source, real_trajectory_inventory
+        ),
         real_trajectory_decision_time_figure=real_trajectory_decision_time_figure_rows(
             _real_trajectory_prepared_events(workspace_root)
         ),
@@ -781,6 +788,14 @@ def _real_trajectory_prepared_events(
         PreprocessingLeaf.PREPARED_REAL_TRAJECTORIES, RealTrajectoryArtifactFile.PREPARED_COHORT
     )
     return read_model(cohort_path, PreparedRealTrajectoryCohort).events
+
+
+def _real_trajectory_inventory(workspace_root: Path) -> RealTrajectoryDatasetInventory:
+    inventory_path = workspace_root / real_trajectory_preprocessing_path(
+        PreprocessingLeaf.INVENTORIES_REAL_TRAJECTORIES,
+        RealTrajectoryArtifactFile.DATASET_INVENTORY,
+    )
+    return read_model(inventory_path, RealTrajectoryDatasetInventory)
 
 
 def _safety_evidence(

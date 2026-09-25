@@ -34,7 +34,7 @@ from trajcert.types import (
     DatasetChecksumHex,
     DatasetColumnName,
     DatasetFilename,
-    DatasetVersionTag,
+    DatasetSourceReference,
     DomainModel,
     EventCount,
     EventIndexWidth,
@@ -717,10 +717,13 @@ class RealTrajectoryColumnConfig(ConfigModel):
 
 class RealTrajectoryDatasetConfig(ConfigModel):
     name: RealTrajectoryDatasetName
-    doi: DatasetVersionTag
+    source_reference: DatasetSourceReference
     data_filename: DatasetFilename
     checksums_filename: DatasetFilename
     sha256: DatasetChecksumHex
+    documented_total_rows: Count
+    documented_ground_truth_attack_rows: Count
+    documented_human_reviewed_rows: Count
     device_names: tuple[ClientId, ...]
     raw_columns: tuple[DatasetColumnName, ...]
     flow_identity_columns: tuple[DatasetColumnName, ...]
@@ -731,6 +734,11 @@ class RealTrajectoryDatasetConfig(ConfigModel):
     def validate_dataset_contract(self) -> RealTrajectoryDatasetConfig:
         if not self.device_names:
             raise ValueError("real_trajectory.dataset.device_names must not be empty")
+        if (
+            self.documented_ground_truth_attack_rows > self.documented_total_rows
+            or self.documented_human_reviewed_rows > self.documented_total_rows
+        ):
+            raise ValueError("documented dataset counts cannot exceed documented_total_rows")
         if not self.raw_columns or not self.expected_schema:
             raise ValueError("real_trajectory dataset column contracts must not be empty")
         if not set(self.raw_columns).issubset(self.expected_schema):

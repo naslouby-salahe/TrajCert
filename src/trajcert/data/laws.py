@@ -5,6 +5,7 @@ from math import isfinite
 import numpy as np
 
 from trajcert.config import active_config
+from trajcert.data.partitions import TrajectoryPartition
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.types import (
     BandCount,
@@ -15,6 +16,7 @@ from trajcert.types import (
     Probability,
     SlopeValue,
     Vector,
+    mass_tuple,
 )
 
 
@@ -48,6 +50,30 @@ class FullLawProbabilities(DomainModel):
         )
 
 
+class PreparedSyntheticLaw(DomainModel):
+    parameters: LawParameters
+    harmful_resolved: tuple[Mass, ...]
+    correct_resolved: tuple[Mass, ...]
+    terminal_harmful: Mass
+    terminal_correct: Mass
+    partitions: tuple[TrajectoryPartition, ...]
+
+
+def prepared_synthetic_law(
+    parameters: LawParameters,
+    full_law: FullLawProbabilities,
+    partitions: tuple[TrajectoryPartition, ...],
+) -> PreparedSyntheticLaw:
+    return PreparedSyntheticLaw(
+        parameters=parameters,
+        harmful_resolved=mass_tuple(full_law.harmful_resolved),
+        correct_resolved=mass_tuple(full_law.correct_resolved),
+        terminal_harmful=full_law.terminal_harmful,
+        terminal_correct=full_law.terminal_correct,
+        partitions=partitions,
+    )
+
+
 def configured_laws() -> tuple[LawParameters, ...]:
     config = active_config.get()
     return tuple(
@@ -70,6 +96,8 @@ def resolved_band_weights(band_count: BandCount, slope: SlopeValue) -> Vector:
     bands = band_count
     if bands <= 0:
         raise InvalidScientificDataError("band count must be positive")
+    if not isfinite(slope):
+        raise InvalidScientificDataError("law band slope must be finite")
     indices = np.arange(1, bands + 1, dtype=np.float64)
     center = (bands + 1) / 2.0
     logits = slope * (indices - center)

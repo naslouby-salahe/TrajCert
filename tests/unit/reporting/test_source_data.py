@@ -328,6 +328,8 @@ def test_population_rho_utility_rows_maps_population_evidence() -> None:
     assert row.metric_name == RhoUtilityMetricName.POPULATION_LATENT_RISK_UPPER_BOUND
     assert row.metric_value == pytest.approx(0.3)
     assert row.compatibility_state is CompatibilityRegime.COMPATIBLE_INTERVAL
+    assert row.rho_min == pytest.approx(0.02)
+    assert row.rho_compatibility_margin == pytest.approx(0.03)
     assert row.tau == pytest.approx(0.02)
     assert row.risk_upper == pytest.approx(0.3)
     assert row.identified_width == pytest.approx(0.2)
@@ -642,6 +644,16 @@ def test_descriptor_for_returns_registered_source() -> None:
     table = _descriptor_for(PublicationSourceName.RHO_UTILITY)
     assert table.source_path.stem == "rho_utility"
     assert table.source_role is PublicationSourceRole.TABLE
+    assert {"rho_min", "rho_compatibility_margin"}.issubset(set(table.columns))
+    diagnostic = _descriptor_for(PublicationSourceName.REAL_TRAJECTORY_VALIDATION)
+    assert {
+        "reviewed_attack_rows",
+        "reviewed_attack_model_error_rows",
+        "reviewed_attack_model_error_rate",
+        "unreviewed_attack_rows",
+        "unreviewed_attack_model_error_rows",
+        "unreviewed_attack_model_error_rate",
+    }.issubset(set(diagnostic.columns))
 
 
 def test_read_verified_source_data_sorts_rows_and_verifies_lineage(tmp_path: Path) -> None:

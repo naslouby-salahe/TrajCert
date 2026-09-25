@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from trajcert.data.summaries import ObservableSummary
+from trajcert.math.information import latent_risk
 from trajcert.math.solver import HiddenMassSolveResult, solve_hidden_mass_interval
 from trajcert.types import (
     HiddenMassInterval,
@@ -41,9 +42,9 @@ def sharp_risk_set(
     )
     if solved.interval is None:
         return SharpRiskSet(hidden_mass=None, latent_risk=None, solve_result=solved)
-    harmful = summary.resolved_harmful_mass
     risk = RiskInterval(
-        lower=harmful + solved.interval.lower, upper=harmful + solved.interval.upper
+        lower=latent_risk(summary, solved.interval.lower),
+        upper=latent_risk(summary, solved.interval.upper),
     )
     return SharpRiskSet(hidden_mass=solved.interval, latent_risk=risk, solve_result=solved)
 

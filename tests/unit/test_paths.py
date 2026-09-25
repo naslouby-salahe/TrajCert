@@ -21,13 +21,14 @@ from trajcert.paths import (
     canonical_number_token,
     experiment_leaf,
     experiment_root,
+    long_path_safe,
     preprocessing_leaf,
     results_experiment_leaf,
     semantic_cell_path,
     semantic_slug,
     shared_artifact_path,
 )
-from trajcert.types import CoordinateName, CoordinateToken, ExperimentSlug
+from trajcert.types import CoordinateName, CoordinateToken, ExperimentSlug, PlatformName
 
 _SLUG_CASES: tuple[tuple[str, str], ...] = (
     ("Hello World!", "hello-world"),
@@ -50,6 +51,35 @@ def test_semantic_slug_is_deterministic() -> None:
     first = semantic_slug("Trajectory A")
     second = semantic_slug("Trajectory A")
     assert first == second
+
+
+@pytest.mark.parametrize(
+    ("resolved", "expected"),
+    [
+        (
+            r"\\wsl.localhost\Ubuntu\home\project\file",
+            r"\\?\UNC\wsl.localhost\Ubuntu\home\project\file",
+        ),
+        (r"C:\Users\example\file", r"\\?\C:\Users\example\file"),
+        (
+            r"\\?\UNC\server\share\file",
+            r"\\?\UNC\server\share\file",
+        ),
+    ],
+)
+def test_long_path_safe_uses_valid_windows_extended_paths(
+    monkeypatch: pytest.MonkeyPatch,
+    resolved: str,
+    expected: str,
+) -> None:
+    from trajcert import paths
+
+    def resolve_path(_path: Path) -> Path:
+        return Path(resolved)
+
+    monkeypatch.setattr(paths, "current_platform", lambda: PlatformName.WIN32)
+    monkeypatch.setattr(Path, "resolve", resolve_path)
+    assert str(long_path_safe(Path("unused"))) == expected
 
 
 @pytest.mark.parametrize("source", ["", "---", "αβ", "   "])

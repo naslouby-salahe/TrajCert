@@ -13,7 +13,6 @@ from tools.source_audit import (
     GENERIC_TEXT_PROCESSING,
     HUMAN_RENDERING,
     IMPLEMENTATION_TEMPORARY,
-    THIRD_PARTY_INTEROP,
     RULE_BUILDING_BLOCK,
     RULE_CLAIM,
     RULE_COMPATIBILITY,
@@ -26,6 +25,7 @@ from tools.source_audit import (
     RULE_ROADMAP,
     RULE_SUPPRESSION,
     RULE_UNTYPED,
+    THIRD_PARTY_INTEROP,
     Finding,
     audit_path,
     audit_scope,
@@ -106,9 +106,11 @@ def test_production_never_names_a_generic_numeric_building_block_outside_types()
         if path.name == "types.py":
             continue
         text = path.read_text(encoding="utf-8")
-        for name in GENERIC_NUMERIC_BUILDING_BLOCKS:
-            if re.search(rf"\b{name}\b", text):
-                offenders.append(f"{path}: {name}")
+        offenders.extend(
+            f"{path}: {name}"
+            for name in GENERIC_NUMERIC_BUILDING_BLOCKS
+            if re.search(rf"\b{name}\b", text)
+        )
     assert not offenders, "\n".join(offenders)
 
 

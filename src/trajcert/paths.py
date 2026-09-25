@@ -191,6 +191,7 @@ class PlanArtifactFile(StrEnum):
 
 class RealTrajectoryArtifactFile(StrEnum):
     DATASET_PROVENANCE = "hitl_iot_dataset_provenance.json"
+    DATASET_INVENTORY = "hitl_iot_dataset_inventory.json"
     ELIGIBILITY_REPORT = "hitl_iot_eligibility_report.json"
     SCHEMA_VALIDATION = "hitl_iot_schema_validation.json"
     PREPARED_COHORT = "hitl_iot_prepared_cohort.json"
@@ -234,9 +235,12 @@ def long_path_safe(path: Path) -> Path:
     if current_platform() is not PlatformName.WIN32:
         return path
     resolved = path.resolve()
-    if str(resolved).startswith(_WINDOWS_EXTENDED_LENGTH_PREFIX):
+    resolved_text = str(resolved)
+    if resolved_text.startswith(_WINDOWS_EXTENDED_LENGTH_PREFIX):
         return resolved
-    return Path(f"{_WINDOWS_EXTENDED_LENGTH_PREFIX}{resolved}")
+    if resolved_text.startswith("\\\\"):
+        return Path(f"{_WINDOWS_EXTENDED_LENGTH_PREFIX}UNC\\{resolved_text[2:]}")
+    return Path(f"{_WINDOWS_EXTENDED_LENGTH_PREFIX}{resolved_text}")
 
 
 def fsync_directory(directory: Path) -> None:

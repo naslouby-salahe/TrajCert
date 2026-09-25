@@ -129,6 +129,8 @@ class PublicationColumn(StrEnum):
     POPULATION_MEDIAN_RUNTIME_MS = auto()
     PRIMARY_ARTIFACT = auto()
     RHO = auto()
+    RHO_MIN = auto()
+    RHO_COMPATIBILITY_MARGIN = auto()
     RHO_IS_LOG2 = auto()
     RHO_OFFSET = auto()
     RHO_OFFSET_MODE = auto()
@@ -171,6 +173,12 @@ class PublicationColumn(StrEnum):
     STRATUM_KIND = auto()
     STRATUM_LABEL = auto()
     STRATUM_SIZE = auto()
+    REVIEWED_ATTACK_ROWS = auto()
+    REVIEWED_ATTACK_MODEL_ERROR_ROWS = auto()
+    REVIEWED_ATTACK_MODEL_ERROR_RATE = auto()
+    UNREVIEWED_ATTACK_ROWS = auto()
+    UNREVIEWED_ATTACK_MODEL_ERROR_ROWS = auto()
+    UNREVIEWED_ATTACK_MODEL_ERROR_RATE = auto()
     RESOLVED_FRACTION = auto()
     THETA_TRUE = auto()
     SCIENTIFIC_STATE = auto()
@@ -356,6 +364,8 @@ PUBLICATION_SOURCE_CATALOG: tuple[PublicationSourceDefinition, ...] = (
                 PublicationColumn.METRIC_VALUE,
                 PublicationColumn.COMPATIBILITY_STATE,
                 PublicationColumn.TAU,
+                PublicationColumn.RHO_MIN,
+                PublicationColumn.RHO_COMPATIBILITY_MARGIN,
                 PublicationColumn.RISK_UPPER,
                 PublicationColumn.IDENTIFIED_WIDTH,
                 PublicationColumn.COMPLETE_CASE_ARRIVAL_ONLY,
@@ -532,6 +542,8 @@ PUBLICATION_SOURCE_CATALOG: tuple[PublicationSourceDefinition, ...] = (
                 PublicationColumn.LAW_NAME,
                 PublicationColumn.PARTITION_NAME,
                 PublicationColumn.RHO,
+                PublicationColumn.RHO_MIN,
+                PublicationColumn.RHO_COMPATIBILITY_MARGIN,
                 PublicationColumn.RISK_UPPER,
                 PublicationColumn.COMPATIBILITY_STATE,
                 PublicationColumn.RHO_IS_LOG2,
@@ -631,6 +643,12 @@ PUBLICATION_SOURCE_CATALOG: tuple[PublicationSourceDefinition, ...] = (
                 PublicationColumn.HORIZON_SECONDS,
                 PublicationColumn.PARTITION_NAME,
                 PublicationColumn.STRATUM_SIZE,
+                PublicationColumn.REVIEWED_ATTACK_ROWS,
+                PublicationColumn.REVIEWED_ATTACK_MODEL_ERROR_ROWS,
+                PublicationColumn.REVIEWED_ATTACK_MODEL_ERROR_RATE,
+                PublicationColumn.UNREVIEWED_ATTACK_ROWS,
+                PublicationColumn.UNREVIEWED_ATTACK_MODEL_ERROR_ROWS,
+                PublicationColumn.UNREVIEWED_ATTACK_MODEL_ERROR_RATE,
                 PublicationColumn.RESOLVED_FRACTION,
                 PublicationColumn.THETA_TRUE,
                 PublicationColumn.TAU,

@@ -99,14 +99,18 @@ The epoch manifest fixes detector/model identity, action policy, adjudication re
 
 ## 2.2 Research questions
 
-1. Does one fixed path-information sensitivity budget retain its meaning under deterministic trajectory coarsening and generate nested sharp risk sets?
-2. Is resolved timing information identifiable, and when does finer timing strictly improve the upper risk bound?
-3. Does the one-dimensional information profile generate the exact compatible latent-risk set?
-4. Can the method distinguish model contradiction, sensitivity-driven non-certification, and intrinsic impossibility?
-5. Does projection of a simultaneous observable-law confidence sequence through the conservative sharp-map envelope provide the declared time-uniform upper-risk guarantee?
-6. Over a predeclared $\rho$ domain, when is the certificate informative, incompatible, or practically vacuous?
-7. If a future eligible action/adjudication ledger exists, does real resolved timing materially improve certification?
-8. Does local validity remain independent of foreign-client information?
+### Primary
+
+1. Under a finite categorical adjudication path and a fixed path-information sensitivity budget, what is the exact sharp risk set, and how does deterministic coarsening change it?
+2. Can a simultaneous confidence sequence for the observable path law be projected to a time-uniform local upper-risk certificate under the stated stable-stream assumptions?
+3. On prespecified synthetic laws, in which regimes does path resolution improve risk certification over endpoint-only and simple assumption-based comparators, and where is the certificate uninformative or incompatible?
+
+### Secondary and diagnostic
+
+4. Which compatibility, safety, and sensitivity regimes explain the conditional utility result?
+5. Does implementation preserve local inference without using foreign-stream information, and does its numerical solution match an independent oracle?
+
+The HITL-IoT replay is diagnostic only. It cannot answer a real-human or operational generalization question without independently verifiable annotation provenance and a justified observation process (§6). Exact claim scope and support states are in Section 21.
 
 The confirmatory claim names, exact wording, evidence gates, scopes, and failure states are authoritative in Section 21.
 
@@ -114,9 +118,27 @@ The confirmatory claim names, exact wording, evidence gates, scopes, and failure
 
 The contribution does **not** claim invention of callback/repeated-attempt data, outcome-dependent timing as missing-data information, mutual information, entropy/divergence sensitivity generally, partial identification, sharp bounds generally, falsification/breakdown frontiers generally, data processing, confidence sequences/e-processes, delayed-outcome inference generally, active querying/abstention/selective acting, or federated evidence borrowing.
 
-It does **not** claim finite-sample minimax optimality; universal $\rho$ calibration; universal odds-ratio-to-$\rho$ conversion; continuous-time or unrestricted serial-drift validity; covariate-conditional validity; active-adjudication optimality; detector-training superiority; privacy protection; poisoning/Byzantine robustness; OOD/zero-day superiority; constrained-device deployment feasibility; or prospective, live operational production-deployment validation (§21.12 evaluates retrospective empirical generalization on a released research dataset, not a live ledger).
+It does **not** claim finite-sample minimax optimality; universal $\rho$ calibration; universal odds-ratio-to-$\rho$ conversion; continuous-time or unrestricted serial-drift validity; covariate-conditional validity; active-adjudication optimality; detector-training superiority; privacy protection; poisoning/Byzantine robustness; OOD/zero-day superiority; constrained-device deployment feasibility; or real-human, external, prospective, or live operational validation from the current HITL-IoT replay (§21.12).
 
 The theorem assumes trustworthy event IDs, issue/adjudication timestamps, terminal status, and resolved correctness labels. Tampering, malicious adjudicators/clients, poisoning, detector evasion, secure aggregation, and privacy leakage are outside scope; a data-integrity violation yields no certificate. Federation is unnecessary for local validity and foreign-client information does not enter the core inference procedure.
+
+## 2.4 Related methods and comparator roles
+
+The comparison is about estimands and assumptions, not terminology. These methods are not interchangeable with TrajCert merely because they address missing outcomes, callbacks, information, or sequential monitoring.
+
+| Method family and primary source | Observed data and key assumption | Target and identification | Timing and time-uniformity | Sensitivity parameter and relation to TrajCert |
+|---|---|---|---|---|
+| Endpoint missing-outcome bounds ([Manski, 2005](https://doi.org/10.1016/j.ijar.2004.10.006)) | Observed outcome fraction and missing fraction; no assumption on missing outcomes for the assumption-free bounds. | The full-data outcome distribution or functionals are set-identified; for a binary mean, the unresolved outcomes can range over their logical support. | Uses response/missingness status only; no sequential guarantee. | No sensitivity axis is required for worst-case bounds. TrajCert reports unresolved-as-harm and endpoint-only PIS; merging the trajectory to `K=1` removes timing information (`tau=0`) while retaining the declared `rho` constraint. |
+| Callback/nonresponse adjustment ([Alho, 1990](https://doi.org/10.1093/biomet/77.3.617); [Miao et al., 2025](https://doi.org/10.1093/jrsssb/qkae097)) | Alho uses respondent data and callback attempts under a logistic response-propensity model. Miao et al. use callback data under a stableness-of-resistance assumption to identify the joint outcome/response law. | Alho estimates population moments by propensity weighting; Miao et al. establish identification under their callback restriction and develop semiparametric estimators. These rely on callback/contact-attempt structure. | Callback order is observed, but elapsed categorical adjudication-path information is not the target; neither method gives TrajCert's anytime projection. | Alho's logistic response model and Miao et al.'s resistance restriction are not a `rho` scale. Callback estimators are not a special case of TrajCert without additional equivalence assumptions. |
+| Informatively coarsened data ([Shardell & El-Kamary, 2009](https://doi.org/10.1080/10543400903242779)) | Coarsened outcome patterns, including interval censoring and dropout, analyzed under alternative coarsening mechanisms. | Pattern-mixture sensitivity analysis for outcome quantities under the specified coarsening models; not the sharp binary terminal-risk interval proved here. | Directly addresses informative coarsening patterns, but not a time-uniform risk certificate. | This is a close conceptual neighbor on coarsening and sensitivity. Its pattern-mixture restrictions are not a fixed mutual-information budget on terminal harm and a categorical resolution path. |
+| Pattern-mixture sensitivity ([Little, 1993](https://doi.org/10.1080/01621459.1993.10594302)) | Observed outcomes grouped by missingness pattern; each pattern's outcome distribution is modeled and missing-pattern distributions require assumptions or sensitivity restrictions. | A fixed pattern-mixture model can yield point estimates; allowing a set of sensitivity values yields a union/set of possible estimands. | Patterns may encode repeated visits but need not encode ordered resolution bands; not time-uniform by itself. | Parameters such as pattern-specific location shifts or distributional restrictions differ from the path-information budget. TrajCert does not claim to subsume general pattern-mixture models. |
+| Bounded selection sensitivity ([Kline & Santos, 2013](https://doi.org/10.3982/QE176)) | Observed outcomes, missingness, and covariates; selection is bounded using the maximum Kolmogorov–Smirnov distance between missing and observed outcome distributions conditional on covariates. | Derives sharp bounds for conditional quantile approximations under its selection restriction. | No categorical resolution trajectory or time-uniform inference. | A useful sensitivity-analysis comparison, but its discrepancy measure and quantile target differ from TrajCert's path-information budget and terminal-risk certificate. |
+| Information-anchored sensitivity ([Cro, Carpenter & Kenward, 2019](https://doi.org/10.1111/rssa.12423)) | Longitudinal clinical-trial outcomes with controlled/reference-based multiple imputation and a primary analysis model. | Studies how sensitivity assumptions affect information/variance for the treatment-effect estimator; it is not a latent-risk identification region under a mutual-information constraint. | Uses visit/deviation patterns, not a categorical resolution-path risk certificate; not an anytime-valid procedure. | Its “information” is inferential precision anchoring, not Shannon `I(L;J*)`. It is a nearby naming/interpretation issue, not the same constraint. |
+| Mutual-information sensitivity for incomplete outcomes | A targeted primary-source search for a direct constraint on `I(L;J*)` in this finite-resolution censoring model did not identify an equivalent formulation. This search result is not proof that no such work exists. | No novelty claim follows from the search absence. | — | Keep the contribution claim confined to the exact model and proved results here; cite any directly equivalent work found during manuscript review and revise the comparison. |
+| Anytime-valid inference ([Howard et al., 2021](https://doi.org/10.1214/20-AOS1991); [Johari et al., 2022](https://doi.org/10.1287/opre.2021.2135)) | Sequential observations under their stated martingale, boundedness, or experimental assumptions. | Confidence sequences or always-valid tests quantify uncertainty for an observable target; they do not by themselves identify an unobserved terminal risk under informative resolution. | Explicitly time-uniform/always-valid, but not trajectory-sensitive latent-risk identification. | No `rho` sensitivity model. TrajCert uses an observable-law confidence sequence as an input to a conservative PIS projection; the projection and its scope require their own proof. |
+| Project legacy bandwise odds-ratio comparator | Same synthetic observable path cells as the target method, with a bandwise odds-ratio sensitivity restriction. | Produces a comparator bound conditional on its odds-ratio model; it is not the PIS sharp set. | Retains partition dependence but has no sequential confidence guarantee. | Its odds-ratio parameter is kept separate from `rho`; no universal conversion is asserted. It is a planned in-repository comparator rather than evidence that either model nests the other. |
+
+The scoped primary-source comparison supports only this narrow contribution statement: for the stated finite categorical resolution model, TrajCert derives an exact one-dimensional sharp latent-risk set under a fixed path-information budget, characterizes its compatibility floor and deterministic-coarsening behavior, gives conditions under which retaining informative categorical resolution states strictly lowers the sharp risk upper endpoint, and proves a conservative time-uniform projection from observable-law confidence sequences to a local latent-risk certificate. Informative-coarsening pattern-mixture methods are a close conceptual neighbor and are explicitly included above. This search does not establish that the ingredients are individually new, that no equivalent formulation exists, or that this is the first method of its kind.
 
 # 3. Formal Observation and Mathematical Contract
 
@@ -274,6 +296,10 @@ The finest trajectory representation $J^*$ is fixed before corresponding outcome
 $$
 \boxed{I(L;J^*)\le\rho.}
 $$
+
+`rho` is an assumption axis measured in nats, not a quantity estimated or calibrated by this study. Increasing `rho` permits stronger dependence between latent error `L` and the full finest-resolution path `J*`, so the compatible latent-risk set can stay the same or widen; decreasing `rho` imposes a stronger restriction and can make the observable law incompatible. For an observed partition, compatibility requires `rho >= rho_min`, where `rho_min = tau_Pi` under the conditions in §3.5. A negative `rho - rho_min` margin therefore means `MODEL_INCOMPATIBLE`, not a value to clip or omit.
+
+Practical elicitation is application-specific and is not solved here. A future user could elicit a range of plausible associations between terminal error and resolution paths from domain experts, or estimate such associations in an independently adjudicated validation sample, translate each candidate joint law into `I(L;J*)` in nats, and preregister a range of `rho` values. Any such exercise must account for sampling uncertainty and the correspondence between the sample and deployed process. The present configured grid is a mathematical sensitivity sweep; it is not asserted to be realistic, calibrated, validated, or operationally plausible.
 
 Every analysis partition is a deterministic coarsening
 
@@ -672,7 +698,7 @@ sequential:
     acceptance_upper_limit: 0.06
 
   utility:
-    streams: 500
+    streams: 6000
     max_events: 2000
     checkpoint_every: 50
     rho: [0.05, 0.10, 0.20]
@@ -736,7 +762,7 @@ The following configuration-adjacent rules are mandatory:
 
 ## 4.1 Dependency-lock generation and installation
 
-The canonical direct dependency declaration is `pyproject.toml`; `requirements.lock` is generated inside the authoritative Python 3.13.15 container using exactly:
+The canonical direct dependency declaration is `pyproject.toml`; `requirements.lock` is generated inside the authoritative Python 3.13.12 environment using exactly:
 
 ```text
 python -m pip install "pip-tools==7.6.0"
@@ -1026,45 +1052,45 @@ If the raw dataset differs from documented expectations:
 6. if a required scientific semantic cannot be established from the raw source, mark the dataset `INELIGIBLE`;
 7. never silently substitute an unrelated timestamp, derived pseudo-client, reconstructed verdict, or inferred terminal status.
 
-Current real-trajectory planning status is exactly:
+TrajCert does not bundle a real-world dataset. Its primary experiment inputs are synthetic laws generated from the repository's configuration. The optional HITL-IoT retrospective replay reads an external CSV at a machine-specific configured path; `data/raw` is a symlink to external shared data, not a repository-owned dataset. Its current evidence status is:
 
 ```text
-CONFIRMATORY_GENERALIZATION_EXECUTED
+DIAGNOSTIC_REPLAY_ONLY; EXTERNAL_VALIDATION_NOT_ESTABLISHED
 ```
 
-Confirmatory identity/theorem execution continues to use the synthetic benchmark defined under `laws`; the synthetic generator remains authoritative there, so generated and expected probability tables must agree within deterministic numerical tolerance. `Real-Trajectory Validation` is a separate, genuinely executable GENERALIZATION experiment layered on top of that synthetic core; it never substitutes for or modifies the synthetic identity checks.
+The audited raw CSV was present and matched the configured SHA-256, but its upstream release identity is not independently verified. The source repository's [changelog](https://github.com/abubakarwakili9/HITL-IoT--Human-in-the-Loop-Intrusion-Detection-Dataset/blob/main/CHANGELOG.md) says generation is reproducible from seed 42; its annotation protocol and primary publication are not available in the checked-out source, and its citation metadata contains placeholder DOI text. The project has not independently established that the recorded rows are real human observations. The CSV is therefore retained as a DIAGNOSTIC retrospective latency replay, not as external empirical validation or confirmatory evidence. The SHA-256 identifies the audited file bytes; it does not establish an upstream release or annotation provenance.
 
-A real study is eligible only if the same action unit has:
+An external generalization study is eligible only if the same action unit has:
 
 * immutable event identifier;
 * issue timestamp;
 * automatic-action channel;
 * adjudication completion timestamp;
 * binary correctness verdict;
-* operationally justified terminal horizon;
+* a prespecified terminal horizon with a justified operational interpretation;
 * explicit unresolved-at-horizon versus missing-logging distinction;
 * stable detector/action-policy/adjudication/logging regime;
 * provenance proving adjudication time is not merely an event/capture timestamp.
 
-If any required element must be fabricated or inferred from an unrelated timestamp, the source is ineligible.
+If any required element must be fabricated or inferred from an unrelated timestamp, the source is ineligible for generalization. Here `decision_time` is a recorded elapsed latency, but the source does not independently establish an operational censoring SLA or a real human observation process. The configured 15/30/60-second cutoffs are analysis horizons, not deployment service levels.
 
-`Real-Trajectory Validation` uses **HITL-IoT** (Wakili et al., *HITL-IoT: Human-in-the-Loop Intrusion Detection Dataset*, Zenodo, DOI `10.5281/zenodo.17862334`, pinned by SHA-256 checksum of the released `HITL-IoT_dataset.csv`). Its 127,845 network flows satisfy the eligibility list above as follows, using only the dataset's own recorded fields (never a fabricated or unrelated substitute):
+`Real-Trajectory Validation` uses the optional externally supplied **HITL-IoT** file (SHA-256 `162121f804c2e177dddae4fb9c91e70045aaccaa6e918adde25fc7964acb0c04`) for a retrospective replay. Direct raw inspection in the audited environment confirms 127,845 flows and the configured schema, but those counts do not establish the human-annotation provenance. This file is not bundled with TrajCert. Its fields support only the following restricted description:
 
-* immutable event identifier: the flow's `(timestamp, src_mac, dst_ip, src_port, dst_port)` tuple (verified unique in the raw release);
-* issue timestamp: `timestamp`;
-* automatic-action channel: the dataset's recorded `ml_prediction`, the sole automatic classifier decision present per flow;
-* adjudication completion timestamp: `decision_time`, the analyst's recorded decision latency in seconds, distinct from `timestamp` and never conflated with it;
+* observed flow key: `(timestamp, src_mac, dst_ip, src_port, dst_port)` (verified unique in the reviewed cohort);
+* flow timestamp: `timestamp`;
+* recorded classifier decision: `ml_prediction`;
+* recorded elapsed decision latency: `decision_time`, documented by the release as seconds taken per decision; no wall-clock adjudication-completion timestamp is provided;
 * binary correctness verdict: `L = (ml_prediction != is_attack)`, computed from the dataset's own ground-truth `is_attack` label, never from the analyst's `human_decision`;
-* operationally justified terminal horizon: `H = 30` seconds (primary), `H = 15` and `H = 60` seconds (sensitivity); see §18.14;
-* explicit unresolved-at-horizon versus missing-logging distinction: only the `human_reviewed = true` cohort (10,227 of 127,845 flows) is eligible; `human_reviewed = false` means "not selected for annotation," never "unresolved," and those flows are excluded from the trajectory cohort entirely, not folded into unresolved mass;
-* stable regime: one recorded automatic-prediction channel; analyst expertise (`expert` / `intermediate` / `novice`) is preserved as an explicit stratum rather than pooled away;
-* provenance: `decision_time` is a distinct dataset field from `timestamp`, documented by the dataset's own annotation protocol as analyst decision latency, not a network-capture artifact.
+* analysis horizon: 30 seconds for the configured primary replay, with 15 and 60 seconds as sensitivity cutoffs; none is an operational SLA;
+* cohort boundary: only `human_reviewed = true` rows (10,227 of 127,845) enter the replay; `human_reviewed = false` means not selected for annotation, never unresolved;
+* strata: 12 recorded device labels and three expertise labels are descriptive groups; `annotator_id` contains expertise categories rather than unique annotator identities, and device labels are not established independent physical deployments;
+* correctness: $L=(ml_prediction\ne is_attack)$ is a retrospective classifier-error label, not the analyst's decision correctness.
 
-Eligibility is computed once during `trajcert preprocess hitl-iot`, which records candidate/annotated/eligible/excluded counts and excluded-row reasons (`NOT_HUMAN_ANNOTATED`, `MISSING_GROUND_TRUTH`, `MISSING_AUTOMATIC_PREDICTION`, `INVALID_DEVICE_IDENTITY`, `INVALID_DECISION_LATENCY`, `DUPLICATE_ANNOTATION`) in a persisted eligibility report; on the pinned release all five data-quality exclusions are zero and the full annotated cohort (10,227 flows) is eligible.
+The persisted documented-versus-observed inventory includes ground-truth attack counts, human-reviewed counts, observed timestamp range, and attack-specific model-error counts and rates split by review status. The diagnostic result table carries the four attack-cohort counts and two rates alongside each replay result. The inventory reports `OBSERVED_DEVIATION` because the raw release has 19,177 positive ground-truth labels versus the README's 19,215; do not force the observed value to the published count. The reviewed subset is selective: direct inspection found 279 classifier errors among 1,645 reviewed attack rows (16.96%), versus 1,073 among 17,532 unreviewed attack rows (6.12%); no benign-row classifier errors occur in either group. These data describe selection and prevent population-level generalization from the reviewed subset.
 
-Fixed-horizon censoring is administrative, not a claim about naturally unresolved operational incidents: for a chosen horizon $H$, a flow with `decision_time <= H` is resolved and its correctness `L` is observable; a flow with `decision_time > H` is `retrospective fixed-horizon empirical trajectory validation` unresolved-through-$H$, and its `L` is withheld from the operational summary — it remains available only to the hidden empirical oracle (§18.14, §21.12). Changing the hidden `L` of any flow with `decision_time > H` while holding everything observable through $H$ fixed leaves the operational certificate unchanged by construction.
+For analysis only, the replay treats `decision_time <= H` as resolved and `decision_time > H` as censored through $H$. The hidden-error-label isolation test verifies this computation, but it cannot turn the retrospective cutoff into natural operational censoring. The flow cohort is ordered over January 15–21, 2024; the current analysis does not establish independent operational streams or model temporal dependence.
 
-This real study is layered on top of, and does not alter, the synthetic confirmatory registry.
+The replay does not alter or broaden the synthetic confirmatory claims. A real-human generalization study remains future work and requires a source with verifiable annotation methods, actual adjudication timing semantics, a justified horizon, and a defensible independent unit.
 
 # 7. Baseline and Comparator Contracts
 
@@ -1546,7 +1572,8 @@ The last uses the exact binary maximum-information budget $\log 2$ and removes t
 | `Latent error risk`                             | $\theta=A+u$                                  | lower safer                              |
 | `Observed timing information`                   | $\tau$                                        | descriptive                              |
 | `Conditional timing gain`                       | $\Delta\tau$                                  | larger indicates more timing information |
-| `Minimum compatible sensitivity budget`         | $\tau$                                        | descriptive                              |
+| `Minimum compatible sensitivity budget`         | $\rho_{\min}=\tau_\Pi$                       | descriptive; compatibility requires $\rho\ge\rho_{\min}$ |
+| `Sensitivity compatibility margin`             | $\rho-\rho_{\min}$                           | nats; negative means model-incompatible |
 | `Minimum-information risk`                      | $\theta^\dagger$                              | lower safer                              |
 | `Risk lower bound`                              | $A+u_L$                                       | descriptive                              |
 | `Risk upper bound`                              | $A+u_U$                                       | lower better                             |
@@ -2225,7 +2252,7 @@ For one comparison:
 7. for confidence level $1-\alpha$, use quantiles $\alpha/2$ and $1-\alpha/2$;
 8. quantiles use linear interpolation at index $(B-1)q$.
 
-### Sign-flip test
+### Monte Carlo sign-flip test
 
 Define
 
@@ -2266,6 +2293,35 @@ p=
 1+B
 }.
 $$
+
+This is a Monte Carlo sign-flip test of the one-sided paired-mean null
+$H_0:E[D]\le 0$ against $E[D]>0$; it is not justified by randomized assignment of
+methods. Finite-sample exactness/super-uniformity requires the joint paired differences
+to be invariant under independent sign changes under the null (for example, independent
+differences individually symmetric about zero). The configured synthetic-law design
+does not impose that symmetry, so the test is **not claimed to be finite-sample exact**.
+
+The same basic sign-flipping test is asymptotically valid for independent contributions
+with $E[D_i]\le 0$, finite variances, the Lindeberg condition, and a positive limiting
+average variance; this follows from Theorem 1 and Corollary 1 of Hemerik, Goeman, and
+Finos (2020). In each fixed utility condition, independently generated stream-level
+paired differences are IID and bounded (certified-fraction and risk differences in
+$[-1,1]$; time-to-certification differences in $[-2001,2001]$), so finite moments and
+Lindeberg hold; nondegenerate conditions have positive variance. Degenerate
+nonpositive differences cannot yield a favorable rejection. Thus the implemented
+one-sided p-values are **asymptotically valid**, not finite-sample exact, under the
+stream-level IID model. The 6,000-stream count is selected by the separate complete-gate
+power design; the asymptotic theorem does not establish a finite-sample type-I error
+bound at $n=6{,}000$.
+
+The 20,000 random sign draws plus the observed statistic form 20,001 Monte Carlo
+reference values, matching the fixed-transformation asymptotic result in that paper.
+The plus-one tail count is conservative on ties. Rho-specific p-values are dependent
+because they reuse streams; Holm permits arbitrary dependence **provided each input
+p-value is valid under its null**. Here validity is asymptotic under the assumptions
+above, so the fixed 54-test Holm family has asymptotic family-wise error control, not a
+finite-sample guarantee from sign symmetry. The proof and source details are recorded
+in [docs/.audit/sign-flip-validity.md](.audit/sign-flip-validity.md).
 
 ### Effect-size edge cases
 
@@ -2797,7 +2853,7 @@ TrajCert/
 │   │   │   # Nine one-at-a-time failure-boundary axes.
 │   │   │
 │   │   ├── real-trajectory-validation/
-│   │   │   # Empirical GENERALIZATION check on HITL-IoT human adjudication trajectories.
+│   │   │   # DIAGNOSTIC retrospective replay of the HITL-IoT recorded latency field.
 │   │   │
 │   │   ├── foreign-information-negative-control/
 │   │   │   # DIAGNOSTIC: true/foreign/naive-pooled negative-control comparison.
@@ -3354,7 +3410,7 @@ Nulls sort before non-null values; strings sort lexicographically by Unicode cod
 
 `cell_plan_digest` is SHA-256 of the canonical JSON object for one row.
 
-Dataset manifest:
+Dataset manifest (for external sources, `source_version` may be null when no release identity is verifiable; the raw source checksum remains the byte-level identity):
 
 ```text
 dataset_name
@@ -3364,7 +3420,7 @@ generator_code_digest
 source_version
 source_checksum
 license_or_permission
-official_documentation_reference
+source_documentation_reference
 primary_publication_reference
 event_semantics
 label_semantics
@@ -3869,12 +3925,14 @@ Coverage recovery uses the configured coverage seed interval and batch size.
 
 Utility recovery uses the configured utility interval and batch size.
 
-The current contracts yield:
+For the current configuration, the batch counts are derived as `ceil(streams / batch_size)`:
 
 ```text
 coverage batches = 50
-utility batches = 10
+utility batches = ceil(6000 / 50) = 120
 ```
+
+The sequential utility plan remains 18 law/rho experiment cells and 108,000 law/rho-cell stream uses. Because the event-stream seed namespace omits rho, each law reuses the same 6,000 deterministic event streams across its three rho values, for 36,000 distinct law/seed event ledgers overall. Within each cell, endpoint-only reuses each same stream artifact.
 
 Each checkpoint records:
 
@@ -4087,7 +4145,7 @@ The plan defines the executable experiment families and their expected expansion
 | Comparator reduction                    | Callback-Model Reduction Falsification     | CONFIRMATORY     | 12 finest-partition laws               |        12 |
 | Comparator reduction                    | Generic Information-Optimization Reduction | CONFIRMATORY     | 12 finest-partition laws               |        12 |
 | Partition and timing mechanism          | Partition Coherence                        | CONFIRMATORY     | 6 laws × 3 pairs × 3 offsets           |        54 |
-| Partition and timing mechanism          | Same Endpoint, Different Timing            | ABLATION         | 4 partitions × 5 rho paired-law cells  |        20 |
+| Partition and timing mechanism          | Same Endpoint, Different Timing            | ABLATION         | 4 partitions × 6 rho paired-law cells  |        24 |
 | Partition and timing mechanism          | Strict Timing Gain                         | CONFIRMATORY     | 6 cases × 3 offsets                    |        18 |
 | Compatibility, sharpness, and safety    | Compatibility Floor Behavior               | CONFIRMATORY     | 12 laws × 2 partitions                 |        24 |
 | Compatibility, sharpness, and safety    | Sharpness Against Generic Oracle           | CONFIRMATORY     | 10 laws × 4 partitions                 |        40 |
@@ -4097,7 +4155,7 @@ The plan defines the executable experiment families and their expected expansion
 | Utility analysis                        | Population Sensitivity Utility             | ROBUSTNESS       | 6 laws × 4 partitions × 15 rho         |       360 |
 | Utility analysis                        | Sequential Sensitivity Utility             | ROBUSTNESS       | 6 laws × 3 rho                         |        18 |
 | Failure-boundary analysis               | Failure Boundary Atlas                     | FAILURE_BOUNDARY | 9 axes × 7 levels                      |        63 |
-| Real-trajectory generalization          | Real-Trajectory Validation                 | GENERALIZATION   | HITL-IoT: pooled×3 horizons×4 partitions + 12 devices×4 partitions + 3 expertise×4 partitions |        72 |
+| HITL-IoT latency replay                 | Real-Trajectory Validation                 | DIAGNOSTIC       | Reviewed flows: pooled×3 horizons×4 partitions + 12 recorded device labels×4 partitions + 3 expertise labels×4 partitions |        72 |
 | Foreign-information diagnostic          | Foreign-Information Negative Control       | DIAGNOSTIC       | 12 laws × 4 partitions × 5 offsets     |       240 |
 | Computational scaling                   | Computational Scaling                      | VALIDATION       | 8 K values                             |         8 |
 | Statistical synthesis                   | Statistical Synthesis                      | VALIDATION       | deterministic synthesis                |         1 |
@@ -4335,7 +4393,7 @@ If an existing comparator is found to reproduce a TrajCert result at a tested se
 3 refinement offsets
 ```
 
-`Same Endpoint, Different Timing` consists of **20 paired-law semantic cells**, not 40 separate law cells.
+`Same Endpoint, Different Timing` consists of **24 paired-law semantic cells**, not 48 separate law cells.
 
 Each cell coordinate is:
 
@@ -4709,7 +4767,7 @@ true rate sitting exactly at the nominal $\delta=0.05$. Nothing else is relaxed:
 events, the same checkpoint grid, the same four method labels, the same comparators and the same
 `acceptance_upper_limit` apply, and only the Monte Carlo replicate count changes.
 
-The realized time-uniform violation rate is a first-class reported quantity, not a diagnostic. For every primary cell the number of streams whose running simultaneous region became empty is counted, and that count is reported with the exact one-sided Clopper-Pearson upper limit at `sequential.coverage.clopper_pearson_confidence`, by exactly the same procedure that bounds every other method failure rate. The confidence-sequence construction itself appears as a method row alongside `TrajCert`, `Time-uniform observable-law projection`, `Repeated-static monitoring negative control` and `Ignorable-delay anytime reference`, together with its independent-stream count, empirical violation rate, exact upper limit and criterion verdict, so that the realized violation rate of the construction is directly comparable, row by row, with the certification failure rates of the methods that consume it.
+For every primary cell the number of streams whose running simultaneous region became empty is counted and reported with the exact one-sided Clopper-Pearson upper limit at `sequential.coverage.clopper_pearson_confidence`. These are pointwise per-condition diagnostics: the twelve conditionwise intervals do not form a 95% familywise statement, and the campaign has no across-condition multiplicity or power design. Report the independent-stream count, empirical violation rate, exact upper limit and criterion verdict by condition. Treat these results as implementation checks and potential theorem-falsification evidence under each declared stress law. Passing every per-condition gate does not establish a joint campaign-level coverage probability. The confidence-sequence construction appears as a method row alongside `TrajCert`, `Time-uniform observable-law projection`, `Repeated-static monitoring negative control` and `Ignorable-delay anytime reference`, with its own condition-specific quantities.
 
 The time-uniform construction that supplies the per-category region is fixed: the per-category Jeffreys beta-binomial mixture confidence sequence of §9.2 at the union-bound allocation $\alpha_j=\delta/d$. It is a single fixed scientific construction with no configuration knob — `confidence` carries only `anytime_delta`, `level` and `alpha`. No alternative construction, component shape, weight vector or joint concentration can be selected from the configuration file, so none can be selected after seeing an outcome. The Jeffreys shape parameter is the $\frac12$ written explicitly in the §9.2 formula: a mathematical constant of the fixed construction, hardcoded in the construction code and never an editable configuration value.
 
@@ -4825,9 +4883,9 @@ Incompatible rho values remain visible but cannot count as materiality successes
 
 ### Sequential utility
 
-For each law/rho condition, 8-band and endpoint-only methods use the same underlying finest-path streams.
+For each law/rho condition, 8-band and endpoint-only methods use the same underlying finest-path streams. Within each law, event-stream seeds are also shared across rho because the event-stream namespace excludes rho. This common-stream reuse makes the rho-specific tests dependent. Holm adjustment permits arbitrary dependence when each input p-value is valid; here individual sign-flip p-values are asymptotically valid under the IID/bounded stream-level assumptions in Section 9.9, so family-wise control is asymptotic rather than a finite-sample symmetry guarantee. The power design uses one designated rho per supporting law and does not assume independence across rho conditions.
 
-Exactly 500 streams are used.
+Exactly `sequential.utility.streams` streams are used. The final configured value is 6,000 (see the pre-campaign precision and power analysis in `docs/audit/Sequential Utility Power Design.md`). The separate planning alternative is a seven-percentage-point paired gain, selected as a prespecified methodological design target two points above the unchanged five-point observed-effect materiality floor; it is not claimed to be an empirically validated domain threshold.
 
 All three practical metrics generate paired inference and remain in the 54-test Holm family.
 
@@ -4899,7 +4957,9 @@ For Table 11:
 ## 18.11 Planned nonapplicabilities
 
 No experiment in the catalog is currently a planned zero-cell nonapplicability. `Real-Trajectory
-Validation` is a fully executable GENERALIZATION experiment; see §18.14 and §21.12.
+Validation` is a fully executable DIAGNOSTIC replay; it provides no external generalization claim
+until the dataset's human-annotation provenance and operational semantics are independently
+established (§6, §18.14, §21.12).
 `Foreign-Information Negative Control` is a fully executable DIAGNOSTIC experiment; see §18.13 and
 §21.13.
 
@@ -5012,10 +5072,12 @@ peak_memory_mib =
 
 Empirical slopes are descriptive only.
 
-## 18.14 Real-Trajectory Validation
+## 18.14 HITL-IoT Retrospective Latency Replay
 
-Dataset: HITL-IoT (§6), pinned by SHA-256 checksum; see the eligibility and censoring protocol in
-§6 for the full field mapping, exclusion accounting, and leakage-isolation contract.
+Dataset: checksum-pinned HITL-IoT (§6). This is a descriptive, diagnostic replay of a reviewed
+subset with recorded elapsed decision latency. It does not validate real human adjudication or
+operational generalization. The horizon and strata are analysis choices, not independent deployment
+units or service-level requirements.
 
 Coordinates (72 cells total, purposeful and bounded rather than a full Cartesian sweep):
 
@@ -5064,10 +5126,11 @@ tau is computed, not assumed positive
 rho_min_point and oracle_containment_at_tau are computed, not assumed to certify or to contain theta_true
 ```
 
-`Real-Trajectory Validation` never trains a detector: `ml_prediction` is the dataset's own
-recorded automatic decision. No hidden label from a `decision_time > H` event enters any
-observable quantity, coordinate selection, or rho selection (§6, §18 architecture invariant,
-enforced by a dedicated leakage-invariance test).
+`Real-Trajectory Validation` never trains a detector: `ml_prediction` is the dataset's recorded
+classifier output. No hidden label from a `decision_time > H` event enters an observable quantity,
+coordinate selection, or rho selection (§6, §18 architecture invariant, enforced by a dedicated
+leakage-invariance test). This verifies the replay implementation only; it does not validate natural
+censoring, annotation provenance, or temporal independence.
 
 ## 18.15 Statistical synthesis
 
@@ -5627,9 +5690,11 @@ Support:
 
 ```text
 all hand cases pass
-all primary TrajCert stress cases satisfy CP acceptance
+all primary TrajCert stress cases satisfy their pointwise per-condition CP acceptance rule
 no anti-conservative optimizer failure
 ```
+
+This is a conditionwise implementation/falsification criterion, not a familywise 95% claim across the twelve stress cells. No campaign-wide multiplicity or power procedure is prespecified.
 
 Any primary stress failure yields:
 
@@ -5684,6 +5749,8 @@ all 54 Holm-family tests
 ```
 
 A law qualifies only by the certified-update-fraction rule in Section 18.9.
+
+The prospective design target is 80% complete three-law-gate power at a paired gain of 0.07. The value 0.07 was fixed before campaign execution as a rounded methodological sensitivity informed by the pre-campaign precision/power analysis. It is not an empirically validated domain threshold, a claimed minimum worthwhile application effect, or evidence of effectiveness. The separate observed practical-effect filter remains 0.05. The configured 6,000 streams give 83.40% power under the conservative paired design model in `docs/audit/Sequential Utility Power Design.md`; this power calculation does not establish finite-sample exactness of the sign-flip p-values.
 
 Support:
 
@@ -5746,31 +5813,25 @@ Consequently a foreign client, action channel, or epoch cannot enter a local
 bound computation; such an input fails at the inference boundary as a
 data-integrity error rather than being silently aggregated.
 
-## 21.12 Real-Trajectory Value
+## 21.12 HITL-IoT Replay Scope
 
-Design: `Real-Trajectory Validation` (§18.14) evaluates this claim empirically on HITL-IoT (§6) —
-genuine human adjudication latency, the dataset's own recorded automatic prediction, and its own
-ground-truth label — rather than only theoretically/synthetically. It is a genuine, executable,
-empirical GENERALIZATION layer over the existing synthetic confirmatory core; it replaces no
-theory and no synthetic identity check.
+`Real-Trajectory Validation` (§18.14) is `DIAGNOSTIC` evidence only. The configured file is
+checksum-valid, but its public repository describes generation from seed 42, does not include the
+linked annotation-protocol documents, and contains placeholder DOI metadata. The project has not
+independently verified that its annotations are real human observations. The reviewed cohort is also
+selective and differs in classifier-error prevalence from unreviewed attack rows (§6).
 
-Current state:
+The replay may be reported as a checksum-pinned, retrospective analysis of recorded classifier
+labels and latency fields. It cannot support claims about human adjudication, all HITL-IoT flows,
+physical-device populations, natural delayed outcomes, or operational deployment. No execution
+result is available yet; the configured experiment remains unexecuted until verified completion
+artifacts exist.
 
-```text
-PENDING_EXECUTION_EVIDENCE
-```
-
-This state is provisional pending the completed production execution and results audit. It must be
-replaced with one of the outcome states in §22, derived strictly from persisted evidence, once that
-run and audit are complete. No numerical result is asserted here in advance of that evidence.
-
-Allowed manuscript statement while `PENDING_EXECUTION_EVIDENCE`:
-
-> TrajCert is theoretically and synthetically evaluated for the adjudication-trajectory setting; a genuine empirical evaluation on real human adjudication trajectories (HITL-IoT) is implemented and executable, with results reported from verified persisted evidence.
-
-Real operational (live production-deployment) validation is not claimed regardless of this
-empirical generalization outcome: HITL-IoT is a released research dataset evaluated under
-retrospective, fixed-horizon censoring (§6), not a live operational ledger.
+External validation requires a separate source with independently documented collection and
+annotation methods, verified adjudication-time semantics, a defensible sampling frame, an
+operationally justified horizon, and an appropriate independent replication unit. The present
+HITL-IoT implementation can serve as a feasibility probe after those conditions are met, but it
+does not satisfy them now.
 
 ## 21.13 Foreign-Information Negative Control
 
@@ -6004,7 +6065,7 @@ Before reporting, reviewers verify:
 * **Identity/recovery:** no duplicate active semantic result; each reusable artifact has one producer; partial outputs never become active evidence; checkpoints never cross dependency incompatibility; stale descendants are removed; caches never become evidence.
 * **Evidence lineage:** every table/figure has stable machine-readable source data; exports use completed verified evidence only; `results/` contains no caches/debug/failures/invalid/stale/partial/checkpoint artifacts.
 * **Local validity:** the per-stream data-isolation invariant in Section 21.11 holds.
-* **Execution completeness:** all 1,422 planned cells are accounted for as executable-completed, planned-invalid, or zero-cell nonapplicable according to their contracts; no mandatory executable cell is missing.
+* **Execution completeness:** all 1,738 planned cells are accounted for as executable-completed, planned-invalid, or zero-cell nonapplicable according to their contracts; no mandatory executable cell is missing.
 
 This checklist guides review; it does not create a runtime artifact or block execution.
 
@@ -6047,7 +6108,7 @@ Successful earlier and unrelated experiment results remain active unless one of 
 
 `Real-Trajectory Validation` and `Foreign-Information Negative Control` are both fully executable,
 resumable, deterministic-coordinate experiments like every other direct-dispatch experiment in this
-table.
+table. The HITL-IoT replay remains diagnostic-only regardless of execution status.
 
 At no point does the operator choose:
 

@@ -69,6 +69,21 @@ def test_build_plan_production_reproduces_cell_total() -> None:
     assert plan.invalid_cells == 0
 
 
+def test_same_endpoint_timing_plan_uses_all_configured_rho_values() -> None:
+    config = _production_config()
+    cells = cells_for_experiment(build_plan(config), ExperimentName.SAME_ENDPOINT_DIFFERENT_TIMING)
+    coordinates = tuple(cell.identity.coordinates for cell in cells)
+
+    assert len(config.grids.partitions) == 4
+    assert len(config.grids.same_endpoint_rho) == 6
+    assert len(cells) == len(config.grids.partitions) * len(config.grids.same_endpoint_rho) == 24
+    assert {coordinate.rho for coordinate in coordinates} == set(config.grids.same_endpoint_rho)
+    assert len({coordinate.partition_name for coordinate in coordinates}) == 4
+    assert all(cell.executable for cell in cells)
+    keys = tuple(cell.identity.semantic_cell_key for cell in cells)
+    assert len(keys) == len(set(keys))
+
+
 def test_build_plan_is_deterministic() -> None:
     config = _production_config()
     first = build_plan(config)

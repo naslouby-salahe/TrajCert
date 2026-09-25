@@ -20,7 +20,10 @@ from trajcert.config import (
 from trajcert.constants import BINARY_MAX_INFORMATION_NATS
 from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
 from trajcert.data.partitions import build_partition, partition_name
-from trajcert.data.real_trajectories import HitlIotEligibleEvent
+from trajcert.data.real_trajectories import (
+    HitlIotEligibleEvent,
+    RealTrajectoryDatasetInventory,
+)
 from trajcert.data.summaries import summarize_full_law
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.anytime import (
@@ -67,6 +70,7 @@ from trajcert.types import (
     FailureBoundaryLevel,
     InequalityMargin,
     InformationNats,
+    InformationResidual,
     LawKey,
     LawName,
     Mass,
@@ -168,6 +172,8 @@ class RhoUtilityRow(DomainModel):
     metric_value: RiskValue | None = None
     compatibility_state: CompatibilityRegime | None = None
     tau: InformationNats | None = None
+    rho_min: InformationNats | None = None
+    rho_compatibility_margin: InformationResidual | None = None
     risk_upper: RiskValue | None = None
     identified_width: RiskValue | None = None
     complete_case_arrival_only: Probability | None = None
@@ -304,6 +310,8 @@ class RhoSensitivityFigureRow(DomainModel):
     law_name: LawName
     partition_name: PartitionName
     rho: SensitivityBudget
+    rho_min: InformationNats | None = None
+    rho_compatibility_margin: InformationResidual | None = None
     risk_upper: RiskValue | None
     compatibility_state: CompatibilityRegime
     rho_is_log2: SearchPredicate
@@ -420,6 +428,12 @@ def population_rho_utility_rows(
             metric_value=item.result.risk_upper,
             compatibility_state=item.result.compatibility_regime,
             tau=item.result.tau,
+            rho_min=item.result.tau,
+            rho_compatibility_margin=(
+                None
+                if item.result.tau is None
+                else item.result.sensitivity_budget - item.result.tau
+            ),
             risk_upper=item.result.risk_upper,
             identified_width=item.result.identified_width,
             complete_case_arrival_only=item.result.complete_case_arrival_only,
@@ -1215,6 +1229,10 @@ def _rho_sensitivity_rows(
             law_name=cell.identity.coordinates.synthetic_law_name or LawName(""),
             partition_name=_required_partition(cell),
             rho=result.sensitivity_budget,
+            rho_min=result.tau,
+            rho_compatibility_margin=(
+                None if result.tau is None else result.sensitivity_budget - result.tau
+            ),
             risk_upper=None if result.risk_upper is None else result.risk_upper,
             compatibility_state=result.compatibility_regime,
             rho_is_log2=abs(result.sensitivity_budget - log2_value)
@@ -1401,6 +1419,12 @@ class RealTrajectoryValidationRow(DomainModel):
     horizon_seconds: AgeUnit
     partition_name: PartitionName
     stratum_size: Count
+    reviewed_attack_rows: Count
+    reviewed_attack_model_error_rows: Count
+    reviewed_attack_model_error_rate: Probability | None
+    unreviewed_attack_rows: Count
+    unreviewed_attack_model_error_rows: Count
+    unreviewed_attack_model_error_rate: Probability | None
     resolved_fraction: Probability
     theta_true: Probability
     tau: InformationNats | None
@@ -1429,6 +1453,7 @@ class RealTrajectoryRefinementFigureRow(DomainModel):
 
 def real_trajectory_validation_rows(
     results: tuple[RealTrajectoryCellResult, ...],
+    inventory: RealTrajectoryDatasetInventory,
 ) -> tuple[RealTrajectoryValidationRow, ...]:
     rows: list[RealTrajectoryValidationRow] = []
     for result in results:
@@ -1440,6 +1465,12 @@ def real_trajectory_validation_rows(
                 horizon_seconds=result.horizon_seconds,
                 partition_name=result.partition_name,
                 stratum_size=result.accounting.stratum_size,
+                reviewed_attack_rows=inventory.reviewed_attack_rows,
+                reviewed_attack_model_error_rows=inventory.reviewed_attack_model_error_rows,
+                reviewed_attack_model_error_rate=inventory.reviewed_attack_model_error_rate,
+                unreviewed_attack_rows=inventory.unreviewed_attack_rows,
+                unreviewed_attack_model_error_rows=inventory.unreviewed_attack_model_error_rows,
+                unreviewed_attack_model_error_rate=inventory.unreviewed_attack_model_error_rate,
                 resolved_fraction=result.accounting.resolved_fraction,
                 theta_true=result.oracle.theta_true,
                 tau=result.tau,

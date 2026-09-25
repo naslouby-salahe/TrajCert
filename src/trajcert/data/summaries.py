@@ -90,26 +90,6 @@ def summarize_full_law(
     )
 
 
-def summarize_counts(
-    partition: TrajectoryPartition, counts: ObservableCounts, comparison_guard: ToleranceValue
-) -> ObservableSummary:
-    bands = partition.band_count
-    if len(counts.harmful_by_band) != bands or len(counts.correct_by_band) != bands:
-        raise InvalidScientificDataError(
-            "observable count vectors must match the partition band count"
-        )
-    total = counts.total
-    if total <= 0:
-        raise InvalidScientificDataError("observable counts must contain at least one event")
-    return summarize_observable_masses(
-        partition=partition,
-        harmful_by_band=np.array(counts.harmful_by_band, dtype=np.float64) / total,
-        correct_by_band=np.array(counts.correct_by_band, dtype=np.float64) / total,
-        unresolved_mass=counts.unresolved / total,
-        comparison_guard=comparison_guard,
-    )
-
-
 def coarsen_summary(
     summary: ObservableSummary,
     coarse_partition: TrajectoryPartition,

@@ -12,10 +12,8 @@ from trajcert.data.partitions import (
     partition_name,
 )
 from trajcert.data.summaries import (
-    ObservableCounts,
     ObservableSummary,
     coarsen_summary,
-    summarize_counts,
     summarize_full_law,
     summarize_observable_masses,
 )
@@ -159,9 +157,6 @@ def test_summary_helpers_reject_mismatched_inputs() -> None:
     )
     with pytest.raises(InvalidScientificDataError, match="resolution"):
         _ = summarize_full_law(partition, law, 1e-12)
-    invalid_counts = ObservableCounts(harmful_by_band=(1,), correct_by_band=(1,), unresolved=0)
-    with pytest.raises(InvalidScientificDataError, match="count vectors"):
-        _ = summarize_counts(partition, invalid_counts, 1e-12)
 
 
 @pytest.mark.parametrize(
@@ -185,25 +180,6 @@ def test_summarize_observable_masses_validates_mass(
             partition, np.array(harmful), np.array(correct), unresolved, 1e-12
         )
         assert summary.harmful_rate_by_band == (pytest.approx(0.2),)
-
-
-@pytest.mark.parametrize(
-    ("counts", "expected_total", "raises"),
-    [
-        (ObservableCounts(harmful_by_band=(1, 0), correct_by_band=(1, 2), unresolved=2), 6, False),
-        (ObservableCounts(harmful_by_band=(0, 0), correct_by_band=(0, 0), unresolved=0), 0, True),
-    ],
-)
-def test_summarize_counts_and_counts_total(
-    counts: ObservableCounts, expected_total: int, raises: bool
-) -> None:
-    partition = build_partition(2, 2, 1.0)
-    assert counts.total == expected_total
-    if raises:
-        with pytest.raises(InvalidScientificDataError, match="at least one"):
-            _ = summarize_counts(partition, counts, 1e-12)
-    else:
-        assert summarize_counts(partition, counts, 1e-12).total_mass == pytest.approx(1.0)
 
 
 def test_coarsen_summary_and_intervals(observable_summary: ObservableSummary) -> None:
