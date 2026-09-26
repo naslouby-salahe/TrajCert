@@ -1283,12 +1283,12 @@ def _declared_constant_names(path: Path) -> set[str]:
     return declared
 
 
-def _assignment_targets(statement: cst.BaseSmallStatement) -> tuple[cst.BaseExpression, ...]:
+def _assignment_targets(statement: cst.BaseSmallStatement) -> list[cst.BaseExpression]:
     if isinstance(statement, cst.Assign):
-        return tuple(item.target for item in statement.targets)
+        return [item.target for item in statement.targets]
     if isinstance(statement, cst.AnnAssign):
-        return (statement.target,)
-    return ()
+        return [statement.target]
+    return []
 
 
 def _contains_roadmap(node: cst.SimpleString) -> bool:
