@@ -734,7 +734,7 @@ failure_boundary:
 
 `PyYAML 6.0.3` is explicitly included because the authoritative configuration is YAML and that release supports CPython 3.13.
 
-`pip-tools 7.6.0` is the prescribed dependency-resolution tool. The dependency file is generated with hashes because `pip-compile --generate-hashes` is specifically intended to produce hash-checking requirements files.
+`uv.lock` is the canonical resolved dependency graph. `requirements.lock` is its hash-locked, all-extras export for pip-based CI and Nox installs. The export contains hashes so installation can verify each downloaded wheel and forbid source builds.
 
 The YAML stores configuration data only. Mathematical constants, derivations, algorithm procedures, validation conditions, deterministic ordering rules, reporting contracts, and claim semantics remain authoritative scientific or execution text outside YAML.
 
@@ -762,24 +762,24 @@ The following configuration-adjacent rules are mandatory:
 
 ## 4.1 Dependency-lock generation and installation
 
-The canonical direct dependency declaration is `pyproject.toml`; `requirements.lock` is generated inside the authoritative Python 3.13.12 environment using exactly:
+The canonical direct dependency declaration is `pyproject.toml`; `uv.lock` records the resolved graph, and `requirements.lock` is exported inside the authoritative Python 3.13.12 environment using exactly:
 
 ```text
-python -m pip install "pip-tools==7.6.0"
-python -m piptools compile \
-  --generate-hashes \
-  --resolver=backtracking \
-  --strip-extras \
-  --output-file=requirements.lock \
-  pyproject.toml
+uv lock
+uv export \
+  --locked \
+  --all-extras \
+  --no-emit-project \
+  --format requirements.txt \
+  --output-file requirements.lock
 ```
 
-Resolution uses the default public Python Package Index unless an explicitly documented organization mirror is required. The resulting `requirements.lock` is stored in the repository and becomes the authoritative transitive dependency artifact.
+Resolution uses the default public Python Package Index unless an explicitly documented organization mirror is required. Both lock artifacts are stored in the repository. CI and Nox consume the hashed `requirements.lock` export; it includes runtime and quality dependencies so installation never performs a second unpinned resolution.
 
 Authoritative installation is:
 
 ```text
-python -m pip install --require-hashes -r requirements.lock
+python -m pip install --only-binary :all: --require-hashes -r requirements.lock
 ```
 
 Scientific execution never re-resolves dependencies when a valid `requirements.lock` exists.

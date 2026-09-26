@@ -122,16 +122,14 @@ def test_intrinsic_search_failure_propagates_as_numerical_error(
         _ = project_upper_risk(envelope, 0.05, 1e-12, 1e-10, 1e-12, 128, 1e-6, 1)
 
 
-def test_arb_bound_helpers_return_infinities_for_indeterminate_values() -> None:
-    previous_precision = ctx.prec
-    ctx.prec = 128
-    try:
-        indeterminate = (arb(1e-300, 1e-250) / arb(1e-300)).log()
-        assert not indeterminate.is_finite()
-        assert projection_module.arb_lower(indeterminate) == -inf
-        assert projection_module.arb_upper(indeterminate) == inf
-    finally:
-        ctx.prec = previous_precision
+def test_arb_bound_helpers_return_infinities_for_indeterminate_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(ctx, "prec", 128)
+    indeterminate = (arb(1e-300, 1e-250) / arb(1e-300)).log()
+    assert not indeterminate.is_finite()
+    assert projection_module.arb_lower(indeterminate) == -inf
+    assert projection_module.arb_upper(indeterminate) == inf
 
 
 def test_mass_entropy_bounds_does_not_crash_on_near_degenerate_intervals() -> None:

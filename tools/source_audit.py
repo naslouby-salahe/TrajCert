@@ -174,6 +174,18 @@ class _WorkspaceIndex:
 
 
 _HOMOGENEOUS_SEQUENCE_PARTS = 2
+_ANNOTATED_PREFIX = "Annotated["
+_OPTIONAL_PREFIX = "Optional["
+_TUPLE_PREFIX = "tuple["
+_SEQUENCE_PREFIXES = (
+    _TUPLE_PREFIX,
+    "list[",
+    "set[",
+    "frozenset[",
+    "Sequence[",
+    "Iterable[",
+    "List[",
+)
 _INDEX_CACHE: dict[Path, _WorkspaceIndex] = {}
 _FILE_AUDIT_CACHE: dict[tuple[Path, int, int, bool], FileAudit] = {}
 _PARSED_MODULE_CACHE: dict[tuple[Path, int, int], cst.Module | None] = {}
@@ -201,10 +213,10 @@ def _resolve_kind(annotation_text: str, index: _WorkspaceIndex) -> str | None:
     simple = _simple_kind(text, index)
     if simple is not None:
         return simple
-    if text.startswith("Annotated[") and text.endswith("]"):
-        return _resolve_kind(_first_top_level_part(text[len("Annotated[") : -1]), index)
-    if text.startswith("Optional[") and text.endswith("]"):
-        return _resolve_kind(text[len("Optional[") : -1], index)
+    if text.startswith(_ANNOTATED_PREFIX) and text.endswith("]"):
+        return _resolve_kind(_first_top_level_part(text[len(_ANNOTATED_PREFIX) : -1]), index)
+    if text.startswith(_OPTIONAL_PREFIX) and text.endswith("]"):
+        return _resolve_kind(text[len(_OPTIONAL_PREFIX) : -1], index)
     if "|" in text:
         return _unanimous_kind([_resolve_kind(part, index) for part in _split_top_level(text, "|")])
     return None
@@ -262,30 +274,44 @@ def _first_top_level_part(text: str) -> str:
 
 
 def _sequence_element_text(annotation_text: str) -> str | None:
-    text = annotation_text.strip()
-    if text.startswith("Optional[") and text.endswith("]"):
-        text = text[len("Optional[") : -1]
+    text = _unwrap_optional_text(annotation_text.strip())
     if "|" in text:
-        parts = [part for part in _split_top_level(text, "|") if part.strip() not in {"None", ""}]
-        if len(parts) == 1 and parts[0].strip() != text.strip():
-            return _sequence_element_text(parts[0])
+        optional_member = _single_optional_union_member(text)
+        return None if optional_member is None else _sequence_element_text(optional_member)
+    return _container_element_text(text)
+
+
+def _unwrap_optional_text(text: str) -> str:
+    if text.startswith(_OPTIONAL_PREFIX) and text.endswith("]"):
+        return text[len(_OPTIONAL_PREFIX) : -1]
+    return text
+
+
+def _single_optional_union_member(text: str) -> str | None:
+    parts = [part for part in _split_top_level(text, "|") if part.strip() not in {"None", ""}]
+    if len(parts) == 1 and parts[0].strip() != text.strip():
+        return parts[0].strip()
+    return None
+
+
+def _container_element_text(text: str) -> str | None:
+    prefix = next(
+        (candidate for candidate in _SEQUENCE_PREFIXES if text.startswith(candidate)), None
+    )
+    if prefix is None or not text.endswith("]"):
         return None
-    for prefix in ("tuple[", "list[", "set[", "frozenset[", "Sequence[", "Iterable[", "List["):
-        if text.startswith(prefix) and text.endswith("]"):
-            inner = text[len(prefix) : -1]
-            parts = _split_top_level(inner, ",")
-            if len(parts) == 1:
-                return parts[0].strip()
-            if len(parts) == _HOMOGENEOUS_SEQUENCE_PARTS and parts[1].strip() == "...":
-                return parts[0].strip()
-            return None
+    parts = _split_top_level(text[len(prefix) : -1], ",")
+    if len(parts) == 1:
+        return parts[0].strip()
+    if len(parts) == _HOMOGENEOUS_SEQUENCE_PARTS and parts[1].strip() == "...":
+        return parts[0].strip()
     return None
 
 
 def _tuple_element_texts(annotation_text: str) -> tuple[str, ...] | None:
     text = annotation_text.strip()
-    if text.startswith("tuple[") and text.endswith("]"):
-        inner = text[len("tuple[") : -1]
+    if text.startswith(_TUPLE_PREFIX) and text.endswith("]"):
+        inner = text[len(_TUPLE_PREFIX) : -1]
         parts = _split_top_level(inner, ",")
         if len(parts) == _HOMOGENEOUS_SEQUENCE_PARTS and parts[1].strip() == "...":
             return None
@@ -487,11 +513,11 @@ def _resolve_text_kind(text: str, index: _WorkspaceIndex, seen: set[str]) -> str
 def _resolve_wrapper_kind(stripped: str, index: _WorkspaceIndex, seen: set[str]) -> str:
     if stripped.startswith("NewType(") and stripped.endswith(")"):
         return _new_type_kind(stripped, index, seen)
-    if stripped.startswith("Annotated[") and stripped.endswith("]"):
-        inner = _first_top_level_part(stripped[len("Annotated[") : -1])
+    if stripped.startswith(_ANNOTATED_PREFIX) and stripped.endswith("]"):
+        inner = _first_top_level_part(stripped[len(_ANNOTATED_PREFIX) : -1])
         return _resolve_text_kind(inner, index, seen)
-    if stripped.startswith("Optional[") and stripped.endswith("]"):
-        return _resolve_text_kind(stripped[len("Optional[") : -1], index, seen)
+    if stripped.startswith(_OPTIONAL_PREFIX) and stripped.endswith("]"):
+        return _resolve_text_kind(stripped[len(_OPTIONAL_PREFIX) : -1], index, seen)
     if "|" in stripped:
         return _union_text_kind(stripped, index, seen)
     return "other"
@@ -664,37 +690,52 @@ class _AuditVisitor(cst.CSTVisitor):
 
     def visit_Call(self, node: cst.Call) -> None:
         call = _qualified_name(node.func)
+        self._check_call_logging(call, node)
+        self._check_call_configuration(call, node)
+        self._check_call_row_conversion(call, node)
+        self._check_call_path_access(call, node)
+        self._check_call_cast(node)
+        self._check_scalar_conversion(node)
+
+    def _check_call_logging(self, call: str, node: cst.Call) -> None:
         if call == "print" and self.path.name != "cli.py":
             self._add(
                 RULE_LOGGING,
                 node,
                 "production output must use structured logging outside the CLI renderer",
             )
+
+    def _check_call_configuration(self, call: str, node: cst.Call) -> None:
         if call in {"yaml.safe_load", "yaml.load"}:
             self._add(RULE_CONFIG_YAML, node, "YAML may only be loaded by trajcert.config")
         if call in {"os.getenv", "os.environ.get"}:
             self._add(
                 RULE_CONFIG_ENV, node, "scientific configuration may not come from environment"
             )
+
+    def _check_call_row_conversion(self, call: str, node: cst.Call) -> None:
         if call.endswith(".to_dicts"):
             self._add(
                 RULE_UNTYPED,
                 node,
                 "Polars to_dicts() yields anonymous dict[str, Any] rows; use iter_rows()",
             )
+
+    def _check_call_path_access(self, call: str, node: cst.Call) -> None:
         if call in {"open", "Path.read_text", "Path.read_bytes"}:
             for argument in node.args:
                 if isinstance(argument.value, cst.SimpleString) and _contains_roadmap(
                     argument.value
                 ):
                     self._add(RULE_ROADMAP, node, "runtime roadmap access is forbidden")
+
+    def _check_call_cast(self, node: cst.Call) -> None:
         if isinstance(node.func, cst.Name) and node.func.value == "cast" and node.args:
             cast_target = node.args[0].value
             if _expression_text(cast_target) == "Any":
                 self._add(RULE_UNTYPED, node, "cast(Any, ...) is forbidden")
             else:
                 self._check_cast_target(cast_target, node)
-        self._check_scalar_conversion(node)
 
     def visit_Attribute(self, node: cst.Attribute) -> None:
         if node.attr.value != "value":
@@ -963,7 +1004,7 @@ class _AuditVisitor(cst.CSTVisitor):
             return self._annotation_of_expression(inner)
         if name == "enumerate" and len(positional) == 1:
             element = self._element_of(positional[0].value)
-            return None if element is None else f"tuple[int, {element}]"
+            return None if element is None else f"{_TUPLE_PREFIX}int, {element}]"
         if name == "zip" and positional:
             return self._zip_annotation(positional)
         if isinstance(expression.func, cst.Name):
@@ -974,7 +1015,7 @@ class _AuditVisitor(cst.CSTVisitor):
         elements = [self._element_of(argument.value) for argument in positional]
         if any(element is None for element in elements):
             return None
-        return "tuple[" + ", ".join(element for element in elements if element) + "]"
+        return _TUPLE_PREFIX + ", ".join(element for element in elements if element) + "]"
 
     def _element_of(self, expression: cst.BaseExpression) -> str | None:
         if isinstance(expression, cst.StarredElement):
@@ -1221,21 +1262,33 @@ def unused_exemptions(root: Path) -> tuple[str, ...]:
 def unused_constant_exemptions(root: Path) -> tuple[str, ...]:
     declared: set[str] = set()
     for path in audit_scope(root):
-        module = _parsed_module(path)
-        if module is None:
-            continue
-        for line in module.body:
-            if not isinstance(line, cst.SimpleStatementLine):
-                continue
-            for statement in line.body:
-                if isinstance(statement, cst.Assign):
-                    targets = tuple(item.target for item in statement.targets)
-                elif isinstance(statement, cst.AnnAssign):
-                    targets = (statement.target,)
-                else:
-                    continue
-                declared.update(target.value for target in targets if isinstance(target, cst.Name))
+        declared.update(_declared_constant_names(path))
     return tuple(sorted(set(_CONSTANT_NAME_EXEMPTIONS) - declared))
+
+
+def _declared_constant_names(path: Path) -> set[str]:
+    module = _parsed_module(path)
+    if module is None:
+        return set()
+    declared: set[str] = set()
+    for line in module.body:
+        if not isinstance(line, cst.SimpleStatementLine):
+            continue
+        for statement in line.body:
+            declared.update(
+                target.value
+                for target in _assignment_targets(statement)
+                if isinstance(target, cst.Name)
+            )
+    return declared
+
+
+def _assignment_targets(statement: cst.BaseSmallStatement) -> tuple[cst.BaseExpression, ...]:
+    if isinstance(statement, cst.Assign):
+        return tuple(item.target for item in statement.targets)
+    if isinstance(statement, cst.AnnAssign):
+        return (statement.target,)
+    return ()
 
 
 def _contains_roadmap(node: cst.SimpleString) -> bool:

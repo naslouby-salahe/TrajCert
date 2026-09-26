@@ -4,7 +4,6 @@ import nox
 
 _SRC = "src"
 _REQUIREMENTS_LOCK = "requirements.lock"
-_QUALITY_EXTRA = ".[quality]"
 
 
 @nox.session(reuse_venv=True)
@@ -43,5 +42,5 @@ def verify(session: nox.Session) -> None:
 
 
 def _install_quality_environment(session: nox.Session) -> None:
-    session.install("--require-hashes", "-r", _REQUIREMENTS_LOCK)
-    session.install(_QUALITY_EXTRA)
+    session.install("--only-binary", ":all:", "--require-hashes", "-r", _REQUIREMENTS_LOCK)
+    session.run("uv", "lock", "--check")

@@ -17,10 +17,10 @@ def xlogx(value: Vector) -> Vector: ...
 def xlogx(value: Probability | Vector) -> EntropyValue | Vector:
     if isinstance(value, np.ndarray):
         return -entr(value)
-    if value == 0.0:
-        return 0.0
     if value < 0.0:
         return inf
+    if value <= 0.0:
+        return 0.0
     return value * log(value)
 
 

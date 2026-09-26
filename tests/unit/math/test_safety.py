@@ -118,11 +118,12 @@ def test_safety_geometry_keeps_boundary_equality_in_the_higher_regime(
 def test_safety_geometry_rejects_risk_budgets_outside_the_closed_unit_interval(
     risk_budget: float,
 ) -> None:
+    observed = summary([0.2], [0.4], 0.4)
     with pytest.raises(
         InvalidScientificDataError,
         match=r"^risk budget must be finite and lie in \[0, 1\]$",
     ):
-        _ = assess_safety_geometry(summary([0.2], [0.4], 0.4), risk_budget)
+        _ = assess_safety_geometry(observed, risk_budget)
 
 
 @pytest.mark.parametrize("risk_budget", (0.0, 1.0))

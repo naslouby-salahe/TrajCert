@@ -429,6 +429,53 @@ def _coverage_checkpoint_violation_counts(
 
 
 @dataclass(frozen=True, slots=True)
+class _CoverageCheckpointUpdate:
+    method_failures: tuple[MethodFailureCount, ...]
+    eligible: bool
+    certified: bool
+    first_certified: MedianEventCount | None
+
+
+def _coverage_checkpoint_update(
+    state: CategoricalState,
+    partition: TrajectoryPartition,
+    running: CategoricalConfidenceRegion | None,
+    ignorable: IgnorableDelayResult,
+    sensitivity_budget: SensitivityBudget,
+    risk_budget: RiskBudget,
+    assumption_valid: SearchPredicate,
+    true_risk: RiskValue,
+) -> _CoverageCheckpointUpdate:
+    projection, failures = _coverage_checkpoint_violation_counts(
+        state,
+        partition,
+        running,
+        ignorable,
+        sensitivity_budget,
+        assumption_valid,
+        true_risk,
+    )
+    if projection is None:
+        return _CoverageCheckpointUpdate(failures, False, False, None)
+    config = active_config.get()
+    assessment = classify_certification(
+        state=state,
+        projection=projection,
+        sensitivity_budget=sensitivity_budget,
+        risk_budget=risk_budget,
+        minimum_matured_events=config.minimum_evidence.matured_events,
+        minimum_resolved_events=config.minimum_evidence.resolved_events,
+        comparison_guard=config.numerics.comparison_guard,
+    )
+    scientific_state = assessment.scientific_state
+    if scientific_state is None or scientific_state is ScientificState.INSUFFICIENT_EVIDENCE:
+        return _CoverageCheckpointUpdate(failures, False, False, None)
+    certified = scientific_state is ScientificState.CERTIFIED
+    first_certified: MedianEventCount | None = float(state.matured_count) if certified else None
+    return _CoverageCheckpointUpdate(failures, True, certified, first_certified)
+
+
+@dataclass(frozen=True, slots=True)
 class _AnytimeRegionUpdate:
     running: CategoricalConfidenceRegion | None
     ignorable: IgnorableDelayResult
@@ -508,7 +555,6 @@ def _coverage_stream_outcome(
     true_risk: RiskValue,
     stream_index: SeedIndex,
 ) -> CoverageStreamCertification:
-    config = active_config.get()
     ledger = generate_stochastic_ledger(
         parameters=parameters,
         partition=partition,
@@ -549,35 +595,24 @@ def _coverage_stream_outcome(
         failed.extend(regions.failures)
         if position % checkpoint_every != 0 and position != max_events:
             continue
-        projection, checkpoint_counts = _coverage_checkpoint_violation_counts(
+        checkpoint = _coverage_checkpoint_update(
             state,
             partition,
             running,
             ignorable,
             sensitivity_budget,
+            risk_budget,
             assumption_valid,
             true_risk,
         )
-        failed.extend(checkpoint_counts)
-        if projection is None:
-            continue
-        assessment = classify_certification(
-            state=state,
-            projection=projection,
-            sensitivity_budget=sensitivity_budget,
-            risk_budget=risk_budget,
-            minimum_matured_events=config.minimum_evidence.matured_events,
-            minimum_resolved_events=config.minimum_evidence.resolved_events,
-            comparison_guard=config.numerics.comparison_guard,
-        )
-        state_value = assessment.scientific_state
-        if state_value is None or state_value is ScientificState.INSUFFICIENT_EVIDENCE:
+        failed.extend(checkpoint.method_failures)
+        if not checkpoint.eligible:
             continue
         eligible_updates += 1
-        if state_value is ScientificState.CERTIFIED:
+        if checkpoint.certified:
             certified_updates += 1
             if first_certified is None:
-                first_certified = float(state.matured_count)
+                first_certified = checkpoint.first_certified
     fraction = 0.0 if eligible_updates == 0 else certified_updates / eligible_updates
     return CoverageStreamCertification(
         method_failures=tuple(failed),

@@ -156,11 +156,12 @@ def test_foreign_law_for_is_deterministic_and_cyclic() -> None:
 
 
 def test_foreign_law_for_rejects_unknown_law() -> None:
+    unknown_law = LawName("Not a configured law")
     config = TrajCertConfig.from_yaml(PRODUCTION_CONFIG_PATH)
     token = active_config.set(config)
     try:
         with pytest.raises(InvalidScientificDataError):
-            _ = foreign_law_for(LawName("Not a configured law"))
+            _ = foreign_law_for(unknown_law)
     finally:
         active_config.reset(token)
 

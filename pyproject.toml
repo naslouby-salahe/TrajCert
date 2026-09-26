@@ -36,6 +36,7 @@ quality = [
     "pip-audit==2.10.0",
     "pyarrow-stubs==20.0.0.20260819",
     "types-psutil==7.2.2.20260827",
+    "uv==0.11.15",
     "pytest==9.0.3",
     "pytest-archon==0.0.6",
     "pytest-cov==6.2.1",
@@ -72,7 +73,7 @@ root_package = "trajcert"
 [tool.deptry]
 extend_exclude = ["noxfile.py", "tools", "mutants"]
 known_first_party = ["trajcert"]
-package_module_name_map = { PyYAML = "yaml", coverage = "coverage", "import-linter" = "import_linter", mpmath = "mpmath", nox = "nox", numpy = "numpy", pydantic = "pydantic", pyarrow = "pyarrow", "python-flint" = "flint", pyright = "pyright", pytest = "pytest", ruff = "ruff", scipy = "scipy", semgrep = "semgrep", vulture = "vulture" }
+package_module_name_map = { PyYAML = "yaml", coverage = "coverage", "import-linter" = "import_linter", mpmath = "mpmath", nox = "nox", numpy = "numpy", pydantic = "pydantic", pyarrow = "pyarrow", "python-flint" = "flint", pyright = "pyright", pytest = "pytest", ruff = "ruff", scipy = "scipy", semgrep = "semgrep", uv = "uv", vulture = "vulture" }
 optional_dependencies_dev_groups = ["quality"]
 
 [[tool.importlinter.contracts]]

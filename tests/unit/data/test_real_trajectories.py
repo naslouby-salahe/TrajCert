@@ -148,7 +148,6 @@ def test_cohort_for_stratum_filters_by_device() -> None:
 def test_cohort_for_stratum_rejects_empty_result() -> None:
     events = (_event(1.0, is_attack=False, ml_prediction=False, device="camera_21"),)
     cohort = cohort_from_events(events)
+    missing_device = RealTrajectoryStratumValue("tv_28")
     with pytest.raises(InvalidScientificDataError):
-        _ = cohort_for_stratum(
-            cohort, RealTrajectoryStratumKind.DEVICE, RealTrajectoryStratumValue("tv_28")
-        )
+        _ = cohort_for_stratum(cohort, RealTrajectoryStratumKind.DEVICE, missing_device)

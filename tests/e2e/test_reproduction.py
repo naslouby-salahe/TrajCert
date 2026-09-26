@@ -7,11 +7,16 @@ from trajcert.schemas import EnvironmentReproducibilityRecord
 from trajcert.types import DependencyAuthority, EnvironmentDigest
 
 
-def test_requirements_lock_is_the_only_dependency_lock_authority() -> None:
+def test_resolver_lock_and_hash_locked_install_export_are_present() -> None:
     assert Path("pyproject.toml").is_file()
+    assert Path("uv.lock").is_file()
     assert Path("requirements.lock").is_file()
     assert Path("requirements.lock").stat().st_size > 0
-    assert not Path("uv.lock").exists()
+    requirements = Path("requirements.lock").read_text(encoding="utf-8")
+    assert "uv export --locked --all-extras" in requirements
+    assert "--hash=sha256:" in requirements
+    assert "basedpyright==" in requirements
+    assert "pytest==" in requirements
 
 
 def test_reproducibility_record_truthfully_represents_non_container_execution() -> None:
