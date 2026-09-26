@@ -42,7 +42,7 @@ def test_full_law_and_summary_preserve_probability_mass() -> None:
 
     assert law.unresolved == pytest.approx(0.45)
     assert law.total == pytest.approx(1.0)
-    assert summary.total_mass == pytest.approx(1.0)
+    assert summary.resolved_mass + summary.unresolved_mass == pytest.approx(1.0)
     assert summary.harmful_rate_by_band == (pytest.approx(3 / 11), pytest.approx(3 / 11))
 
 

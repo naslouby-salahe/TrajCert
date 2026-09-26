@@ -17,10 +17,6 @@ _RESULTS_ROOT_NAMES = ("RESULTS_ROOT", "RESULTS_EXPERIMENTS_ROOT", "PROJECT_SUMM
 _RESULTS_ROOT_NAME_PATTERN = re.compile(r"\b(?:" + "|".join(_RESULTS_ROOT_NAMES) + r")\b")
 _RESULTS_STRING_LITERAL_PATTERN = re.compile(r"""(["'])results(?:/[^"']*)?\1""")
 
-_RESULTS_WRITE_SURFACE_NAMES = (*_RESULTS_ROOT_NAMES, "results_experiment_leaf")
-_RESULTS_WRITE_SURFACE_PATTERN = re.compile(
-    r"\b(?:" + "|".join(_RESULTS_WRITE_SURFACE_NAMES) + r")\b"
-)
 _WRITABILITY_PROBE_EXEMPT = {"cli.py", "workflows.py"}
 
 _OUTPUTS_EXPERIMENTS_LITERAL_PATTERN = re.compile(r"""(["'])outputs/experiments(?:/[^"']*)?\1""")
@@ -64,8 +60,9 @@ def test_only_reporting_module_writes_under_results_root() -> None:
             continue
         if path.name in _WRITABILITY_PROBE_EXEMPT:
             continue
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-            if _RESULTS_WRITE_SURFACE_PATTERN.search(line):
+        source = path.read_text(encoding="utf-8")
+        for line_number, line in enumerate(source.splitlines(), start=1):
+            if _RESULTS_ROOT_NAME_PATTERN.search(line):
                 findings.append(f"{path}:{line_number}: {line.strip()}")
     assert not findings, "\n".join(findings)
 

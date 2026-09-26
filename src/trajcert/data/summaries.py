@@ -22,10 +22,6 @@ class ObservableSummary(DomainModel):
     def resolved_mass(self) -> Mass:
         return self.resolved_harmful_mass + self.resolved_correct_mass
 
-    @property
-    def total_mass(self) -> Mass:
-        return self.resolved_mass + self.unresolved_mass
-
 
 class ObservableCounts(DomainModel):
     harmful_by_band: tuple[Count, ...]

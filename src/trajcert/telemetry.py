@@ -3,11 +3,14 @@ from __future__ import annotations
 import logging
 import sys
 import time
+from collections.abc import Callable
 from contextvars import ContextVar
+from functools import wraps
 from pathlib import Path
-from typing import Final
+from typing import Final, ParamSpec, TypeVar
 
 from trajcert.types import (
+    CliCommand,
     Count,
     DatasetChecksumHex,
     DatasetSourceReference,
@@ -24,6 +27,7 @@ from trajcert.types import (
     TelemetryPhase,
     TimestampSeconds,
     VisitedNodeCount,
+    WorkflowName,
 )
 
 _TIMESTAMP_FORMAT: Final[str] = "%Y-%m-%dT%H:%M:%S"
@@ -31,6 +35,44 @@ _DEFAULT_LOG_INTERVAL_SECONDS: Final[LogIntervalSeconds] = LogIntervalSeconds(5.
 
 _logger = logging.getLogger(TelemetryLoggerName.TRAJCERT)
 _current_cell_key: ContextVar[SemanticCellKey | None] = ContextVar("current_cell_key", default=None)
+_WorkflowParameters = ParamSpec("_WorkflowParameters")
+_WorkflowResult = TypeVar("_WorkflowResult")
+
+
+def observable_workflow(
+    workflow: WorkflowName,
+) -> Callable[
+    [Callable[_WorkflowParameters, _WorkflowResult]],
+    Callable[_WorkflowParameters, _WorkflowResult],
+]:
+    def decorate(
+        function: Callable[_WorkflowParameters, _WorkflowResult],
+    ) -> Callable[_WorkflowParameters, _WorkflowResult]:
+        @wraps(function)
+        def wrapped(
+            *args: _WorkflowParameters.args, **kwargs: _WorkflowParameters.kwargs
+        ) -> _WorkflowResult:
+            started_at = time.monotonic()
+            _logger.info("workflow_started workflow=%s", workflow)
+            try:
+                result = function(*args, **kwargs)
+            except Exception:
+                _logger.exception(
+                    "workflow_failed workflow=%s elapsed_seconds=%.3f",
+                    workflow,
+                    time.monotonic() - started_at,
+                )
+                raise
+            _logger.info(
+                "workflow_completed workflow=%s elapsed_seconds=%.3f",
+                workflow,
+                time.monotonic() - started_at,
+            )
+            return result
+
+        return wrapped
+
+    return decorate
 
 
 def configure_logging() -> None:
@@ -45,6 +87,17 @@ def configure_logging() -> None:
     )
     _logger.addHandler(handler)
     _logger.setLevel(logging.INFO)
+
+
+def log_cli_command_started(command: CliCommand) -> None:
+    _logger.info("cli_command_started command=%s", command)
+
+
+def log_cli_command_finished(command: CliCommand, state: PublicExecutionState) -> None:
+    if state is PublicExecutionState.COMPLETED:
+        _logger.info("cli_command_finished command=%s state=%s", command, state)
+    else:
+        _logger.error("cli_command_finished command=%s state=%s", command, state)
 
 
 def attach_execution_log_file(path: Path) -> logging.Handler:

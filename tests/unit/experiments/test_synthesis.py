@@ -413,6 +413,7 @@ def test_make_statistical_synthesis_executor_forwards_call(
         _ = executor(cell, context)
 
 
+@pytest.mark.timeout(300)
 def test_dependency_fingerprint_is_stable_and_verifies(
     synthesis_plan: ExperimentPlan,
     synthesis_workspace: Path,
@@ -688,8 +689,8 @@ def _sequential_series_family() -> tuple[PairedSeries, ...]:
             law_name=law,
             sensitivity_budget=rho,
             metric_name=metric,
-            method_name=MethodName("TrajCert"),
-            baseline_name=BaselineName("Endpoint-only path information"),
+            method_name=MethodName.TRAJCERT_FINEST_TRAJECTORY_PARTITION,
+            baseline_name=BaselineName.ENDPOINT_ONLY_PARTITION,
             method_values=np.array([0.4, 0.5], dtype=np.float64),
             baseline_values=np.array([0.5, 0.6], dtype=np.float64),
         )

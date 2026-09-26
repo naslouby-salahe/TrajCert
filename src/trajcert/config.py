@@ -7,7 +7,7 @@ from itertools import pairwise
 from math import isclose
 from pathlib import Path
 from types import MappingProxyType
-from typing import Literal, cast
+from typing import Final, cast
 
 import yaml
 from pydantic import field_serializer, field_validator, model_validator
@@ -28,7 +28,9 @@ from trajcert.types import (
     ClientId,
     CoefficientValue,
     ConfidenceLevel,
+    ConfigAgreementTolerance,
     ConfigFieldPath,
+    ConfigurationSchemaVersion,
     Count,
     CoverageStressCaseName,
     DatasetChecksumHex,
@@ -91,8 +93,10 @@ type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "
 
 active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
 
-_EXACT_AGREEMENT_RELATIVE_TOLERANCE = 0.0
-_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE = 1e-12
+_EXACT_AGREEMENT_RELATIVE_TOLERANCE: Final[ConfigAgreementTolerance] = ConfigAgreementTolerance(0.0)
+_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE: Final[ConfigAgreementTolerance] = ConfigAgreementTolerance(
+    1e-12
+)
 
 
 class ConfigModel(DomainModel):
@@ -779,7 +783,7 @@ class FigureLayoutConfig(ConfigModel):
 
 
 class TrajCertConfig(ConfigModel):
-    schema_version: Literal[1]
+    schema_version: ConfigurationSchemaVersion
     method: MethodConfig
     budgets: BudgetsConfig
     confidence: ConfidenceConfig
@@ -873,20 +877,7 @@ class TrajCertConfig(ConfigModel):
         overrides = _execution_size_overrides(overrides_path)
         if overrides is None:
             return config
-        merged = cast(dict[str, dict[str, YamlValue]], config.model_dump(mode="json"))
-        sequential = merged["sequential"]
-        sequential["coverage"] = _merge_size_fields(
-            cast(dict[str, YamlValue], sequential["coverage"]), overrides.sequential.coverage
-        )
-        sequential["utility"] = _merge_size_fields(
-            cast(dict[str, YamlValue], sequential["utility"]), overrides.sequential.utility
-        )
-        merged["statistics"] = _merge_size_fields(merged["statistics"], overrides.statistics)
-        merged["benchmark"] = _merge_size_fields(merged["benchmark"], overrides.benchmark)
-        try:
-            return cls.model_validate(merged)
-        except ValueError as exc:
-            raise ConfigurationError(str(exc)) from exc
+        return _with_execution_size_overrides(config, overrides)
 
 
 def _execution_size_overrides(overrides_path: Path) -> ExecutionSizeOverrides | None:
@@ -911,9 +902,114 @@ def _execution_size_overrides(overrides_path: Path) -> ExecutionSizeOverrides | 
         raise ConfigurationError(str(exc)) from exc
 
 
-def _merge_size_fields(base: dict[str, YamlValue], overrides: ConfigModel) -> dict[str, YamlValue]:
-    override_values = cast(dict[str, YamlValue], overrides.model_dump(mode="json"))
-    return {**base, **{name: value for name, value in override_values.items() if value is not None}}
+def _with_execution_size_overrides(
+    config: TrajCertConfig, overrides: ExecutionSizeOverrides
+) -> TrajCertConfig:
+    sequential = SequentialConfig(
+        coverage=_with_coverage_size_overrides(
+            config.sequential.coverage, overrides.sequential.coverage
+        ),
+        utility=_with_utility_size_overrides(
+            config.sequential.utility, overrides.sequential.utility
+        ),
+    )
+    return TrajCertConfig(
+        schema_version=config.schema_version,
+        method=config.method,
+        budgets=config.budgets,
+        confidence=config.confidence,
+        minimum_evidence=config.minimum_evidence,
+        laws=config.laws,
+        grids=config.grids,
+        study_design=config.study_design,
+        numerics=config.numerics,
+        comparators=config.comparators,
+        sequential=sequential,
+        statistics=_with_statistics_size_overrides(config.statistics, overrides.statistics),
+        materiality=config.materiality,
+        benchmark=_with_benchmark_size_overrides(config.benchmark, overrides.benchmark),
+        failure_boundary=config.failure_boundary,
+        identifiers=config.identifiers,
+        serialization=config.serialization,
+        determinism=config.determinism,
+        units=config.units,
+        smoke=config.smoke,
+        publication=config.publication,
+        hand_cases=config.hand_cases,
+        figure_layout=config.figure_layout,
+        real_trajectory=config.real_trajectory,
+    )
+
+
+def _with_coverage_size_overrides(
+    config: CoverageConfig, overrides: CoverageSizeOverrides
+) -> CoverageConfig:
+    return CoverageConfig(
+        streams=config.streams if overrides.streams is None else overrides.streams,
+        max_events=config.max_events if overrides.max_events is None else overrides.max_events,
+        checkpoint_every=(
+            config.checkpoint_every
+            if overrides.checkpoint_every is None
+            else overrides.checkpoint_every
+        ),
+        acceptance_upper_limit=config.acceptance_upper_limit,
+        clopper_pearson_confidence=config.clopper_pearson_confidence,
+        batch_size=config.batch_size,
+    )
+
+
+def _with_utility_size_overrides(
+    config: SequentialUtilityConfig, overrides: SequentialUtilitySizeOverrides
+) -> SequentialUtilityConfig:
+    return SequentialUtilityConfig(
+        streams=config.streams if overrides.streams is None else overrides.streams,
+        max_events=config.max_events if overrides.max_events is None else overrides.max_events,
+        checkpoint_every=(
+            config.checkpoint_every
+            if overrides.checkpoint_every is None
+            else overrides.checkpoint_every
+        ),
+        rho=config.rho,
+        batch_size=config.batch_size,
+    )
+
+
+def _with_statistics_size_overrides(
+    config: StatisticsConfig, overrides: StatisticsSizeOverrides
+) -> StatisticsConfig:
+    return StatisticsConfig(
+        bootstrap_resamples=(
+            config.bootstrap_resamples
+            if overrides.bootstrap_resamples is None
+            else overrides.bootstrap_resamples
+        ),
+        sign_flip_randomizations=(
+            config.sign_flip_randomizations
+            if overrides.sign_flip_randomizations is None
+            else overrides.sign_flip_randomizations
+        ),
+        minimum_paired_values=config.minimum_paired_values,
+    )
+
+
+def _with_benchmark_size_overrides(
+    config: BenchmarkConfig, overrides: BenchmarkSizeOverrides
+) -> BenchmarkConfig:
+    return BenchmarkConfig(
+        warmup_repetitions=(
+            config.warmup_repetitions
+            if overrides.warmup_repetitions is None
+            else overrides.warmup_repetitions
+        ),
+        measured_repetitions=(
+            config.measured_repetitions
+            if overrides.measured_repetitions is None
+            else overrides.measured_repetitions
+        ),
+        outer_sample_size=config.outer_sample_size,
+        minimum_samples_for_standard_deviation=config.minimum_samples_for_standard_deviation,
+        scaling_information_margin=config.scaling_information_margin,
+    )
 
 
 def _validate_nested_partitions(partitions: tuple[BandCount, ...]) -> None:

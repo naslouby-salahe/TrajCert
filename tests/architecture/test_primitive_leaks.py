@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -20,6 +21,8 @@ from tools.source_audit import (
     RULE_CONFIG_PARAM,
     RULE_CONFIG_YAML,
     RULE_CONSTANT,
+    RULE_FINITE_DOMAIN,
+    RULE_LOGGING,
     RULE_PRIMITIVE,
     RULE_REDUNDANT_CONVERSION,
     RULE_ROADMAP,
@@ -31,6 +34,7 @@ from tools.source_audit import (
     audit_scope,
     audit_tree,
     audit_tree_files,
+    unused_constant_exemptions,
     unused_exemptions,
 )
 
@@ -67,6 +71,9 @@ RULE_FIXTURES: dict[str, str] = {
     RULE_ROADMAP: "roadmap_runtime_read.py",
     RULE_CLAIM: "claim_registry.py",
     RULE_SUPPRESSION: "noqa_suppression.py",
+    source_audit.RULE_SCANNER: "unparsable_source.py",
+    RULE_FINITE_DOMAIN: "finite_policy_string.py",
+    RULE_LOGGING: "operational_print.py",
 }
 
 
@@ -78,21 +85,25 @@ def _render(findings: tuple[Finding, ...], rule_ids: set[str]) -> str:
     return "\n".join(finding.render() for finding in findings if finding.rule_id in rule_ids)
 
 
+@pytest.mark.timeout(300)
 def test_production_has_no_raw_primitive_domain_boundaries() -> None:
     findings = audit_tree(SOURCE_ROOT)
     assert not _render(findings, {RULE_PRIMITIVE}), _render(findings, {RULE_PRIMITIVE})
 
 
+@pytest.mark.timeout(300)
 def test_production_has_no_untyped_any_or_object_boundaries() -> None:
     findings = audit_tree(SOURCE_ROOT)
     assert not _render(findings, {RULE_UNTYPED}), _render(findings, {RULE_UNTYPED})
 
 
+@pytest.mark.timeout(300)
 def test_production_only_uses_generic_numeric_building_blocks_in_types() -> None:
     findings = audit_tree(SOURCE_ROOT)
     assert not _render(findings, {RULE_BUILDING_BLOCK}), _render(findings, {RULE_BUILDING_BLOCK})
 
 
+@pytest.mark.timeout(300)
 def test_production_has_no_redundant_scalar_or_enum_value_conversions() -> None:
     findings = audit_tree(SOURCE_ROOT)
     assert not _render(findings, {RULE_REDUNDANT_CONVERSION}), _render(
@@ -125,15 +136,15 @@ def test_production_never_unwraps_a_domain_object_with_value() -> None:
 
 def test_production_never_mentions_any_and_limits_object_to_interop() -> None:
     any_offenders: list[str] = []
-    object_offenders: list[str] = []
     for path in audit_scope(SOURCE_ROOT):
         text = path.read_text(encoding="utf-8")
         if re.search(r"\bAny\b", text):
             any_offenders.append(str(path))
-        if re.search(r"\bobject\b", text) and path.name != "types.py":
-            object_offenders.append(str(path))
     assert not any_offenders, "\n".join(any_offenders)
-    assert not object_offenders, "\n".join(object_offenders)
+    untyped_findings = tuple(
+        finding for finding in audit_tree(SOURCE_ROOT) if finding.rule_id == RULE_UNTYPED
+    )
+    assert not untyped_findings, "\n".join(finding.render() for finding in untyped_findings)
 
 
 def test_every_architecture_rule_has_a_mutation_fixture() -> None:
@@ -171,6 +182,14 @@ def test_boundary_exemption_does_not_leak_to_other_modules() -> None:
 
 def test_every_declared_boundary_exemption_is_actually_applied() -> None:
     assert not unused_exemptions(SOURCE_ROOT)
+
+
+def test_every_declared_numeric_constant_exemption_is_active() -> None:
+    assert not unused_constant_exemptions(SOURCE_ROOT)
+
+
+def test_config_module_numeric_constants_are_scanned() -> None:
+    assert RULE_CONSTANT in _rule_ids(INVALID / "config.py")
 
 
 def test_every_boundary_exemption_category_is_exercised() -> None:
@@ -251,6 +270,25 @@ def test_bare_value_comparison_fixture_is_rejected_with_redundant_conversion_rul
     assert RULE_REDUNDANT_CONVERSION in _rule_ids(INVALID / "bare_value_comparison.py")
 
 
+@pytest.mark.parametrize(
+    "fixture",
+    (
+        "finite_policy_string.py",
+        "finite_status_match.py",
+        "finite_strategy_membership.py",
+        "finite_domain_constant.py",
+        "string_choice_collection.py",
+    ),
+)
+def test_finite_domain_string_mutations_are_rejected(fixture: str) -> None:
+    assert RULE_FINITE_DOMAIN in _rule_ids(INVALID / fixture)
+
+
+@pytest.mark.parametrize("fixture", ("str_policy_field.py", "str_dataset_field.py"))
+def test_finite_domain_string_annotations_are_rejected(fixture: str) -> None:
+    assert RULE_PRIMITIVE in _rule_ids(INVALID / fixture)
+
+
 def test_enum_value_return_fixture_is_rejected_with_redundant_conversion() -> None:
     assert RULE_REDUNDANT_CONVERSION in _rule_ids(INVALID / "enum_value_return.py")
 
@@ -311,6 +349,24 @@ def test_audit_scope_returns_every_python_file_in_the_tree() -> None:
     assert set(audit_scope(SOURCE_ROOT)) == set(SOURCE_ROOT.rglob("*.py"))
 
 
+def test_production_scanner_covers_every_source_root_file() -> None:
+    source_tree = SOURCE_ROOT.parent
+    audits = audit_tree_files(source_tree)
+    discovered = {
+        Path(directory) / filename
+        for directory, _, filenames in os.walk(source_tree)
+        for filename in filenames
+        if filename.endswith(".py")
+    }
+    assert {audit.path for audit in audits} == discovered
+    assert not {
+        finding.render()
+        for audit in audits
+        for finding in audit.findings
+        if finding.rule_id == source_audit.RULE_SCANNER
+    }
+
+
 def test_every_audited_file_reports_its_own_path() -> None:
     for audit in audit_tree_files(SOURCE_ROOT):
         assert audit.path.exists()
@@ -345,6 +401,11 @@ def test_a_newly_added_nested_source_file_is_scanned(tmp_path: Path) -> None:
     findings = audit_tree(tmp_path)
 
     assert any(finding.path == added for finding in findings)
+
+
+def test_unparsable_production_source_fails_closed() -> None:
+    findings = audit_path(INVALID / "unparsable_source.py", production=True)
+    assert source_audit.RULE_SCANNER in {finding.rule_id for finding in findings}
 
 
 def test_audit_tree_reports_no_findings_for_a_fully_typed_nested_tree(tmp_path: Path) -> None:

@@ -32,7 +32,6 @@ class WorkspacePathComponent(StrEnum):
     EXPERIMENTS = "experiments"
     PROJECT_SUMMARY = "project_summary"
     PREPROCESSING = "preprocessing"
-    CACHE = "cache"
 
 
 class PathSyntax(StrEnum):
@@ -90,20 +89,12 @@ class ExperimentLeaf(StrEnum):
     PROVENANCE_DEPENDENCIES = "provenance/dependencies"
 
 
-class ResultsExperimentLeaf(StrEnum):
-    FIGURES_MAIN = PublicationLeaf.FIGURES_MAIN
-    FIGURES_SUPPLEMENTARY = PublicationLeaf.FIGURES_SUPPLEMENTARY
-    TABLES_MAIN = PublicationLeaf.TABLES_MAIN
-    TABLES_SUPPLEMENTARY = PublicationLeaf.TABLES_SUPPLEMENTARY
-    SOURCE_DATA_FIGURES = "source_data/figures"
-    SOURCE_DATA_TABLES = "source_data/tables"
-    METRICS_PRIMARY = "metrics/primary"
-    METRICS_SECONDARY = "metrics/secondary"
-    METRICS_SUMMARY = "metrics/summary"
-    STATISTICS_TESTS = "statistics/tests"
-    STATISTICS_CONFIDENCE_INTERVALS = "statistics/confidence_intervals"
-    STATISTICS_EFFECTS = "statistics/effects"
-    STATISTICS_MULTIPLICITY = "statistics/multiplicity"
+class ResultsDirectory(StrEnum):
+    FIGURES = "figures"
+    TABLES = "tables"
+    SOURCE_DATA = "source_data"
+    METRICS = "metrics"
+    STATISTICS = "statistics"
     REPRODUCIBILITY = "reproducibility"
 
 
@@ -133,12 +124,6 @@ class SharedArtifactCategory(StrEnum):
     DERIVED_STREAMS = "derived/streams"
     DERIVED_POPULATION = "derived/population"
     DERIVED_SEQUENTIAL = "derived/sequential"
-
-
-class CacheCategory(StrEnum):
-    PREPROCESSING = "preprocessing"
-    EVALUATION = "evaluation"
-    ANALYSIS = "analysis"
 
 
 class ArtifactFile(StrEnum):
@@ -340,10 +325,6 @@ def experiment_leaf(experiment_slug: ExperimentSlug, leaf: ExperimentLeaf) -> Pa
     return experiment_root(experiment_slug) / Path(leaf)
 
 
-def results_experiment_leaf(experiment_slug: ExperimentSlug, leaf: ResultsExperimentLeaf) -> Path:
-    return RESULTS_EXPERIMENTS_ROOT / experiment_slug / Path(leaf)
-
-
 def results_publication_leaf(leaf: ResultsLeaf) -> Path:
     return Path(leaf)
 
@@ -369,10 +350,6 @@ def preprocessing_leaf(leaf: PreprocessingLeaf) -> Path:
 
 def shared_artifact_path(category: SharedArtifactCategory) -> Path:
     return ARTIFACTS_ROOT / Path(category)
-
-
-def cache_path(category: CacheCategory) -> Path:
-    return OUTPUTS_ROOT / WorkspacePathComponent.CACHE / Path(category)
 
 
 def semantic_cell_path(

@@ -136,7 +136,6 @@ from trajcert.types import (
     SemanticCellKey,
     SemanticComparisonKey,
     SensitivityBudget,
-    TheoremName,
     Vector,
 )
 
@@ -1045,7 +1044,7 @@ def _theorem_observation(
     margin: InequalityMargin | None,
 ) -> TheoremValidationObservation:
     return TheoremValidationObservation(
-        theorem_name=TheoremName(name),
+        theorem_name=name,
         passed=passed,
         absolute_error=error,
         inequality_margin=margin,

@@ -13,7 +13,7 @@ from trajcert.provenance import (
 )
 from trajcert.types import (
     ArtifactKey,
-    ArtifactTypeName,
+    ArtifactType,
     DigestHex,
     EnvironmentDigest,
     ExperimentName,
@@ -63,7 +63,7 @@ def _parent_identity() -> ParentArtifactIdentity:
 
 def _dependency_material() -> DependencyMaterial:
     return DependencyMaterial(
-        artifact_type=ArtifactTypeName("model"),
+        artifact_type=ArtifactType.SCIENTIFIC_RESULT,
         semantic_cell=_identity(),
         scientific_specification_digest=SpecificationDigest(_HEX_D),
         source_identity_digest=SourceIdentityDigest(_HEX_S),
@@ -162,7 +162,7 @@ def test_semantic_cell_key_is_deterministic() -> None:
 
 def test_dependency_material_constructs() -> None:
     material = _dependency_material()
-    assert material.artifact_type == ArtifactTypeName("model")
+    assert material.artifact_type is ArtifactType.SCIENTIFIC_RESULT
     assert material.scientific_specification_digest == SpecificationDigest(_HEX_D)
     assert material.source_identity_digest == SourceIdentityDigest(_HEX_S)
     assert material.environment_dependency_digest == EnvironmentDigest("env")
@@ -207,5 +207,5 @@ def test_dependency_fingerprint_is_deterministic_hex() -> None:
 
 def test_dependency_fingerprint_is_content_sensitive() -> None:
     base = _dependency_material()
-    changed = base.model_copy(update={"artifact_type": ArtifactTypeName("other")})
+    changed = base.model_copy(update={"environment_dependency_digest": EnvironmentDigest("other")})
     assert dependency_fingerprint(base) != dependency_fingerprint(changed)

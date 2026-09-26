@@ -102,7 +102,6 @@ from trajcert.types import (
     SensitivityOffset,
     SerializedConfigJson,
     StreamCount,
-    TheoremName,
     ToleranceValue,
     VariantName,
 )
@@ -121,13 +120,23 @@ class AnalysisType(StrEnum):
 
 
 class TheoremValidationSummaryRow(DomainModel):
-    theorem_name: TheoremName
+    theorem_name: ExperimentName
     case_count: Count
     maximum_absolute_error: AbsoluteError | None
     minimum_inequality_margin: InequalityMargin | None
     all_cases_pass: SearchPredicate
     primary_artifact: ArtifactKey
     scientific_consequence: ScientificInterpretation
+
+
+class _TheoremValidationAggregate(DomainModel):
+    theorem_name: ExperimentName
+    case_count: Count
+    maximum_absolute_error: AbsoluteError | None
+    minimum_inequality_margin: InequalityMargin | None
+    all_cases_pass: SearchPredicate
+    artifact_count: Count
+    primary_artifact: ArtifactKey
 
 
 class PartitionTimingRow(DomainModel):
@@ -349,7 +358,7 @@ class PublicationSourceRows(DomainModel):
 
 
 class TheoremValidationObservation(DomainModel):
-    theorem_name: TheoremName
+    theorem_name: ExperimentName
     passed: SearchPredicate
     absolute_error: AbsoluteError | None
     inequality_margin: InequalityMargin | None
@@ -469,20 +478,21 @@ def theorem_validation_summary_rows(
         primary_artifact=pl.col("primary_artifact").first(),
     )
     rows: list[TheoremValidationSummaryRow] = []
-    for record in grouped.sort("theorem_name").iter_rows(named=True):
-        if record["artifact_count"] != 1:
+    for raw_record in grouped.sort("theorem_name").iter_rows(named=True):
+        record = _TheoremValidationAggregate.model_validate(raw_record)
+        if record.artifact_count != 1:
             raise InvalidScientificDataError("one theorem summary must use one primary artifact")
-        theorem_name = TheoremName(record["theorem_name"])
+        theorem_name = record.theorem_name
         rows.append(
             TheoremValidationSummaryRow(
                 theorem_name=theorem_name,
-                case_count=record["case_count"],
-                maximum_absolute_error=record["maximum_absolute_error"],
-                minimum_inequality_margin=record["minimum_inequality_margin"],
-                all_cases_pass=record["all_cases_pass"],
-                primary_artifact=ArtifactKey(record["primary_artifact"]),
+                case_count=record.case_count,
+                maximum_absolute_error=record.maximum_absolute_error,
+                minimum_inequality_margin=record.minimum_inequality_margin,
+                all_cases_pass=record.all_cases_pass,
+                primary_artifact=record.primary_artifact,
                 scientific_consequence=_theorem_scientific_consequence(
-                    theorem_name, record["case_count"], record["all_cases_pass"]
+                    theorem_name, record.case_count, record.all_cases_pass
                 ),
             )
         )
@@ -490,7 +500,7 @@ def theorem_validation_summary_rows(
 
 
 def _theorem_scientific_consequence(
-    theorem_name: TheoremName, case_count: Count, all_cases_pass: SearchPredicate
+    theorem_name: ExperimentName, case_count: Count, all_cases_pass: SearchPredicate
 ) -> ScientificInterpretation:
     if all_cases_pass:
         return ScientificInterpretation(

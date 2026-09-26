@@ -27,7 +27,11 @@ from trajcert.experiments.workflows import (
     run_experiment,
     smoke,
 )
-from trajcert.telemetry import configure_logging
+from trajcert.telemetry import (
+    configure_logging,
+    log_cli_command_finished,
+    log_cli_command_started,
+)
 from trajcert.types import (
     CliArgumentValue,
     CliCommand,
@@ -95,9 +99,11 @@ class CliArguments(DomainModel):
 def main() -> None:
     configure_logging()
     arguments = parse_args()
+    log_cli_command_started(arguments.command)
     try:
         _dispatch(arguments)
     except InvalidScientificDataError as exc:
+        log_cli_command_finished(arguments.command, PublicExecutionState.FAILED)
         print(f"TrajCert: {exc}", file=sys.stderr)
         code = (
             CliExitCode.COMPLETION_OR_EVIDENCE_FAILURE
@@ -106,8 +112,14 @@ def main() -> None:
         )
         raise SystemExit(code) from exc
     except TrajCertError as exc:
+        log_cli_command_finished(arguments.command, PublicExecutionState.FAILED)
         print(f"TrajCert: {exc}", file=sys.stderr)
         raise SystemExit(CliExitCode.TECHNICAL_EXECUTION_FAILURE) from exc
+    except Exception:
+        log_cli_command_finished(arguments.command, PublicExecutionState.FAILED)
+        raise
+    else:
+        log_cli_command_finished(arguments.command, PublicExecutionState.COMPLETED)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> CliArguments:

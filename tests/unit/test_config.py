@@ -30,6 +30,7 @@ from trajcert.determinism import (
 )
 from trajcert.exceptions import ConfigurationError, InvalidScientificDataError
 from trajcert.types import (
+    ConfigurationSchemaVersion,
     DomainModel,
     LawName,
     SeedNamespace,
@@ -55,7 +56,7 @@ class VectorModel(DomainModel):
 def test_root_model_owns_yaml_loading() -> None:
     configuration = TrajCertConfig.from_yaml(CONFIG_PATH)
 
-    assert configuration.schema_version == 1
+    assert configuration.schema_version is ConfigurationSchemaVersion.V1
     assert len(configuration.laws) == _PRODUCTION_LAW_COUNT
     assert configuration.method.finest_bands == configuration.grids.partitions[0]
     assert configuration.study_design.partition_coherence_figure_rho == pytest.approx(0.10)

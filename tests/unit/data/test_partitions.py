@@ -56,10 +56,6 @@ def test_build_partition_constructs_deterministic_coarsenings(
 
     assert partition.boundaries == boundaries
     assert partition.coarsening_map_from_finest == mapping
-    observed_mapping = tuple(
-        partition.coarse_band_for_finest(index) for index in range(1, finest + 1)
-    )
-    assert observed_mapping == mapping
 
 
 @pytest.mark.parametrize(
@@ -136,8 +132,6 @@ def test_partition_public_guards_reject_invalid_indices_and_coarsenings() -> Non
     coarse = build_partition(4, 2, 8.0)
     unrelated = build_partition(6, 2, 8.0)
     with pytest.raises(InvalidPartitionError):
-        _ = fine.coarse_band_for_finest(0)
-    with pytest.raises(InvalidPartitionError):
         _ = partition_name(0)
     with pytest.raises(InvalidPartitionError):
         _ = coarsen_mass_vector(np.array([0.1]), fine, coarse)
@@ -186,7 +180,7 @@ def test_coarsen_summary_and_intervals(observable_summary: ObservableSummary) ->
     coarse = build_partition(4, 2, 8.0)
     result = coarsen_summary(observable_summary, coarse, 1e-12)
     assert np.allclose(result.harmful_by_band, [0.15, 0.05])
-    assert result.total_mass == pytest.approx(1.0)
+    assert result.resolved_mass + result.unresolved_mass == pytest.approx(1.0)
     assert HiddenMassInterval(lower=0.1, upper=0.3).width == pytest.approx(0.2)
     assert RiskInterval(lower=0.2, upper=0.6).width == pytest.approx(0.4)
 

@@ -9,6 +9,7 @@ from typing import Final, cast
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pyarrow.types as pa_types
 
 from trajcert.exceptions import InvalidScientificDataError, SerializationError
 from trajcert.paths import (
@@ -127,7 +128,7 @@ def _validate_source_columns(table: pa.Table, descriptor: PublicationSourceDescr
 
 def _validate_scientific_values(table: pa.Table, source_path: Path) -> None:
     for column_name, column_type in zip(table.schema.names, table.schema.types, strict=True):
-        if not pa.types.is_floating(column_type):
+        if not pa_types.is_floating(column_type):
             continue
         for raw_value in table.column(column_name).to_pylist():
             value = cast(TabularCellValue, raw_value)

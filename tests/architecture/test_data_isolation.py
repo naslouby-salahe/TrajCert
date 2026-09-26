@@ -15,13 +15,13 @@ from trajcert.inference.categorical import (
     append_matured_event,
     initialize_categorical_state,
 )
-from trajcert.types import ActionChannelId, ClientId, EpochId, EventId, OutcomeLabel
+from trajcert.types import ActionChannel, ClientId, EpochId, EventId, OutcomeLabel
 
 
 def _identity(client: str) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId(client),
-        action_channel_id=ActionChannelId("channel"),
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=EpochId("epoch"),
     )
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -38,7 +38,7 @@ from trajcert.storage import (
 )
 from trajcert.types import (
     ArtifactKey,
-    ArtifactTypeName,
+    ArtifactType,
     BatchIndex,
     DependencyFingerprint,
     EnvironmentDigest,
@@ -52,9 +52,6 @@ if TYPE_CHECKING:
 
 class ScientificArtifactKeyPrefix(StrEnum):
     SCIENTIFIC_RESULT = "scientific-result|"
-
-
-SCIENTIFIC_RESULT_ARTIFACT_TYPE: Final[ArtifactTypeName] = ArtifactTypeName("scientific-result")
 
 
 def completion_is_compatible(
@@ -225,7 +222,7 @@ def cell_dependency_material(
         if (identity := _parent_artifact_identity(parent, workspace_root)) is not None
     )
     return DependencyMaterial(
-        artifact_type=SCIENTIFIC_RESULT_ARTIFACT_TYPE,
+        artifact_type=ArtifactType.SCIENTIFIC_RESULT,
         semantic_cell=cell.identity,
         scientific_specification_digest=scientific_specification,
         source_identity_digest=source_identity_digest(),

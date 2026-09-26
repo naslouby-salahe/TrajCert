@@ -7,12 +7,10 @@ import pytest
 
 from trajcert.constants import (
     BINARY_MAX_INFORMATION_NATS,
-    ENDPOINT_PARTITION_NAME,
     PRODUCTION_CONFIG_PATH,
     SEED_MODULUS,
-    TERMINAL_CATEGORY_NAME,
 )
-from trajcert.types import SeedMaterialGrammar
+from trajcert.types import PartitionLabel, SeedMaterialGrammar
 
 _SEED_MODULUS_EXPECTED = 1 << 63
 
@@ -24,8 +22,8 @@ def test_schema_and_seed_constants_are_pinned() -> None:
 
 
 def test_naming_and_config_constants_are_pinned() -> None:
-    assert TERMINAL_CATEGORY_NAME == "infinity"
-    assert ENDPOINT_PARTITION_NAME == "Endpoint-only partition"
+    assert PartitionLabel.TERMINAL == "infinity"
+    assert PartitionLabel.ENDPOINT_ONLY == "Endpoint-only partition"
     assert Path("configs/trajcert.yaml") == PRODUCTION_CONFIG_PATH
 
 

@@ -104,6 +104,7 @@ from trajcert.telemetry import (
     attach_execution_log_file,
     configure_logging,
     detach_execution_log_file,
+    observable_workflow,
 )
 from trajcert.types import (
     ArtifactFileName,
@@ -120,6 +121,7 @@ from trajcert.types import (
     ReasonCode,
     SemanticCellKey,
     TimestampSeconds,
+    WorkflowName,
 )
 
 
@@ -167,6 +169,7 @@ class DoctorResult(DomainModel):
         return all(self.model_dump().values())
 
 
+@observable_workflow(WorkflowName.DOCTOR)
 def doctor(workspace_root: Path | None = None) -> DoctorResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
     config = _load_config(workspace_root)
@@ -211,6 +214,7 @@ def doctor(workspace_root: Path | None = None) -> DoctorResult:
     )
 
 
+@observable_workflow(WorkflowName.PREPROCESS)
 def preprocess(
     dataset_name: LawName | RealTrajectoryDatasetName | None = None,
     *,
@@ -391,6 +395,7 @@ def _real_trajectory_preprocessing_is_current(
     )
 
 
+@observable_workflow(WorkflowName.PLAN)
 def plan_view(workspace_root: Path | None = None) -> ExperimentPlan:
     workspace_root = workspace_root if workspace_root is not None else Path()
     return build_plan(_load_config(workspace_root))
@@ -406,6 +411,7 @@ def _persist_plan_artifacts(workspace_root: Path, plan: ExperimentPlan) -> None:
     )
 
 
+@observable_workflow(WorkflowName.SMOKE)
 def smoke(workspace_root: Path | None = None) -> SmokeResult:
     workspace_root = workspace_root if workspace_root is not None else Path()
     config = TrajCertConfig.from_yaml_with_overrides(
@@ -415,6 +421,7 @@ def smoke(workspace_root: Path | None = None) -> SmokeResult:
     return run_smoke_fixtures(config)
 
 
+@observable_workflow(WorkflowName.RUN_EXPERIMENT)
 def run_experiment(
     experiment_name: ExperimentName,
     *,
@@ -581,6 +588,7 @@ def _tally_outcome(
     return completed, reused, failed, blocked
 
 
+@observable_workflow(WorkflowName.EXPERIMENT_STATUS)
 def experiment_status(
     experiment_name: ExperimentName,
     *,
@@ -592,6 +600,7 @@ def experiment_status(
     return _experiment_status(_known_experiment_name(experiment_name), plan, workspace_root, {})
 
 
+@observable_workflow(WorkflowName.REPORT)
 def report(
     *,
     workspace_root: Path | None = None,

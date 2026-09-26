@@ -84,7 +84,7 @@ def evaluate_population_materiality(
             qualifies=len(qualified_by_law[law_name])
             >= config.materiality.population.compatible_rho_values,
         )
-        for law_name in sorted(encountered_laws, key=str)
+        for law_name in sorted(encountered_laws)
     )
     qualifying_law_count = sum(law.qualifies for law in laws)
     return PopulationMaterialitySummary(
@@ -117,7 +117,7 @@ def evaluate_sequential_materiality(
             qualifying_rho_count=len(qualified_by_law[law_name]),
             qualifies=bool(qualified_by_law[law_name]),
         )
-        for law_name in sorted(encountered_laws, key=str)
+        for law_name in sorted(encountered_laws)
     )
     qualifying_law_count = sum(law.qualifies for law in laws)
     return SequentialMaterialitySummary(

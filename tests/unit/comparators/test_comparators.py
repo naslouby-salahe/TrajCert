@@ -28,7 +28,7 @@ from trajcert.exceptions import InvalidScientificDataError
 from trajcert.inference.categorical import CategoricalState
 from trajcert.inference.projection import ProjectionTerminationReason
 from trajcert.types import (
-    ActionChannelId,
+    ActionChannel,
     ClientId,
     ComparatorAssumption,
     ComparatorObservationAccess,
@@ -45,7 +45,7 @@ def _state(counts: tuple[int, ...], band_count: int = 2) -> CategoricalState:
     return CategoricalState(
         identity=LedgerIdentity(
             client_id=ClientId("client"),
-            action_channel_id=ActionChannelId("channel"),
+            action_channel_id=ActionChannel.AUTOMATIC,
             epoch_id=EpochId("epoch"),
         ),
         partition=partition,

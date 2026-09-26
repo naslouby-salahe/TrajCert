@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from enum import StrEnum
+from typing import Final
 
 from trajcert.data.laws import LawParameters, build_full_law, configured_laws, resolved_band_weights
 from trajcert.data.summaries import ObservableSummary, summarize_observable_masses
@@ -14,6 +15,7 @@ from trajcert.types import (
     DomainModel,
     HiddenMassInterval,
     InformationNats,
+    LawCount,
     LawName,
     Mass,
     NumericStatus,
@@ -70,7 +72,7 @@ class ForeignInformationNegativeControlResult(DomainModel):
     naive_pooled_spurious_improvement: bool
 
 
-_MINIMUM_LAWS_FOR_FOREIGN_INFORMATION = 2
+_MINIMUM_LAWS_FOR_FOREIGN_INFORMATION: Final[LawCount] = 2
 
 
 def foreign_law_for(local_law_name: LawName) -> LawParameters:

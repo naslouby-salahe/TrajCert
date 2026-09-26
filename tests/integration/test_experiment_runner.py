@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from trajcert.config import (
     CoverageConfig,
     SequentialConfig,
@@ -119,6 +121,7 @@ def _build_context(tmp_path: Path, plan: ExperimentPlan, cell: PlannedCell) -> E
     )
 
 
+@pytest.mark.timeout(300)
 def test_coverage_stress_batch_checkpoints_are_reused_on_second_execution(
     tmp_path: Path,
 ) -> None:

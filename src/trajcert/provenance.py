@@ -13,7 +13,7 @@ from trajcert.types import (
     AgeUnit,
     AnytimeConfidenceDelta,
     ArtifactKey,
-    ArtifactTypeName,
+    ArtifactType,
     BandCount,
     BaselineName,
     CaseIndex,
@@ -314,7 +314,7 @@ class ParentArtifactIdentity(DomainModel):
 
 
 class DependencyMaterial(DomainModel):
-    artifact_type: ArtifactTypeName
+    artifact_type: ArtifactType
     semantic_cell: SemanticCellIdentity
     scientific_specification_digest: SpecificationDigest
     source_identity_digest: SourceIdentityDigest

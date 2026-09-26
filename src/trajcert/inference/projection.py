@@ -782,7 +782,7 @@ def _sensitivity_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> Inform
     entropy_lower, _ = _binary_entropy_bounds(theta_lower, theta_upper)
     terminal_correct_lower = max(0.0, unresolved_lower - hidden_upper)
     terminal_correct_upper = max(0.0, unresolved_upper - box.hidden_lower)
-    _, terminal_entropy_upper = _mass_entropy_bounds(
+    _, terminal_entropy_upper = mass_entropy_bounds(
         box.hidden_lower,
         hidden_upper,
         terminal_correct_lower,
@@ -795,7 +795,7 @@ def _sensitivity_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> Inform
 
 
 def _compatibility_box_lower(box: _Box, envelope: ObservableSummaryEnvelope) -> InformationNats:
-    entropy_lower, _ = _mass_entropy_bounds(
+    entropy_lower, _ = mass_entropy_bounds(
         box.harmful_lower,
         box.harmful_upper,
         box.correct_lower,
@@ -1029,7 +1029,7 @@ def _verified_information_feasible(
     resolved_entropy: arb | None = None,
 ) -> SearchPredicate:
     information = _information_point_arb(summary, hidden, resolved_entropy)
-    return _arb_upper(information) <= rho
+    return arb_upper(information) <= rho
 
 
 def _resolved_bandwise_entropy_arb(summary: ObservableSummary) -> arb:
@@ -1061,7 +1061,7 @@ def _minimum_profile_point(summary: ObservableSummary) -> tuple[RiskValue, Infor
     harmful = summary.resolved_harmful_mass
     unresolved = summary.unresolved_mass
     hidden = harmful * unresolved / resolved
-    information = _arb_upper(_information_point_arb(summary, hidden))
+    information = arb_upper(_information_point_arb(summary, hidden))
     return harmful / resolved, max(0.0, information)
 
 
@@ -1083,14 +1083,14 @@ def _binary_entropy_bounds(lower: Mass, upper: Mass) -> tuple[InformationNats, I
         raise NumericalError("invalid entropy interval")
     left = _binary_entropy_point_arb(lower)
     right = _binary_entropy_point_arb(upper)
-    minimum = min(_arb_lower(left), _arb_lower(right))
-    maximum = max(_arb_upper(left), _arb_upper(right))
+    minimum = min(arb_lower(left), arb_lower(right))
+    maximum = max(arb_upper(left), arb_upper(right))
     if lower <= ENTROPY_MAXIMIZING_PROBABILITY <= upper:
-        maximum = max(maximum, _arb_upper(_log_two(ctx.prec)))
+        maximum = max(maximum, arb_upper(_log_two(ctx.prec)))
     return max(0.0, minimum), max(0.0, maximum)
 
 
-def _mass_entropy_bounds(
+def mass_entropy_bounds(
     left_lower: Mass,
     left_upper: Mass,
     right_lower: Mass,
@@ -1101,14 +1101,14 @@ def _mass_entropy_bounds(
         for left in (left_lower, left_upper)
         for right in (right_lower, right_upper)
     )
-    lower = min(_arb_lower(value) for value in corners)
+    lower = min(arb_lower(value) for value in corners)
     if left_lower > 0.0 and right_lower > 0.0:
         left_interval = _arb_interval(left_lower, left_upper)
         right_interval = _arb_interval(right_lower, right_upper)
-        interval_upper = _arb_upper(_mass_entropy_arb(left_interval, right_interval))
+        interval_upper = arb_upper(_mass_entropy_arb(left_interval, right_interval))
     else:
         interval_upper = inf
-    generic_upper = (left_upper + right_upper) * _arb_upper(_log_two(ctx.prec))
+    generic_upper = (left_upper + right_upper) * arb_upper(_log_two(ctx.prec))
     upper = min(interval_upper, generic_upper)
     return max(0.0, lower), max(0.0, upper)
 
@@ -1258,7 +1258,7 @@ def _arb_interval(lower: Mass, upper: Mass) -> arb:
     return _arb_exact(lower).union(_arb_exact(upper))
 
 
-def _arb_lower(value: arb) -> ArbEndpointValue:
+def arb_lower(value: arb) -> ArbEndpointValue:
     if not value.is_finite():
         return -inf
     mantissa, exponent = value.lower().man_exp()
@@ -1266,7 +1266,7 @@ def _arb_lower(value: arb) -> ArbEndpointValue:
     return nextafter(numeric, -inf)
 
 
-def _arb_upper(value: arb) -> ArbEndpointValue:
+def arb_upper(value: arb) -> ArbEndpointValue:
     if not value.is_finite():
         return inf
     mantissa, exponent = value.upper().man_exp()

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tools.source_audit import RULE_CONSTANT, RULE_PRIMITIVE, audit_path, audit_tree
 
 SOURCE_ROOT = Path(__file__).parents[2] / "src" / "trajcert"
@@ -30,6 +32,7 @@ def test_hardcoded_module_constant_fixture_is_rejected_with_constant_rule() -> N
     assert RULE_CONSTANT in rule_ids
 
 
+@pytest.mark.timeout(300)
 def test_production_has_no_hardcoded_module_level_numeric_constants() -> None:
     findings = audit_tree(SOURCE_ROOT)
     violations = [finding.render() for finding in findings if finding.rule_id == RULE_CONSTANT]

@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from tests.unit.conftest import ledger_event, ledger_identity
 from trajcert.data.ledger import EventLedger, LedgerEvent, LedgerIdentity
 from trajcert.exceptions import DataIntegrityError
-from trajcert.types import ActionChannelId, ClientId, EpochId, EventId, OutcomeLabel
+from trajcert.types import ActionChannel, ClientId, EpochId, EventId, OutcomeLabel
 
 
 def test_event_identity_matches_ledger_identity() -> None:
@@ -29,7 +29,7 @@ def test_maturity_guard_rejects_negative_horizon() -> None:
     invalid = LedgerEvent.model_construct(
         event_id=EventId("e1"),
         client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=EpochId("epoch"),
         issue_age_unit=2.0,
         terminal_horizon=-1.0,
@@ -81,7 +81,7 @@ def test_ledger_rejects_foreign_event_identity() -> None:
     foreign = LedgerEvent(
         event_id=EventId("e1"),
         client_id=ClientId("other"),
-        action_channel_id=ActionChannelId("channel"),
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=EpochId("epoch"),
         issue_age_unit=0.0,
         terminal_horizon=8.0,

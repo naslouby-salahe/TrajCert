@@ -3,7 +3,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from tools.source_audit import RULE_SUPPRESSION, audit_path, audit_tree
+import pytest
+
+from tools.source_audit import RULE_LOGGING, RULE_SUPPRESSION, audit_path, audit_tree
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SOURCE_ROOT = Path(__file__).parents[2]
@@ -23,6 +25,13 @@ def test_noqa_suppression_fixture_is_rejected_with_suppression_rule() -> None:
     assert RULE_SUPPRESSION in rule_ids
 
 
+def test_operational_print_fixture_is_rejected_with_logging_rule() -> None:
+    rule_ids = {
+        finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "operational_print.py")
+    }
+    assert RULE_LOGGING in rule_ids
+
+
 def test_type_ignore_fixture_is_rejected_with_suppression_rule() -> None:
     rule_ids = {finding.rule_id for finding in audit_path(FIXTURES / "invalid" / "type_ignore.py")}
     assert RULE_SUPPRESSION in rule_ids
@@ -35,10 +44,20 @@ def test_semgrep_ignore_fixture_is_rejected_with_suppression_rule() -> None:
     assert RULE_SUPPRESSION in rule_ids
 
 
+@pytest.mark.timeout(300)
 def test_application_source_contains_no_quality_suppressions() -> None:
     root = Path(__file__).parents[2] / "src" / "trajcert"
     violations = [
         finding.render() for finding in audit_tree(root) if finding.rule_id == RULE_SUPPRESSION
+    ]
+    assert not violations, "\n".join(violations)
+
+
+@pytest.mark.timeout(300)
+def test_operational_application_source_uses_structured_logging() -> None:
+    root = Path(__file__).parents[2] / "src" / "trajcert"
+    violations = [
+        finding.render() for finding in audit_tree(root) if finding.rule_id == RULE_LOGGING
     ]
     assert not violations, "\n".join(violations)
 

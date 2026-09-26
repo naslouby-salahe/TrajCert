@@ -17,7 +17,7 @@ from trajcert.determinism import event_stream_namespace, generator_for
 from trajcert.exceptions import InvalidProbabilityError
 from trajcert.paths import semantic_slug
 from trajcert.types import (
-    ActionChannelId,
+    ActionChannel,
     BandIndex,
     CategoryIndex,
     ClientId,
@@ -35,7 +35,6 @@ from trajcert.types import (
 )
 
 _SYNTHETIC_CLIENT_ID = ClientId("synthetic-client")
-_SYNTHETIC_ACTION_CHANNEL_ID = ActionChannelId("automatic-action")
 
 
 class ObservableCategoryProbability(DomainModel):
@@ -225,7 +224,7 @@ def _event_from_observable_category(
     return LedgerEvent(
         event_id=_event_id(law_name, stream_index, event_index),
         client_id=_SYNTHETIC_CLIENT_ID,
-        action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=_static_epoch_id(law_name),
         issue_age_unit=issue,
         terminal_horizon=partition.terminal_horizon,
@@ -237,7 +236,7 @@ def _event_from_observable_category(
 def _synthetic_identity(law_name: LawName) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=_SYNTHETIC_CLIENT_ID,
-        action_channel_id=_SYNTHETIC_ACTION_CHANNEL_ID,
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=_static_epoch_id(law_name),
     )
 

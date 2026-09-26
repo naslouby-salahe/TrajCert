@@ -12,18 +12,14 @@ from trajcert.paths import (
     PROJECT_SUMMARY_ROOT,
     RESULTS_EXPERIMENTS_ROOT,
     RESULTS_ROOT,
-    CacheCategory,
     ExperimentLeaf,
     PreprocessingLeaf,
-    ResultsExperimentLeaf,
     SharedArtifactCategory,
-    cache_path,
     canonical_number_token,
     experiment_leaf,
     experiment_root,
     long_path_safe,
     preprocessing_leaf,
-    results_experiment_leaf,
     semantic_cell_path,
     semantic_slug,
     shared_artifact_path,
@@ -206,12 +202,6 @@ def test_experiment_leaf_values_are_clean_relative_paths() -> None:
         assert ".." not in value.split("/")
 
 
-def test_results_experiment_leaf_layout() -> None:
-    assert results_experiment_leaf(
-        ExperimentSlug("foo"), ResultsExperimentLeaf.FIGURES_MAIN
-    ) == Path("results/experiments/foo/figures/main")
-
-
 def test_preprocessing_leaf_layout() -> None:
     assert preprocessing_leaf(PreprocessingLeaf.PREPARED_LAWS) == Path(
         "outputs/preprocessing/prepared/laws"
@@ -222,7 +212,3 @@ def test_shared_artifact_path_layout() -> None:
     assert shared_artifact_path(SharedArtifactCategory.DERIVED_STREAMS) == Path(
         "outputs/artifacts/derived/streams"
     )
-
-
-def test_cache_path_layout() -> None:
-    assert cache_path(CacheCategory.EVALUATION) == Path("outputs/cache/evaluation")

@@ -223,3 +223,4 @@ docs/.architecture-cleanup/
 docs/.trajcert-execution-audit/
 docs/audit/pocs/
 graphify-out/
+mutants/

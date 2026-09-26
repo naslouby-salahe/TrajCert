@@ -162,6 +162,7 @@ def test_sequential_sensitivity_utility_small_run() -> None:
     assert result.mean_bound_gain == pytest.approx(stream.mean_bound_gain)
 
 
+@pytest.mark.timeout(300)
 def test_sequential_utility_batches_combine_to_match_single_run() -> None:
     config = _small_config()
     parameters = _law_parameters(config.laws[LawKey.TIMING_TERMINAL_HARMFUL_LATE])

@@ -26,12 +26,19 @@ their values are generated from data, user input, or serialized artifacts and ar
 therefore not a closed vocabulary.
 """
 
-ActionChannelId = NewType("ActionChannelId", str)
 ArtifactFileName = NewType("ArtifactFileName", str)
 ArtifactKey = NewType("ArtifactKey", str)
-ArtifactTypeName = NewType("ArtifactTypeName", str)
-BaselineName = NewType("BaselineName", str)
 ComparisonPairDisplay = NewType("ComparisonPairDisplay", str)
+ConfigAgreementTolerance = NewType("ConfigAgreementTolerance", float)
+
+
+class ActionChannel(StrEnum):
+    AUTOMATIC = "automatic-action"
+    HAND_CASE = "hand-case-action"
+
+
+class BaselineName(StrEnum):
+    ENDPOINT_ONLY_PARTITION = "Endpoint-only partition"
 
 
 class CoordinateName(StrEnum):
@@ -51,6 +58,10 @@ class CoordinateName(StrEnum):
     BAND_COUNT = "k"
     SEED_INDEX = "seed-index"
     SENSITIVITY = "sensitivity"
+
+
+class ArtifactType(StrEnum):
+    SCIENTIFIC_RESULT = "scientific-result"
 
 
 CoordinateToken = NewType("CoordinateToken", str)
@@ -74,7 +85,12 @@ FigureTitle = NewType("FigureTitle", str)
 ExceptionClassName = NewType("ExceptionClassName", str)
 TracebackText = NewType("TracebackText", str)
 LawName = NewType("LawName", str)
-MethodName = NewType("MethodName", str)
+
+
+class MethodName(StrEnum):
+    TRAJCERT_FINEST_TRAJECTORY_PARTITION = "TrajCert finest trajectory partition"
+
+
 MethodDisplayName = NewType("MethodDisplayName", str)
 NamedComparison = NewType("NamedComparison", str)
 PartitionName = NewType("PartitionName", str)
@@ -85,7 +101,6 @@ SerializedConfigJson = NewType("SerializedConfigJson", str)
 SourceIdentityDigest = NewType("SourceIdentityDigest", str)
 SvgFragment = NewType("SvgFragment", str)
 TelemetryLabel = NewType("TelemetryLabel", str)
-TheoremName = NewType("TheoremName", str)
 TimestampSeconds = NewType("TimestampSeconds", float)
 LogIntervalSeconds = NewType("LogIntervalSeconds", float)
 SeedNamespace = NewType("SeedNamespace", str)
@@ -305,6 +320,9 @@ class PlatformName(StrEnum):
     DARWIN = "darwin"
 
 
+UnknownPlatformName = NewType("UnknownPlatformName", str)
+
+
 class NumericSign(StrEnum):
     NEGATIVE = "-"
     NON_NEGATIVE = ""
@@ -326,24 +344,30 @@ class BatchPhasePrefix(StrEnum):
     COVERAGE_STRESS = "coverage_stress_batch"
 
 
-TelemetryPhase = SearchPhase | str
+TelemetryPhase = SearchPhase | TelemetryLabel
 
 
 def batch_phase(prefix: BatchPhasePrefix, batch_index: BatchIndex) -> TelemetryPhase:
-    return f"{prefix}_{batch_index}"
+    return TelemetryLabel(f"{prefix}_{batch_index}")
 
 
-Platform = PlatformName | str
+Platform = PlatformName | UnknownPlatformName
 
 
 def current_platform() -> Platform:
-    return PlatformName(sys.platform) if sys.platform in set(PlatformName) else sys.platform
+    if sys.platform in set(PlatformName):
+        return PlatformName(sys.platform)
+    return UnknownPlatformName(sys.platform)
 
 
 class ConfigFile(StrEnum):
     PRODUCTION = "configs/trajcert.yaml"
     SMOKE_OVERRIDES = "configs/smoke.yaml"
     TEST_OVERRIDES = "configs/tests.yaml"
+
+
+class ConfigurationSchemaVersion(IntEnum):
+    V1 = 1
 
 
 class SeedMaterialGrammar(StrEnum):
@@ -380,6 +404,16 @@ class PartitionLabel(StrEnum):
 
 class TelemetryLoggerName(StrEnum):
     TRAJCERT = "trajcert"
+
+
+class WorkflowName(StrEnum):
+    DOCTOR = "doctor"
+    PREPROCESS = "preprocess"
+    PLAN = "plan"
+    SMOKE = "smoke"
+    RUN_EXPERIMENT = "run_experiment"
+    EXPERIMENT_STATUS = "experiment_status"
+    REPORT = "report"
 
 
 class TelemetryFallbackLabel(StrEnum):

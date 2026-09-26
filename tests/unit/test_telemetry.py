@@ -4,8 +4,13 @@ import logging
 
 import pytest
 
-from trajcert.telemetry import ExperimentProgress, configure_logging
-from trajcert.types import ExperimentName, PublicExecutionState, SemanticCellKey
+from trajcert.telemetry import ExperimentProgress, configure_logging, observable_workflow
+from trajcert.types import (
+    ExperimentName,
+    PublicExecutionState,
+    SemanticCellKey,
+    WorkflowName,
+)
 
 _CELL_KEY = SemanticCellKey("Partition Coherence::example")
 _STRESS_CELL_COUNT = 3
@@ -57,3 +62,34 @@ def test_configure_logging_is_idempotent() -> None:
     handler_count = len(logger.handlers)
     configure_logging()
     assert len(logger.handlers) == handler_count
+
+
+def test_observable_workflow_logs_successful_lifecycle(caplog: pytest.LogCaptureFixture) -> None:
+    @observable_workflow(WorkflowName.PLAN)
+    def workflow(value: int) -> int:
+        return value + 1
+
+    with caplog.at_level(logging.INFO, logger="trajcert"):
+        assert workflow(4) == 5
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any(message.startswith("workflow_started workflow=plan") for message in messages)
+    assert any(message.startswith("workflow_completed workflow=plan") for message in messages)
+    assert not any("workflow_failed" in message for message in messages)
+
+
+def test_observable_workflow_logs_exceptions_and_propagates_them(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    @observable_workflow(WorkflowName.REPORT)
+    def workflow() -> None:
+        raise ValueError("broken report")
+
+    with caplog.at_level(logging.INFO, logger="trajcert"), pytest.raises(
+        ValueError, match="broken report"
+    ):
+        workflow()
+
+    failure = next(record for record in caplog.records if "workflow_failed" in record.message)
+    assert "workflow=report" in failure.message
+    assert failure.exc_info is not None

@@ -6,7 +6,7 @@ from pydantic import field_validator, model_validator
 
 from trajcert.exceptions import DataIntegrityError
 from trajcert.types import (
-    ActionChannelId,
+    ActionChannel,
     AgeUnit,
     ClientId,
     DomainModel,
@@ -19,14 +19,14 @@ from trajcert.types import (
 
 class LedgerIdentity(DomainModel):
     client_id: ClientId
-    action_channel_id: ActionChannelId
+    action_channel_id: ActionChannel
     epoch_id: EpochId
 
 
 class LedgerEvent(DomainModel):
     event_id: EventId
     client_id: ClientId
-    action_channel_id: ActionChannelId
+    action_channel_id: ActionChannel
     epoch_id: EpochId
     issue_age_unit: AgeUnit
     terminal_horizon: TerminalHorizon

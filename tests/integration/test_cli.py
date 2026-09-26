@@ -9,7 +9,7 @@ from trajcert import cli
 from trajcert.exceptions import InvalidScientificDataError
 from trajcert.experiments.workflows import DoctorResult
 from trajcert.reporting.export import ReportExportResult
-from trajcert.types import CliCommand
+from trajcert.types import CliCommand, ExperimentName, PublicExecutionState
 
 
 def test_cli_exposes_exact_public_command_set() -> None:
@@ -58,6 +58,95 @@ def test_unknown_experiment_exits_with_usage_code(
     with pytest.raises(SystemExit) as raised:
         cli.main()
     assert raised.value.code == cli.CliExitCode.USAGE_OR_UNKNOWN_NAME
+
+
+def test_cli_command_logs_successful_lifecycle(monkeypatch: pytest.MonkeyPatch) -> None:
+    logged: list[tuple[CliCommand, PublicExecutionState | None]] = []
+
+    def started(command: CliCommand) -> None:
+        logged.append((command, None))
+
+    def finished(command: CliCommand, state: PublicExecutionState) -> None:
+        logged.append((command, state))
+
+    result = DoctorResult(
+        configuration_valid=True,
+        plan_valid=True,
+        dependency_lock_valid=True,
+        imports_valid=True,
+        workspace_writable=True,
+        dataset_valid=True,
+        publication_contract_valid=True,
+        results_layout_valid=True,
+    )
+    monkeypatch.setattr(cli, "log_cli_command_started", started)
+    monkeypatch.setattr(cli, "log_cli_command_finished", finished)
+    monkeypatch.setattr(cli, "doctor", lambda: result)
+    monkeypatch.setattr(sys, "argv", ["trajcert", "doctor"])
+
+    cli.main()
+
+    assert logged == [
+        (CliCommand.DOCTOR, None),
+        (CliCommand.DOCTOR, PublicExecutionState.COMPLETED),
+    ]
+
+
+def test_cli_command_logs_failure_lifecycle(monkeypatch: pytest.MonkeyPatch) -> None:
+    logged: list[tuple[CliCommand, PublicExecutionState | None]] = []
+
+    def started(command: CliCommand) -> None:
+        logged.append((command, None))
+
+    def finished(command: CliCommand, state: PublicExecutionState) -> None:
+        logged.append((command, state))
+
+    def fail_report(
+        *, experiment_name: ExperimentName | None, overwrite: bool
+    ) -> ReportExportResult:
+        _ = experiment_name
+        _ = overwrite
+        raise InvalidScientificDataError("synthesis evidence is incomplete")
+
+    monkeypatch.setattr(cli, "log_cli_command_started", started)
+    monkeypatch.setattr(cli, "log_cli_command_finished", finished)
+    monkeypatch.setattr(cli, "report", fail_report)
+    monkeypatch.setattr(sys, "argv", ["trajcert", "report"])
+
+    with pytest.raises(SystemExit) as raised:
+        cli.main()
+
+    assert raised.value.code == cli.CliExitCode.COMPLETION_OR_EVIDENCE_FAILURE
+    assert logged == [
+        (CliCommand.REPORT, None),
+        (CliCommand.REPORT, PublicExecutionState.FAILED),
+    ]
+
+
+def test_cli_command_logs_unhandled_failure_lifecycle(monkeypatch: pytest.MonkeyPatch) -> None:
+    logged: list[tuple[CliCommand, PublicExecutionState | None]] = []
+
+    def started(command: CliCommand) -> None:
+        logged.append((command, None))
+
+    def finished(command: CliCommand, state: PublicExecutionState) -> None:
+        logged.append((command, state))
+
+    def fail_doctor() -> DoctorResult:
+        raise RuntimeError("unexpected failure")
+
+    monkeypatch.setattr(cli, "log_cli_command_started", started)
+    monkeypatch.setattr(cli, "log_cli_command_finished", finished)
+    monkeypatch.setattr(cli, "doctor", fail_doctor)
+    monkeypatch.setattr(sys, "argv", ["trajcert", "doctor"])
+
+    with pytest.raises(RuntimeError, match="unexpected failure"):
+        cli.main()
+
+    assert logged == [
+        (CliCommand.DOCTOR, None),
+        (CliCommand.DOCTOR, PublicExecutionState.FAILED),
+    ]
 
 
 def test_report_evidence_failure_exits_with_completion_code(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -21,6 +22,9 @@ RULE_COMPATIBILITY = "TC-COMPAT-001"
 RULE_ROADMAP = "TC-ROADMAP-001"
 RULE_CLAIM = "TC-CLAIM-001"
 RULE_SUPPRESSION = "TC-SUPPRESS-001"
+RULE_SCANNER = "TC-SCANNER-001"
+RULE_FINITE_DOMAIN = "TC-ENUM-001"
+RULE_LOGGING = "TC-LOG-001"
 
 EXTERNAL_FORMAT_SERIALIZATION = "EXTERNAL_FORMAT_SERIALIZATION"
 EXTERNAL_INPUT_PARSING = "EXTERNAL_INPUT_PARSING"
@@ -89,9 +93,10 @@ SUPPRESSIONS = frozenset(
     }
 )
 
-_FINITE_DOMAIN_SUFFIX_PATTERN = re.compile(
-    r"(?:mode|type|status|state|policy|strategy|kind|category|direction|stage|"
-    r"objective|outcome|split|aggregation|format|level|variant|class|family)$",
+_FINITE_DOMAIN_NAME_PATTERN = re.compile(
+    r"(?:^|_)(?:mode|type|status|state|policy|strategy|kind|category|direction|stage|"
+    r"objective|outcome|split|aggregation|format|level|variant|class|family|dataset|"
+    r"experiment|command|metric|artifact|threshold|report)(?:_|$)",
     re.IGNORECASE,
 )
 _ACTIVE_CONFIG_SET_PATTERN = re.compile(r"active_config\.set\(")
@@ -104,13 +109,10 @@ _CONFIG_ACCESSOR = "active_config.get"
 
 BOUNDARY_EXEMPTIONS: Mapping[str, str] = MappingProxyType(
     {
-        "config.py:from_yaml_with_overrides": EXTERNAL_FORMAT_SERIALIZATION,
         "types.py:NDArrayFloat64Annotation.__get_pydantic_core_schema__(source_type)": (
             THIRD_PARTY_INTEROP
         ),
         "types.py:NDArrayFloat64Annotation.validate(value)": THIRD_PARTY_INTEROP,
-        "config.py:_merge_size_fields(base)": EXTERNAL_FORMAT_SERIALIZATION,
-        "config.py:_merge_size_fields": EXTERNAL_FORMAT_SERIALIZATION,
         "config.py:_coerce_yaml_value:result": EXTERNAL_FORMAT_SERIALIZATION,
         "cli.py:parse_args(argv)": EXTERNAL_INPUT_PARSING,
         "paths.py:semantic_slug(value)": GENERIC_TEXT_PROCESSING,
@@ -130,24 +132,14 @@ BOUNDARY_EXEMPTIONS: Mapping[str, str] = MappingProxyType(
     }
 )
 
-_CONSTANT_NAME_EXEMPTIONS = frozenset(
+_CONSTANT_NAME_EXEMPTIONS: Mapping[str, str] = MappingProxyType(
     {
-        "ENDPOINT_BAND_COUNT",
-        "_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT",
-        "_MINIMUM_LAWS_FOR_FOREIGN_INFORMATION",
-        "ENTROPY_MAXIMIZING_PROBABILITY",
-        "RESOLVED_HARM_BOUNDARY_OFFSET",
-        "INFORMATION_ROUNDOFF_ULPS",
-        "ARB_INCUMBENT_BISECTION_ITERATIONS",
-        "ARB_SEARCH_DECISION_STALL_IMPROVEMENT_FLOOR",
-        "ARB_SEARCH_DECISION_STALL_MINIMUM_VISITED",
-        "ARB_SEARCH_DECISION_STALL_WINDOW_VISITED",
-        "ARB_SEARCH_PROJECTION_STALL_IMPROVEMENT_FLOOR",
-        "ARB_SEARCH_PROJECTION_STALL_MINIMUM_VISITED",
-        "ARB_SEARCH_PROJECTION_STALL_WINDOW_VISITED",
-        "ARB_SEARCH_ROOT_SCAN_ENVELOPE_SPAN_FLOOR",
-        "ARB_SEARCH_ROOT_SCAN_GRID_POINTS",
-        "SEED_DIGEST_BYTES",
+        "_EXACT_AGREEMENT_RELATIVE_TOLERANCE": "config comparison tolerance",
+        "_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE": "config comparison tolerance",
+        "_MINIMUM_ROWS_FOR_DETERMINISTIC_SORT": "stable table ordering cutoff",
+        "_MINIMUM_LAWS_FOR_FOREIGN_INFORMATION": "minimum law count for pairwise comparison",
+        "ENTROPY_MAXIMIZING_PROBABILITY": "binary entropy maximizer",
+        "SEED_DIGEST_BYTES": "SHA-256 digest truncation width",
     }
 )
 
@@ -621,6 +613,7 @@ class _AuditVisitor(cst.CSTVisitor):
                 self._check_primitive_annotation(node.annotation.annotation, node, qualified)
             if node.value is not None:
                 self._check_hardcoded_constant(node, node.target.value, node.value)
+                self._check_semantic_string_constant(node, node.target.value, node.value)
         elif isinstance(node.target, cst.Attribute):
             self._check_primitive_annotation(
                 node.annotation.annotation, node, self._qualified_name(None)
@@ -640,6 +633,7 @@ class _AuditVisitor(cst.CSTVisitor):
                 if name.casefold() in {"claim_registry", "claim_state", "evidence_manifest"}:
                     self._add(RULE_CLAIM, node, "runtime claim machinery is forbidden")
                 self._check_hardcoded_constant(node, name, node.value)
+                self._check_semantic_string_constant(node, name, node.value)
 
     def visit_For(self, node: cst.For) -> None:
         self._bind_iteration(node.target, node.iter)
@@ -670,6 +664,12 @@ class _AuditVisitor(cst.CSTVisitor):
 
     def visit_Call(self, node: cst.Call) -> None:
         call = _qualified_name(node.func)
+        if call == "print" and self.path.name != "cli.py":
+            self._add(
+                RULE_LOGGING,
+                node,
+                "production output must use structured logging outside the CLI renderer",
+            )
         if call in {"yaml.safe_load", "yaml.load"}:
             self._add(RULE_CONFIG_YAML, node, "YAML may only be loaded by trajcert.config")
         if call in {"os.getenv", "os.environ.get"}:
@@ -798,6 +798,24 @@ class _AuditVisitor(cst.CSTVisitor):
                     "comparing enum.value directly is redundant; "
                     "compare the enum/domain type itself",
                 )
+        if any(_is_finite_domain_name(operand) for operand in operands) and any(
+            _contains_string_literal(operand) for operand in operands
+        ):
+            self._add(
+                RULE_FINITE_DOMAIN,
+                node,
+                "finite-domain values must be compared with canonical enum members",
+            )
+
+    def visit_Match(self, node: cst.Match) -> None:
+        if _is_finite_domain_name(node.subject) and any(
+            _contains_string_literal(case.pattern) for case in node.cases
+        ):
+            self._add(
+                RULE_FINITE_DOMAIN,
+                node,
+                "finite-domain match cases must use canonical enum members",
+            )
 
     def _record_import(self, local_name: str, module: str, imported_name: str) -> None:
         if module in {"trajcert.types", "types"}:
@@ -855,7 +873,8 @@ class _AuditVisitor(cst.CSTVisitor):
                 f"in {_expression_text(annotation)!r}",
             )
             return
-        if "bool" in scan.names and _FINITE_DOMAIN_SUFFIX_PATTERN.search(_declared_name(qualified)):
+        declared_name = _declared_name(qualified)
+        if "bool" in scan.names and _is_finite_domain_name_text(declared_name):
             self._add(
                 RULE_PRIMITIVE,
                 node,
@@ -1046,8 +1065,6 @@ class _AuditVisitor(cst.CSTVisitor):
     def _check_hardcoded_constant(
         self, node: cst.CSTNode, name: str, value: cst.BaseExpression
     ) -> None:
-        if self.path.name == _CONFIG_MODULE_NAME:
-            return
         if name in _CONSTANT_NAME_EXEMPTIONS:
             return
         if not _CONSTANT_NAME_PATTERN.match(name):
@@ -1059,8 +1076,22 @@ class _AuditVisitor(cst.CSTVisitor):
         self._add(
             RULE_CONSTANT,
             node,
-            f"{name!r} is a hardcoded numeric constant; it must be owned by trajcert.config",
+            f"{name!r} is a hardcoded numeric constant; type it or document an exact exception",
         )
+
+    def _check_semantic_string_constant(
+        self, node: cst.CSTNode, name: str, value: cst.BaseExpression
+    ) -> None:
+        if not self._is_module_level(node) or not _CONSTANT_NAME_PATTERN.match(name):
+            return
+        if (
+            _is_finite_domain_name(cst.Name(name)) and _contains_domain_string_value(value)
+        ) or _is_string_choice_collection(value):
+            self._add(
+                RULE_FINITE_DOMAIN,
+                node,
+                f"{name!r} is a finite string-domain constant; define a canonical enum",
+            )
 
     def _check_config_param(self, node: cst.FunctionDef) -> None:
         if self.path.name == _CONFIG_MODULE_NAME:
@@ -1127,7 +1158,7 @@ def audit_file(path: Path, *, production: bool = False) -> FileAudit:
 def _audit_file_uncached(path: Path, *, production: bool) -> FileAudit:
     module = _parsed_module(path)
     if module is None:
-        finding = Finding(RULE_SUPPRESSION, path, 1, "unparsable production source")
+        finding = Finding(RULE_SCANNER, path, 1, "production source could not be parsed")
         return FileAudit(path, (finding,), frozenset())
     signatures = _FileSignatureCollector()
     module.visit(signatures)
@@ -1159,7 +1190,25 @@ def audit_tree(root: Path) -> tuple[Finding, ...]:
 
 
 def audit_scope(root: Path) -> tuple[Path, ...]:
-    return tuple(sorted(root.rglob("*.py")))
+    if not root.is_dir():
+        raise FileNotFoundError(f"production source root does not exist: {root}")
+    paths: list[Path] = []
+
+    def fail_on_walk_error(error: OSError) -> None:
+        raise error
+
+    for directory, subdirectories, filenames in os.walk(root, onerror=fail_on_walk_error):
+        current = Path(directory)
+        linked_directories = [
+            current / name for name in subdirectories if (current / name).is_symlink()
+        ]
+        if linked_directories:
+            raise OSError(
+                "production scanner does not follow source-directory symlinks: "
+                + f"{linked_directories}"
+            )
+        paths.extend(current / filename for filename in filenames if filename.endswith(".py"))
+    return tuple(sorted(paths))
 
 
 def unused_exemptions(root: Path) -> tuple[str, ...]:
@@ -1169,9 +1218,63 @@ def unused_exemptions(root: Path) -> tuple[str, ...]:
     return tuple(sorted(set(BOUNDARY_EXEMPTIONS) - applied))
 
 
+def unused_constant_exemptions(root: Path) -> tuple[str, ...]:
+    declared: set[str] = set()
+    for path in audit_scope(root):
+        module = _parsed_module(path)
+        if module is None:
+            continue
+        for line in module.body:
+            if not isinstance(line, cst.SimpleStatementLine):
+                continue
+            for statement in line.body:
+                if isinstance(statement, cst.Assign):
+                    targets = tuple(item.target for item in statement.targets)
+                elif isinstance(statement, cst.AnnAssign):
+                    targets = (statement.target,)
+                else:
+                    continue
+                declared.update(target.value for target in targets if isinstance(target, cst.Name))
+    return tuple(sorted(set(_CONSTANT_NAME_EXEMPTIONS) - declared))
+
+
 def _contains_roadmap(node: cst.SimpleString) -> bool:
     value = node.evaluated_value
     return isinstance(value, str) and "roadmap" in value.casefold()
+
+
+def _is_finite_domain_name(expression: cst.BaseExpression) -> bool:
+    if not isinstance(expression, (cst.Name, cst.Attribute)):
+        return False
+    name = expression.value if isinstance(expression, cst.Name) else expression.attr.value
+    return _is_finite_domain_name_text(name)
+
+
+def _is_finite_domain_name_text(name: str) -> bool:
+    return _FINITE_DOMAIN_NAME_PATTERN.search(name) is not None and not name.casefold().endswith(
+        ("_valid", "_met", "_match", "_passed", "_available", "_enabled", "_complete")
+    )
+
+
+def _contains_string_literal(node: cst.CSTNode) -> bool:
+    if isinstance(node, cst.SimpleString):
+        return True
+    return any(_contains_string_literal(child) for child in node.children)
+
+
+def _is_string_choice_collection(expression: cst.BaseExpression) -> bool:
+    if not isinstance(expression, (cst.Tuple, cst.List, cst.Set)):
+        return False
+    values = tuple(element.value for element in expression.elements)
+    return len(values) > 1 and all(isinstance(value, cst.SimpleString) for value in values)
+
+
+def _contains_domain_string_value(expression: cst.BaseExpression) -> bool:
+    if isinstance(expression, cst.SimpleString):
+        return isinstance(expression.evaluated_value, str) and "%" not in expression.evaluated_value
+    if isinstance(expression, cst.Call):
+        return any(isinstance(argument.value, cst.SimpleString) for argument in expression.args)
+    return _is_string_choice_collection(expression)
 
 
 def _is_bare_numeric_literal(value: cst.BaseExpression) -> bool:
@@ -1200,7 +1303,7 @@ def _qualified_name(expression: cst.BaseExpression) -> str:
 
 
 def main(arguments: Iterable[str] | None = None) -> int:
-    roots = tuple(Path(argument) for argument in (arguments or ("src/trajcert",)))
+    roots = tuple(Path(argument) for argument in (arguments or ("src",)))
     findings: list[Finding] = []
     applied: set[str] = set()
     for root in roots:
@@ -1212,7 +1315,10 @@ def main(arguments: Iterable[str] | None = None) -> int:
     stale = sorted(set(BOUNDARY_EXEMPTIONS) - applied)
     for key in stale:
         print(f"{key}: {RULE_PRIMITIVE}: dead boundary exemption declared but never applied")
-    return int(bool(findings) or bool(stale))
+    stale_constants = sorted({name for root in roots for name in unused_constant_exemptions(root)})
+    for name in stale_constants:
+        print(f"{name}: {RULE_CONSTANT}: dead numeric constant exemption")
+    return int(bool(findings) or bool(stale) or bool(stale_constants))
 
 
 if __name__ == "__main__":

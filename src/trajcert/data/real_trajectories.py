@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from hashlib import sha256
 from math import isfinite
 from pathlib import Path
@@ -128,6 +129,48 @@ class RealTrajectoryEligibilityReport(DomainModel):
     expertise_eligible_counts: tuple[tuple[AnnotatorExpertise, Count], ...]
 
 
+class _DatasetCounts(DomainModel):
+    ground_truth_attack_rows: Count
+    human_reviewed_rows: Count
+    reviewed_attack_rows: Count
+    reviewed_attack_model_error_rows: Count
+    unreviewed_attack_rows: Count
+    unreviewed_attack_model_error_rows: Count
+
+
+class _TimestampRange(DomainModel):
+    start: datetime
+    end: datetime
+
+
+class _DatasetRowCount(DomainModel):
+    row_count: Count
+
+
+class _DeviceNameRow(DomainModel):
+    device_name: ClientId
+
+
+class _DeviceCountRow(DomainModel):
+    device_name: ClientId
+    len: Count
+
+
+class _ExpertiseCountRow(DomainModel):
+    annotator_id: AnnotatorExpertise
+    len: Count
+
+
+class _EligibleEventField(StrEnum):
+    DEVICE_NAME = "device_name"
+    DEVICE_TYPE = "device_type"
+    EXPERTISE = "expertise"
+    IS_ATTACK = "is_attack"
+    ML_PREDICTION = "ml_prediction"
+    DECISION_TIME = "decision_time"
+    HUMAN_CONFIDENCE = "human_confidence"
+
+
 class HitlIotEligibleEvent(DomainModel):
     device_name: ClientId
     device_type: HitlIotDeviceType
@@ -148,7 +191,7 @@ class RealTrajectoryCohort:
 
     @property
     def size(self) -> Count:
-        return int(self.decision_time.shape[0])
+        return len(self.decision_time)
 
 
 class RealTrajectoryEmpiricalOracle(DomainModel):
@@ -180,7 +223,9 @@ def verify_dataset_integrity(dataset_root: RawDatasetRoot) -> RealTrajectoryData
             raise DataIntegrityError(
                 "HITL-IoT dataset checksum does not match the dataset's own checksums manifest"
             )
-    total_rows = pl.scan_csv(dataset_path).select(pl.len()).collect().item()
+    total_rows = _DatasetRowCount.model_validate(
+        {"row_count": pl.scan_csv(dataset_path).select(pl.len()).collect().item()}
+    ).row_count
     return RealTrajectoryDatasetProvenance(
         dataset_name=dataset.name,
         source_reference=dataset.source_reference,
@@ -195,83 +240,19 @@ def inventory_real_trajectory_dataset(
 ) -> RealTrajectoryDatasetInventory:
     dataset = _dataset_contract()
     dataset_path = Path(dataset_root) / dataset.data_filename
-    observed_columns = tuple(
-        DatasetColumnName(name) for name in pl.scan_csv(dataset_path).collect_schema().names()
+    observed_columns = _observed_dataset_columns(dataset_path)
+    observed_entity_ids = _observed_entity_ids(dataset_path, dataset)
+    observed_counts = _observed_dataset_counts(dataset_path, dataset)
+    timestamp_range = _observed_timestamp_range(dataset_path)
+    observed_structure = _observed_dataset_structure(
+        dataset, dataset_path, observed_columns, observed_entity_ids, observed_counts
     )
-    observed_entity_ids = tuple(
-        ClientId(device_name)
-        for (device_name,) in pl.read_csv(dataset_path, columns=[dataset.columns.device_name])
-        .unique()
-        .sort(dataset.columns.device_name)
-        .iter_rows()
-    )
-    observed_counts = (
-        pl.scan_csv(dataset_path)
-        .select(
-            pl.col(dataset.columns.is_attack).sum().alias("ground_truth_attack_rows"),
-            pl.col(dataset.columns.human_reviewed).sum().alias("human_reviewed_rows"),
-            (pl.col(dataset.columns.human_reviewed) & pl.col(dataset.columns.is_attack))
-            .sum()
-            .alias("reviewed_attack_rows"),
-            (
-                pl.col(dataset.columns.human_reviewed)
-                & pl.col(dataset.columns.is_attack)
-                & (pl.col(dataset.columns.ml_prediction) != pl.col(dataset.columns.is_attack))
-            )
-            .sum()
-            .alias("reviewed_attack_model_error_rows"),
-            (~pl.col(dataset.columns.human_reviewed) & pl.col(dataset.columns.is_attack))
-            .sum()
-            .alias("unreviewed_attack_rows"),
-            (
-                ~pl.col(dataset.columns.human_reviewed)
-                & pl.col(dataset.columns.is_attack)
-                & (pl.col(dataset.columns.ml_prediction) != pl.col(dataset.columns.is_attack))
-            )
-            .sum()
-            .alias("unreviewed_attack_model_error_rows"),
-        )
-        .collect()
-        .row(0, named=True)
-    )
-    timestamp_range = (
-        pl.scan_csv(dataset_path)
-        .select(
-            pl.col("timestamp").min().alias("start"),
-            pl.col("timestamp").max().alias("end"),
-        )
-        .collect()
-        .row(0, named=True)
-    )
-    observed_structure = RealTrajectoryDatasetStructure(
-        dataset_filename=DatasetFilename(dataset_path.name),
-        file_count=len((dataset_path,)),
-        row_count=pl.scan_csv(dataset_path).select(pl.len()).collect().item(),
-        ground_truth_attack_rows=int(observed_counts["ground_truth_attack_rows"]),
-        human_reviewed_rows=int(observed_counts["human_reviewed_rows"]),
-        entity_ids=observed_entity_ids,
-        raw_schema=observed_columns,
-        flow_identity_columns=tuple(
-            column for column in dataset.flow_identity_columns if column in observed_columns
-        ),
-        decision_time_column=dataset.columns.decision_time,
-    )
-    documented_structure = RealTrajectoryDatasetStructure(
-        dataset_filename=dataset.data_filename,
-        file_count=len((dataset.data_filename,)),
-        row_count=dataset.documented_total_rows,
-        ground_truth_attack_rows=dataset.documented_ground_truth_attack_rows,
-        human_reviewed_rows=dataset.documented_human_reviewed_rows,
-        entity_ids=dataset.device_names,
-        raw_schema=dataset.expected_schema,
-        flow_identity_columns=dataset.flow_identity_columns,
-        decision_time_column=dataset.columns.decision_time,
-    )
+    documented_structure = _documented_dataset_structure(dataset)
     matched = documented_structure == observed_structure
-    reviewed_attack_rows = int(observed_counts["reviewed_attack_rows"])
-    reviewed_attack_errors = int(observed_counts["reviewed_attack_model_error_rows"])
-    unreviewed_attack_rows = int(observed_counts["unreviewed_attack_rows"])
-    unreviewed_attack_errors = int(observed_counts["unreviewed_attack_model_error_rows"])
+    reviewed_attack_rows = observed_counts.reviewed_attack_rows
+    reviewed_attack_errors = observed_counts.reviewed_attack_model_error_rows
+    unreviewed_attack_rows = observed_counts.unreviewed_attack_rows
+    unreviewed_attack_errors = observed_counts.unreviewed_attack_model_error_rows
     return RealTrajectoryDatasetInventory(
         expected_source_release=None,
         source_documentation_reference=dataset.source_reference,
@@ -290,12 +271,8 @@ def inventory_real_trajectory_dataset(
             if unreviewed_attack_rows > 0
             else None
         ),
-        observed_timestamp_start=DatasetTimestamp(
-            datetime.fromisoformat(str(timestamp_range["start"]))
-        ),
-        observed_timestamp_end=DatasetTimestamp(
-            datetime.fromisoformat(str(timestamp_range["end"]))
-        ),
+        observed_timestamp_start=DatasetTimestamp(timestamp_range.start),
+        observed_timestamp_end=DatasetTimestamp(timestamp_range.end),
         discrepancy_status=(
             DatasetComparisonStatus.MATCHED
             if matched
@@ -306,6 +283,100 @@ def inventory_real_trajectory_dataset(
             if set(dataset.raw_columns).issubset(observed_columns)
             else DatasetFieldMappingStatus.REQUIRES_REVIEW
         ),
+    )
+
+
+def _observed_dataset_columns(dataset_path: Path) -> tuple[DatasetColumnName, ...]:
+    return tuple(
+        DatasetColumnName(name) for name in pl.scan_csv(dataset_path).collect_schema().names()
+    )
+
+
+def _observed_entity_ids(
+    dataset_path: Path, dataset: RealTrajectoryDatasetConfig
+) -> tuple[ClientId, ...]:
+    return tuple(
+        _DeviceNameRow.model_validate(row).device_name
+        for row in pl.read_csv(dataset_path, columns=[dataset.columns.device_name])
+        .unique()
+        .sort(dataset.columns.device_name)
+        .iter_rows(named=True)
+    )
+
+
+def _observed_dataset_counts(
+    dataset_path: Path, dataset: RealTrajectoryDatasetConfig
+) -> _DatasetCounts:
+    reviewed = pl.col(dataset.columns.human_reviewed)
+    attack = pl.col(dataset.columns.is_attack)
+    prediction_error = pl.col(dataset.columns.ml_prediction) != attack
+    return _DatasetCounts.model_validate(
+        pl.scan_csv(dataset_path)
+        .select(
+            attack.sum().alias("ground_truth_attack_rows"),
+            reviewed.sum().alias("human_reviewed_rows"),
+            (reviewed & attack).sum().alias("reviewed_attack_rows"),
+            (reviewed & attack & prediction_error).sum().alias("reviewed_attack_model_error_rows"),
+            (~reviewed & attack).sum().alias("unreviewed_attack_rows"),
+            (~reviewed & attack & prediction_error)
+            .sum()
+            .alias("unreviewed_attack_model_error_rows"),
+        )
+        .collect()
+        .row(0, named=True)
+    )
+
+
+def _observed_timestamp_range(dataset_path: Path) -> _TimestampRange:
+    return _TimestampRange.model_validate(
+        pl.scan_csv(dataset_path)
+        .select(
+            pl.col("timestamp").min().alias("start"),
+            pl.col("timestamp").max().alias("end"),
+        )
+        .collect()
+        .row(0, named=True)
+    )
+
+
+def _observed_dataset_structure(
+    dataset: RealTrajectoryDatasetConfig,
+    dataset_path: Path,
+    observed_columns: tuple[DatasetColumnName, ...],
+    observed_entity_ids: tuple[ClientId, ...],
+    observed_counts: _DatasetCounts,
+) -> RealTrajectoryDatasetStructure:
+    row_count = _DatasetRowCount.model_validate(
+        {"row_count": pl.scan_csv(dataset_path).select(pl.len()).collect().item()}
+    ).row_count
+    return RealTrajectoryDatasetStructure(
+        dataset_filename=DatasetFilename(dataset_path.name),
+        file_count=len((dataset_path,)),
+        row_count=row_count,
+        ground_truth_attack_rows=observed_counts.ground_truth_attack_rows,
+        human_reviewed_rows=observed_counts.human_reviewed_rows,
+        entity_ids=observed_entity_ids,
+        raw_schema=observed_columns,
+        flow_identity_columns=tuple(
+            column for column in dataset.flow_identity_columns if column in observed_columns
+        ),
+        decision_time_column=dataset.columns.decision_time,
+    )
+
+
+def _documented_dataset_structure(
+    dataset: RealTrajectoryDatasetConfig,
+) -> RealTrajectoryDatasetStructure:
+    return RealTrajectoryDatasetStructure(
+        dataset_filename=dataset.data_filename,
+        file_count=len((dataset.data_filename,)),
+        row_count=dataset.documented_total_rows,
+        ground_truth_attack_rows=dataset.documented_ground_truth_attack_rows,
+        human_reviewed_rows=dataset.documented_human_reviewed_rows,
+        entity_ids=dataset.device_names,
+        raw_schema=dataset.expected_schema,
+        flow_identity_columns=dataset.flow_identity_columns,
+        decision_time_column=dataset.columns.decision_time,
     )
 
 
@@ -333,7 +404,18 @@ def build_real_trajectory_eligibility(
     total_rows = frame.height
     annotated = frame.filter(pl.col(columns.human_reviewed))
     candidate_rows = annotated.height
+    exclusion_counts, eligible = _eligible_annotated_rows(annotated, dataset, total_rows)
+    report = _eligibility_report(eligible, dataset, total_rows, candidate_rows, exclusion_counts)
+    events = _eligible_events(eligible, dataset)
+    return events, report
 
+
+def _eligible_annotated_rows(
+    annotated: pl.DataFrame,
+    dataset: RealTrajectoryDatasetConfig,
+    total_rows: Count,
+) -> tuple[tuple[RealTrajectoryExclusionCount, ...], pl.DataFrame]:
+    columns = dataset.columns
     duplicate_mask = annotated.select(list(dataset.flow_identity_columns)).is_duplicated()
     checks: tuple[tuple[RealTrajectoryExclusionReason, pl.Series], ...] = (
         (
@@ -355,78 +437,76 @@ def build_real_trajectory_eligibility(
         ),
         (RealTrajectoryExclusionReason.DUPLICATE_ANNOTATION, duplicate_mask),
     )
-    exclusion_counts: list[RealTrajectoryExclusionCount] = [
+    excluded_so_far = pl.Series(np.zeros(annotated.height, dtype=bool))
+    counts = [
         RealTrajectoryExclusionCount(
             reason=RealTrajectoryExclusionReason.NOT_HUMAN_ANNOTATED,
-            count=total_rows - candidate_rows,
+            count=total_rows - annotated.height,
         )
     ]
-    excluded_so_far = pl.Series(np.zeros(candidate_rows, dtype=bool))
     for reason, mask in checks:
         newly_excluded = mask & ~excluded_so_far
-        exclusion_counts.append(
-            RealTrajectoryExclusionCount(reason=reason, count=int(newly_excluded.sum()))
-        )
+        counts.append(RealTrajectoryExclusionCount(reason=reason, count=int(newly_excluded.sum())))
         excluded_so_far = excluded_so_far | mask
-    eligible = annotated.filter(~excluded_so_far)
-    eligible_rows = eligible.height
+    return tuple(counts), annotated.filter(~excluded_so_far)
 
+
+def _eligibility_report(
+    eligible: pl.DataFrame,
+    dataset: RealTrajectoryDatasetConfig,
+    total_rows: Count,
+    candidate_rows: Count,
+    exclusion_counts: tuple[RealTrajectoryExclusionCount, ...],
+) -> RealTrajectoryEligibilityReport:
+    columns = dataset.columns
     device_counts = tuple(
-        (ClientId(device_name), count)
-        for device_name, count in eligible.group_by(columns.device_name)
-        .len()
-        .sort(columns.device_name)
-        .iter_rows()
+        (row.device_name, row.len)
+        for row in (
+            _DeviceCountRow.model_validate(raw_row)
+            for raw_row in eligible.group_by(columns.device_name)
+            .len()
+            .sort(columns.device_name)
+            .iter_rows(named=True)
+        )
     )
     expertise_counts = tuple(
-        (AnnotatorExpertise(annotator_id), count)
-        for annotator_id, count in eligible.group_by(columns.annotator_id)
-        .len()
-        .sort(columns.annotator_id)
-        .iter_rows()
+        (row.annotator_id, row.len)
+        for row in (
+            _ExpertiseCountRow.model_validate(raw_row)
+            for raw_row in eligible.group_by(columns.annotator_id)
+            .len()
+            .sort(columns.annotator_id)
+            .iter_rows(named=True)
+        )
     )
-    report = RealTrajectoryEligibilityReport(
+    eligible_rows = eligible.height
+    return RealTrajectoryEligibilityReport(
         total_dataset_rows=total_rows,
         annotated_rows=candidate_rows,
         candidate_rows=candidate_rows,
         eligible_rows=eligible_rows,
         excluded_rows=candidate_rows - eligible_rows,
-        excluded_by_reason=tuple(exclusion_counts),
+        excluded_by_reason=exclusion_counts,
         device_eligible_counts=device_counts,
         expertise_eligible_counts=expertise_counts,
     )
+
+
+def _eligible_events(
+    eligible: pl.DataFrame,
+    dataset: RealTrajectoryDatasetConfig,
+) -> tuple[HitlIotEligibleEvent, ...]:
+    columns = dataset.columns
     event_rows = eligible.select(
-        (
-            columns.device_name,
-            columns.device_type,
-            columns.annotator_id,
-            columns.is_attack,
-            columns.ml_prediction,
-            columns.decision_time,
-            columns.human_confidence,
-        )
-    ).iter_rows()
-    events = tuple(
-        HitlIotEligibleEvent(
-            device_name=ClientId(device_name),
-            device_type=HitlIotDeviceType(device_type),
-            expertise=AnnotatorExpertise(annotator_id),
-            is_attack=is_attack,
-            ml_prediction=ml_prediction,
-            decision_time=decision_time,
-            human_confidence=human_confidence,
-        )
-        for (
-            device_name,
-            device_type,
-            annotator_id,
-            is_attack,
-            ml_prediction,
-            decision_time,
-            human_confidence,
-        ) in event_rows
-    )
-    return events, report
+        pl.col(columns.device_name).alias(_EligibleEventField.DEVICE_NAME),
+        pl.col(columns.device_type).alias(_EligibleEventField.DEVICE_TYPE),
+        pl.col(columns.annotator_id).alias(_EligibleEventField.EXPERTISE),
+        pl.col(columns.is_attack).alias(_EligibleEventField.IS_ATTACK),
+        pl.col(columns.ml_prediction).alias(_EligibleEventField.ML_PREDICTION),
+        pl.col(columns.decision_time).alias(_EligibleEventField.DECISION_TIME),
+        pl.col(columns.human_confidence).alias(_EligibleEventField.HUMAN_CONFIDENCE),
+    ).iter_rows(named=True)
+    return tuple(HitlIotEligibleEvent.model_validate(row) for row in event_rows)
 
 
 def cohort_from_events(events: tuple[HitlIotEligibleEvent, ...]) -> RealTrajectoryCohort:
@@ -453,10 +533,10 @@ def cohort_for_stratum(
     if stratum_value is None:
         raise InvalidScientificDataError("non-pooled stratum requires a stratum value")
     if stratum_kind is RealTrajectoryStratumKind.DEVICE:
-        mask = cohort.device_name == stratum_value
+        mask = np.equal(cohort.device_name, stratum_value)
     else:
-        mask = cohort.expertise == stratum_value
-    if not bool(mask.any()):
+        mask = np.equal(cohort.expertise, stratum_value)
+    if not np.flatnonzero(mask).size:
         raise InvalidScientificDataError(f"stratum has no eligible events: {stratum_value}")
     return RealTrajectoryCohort(
         device_name=cohort.device_name[mask],

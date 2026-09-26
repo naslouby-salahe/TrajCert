@@ -72,6 +72,7 @@ from trajcert.types import (
     DependencyFingerprint,
     DigestHex,
     DomainModel,
+    ExperimentName,
     LawKey,
     LawName,
     PartitionName,
@@ -83,7 +84,6 @@ from trajcert.types import (
     SemanticCellKey,
     SensitivityBudget,
     SpecificationDigest,
-    TheoremName,
 )
 
 
@@ -238,21 +238,21 @@ def test_theorem_validation_summary_rows_aggregates_grouped_observations() -> No
     rows = theorem_validation_summary_rows(
         (
             TheoremValidationObservation(
-                theorem_name=TheoremName("T1"),
+                theorem_name=ExperimentName.PATH_INFORMATION_DECOMPOSITION,
                 passed=True,
                 absolute_error=0.1,
                 inequality_margin=0.2,
                 primary_artifact=ArtifactKey("a"),
             ),
             TheoremValidationObservation(
-                theorem_name=TheoremName("T1"),
+                theorem_name=ExperimentName.PATH_INFORMATION_DECOMPOSITION,
                 passed=False,
                 absolute_error=0.3,
                 inequality_margin=None,
                 primary_artifact=ArtifactKey("a"),
             ),
             TheoremValidationObservation(
-                theorem_name=TheoremName("T2"),
+                theorem_name=ExperimentName.PARTITION_COHERENCE,
                 passed=True,
                 absolute_error=0.2,
                 inequality_margin=0.4,
@@ -261,14 +261,14 @@ def test_theorem_validation_summary_rows_aggregates_grouped_observations() -> No
         )
     )
     assert len(rows) == _TWO_THEOREMS
-    assert rows[0].theorem_name == TheoremName("T1")
+    assert rows[0].theorem_name is ExperimentName.PATH_INFORMATION_DECOMPOSITION
     assert rows[0].case_count == _TWO_OBSERVATIONS
     assert rows[0].maximum_absolute_error == pytest.approx(0.3)
     assert rows[0].minimum_inequality_margin == pytest.approx(0.2)
     assert rows[0].all_cases_pass is False
     assert rows[0].primary_artifact == ArtifactKey("a")
     assert "falsifies the theorem" in rows[0].scientific_consequence
-    assert rows[1].theorem_name == TheoremName("T2")
+    assert rows[1].theorem_name is ExperimentName.PARTITION_COHERENCE
     assert rows[1].all_cases_pass is True
     assert "theorem holds" in rows[1].scientific_consequence
 
@@ -281,14 +281,14 @@ def test_theorem_validation_summary_rows_rejects_empty_observations() -> None:
 def test_theorem_validation_summary_rows_rejects_multiple_artifacts_per_theorem() -> None:
     observations = (
         TheoremValidationObservation(
-            theorem_name=TheoremName("T1"),
+            theorem_name=ExperimentName.PATH_INFORMATION_DECOMPOSITION,
             passed=True,
             absolute_error=0.1,
             inequality_margin=0.2,
             primary_artifact=ArtifactKey("a"),
         ),
         TheoremValidationObservation(
-            theorem_name=TheoremName("T1"),
+            theorem_name=ExperimentName.PATH_INFORMATION_DECOMPOSITION,
             passed=True,
             absolute_error=0.1,
             inequality_margin=0.2,

@@ -42,7 +42,7 @@ from trajcert.types import (
 
 matplotlib.rcParams["svg.fonttype"] = "none"
 matplotlib.rcParams["svg.hashsalt"] = "trajcert"
-os.environ.setdefault("SOURCE_DATE_EPOCH", "0")
+_ = os.environ.setdefault("SOURCE_DATE_EPOCH", "0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -541,14 +541,14 @@ def _new_figure() -> Figure:
 
 def _single_axis(figure: Figure) -> Axes:
     layout = active_config.get().figure_layout
-    axes = figure.subplots(1, 1, squeeze=False)
+    axis = figure.add_subplot(1, 1, 1)
     figure.subplots_adjust(
         left=layout.margin_left / layout.width,
         right=1.0 - layout.margin_right / layout.width,
         top=1.0 - layout.margin_top / layout.height,
         bottom=layout.margin_bottom / layout.height,
     )
-    return axes.ravel()[0]
+    return axis
 
 
 def _horizontal_axes(figure: Figure, count: PanelCount) -> tuple[Axes, ...]:
@@ -558,7 +558,7 @@ def _horizontal_axes(figure: Figure, count: PanelCount) -> tuple[Axes, ...]:
     panel_width = (layout.width - layout.margin_left - layout.margin_right) / count
     gap = layout.horizontal_panel_gap
     wspace = gap / panel_width if panel_width else 0.2
-    axes = figure.subplots(1, count, squeeze=False)
+    axes = tuple(figure.add_subplot(1, count, index + 1) for index in range(count))
     figure.subplots_adjust(
         left=layout.margin_left / layout.width,
         right=1.0 - layout.margin_right / layout.width,
@@ -566,7 +566,7 @@ def _horizontal_axes(figure: Figure, count: PanelCount) -> tuple[Axes, ...]:
         bottom=layout.margin_bottom / layout.height,
         wspace=wspace,
     )
-    return tuple(axes.ravel())
+    return axes
 
 
 def _grid_axes(figure: Figure, count: PanelCount, columns: GridColumnCount) -> tuple[Axes, ...]:
@@ -588,7 +588,7 @@ def _grid_axes(figure: Figure, count: PanelCount, columns: GridColumnCount) -> t
     ) / rows
     wspace = layout.grid_panel_gap_x / panel_width if panel_width else 0.2
     hspace = layout.grid_panel_gap_y / panel_height if panel_height else 0.2
-    axes = figure.subplots(rows, columns, squeeze=False)
+    axes = tuple(figure.add_subplot(rows, columns, index + 1) for index in range(rows * columns))
     figure.subplots_adjust(
         left=layout.margin_left / layout.width,
         right=1.0 - layout.margin_right / layout.width,
@@ -597,10 +597,9 @@ def _grid_axes(figure: Figure, count: PanelCount, columns: GridColumnCount) -> t
         wspace=wspace,
         hspace=hspace,
     )
-    flat = tuple(axes.ravel())
-    for axis in flat[count:]:
+    for axis in axes[count:]:
         axis.set_visible(False)
-    return flat[:count]
+    return axes[:count]
 
 
 def _set_limits(ax: Axes, xs: Sequence[PlotValue], ys: Sequence[PlotValue]) -> None:

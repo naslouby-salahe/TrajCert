@@ -30,7 +30,7 @@ from trajcert.paths import (
     ArtifactFile,
     ExperimentLeaf,
     PublicationExtension,
-    ResultsExperimentLeaf,
+    ResultsDirectory,
     ResultsLeaf,
     experiment_leaf,
     results_publication_leaf,
@@ -69,10 +69,7 @@ from trajcert.types import (
 LOCK_PATH = Path(DependencyAuthority.REQUIREMENTS_LOCK)
 _SYNTHESIS_NAME = ExperimentName.STATISTICAL_SYNTHESIS
 _SYNTHESIS_OWNER = CoordinateToken("statistical-synthesis")
-_ALLOWED_EXPERIMENT_CHILDREN = frozenset(
-    item.split("/", maxsplit=1)[0] for item in ResultsExperimentLeaf
-)
-_ALLOWED_PROJECT_CHILDREN = _ALLOWED_EXPERIMENT_CHILDREN
+_ALLOWED_RESULTS_DIRECTORIES = frozenset(ResultsDirectory)
 _TABLE_FORMATS = (PublicationFormat.CSV, PublicationFormat.TEX)
 _FIGURE_FORMATS = (PublicationFormat.SVG, PublicationFormat.PNG)
 _FORMAT_EXTENSIONS = {
@@ -451,7 +448,7 @@ def validate_results_layout(workspace_root: Path) -> None:
             invalid = {
                 item.name
                 for item in experiment.iterdir()
-                if item.name not in _ALLOWED_EXPERIMENT_CHILDREN
+                if item.name not in _ALLOWED_RESULTS_DIRECTORIES
             }
             if invalid:
                 raise InvalidScientificDataError(
@@ -460,7 +457,7 @@ def validate_results_layout(workspace_root: Path) -> None:
     summary = results_root / PROJECT_SUMMARY_ROOT.relative_to(RESULTS_ROOT)
     if summary.is_dir():
         invalid = {
-            item.name for item in summary.iterdir() if item.name not in _ALLOWED_PROJECT_CHILDREN
+            item.name for item in summary.iterdir() if item.name not in _ALLOWED_RESULTS_DIRECTORIES
         }
         if invalid:
             raise InvalidScientificDataError(

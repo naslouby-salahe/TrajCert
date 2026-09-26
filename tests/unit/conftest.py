@@ -19,7 +19,7 @@ from trajcert.experiments.models import (
 from trajcert.experiments.plan import PlannedCell
 from trajcert.inference.categorical import CategoricalState
 from trajcert.storage import ArtifactIndexEntry, CellArtifactIndex, file_digest
-from trajcert.types import ActionChannelId, ClientId, EpochId, EventId, OutcomeLabel
+from trajcert.types import ActionChannel, ClientId, EpochId, EventId, OutcomeLabel
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +40,7 @@ def summary(harmful: list[float], correct: list[float], unresolved: float) -> Ob
 def ledger_identity() -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=EpochId("epoch"),
     )
 
@@ -55,7 +55,7 @@ def ledger_event(
     return LedgerEvent(
         event_id=EventId(event_id),
         client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=EpochId("epoch"),
         issue_age_unit=issue,
         terminal_horizon=horizon,

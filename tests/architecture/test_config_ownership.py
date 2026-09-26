@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tools.source_audit import (
     RULE_CONFIG_ENV,
     RULE_CONFIG_PARAM,
@@ -44,12 +46,14 @@ def test_config_entry_point_fixture_is_not_rejected_with_config_param_rule() -> 
     assert RULE_CONFIG_PARAM not in rule_ids
 
 
+@pytest.mark.timeout(300)
 def test_production_has_no_config_threaded_as_a_parameter() -> None:
     findings = audit_tree(SOURCE_ROOT)
     violations = [finding.render() for finding in findings if finding.rule_id == RULE_CONFIG_PARAM]
     assert not violations, "\n".join(violations)
 
 
+@pytest.mark.timeout(300)
 def test_tests_have_no_config_threaded_as_a_parameter() -> None:
     findings = audit_tree(TESTS_ROOT)
     violations = [

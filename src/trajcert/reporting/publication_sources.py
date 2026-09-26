@@ -45,17 +45,12 @@ class PublicationSourceName(StrEnum):
     FIGURE_REAL_TRAJECTORY_REFINEMENT = "figure_real_trajectory_refinement"
 
 
-class PublicationLabel(StrEnum):
-    TRAJCERT_FINEST_TRAJECTORY_PARTITION = "TrajCert finest trajectory partition"
-    ENDPOINT_ONLY_PARTITION = "Endpoint-only partition"
-
-
 def publication_method_name() -> MethodName:
-    return MethodName(PublicationLabel.TRAJCERT_FINEST_TRAJECTORY_PARTITION)
+    return MethodName.TRAJCERT_FINEST_TRAJECTORY_PARTITION
 
 
 def publication_baseline_name() -> BaselineName:
-    return BaselineName(PublicationLabel.ENDPOINT_ONLY_PARTITION)
+    return BaselineName.ENDPOINT_ONLY_PARTITION
 
 
 class PublicationColumn(StrEnum):
@@ -703,10 +698,6 @@ PUBLICATION_SOURCE_CATALOG: tuple[PublicationSourceDefinition, ...] = (
 )
 if {definition.name for definition in PUBLICATION_SOURCE_CATALOG} != set(PublicationSourceName):
     raise RuntimeError("publication source catalog must define every rendered source exactly once")
-
-
-def publication_source_file(name: PublicationSourceName) -> PublicationSourceFile:
-    return next(source.source_file for source in PUBLICATION_SOURCE_CATALOG if source.name is name)
 
 
 def publication_source_artifact_key(name: PublicationSourceName) -> ArtifactKey:

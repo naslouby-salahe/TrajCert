@@ -79,7 +79,7 @@ from trajcert.telemetry import StreamProgress
 from trajcert.types import (
     AbsoluteError,
     AcceptanceUpperLimit,
-    ActionChannelId,
+    ActionChannel,
     AnytimeConfidenceDelta,
     BandCount,
     BatchIndex,
@@ -1397,7 +1397,7 @@ def _law(law_key: LawKey) -> LawParameters:
 def _hand_identity(case_index: CaseIndex) -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId("hand-case-client"),
-        action_channel_id=ActionChannelId("hand-case-action"),
+        action_channel_id=ActionChannel.HAND_CASE,
         epoch_id=EpochId(f"{CoordinateGrammar.HAND_CASE_PREFIX}{case_index:02d}"),
     )
 

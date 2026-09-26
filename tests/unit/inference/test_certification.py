@@ -13,7 +13,7 @@ from trajcert.inference.certification import (
 )
 from trajcert.inference.projection import ProjectionResult, ProjectionTerminationReason
 from trajcert.types import (
-    ActionChannelId,
+    ActionChannel,
     ClientId,
     EpochId,
     NumericStatus,
@@ -24,7 +24,7 @@ from trajcert.types import (
 def _identity() -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=EpochId("epoch"),
     )
 

@@ -11,13 +11,13 @@ from trajcert.inference.categorical import (
     append_matured_event,
     initialize_categorical_state,
 )
-from trajcert.types import ActionChannelId, ClientId, EpochId, EventId, OutcomeLabel
+from trajcert.types import ActionChannel, ClientId, EpochId, EventId, OutcomeLabel
 
 
 def _identity() -> LedgerIdentity:
     return LedgerIdentity(
         client_id=ClientId("client"),
-        action_channel_id=ActionChannelId("channel"),
+        action_channel_id=ActionChannel.AUTOMATIC,
         epoch_id=EpochId("epoch"),
     )
 
@@ -80,7 +80,7 @@ def test_append_matured_event_rejects_foreign_identity() -> None:
         event_id=EventId("e1"),
         identity=LedgerIdentity(
             client_id=ClientId("other"),
-            action_channel_id=ActionChannelId("channel"),
+            action_channel_id=ActionChannel.AUTOMATIC,
             epoch_id=EpochId("epoch"),
         ),
         maturity_age_unit=1.0,

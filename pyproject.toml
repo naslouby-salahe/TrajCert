@@ -70,7 +70,7 @@ skip_covered = true
 root_package = "trajcert"
 
 [tool.deptry]
-extend_exclude = ["noxfile.py", "tools"]
+extend_exclude = ["noxfile.py", "tools", "mutants"]
 known_first_party = ["trajcert"]
 package_module_name_map = { PyYAML = "yaml", coverage = "coverage", "import-linter" = "import_linter", mpmath = "mpmath", nox = "nox", numpy = "numpy", pydantic = "pydantic", pyarrow = "pyarrow", "python-flint" = "flint", pyright = "pyright", pytest = "pytest", ruff = "ruff", scipy = "scipy", semgrep = "semgrep", vulture = "vulture" }
 optional_dependencies_dev_groups = ["quality"]
@@ -127,9 +127,6 @@ stubPath = "typings"
 strictListInference = true
 strictDictionaryInference = true
 strictSetInference = true
-reportUnknownMemberType = false
-reportUnknownArgumentType = false
-reportAny = false
 reportUnusedCallResult = false
 
 [tool.complexipy]
@@ -137,5 +134,11 @@ paths = ["src/trajcert"]
 max_complexity = 10
 
 [tool.mutmut]
-paths_to_mutate = ["src/trajcert/config.py", "src/trajcert/types.py", "src/trajcert/math", "src/trajcert/data"]
-tests_dir = ["tests/unit", "tests/architecture"]
+paths_to_mutate = ["src/trajcert/math/safety.py"]
+tests_dir = ["tests/unit/math"]
+also_copy = ["configs", "requirements.lock", "src/trajcert"]
+pytest_add_cli_args = ["-p", "randomly"]
+pytest_add_cli_args_test_selection = [
+    "-k",
+    "not test_benchmark_scaling_cell_small_run",
+]

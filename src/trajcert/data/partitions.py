@@ -7,9 +7,16 @@ from typing import Self
 import numpy as np
 from pydantic import model_validator
 
-from trajcert.constants import ENDPOINT_PARTITION_NAME
 from trajcert.exceptions import InvalidPartitionError
-from trajcert.types import BandCount, BandIndex, DomainModel, PartitionName, TerminalHorizon, Vector
+from trajcert.types import (
+    BandCount,
+    BandIndex,
+    DomainModel,
+    PartitionLabel,
+    PartitionName,
+    TerminalHorizon,
+    Vector,
+)
 
 
 class TrajectoryPartition(DomainModel):
@@ -43,12 +50,6 @@ class TrajectoryPartition(DomainModel):
                 "coarsening map is inconsistent with deterministic equal-width coarsening"
             )
         return self
-
-    def coarse_band_for_finest(self, finest_band: BandIndex) -> BandIndex:
-        index = finest_band
-        if index < 1 or index > self.finest_band_count:
-            raise InvalidPartitionError("finest-band index is outside the partition domain")
-        return self.coarsening_map_from_finest[index - 1]
 
 
 def _validate_partition_shape(
@@ -102,7 +103,7 @@ def partition_name(band_count: BandCount) -> PartitionName:
     # A one-band partition is intrinsically the endpoint-only partition. Runtime
     # endpoint selection reads the validated configuration at its orchestration edge.
     if bands == 1:
-        return PartitionName(ENDPOINT_PARTITION_NAME)
+        return PartitionName(PartitionLabel.ENDPOINT_ONLY)
     return PartitionName(f"{bands}-band partition")
 
 

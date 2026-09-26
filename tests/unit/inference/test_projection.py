@@ -128,17 +128,14 @@ def test_arb_bound_helpers_return_infinities_for_indeterminate_values() -> None:
     try:
         indeterminate = (arb(1e-300, 1e-250) / arb(1e-300)).log()
         assert not indeterminate.is_finite()
-        arb_lower = getattr(projection_module, "_arb_lower")  # noqa: B009
-        arb_upper = getattr(projection_module, "_arb_upper")  # noqa: B009
-        assert arb_lower(indeterminate) == -inf
-        assert arb_upper(indeterminate) == inf
+        assert projection_module.arb_lower(indeterminate) == -inf
+        assert projection_module.arb_upper(indeterminate) == inf
     finally:
         ctx.prec = previous_precision
 
 
 def test_mass_entropy_bounds_does_not_crash_on_near_degenerate_intervals() -> None:
-    mass_entropy_bounds = getattr(projection_module, "_mass_entropy_bounds")  # noqa: B009
-    lower, upper = mass_entropy_bounds(1e-300, 1e-250, 1e-300, 1e-250)
+    lower, upper = projection_module.mass_entropy_bounds(1e-300, 1e-250, 1e-300, 1e-250)
     assert lower >= 0.0
     assert upper >= 0.0
     assert not isinf(lower)
