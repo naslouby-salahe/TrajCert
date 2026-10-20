@@ -1,0 +1,121 @@
+[
+  {
+    "key": "manski2005",
+    "doi": "10.1016/j.ijar.2004.10.006",
+    "http_status": 302,
+    "target": "https://linkinghub.elsevier.com/retrieve/pii/S0888613X04001124",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "little1993",
+    "doi": "10.1080/01621459.1993.10594302",
+    "http_status": 302,
+    "target": "https://www.tandfonline.com/doi/full/10.1080/01621459.1993.10594302",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "shardell2009",
+    "doi": "10.1080/10543400903242779",
+    "http_status": 302,
+    "target": "https://www.tandfonline.com/doi/full/10.1080/10543400903242779",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "kline2013",
+    "doi": "10.3982/qe176",
+    "http_status": 302,
+    "target": "http://doi.wiley.com/10.3982/QE176",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "miao2025",
+    "doi": "10.1093/jrsssb/qkae097",
+    "http_status": 302,
+    "target": "https://academic.oup.com/jrsssb/article/87/2/433/7821199",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "jiang2018",
+    "doi": "10.1214/17-aoas1133",
+    "http_status": 302,
+    "target": "https://projecteuclid.org/journals/annals-of-applied-statistics/volume-12/issue-3/Using-missing-types-to-improve-partial-identification-with-application-to/10.1214/17-AOAS1133.full",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "imbens2004",
+    "doi": "10.1111/j.1468-0262.2004.00555.x",
+    "http_status": 302,
+    "target": "http://doi.wiley.com/10.1111/j.1468-0262.2004.00555.x",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "howard2021",
+    "doi": "10.1214/20-aos1991",
+    "http_status": 302,
+    "target": "https://projecteuclid.org/journals/annals-of-statistics/volume-49/issue-2/Time-uniform-nonparametric-nonasymptotic-confidence-sequences/10.1214/20-AOS1991.full",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "waudby2024",
+    "doi": "10.1093/jrsssb/qkad009",
+    "http_status": 302,
+    "target": "https://academic.oup.com/jrsssb/article/86/1/1/7043257",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "ramdas2023",
+    "doi": "10.1214/23-sts894",
+    "http_status": 302,
+    "target": "https://projecteuclid.org/journals/statistical-science/volume-38/issue-4/Game-Theoretic-Statistics-and-Safe-Anytime-Valid-Inference/10.1214/23-STS894.full",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "johari2022",
+    "doi": "10.1287/opre.2021.2135",
+    "http_status": 302,
+    "target": "https://pubsonline.informs.org/doi/10.1287/opre.2021.2135",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "clopper1934",
+    "doi": "10.1093/biomet/26.4.404",
+    "http_status": 302,
+    "target": "https://academic.oup.com/biomet/article-lookup/doi/10.1093/biomet/26.4.404",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "cro2019",
+    "doi": "10.1111/rssa.12423",
+    "http_status": 302,
+    "target": "https://academic.oup.com/jrsssa/article/182/2/623/7070172",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "carpenter2021",
+    "doi": "10.1002/bimj.202000196",
+    "http_status": 302,
+    "target": "https://onlinelibrary.wiley.com/doi/10.1002/bimj.202000196",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "christensen2023",
+    "doi": "10.3982/ecta17232",
+    "http_status": 302,
+    "target": "https://www.econometricsociety.org/doi/10.3982/ECTA17232",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "jin2026",
+    "doi": "10.1287/opre.2023.0001",
+    "http_status": 302,
+    "target": "https://pubsonline.informs.org/doi/10.1287/opre.2023.0001",
+    "status": "RESOLVED"
+  },
+  {
+    "key": "lindon2026",
+    "doi": "10.48550/arXiv.2603.25971",
+    "http_status": 302,
+    "target": "https://arxiv.org/abs/2603.25971",
+    "status": "RESOLVED"
+  }
+]

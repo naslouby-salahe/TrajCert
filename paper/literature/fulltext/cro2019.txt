@@ -1,0 +1,1836 @@
+                                                Information-Anchored Sensitivity Analysis:
+                                                Theory and Application
+
+
+                                                Suzie Cro
+                                                MRC Clinical Trials Unit at UCL, UK, London School of Hygiene & Tropical Medicine, UK
+                                                and Imperial College London, UK.
+                                                E-mail: s.cro@imperial.ac.uk
+arXiv:1805.05795v1 [stat.ME] 15 May 2018
+
+
+
+
+                                                James R Carpenter
+                                                MRC Clinical Trials Unit at UCL, UK and London School of Hygiene & Tropical Medicine,
+                                                UK.
+                                                Michael G Kenward
+                                                Ashkirk, Scotland.
+                                                Summary. Analysis of longitudinal randomised controlled trials is frequently complicated
+                                                because patients deviate from the protocol. Where such deviations are relevant for the es-
+                                                timand, we are typically required to make an untestable assumption about post-deviation
+                                                behaviour in order to perform our primary analysis and estimate the treatment effect. In
+                                                such settings, it is now widely recognised that we should follow this with sensitivity anal-
+                                                yses to explore the robustness of our inferences to alternative assumptions about post-
+                                                deviation behaviour. Although there has been a lot of work on how to conduct such sen-
+                                                sitivity analyses, little attention has been given to the appropriate loss of information due
+                                                to missing data within sensitivity analysis. We argue more attention needs to be given to
+                                                this issue, showing it is quite possible for sensitivity analysis to decrease and increase the
+                                                information about the treatment effect. To address this critical issue, we introduce the con-
+                                                cept of information-anchored sensitivity analysis. By this we mean sensitivity analysis in
+                                                which the proportion of information about the treatment estimate lost due to missing data
+                                                is the same as the proportion of information about the treatment estimate lost due to miss-
+                                                ing data in the primary analysis. We argue this forms a transparent, practical starting point
+                                                for interpretation of sensitivity analysis. We then derive results showing that, for longitudi-
+                                                nal continuous data, a broad class of controlled and reference-based sensitivity analyses
+                                                performed by multiple imputation are information-anchored. We illustrate the theory with
+                                                simulations and an analysis of a peer review trial, then discuss our work in the context of
+                                                other recent work in this area. Our results give a theoretical basis for the use of controlled
+                                                multiple imputation procedures for sensitivity analysis.
+
+                                                Keywords: deviations, missing data, controlled multiple imputation, sensitivity anal-
+                                                ysis, randomised controlled trial
+
+
+                                           1.   Introduction
+                                           The statistical analysis of longitudinal randomised clinical trials is frequently compli-
+                                           cated because patients deviate from the trial protocol. Such deviations are increasingly
+2    Cro, Carpenter & Kenward
+referred to as inter-current events. For example, patients might withdraw from trial
+treatment, switch treatment, receive additional rescue therapy or simply become lost
+to follow-up. Post-deviation, such patients’ data (if available) will often no longer be
+directly relevant for the primary estimand. Consequently, such post-deviation data are
+often set as missing; any observed post-deviation data can then inform the missing data
+assumptions. Nevertheless, however the analysis is approached, unverifiable assumptions
+about aspects of the statistical distribution of the post-deviation data must be made.
+    Recognising this, recent regulatory guidelines from the European Medicines Agency
+Committee for Medicinal Products for Human Use (2010) and a United States Food and
+Drug Administration mandated panel report by the National Research Council (2010)
+emphasise the importance of conducting sensitivity analyses. Further, the recent publi-
+cation of the International Conference on Harmonisation of Technical Requirements for
+Registration of Pharmaceuticals for Human Use (ICH) E9 (R1) addendum on estimands
+and sensitivity analysis in clinical trials (2017) raises important issues about how such
+sensitivity analyses should be approached. It highlights how in any trial setting it is im-
+portant first to define the estimand of interest. This will inform what data are missing
+and how such missing data should be handled in the primary analysis. Sensitivity anal-
+ysis, which targets the same estimand, should subsequently be undertaken to address
+the robustness of inferences to the underlying assumptions, including those made for the
+missing data.
+    We propose splitting sensitivity analyses for missing data into two broad classes. In
+both classes, one or more alternative sets of assumptions (or scenarios) are postulated
+and the sensitivity of the conclusions to these alternative scenarios is to be assessed. In
+our first class, the primary analysis model is retained in the sensitivity analysis. This
+enables the exclusive assessment of the impact of alternative missing data assumptions
+on the primary outcome of interest. For example, for our sensitivity analysis we may
+impute missing data under a missing not at random (MNAR) assumption, and fit the
+primary analysis model to these imputed data. When performed by Multiple Imputation
+(MI), class-1 sensitivity analyses are therefore uncongenial, in the sense described by
+Meng (1994) and Xie and Meng (2017). Conversely, in the second class, for each set of
+sensitivity assumptions an appropriate analysis model is identified and fitted. Hence,
+each such analysis model is consistent with its assumptions, which is why the analysis
+models generally change as we move from scenario to scenario.
+    In the first class of sensitivity analyses, the assumptions of the primary analysis model
+may be inconsistent to some degree with the data generating mechanism postulated by
+the sensitivity analysis assumption. Nevertheless, a strong advantage of such sensitiv-
+ity analysis is the avoidance of full modelling under various, potentially very complex,
+missing data assumptions. However, when performing class-1 sensitivity analyses, the
+properties of an estimator under the primary analysis may change as we move to the
+sensitivity analysis. In particular, we will see that a sensible variance estimator for
+the primary analysis may behave in an unexpected way under certain sensitivity anal-
+ysis scenarios, for example decreasing as the proportion of missing values increases. In
+regulatory work, particularly in class-1 sensitivity analyses, it is therefore important
+to appreciate fully the quantity and nature of any additional statistical information
+about the treatment estimate that may arise in the sensitivity analysis, relative to the
+                                                           Information-Anchored Sensitivity Analysis   3
+
+
+
+
+                                                           Sensitivity analysis information
+
+
+
+
+                                   120
+                                                           Full data information
+                                                           Observed data information
+
+
+                                   110
+                     Information
+
+                                   100
+                                   90
+                                   80
+                                   70
+
+
+
+
+                                         0.0   0.5   1.0   1.5       2.0       2.5       3.0
+
+                                                           σ2m
+
+
+
+                                                                        2
+                 Fig. 1. Information about the sample mean varies with σm .
+
+
+primary analysis.
+     This superficially abstract point can be readily illustrated. Suppose a study intends
+to take measurements on n patients Y1 , . . . , Yn , from a population with known variance
+σ 2 , and the estimator is the mean. If no data are missing, then the statistical information
+about the mean is n/σ 2 . Now suppose that nd observations are missing. We will perform
+a class-1 sensitivity analysis, so that the estimator is the mean for both our primary and
+sensitivity analysis. Our primary analysis will assume data are missing completely at
+random, and the sensitivity analysis will assume that the missing values are from patients
+with the same mean, but a different variance, σm     2 .
+
+     Under our primary analysis assumption, we can obtain valid inference by calculating
+the mean of the n − nd observed values, or by using multiple imputation for the missing
+values. In both cases the information about the mean is the same: (n − nd )/σ 2 .
+     Under our class-1 sensitivity analysis, we multiply impute the missing data under
+our assumption, and again our estimator is the mean. Now, however, the statistical
+information will be approximately n2 /{(n − nd )σ 2 + nd σm    2 }. Further, the information
+
+about the mean from the sensitivity analysis depends on σm     2 . Since σ 2 is not estimable,
+                                                                          m
+this information is under the control of the analyst.
+     This is illustrated by Figure 1, which shows how the information about the mean
+varies with σm  2 , when n = 100, n = 20 and σ 2 = 1. When σ 2 < σ 2 , the information
+                                     d                              m
+about the mean in the sensitivity analysis is greater than from the intended 100 ob-
+servations; when 1 ≤ σm    2 ≤ 2.25 then the information is greater than in the (n − n )
+                                                                                            d
+observations we were able to obtain, and when σm       2 > 2.25, the information is less than
+
+in the observed data (n − nd ) observations we were able to obtain.
+     We believe the ICH E9 (R1) addendum (2017) will lead to sensitivity analysis playing
+4      Cro, Carpenter & Kenward
+a much more central role; in this context we believe it important for statisticians and
+regulators to be aware of how—compared to the primary analysis—information can be
+removed or added in the sensitivity analysis.
+   Our purpose in this paper is to:
+
+     1. Consider the information in sensitivity analyses, arguing that sensitivity analysis
+        in a clinical trial should be information-anchored—as defined below—relative to
+        the primary analysis, and
+     2. Demonstrate that using reference- and δ-based controlled multiple imputation, with
+        Rubin’s rules, to perform class-1 sensitivity analyses is information-anchored.
+
+    An important practical consequence of our work is that it provides a set of condi-
+tions that can be imposed on class-1 sensitivity analyses to ensure that—relative to the
+primary analysis—they neither create, nor destroy, statistical information. We believe
+this provides important reassurance for their use, for example in the regulatory setting.
+    The plan for the rest of the paper is as follows. Section 2 defines the concept of
+information-anchoring in sensitivity analysis. Section 3 considers class-1 sensitivity anal-
+ysis by reference- and δ-based controlled multiple imputation, and presents our main the-
+oretical results on information-anchoring within this setting. Section 4 briefly reviews
+class-2 sensitivity analyses from this perspective. In Section 5 we present a simulation
+study which illustrates our theory for information-anchored sensitivity analysis, which
+is then applied to a trial of training for peer reviewers in Section 6. We conclude with a
+discussion in Section 7.
+
+
+
+2.    Information-Anchored Sensitivity Analysis
+
+We have seen in the simple example above how a sensitivity analysis can change the
+statistical information about a treatment estimate. We now define information-anchored
+sensitivity analyses, which hold the proportion of information lost due to missing data
+constant across the primary and sensitivity analyses.
+   Suppose that a clinical trial intends to collect data from 2n patients, denoted Y, in or-
+der to estimate a treatment effect θ. However, a number of patients do not give complete
+data. Denote the observed data by Yobs , and missing data by Ymiss . Consistent with
+the ICH-E9 (R1) addendum (2017), we make a primary set of assumptions, under which
+we perform the primary analysis. We then make a sensitivity set of assumptions, under
+which we perform the sensitivity analysis. Both primary and sensitivity assumptions (i)
+specify the distribution [Ymiss |Yobs ], (ii) could be true, yet (iii) cannot be verified from
+Yobs .
+   Let θ̂obs, primary be the estimate of θ under the primary analysis assumption. Further,
+suppose we were able to observe a realisation of Ymiss under the primary assumption.
+Putting these data together with Yobs gives us a complete set of observed data, which
+actually follows the primary assumption: we denote this by Yprimary , and the corre-
+sponding estimate of θ by θ̂f ull, primary . We denote the observed information about θ by
+                                                               Information-Anchored Sensitivity Analysis   5
+I(θ̂obs, primary ) and I(θ̂f ull, primary ), respectively. Then,
+
+                                                  I(θ̂obs, primary )
+                                                                          < 1,
+                                                  I(θ̂f ull, primary )
+reflecting the loss of information about θ due to missing data.
+    Defining corresponding quantities under the sensitivity assumptions for the chosen
+sensitivity analysis procedure (be this class-1 or class-2) we have,
+
+                                                 I(θ̂obs, sensitivity )
+                                                                           < 1,
+                                                I(θ̂f ull, sensitivity )
+again reflecting the loss of information about θ due to missing data—but now under the
+sensitivity assumptions.
+   Comparing these leads us to the following definitions,
+
+     I(θ̂obs, primary )       I(θ̂obs, sensitivity )
+                          >                              :    Information-negative sensitivity analysis,
+ I(θ̂f ull, primary )         I(θ̂f ull, sensitivity )
+     I(θ̂obs, primary )       I(θ̂obs, sensitivity )
+                          =                              :   Information-anchored sensitivity analysis, (1)
+ I(θ̂f ull, primary )         I(θ̂f ull, sensitivity )
+     I(θ̂obs, primary )       I(θ̂obs, sensitivity )
+                          <                              :    Information-positive sensitivity analysis.
+ I(θ̂f ull, primary )         I(θ̂f ull, sensitivity )
+    When analysing a clinical trial, we believe an information-positive sensitivity analysis
+is rarely justifiable, implying as it does that the more data are missing, the more certain
+we are about the treatment effect under the sensitivity analysis. Conversely, while
+information-negative sensitivity analyses provide an incentive for minimising missing
+data, there is no natural consensus about the appropriate loss of information. Therefore,
+we argue that information-anchored sensitivity analyses are the natural starting point.
+In regulatory work they provide a level playing field between regulators and industry,
+allowing the focus to be on the average response to treatment among the unobserved
+patients.
+    The definitions above are quite general, applying directly to class-1 and class-2 sen-
+sitivity analyses, and all types of de jure (on-treatment) and de facto (as-observed) as-
+sumptions. We now discuss class-1 sensitivity analyses from the information perspective
+and present our theory for information-anchoring.
+
+3.     Class-1 Sensitivity Analysis and Theory for Information-Anchoring
+While class-1 sensitivity analyses can be performed without using multiple imputation
+(Lu, 2014; Liu and Pang, 2016; Tang, 2017), multiple imputation is the most flexi-
+ble approach, and often the simplest to implement (e.g., using the SAS software from
+www.missingdata.org.uk or Stata software by Cro et al. (2016)). This is generally called
+controlled multiple imputation, because the form of the imputation for the missing data
+is controlled by the analyst. So, for example, the analyst can control the imputed data
+6    Cro, Carpenter & Kenward
+mean to be δ below that under missing at random (MAR). See, for example, Mallinckrodt
+(2013) Ch. 10, O’Kelly and Ratitch (2014), p. 284–319 and Ayele et al. (2014).
+   One approach is to obtain information about parameters that control the departure
+from MAR from experts (Mason et al., 2017), but this is controversial (Heitjan, 2017),
+and challenging for longitudinal data where multiple parameters are involved. An al-
+ternative, as introduced by Little and Yau (1996) and developed and discussed further
+more recently by, among others, Carpenter et al. (2013); Ratitch et al. (2013); Liu and
+Pang (2016), is reference-based multiple imputation. In this approach, the distribution
+of the missing data is specified by reference to other groups of patients. This enables
+contextually relevant qualitative assumptions to be explored and avoids the need to for-
+mally specify numerical sensitivity parameters (these are implicit consequences of the
+appropriate reference for a patient). Some examples are listed in Table 1. For example,
+we may explore the consequences of patients in an active arm ‘jumping to reference’
+post-deviation. In practice the appropriate imputation model depends critically on the
+particular clinical setting and what assumptions are considered credible. Such analyses
+can be performed using the reference-based MI algorithm in Appendix A implemented
+in Cro et al. (2016). Overall, this approach is both very flexible, and accessible, since
+patients’ missing outcomes are specified qualitatively—by reference to other groups of
+patients in the study. This explains its increasing popularity (Philipsen et al., 2015; Jans
+et al., 2015; Billings et al., 2018; Atri et al., 2018).
+   The above papers all focus on clinical trials with continuous outcome measures that
+are collected longitudinally, and modelled using the multivariate normal distribution.
+We consider the same setting, and give criteria for class-1 sensitivity analysis using con-
+trolled multiple imputation with Rubin’s variance formula to be information-anchored.
+This shows that most forms of δ- and reference-based imputation proposed in the liter-
+ature are, to a good approximation, information-anchored. It also shows that, in class-1
+settings, uncritical use of the conventional primary analysis variance estimator is often
+information-positive, which is undesirable in practice.
+   There are two principal reasons for this. The first is that class-1 sensitivity analyses
+retain the primary analysis model in the sensitivity analysis. However, in the sensitivity
+analysis data assumptions are not wholly compatible with those of the primary analysis
+model. In particular variance estimators may behave in unexpected ways. The second
+reason is that reference-based methods essentially use the data twice, for example, by
+using data from the reference arm (i) to impute missing data in an active arm and (ii)
+to estimate the effect of treatment in the reference arm.
+
+
+3.1. Theoretical Results
+The presentation of our theoretical results is structured as follows. We begin by describ-
+ing our data, model, primary analysis and sensitivity analysis. We show in Corollary 2
+that, when all data can be fully observed, for our treatment estimate θ̂,
+                        E[V̂full, sensitivity ] = E[V̂full, primary ] + O(n−2 ).
+Theorem 1 then defines the information-anchored variance and derives a general expres-
+sion for the difference between this and the variance from Rubin’s rules. Finally, we
+show, in the remarks following the theorem, that in practice this difference is small.
+                                           Information-Anchored Sensitivity Analysis   7
+
+
+
+
+Table 1.      Examples of reference-based and external information controlled multiple
+imputation methods.
+  Name                      Description
+  Reference-based
+  controlled MI methods:
+                            Imputes assuming that following dropout a patients mean
+  Jump to reference (J2R)   profile follows that observed in the reference arm.
+                            Pre-drop out means come from the randomised arm.
+
+                            Forms post-dropout means by copying increments in the
+ Copy increments in
+                            reference arm. Pre-drop out means come from the
+ reference (CIR)
+                            randomised arm.
+
+ Last mean carried          Forms post-dropout means by carrying forward the
+ forward (LMCF)             randomised arm mean at dropout.
+
+                            The conditional profile given the history is copied from
+                            the reference group i.e. imputes as if randomised to
+ Copy reference (CR)
+                            reference arm, pre- and post-drop out means come from
+                            the reference arm.
+
+ External information
+ controlled MI methods:
+                            Impute under randomised arm MAR and subtract/add by
+ The δ-method
+                            fixed δ.
+8    Cro, Carpenter & Kenward
+Trial Data
+Consider a two-arm trial, which includes n patients randomised to an active arm and
+n patients randomised to a reference arm (total 2n patients within the trial). Outcome
+data are recorded at j = 1, ..., J visits, where visit j = 1 is baseline. For patient i in
+treatment arm z, where z = a indicates active arm assignment and z = r indicates
+reference arm assignment, let Yz,i,j denote the outcome at time j.
+    We wish to estimate the treatment effect at the end of the follow-up, time J. Our
+analysis model is the regression of the outcome at time J on treatment and baseline (i.e.,
+ANCOVA). Now suppose a number of patients are lost to follow-up in the active arm
+(for simplicity, we assume for now the reference arm data are complete). Our primary
+assumption is MAR.
+    Our primary analysis uses all the observed values, imputes the missing data under
+MAR, fits the ANCOVA model to each imputed data set and combines the results (this
+is essentially equivalent to fitting a mixed model with unstructured mean and covariance
+matrix to the observed values, see Carpenter and Kenward (2008), Chapter 3).
+    Our sensitivity analysis uses controlled multiple imputation, as formally defined be-
+low. This could include a δ-based method or one of the reference-based methods given in
+Table 1; all reference-based MI methods can be implemented using the generic algorithm
+in Appendix A.
+    For each trial arm, we assume a multivariate normal model, with common covariance
+matrix, so that for patient i who has no missing values:
+                                           2        2           2  
+                  Yz,i,1           µz,1          σ1,1 σ1,2   . . . σ1,J  
+                                                   2      2           2
+                                                                         
+                 Yz,i,2        µz,2 
+                                               σ1,2   σ 2,2 . . . σ    
+                                                                          
+                                                                     2,J 
+                 ..  ∼ N  ..  , Σ =  ..                                ,
+                                           
+                                                          .
+                                                          ..          .
+                                                                      .. 
+                                                                         
+                 .            
+                                  .          .            ...         
+                                                  2     2            2
+                                                                          
+                  Yz,i,J         µ
+                                      z,J        σ1,J   σ2,J  . . . σJ,J
+                                                                          
+
+where z = a for the active patients and z = r for the reference patients.
+   Now suppose all reference group patients follow the protocol, but nd = n − no active
+patients deviate from the protocol. Suppose it was possible to continue to observe these
+nd patients, but now their post-deviation data follows the controlled model:
+                             Ya,i,1              µa,1
+                                                      
+                                                           
+                           ..              ..  
+                                          
+                                                           
+                           .                      .
+                                          
+                                                           
+                                                            
+                                          
+                                                         
+                                                            
+                            Y                  µ
+                                                       
+                           a,i,j−1       a,j−1  
+                                                           
+                           Ya,i,j  ∼ N  µd,j,j  , Σ .                            (2)
+                                                      
+                          Ya,i,j+1           µ
+                                                      
+                                                 d,j,j+1
+                                          
+                                                         
+                                                            
+                           .            
+                                            .           
+                           ..           
+                                          
+                                            ..          
+                                                            
+                                          
+                                                           
+                                                            
+                             Ya,i,J             µd,j,J
+The term ‘controlled’ means that the analyst controls the post-deviation distribution.
+Here, for patient i, the first index indicates active/deviation, the second the time of
+deviation, and the third the visit number. Different patients can deviate at different
+times, and this general formulation allows the pattern of their post-deviation means to
+differ depending on their deviation time. This encompasses all the settings in Table 1,
+and others besides.
+                                                             Information-Anchored Sensitivity Analysis       9
+   To present the theory, we first consider the case where the primary analysis does not
+adjust for baseline, extending to the baseline-adjusted case in Corollary 2.
+Proposition 1
+For the trial data described above, when the analysis model is a difference in means
+at the final time point with the usual sample variance estimate in both observed and
+controlled settings, then:
+ (a) If all patients follow the protocol and no data are missing, then the expectation of
+     the variance estimate is:
+                                                             2
+                                                           2σJ,J
+                                     E[V̂full, primary ] =       .
+                                                             n
+ (b) If nd patients deviate and are observed following the controlled model (2) the
+     expectation of the variance estimate is:
+                                                                                  J
+                                                       J                       q6=p
+                                                                             J X
+                                             2
+                                           2σJ,J       X no nd,j ∆2d,j       X      nd,p nd,q ∆2d,p,q
+               E[V̂full, sensitivity ] =           +                     +                              ,
+                                            n                    n3                         n3
+                                                       j=2                   p=2 q=2
+
+     where ∆d,j = µa,J − µd,j,J , ∆d,p,q = µd,p,J − µd,q,J and we let (n − 1) → n.
+Proof: Appendix B.1.                                                                                         2
+Corollary 1
+For clinical trials designed to detect a difference of µa,J − µr,J = ∆, with a significance
+level of α and power β, at the final visit, J,
+                             E[V̂full, sensitivity ] = E[V̂full, primary ] + O(n−2 ).
+Proof:
+First notice that the standard sample size formula implies
+                                                        2f (α, β)σ 2
+                                                ∆2 =                 .
+                                                             n
+Therefore, ∆2 is O(n−1 ). Further, since in any trial, all ∆2d,p,J can be written as ∆2d,p,J =
+κd,p,J ∆2 for some constant κd,p,j , we have ∆2d,p,J = O(n−1 ). Following the same argu-
+ments, ∆2d,j = O(n−1 ). Second, notice that no /n is the proportion of active patients
+who complete the trial, and nd,j /n is the proportion who deviate at time j. Therefore,
+no nd,j /n2 < 1. Similarly nd,p nd,q /n2 < 1. It therefore follows that,
+
+                             E[V̂full, sensitivity ] = E[V̂full, primary ] + O(n−2 ).                       (3)
+
+Corollary 2
+Under the conditions of Corollary 1, if the primary analysis model is a linear regression
+of the outcome at the final time point, adjusted for baseline, then (3) still holds.
+Proof:
+                                       2 , with the variance conditional on baseline,
+Replace the unconditional variance, σJ,J
+                 2
+ 2 = σ2 − σ2
+σJ.1   J,J    1,J
+                       2 , in the proof of Proposition 1.
+                     /σ1,1                                                         2
+10      Cro, Carpenter & Kenward
+We now use this result in the context of reference-based multiple imputation to calculate
+the difference between our defined information-anchored variance and Rubin’s multiple
+imputation variance.
+Theorem 1
+Consider a two-arm trial which includes n patients randomised to an active arm and n
+patients randomised to a reference arm. Measurement data is recorded at j = 1, . . . , J
+visits (where visit 1 is baseline). The primary analysis model is a linear regression of the
+outcome at the final time point (visit J) on baseline outcome and treatment. Suppose
+all n of the reference arm are completely observed on reference treatment over the full
+duration of the trial (at all J visits) but in the active arm, only no are observed without
+deviation. The remaining nd patients in the active arm deviate at some point during
+the trial post-baseline in a monotone fashion (such that no + nd = n). Specifically, we
+assume a proportion πd,j = nd,j /n drop out at each visit, for j > 1 and their data are
+missing post-deviation.
+     Assume that the primary design-based analysis model satisfies (3), and that the
+variance covariance matrix for the data is the same in each arm. For the patient deviation
+pattern in the active arm beginning at time j, let P̄a,d,j be the j × 1 mean vector of the
+nd,j responses at times 1, . . . , (j − 1) plus a 1 (to allow for an intercept in the imputation
+model).
+     Suppose the primary analysis is performed by MI assuming within-arm MAR. Let
+V̂obs, primary denote the estimated variance for the treatment effect under the primary
+MAR assumption. Subsequently we perform class-1 sensitivity analysis via reference-
+based MI, i.e. under (2), using the imputation algorithm in Appendix A. This general
+formulation includes all the reference-based options in Table 1. As we are doing class-
+1 sensitivity analysis, the primary analysis model is used to analyse the imputed data.
+Then the difference between the information-anchored variance of the sensitivity analysis
+treatment estimate, denoted by V̂anchored , which by definition is (V̂obs, primary /V̂full, primary ) ×
+V̂full, sensitivity and Rubin’s MI variance, denoted by V̂Rubin’s, MI , is
+                                     J
+                                     X
+                                            2                                          T         E[B̂primary ]
+E[V̂anchored ]−E[V̂Rubin’s, MI ] =         πd,j P̄a,d,j (Vprimary,j −Vsensitivity,j )P̄a,d,j +                   .
+                                     j=2                                O(n2 )E[Ŵprimary ]
+                                                                                     (4)
+   Here Vprimary,j is the variance-covariance matrix of the parameter estimates in the
+primary MAR imputation model for deviation at time j and Vsensitivity,j is the variance-
+covariance matrix of the parameter estimates in the imputation model for deviation
+at time j, defined by the reference-based sensitivity analysis assumption. B̂primary is
+the between-imputation variance and Ŵprimary is the within-imputation variance of the
+treatment effect in the primary analysis, both under MAR.
+Proof: Appendix B.2                                                                                          2
+Theorem 1 establishes the difference between the information-anchored variance and
+Rubin’s rules variance. To show that class-1 sensitivity analysis by reference-based
+multiple imputation is information-anchored, we need to consider how close expression
+(4) is to zero.
+                                              Information-Anchored Sensitivity Analysis       11
+    The key quantity driving the approximation is the first of the two terms. Notice
+that for each deviation time, j, the variance covariance matrix of the parameters of the
+on-treatment imputation model is Vprimary,j = Σj /no , where Σj is the relevant sub-
+matrix of the variance-covariance matrix Σ of the J observations. The precise form of
+Vsensitivity,j will depend on the sensitivity analysis imputation model. Consider data
+from the fully observed reference arm are used in the sensitivity imputation (e.g. copy
+reference). In this case, Vsensitivity,j = Σj /n, and
+                                                                           h         i
+        2                                          T         2               1     1    T
+      πd,j P̄a,d,j [Vprimary,j − Vsensitivity,j ]P̄a,d,j = πd,j P̄a,d,j Σj no − n P̄a,d,j
+                                                                            h      i
+                                                               2 P̄           n−no     T
+                                                          = πd,j         Σ
+                                                                    a,d,j j    no n P̄a,d,j
+                                                                          h          i
+                                                            2 P̄               πd       T
+                                                         = πd,j  a,d,j j n(1−πd ) P̄a,d,j .
+                                                                       Σ
+
+Applying this line of argument to the other methods in Table 1 suggests that the error
+in the approximation will be small, and vanish asymptotically.
+    Thus we have established that class-1 referenced-based imputation sensitivity analysis
+is, to a good approximation, information-anchored. We illustrate this in the simulation
+study in Section 5.
+
+
+3.2. Further Comments
+ (a) In the proof of Theorem 1, to simplify the argument, the variance-covariance matrix
+     of the data Σ is assumed known in the imputation model. When—as will generally
+     be the case—it has to be estimated, Carpenter and Kenward (2013), p. 58–59,
+     show that, for the simple case of the sample mean, the additional bias is small, and
+     vanishes asymptotically. This strongly suggests that any additional bias caused
+     by estimating the variance covariance matrix will be small, and asymptotically
+     irrelevant; this is borne out by our simulation studies below.
+
+ (b) For simplicity the theory treated the deviation pattern as fixed. We can replace all
+     the proportions, πd,j by their sample estimates, and then take expectations over
+     these in a further stage. As our results are asymptotic, the conclusions will be
+     asymptotically equivalent.
+
+ (c) δ-method sensitivity analysis: We consider that at the final time point J imputed
+     values for patients who deviate at time j (for j > 1) are edited by (J + 1 − j)δ
+     to represent a change in the rate of response of δ per time point post-deviation.
+     We now evaluate the size of the two terms in (4) separately. For the first term,
+     when δ is fixed, the covariance matrix for the imputation coefficients under the
+     primary analysis and the sensitivity analysis is identical for each missing data pat-
+     tern j; the δ-method simply adds a constant to the imputed values. Consequently
+                                         2 P̄                                      T
+     Vprimary,j = Vsensitivity,j , thus πd,j a,d,j [Vprimary,j − Vsensitivity,j ]P̄a,d,j = 0, and
+     Rubin’s rules give a very sharp approximation to the information-anchored vari-
+     ance.
+12    Cro, Carpenter & Kenward
+     However when δ is not fixed and we vary δ over the imputation set K, that is we
+                                                                                   T
+     suppose δk ∼ N δ, σδ2 , then, πd,j 2 P̄                                                 2 2
+                            
+                                             a,d,j [Vprimary,j − Vsensitivity,j ]P̄a,d,j = −πd σδ ,
+     and the sensitivity analysis is information-negative. The extent of this is principally
+     driven by the variance of δk .
+
+     Now consider the second term in (4). When the δ-method is used it is not necessarily
+     the case that (3) holds, since ∆d,j = µa,J − µd,j,J and ∆d,p,q = µd,p,J − µd,q,J are
+     not necessarily O(n−1 ). In the δ-based scenario, as outlined in Appendix B.1,
+
+                                 V̂full, sensitivity = V̂full, primary + Q,
+     where,
+          J                                  J (J,q6 =p)
+          X no nd,j (J + 1 − j)2 δ 2         X   X       nd,p nd,q ((J + 1 − p) δ − (J + 1 − q) δ)2
+     Q=                                  +                                                          .
+                         n3                                                  n3
+          j=2                                p=2    q=2
+
+     Thus, for the δ-method the O(n−2 ) component in the second term of (4) is replaced
+     with Q (as defined above). The composition of Q indicates that the information-
+     anchoring performance of Rubin’s variance estimate will also depend on the size
+     of δ. Typically, the size of δ will not have a large effect since the terms in Q are
+     all multiplied by components of the form no nd,j /n3 or nd,p nd,q /n3 and thus will
+     vanish asymptotically. Hence with a fixed δ adjustment, the information-anchoring
+     approximation will be excellent.
+
+(d) Improved information-anchoring: Remark (b) shows that, provided the underlying
+    variance-covariance matrices of the data are similar, the key error term in the
+    information-anchoring approximation is the difference in precision with which they
+    are estimated. If all n patients are observed in the reference arm and no in the
+    active arm, this is
+                                           1    1
+                                              − .
+                                          no n
+    This suggests Rubin’s rules will lead to improved information-anchoring if, instead
+    of using all patients in the reference arm to estimate the imputation model for
+    deviators at time j, a random no are used. We have confirmed this by simulation,
+    but the improvement is negligible when the proportion of missing data is < 40%,
+    when simulations confirm the approximation is typically excellent.
+
+ (e) Theorem 1 suggests that, for a given deviation pattern, information-anchoring will
+     be worse the greater the difference between the covariance matrix of the imputa-
+     tion coefficients under the primary and sensitivity analysis. However, we have not
+     encountered examples where this has been a practical concern.
+
+ (f) We have not presented formal extensions of our theory to the case when we also
+     have missing data in the reference arm. But this does not introduce any substantial
+     errors in the information-anchoring approximation. With missing data in the refer-
+     ence arm, for each missing data pattern j, an additional component which depends
+                                            Information-Anchored Sensitivity Analysis     13
+     on the difference between the variance of the imputation parameters in the primary
+     on-treatment imputation model and sensitivity scenario imputation model for the
+     reference arm, multiplied by the proportion of reference patients with that missing
+                                       2
+     data pattern squared (denoted πr,d,j ) is included. If reference arm data are imputed
+     under within-arm MAR (as under CIR, CR or J2R) these terms will be zero. In
+     the more general case, where different patterns of patients, across different arms,
+     are imputed with different reference-based assumptions, additional non-zero error
+     terms of the form as in the summation in (4) will be introduced; but again, for the
+     reasons discussed above, these will typically be small. The covariance between the
+     parameters of the active and reference arm sensitivity scenario imputation models
+     for each missing data pattern also contributes to the sharpness of the approxima-
+     tion. The exact size of these additional error terms again depend on the specific
+     sensitivity scenario and in some cases will be zero (e.g. LMCF). But each covari-
+     ance term is always multiplied by the proportion of deviators in each arm with
+                                                                        T
+     the associated missing data patterns (πd,j πr,d,j ), P̄a,d,j and P̄r,d,j (the j × 1 mean
+     vector of the responses at times 1, . . . , (j − 1) for the reference patients deviating
+     at time j, plus a 1 to allow for an intercept in the imputation model). Thus will
+     be of a relatively small order in practice following the reasons discussed above.
+
+
+Summary
+Given a primary design-based analysis model, we have established in Proposition 1 a
+criterion which defines a general class of reference-based sensitivity analyses. If these
+sensitivity analyses are performed by MI, we have further established in Theorem 1
+that they will be—to a good approximation—information-anchored, in line with the
+principles we set out in Section 2. We have also shown why the information-anchoring
+is particularly sharp for the δ-method of MI.
+
+4.   Class-2 Sensitivity Analyses and Information-Anchoring
+A full exploration of information-anchoring for class-2 sensitivity analyses is beyond
+the scope of this article. Here, we focus on likelihood-based selection models (see, for
+example, Diggle and Kenward, 1994), and use the results of Molenberghs et al. (1998) to
+make links to pattern mixture models, which allows us to use the results we presented
+in Section 3.
+    Continuing with the setting in Section 3, consider a trial with scheduled measurement
+times of a continuous outcome measure at baseline and over the course of the follow-
+up. When data are complete, the primary analysis is the ANCOVA of the outcome
+measure at the scheduled end of follow-up on baseline and treatment group. Equivalent
+estimates and inferences can be obtained from a mixed model fitted to all the observed
+data, provided we have a common unstructured covariance matrix and a full treatment-
+time and baseline-time interaction.
+    Now suppose patients withdraw before the scheduled end of follow-up, and subsequent
+data are missing. The mixed model described in the previous paragraph then provides
+valid inference under the assumption that post-withdrawal data are MAR given base-
+line, treatment group and available follow-up data. A selection model that allows post-
+14     Cro, Carpenter & Kenward
+withdrawal data to be MNAR combines this mixed model with a model for the dropout
+process. Let Ri,j = 1/0 if we observe/miss the outcome for patient i at scheduled visit
+j = 1, . . . , J. An illustrative selection model is:
+                Yi,j     = αj + βj Yi,0 + γj Ti + i,j , i ∼ N (0, ΣJ×J )
+             g(Ri,j ) = αjR + βjR Yi,0 + γjR Ti + δ1R Yi,j−1 + δ2R (Yi,j − Yi,j−1 ),          (5)
+where the superscript ‘R’ denotes a selection model parameter, and the link function
+g is typically logit, probit or complementary log-log (the latter giving a discrete time
+proportional hazards model for withdrawal).
+    Usually there is little information on the informative missingness parameter δ2R in
+the data (Rotnitzky et al., 2000; Kenward, 1998), and this information will be highly
+dependent on the assumed data distribution. Therefore, in applications it is more useful
+to explore the robustness of inferences to specific, fixed, values of δ2R (δ2R = 0 corresponds
+to MAR).
+    For each of these specific values of δ2R , we may recast the selection model as a pattern
+mixture model, following Molenberghs et al. (1998). The differences between the ob-
+served and unobserved patterns are defined as functions of the fixed δ2R . However, these
+then become a particular example of the δ-method pattern mixture models considered
+in Section 3, which we have shown are information-anchoring.
+    More generally, local departures from MAR are asymptotically information-anchored.
+To see this, denote by θ the parameters in (5), apart from δ2R . For a fixed δ2R , let i(θ̂; δ2R )
+be the observed information matrix at the corresponding maximum likelihood estimates
+θ̂. For regular log-likelihoods and a given data set, as we move away from MAR, for each
+element, i, of the information matrix i, the mean value theorem gives
+                                                           !
+                                   ∂
+         i(θ̂; δ2R ) − i(θ̂; 0) =      i(θ̂; δ2R )           δ2R , for some δ̃2R ∈ (0, δ2R ). (6)
+                                  ∂δ2R              R
+                                                   δ =δ̃ R
+                                                2   2
+
+
+However, asymptotically the parameter estimates are normally distributed, so the third
+derivative of the likelihood (i.e. the RHS of (6)) goes to zero. Because the above holds
+when we use both the full data, and the partially observed data, it is sufficient to give
+information-anchoring. This is the basis for our intuition that, for most Phase III trials,
+class-2 sensitivity analyses can be treated as information-anchored for practical purposes.
+
+5.   Simulation Study
+We now present a simulation study which illustrates the information-anchoring property
+of Rubin’s variance formula, derived in Section 3. The simulation study is based on
+a double-blind chronic asthma randomised controlled trial conducted by Busse et al.
+(1998). The trial compared four doses of the active treatment budesonide against placebo
+on forced expiratory volume (FEV1 recorded in litres) over a period of 12 weeks. FEV1
+measurements were recorded at baseline and after 2, 4, 8 and 12 weeks of treatment.
+The trial was designed to have 80% power (5% type-1 error) to detect a change of 0.23
+litres in FEV1 with 75 patients per arm, assuming a SD of 0.5 litres.
+    We simulated longitudinal data, consisting of baseline and two follow-up time points
+(time 2 being week 4, and time 3 being week 12), from a multivariate normal distribution
+                                                      Information-Anchored Sensitivity Analysis              15
+whose mean and covariance matrix were similar to those observed in the placebo and
+lowest active dose arm of this trial:
+                                                          
+                                              0.4 0.2 0.2
+                       Σplacebo = Σactive =  0.2 0.5 0.2  ,
+                                              0.2 0.2 0.6
+                µplacebo = [2.0, 1.95, 1.9] ,       µactive = [2.0, 2.21, µa,3 ]       (litres).
+    In the asthma study µa,3 ≈ 2.2 litres, corresponding to a treatment effect of ≈ 0.3
+litres at time 3 (week 12). In the simulation study we explored µa,3 = {1.9, 2.2, 2.9} .
+To test the approximation (3) we chose a sample size of n = 250 in each arm, giving a
+power of at least 90% in all scenarios. For each scenario, the analysis model was a linear
+regression of FEV1 at visit 2 and baseline and treatment, and this was fitted to the full
+data.
+    Subsequently, for the active arm, we simulated monotone deviation completely at
+random. We varied the proportion of patients deviating overall from 0-50%. For each
+overall proportion deviating, around half the patients deviated completely at random
+before visit 2, and around half deviated completely at random before visit 3. All post-
+deviation data were set to missing. The reference arm was always fully observed.
+    For each simulated data set, the primary analysis assumed MAR, and we performed
+class-1 sensitivity analyses using each of the reference-based methods in Table 1. Fifty
+imputations were used for each analysis. For the δ-method, the unobserved data was
+postulated to be worse (than under MAR) by a fixed amount of δ = {0, −0.1, −0.5, −1},
+for each time point post-deviation, where δ = 0 is equivalent to the primary, MAR
+analysis. Thus, for patients who deviated between visits 1 and 2, their MAR imputed
+observations at visit 2 were altered by δ and at time 3 by 2δ. For patients who deviated
+between visits 2 and 3, their MAR imputed observation at time 3 was altered by δ.
+    One thousand independent replicates were generated for each combination of µa,3
+and deviation. Our results focus on the visit 3 treatment effect and its variance.
+    In order to minimise the Monte-Carlo variability in our comparisons, we used the
+same set of 1000 datasets and deviation patterns for each sensitivity analysis.
+    Within each replication, for each sensitivity scenario, we also drew post-deviation
+data under this scenario, giving a complete scenario-specific data set. For each replica-
+tion this allowed us to estimate the treatment effect and V̂full, sensitivity for each scenario.
+Then, we calculated the theoretical information-anchored variance, which by definition
+in Section 2 is V̂anchored = (V̂obs, primary /V̂full, primary ) × V̂full, sensitivity . Rubin’s variance estimate
+was calculated. Estimates were averaged over the 1000 simulations. All simulations
+were performed using Stata version 14 (StataCorp, 2015) and reference-based MI was
+conducted using the mimix program by Cro et al. (2016).
+
+
+5.1. Simulation Results
+Figure 2 shows the results, for each of the reference-based sensitivity scenarios in Table
+1, and controlled multiple imputation with four values of δ.
+    The top four panels are for a moderate treatment effect of 0.3 (µa,3 = 2.2), compa-
+rable to that found in the asthma trial. We see the results show excellent information-
+anchoring by Rubin’s variance estimator for up to 40% of patients deviating. Notice the
+16              Cro, Carpenter & Kenward
+
+
+
+
+                             Sensitivity scenario: Copy reference                                  Sensitivity scenario: Jump to reference
+                 .01                                                                     .01
+
+                .008                                                                    .008
+     Variance
+
+
+
+
+                                                                             Variance
+                .006                                                                    .006
+
+                .004                                                                    .004
+
+                .002                                                                    .002
+
+                   0                                                                       0
+                    10%          20%            30%           40%      50%                  10%         20%            30%           40%      50%
+                                 Proportion of missing data (active)                                    Proportion of missing data (active)
+
+                  Sensitivity scenario: Copy increments in reference                           Sensitivity scenario: Last mean carried forward
+                 .01                                                                     .01
+
+                .008                                                                    .008
+     Variance
+
+
+
+
+                                                                             Variance
+                .006                                                                    .006
+
+                .004                                                                    .004
+
+                .002                                                                    .002
+
+                  0                                                                       0
+                   10%           20%            30%           40%      50%                 10%          20%            30%           40%      50%
+                                 Proportion of missing data (active)                                    Proportion of missing data (active)
+
+                       Sensitivity scenario: δ method, with δ = 0 (MAR)                         Sensitivity scenario: δ method, with δ = -0.1
+                .014                                                                    .014
+                .012                                                                    .012
+                 .01                                                                     .01
+     Variance
+
+
+
+
+                                                                             Variance
+
+
+
+
+                .008                                                                    .008
+                .006                                                                    .006
+                .004                                                                    .004
+                .002                                                                    .002
+                   0                                                                       0
+                    10%          20%            30%           40%      50%                  10%         20%            30%           40%      50%
+                                 Proportion of missing data (active)                                    Proportion of missing data (active)
+
+                         Sensitivity scenario: δ method, with δ = -0.5                          Sensitivity scenario: δ method, with δ = -1.0
+                .014                                                                    .014
+                .012                                                                    .012
+                 .01                                                                     .01
+     Variance
+
+
+
+
+                                                                             Variance
+
+
+
+
+                .008                                                                    .008
+                .006                                                                    .006
+                .004                                                                    .004
+                .002                                                                    .002
+                   0                                                                       0
+                    10%          20%            30%           40%      50%                  10%         20%            30%           40%      50%
+                                 Proportion of missing data (active)                                    Proportion of missing data (active)
+
+
+
+
+Fig. 2. Simulation results: for each sensitivity scenario, as the proportion of active arm devia-
+tions increases, each panel shows the evolution of the mean estimate of the visit 3 treatment
+effect variance (over 1000 replications) calculated in four ways: (i) −◦− Rubin’s MI variance, from
+reference-/δ-based MI; (ii) −×− information-anchored variance (Ê[V̂anchored ]); (iii) −− applying pri-
+mary analysis variance estimator in sensitivity scenarios; (iv) −/− Variance when post-deviation
+data is actually fully observed under the given scenario (Ê[V̂full, sensitivity ]).
+                                              Information-Anchored Sensitivity Analysis      17
+information-anchored variance is always greater than V̂full, sensitivity , the variance we would
+see if we were able to observe data under the sensitivity assumption.
+    These results are echoed by those with smaller and larger treatment effects (see
+Appendix C Figure 4). We conclude that, for realistic proportions of missing post-
+deviation data, reference-based multiple imputation using Rubin’s variance estimator
+can be regarded as information-anchored.
+    This is in contrast to the behaviour of the conventional variance estimator from the
+primary regression analysis. Across all four reference-based scenarios, this gets smaller—
+and tends to zero—as the proportion of missing data increases, so yields increasingly
+information-positive inference as more data are missing! It is also smaller than the
+variance we would obtain if we were able to observe data under the sensitivity assumption.
+Therefore, (see Carpenter et al. (2014)) we believe this is not generally an appropriate
+variance estimator for class-1 sensitivity analyses. We return to this point below.
+    Now consider the lower four panels of Figure 2, which show results for controlled
+multiple imputation using the δ-method. Again, consistent with the theory in Sec-
+tion 3, these show excellent information-anchoring by Rubin’s variance estimator for all
+missingness scenarios for δ = 0, −0.1, −0.5 litres. Indeed, the information-anchoring ap-
+proximation is better than for the reference-based methods above because the covariance
+matrix for the imputation coefficients under MAR and δ-based imputation are identical:
+term 1 in (4) disappears.
+    For contextually large δ = −1 litres, the approximation is excellent for up to 40%
+missing data. For greater proportions of missingness the approximation is not so sharp,
+and this is caused by the size of the second term in (4), which is larger with a bigger δ
+and greater proportion of missing post-deviation data.
+    For the δ-method we also see using the conventional variance estimator from the
+primary analysis is also information-anchored. The reason for different behaviour here
+than for reference-based methods is that reference-based methods borrow information
+from another trial arm, and they do this increasingly as the proportion of patients
+deviating increases. This causes the conventional variance estimator to be information-
+positive. However, with the δ-method there is no borrowing between arms, so this issue
+does not arise.
+    To summarise, the simulations demonstrate our theoretical results, showing that for
+all the controlled MI methods outlined in Table 1 (reference- and δ-based), in realistic
+trial settings multiple imputation using Rubin’s rules gives information-anchored infer-
+ence for treatment effects. It is only with very high proportions of missing data (e.g.
+> 50%) that the information-anchoring performance of Rubin’s variance begins to dete-
+riorate. Such high proportions of missing data are unlikely in well designed trials, and
+would typically be indicative of other major problems.
+
+
+6.   Analysis of a Peer Review Trial
+
+We now illustrate how the information-anchored theory outlined in Section 3 performs in
+practice, using data from a single blind randomised controlled trial of training methods
+for peer reviewers of the British Medical Journal. Full details of the trial are given in
+Schroter et al. (2004).
+18     Cro, Carpenter & Kenward
+
+                                                  5
+
+
+
+
+               Review Quality Index for paper 1
+                                                  4
+
+
+
+
+                                                  3
+
+
+
+
+                                                  2
+
+
+
+
+                                                  1
+                                                          No-training                     Self-taught package
+
+                                                                 Reviewed paper 2   Did not review paper 2
+
+
+
+
+                                                      Fig. 3. The quality of the baseline review
+
+
+
+6.1.   Description of the Data
+
+Following concerns about the quality of peer review, the original trial was set up to eval-
+uate no-training, face-to-face training or a self-taught training package. After consent,
+but before randomisation, each participant was sent a baseline paper to review (paper
+1) and the review quality was measured using the Review Quality Index (RQI). This is
+a validated instrument which contains eight items and is scored from 1 to 5, where a
+perfect review would score 5. All 609 participants who returned their review of paper 1,
+were randomised to receive one of the three interventions.
+   Two to three months later, participants were sent a further article to review (paper
+2). If this paper was reviewed a third paper was sent three months later (paper 3).
+Unfortunately, not all of the reviewers completed the required reviews, thus a number
+of review scores were missing. The main trial analysis was conducted under the MAR
+assumption, using a linear regression of RQI on intervention group adjusted for baseline
+RQI. The analysis showed that the only statistically significant difference was in the
+quality of the review of paper 2, where the self-taught group did significantly better
+than the no-training group.
+   Therefore, here we focus on examining the robustness of this purportedly significant
+result to different assumptions about the missing data. Assuming MAR, the analysis
+found that reviewers in the self-taught group had a mean RQI 0.237 points above the
+no-intervention group (95% CI 0.01–0.37, p = 0.001). Although this is relatively small,
+the self-taught intervention is inexpensive and may be worth pursuing. However, Figure
+3 shows the quality of the review at baseline for (a) those who went on to complete the
+second review and (b) those who did not, for each of these two trial arms. The results
+suggest that a disproportionate number of poor reviewers in the self-taught group failed
+to review paper 2. This suggests the MAR assumption may be inappropriate, and data
+may be missing not at random.
+                                             Information-Anchored Sensitivity Analysis   19
+6.2. Statistical Analysis
+The primary analysis model was a linear regression of paper 2 RQI on baseline and
+intervention group (self-taught vs no-training), and the intervention effect estimate is
+shown in the first row of Table 2.
+   We conducted four further analyses:
+ (a) We multiply imputed the missing RQI data assuming MAR, fitted the primary
+     analysis model to each imputed dataset and combined the results for inference using
+     Rubin’s rules. The imputation model for RQI of paper 2 included the variables
+     present in the primary analysis model (RQI at baseline and treatment group).
+ (b) As it is reasonable to suppose that many of the reviewers in the self-taught group
+     who did not return their second review ignored their training materials, we perform
+     a class-1 sensitivity analysis assuming they ‘copied no-training’. We used MI and
+     Rubin’s rules for information-anchored inference.
+ (c) We reproduced a previous sensitivity analysis described by White et al. (2007).
+     They used a questionnaire to elicit experts’ prior opinion about the average differ-
+     ence in review quality index between those who did, and did not, return the review
+     of paper 2 (20 editors and other staff at the BMJ completed the questionnaire). The
+     resulting distribution can be summarised as N (−0.21, 0.462 ). We used this to per-
+     form a δ-method sensitivity analysis, where, for each imputation k, RQI values in
+     the self-taught arm were imputed under MAR and then had δk ∼ N (−0.21, 0.462 )
+     added. This analysis is expected to be information-negative.
+ (d) Our fourth analysis used the δ-method via MI for participants in the self-taught
+     arm, but now fixed δ = −0.21 (the mean expert opinion) to obtain information-
+     anchored analysis.
+All analyses used 50 imputations and were performed using Stata version 14 (StataCorp,
+2015).
+
+
+6.3. Results
+Table 2 shows the results. As theory predicts, rows 1 and 2 show that the primary
+analysis and analysis assuming MAR using MI give virtually identical results. In row
+3, reference-based sensitivity analysis assuming copy no-training reduces the estimated
+effect to 0.172; compared to the primary analysis the information-anchored standard
+error (SE) is now very slightly reduced at 0.069. The effect of this is to increase the
+p-value by a factor of ten to 0.013.
+    In contrast, using the expert’s prior distribution (row 4), the point estimate is 0.195,
+but the standard error is much increased at 0.132, so the p-value is over 100 times greater
+than in the primary analysis. Lastly (row 5), again using the δ-method, but now fixing
+δ = −0.21 gives a similar point estimate, but an information-anchored SE of 0.072.
+    Critically, comparing rows 4 and 5 shows that expert opinion loses a further
+                                      1        1
+                                   0.0722 − 0.1322
+                                           1         = 70%
+                                        0.0722
+of the information beyond that lost due to missing data under the primary analysis. Such
+information losses are not atypical (Mason et al., 2017). Since trials are often powered
+20    Cro, Carpenter & Kenward
+                   Table 2. Estimated effect of self-training vs no train-
+                   ing on the paper 2 Review Quality Index, from the
+                   primary and various sensitivity analyses; † indicates
+                   information-anchored analysis.
+                     Analysis                 Est      SE      p-value
+                     Primary analysis, MAR† 0.237 0.070 0.001
+
+                     MI, MAR†                  0.234   0.071   0.001
+
+                     MI, copy no-training†     0.172   0.069   0.013
+
+                     MI, expert opinion        0.195   0.132   0.145
+                     δk ∼ N (−0.21, 0.462 )
+
+                     MI, δ-method with         0.189   0.072   0.009
+                     δ = −0.21†
+
+
+with minimal regard to potential missing data, such a loss of information must frequently
+lead to the primary analysis being overturned. By contrast, information-anchored sen-
+sitivity analysis fixes the loss of information across the primary and sensitivity analysis,
+at a level that is possible to estimate a-priori for any given deviation pattern.
+
+7.   Discussion
+The recent publication of the ICH E9 (R1) addendum (2017) is bringing a sharper focus
+on the estimand. As the addendum recognises, this in turn leads to greater focus on
+the assumptions underpinning estimands. When we are faced with estimand relevant
+protocol deviations, or inter-current events (e.g. rescue medication) and loss to follow-up
+etc., such assumptions are at best only partially verifiable from the actual trial data.
+In such settings, a primary analysis assumption is made, and then the robustness of
+inferences to a number of secondary sensitivity assumptions will ideally be explored.
+    The assumptions underpinning the primary and sensitivity analyses should be as
+accessible as possible. This applies not only to assumptions about the typical, or mean,
+profile of patients post-deviation, but also to assumptions about their precision.
+    In this article, we have introduced the concept of information-anchoring—whereby
+the extent of information loss due to missing data is held constant across primary and
+sensitivity analyses. We believe this facilitates informed inferences and decisions, what-
+ever statistical method is adopted. Information-anchoring allows stakeholders to focus
+on the assumptions about the mean responses of each patient, or group of patients,
+post-deviation, without being concerned as to whether we are injecting information
+into or removing information from the analysis (relative to that lost—due to patient
+deviations—in the primary analysis). For example, we believe this provides a good basis
+for discussions between regulators and pharmaceutical statisticians: the former can be
+reassured the sensitivity analysis is not injecting information, while the latter can be
+reassured that the sensitivity analysis is not discarding information.
+    We have differentiated between two different types of sensitivity analysis: class-1 and
+                                             Information-Anchored Sensitivity Analysis    21
+class-2. In class-1 the primary analysis model is retained in the sensitivity analysis; such
+sensitivity analyses can be readily (but need not be) carried out by multiple imputation.
+    Controlled MI procedures, which combine a pattern-mixture modelling approach with
+MI, naturally fall into this first class. These include reference-based MI procedures,
+which impute missing data under qualitative assumptions for the unobserved data, based
+on data observed in a specified reference group. The primary analysis model is retained
+in the sensitivity analyses, fitted to each imputed data set and results combined using
+Rubin’s rules. Consequently the assumptions of the primary analysis model are gen-
+erally inconsistent with the data generating mechanism postulated by the sensitivity
+analysis assumption. Thus the usual justification for Rubin’s MI rules does not hold.
+Instead, we have identified a new property of these rules, namely that for a broad class
+of controlled MI approaches, including both δ- and reference-based approaches, they
+yield information-anchored inference. In this regard, a practically important corollary
+of our theory is that the widely used δ-method (and associated tipping-point analysis)
+is information-anchored with fixed δ adjustment.
+    While we believe information-anchored sensitivity analyses provide a natural starting
+point, and will often be sufficient, in certain scenarios it may also be desirable to conduct
+information-negative sensitivity analysis. In such analyses a greater loss of information
+due to post-deviation (missing) data is imposed by the analyst in the sensitivity analysis
+relative to the primary analysis. One way to do this is by prior elicitation—i.e. incor-
+porating a prior distribution on δ—as touched upon in the further comments following
+Theorem 1 and Section 6. The theory in Section 3 also shows how a greater loss of infor-
+mation can be imposed in sensitivity analysis via reference-based MI if required. This
+is done by reducing the size of the reference group used to construct the reference-based
+imputation models.
+    Whatever approach is taken, careful thought needs to be given, and justification
+provided, for the additional loss of information being imposed. As we discussed at the
+end of Section 6, the loss of information with prior elicitation can be substantial. Often
+it will be difficult to justify an additional amount of information loss to impose.
+    Conversely, we argue that information-positive sensitivity analysis, where a lower loss
+of information due to missing data post-deviation is imposed in the sensitivity analysis
+relative to the primary analysis, is rarely justifiable, if at all. This is because it goes
+against all our intuition that missing data means we lose (not gain) information: with
+information-positive sensitivity analyses, we gain more precise inferences the more data
+we lose!
+    Our approach to determining the appropriate information in sensitivity analyses
+(which, as the simple example in the Introduction shows is under the control of the
+analyst), contrasts with some recent work. Lu (2014), Tang (2017) and Liu and Pang
+(2016) each developed alternative implementations of the reference-based pattern mix-
+ture modelling approach. Lu (2014) introduced an analytical approach for placebo-based
+(CR) pattern mixture modelling which uses maximum likelihood and the delta method
+for treatment effect and variance estimation. Tang (2017) derived different analytical
+expressions for reference-based models, also via the likelihood-based approach. Liu and
+Pang (2016) proposed a Bayesian analysis for reference-based methods which estimates
+the treatment effect and variance from the posterior distribution.
+22    Cro, Carpenter & Kenward
+    What these papers have in common is that, in the terminology developed here, they
+essentially choose to apply the primary analysis variance estimator across the sensitivity
+analyses. While this choice has a long-run justification, for the reference-based multiple
+imputation estimator, as our simulation results in Figure 2 show (and we have discussed
+elsewhere (Carpenter et al., 2014)), this choice also means information-positive inferences
+for reference-based scenarios. This is a consequence of (i) uncongeniality between the
+imputation and analysis model and (ii) the fact that reference-based methods borrow
+information from within and across arms. Thus we highlight here that if one of these
+alternative implementations is employed within sensitivity analysis information-positive
+inference will be obtained.
+    What are the implications of this for our approach? Necessarily, the variance estimate
+arising from the information-anchored sensitivity analysis via reference-based multiple
+imputation does not have a long-run justification for the reference-based multiple im-
+putation point estimate. However, having determined that the information-anchored
+variance is appropriate, we can readily inflate the long-run variance of the reference-
+based multiple imputation estimator by adding appropriate random noise. In this way,
+having chosen to make our primary and sensitivity analysis information-anchored, we
+can derive a corresponding point estimator whose long run variance is the information-
+anchored variance.
+    If we wish to do this, we can proceed as follows. Recall that reference-based methods
+calculate the means of the missing values for each patient as linear combinations of the
+estimated treatment means at each time point under randomised arm MAR. Assume
+J follow-up visits, and denote these estimated means by the 2J × 1 column vector µ,
+with estimated covariance matrix V̂. It follows that, for some 2J × 1 column vector
+L, the maximum likelihood reference-based treatment estimate is given by Lt µ, with
+                                             2         t
+associated estimated empirical variance σ̂M     L = L V̂L. If we denote the information-
+anchored variance by σ̂IA2 , take a draw from N (0, σ̂ 2 − σ̂ 2 ), add this to the treatment
+                                                      IA     ML
+estimate obtained from the reference-based analysis by MI, this will result in an estimate
+with the information-anchored variance in a long-run sense. In practice σ̂M    2
+                                                                                 L could also
+be estimated using one of the implementations of Lu (2014), Tang (2017) or Liu and
+Pang (2016). In applications, however, we do not think this step is typically worthwhile.
+Note too that with the δ-method σ̂IA 2 is well approximated by σ̂ 2 , so it is not necessary.
+                                                                   ML
+    This article has focused on the analysis of a longitudinal measure of a continuous
+outcome. For generalized linear models (GLMs), if we perform controlled MI on the
+linear predictor scale, then we can apply the theory developed here on the linear predictor
+scale. This suggests that for GLMs, controlled MI will be approximately information-
+anchored; preliminary simulations support this, and work in this area is continuing.
+We note, however, that issues may arise with non-collapsability when combining the
+component models in this setting. For survival data, we need to define the reference-
+based assumptions. This has been done in a recent manuscript we have submitted, which
+also contains simulation results suggesting promising information-anchoring properties
+for Rubin’s rules in this setting.
+    When conducting class-1 sensitivity analyses via MI a natural question might be how
+many imputations to conduct. As remarked in the proof of Theorem 1 in Appendix B.2,
+the number of imputations does not materially affect the information-anchoring perfor-
+                                           Information-Anchored Sensitivity Analysis   23
+mance of Rubin’s variance estimate. Thus we recommend determining the number of
+imputations required for primary analysis (under MAR) based on the required precision;
+these should estimate the information-anchored variance with similar precision in sen-
+sitivity analysis. To establish the number of imputations required to achieve a specific
+level of precision under MAR Rubin (1987) showed that the relative variance i.e. the
+efficiency of an estimate using only K imputations compared to an infinite number is
+approximately (1 + λ/K), where λ is the fraction of missing information. As discussed in
+Carpenter and Kenward (2008), p. 86–87, 5–10 imputations is sufficient to get a reason-
+ably accurate answer for most applications. For more critical inferences, at least 50-100
+imputations are recommended (see Carpenter and Kenward, (2013), p. 54–55).
+    Of course, to obtain information-anchored analyses Multiple Imputation does not
+have to be used. In principle we can perform information-anchored analysis by calculat-
+ing the variance directly from the information-anchoring formula. However, to do this
+we need to calculate the expected value of the design-variance when we actually observe
+data under the sensitivity assumption. When the approach is used with its full flexibility
+(with different assumptions for different groups of patients) this is awkward. Multiple
+imputation provides a much more direct, computationally general, accessible approach
+for busy trialists, without the need for sophisticated one-off programming which is often
+required to directly fit MNAR pattern-mixture models or other MNAR models.
+    In conclusion, we believe that sensitivity analysis via controlled MI provides an ac-
+cessible practical approach to exploring the robustness of inference under the primary
+assumption to a range of accessible, contextually plausible alternative scenarios. It
+is increasingly being used in the regulatory world (see, for example, the DIA pages
+at www.missingdata.org.uk, and the code therein; Philipsen et al. (2015), Jans et al.
+(2015), Billings et al. (2018), Atri et al. (2018), O’Kelly and Ratitch (2014) and refer-
+ences therein). Our aim has been to provide a more formal underpinning. Information-
+anchoring is a natural principle for such analysis, and we have shown this is an automatic
+consequence of using MI in this setting.
+
+
+8.   Acknowledgements
+
+We are grateful to the Associate Editor and two referees whose comments have lead to
+a greatly improved manuscript. Suzie Cro was supported for her PhD by MRC London
+Hub for Trials Methodology Research, grant number MC EX G0800814. James Car-
+penter is supported by the Medical Research Council, grant numbers MC UU 12023/21
+and MC UU 12023/29.
+
+
+A.   Appendix A: Algorithm for reference-based multiple imputation
+
+For a continuous outcome, the generic algorithm of Carpenter et al. (2013) can be sum-
+marized in full as follows:
+
+ (a) Separately for each treatment arm take all the observed data, and assuming MAR,
+     fit a multivariate normal (MVN) distribution with an unstructured mean (i.e. a
+     separate mean for each of the baseline and post-randomisation observation times)
+24     Cro, Carpenter & Kenward
+     and variance covariance matrix using a Bayesian approach with an improper prior
+     for the mean and an uninformative Jeffreys prior for the covariance matrix.
+ (b) Draw a mean vector and covariance matrix from the posterior distribution for
+     each treatment arm. Specifically we use the Markov-Chain Monte Carlo (MCMC)
+     method to draw from the appropriate Bayesian posterior, with a sufficient burn-
+     in and update the chain sufficiently in-between to ensure subsequent draws are
+     independent. The sampler is initiated using the Expectation-Maximization (EM)
+     algorithm.
+ (c) Use the draws in step 2 to form the joint distribution of each deviating individual’s
+     observed and missing outcome data as required. This can be done under a range
+     of assumptions, in order to explore the robustness of inference about treatment
+     effects. The options presented in Carpenter et al. (2013) that each translate to a
+     relevant assumption are described in Table 1.
+ (d) Construct the conditional distribution of missing (post-deviation) given observed
+     outcome data for each individual who deviated, using their joint distribution formed
+     in step 3. Sample their missing post-deviation data from this conditional distribu-
+     tions to create a completed data set.
+ (e) Repeat steps 2–4 K times, resulting in K imputed data sets.
+
+   We now describe how step 3 works under ‘jump to reference’. This leads to a brief
+presentation of the approach for the other options. Suppose there are two arms, active
+(indexed below by a) and reference (indexed below by r). In step 2, denote the current
+draw from the posterior for the 1+J reference arm means and variance-covariance matrix
+by µr,0 , . . . µr,J , and Σr . Use the subscript a for the corresponding draws from the other
+arm in question (which will depend on the arm chosen as reference for the analysis at
+hand).
+   Under ‘jump to reference’, suppose patient i is not randomised to the reference arm
+and their last observation, prior to deviating, is at time di , di ∈ (1, . . . , J − 1). The joint
+distribution of their observed and post-withdrawal outcomes is multivariate normal with
+mean
+                               µ̃i = (µa,0 , . . . , µa,di , µr,di +1 , . . . , µr,J )T ;
+that is post-deviation they ‘jump to reference’.
+   We construct the new covariance matrix for these observations as follows. Denote
+the covariance matrices from the reference arm (without deviation) and the other arm
+in question (without deviation), partitioned at time di according to the pre- and post-
+deviation measurements, by:
+                                                                          
+                             R11 R12                              A11 A12
+         Reference Σr =                   and other arm: Σa =                 .
+                             R21 R22                              A21 A22
+   We want the new covariance matrix, Σ say, to match that from the active arm for the
+pre-deviation measurements, and the reference arm for the conditional components for
+the post-deviation given the pre-deviation measurements. This also guarantees positive
+definiteness of the new matrix, since Σr and Σa are positive definite. That is, we want
+                                                  
+                                         Σ11 Σ12
+                                   Σ=                ,
+                                         Σ21 Σ22
+                                                        Information-Anchored Sensitivity Analysis   25
+subject to the constraints
+
+                                                 Σ11 = A11 ,
+                                           Σ21 Σ−1        −1
+                                                11 = R21 R11 ,
+                           Σ22 − Σ21 Σ−1                  −1
+                                      11 Σ12 = R22 − R21 R11 R12 .
+
+     The solution is:
+
+                                     Σ11 = A11 ,
+                                     Σ21 = R21 R−1
+                                                11 A11 ,
+                                     Σ22 = R22 − R21 R−1              −1
+                                                      11 (R11 − A11 )R11 R12 .
+
+    Under ‘jump to reference’ we have now specified the joint distribution for a patient’s
+pre- and post-deviation outcomes, when deviation is at time di . This is what we require
+for step 4. For ‘copy increments in reference’ we use the same Σ as for ‘jump to reference’
+but now
+
+                 µi = {µa,0 , . . . , µa,di −1 , µa,di , µa,di + (µr,di +1 − µr,di ),
+                                      µa,di + (µr,di +2 − µr,di ), . . .}T .
+
+For ‘last mean carried forward’, Σ equals the covariance matrix from the randomisation
+arm. The important change is the way we put together µ. Thus, for patient i in arm a
+under ‘last mean carried forward’,
+
+                   µi = (µa,0 , . . . , µa,di −1 , µa,di , µa,di , . . . ...)T ;   Σ = Σa .
+
+Finally for ‘copy reference’ the mean and covariance both come from the reference (typ-
+ically, but not necessarily, control) arm, irrespective of deviation time. A SAS macro
+implementing this approach can be downloaded from,
+www.missingdata.org.uk (Roger, 2012) and Stata software from
+https://ideas.repec.org/c/boc/bocode/s457983.html (Cro, 2015; Cro et al., 2016).
+
+B.    Appendix B: Proofs
+B.1. Proof of Proposition 1
+Here we outline the argument for Proposition 1. Consider the baseline (time 1) and J −1
+follow-up setting where Yz,i,j denotes the continuous outcome measure for patient i in
+arm z (z = a indicates active arm allocation and z = r reference arm allocation) at time
+j for i = 1, ..., n and j = 1, ..., J. nd,j patients deviate at time j in a monotone fashion,
+for j > 1 such that nd = Jj=2 nd,j . Interest lies in the unadjusted mean treatment
+                               P
+group difference at time J. Conditioning on nd,j for j > 1, the expected value of the
+treatment estimate at time J when the post-deviation data can be observed is,
+                                                             
+                                             J
+                                  n
+                               o µa,J +
+                                            X    n d,j
+                                                       µd,j,J  − µr,1 .
+                                  n               n
+                                                  j=2
+26     Cro, Carpenter & Kenward
+The variance of this estimate is calculated using the usual sample variance formula as,
+                                                                       PJ nd,j           2
+                                  2    1 Pn               no
+        1 Pn                                      Y      −    Ȳ      −         Ȳ
+               i=1 Yr,i,J − Ȳr,J      n−1  i=1    a,i,J   n    a,J,o    j=2 n    a,J,d,j
+       n−1
+                                     +
+                    n                                            n
+                  1 Pn                     1 P                              1 P
+where Ȳr,J = n i=1 Yr,i,J , Ȳa,J,o = no i∈o Ya,i,J and Ȳa,J,d,j = nd,j         i∈d,j Ya,i,J for
+j = 2, ..., J. When expanding this expression and letting (n − 1) → n this has expected
+value,
+                                                                                    J
+                                                         J                       q6=p
+                                                                               J X
+           h               i        2
+                                   σJ,J        2
+                                              σJ,J       X no nd,j ∆2d,j       X      nd,p nd,q ∆2d,p,q
+         E V̂full, sensitivity =          +          +                     +
+                                    n          n                 n3                           n3
+                                                         j=2                   p=2 q=2
+
+where ∆d,j = µa,J − µd,j,J , ∆d,p,q = µd,p,J − µd,q,J , µd,j,J is the mean proposed under
+the controlled scenario at time J, for patients who deviate at time j and µd,p,J and
+µd,q,J are the means proposed under the controlled scenario at time J, for patients who
+deviate at times p and q for p = 2, ..., J and q = 2, ..., J. For the δ-method of MI where
+imputed values at final time J are edited by (J + 1 − j)δ, for patients who deviate at
+time j, we replace ∆d,j = µa,J − µd,j,J = (J + 1 − j)δ and ∆d,p,q = µd,p,J − µd,q,J =
+(J + 1 − p)δ − (J + 1 − q)δ.
+
+
+B.2. Proof of Theorem 1
+Let D and O define the sets of indices for the patients who do and do not deviate
+in the active arm respectively. Further let DJ denote the set of indices for deviating
+patients who deviateP at time j, so that the total number of deviating patients in the
+active arm nd = Jj=2 nd,j . The follow-up outcome data at the final time point for the
+reference patients are contained in the vector Yr,J = (Yr,1,J , ...Yr,n,J )T . The final visit
+outcome data for the observed non-deviating active patients are contained in the vector
+Ya,J,o = {Ya,i,J ; i ∈ O}T .
+    We suppose that each deviating patient has two potential outcomes at time J: the
+one that would occur if they remain on active treatment post-deviation (primary on-
+treatment data model, indexed below with the subscript P ) and the other that would
+occur under the controlled sensitivity scenario data model (indexed below with the sub-
+script S ). The potentially observable primary on-treatment data for the nd deviating
+patients at time J are contained in the vector Ya,J,P,d and the alternative outcome data
+under the sensitivity scenario in the vector Ya,J,S,d . Define
+Y = (Yr,J , Ya,J,o , Ya,J,P,d , Ya,J,S,d )T as the collection of observed and potentially ob-
+servable outcome data at time J, which has dimensions [(n + no + 2nd ) × 1].
+    For each deviating patient we can only observe one of the potential outcomes, either
+primary on-treatment or under the sensitivity scenario. Consider two
+[(n + no + 2nd ) × (n + no + 2nd )] matrices, DP and DS of 0’s and 1’s such that DP Y
+gives the [(n + no + 2nd ) × 1] on-treatment (primary) data and DS Y
+gives the [(n + no + 2nd ) × 1] sensitivity scenario data at time J.
+    Let a be a [(n + no + 2nd ) × 1] vector such that aT DP Y returns the primary on-
+treatment treatment estimate and aT DS Y returns the sensitivity scenario treatment
+                                                Information-Anchored Sensitivity Analysis   27
+estimate. When the deviating patients experience primary on-treatment behaviour post-
+deviation and are fully observed the expectation of the variance of the primary on-
+treatment estimand can be expressed as,
+        h              i
+      E V̂full, primary = E [ V aT DP Y = E aT DP V (Y)DT          T       T
+                                                           
+                                                           P a = a DP ΣDP a.      (7)
+
+Under the conditions of Proposition 1 and using Corollary 1 and 2, the variance estimator
+for the sensitivity estimand where post-deviation data are fully observed can be expressed
+as,                        h                  i
+                                                                  −2
+                         E V̂full, sensitivity = aT DP ΣDT
+                                                         P a + O(n ).                  (8)
+We now suppose that post-deviation data are unobserved, i.e. the potentially observ-
+able primary on-treatment and sensitivity scenario entries in Y are missing for the nd
+active patients. We alternatively multiply impute these outcomes, using primary on-
+treatment (MAR) imputation and imputation under the sensitivity scenario. This gives
+K ‘complete’ data samples Yk , of size [(n + no + 2nd ) × 1]. For this we need appro-
+priate imputation distributions for each missing data pattern under each scenario, with
+suitable posteriors for the included parameters.
+    Under our primary on-treatment assumption (MAR), the imputation model for pa-
+tients deviating at time j, for each j > 1 is formed from the regression of Ya,J,o on Pa,o,j
+where Pa,o,j is the design matrix for the imputation model, which contains the values
+of the 1, ..., j − 1 outcomes and covariates included in the imputation model (excluding
+treatment) for the no observed active patients, along with a vector of 1’s to include
+an intercept in the model. This is appropriate since we are not imputing any interim
+missing outcomes here. We only consider monotone missing data patterns. We are in-
+terested in the treatment effect at time J. As described by Carpenter and Kenward
+(2013, p. 77–78), under MAR, each of the regressions will be validly estimated from
+those observed in the data set. The parameter estimates for the primary on-treatment
+(MAR) imputation model for the nd,j patients missing outcomes j to J for each j > 1
+are found as β̂ primary,j = (PTa,o,j Pa,o,j )−1 PTa,o,j Ya,J,o with assumed known covariance
+matrix Vprimary,j = (PTa,o,j Pa,o,j )−1 σj2 .
+    We assume the large sample posterior for the parameter estimates for the primary
+on-treatment imputation model, denoted β̂ primary,j , is normal and centered on the ML
+estimator β̂ primary,j with covariance matrix Vprimary,j . That is,
+
+                       β̂ primary,j |Ya,J,o ∼ N (β̂ primary,j ; Vprimary,j ).
+
+The primary on-treatment imputation model for active patient i deviating at time j, for
+each j > 1 and imputation k can therefore be expressed as,
+                                    h                           i
+        Ỹa,i,J,k |Ya,J,o = Pa,d,j,i β̂ primary,j + bprimary,j,k + ei,j,k for i ∈ {DJ },
+
+where, bprimary,j,k ∼ N (0, Va,o,j ), ei,j,k ∼ N (0, σj2 ) and Pa,d,j,i contains the values of
+the 1, ..., j − 1 outcomes and covariates included in the imputation model (excluding
+treatment, plus a 1 for the intercept) for each deviating active patient i, who deviates
+at time j.
+28      Cro, Carpenter & Kenward
+    For sensitivity analysis we conduct imputation under the proposed sensitivity scenario
+and assume the large sample posterior for the imputation parameters for the nd,j patients
+missing outcomes j to J for each j > 1, β̂ sensitivity,j is normal and centered on the ML
+estimator β̂ sensitivity,j with known covariance matrix Vsensitivity,j , that is for each j > 1,
+
+                    β̂ sensitivity,j |Ysensitivity,J ∼ N (β̂ sensitivity,j ; Vsensitivity,j ),
+
+where Ysensitivity,J consists of the relevant observed outcome data under the particular
+sensitivity scenario setting of interest. The imputation model used in the sensitivity
+analysis for active patient i deviating following time j, for each j > 1 and imputation k
+can therefore be expressed as,
+                                       h                                   i
+   Y̆a,i,J,k |Ysensitivity,J = Pa,d,j,i β̂ sensitivity,j + bsensitivity,j,k + ei,j,k for i ∈ {DJ },
+
+where, bsensitivity,j,k ∼ N (0, Vsensitivity,j ) and ei,j,k ∼ N (0, σj2 ). Under the assumption
+of equal variance-covariance matrix of baseline and follow-up by treatment arm we con-
+sequently assume the same variance for the residuals in the primary and sensitivity
+imputation models for patients deviating at the same             P timeT j, for each1j P   > 1.
+    We are interested in imputation inference for, K1 K            k=1  a  D P Y  k or K
+                                                                                              K    T
+                                                                                              k=1 a DS Y k .
+Letting the number of imputations, K → ∞, the variance of our MI treatment esti-
+mate as estimated by Rubin’s rules is, V̂MI, primary = Ŵprimary + B̂primary or V̂MI, sensitivity =
+Ŵsensitivity
+  h           +iB̂sensitivity
+                        h P   where under the conditions
+                                                      i        required in the proposition,
+                           1    K    T
+E Ŵprimary = E K k=1 a DP Σ̂k DP a → a DP ΣDT   T           T
+                                                                       P a and,
+  h              i         h P                          i
+E Ŵsensitivity = E K1 K               T            T         T
+                                 k=1 a DS Σ̂k DS a → a DP ΣDP a + O(n ).
+                                                                         T          −2
+
+    Under primary (on-treatment) imputation,
+                                                                                                         2
+                            K    J
+                   1      X     X                                                                       
+ B̂primary =                      πd,j (ēj,k − ēj ) + πd,j P̄a,d,j bprimary,j,k − P̄a,d,j b̄primary,j 
+                K −1
+                       k=1    j=2
+
+                   1 P                      1 PK                         1 P
+    where ēj,k = nd,j  i∈DJ ei,j,k , ēj = K   k=1 ēj,k , P̄a,d,j = nd,j        i∈DJ Pa,d,j,i and
+               1 PK
+b̄primary,j = K k=1 bprimary,j,k . Which has expectation,
+                                              h 2
+                                               σj +nd,j P̄a,d,j Vprimary,j P̄T
+                    h       i                                                      i
+                 E B̂primary = Jj=2 πd,j    2
+                                  P                                          a,d,j
+                                                              nd,j                   .
+
+When imputation is conducted under the sensitivity scenario,
+                                                                                                         2
+                     K   J
+                  1 X X                                                                                
+B̂sensitivity =            πd,j (ēj,k − ēj ) + πd,j P̄a,d,j bsensitivity,j,k − P̄a,d,j b̄sensitivity,j  ,
+                K −1
+                        k=1    j=2
+
+
+where b̄sensitivity,j = K1 K
+                           P
+                               k=1 bsensitivity,j,k . Which has expectation,
+                                                  h 2
+                                                    σj +nd,j P̄a,d,j Vsensitivity,j P̄T
+                   h           i                                                            i
+                E B̂sensitivity = Jj=2 πd,j   2
+                                    P                                                 a,d,j
+                                                                     nd,j                     .
+                                                    Information-Anchored Sensitivity Analysis             29
+The information-anchored variance can be expressed as,
+                h                  i h              i  h     i                             h          i
+ h          i E V̂full, sensitivity E Ŵprimary + E B̂primary       h                   i    E B̂primary
+E V̂anchored =                       h                i          = E V̂full, sensitivity 1 + h          i .
+                                    E V̂full, primary                                        E Ŵprimary
+       h         i   h               i
+Since E Ŵprimary = E V̂full, primary and using (7) and (8) that is,
+                                                                   
+     h          i                        E B̂primary 
+    E V̂anchored = aT DP ΣDT        −2                aT DP ΣDT a + O(n−2 )
+                                                                             
+                           P a + O(n ) +                       P
+                                          
+                                         E Ŵprimary
+                                                                                       
+                                                   h           i E B̂primary
+                       = aT DP ΣDT a + O(n −2 ) + E B̂          +            O(n−2 ).
+                                 P                     primary
+                                                                 E Ŵprimary
+
+
+If Rubin’s rules are information-anchoring and preserve the information loss in the pri-
+mary analysis under MAR then the following holds,
+                                                                     h        i
+   h           i  h             i                       h       i E B̂primary
+                                                  −2                           i O(n−2 ).
+E Ŵsensitivity +E B̂sensitivity ≈ aT DP ΣDT
+                                           P a+O(n )+E B̂primary + h
+                                                                   E Ŵprimary
+
+That is,
+                               h               i
+                      −2
+    aT DP ΣDT
+            P a + O(n    ) + E   B̂sensitivity   ≈                 aT DP ΣDT        −2
+                                                                           P a + O(n )
+                                                                                         
+                                                               h         i    E B̂primary
+                                                          +E B̂primary       +            O(n−2 ).
+                                                                              E Ŵprimary
+
+
+   After simplification and rearrangement this becomes,
+                                                 h         i
+                     h      i     h           i E B̂primary 
+                                                            i O(n−2 ) .
+                                                                     
+             0 ≈ E B̂primary − E B̂sensitivity + h
+                                                E Ŵprimary
+
+Which is,
+                                                                    h           i
+       XJ                                                         E  B̂ primary
+                                                                                i O(n−2 )
+            2
+            πd,j P̄a,d,j (Vprimary,j − Vsensitivity,j ) P̄Ta,d,j + h
+                                                                                        
+    0≈
+       j=2                                                        E Ŵprimary
+
+    This gives the required result in the longitudinal trial setting with monotone miss-
+ingness in the active treatment arm with K = ∞. In practice K 6= ∞, however
+the information-anchoring approximation results will still hold for finite K. For fi-
+nite K the variance of our MI      treatment estimate as estimated by Rubin’s                     rules is,
+V̂MI, primary = Ŵprimary + 1 + K1 B̂primary or V̂MI, sensitivity = Ŵsensitivity + 1 + K1 B̂sensitivity . We
+                                                                                          
+will therefore have additional terms in the difference between Rubin’s variance estimator
+30     Cro, Carpenter & Kenward
+and the ideal information-anchored variance, but these will also be very small. They
+will be the same order of the terms already presented multiplied by K −1 , hence in-
+deed smaller. Thus following the reasons discussed in the main text the approximation
+remains with finite K.
+   We note that when we relax the equal variance by trial arm assumption, we can no
+longer assume the variance of the residuals in the primary de jure imputation model
+for patients with missingness pattern j matches the variance of the residuals in the
+sensitivity de facto imputation model for patients with missingness pattern j, for each
+missing data pattern j.
+   In this setting we denote the variance of the residuals in the primary on-treatment
+imputation model for patients missing outcomes j, ..., J as σP,j         2    and in the sensitivity
+                           2
+imputation model as σS,j for j > 1. Then the information-anchoring performance of
+Rubin’s MI variance estimator is driven by,
+                                                                                    h           i
+      J
+              "                                                               #
+     X           2       2
+                σP,j − σS,j                                                       E   B̂primary
+          2
+                             + P̄a,d,j (Vprimary,j − Vsensitivity,j ) P̄Ta,d,j + h              i O(n−2 ) .
+                                                                                                        
+0≈       πd,j
+                    nd,j                                                          E Ŵ
+     j=2                                                                               primary
+
+
+
+   The additional components in the difference between Rubin’s variance and the ideal
+information-anchored variance are driven by the degree of difference in the variance
+structure of the data by trial arm for each missingness pattern. Since the variance
+structure is not likely to differ too markedly by trial arm for each missingness pattern,
+and these extra components are each multiplied by πd,j  2 /n , the overall impact will in
+                                                            d,j
+practice be relatively small.
+                                                                             Information-Anchored Sensitivity Analysis                                   31
+C.   Appendix C: Further simulation results
+
+
+                                 Sensitivity scenario: Copy reference,                                 Sensitivity scenario: Jump to reference,
+                                          treatment effect = 0                                                    treatment effect = 0
+                        .01                                                                  .01
+
+                       .008                                                                 .008
+            Variance
+
+
+
+
+                                                                                 Variance
+                       .006                                                                 .006
+
+                       .004                                                                 .004
+
+                       .002                                                                 .002
+
+                          0                                                                    0
+                           10%       20%            30%           40%      50%                  10%          20%            30%           40%      50%
+                                     Proportion of missing data (active)                                     Proportion of missing data (active)
+
+                         Sensitivity scenario: Copy increments in reference,                       Sensitivity scenario: Last mean carried forward,
+                                          treatment effect = 0                                                    treatment effect = 0
+                        .01                                                                  .01
+
+                       .008                                                                 .008
+            Variance
+
+
+
+
+                                                                                 Variance
+                       .006                                                                 .006
+
+                       .004                                                                 .004
+
+                       .002                                                                 .002
+
+                         0                                                                    0
+                          10%        20%            30%           40%      50%                 10%           20%            30%           40%      50%
+                                     Proportion of missing data (active)                                     Proportion of missing data (active)
+
+                                 Sensitivity scenario: Copy reference,                                 Sensitivity scenario: Jump to reference,
+                                         treatment effect = 1.0                                                  treatment effect = 1.0
+                        .01                                                                  .01
+
+                       .008                                                                 .008
+            Variance
+
+
+
+
+                                                                                 Variance
+
+
+
+
+                       .006                                                                 .006
+
+                       .004                                                                 .004
+
+                       .002                                                                 .002
+
+                          0                                                                    0
+                           10%       20%            30%           40%      50%                  10%          20%            30%           40%      50%
+                                     Proportion of missing data (active)                                     Proportion of missing data (active)
+
+                         Sensitivity scenario: Copy increments in reference,                       Sensitivity scenario: Last mean carried forward,
+                                         treatment effect = 1.0                                                  treatment effect = 1.0
+                        .01                                                                  .01
+
+                       .008                                                                 .008
+            Variance
+
+
+
+
+                                                                                 Variance
+
+
+
+
+                       .006                                                                 .006
+
+                       .004                                                                 .004
+
+                       .002                                                                 .002
+
+                         0                                                                    0
+                          10%        20%            30%           40%      50%                 10%           20%            30%           40%      50%
+                                     Proportion of missing data (active)                                     Proportion of missing data (active)
+
+
+
+
+Fig. 4. Simulation results: for each sensitivity scenario, as the proportion of active arm devia-
+tions increases, each panel shows the evolution of the mean estimate of the visit 3 treatment
+effect variance (over 1000 simulations) calculated in four ways: (i) −◦− Rubin’s MI variance, from
+reference-/δ-based MI; (ii) −×− Information-anchored variance (Ê[V̂anchored ]); (iii) −− applying pri-
+mary analysis variance estimator in sensitivity scenarios; (iv) −/− Variance when post-deviation
+data is alternatively fully observed under the given scenario (Ê[V̂full, sensitivity ]).
+32    Cro, Carpenter & Kenward
+References
+Atri, A., Frolich, L., Ballard, C., Tariot, P. N., Molinueve, J. L., Boneva, N., Windfeld,
+ K., Raket, L. L. and Cummings, J. L. (2018) Effect of idalopirdine as adjunct to
+ cholinesterase inhibitors on change in cognition in patients with alzheimer disease:
+ Three randomized clinical trials. JAMA, 319(2), 130–142.
+
+Ayele, B., Lipkovich, I., Molenberghs, G. and Mallinckrodt, C. (2014) A multiple-
+ imputation-based approach to sensitivity analyses and effectiveness assessments in
+ longitudinal clinical trials. Journal of biopharmaceutical statistics, 24(2), 211–228.
+
+Billings, L. K., Doshi, A., Gouet, D., Oviedo, A., Rodbard, H. W., Tentolouris, N., Grøn,
+  R., Halladin, N. and Jodar, E. (2018) Efficacy and safety of ideglira versus basal-bolus
+  insulin therapy in patients with type 2 diabetes uncontrolled on metformin and basal
+  insulin; dual vii randomized clinical trial. Diabetes Care.
+
+Busse, W. W., Chervinsky, P., Condemi, J., Lumry, W. R., Petty, T. L., Rennard, S.
+ and Townley, R. G. (1998) Budesonide delivered by Turbuhaler is effective in a dose-
+ dependent fashion when used in the treatment of adult patients with chronic asthma.
+ J Allergy Clin Immunol, 101, 457–463.
+
+Carpenter, J. R. and Kenward, M. G. (2008) Missing data in clinical trials — a prac-
+ tical guide. Birmingham: National Health Service Co-ordinating Centre for Research
+ Methodology.
+
+Carpenter, J. R. and Kenward, M. G. (2013) Multiple Imputation and its Application.
+ Chichester, Wiley.
+
+Carpenter, J. R., Roger, J. H. and Kenward, M. G. (2013) Analysis of longitudinal
+ trials with protocol deviation:— a framework for relevant accessible assumptions and
+ inference via multiple imputation. Journal of Biopharmaceutical Statistics, 23, 1352–
+ 1371.
+
+Carpenter, J. R., Roger, J. H., Cro, S. and Kenward, M. G. (2014) Response to com-
+ ments by Seaman et al. on ’Analysis of longitudinal trials with protocol deviation: a
+ framework for relevant, accessible assumptions and inference via Multiple Imputation’.
+ Journal of Biopharmaceutical Statistics, 24, 1363–1369.
+
+Committee for Medicinal Products for Human Use (2010) Guideline on missing data in
+ confirmatory clinical trials. London: European Medicines Agency.
+
+Cro, S. (2015) Mimix: Stata module to perform reference based multiple imputation
+ for sensitivity analysis of longitudinal clinical trials with protocol deviation. Available
+ from https://ideas.repec.org/c/boc/bocode/s457983.html, accessed 15 July 2016.
+
+Cro, S., Morris, T. P., Kenward, M. G. and Carpenter, J. R. (2016) Reference-based sen-
+ sitivity analysis via multiple imputation for longitudinal trials with protocol deviation.
+ Stata Journal, 16, 443–463.
+                                               Information-Anchored Sensitivity Analysis      33
+Diggle, P. J. and Kenward, M. G. (1994) Informative dropout in longitudinal data anal-
+  ysis (with discussion). Journal of the Royal Statistical Society Series C (applied statis-
+  tics), 43, 49–94.
+
+Heitjan, D. F. (2017) Commentary on‘Development of a practical approach to expert
+ elicitation for randomised controlled trials with missing health outcomes: Application
+ to the IMPROVE Trial by Mason et al. Clinical Trials, 14, 368–369.
+
+International Conference on Harmonisation of Technical Requirements for Registration
+  of Pharmaceuticals for Human Use (2017) ICH E9 (R1) addendum on estimands and
+  sensitivity analysis in clinical trials to the guideline on statistical principles for clinical
+  trials.
+
+Jans, T., Jacob, C., Warnke, A., Zwanzger, U., Gro-Lesch, S., Matthies, S., Borel, P.,
+  Hennighausen, K., Haack-Dees, B., Rsler, M., Retz, W., von Gontard, A., Hnig, S.,
+  Sobanski, E., Alm, B., Poustka, L., Hohmann, S., Colla, M., Gentschow, L., Jaite, C.,
+  Kappel, V., Becker, K., Holtmann, M., Freitag, C., Graf, E., Ihorst, G. and Philipsen,
+  A. (2015) Does intensive multimodal treatment for maternal adhd improve the efficacy
+  of parent training for children with adhd? a randomized controlled multicenter trial.
+  Journal of Child Psychology and Psychiatry, 56(12), 1298–1313.
+
+Kenward, M. G. (1998) Selection models for repeated measurements with non-random
+ dropout: an illustration of sensitivity. Statistics in Medicine, 17, 2723–2732.
+
+Little, R. J. A. and Yau, L. (1996) Intent-to-treat analysis for longitudinal studies with
+  drop-outs. Biometrics, 52, 471–483.
+
+Liu, G. F. and Pang, L. (2016) On analysis of longitudinal clinical trials with missing
+  data using reference-based imputation. Journal of Biopharmaceutical Statistics, 26(5),
+  924–936.
+
+Lu, K. (2014) An analytic method for the placebo-based pattern- mixture model. Statis-
+  tics in Medicine, 33(7), 1134–1145.
+
+Mallinckrodt, C. H. (2013) Preventing and Treating Missing Data in Longitudinal Clin-
+ ical Trials: A Practical Guide. Practical Guides to Biostatistics and Epidemiology.
+ Cambridge University Press.
+
+Mason, A. J., Gomes, M., Grieve, R., Ulug, P., Powell, J. T. and Carpenter, J. R. (2017)
+ Development of a practical approach to expert elicitation for randomised controlled
+ trials with missing health outcomes: Application to the improve trial. Clinical Trials,
+ 14, 357–367.
+
+Meng, X. L. (1994) Multiple-imputation inferences with uncongenial sources of input
+ (with discussion). Statistical Science, 10, 538–573.
+
+Molenberghs, G., Michiels, B., Kenward, M. G. and Diggle, P. J. (1998) Missing data
+ mechanisms and pattern-mixture models. Statistica Neerlandica, 52, 153–161.
+34    Cro, Carpenter & Kenward
+National Research Council (2010) The Prevention and Treatment of Missing Data in
+ Clinical Trials. Panel on Handling Missing Data in Clinical Trials. Committee on
+ National Statistics, Division of Behavioral and Social Sciences and Education. Wash-
+ ington, DC: The National Academies Press.
+O’Kelly, M. and Ratitch, B. (2014) Multiple Imputation, pp. 284–319. John Wiley &
+ Sons, Ltd.
+Philipsen, A., Jans, T., Graf, E. and et al (2015) Effects of group psychotherapy, indi-
+ vidual counseling, methylphenidate, and placebo in the treatment of adult attention-
+ deficit/hyperactivity disorder: A randomized clinical trial. JAMA Psychiatry, 72(12),
+ 1199–1210.
+Ratitch, B., O’Kelly, M. and Tosiello, R. (2013) Missing data in clinical trials: from clin-
+ ical assumptions to statistical analysis using pattern mixture models. Pharmaceutical
+ Statistics, 12(6), 337–347.
+Roger, J. H. (2012) miwithd: SAS code for sensitivity analysis using multiple imputation.
+ Available from www.missingdata.org.uk, accessed 15 July 2016.
+Rotnitzky, A., Cox, D. R., Bottai, M. and Robins, J. (2000) Likelihood-based inference
+ with singular information matrix. Bernoulli, 6(2), 243–284.
+Rubin, D. B. (1987) Multiple imputation for nonresponse in surveys. New York: Wiley.
+Schroter, S., Black, N., Evans, S., Carpenter, J., Godlee, F. and Smith, R. (2004) Effects
+  of training on quality of peer review: randomised controlled trial. British Medical
+  Journal, 328, 673–675.
+StataCorp (2015) Stata statistical software: Release 14. College Station, TX: StataCorp
+  LP.
+Tang, Y. (2017) On the multiple imputation variance estimator for control-based and
+  delta-adjusted pattern mixture models. Biometrics, 73(4), 1379–1387.
+White, I., Carpenter, J., Evans, S. and Schroter, S. (2007) Eliciting and using expert
+ opinions about non-response bias in randomised controlled trials. Clinical Trials, 4,
+ 125–139.
+Xie, X. and Meng, X.-L. (2017) Dissecting multiple imputation from a multi-phase in-
+  ference perspective: what happens when gods, imputers and analysts models are un-
+  congenial? Statistica Sinca, 27, 1485–1594.
+

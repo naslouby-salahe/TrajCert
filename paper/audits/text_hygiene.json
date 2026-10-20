@@ -1,0 +1,117 @@
+[
+  {
+    "path": "main.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "preamble.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "references.bib",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "highlights.txt",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "README.md",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/model.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/experiments.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/discussion.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/identification.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/declarations.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/results.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/introduction.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "sections/sequential.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "tables/all_power.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "tables/population.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "tables/power_selected.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "tables/coverage.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "supplementary/supplement.tex",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "audits/EVIDENCE_AUDIT.md",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "audits/FINAL_MANUSCRIPT_AUDIT.md",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "audits/JOURNAL_COMPLIANCE.md",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "audits/HOSTILE_REVIEW.md",
+    "suspicious_total": 0,
+    "hits": []
+  },
+  {
+    "path": "literature/REFERENCE_AUDIT.md",
+    "suspicious_total": 0,
+    "hits": []
+  }
+]

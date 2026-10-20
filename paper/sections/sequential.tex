@@ -1,0 +1,75 @@
+\section{Anytime-valid risk certification}\label{sec:sequential}
+\subsection{Maturation and the observable confidence sequence}
+An event enters inference once, when its age reaches $H$, even if its label was resolved earlier. Its category is then permanent. This avoids selecting earlier statistical observations merely because they resolve faster. Let $Y_1,Y_2,\ldots$ denote the categories in this maturity order, with filtration $\mathcal F_n$. Assume that there is one fixed categorical law $p$ such that
+\begin{equation}\label{eq:stable}
+ \Ebb[\ind\{Y_n=j\}\mid\mathcal F_{n-1}]=p_j
+ \quad\text{for every category }j\text{ and every }n.
+\end{equation}
+Independent identically distributed categorical observations satisfy this assumption. A fixed policy, verification regime, horizon and label semantics define the stable stream to which a certificate applies. Equation~\eqref{eq:stable} does not cover arbitrary drift or arbitrary informative reordering.
+
+Write $S_{j,n}=\sum_{i\le n}\ind\{Y_i=j\}$. For $x\in(0,1)$, the per-category Jeffreys mixture likelihood ratio is
+\begin{equation}\label{eq:mixture}
+ M_{j,n}(x)=\frac{B(S_{j,n}+1/2,n-S_{j,n}+1/2)}
+ {B(1/2,1/2)x^{S_{j,n}}(1-x)^{n-S_{j,n}}},
+\end{equation}
+where $B$ is the beta function. Define raw intervals as the closures of $\{x:M_{j,n}(x)<d/\delta\}$, take their running intersections over all prefixes, and intersect their product with the probability simplex:
+\begin{equation}\label{eq:CS}
+ \Cset_n=\{p\in\mathbb R_+^d:\sum_jp_j=1,
+              \ \ell_{j,n}\le p_j\le v_{j,n}\text{ for every }j\}.
+\end{equation}
+The construction allocates $\delta/d$ per category and gives
+\begin{equation}\label{eq:CSguarantee}
+ \Pbb\{p\in\Cset_n\text{ for every }n\}\ge1-\delta.
+\end{equation}
+Endpoint nulls $p_j=0,1$ use their limiting likelihoods. Numerical inversion returns the outer endpoints of root brackets, not their midpoints. The region is updated at every matured event, even when risk optimization is performed only at selected checkpoints.
+
+\subsection{Conservative projection and computation}
+The ideal upper-risk projection is
+\begin{equation}\label{eq:idealprojection}
+ U_n^{\rm exact}(\rho)=\sup_{p'\in\Cset_n}\sup\Thset(p',\rho),
+\end{equation}
+where incompatible $p'$ contribute no risks. An empty feasible union produces no certificate. This is a confidence projection of the identified set, not a plug-in estimate of its upper endpoint.
+
+The implementation first encloses all observable summaries from $\Cset_n$ in an aggregate envelope. Direct category sums and complementary sums give simultaneous intervals for $A,G,c$. In particular,
+\begin{equation}\label{eq:aggregate}
+ A_L=\max\Big\{\sum_k\ell_{a_k},\ 1-\sum_kv_{b_k}-v_c,\ 0\Big\},\quad
+ A_U=\min\Big\{\sum_kv_{a_k},\ 1-\sum_k\ell_{b_k}-\ell_c,\ 1\Big\},
+\end{equation}
+with analogous formulas for $G$ and $c$. By coordinatewise monotonicity of $q(a,b)$,
+\begin{align}
+ T_L&=\sum_k q(\ell_{a_k},\ell_{b_k}),\label{eq:entropyenv}\\
+ T_U&=\min\left\{\sum_kq(v_{a_k},v_{b_k}),\
+ \min\big(1,\sum_k(v_{a_k}+v_{b_k})\big)\log2,\ \log2\right\}.\nonumber
+\end{align}
+Thus $\Eset_n=\{(A,G,T):A\in[A_L,A_U],G\in[G_L,G_U],1-A-G\in[c_L,c_U],T\in[T_L,T_U]\}$ contains every true summary on the event in \eqref{eq:CSguarantee}. It may contain combinations unattainable by a categorical law. Maximizing over this envelope is a deliberate relaxation.
+
+Because the information constraint decreases in $T$, the relaxed upper projection sets $T=T_U$ and searches over $(A,G,u)$:
+\begin{equation}\label{eq:relaxedprojection}
+ V_n(\rho)=\sup\left\{A+u:
+ \begin{array}{l} A\in[A_L,A_U],\ G\in[G_L,G_U],\ c=1-A-G\in[c_L,c_U],\\
+ 0\le u\le c,\ h(A+u)-T_U-q(u,c-u)\le\rho
+ \end{array}\right\}.
+\end{equation}
+A nonempty feasible union in \eqref{eq:idealprojection} is contained in this relaxation. The method reports a numerical upper enclosure $\widehat U_n\ge V_n$, capped by one.
+
+Deterministic branch-and-bound uses boxes in three aggregate coordinates. A box is discarded only if its geometric constraints are impossible or a lower enclosure of the information exceeds $\rho$. Every remaining box contributes its objective upper bound $\min(1,A_{\rm hi}+u_{\rm hi})$ to the global bound. Verified feasible joint tables provide lower incumbents, not certificates. Entropy enclosures use Arb ball arithmetic at 128 bits, with outward conversion and explicit allowances for floating-point aggregate arithmetic. The uncertainty of the global entropy envelope need not shrink within a search box, so a small box does not imply a small objective gap.
+
+The computation returns the largest retained upper bound on node exhaustion, stall, box-resolution termination or conservative arithmetic fallback. Objective convergence is recorded only when the upper-minus-incumbent gap meets the declared tolerance. Decision-targeted search can stop once the global upper bound is at most $\beta$, or once a verified feasible risk exceeds $\beta$. The latter justifies withholding certification; it does not show that the true risk exceeds $\beta$. Full derivations and the bounding invariant appear in the Supplement.
+
+\begin{theorem}[Time-uniform sensitivity certificate]\label{thm:anytime}
+Suppose \eqref{eq:stable} holds, the true full law satisfies \eqref{eq:pis}, and each reported numerical bound conservatively encloses the projection described above. For a fixed analysis partition and its per-category allocation,
+\begin{equation}\label{eq:anytime}
+ \Pbb\{\theta\le\widehat U_n(\rho)\text{ at every valid reported update }n\}\ge1-\delta.
+\end{equation}
+Consequently, for any monitoring rule that issues a certificate only when $\widehat U_n(\rho)\le\beta$, the probability of ever certifying when $\theta>\beta$ is at most $\delta$.
+\end{theorem}
+\begin{proof}
+For the true $p_j\in(0,1)$, \eqref{eq:mixture} is a nonnegative mixture martingale of initial value one under \eqref{eq:stable}; at boundary probabilities the limiting process is a nonnegative supermartingale. The maximal inequality and a union bound give \eqref{eq:CSguarantee}. On this single simultaneous event, the true observable summary and true terminal completion are feasible for every projection. Data processing makes the coarse information no greater than $\rho$. The projected and numerical upper bounds therefore dominate $\theta$ at all reported times. A false certificate requires leaving that simultaneous event.
+\end{proof}
+
+The statement is per prespecified partition. Comparing four partitions in a simulation does not allocate a joint four-partition error budget. Choosing a partition from the same data and issuing whichever certificate is most favorable requires a simultaneous allocation across those procedures or a common finest-law region. Likewise, the theorem concerns monitoring within one stable stream, not a familywise guarantee over many streams.
+
+\subsection{Decision states}
+After data and numerical validity checks, the implemented evidence gate requires at least 200 matured and 50 resolved events. It then assigns, in order: \emph{model incompatible} if a conservative lower bound on every plausible compatibility floor exceeds $\rho$; \emph{intrinsically uncertifiable} if a conservative lower bound on every compatible minimum-information risk exceeds $\beta$; \emph{certified} if $\widehat U_n\le\beta$; and \emph{uncertified} otherwise. Count shortfalls give \emph{insufficient evidence}. The strong intrinsic state is withheld if zero resolved population mass remains plausible. Numerical comparison guards make the first two rejections conservative.
+
+An empty running confidence region is a realized confidence-sequence failure event. The affected procedure stops issuing updates; the stream remains in the simulation denominator. It is not replaced by another seed. A technical execution failure is different from any of these scientific states. No state asserts that compatibility has verified the unobserved sensitivity assumption.

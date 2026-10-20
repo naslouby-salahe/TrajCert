@@ -1,0 +1,35 @@
+\documentclass[preprint,11pt,authoryear]{elsarticle}
+\input{preamble}
+\journal{Computational Statistics \& Data Analysis}
+\hypersetup{pdftitle={TrajCert: Sharp risk identification and anytime-valid certification with informative outcome-resolution paths},pdfauthor={Author information pending},pdfsubject={Partial identification and anytime-valid risk certification},pdfkeywords={partial identification, informative verification, mutual information, confidence sequences}}
+\makeatletter
+\def\ps@pprintTitle{\let\@oddhead\@empty\let\@evenhead\@empty\def\@oddfoot{\hfil\thepage\hfil}\let\@evenfoot\@oddfoot}
+\makeatother
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.70}
+\renewcommand{\bibfont}{\small}
+\setlength{\bibsep}{2pt plus 1pt minus 1pt}
+\begin{document}
+\begin{frontmatter}
+\title{TrajCert: Sharp risk identification and anytime-valid certification with informative outcome-resolution paths}
+\author{\draftadmin{AUTHOR NAMES REQUIRED}}
+\address{\draftadmin{AFFILIATIONS AND CORRESPONDING AUTHOR REQUIRED}}
+\begin{abstract}
+Outcome verification can depend on an unobserved harmful outcome, both through resolution timing and through nonresolution at a terminal horizon. Collapsing these paths to a binary verification indicator can discard information needed for risk certification. We study binary harmful risk under a fixed mutual-information budget between the latent outcome and a prespecified categorical resolution path. The compatible risk set is a sharp interval determined by a convex one-dimensional information profile. Its minimum is observable, giving an exact compatibility floor. Deterministic refinement shifts this profile by an observable conditional-information increment, characterizing when timing changes a certification decision. A simultaneous categorical confidence sequence, combined with conservative numerical projection, gives a time-uniform upper-risk certificate under a stable observable law. In a frozen synthetic study with 100 independent streams per cell, a two-band analysis certified all streams by 5,000 matured events under strong informative timing, whereas endpoint-only analysis certified 96 by 50,000 events. At a stricter risk budget, the endpoint population bound precluded certification, while refined analyses certified 99--100 streams by 50,000 events. A matched control demonstrates the finite-sample cost of resolution without timing information. These results identify when retaining verification paths improves both population decisions and finite-sample certification.
+\end{abstract}
+\begin{keyword}
+Partial identification \sep Informative verification \sep Sensitivity analysis \sep Mutual information \sep Confidence sequences \sep Risk certification
+\end{keyword}
+\end{frontmatter}
+\input{sections/introduction}
+\input{sections/model}
+\input{sections/identification}
+\input{sections/sequential}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/declarations}
+\bibliographystyle{elsarticle-harv}
+\bibliography{references}
+\end{document}

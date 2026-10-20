@@ -1,0 +1,864 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        19
+      ]
+    ],
+    "date-time": "2026-10-19T00:33:12Z",
+    "timestamp": 1792369992739,
+    "version": "4.4.0"
+  },
+  "reference-count": 70,
+  "publisher": "Oxford University Press (OUP)",
+  "issue": "1",
+  "license": [
+    {
+      "start": {
+        "date-parts": [
+          [
+            2023,
+            2,
+            16
+          ]
+        ],
+        "date-time": "2023-02-16T00:00:00Z",
+        "timestamp": 1676505600000
+      },
+      "content-version": "vor",
+      "delay-in-days": 0,
+      "URL": "https://academic.oup.com/pages/standard-publication-reuse-rights"
+    }
+  ],
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [],
+  "published-print": {
+    "date-parts": [
+      [
+        2024,
+        2,
+        8
+      ]
+    ]
+  },
+  "abstract": "<jats:title>Abstract</jats:title>\n                  <jats:p>We derive confidence intervals (CIs) and confidence sequences (CSs) for the classical problem of estimating a bounded mean. Our approach generalizes and improves on the celebrated Chernoff method, yielding the best closed-form \"empirical-Bernstein\" CSs and CIs (converging exactly to the oracle Bernstein width) as well as non-closed-form \"betting\" CSs and CIs. Our method combines new composite nonnegative (super)martingales with Ville's maximal inequality, with strong connections to testing by betting and the method of mixtures. We also show how these ideas can be extended to sampling without replacement. In all cases, our bounds are adaptive to the unknown variance, and empirically vastly outperform prior approaches, establishing a new state-of-the-art for four fundamental problems: CSs and CIs for bounded means, when sampling with and without replacement.</jats:p>",
+  "DOI": "10.1093/jrsssb/qkad009",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2023,
+        2,
+        11
+      ]
+    ],
+    "date-time": "2023-02-11T16:48:17Z",
+    "timestamp": 1676134097000
+  },
+  "page": "1-27",
+  "source": "Crossref",
+  "is-referenced-by-count": 85,
+  "title": [
+    "Estimating means of bounded random variables by betting"
+  ],
+  "prefix": "10.1093",
+  "volume": "86",
+  "author": [
+    {
+      "ORCID": "https://orcid.org/0000-0003-4471-1405",
+      "authenticated-orcid": false,
+      "given": "Ian",
+      "family": "Waudby-Smith",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Department of Statistics & Data Science, Carnegie Mellon University , Pittsburgh, PA , USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0003-0497-311X",
+      "authenticated-orcid": false,
+      "given": "Aaditya",
+      "family": "Ramdas",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Department of Statistics & Data Science, Carnegie Mellon University , Pittsburgh, PA , USA"
+        },
+        {
+          "name": "Machine Learning Department, Carnegie Mellon University , Pittsburgh, PA , USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "member": "286",
+  "published-online": {
+    "date-parts": [
+      [
+        2023,
+        2,
+        16
+      ]
+    ]
+  },
+  "reference": [
+    {
+      "key": "2024031313414073500_qkad009-B1",
+      "author": "Abbasi-Yadkori",
+      "year": "2011"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B3",
+      "author": "Audibert",
+      "year": "2007"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B4",
+      "author": "Balsubramani",
+      "year": "2014"
+    },
+    {
+      "issue": "3",
+      "key": "2024031313414073500_qkad009-B5",
+      "doi-asserted-by": "crossref",
+      "first-page": "1361",
+      "DOI": "10.3150/14-BEJ605",
+      "article-title": "Concentration inequalities for sampling without replacement",
+      "volume": "21",
+      "author": "Bardenet",
+      "year": "2015",
+      "journal-title": "Bernoulli"
+    },
+    {
+      "issue": "6",
+      "key": "2024031313414073500_qkad009-B6",
+      "doi-asserted-by": "crossref",
+      "first-page": "724",
+      "DOI": "10.1287/mnsc.34.6.724",
+      "article-title": "Game-theoretic optimal portfolios",
+      "volume": "34",
+      "author": "Bell",
+      "year": "1988",
+      "journal-title": "Management Science"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B7",
+      "doi-asserted-by": "crossref",
+      "first-page": "161",
+      "DOI": "10.1287/moor.5.2.161",
+      "article-title": "Competitive optimality of logarithmic investment",
+      "volume": "5",
+      "author": "Bell",
+      "year": "1980",
+      "journal-title": "Mathematics of Operations Research"
+    },
+    {
+      "issue": "297",
+      "key": "2024031313414073500_qkad009-B8",
+      "doi-asserted-by": "crossref",
+      "first-page": "33",
+      "DOI": "10.1080/01621459.1962.10482149",
+      "article-title": "Probability inequalities for the sum of independent random variables",
+      "volume": "57",
+      "author": "Bennett",
+      "year": "1962",
+      "journal-title": "Journal of the American Statistical Association"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B9",
+      "doi-asserted-by": "crossref",
+      "first-page": "1650",
+      "DOI": "10.1214/009117904000000360",
+      "article-title": "On Hoeffding\u2019s inequalities",
+      "volume": "32",
+      "author": "Bentkus",
+      "year": "2004",
+      "journal-title": "The Annals of Probability"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B11",
+      "volume-title": "Theory of probability",
+      "author": "Bernstein",
+      "year": "1927"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B12",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1093/acprof:oso/9780199535255.001.0001",
+      "volume-title": "Concentration inequalities: A nonasymptotic theory of independence",
+      "author": "Boucheron",
+      "year": "2013",
+      "edition": "1st ed."
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B13",
+      "first-page": "65",
+      "article-title": "Optimal gambling systems for favorable games",
+      "volume": "4",
+      "author": "Breiman",
+      "year": "1961",
+      "journal-title": "Berkeley Symposium on Mathematical Statistics and Probability"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B15",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1017/CBO9780511546921",
+      "volume-title": "Prediction, learning, and games",
+      "author": "Cesa-Bianchi",
+      "year": "2006"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B16",
+      "author": "Cover",
+      "year": "1974"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B17",
+      "doi-asserted-by": "crossref",
+      "first-page": "369",
+      "DOI": "10.1109/TIT.1984.1056869",
+      "article-title": "An algorithm for maximizing expected log investment return",
+      "volume": "30",
+      "author": "Cover",
+      "year": "1984",
+      "journal-title": "IEEE Transactions on Information Theory"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B18",
+      "author": "Cover",
+      "year": "1987"
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B19",
+      "doi-asserted-by": "crossref",
+      "first-page": "1",
+      "DOI": "10.1111/j.1467-9965.1991.tb00002.x",
+      "article-title": "Universal portfolios",
+      "volume": "1",
+      "author": "Cover",
+      "year": "1991",
+      "journal-title": "Mathematical Finance"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B20",
+      "author": "Cutkosky",
+      "year": "(2018"
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B21",
+      "doi-asserted-by": "crossref",
+      "first-page": "66",
+      "DOI": "10.1073/pnas.58.1.66",
+      "article-title": "Confidence sequences for mean, variance, and median",
+      "volume": "58",
+      "author": "Darling",
+      "year": "1967",
+      "journal-title": "Proceedings of the National Academy of Sciences"
+    },
+    {
+      "issue": "6",
+      "key": "2024031313414073500_qkad009-B22",
+      "doi-asserted-by": "crossref",
+      "first-page": "1577",
+      "DOI": "10.1073/pnas.57.6.1577",
+      "article-title": "Inequalities for the sequence of sample means",
+      "volume": "57",
+      "author": "Darling",
+      "year": "1967",
+      "journal-title": "Proceedings of the National Academy of Sciences"
+    },
+    {
+      "issue": "5",
+      "key": "2024031313414073500_qkad009-B23",
+      "doi-asserted-by": "crossref",
+      "first-page": "1188",
+      "DOI": "10.1073/pnas.57.5.1188",
+      "article-title": "Iterated logarithm inequalities",
+      "volume": "57",
+      "author": "Darling",
+      "year": "1967",
+      "journal-title": "Proceedings of the National Academy of Sciences"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B24",
+      "doi-asserted-by": "crossref",
+      "first-page": "278",
+      "DOI": "10.2307/2981683",
+      "article-title": "Present position and potential developments: Some personal views statistical theory the prequential approach",
+      "volume": "147",
+      "author": "Dawid",
+      "year": "1984",
+      "journal-title": "Journal of the Royal Statistical Society: Series A (General)"
+    },
+    {
+      "issue": "3",
+      "key": "2024031313414073500_qkad009-B26",
+      "doi-asserted-by": "crossref",
+      "first-page": "1902",
+      "DOI": "10.1214/009117904000000397",
+      "article-title": "Self-normalized processes: Exponential inequalities, moment bounds and iterated logarithm laws",
+      "volume": "32",
+      "author": "de la Pe\u00f1a",
+      "year": "2004",
+      "journal-title": "The Annals of Probability"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B27",
+      "doi-asserted-by": "crossref",
+      "first-page": "172",
+      "DOI": "10.1214/07-PS119",
+      "article-title": "Pseudo-maximization and self-normalized processes",
+      "volume": "4",
+      "author": "de la Pe\u00f1a",
+      "year": "2007",
+      "journal-title": "Probability Surveys"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B28",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1007/978-3-540-85636-8",
+      "volume-title": "Self-normalized processes: Limit theory and statistical applications",
+      "author": "de la Pe\u00f1a",
+      "year": "2009"
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B30",
+      "first-page": "1",
+      "article-title": "Exponential inequalities for martingales with applications",
+      "volume": "20",
+      "author": "Fan",
+      "year": "2015",
+      "journal-title": "Electronic Journal of Probability"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B32",
+      "author": "Gr\u00fcnwald",
+      "year": "2019"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B34",
+      "author": "Hendriks",
+      "year": "2018"
+    },
+    {
+      "issue": "301",
+      "key": "2024031313414073500_qkad009-B35",
+      "doi-asserted-by": "crossref",
+      "first-page": "13",
+      "DOI": "10.1080/01621459.1963.10500830",
+      "article-title": "Probability inequalities for sums of bounded random variables",
+      "volume": "58",
+      "author": "Hoeffding",
+      "year": "1963,",
+      "journal-title": "Journal of the American Statistical Association"
+    },
+    {
+      "issue": "3",
+      "key": "2024031313414073500_qkad009-B37",
+      "doi-asserted-by": "crossref",
+      "first-page": "1704",
+      "DOI": "10.3150/21-BEJ1388",
+      "article-title": "Sequential estimation of quantiles with applications to A/B testing and best-arm identification",
+      "volume": "28",
+      "author": "Howard",
+      "year": "2022",
+      "journal-title": "Bernoulli"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B38",
+      "doi-asserted-by": "crossref",
+      "first-page": "257",
+      "DOI": "10.1214/18-PS321",
+      "article-title": "Time-uniform Chernoff bounds via nonnegative supermartingales",
+      "volume": "17",
+      "author": "Howard",
+      "year": "2020",
+      "journal-title": "Probability Surveys"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B39",
+      "doi-asserted-by": "crossref",
+      "first-page": "1055",
+      "DOI": "10.1214/20-AOS1991",
+      "article-title": "Time-uniform, nonparametric, nonasymptotic confidence sequences",
+      "volume": "49",
+      "author": "Howard",
+      "year": "2021",
+      "journal-title": "The Annals of Statistics"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B40",
+      "author": "Jun",
+      "year": "2019"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B41",
+      "author": "Jun",
+      "year": "2017"
+    },
+    {
+      "issue": "246",
+      "key": "2024031313414073500_qkad009-B42",
+      "first-page": "1",
+      "article-title": "Mixture martingales revisited with applications to sequential tests and confidence intervals",
+      "volume": "22",
+      "author": "Kaufmann",
+      "year": "2021",
+      "journal-title": "Journal of Machine Learning Research"
+    },
+    {
+      "issue": "4",
+      "key": "2024031313414073500_qkad009-B44",
+      "doi-asserted-by": "crossref",
+      "first-page": "917",
+      "DOI": "10.1002/j.1538-7305.1956.tb03809.x",
+      "article-title": "A new interpretation of information rate",
+      "volume": "35",
+      "year": "1956",
+      "journal-title": "Bell System Technical Journal"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B45",
+      "author": "Kot\u0142owski",
+      "year": "2010"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B46",
+      "doi-asserted-by": "crossref",
+      "first-page": "199",
+      "DOI": "10.1109/TIT.1981.1056331",
+      "article-title": "The performance of universal encoding",
+      "volume": "27",
+      "author": "Krichevsky",
+      "year": "1981",
+      "journal-title": "IEEE Transactions on Information Theory"
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B48",
+      "doi-asserted-by": "crossref",
+      "first-page": "155",
+      "DOI": "10.1016/j.spa.2010.09.004",
+      "article-title": "Sequential optimizing strategy in multi-dimensional bounded forecasting games",
+      "volume": "121",
+      "author": "Kumon",
+      "year": "2011",
+      "journal-title": "Stochastic Processes and their Applications"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B49",
+      "doi-asserted-by": "crossref",
+      "first-page": "265",
+      "DOI": "10.1214/aos/1176343406",
+      "article-title": "On confidence sequences",
+      "volume": "4",
+      "author": "Lai",
+      "year": "1976",
+      "journal-title": "The Annals of Statistics"
+    },
+    {
+      "issue": "3",
+      "key": "2024031313414073500_qkad009-B52",
+      "doi-asserted-by": "crossref",
+      "first-page": "1422",
+      "DOI": "10.1214/009053605000000183",
+      "article-title": "Nonanticipating estimation applied to sequential analysis and changepoint detection",
+      "volume": "33",
+      "author": "Lorden",
+      "year": "2005",
+      "journal-title": "The Annals of Statistics"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B54",
+      "author": "Maurer",
+      "year": "2009"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B57",
+      "doi-asserted-by": "crossref",
+      "first-page": "396",
+      "DOI": "10.1214/aos/1176324527",
+      "article-title": "Dual likelihood",
+      "volume": "23",
+      "author": "Mykland",
+      "year": "1995",
+      "journal-title": "The Annals of Statistics"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B58",
+      "author": "Nystrom",
+      "year": "2015"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B59",
+      "first-page": "577",
+      "article-title": "Coin betting and parameter-free online learning",
+      "volume": "29",
+      "author": "Orabona",
+      "year": "2016",
+      "journal-title": "Advances in Neural Information Processing Systems"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B60",
+      "author": "Orabona",
+      "year": "2017"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B61",
+      "volume-title": "Empirical likelihood",
+      "author": "Owen",
+      "year": "2001"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B63",
+      "author": "Rakhlin",
+      "year": "2017"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B64",
+      "author": "Ramdas",
+      "year": "2020"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B65",
+      "article-title": "Testing exchangeability: Fork-convexity, supermartingales and e-processes",
+      "volume": "141, 83\u2013109",
+      "author": "Ramdas",
+      "year": "2021",
+      "journal-title": "International Journal of Approximate Reasoning"
+    },
+    {
+      "issue": "4",
+      "key": "2024031313414073500_qkad009-B66",
+      "doi-asserted-by": "crossref",
+      "first-page": "629",
+      "DOI": "10.1109/TIT.1984.1056936",
+      "article-title": "Universal coding, information, prediction, and estimation",
+      "volume": "30",
+      "author": "Rissanen",
+      "year": "1984",
+      "journal-title": "IEEE Transactions on Information Theory"
+    },
+    {
+      "issue": "5",
+      "key": "2024031313414073500_qkad009-B68",
+      "doi-asserted-by": "crossref",
+      "first-page": "1397",
+      "DOI": "10.1214/aoms/1177696786",
+      "article-title": "Statistical methods related to the law of the iterated logarithm",
+      "volume": "41",
+      "author": "Robbins",
+      "year": "1970",
+      "journal-title": "The Annals of Mathematical Statistics"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B69",
+      "author": "Robbins",
+      "year": "1968"
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B70",
+      "doi-asserted-by": "crossref",
+      "first-page": "11",
+      "DOI": "10.1073/pnas.62.1.11",
+      "article-title": "Probability distributions related to the law of the iterated logarithm",
+      "volume": "62",
+      "author": "Robbins",
+      "year": "1969,",
+      "journal-title": "Proceedings of the National Academy of Sciences"
+    },
+    {
+      "issue": "5",
+      "key": "2024031313414073500_qkad009-B71",
+      "doi-asserted-by": "crossref",
+      "first-page": "1410",
+      "DOI": "10.1214/aoms/1177696787",
+      "article-title": "Boundary crossing probabilities for the Wiener process and sample sums",
+      "volume": "41",
+      "author": "Robbins",
+      "year": "1970",
+      "journal-title": "The Annals of Mathematical Statistics"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B72",
+      "author": "Robbins",
+      "year": "1972"
+    },
+    {
+      "issue": "3",
+      "key": "2024031313414073500_qkad009-B73",
+      "doi-asserted-by": "crossref",
+      "first-page": "415",
+      "DOI": "10.1214/aos/1176342704",
+      "article-title": "The expected sample size of some tests of power one",
+      "volume": "2",
+      "author": "Robbins",
+      "year": "1974,",
+      "journal-title": "The Annals of Statistics"
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B74",
+      "doi-asserted-by": "crossref",
+      "first-page": "39",
+      "DOI": "10.1214/aos/1176342611",
+      "article-title": "Probability inequalities for the sum in sampling without replacement",
+      "volume": "2",
+      "author": "Serfling",
+      "year": "1974",
+      "journal-title": "The Annals of Statistics"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B75",
+      "doi-asserted-by": "crossref",
+      "first-page": "407",
+      "DOI": "10.1111/rssa.12647",
+      "article-title": "The language of betting as a strategy for statistical and scientific communication",
+      "volume": "184",
+      "author": "Shafer",
+      "year": "2021",
+      "journal-title": "Journal of the Royal Statistical Society, Series A"
+    },
+    {
+      "issue": "1",
+      "key": "2024031313414073500_qkad009-B76",
+      "doi-asserted-by": "crossref",
+      "first-page": "84",
+      "DOI": "10.1214/10-STS347",
+      "article-title": "Test martingales, Bayes factors and p-values",
+      "volume": "26",
+      "author": "Shafer",
+      "year": "2011",
+      "journal-title": "Statistical Science"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B77",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1002/0471249696",
+      "volume-title": "Probability and finance: It\u2019s only a game!",
+      "author": "Shafer",
+      "year": "2001,"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B78",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1002/9781118548035",
+      "volume-title": "Game-theoretic foundations for probability and finance",
+      "author": "Shafer",
+      "year": "2019"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B80",
+      "author": "Stark",
+      "year": "2020"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B81",
+      "author": "Ville",
+      "year": "1939"
+    },
+    {
+      "issue": "4",
+      "key": "2024031313414073500_qkad009-B82",
+      "doi-asserted-by": "crossref",
+      "first-page": "595",
+      "DOI": "10.1214/20-STS817",
+      "article-title": "Testing randomness online",
+      "volume": "36",
+      "author": "Vovk",
+      "year": "2021",
+      "journal-title": "Statistical Science"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B83",
+      "volume-title": "Algorithmic learning in a random world",
+      "author": "Vovk",
+      "year": "2005"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B84",
+      "doi-asserted-by": "crossref",
+      "first-page": "317",
+      "DOI": "10.1111/j.2517-6161.1993.tb01904.x",
+      "article-title": "A logic of probability, with application to the foundations of statistics",
+      "volume": "55",
+      "author": "Vovk",
+      "year": "1993",
+      "journal-title": "Journal of the Royal Statistical Society: Series B (Methodological)"
+    },
+    {
+      "issue": "2",
+      "key": "2024031313414073500_qkad009-B85",
+      "doi-asserted-by": "crossref",
+      "first-page": "117",
+      "DOI": "10.1214/aoms/1177731118",
+      "article-title": "Sequential tests of statistical hypotheses",
+      "volume": "16",
+      "author": "Wald",
+      "year": "1945",
+      "journal-title": "Annals of Mathematical Statistics"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B86",
+      "volume-title": "Sequential analysis",
+      "author": "Wald",
+      "year": "1947"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B87",
+      "author": "Wasserman",
+      "year": "2020"
+    },
+    {
+      "key": "2024031313414073500_qkad009-B88",
+      "first-page": "20204",
+      "article-title": "Confidence sequences for sampling without replacement",
+      "volume": "33",
+      "author": "Waudby-Smith",
+      "year": "2020",
+      "journal-title": "Advances in Neural Information Processing Systems"
+    }
+  ],
+  "container-title": [
+    "Journal of the Royal Statistical Society Series B: Statistical Methodology"
+  ],
+  "original-title": [],
+  "language": "en",
+  "link": [
+    {
+      "URL": "https://academic.oup.com/jrsssb/advance-article-pdf/doi/10.1093/jrsssb/qkad009/49721486/qkad009.pdf",
+      "content-type": "application/pdf",
+      "content-version": "am",
+      "intended-application": "syndication"
+    },
+    {
+      "URL": "https://academic.oup.com/jrsssb/article-pdf/86/1/1/56961777/qkad009.pdf",
+      "content-type": "application/pdf",
+      "content-version": "vor",
+      "intended-application": "syndication"
+    },
+    {
+      "URL": "https://academic.oup.com/jrsssb/article-pdf/86/1/1/56961777/qkad009.pdf",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2024,
+        10,
+        13
+      ]
+    ],
+    "date-time": "2024-10-13T20:25:44Z",
+    "timestamp": 1728851144000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://academic.oup.com/jrsssb/article/86/1/1/7043257"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        2023,
+        2,
+        16
+      ]
+    ]
+  },
+  "references-count": 70,
+  "journal-issue": {
+    "issue": "1",
+    "published-online": {
+      "date-parts": [
+        [
+          2023,
+          2,
+          16
+        ]
+      ]
+    },
+    "published-print": {
+      "date-parts": [
+        [
+          2024,
+          2,
+          8
+        ]
+      ]
+    }
+  },
+  "URL": "https://doi.org/10.1093/jrsssb/qkad009",
+  "relation": {},
+  "ISSN": [
+    "1369-7412",
+    "1467-9868"
+  ],
+  "issn-type": [
+    {
+      "value": "1369-7412",
+      "type": "print"
+    },
+    {
+      "value": "1467-9868",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published-other": {
+    "date-parts": [
+      [
+        2024,
+        2
+      ]
+    ]
+  },
+  "published": {
+    "date-parts": [
+      [
+        2023,
+        2,
+        16
+      ]
+    ]
+  }
+}

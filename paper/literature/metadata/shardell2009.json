@@ -1,0 +1,482 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2025,
+        2,
+        12
+      ]
+    ],
+    "date-time": "2025-02-12T22:40:21Z",
+    "timestamp": 1739400021125,
+    "version": "3.37.0"
+  },
+  "reference-count": 47,
+  "publisher": "Informa UK Limited",
+  "issue": "6",
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [
+    "Journal of Biopharmaceutical Statistics"
+  ],
+  "published-print": {
+    "date-parts": [
+      [
+        2009,
+        10,
+        29
+      ]
+    ]
+  },
+  "DOI": "10.1080/10543400903242779",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2009,
+        10,
+        23
+      ]
+    ],
+    "date-time": "2009-10-23T02:23:33Z",
+    "timestamp": 1256264613000
+  },
+  "page": "1018-1038",
+  "source": "Crossref",
+  "is-referenced-by-count": 5,
+  "title": [
+    "Sensitivity Analysis of Informatively Coarsened Data Using Pattern Mixture Models"
+  ],
+  "prefix": "10.1080",
+  "volume": "19",
+  "author": [
+    {
+      "given": "Michelle",
+      "family": "Shardell",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "a Department of Epidemiology and Preventive Medicine , University of Maryland School of Medicine , Baltimore, Maryland, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    },
+    {
+      "given": "Samer S.",
+      "family": "El-Kamary",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "a Department of Epidemiology and Preventive Medicine , University of Maryland School of Medicine , Baltimore, Maryland, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    }
+  ],
+  "member": "301",
+  "published-online": {
+    "date-parts": [
+      [
+        2009,
+        10,
+        21
+      ]
+    ]
+  },
+  "reference": [
+    {
+      "key": "CIT0001",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1081/BIP-100101020"
+    },
+    {
+      "key": "CIT0002",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/10543400500266692"
+    },
+    {
+      "key": "CIT0003",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1007/978-1-4899-3424-6"
+    },
+    {
+      "key": "CIT0004",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/(SICI)1097-0258(20000215)19:3<405::AID-SIM325>3.0.CO;2-2"
+    },
+    {
+      "key": "CIT0005",
+      "doi-asserted-by": "crossref",
+      "first-page": "275",
+      "DOI": "10.1111/1467-9868.00386",
+      "volume": "65",
+      "author": "Birmingham J.",
+      "year": "2003",
+      "journal-title": "J. R. Stat. Soc. B"
+    },
+    {
+      "key": "CIT0006",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1093/oso/9780195064650.001.0001",
+      "volume-title": "Experts in Uncertainty: Opinion and Subjective Probability in Science",
+      "author": "Cooke R.",
+      "year": "1991"
+    },
+    {
+      "key": "CIT0007",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1081/BIP-120028510"
+    },
+    {
+      "key": "CIT0008",
+      "doi-asserted-by": "crossref",
+      "first-page": "1",
+      "DOI": "10.1111/j.2517-6161.1977.tb01600.x",
+      "volume": "39",
+      "author": "Dempster P.",
+      "year": "1977",
+      "journal-title": "J. R. Stat. Soc. B."
+    },
+    {
+      "key": "CIT0009",
+      "doi-asserted-by": "crossref",
+      "first-page": "391",
+      "DOI": "10.1016/j.phymed.2009.02.002",
+      "volume": "16",
+      "author": "El-Kamary S. S.",
+      "year": "2009",
+      "journal-title": "Phytomedicine"
+    },
+    {
+      "key": "CIT0010",
+      "first-page": "255",
+      "volume-title": "State of the Art in Survival Analysis",
+      "author": "Gill R. D.",
+      "year": "1997"
+    },
+    {
+      "key": "CIT0011",
+      "first-page": "475",
+      "volume": "5",
+      "author": "Heckman J. J.",
+      "year": "1976",
+      "journal-title": "Ann. Econ. Soc. Meas."
+    },
+    {
+      "key": "CIT0012",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.2307/2532251"
+    },
+    {
+      "key": "CIT0013",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biomet/81.4.701"
+    },
+    {
+      "key": "CIT0014",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1214/aos/1176348396"
+    },
+    {
+      "key": "CIT0015",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.2307/2348475"
+    },
+    {
+      "key": "CIT0016",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1958.10501452"
+    },
+    {
+      "key": "CIT0017",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.0006-341X.2004.00173.x"
+    },
+    {
+      "key": "CIT0018",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/(SICI)1097-0258(19980130)17:2<219::AID-SIM735>3.0.CO;2-O"
+    },
+    {
+      "key": "CIT0019",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1993.10594302"
+    },
+    {
+      "key": "CIT0020",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biomet/81.3.471"
+    },
+    {
+      "key": "CIT0021",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.2307/2533148"
+    },
+    {
+      "key": "CIT0022",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/9781119013563"
+    },
+    {
+      "key": "CIT0023",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1081/BIP-120015744"
+    },
+    {
+      "key": "CIT0024",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1081/BIP-120019265"
+    },
+    {
+      "volume-title": "Eliciting and Analyzing Expert Judgment: A Practical Guide",
+      "year": "1991",
+      "author": "Meyer M. A.",
+      "key": "CIT0025"
+    },
+    {
+      "key": "CIT0026",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/1467-9574.00075"
+    },
+    {
+      "key": "CIT0027",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/0470033312"
+    },
+    {
+      "key": "CIT0028",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1995.10476493"
+    },
+    {
+      "key": "CIT0029",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1998.10473795"
+    },
+    {
+      "key": "CIT0030",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.0006-341X.2001.00103.x"
+    },
+    {
+      "key": "CIT0031",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biomet/63.3.581"
+    },
+    {
+      "key": "CIT0032",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/9780470316696"
+    },
+    {
+      "volume-title": "SAS/IML User's Guide",
+      "year": "2004",
+      "key": "CIT0033"
+    },
+    {
+      "key": "CIT0034",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biostatistics/4.4.495"
+    },
+    {
+      "key": "CIT0035",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.0006-341X.2001.00404.x"
+    },
+    {
+      "key": "CIT0036",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1999.10473862"
+    },
+    {
+      "key": "CIT0037",
+      "doi-asserted-by": "crossref",
+      "first-page": "2184",
+      "DOI": "10.1002/sim.2697",
+      "volume": "26",
+      "author": "Shardell M.",
+      "year": "2007",
+      "journal-title": "Stat. Med."
+    },
+    {
+      "key": "CIT0038",
+      "doi-asserted-by": "crossref",
+      "first-page": "5861",
+      "DOI": "10.1002/sim.3397",
+      "volume": "27",
+      "author": "Shardell M.",
+      "year": "2008",
+      "journal-title": "Stat. Med."
+    },
+    {
+      "key": "CIT0039",
+      "doi-asserted-by": "crossref",
+      "first-page": "1460",
+      "DOI": "10.1093/aje/kwn265",
+      "volume": "168",
+      "author": "Shardell M.",
+      "year": "2008",
+      "journal-title": "Am. J. Epidemiol."
+    },
+    {
+      "key": "CIT0040",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/10543409808835259"
+    },
+    {
+      "volume-title": "Statistical Analysis of Interval-Censored Failure Time Data",
+      "year": "2006",
+      "author": "Sun J.",
+      "key": "CIT0041"
+    },
+    {
+      "key": "CIT0042",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biostatistics/3.2.245"
+    },
+    {
+      "key": "CIT0043",
+      "doi-asserted-by": "crossref",
+      "first-page": "290",
+      "DOI": "10.1111/j.2517-6161.1976.tb01597.x",
+      "volume": "38",
+      "author": "Turnbull B. W.",
+      "year": "1976",
+      "journal-title": "J. R. Stat. Soc. B"
+    },
+    {
+      "key": "CIT0044",
+      "doi-asserted-by": "crossref",
+      "first-page": "841",
+      "DOI": "10.1093/biomet/asm070",
+      "volume": "94",
+      "author": "Vansteelandt S.",
+      "year": "2007",
+      "journal-title": "Biometrika"
+    },
+    {
+      "key": "CIT0045",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/1740774507077849"
+    },
+    {
+      "key": "CIT0046",
+      "doi-asserted-by": "crossref",
+      "first-page": "297",
+      "DOI": "10.1093/biostatistics/kxl010",
+      "volume": "8",
+      "author": "Wilkins K. J.",
+      "year": "2007",
+      "journal-title": "Biostatistics"
+    },
+    {
+      "key": "CIT0047",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1191/1740774504cn032oa"
+    }
+  ],
+  "container-title": [
+    "Journal of Biopharmaceutical Statistics"
+  ],
+  "original-title": [],
+  "language": "en",
+  "link": [
+    {
+      "URL": "https://www.tandfonline.com/doi/pdf/10.1080/10543400903242779",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2025,
+        2,
+        12
+      ]
+    ],
+    "date-time": "2025-02-12T22:05:16Z",
+    "timestamp": 1739397916000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://www.tandfonline.com/doi/full/10.1080/10543400903242779"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        2009,
+        10,
+        21
+      ]
+    ]
+  },
+  "references-count": 47,
+  "journal-issue": {
+    "issue": "6",
+    "published-online": {
+      "date-parts": [
+        [
+          2009,
+          10,
+          21
+        ]
+      ]
+    },
+    "published-print": {
+      "date-parts": [
+        [
+          2009,
+          10,
+          29
+        ]
+      ]
+    }
+  },
+  "alternative-id": [
+    "10.1080/10543400903242779"
+  ],
+  "URL": "https://doi.org/10.1080/10543400903242779",
+  "relation": {},
+  "ISSN": [
+    "1054-3406",
+    "1520-5711"
+  ],
+  "issn-type": [
+    {
+      "type": "print",
+      "value": "1054-3406"
+    },
+    {
+      "type": "electronic",
+      "value": "1520-5711"
+    }
+  ],
+  "subject": [],
+  "published": {
+    "date-parts": [
+      [
+        2009,
+        10,
+        21
+      ]
+    ]
+  }
+}

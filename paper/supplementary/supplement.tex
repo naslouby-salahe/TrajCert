@@ -1,0 +1,140 @@
+\documentclass[10pt]{article}
+\input{preamble}
+\usepackage{natbib}
+\renewcommand{\thetheorem}{S\arabic{theorem}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\renewcommand{\thetable}{S\arabic{table}}
+\hypersetup{pdftitle={Supplement to TrajCert: Sharp risk identification and anytime-valid certification},pdfauthor={Author information pending}}
+\title{Supplement to TrajCert: Sharp risk identification and anytime-valid certification with informative outcome-resolution paths}
+\author{Author information pending}
+\date{}
+\begin{document}\maketitle
+This supplement supplies analytical details, conservative numerical arguments, the complete final-cell power results and reproducibility information. Notation agrees with the article: $A,G,c$ are resolved harmful, resolved beneficial and terminal unresolved masses, $u$ is terminal harmful mass, and $r=A+G$.
+
+\section{Information decomposition and all boundary cases}
+For fixed observable masses, every completion has the joint table
+\begin{equation}
+ \begin{array}{c|cccc} &1&\cdots&K&\infty\\\hline
+ L=1&a_1&\cdots&a_K&u\\
+ L=0&b_1&\cdots&b_K&c-u
+ \end{array}.
+\end{equation}
+Its entries are nonnegative and sum to one exactly when $0\le u\le c$. The row harmful marginal is $A+u$. Conditioning on columns gives
+\begin{equation}
+ H(L\mid J_\Pi)=\sum_{k:a_k+b_k>0}(a_k+b_k)h\left(\frac{a_k}{a_k+b_k}\right)+q(u,c-u).
+\end{equation}
+This proves the information profile in the article without a selection-model assumption. When $r,c>0$, put $p_R=A/r$, $p_U=u/c$ and $\theta=rp_R+cp_U$. Then
+\begin{align}
+ \Sprof_\Pi(u)-\tau_\Pi
+ &=h(\theta)-r h(p_R)-c h(p_U)\\
+ &=r\KL\{\operatorname{Bern}(p_R)\Vert\operatorname{Bern}(\theta)\}
+ +c\KL\{\operatorname{Bern}(p_U)\Vert\operatorname{Bern}(\theta)\}\ge0.\label{eq:js}
+\end{align}
+The equality is interpreted by continuity if a marginal is zero. For $0<r,c<1$, equality in the divergence inequality holds precisely at $p_R=p_U$, proving $u=Ac/r$. Thus $\tau_\Pi$ is the minimal possible full information and is determined by the resolved timing distribution. Equation~\eqref{eq:js} also displays the model as an information budget for terminal selection after accounting for observed timing.
+
+For interior hidden masses, $h'(x)=\log\{(1-x)/x\}$ and $h''(x)=-1/\{x(1-x)\}$. Hence
+\begin{equation}
+ \Sprof''(u)=\frac1u+\frac1{c-u}-\frac1{A+u}-\frac1{G+c-u}
+ =\frac{A}{u(A+u)}+\frac{G}{(c-u)(G+c-u)}.
+\end{equation}
+If $r>0$, at least one numerator is positive, so the profile is strictly convex whenever $c>0$. If $A=0<G$, the derivative is $\log\{(G+c-u)/(c-u)\}>0$ and the minimum is $u=0$. If $G=0<A$, the derivative is $\log\{u/(A+u)\}<0$ and the minimum is $u=c$. If $c=0$, the only completion is $u=0$, with information $h(A)-T_\Pi=\tau_\Pi$. If $r=0$, $c=1$, the profile is $h(u)-h(u)=0$ throughout $[0,1]$. These cases also show why no minimum-information risk is defined from resolved cases when $r=0$.
+
+For $r>0,c>0$, strict convexity and continuity imply that the sublevel set is empty below its minimum, is the unique minimizer at equality, and is a nonempty compact interval above it. It can touch either boundary; an interior root need not exist on both branches. Since every feasible completion is a valid table and no other completion is possible, its risk interval is sharp. If only coarse observations are supplied, any completion can be lifted to a hypothetical finer representation with no additional within-coarse-band outcome dependence, preserving mutual information. Known fine margins restrict such a lift, which is why the article states sharpness with respect to the supplied partition.
+
+\section{Refinement, strictness and decision frontiers}
+Let each finite coarse band $B$ collect fine bands with masses $m_k=a_k+b_k$ and harmful proportions $r_k=a_k/m_k$. For $m_B=\sum_{k\in B}m_k>0$, its harmful proportion is $\bar r_B=\sum_{k\in B}m_kr_k/m_B$. Its entropy gain is
+\begin{equation}
+ m_Bh(\bar r_B)-\sum_{k\in B}m_kh(r_k)\ge0.
+\end{equation}
+Strict concavity makes the inequality strict exactly when positive-mass proportions within $B$ differ. Sum over coarse bands. The unresolved column is unchanged, so this sum is $T_c-T_f$, independent of its hidden label split. The chain rule for the deterministic map $J_c=g(J_f)$ gives
+\begin{equation}
+ I(L;J_f)=I(L;J_c)+I(L;J_f\mid J_c),
+\end{equation}
+and identifies the sum with the conditional information. Comparing profiles gives nesting at every common budget, including empty-set cases.
+
+For the sufficient strictness condition in the article, fine compatibility gives $\rho\ge\tau_f>\tau_c$. Therefore the coarse right endpoint is strictly to the right of its minimizer. If it is below $c$, its coarse profile value is $\rho$ and its fine profile value is $\rho+\Delta$. Fine feasibility excludes that point. Compactness prevents the fine upper endpoint from approaching it without attaining it, proving strict inequality. If both right endpoints are $c$, the upper risks coincide despite $\Delta>0$. Thus informative timing is insufficient for strict improvement when both bounds are saturated. If $c=0$, there is no hidden risk to tighten.
+
+For the frontier, first note that every compatible set contains $\theta^\dagger=A/r$. Hence $\beta<\theta^\dagger$ is intrinsically uncertifiable even if $A\le\beta$; $\beta<A$ is the stronger direct obstruction. If $\beta\ge A+c$, every completion is safe. Otherwise, $\theta^\dagger\le\beta<A+c$ puts $u_\beta=\beta-A$ on the right branch, where the profile is strictly increasing beyond its minimum. If $\rho\le\Sprof(u_\beta)$, its sublevel-set right endpoint is at most $u_\beta$. If $\rho>\Sprof(u_\beta)$, continuity gives a feasible point to the right of $u_\beta$ (as $u_\beta<c$), so certification fails. Equality therefore belongs to the certifying side. Subtracting the two profiles at $u_\beta$ gives the exact frontier shift. In the case $\beta=\theta^\dagger<A+c$, the only certifying budget is $\rho=\tau$.
+
+\section{Proof of the simultaneous and projected guarantee}
+For a true category probability $p_j\in(0,1)$, write $X_{j,i}=\ind\{Y_i=j\}$. For any fixed $z\in[0,1]$, the process
+\begin{equation}
+ Z_n(z;p_j)=\prod_{i=1}^n
+ \left(\frac z{p_j}\right)^{X_{j,i}}
+ \left(\frac{1-z}{1-p_j}\right)^{1-X_{j,i}}
+\end{equation}
+is a nonnegative martingale, since its next multiplicative factor has conditional expectation $p_j(z/p_j)+(1-p_j)\{(1-z)/(1-p_j)\}=1$. Integrating against a Beta$(1/2,1/2)$ law preserves this property by conditional Tonelli, with initial value one, and gives the article's $M_{j,n}(p_j)$. At $p_j=0$, all $X_{j,i}=0$ almost surely and the limiting mixture is nonincreasing with initial value one; $p_j=1$ is analogous. The maximal inequality therefore gives
+\begin{equation}
+ \Pbb\{\exists n:M_{j,n}(p_j)\ge d/\delta\}\le\delta/d.
+\end{equation}
+A union bound over the $d$ categories proves simultaneous containment in every raw interval with probability at least $1-\delta$. Taking running intersections and intersecting with the simplex preserve this same event. Categories within an event need not be independent. No union bound over monitoring times is used.
+
+On simultaneous containment, the true summary belongs to the exact observable-law region at every $n$. The actual terminal harmful mass supplies a feasible completion because its finest-path information is at most $\rho$, and coarse information cannot be larger. Therefore $\theta$ is contained in the union of partition-specific risk sets at every $n$. Its supremum is bounded by the aggregate relaxation and by any conservative numerical enclosure. This proves the article's time-uniform risk guarantee. Restricting reports to checkpoints or adding evidence gates can only remove opportunities to certify, so neither requires extra error spending. If the sensitivity assumption fails, this feasibility step fails; compatibility of some other completion does not repair it.
+
+The event also implies simultaneous coverage of every member of the partition-specific identified set: on it, the entire true observable-law set is part of each projection. Thus the guarantee is stronger than pointwise containment of a selected terminal completion, while the implemented relaxation may be wider than necessary. Across multiple partitions or multiple streams the same reasoning needs a simultaneous observable region or an explicit union allocation; the single-partition theorem does not supply such an allocation automatically.
+
+\section{Envelope and branch-and-bound derivation}
+For any selected set of categories $B$, simplex membership implies
+\begin{equation}
+ \max\{\sum_{j\in B}\ell_j,1-\sum_{j\notin B}v_j,0\}
+ \le\sum_{j\in B}p_j\le
+ \min\{\sum_{j\in B}v_j,1-\sum_{j\notin B}\ell_j,1\}.
+\end{equation}
+These inequalities give the aggregate mass bounds. For $a,b>0$, $\partial q/\partial a=\log\{(a+b)/a\}\ge0$ and $\partial q/\partial b=\log\{(a+b)/b\}\ge0$. Continuity extends monotonicity to boundaries. Thus evaluating $q$ at simultaneous lower or upper coordinates gives valid lower or upper entropy bounds. The raw upper sum is valid but can be loose; intersecting it with the resolved-mass entropy ceiling and $\log2$ tightens it. A ceiling is not needed to turn the raw sum into an upper bound. This monotonicity argument, rather than attainability of simultaneous upper coordinates, justifies the envelope.
+
+Every categorical summary maps into $\Eset_n$. Since $\Sprof=h(A+u)-T-q(u,c-u)$ decreases in $T$, replacing the actual $T$ by $T_U$ can only enlarge its feasible set. For a search box $B=[A_-,A_+]\times[G_-,G_+]\times[u_-,u_+]$, define
+\begin{align}
+ c_-&=\max(c_L,1-A_+-G_+,0),&c_+&=\min(c_U,1-A_--G_-,1),\\
+ \tilde u_+&=\min(u_+,c_+),&
+ z_-&=\max(0,c_--\tilde u_+),\quad z_+=\max(0,c_+-u_-).
+\end{align}
+Impossible mass constraints discard the box. Otherwise every feasible point has $u\in[u_-,\tilde u_+]$, terminal beneficial mass in $[z_-,z_+]$, and $\theta\in[A_-+u_-,\min(1,A_++\tilde u_+)]$. A lower enclosure is
+\begin{equation}
+ \underline S_B=\max\left\{0,\ \inf_{x\in[A_-+u_-,\min(1,A_++\tilde u_+)]}h(x)
+       -T_U-\sup_{u\in[u_-,\tilde u_+],\,z\in[z_-,z_+]}q(u,z)-\eta_B\right\},
+\end{equation}
+where $\eta_B$ is the implementation's downward roundoff allowance. Taking the maximum with zero remains a lower bound for the original nonnegative information, even if the relaxed expression itself is negative. The binary-entropy infimum is at an interval endpoint; its supremum includes $1/2$ when appropriate. Mass-entropy bounds use monotonicity and continuous boundary values. Arb enclosures and outward conversions supply the operative bounds, with a $32(K+1)\operatorname{ulp}(1)$ allowance for specified floating operations. A box with $\underline S_B>\rho$ contains no original feasible completion.
+
+The numerical invariant is that every feasible original completion is either retained in an active or queued box, or lies in a rigorously excluded box and hence cannot exist. Each split covers its parent. The maximum objective upper bound over retained boxes and verified incumbents therefore dominates the desired supremum. An incumbent verifies a feasible table with a direct Arb upper information bound no greater than $\rho$; it supplies a lower bound on the optimum. Removing a box merely because it is close to an incumbent would destroy the upper-bound invariant unless its upper value remains in the reported bound. The implemented stopping rules keep it. The returned upper bound is consequently unaffected in direction by the node cap, stall rule or unresolved box width, although its tightness is affected.
+
+The reported search upper bound need not equal the relaxed optimum, because termination can occur while the retained boxes still give a loose enclosure. Validity needs domination of feasible risks rather than convergence to the optimum. The article's numerical guarantee is conditional on conservative enclosures; the available oracle-direction tests are evidence for the implementation, not a formal machine-checked proof of every floating-point instruction. Singleton envelopes use the population solver with its declared root precision. Ordinary finite-sample runs use outward categorical intervals and the conservative search.
+
+Compatibility rejection uses a lower bound on $q(A,G)-T_U$, rounded down and truncated at zero. Intrinsic rejection uses a lower bound on $A/(A+G)$ over compatible-plausible boxes. For example, on a box with $A_-+G_+>0$, $A_-/(A_-+G_+)$ is a valid lower bound. If zero resolved mass is plausible, intrinsic rejection is withheld. Strict comparison guards are $10^{-12}$. Population root tolerance is $10^{-12}$; identity residual tolerance is $10^{-10}$; categorical inversion tolerance is $10^{-12}$; the nominal outer objective gap is $10^{-6}$ with a 2,000,000-node cap. A normalized box-width exit or stall is reported separately from objective convergence.
+
+\section{Complete confirmatory outcomes and design}
+All rows in Table~\ref{tab:allpower} have 100 independent streams, $\delta=0.05$, and confirmatory indices 1,000,000--1,000,099. Within a law, the same finest-resolution streams feed each partition. The ordinary grid is 2,000, 5,000, 10,000, 20,000; the power and matched-control grids and low-prevalence grid are given in the article. Dense monitoring uses 250, 500, 750, 1,000, 1,250, 1,500, 1,750, 2,000, 2,500, 3,000, 3,500, 4,000, 4,500, 5,000, 5,500, 6,000, 6,500, 7,000, 7,500, 8,000, 8,500, 9,000, 9,500, 10,000. Endpoint-uncertifiable uses 10,000, 20,000, 50,000. Zero counts include all streams and do not imply zero certification probability.
+
+\Needspace{6.5in}\input{tables/all_power}
+
+Additional laws use the parameter order $(\theta,q_1,q_0,\lambda_1,\lambda_0)$. High unresolvedness has $(.05,.70,.40,.35,-.10)$. The timing-only law has $(.05,.10,.10,.45,-.15)$ and the terminal-only law has $(.05,.30,.05,0,0)$. Near degeneracy has $(.01,.90,.01,.80,-.80)$; intrinsic impossibility has $(.15,.10,.10,0,0)$. The unsafe, risk-near-budget, incompatible-budget, misspecified-sensitivity and population-decision-boundary scenarios use the ordinary timing-and-terminal harmful-late law from the article. The ignorable-delay and dense-monitoring scenarios use the independent-resolution law. The 32-band validity law is regenerated at 32 bands with the ordinary timing-and-terminal parameters, rather than being a coarsening of the eight-band law.
+
+In the seven validity scenarios, $\rho=I_{\rm true}+0.01$, except the minimum-information completion, which sets terminal harmful mass to $Ac/r$ and uses $\rho=\tau+0.002$. The near-certification risk budget is its own sharp upper bound at the designated $\rho$ plus 0.002; other validity budgets are 0.05. Each scenario uses 500 independent streams, seed indices 0--499, through 500 matured events. The nominal error budget is unchanged. Construction exclusions are monitored at every event and risk-bound diagnostics at the five 100-event checkpoints.
+
+For a count $x$ of $m$ streams, the two-sided 95\% binomial interval has lower endpoint zero if $x=0$ and otherwise $B^{-1}_{x,m-x+1}(0.025)$, and upper endpoint one if $x=m$ and otherwise $B^{-1}_{x+1,m-x}(0.975)$. One-sided violation limits use $B^{-1}_{x+1,m-x}(0.95)$. This distinguishes the Monte Carlo intervals from the stream's own time-uniform confidence region. The prespecified final-horizon power target uses the two-sided interval's lower endpoint, exactly as stored in the publication artifacts.
+
+Repeated-static monitoring uses per-category Wilson intervals with $z=\Phi^{-1}\{1-\delta/(2d)\}$ and no correction across looks. It can therefore have greater power without sharing TrajCert's exact time-uniform guarantee. At the final horizon of the valid ignorable-delay regime, its counts are 98/100 at $K=1$ and 0/100 at $K=8$, while the ignorable-delay reference certifies 98/100 at either partition. In the unsafe law, the latter reference certifies falsely in 7/100 at each displayed partition, but its independence assumption fails there. These are assumption-violation diagnostics. In the dense-monitoring scenario it certifies 97/100, whereas neither sensitivity projection certifies; the stronger identifying assumption changes the population target bound.
+
+All TrajCert power cells record zero false risk certification. The stored premature-certification counter is also zero: it counts certificates in cells classified as compatible but not population-certifiable, and does not include model-incompatible cells. The sensitivity-misspecified two-band cell is population-certifiable under its assumed model but has true risk $0.05>0.045$ and true partition information above $\rho=0.02$; its observed zero certifications do not validate that assumption. The incompatible four-band cell certifies 16/100 although $\rho<\tau$ in the population, with true risk below its budget. These outcomes illustrate the distinction between risk error and a certificate issued under a false structural assumption.
+
+\section{Reproducibility record}
+The canonical configuration is \texttt{configs/trajcert.yaml}; its SHA-256 is
+\begin{quote}\small\ttfamily
+865eeb27e1bdbead6198ecfc1f45349a483fe44e4ea6a06e71012ca0e35058b7.
+\end{quote}
+It is byte-identical to the archived frozen 19 October 2026 copy. The scientific specification digest is
+\begin{quote}\small\ttfamily
+3e9e0c6584a3b4f84bcec4575bf9392de841fe3a47eb9bd7f33e86f7eeb81721.
+\end{quote}
+The report records commit \texttt{36e76519cc6f2496c8b6d0a93e7abae2cf4303af}; the manuscript inspected the clean checkout at \texttt{6a37400fc10e977d4c568d7e94d88f3f49dd67aa}. These identifiers serve different roles. The dependency fingerprint does not hash the source tree, so the report commit is not proof that every experiment used an identical implementation. Power precedes a later runtime optimization, whereas coverage uses the optimized code. The campaign reports identical serialized scientific-output digests, excluding runtime fields, on 11 selected cases; a complete per-cell equivalence rerun is not available. No experimental rerun was performed during manuscript preparation.
+
+The environment lock digest recorded in the report is
+\begin{quote}\small\ttfamily
+2f94341d20401569cbbd305333d78becd88a046ca1b272c30b49997836fcf9db.
+\end{quote}
+The software manifest specifies Python 3.12 or later, NumPy 2.5.2, SciPy 1.17.1, mpmath 1.3.0 and python-flint 0.9.0, with the canonical resolved graph in \texttt{uv.lock} and hash-locked export in \texttt{requirements.lock}. These are declared dependencies; the archived timing data do not independently identify the physical CPU or a reproducible machine load.
+
+Seeds derive from SHA-256 of a semantic event-stream namespace and stream index, using NumPy's PCG64 generator. The namespace includes the law and its finest band count, and excludes the analysis partition, sensitivity budget, risk budget and experiment name. Coarse analyses therefore reuse the same stream; shorter horizons use prefixes. Law selection used population search and separate exploratory streams, and the confirmatory configuration was frozen before the reported streams. This separation prevents tuning on the confirmatory streams, while leaving the designed-law scope of the experiment explicit.
+
+The manuscript-side checks read existing scientific JSON, Parquet and CSV files. They verify the 116 source/destination pairs in the report manifest, all 320 power batches, original stream indices, every checkpoint certification count, the exact binomial intervals, all seven coverage completion markers and batch denominators, the frozen configuration, scaling-unit conversions and 176 targeted/full decisions. Main figures are rendered solely from these existing numerical sources. The archived final test log records 961 passing tests; this is a historical validation record, not a newly executed test suite. The accompanying evidence archive contains unchanged scientific-result JSON files, individual power-batch outcomes, validity-batch records and exported CSV tables for these three current studies, with a SHA-256 manifest and a link to the inspected public code commit. Internal manuscript audits, historical experiments and downloaded literature are excluded from the submission package.
+
+\end{document}

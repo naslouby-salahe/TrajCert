@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-20",
+  "canonical_main": "main.tex",
+  "canonical_bibliography": "references.bib",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "13b80062d794d297ed9d58283073e90c2cca660e037eb83f9510fa3758b1bc06"
+    },
+    {
+      "path": "figures/certification_power.pdf",
+      "sha256": "6705be4261964937715ed3571dde29529ddde30c37a1bb6c47722e512b3cc36a"
+    },
+    {
+      "path": "figures/computation.pdf",
+      "sha256": "551da8b524665e6a62db0a6d1d85341abe0d8692266f7fd429d314fe0292124e"
+    },
+    {
+      "path": "figures/identification.pdf",
+      "sha256": "c745b0f6c236b8b72ffa0539a8a5a2d87595ae2d150275920089254ca42b119f"
+    },
+    {
+      "path": "highlights.rtf",
+      "sha256": "a030d40859df8131b4363e8ad16b8ce6f089cccbdbdcd163fe93ee36c6ad1d3d"
+    },
+    {
+      "path": "highlights.txt",
+      "sha256": "13cb3f3b3a546ef7a6fd89b75baed4aafc29d7639e5bf8c150555e194b7eaeca"
+    },
+    {
+      "path": "main.tex",
+      "sha256": "e54dc32c9b02115578235eb8db4ef32e6dcd710e92fee99a20948cfba1fb4fba"
+    },
+    {
+      "path": "preamble.tex",
+      "sha256": "4faeb033b97dd119c569df742cf5c0e46cc30ad53aaaa3e179cd6f5e1853ea90"
+    },
+    {
+      "path": "references.bib",
+      "sha256": "94518d9c496624b490c7fb726c6951d03bf35bf1f913b95313e459654b87d1ee"
+    },
+    {
+      "path": "sections/declarations.tex",
+      "sha256": "796c16a75c1a5561cc97873a7b990978e0e75634315e64e56e2f63b72dd3d784"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "sha256": "f348f7a5967801bccfa8bd87c75fb3484d8fec435453ab5ea5a73e982331549e"
+    },
+    {
+      "path": "sections/experiments.tex",
+      "sha256": "88f1171ec05039f7f750f07f07a016cb5ad11c7927d5119e1a517afb50b7ded7"
+    },
+    {
+      "path": "sections/identification.tex",
+      "sha256": "dad2527bb0106465a10a00e5e12cfc7ad5cbd8ff06283fed49b6b021a0d5166e"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "sha256": "938c30c006cb1c9eeefa9acce64dc0bcadd13a5e234059930d7c63e944a6c186"
+    },
+    {
+      "path": "sections/model.tex",
+      "sha256": "77b29e71eb3a0dec2ecc367a2f4360b0e8d830811005bbf5983b3c10e1263f4e"
+    },
+    {
+      "path": "sections/results.tex",
+      "sha256": "45a1695a2800e0b189dd26b2d90a2ec71a804830d5a47e3afbb730862eee0452"
+    },
+    {
+      "path": "sections/sequential.tex",
+      "sha256": "d639f76948df6c1dece519393f189198488afc4fa7a462e7c1aab74cb2d0184a"
+    },
+    {
+      "path": "supplementary/supplement.tex",
+      "sha256": "b43f053a237f595d5bda56021c183cb37e5158e16cb336ba0e194fa834a08e3f"
+    },
+    {
+      "path": "tables/all_power.tex",
+      "sha256": "e47c6af766e0fea5babd546cc298246212ac0af0e408587dcad6c28d575c3c9e"
+    },
+    {
+      "path": "tables/coverage.tex",
+      "sha256": "24b2a085880b00a4b92ed5e4f12c647c2e02a3ba0f7b4be31ba8be544a704e5a"
+    },
+    {
+      "path": "tables/population.tex",
+      "sha256": "97a931c71e47f0810978069e2a97d600271f9189b05e74e93fe2a99a2570182b"
+    },
+    {
+      "path": "tables/power_selected.tex",
+      "sha256": "7716c349ff9b2b92dcec6cb2d4192e517959c799e10759e08a70a31499cc32cd"
+    }
+  ]
+}

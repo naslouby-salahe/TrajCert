@@ -1,0 +1,301 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        8
+      ]
+    ],
+    "date-time": "2026-10-08T11:37:54Z",
+    "timestamp": 1791459474057,
+    "version": "4.3.4"
+  },
+  "reference-count": 16,
+  "publisher": "Institute for Operations Research and the Management Sciences (INFORMS)",
+  "issue": "3",
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [
+    "Operations Research"
+  ],
+  "published-print": {
+    "date-parts": [
+      [
+        2022,
+        5
+      ]
+    ]
+  },
+  "abstract": "<jats:p>A/B tests are typically analyzed via frequentist p-values and confidence intervals, but these inferences are wholly unreliable if users endogenously choose samples sizes by continuously monitoring their tests. We define always valid p-values and confidence intervals that let users try to take advantage of data as fast as it becomes available, providing valid statistical inference whenever they make their decision. Always valid inference can be interpreted as a natural interface for a sequential hypothesis test, which empowers users to implement a modified test tailored to them. In particular, we show in an appropriate sense that the measures we develop trade off sample size and power efficiently, despite a lack of prior knowledge of the user\u2019s relative preference between these two goals. We also use always valid p-values to obtain multiple hypothesis testing control in the sequential context. Our methodology has been implemented in a large-scale commercial A/B testing platform to analyze hundreds of thousands of experiments to date.</jats:p>",
+  "DOI": "10.1287/opre.2021.2135",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2021,
+        8,
+        10
+      ]
+    ],
+    "date-time": "2021-08-10T14:17:10Z",
+    "timestamp": 1628605030000
+  },
+  "page": "1806-1821",
+  "source": "Crossref",
+  "is-referenced-by-count": 57,
+  "title": [
+    "Always Valid Inference: Continuous Monitoring of A/B Tests"
+  ],
+  "prefix": "10.1287",
+  "volume": "70",
+  "author": [
+    {
+      "ORCID": "https://orcid.org/0000-0002-3960-0770",
+      "authenticated-orcid": false,
+      "given": "Ramesh",
+      "family": "Johari",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Department of Management Science and Engineering, Stanford University, Stanford, California 94305;"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Pete",
+      "family": "Koomen",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Optimizely, Inc., San Francisco, California 94105;"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0002-3126-9278",
+      "authenticated-orcid": false,
+      "given": "Leonid",
+      "family": "Pekelis",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "CloudTrucks, Inc., San Francisco, California 94103;"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0003-2568-1802",
+      "authenticated-orcid": false,
+      "given": "David",
+      "family": "Walsh",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Unlearn.AI, San Francisco, California 94105"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "member": "109",
+  "reference": [
+    {
+      "key": "B1",
+      "first-page": "2312",
+      "volume": "24",
+      "author": "Abbasi-Yadkori Y",
+      "year": "2011",
+      "journal-title": "Adv. Neural Inform. Processing Systems"
+    },
+    {
+      "key": "B6",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1073/pnas.58.1.66"
+    },
+    {
+      "key": "B7",
+      "volume-title": "Self-Normalized Processes: Limit Theory and Statistical Applications",
+      "author": "de la Pe\u00f1a VH",
+      "year": "2008"
+    },
+    {
+      "key": "B8",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.4780131308"
+    },
+    {
+      "key": "B10",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biomet/asu065"
+    },
+    {
+      "key": "B11",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.1467-9868.2007.00643.x"
+    },
+    {
+      "key": "B12",
+      "volume-title": "Handbook of Sequential Analysis",
+      "author": "Ghosh BK",
+      "year": "1991"
+    },
+    {
+      "issue": "2",
+      "key": "B22",
+      "first-page": "303",
+      "volume": "11",
+      "author": "Lai TL",
+      "year": "2001",
+      "journal-title": "Statist. Sinica"
+    },
+    {
+      "key": "B24",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1007/978-1-4757-1923-9"
+    },
+    {
+      "key": "B29",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1214/aoms/1177696786"
+    },
+    {
+      "key": "B30",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1214/aos/1176342704"
+    },
+    {
+      "key": "B31",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/asmb.2104"
+    },
+    {
+      "key": "B32",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.2307/2335213"
+    },
+    {
+      "key": "B33",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1007/978-1-4757-1862-1"
+    },
+    {
+      "key": "B35",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1214/aoms/1177731118"
+    },
+    {
+      "key": "B37",
+      "first-page": "1343",
+      "volume": "29",
+      "author": "Zhao S",
+      "year": "2016",
+      "journal-title": "Adv. Neural Inform. Processing Systems"
+    }
+  ],
+  "container-title": [
+    "Operations Research"
+  ],
+  "original-title": [],
+  "language": "en",
+  "link": [
+    {
+      "URL": "https://pubsonline.informs.org/doi/pdf/10.1287/opre.2021.2135",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2023,
+        4,
+        2
+      ]
+    ],
+    "date-time": "2023-04-02T17:07:21Z",
+    "timestamp": 1680455241000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://pubsonline.informs.org/doi/10.1287/opre.2021.2135"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        2022,
+        5
+      ]
+    ]
+  },
+  "references-count": 16,
+  "journal-issue": {
+    "issue": "3",
+    "published-print": {
+      "date-parts": [
+        [
+          2022,
+          5
+        ]
+      ]
+    }
+  },
+  "alternative-id": [
+    "10.1287/opre.2021.2135"
+  ],
+  "URL": "https://doi.org/10.1287/opre.2021.2135",
+  "relation": {},
+  "ISSN": [
+    "0030-364X",
+    "1526-5463"
+  ],
+  "issn-type": [
+    {
+      "value": "0030-364X",
+      "type": "print"
+    },
+    {
+      "value": "1526-5463",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published": {
+    "date-parts": [
+      [
+        2022,
+        5
+      ]
+    ]
+  }
+}

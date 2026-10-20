@@ -1,0 +1,2880 @@
+                                                         Sensitivity analysis under the f -sensitivity models:
+                                                               a distributional robustness perspective
+                                                                        Ying Jin∗1 , Zhimei Ren∗2 , and Zhengyuan Zhou3
+                                                                             1
+                                                                            Department of Statistics, Stanford University
+                                                                         2
+                                                                          Department of Statistics, University of Chicago
+arXiv:2203.04373v2 [stat.ME] 5 Sep 2022
+
+
+
+
+                                                                         3
+                                                                           Stern School of Business, New York University
+
+
+
+                                                                                                 Abstract
+                                                     This paper introduces the f -sensitivity model, a new sensitivity model that characterizes the violation
+                                                 of unconfoundedness in causal inference. It assumes the selection bias due to unmeasured confounding is
+                                                 bounded “on average”; compared with the widely used point-wise sensitivity models in the literature, it
+                                                 is able to capture the strength of unmeasured confounding by not only its magnitude but also the chance
+                                                 of encountering such a magnitude.
+                                                     We propose a framework for sensitivity analysis under our new model based on a distributional
+                                                 robustness perspective. We first show that the bounds on counterfactual means under the f -sensitivity
+                                                 model are optimal solutions to a new class of distributionally robust optimization (DRO) programs,
+                                                 whose dual forms are essentially risk minimization problems. We then construct point estimators for
+                                                 these bounds by applying a novel debiasing technique to the output of the corresponding empirical risk
+                                                 minimization (ERM) problems. Our estimators are shown to converge to valid bounds on counterfactual
+                                                 means if any nuisance component can be estimated consistently, and to the exact bounds when the
+                                                 ERM step is additionally consistent. We further establish asymptotic normality and Wald-type inference
+                                                 for these estimators under slower-than-root-n convergence rates of the estimated nuisance components.
+                                                 Finally, the performance of our method is demonstrated with numerical experiments.
+
+
+                                          1      Introduction
+                                          In a variety of areas, conducting randomized trial can be costly, unethical or even infeasible. To draw causal
+                                          conclusions, researchers/policy-makers need to resort to observational data. The particular challenge in
+                                          observational studies is confounding: because the treatment allocation mechanism is completely unknown,
+                                          there might exist variables that affect both the treatment and the outcomes. With unmeasured confounding,
+                                          causal conclusions drawn from naïvely comparing the outcomes for the treated and untreated units – even
+                                          after adjusting for the difference in the observable characteristics – can be invalid.
+                                              An example is the well-known debate over the effect of smoking (the treatment) on the development
+                                          of lung cancer (the outcome), where one observes a higher prevalence of lung cancer among smokers and
+                                          concludes that smoking causes lung cancer. The criticism of Fisher (1958) argues that this effect may instead
+                                          be entirely driven by genetics: even for two people with the same observed characteristics (e.g., demographic
+                                          information and medical history), the one who is genetically more likely to develop lung cancer may also be
+                                          genetically more likely to smoke; should this be true, even though smoking may not cause the lung cancer,
+                                          we could still observe a higher proportion of lung cancer among the treated group even after matching the
+                                          observed characteristics. In this case, the genetic factor could be an unmeasured confounder that induces
+                                          the nontrivial observed effect and potentially leads to a faulty causal conclusion.
+                                              To formalize the discussion, we follow the potential outcome framework (Neyman, 1923; Imbens and
+                                          Rubin, 2015) and posit a data-generating distribution P on (X, U, T, Y (1), Y (0)), where X ∈ X is the
+                                              ∗ Author names listed alphabetically.
+
+
+
+
+                                                                                                      1
+observed covariate vector in a compact set X ⊂ Rp , U ∈ U is the unobserved confounding factor, T ∈ {0, 1}
+is the treatment option (T = 1 for receiving the treatment and T = 0 for control), and Y (1) ∈ R and
+Y (0) ∈ R are the two potential outcomes. We assume access to a dataset {(Xi , Ti , Yi )}ni=1 of n i.i.d. triplets
+generated from P, where for unit i, Yi = Yi (Ti ) is the observed outcome under treatment Ti ,1 Without loss
+of generality (since U is arbitrary), under P, one has
+
+                                                                                                               (1)
+                                                        
+                                            Y (1), Y (0)    T | X, U.
+
+
+
+
+                                                                   |=
+    We are interested in the average treatment effect (ATE): E[Y (1) − Y (0)], the average treatment effect
+on the control (ATC): E[Y (1) − Y (0) | T = 0], and the average treatment effect on the treated (ATT):
+E[Y (1) − Y (0) | T = 1], where in all quantities the expectation is taken with respect to the underlying joint
+distribution. To make progress, we assume that there is sufficient exploration in the dataset, known as the
+overlap assumption in the literature. We define the observed propensity score e(x) := P(T = 1 | X = x).
+Assumption 1 (Overlap). 0 < e(x) < 1 for P-almost all x ∈ X .2
+    Under the overlap assumption, the identification and estimation of treatment effects in observational
+studies have mostly relied on the unconfoundedness condition (a.k.a. strong ignorability (Rosenbaum and
+Rubin, 1983b)): Y (1), Y (0)        T | X. That is, all confounders that could simultaneously affect the treat-
+                                    |=
+
+
+
+
+ment assignment and the outcomes have been measured in X. In the lung cancer example, this condition
+imposes that for all people with the same value of X, even though their genetics and potential outcomes
+differ, they are equally likely to become a smoker (receive the treatment).
+    The strong ignorability condition, however, is not testable and is often hard to justify in practice. Sen-
+sitivity analysis offers a way to bypass this obstacle. In the lung cancer example, Cornfield et al. (1959)
+for the first time used the method of sensitivity analysis: it strongly supports the existence of treatment
+effects by showing that a genetic factor must be nine times more prevalent in smokers than in non-smokers
+in order to explain the observed effect should there be no actual treatment effects (and it is high implausible
+to find such a genetic factor). At a high level, sensitivity analysis starts with a sensitivity model on how
+the unknown data generating process deviates from the strong ignorability condition, and then estimates
+the range – rather than a single value – of the treatment effects, thus offering a quantitative understanding
+of how robust the causal conclusion is against potential unmeasured confounding. The method in Cornfield
+et al. (1959) was generalized by Rosenbaum’s Γ-selection condition (Rosenbaum, 1987), a pioneering model
+on the selection bias that has become a classic. Tan (2006) later proposed the marginal sensitivity model,
+based on which a series of work have developed various treatment effects estimation and inference schemes
+(Zhao et al., 2017; Kallus et al., 2019; Lee et al., 2020; Dorn and Guo, 2021; Jin et al., 2021; Nie et al., 2021;
+Dorn et al., 2021). The marginal sensitivity model centers around the key quantity
+
+                                                P(T = 1 | X = x)/P(T = 0 | X = x)
+                             OR(x, u) =                                                   ,                                  (2)
+                                          P(T = 1 | X = x, U = u)/P(T = 0 | X = x, U = u)
+
+the odds ratio of receiving treatment conditional only on observed covariates versus conditional on both
+unmeasured confounders and observed covariates. Intuitively, OR(x, u) quantifies the impact of unmeasured
+confounding on the treatment probability. Tan (2006) assumes uniformly bounded odds ratio:
+                                                     1
+                                                       ≤ OR(x, u) ≤ Γ                                                        (3)
+                                                     Γ
+for P-almost all x ∈ X and u ∈ U for some Γ ≥ 1. When Γ = 1, this assumption recovers the unconfound-
+edness assumption, and the larger the Γ, the more confoundness the model tolerates.
+    Despite being widely used, the marginal Γ-selection model (3) can be limited in some cases. We illustrate
+this point with a simple and natural parametric example, which also motivates our new sensitivity model.
+Example 1. Let us consider a simple example without covariates. We assume the observed probability
+of treatment is P(T = 1) = 1/2. In this context, the strong ignorability condition means all units receive
+   1 here we implicitly make the Stable Unit Treatment Value Assumption (SUTVA).
+   2 Since X is compact, this is equivalent to assuming that η ≤ e(x) ≤ 1 − η for some positive η, as used in certain versions of
+
+overlap in the literature.
+
+
+                                                               2
+treatments with the same probability. The researcher would like to estimate the range of E[Y (1) | T = 0]
+if the observational data is confounded to some extent. Based on some background          knowledge, she is in
+                                                                           exp(δU ) 
+particular worried about a confounder U ∼ N (0, 1), where T | U ∼ Bern 1+exp(δU    )  for some δ ∈ (0, 1).3 By
+construction, the odds ratio characterizing the selection bias caused by U is
+
+                                                   P(T = 0 | U ) P(T = 1)
+                                     OR(U ) :=                  ·         = e−δU .
+                                                   P(T = 1 | U ) P(T = 0)
+
+Since U is unbounded, the above odds ratio cannot be uniformly bounded by any constant. In this simple
+stylized example, this researcher cannot obtain any informative range of the treatment effects from the
+sensitivity analysis under a hypothesized marginal Γ-selection assumption (3).                       
+
+    More generally, if a researcher concerns a scenario where the unmeasured confounding is drastically
+severe in a small region of the sample space but non-exists in the remaining, it would require a very large,
+if not infinity, value of Γ for (3) to be practically meaningful. Sensitivity analysis under (3) thus provides
+a wide (thus uninformative) range of treatment effects. However, since the magnitude of selection bias is
+large only in a small region, its overall impact (on ATE for instance) should still be small. A desirable
+sensitivity model should still produce informative bounds on the treatment effects in such situations, and
+more generally, capture the strength of unmeasured confounding beyond its maximum magnitude.
+    We do mention that a few works in the literature (Imbens, 2003; Franks et al., 2019) postulate parametric
+models for treatment assignment that is affected by unobserved confounders; such parametric models include
+the simple example discussed here as a special case and hence allow for unbounded local confounded effects.
+However, the key limitation is that the proposed confounding model is highly specialized to the logistic form,
+whereas the marginal Γ-selection criterion provides a non-parametric model that is quite general.
+    Motivated by the merits of both worlds, in this paper, we develop a novel sensitivity model that describes
+the “average” strength of unmeasured confounding. We also develop a framework to conduct sensitivity
+analysis with our new models, which informs the range of treatment effects under various overall strength of
+unmeasured confounding. Our contributions are summarized in the following.
+
+    • A new sensitivity model. We propose the f -sensitivity model, a general, non-parametric model that
+      characterizes the overall strength of unmeasured confounding. It is suitable for situations where the
+      confounding may be unbounded yet with a limited overall impact at the population level.
+    • A new class of distributional robustness problems. We show that the partial identification bounds on
+      treatment effects under the f -sensitivity model can be represented by the solution to a class of DRO
+      programs that are new to the literature, providing a distributional robustness perspective to sensitivity
+      analysis under unmeasured confounding.
+    • A new framework for robust estimation and inference. We develop a set of tools to estimate the optimal
+      objective of the new DRO problems; the objective can be expressed via the solution to a weighted risk
+      minimization problem, with the unknown weights determined by the covariate shift between treatment
+      and control groups. We then propose estimators for the bounds using a new debiasing technique applied
+      to the output of the corresponding ERM problem. We prove that our estimators are doubly-robust
+      to the estimation of nuisance components. Furthermore, they enjoy an interesting one-sided validity
+      property that is specific to the partial identification setting: our estimators are still valid yet perhaps
+      conservative bounds when the ERM step is completely off.
+
+
+2     The new f -sensitivity model
+2.1     The (f, ρ)-selection condition
+Our new f -sensitivity model is specified by the following (f, ρ)-selection condition.
+  3 Here, Y (1) = g(U, δ) for some measurable function g, so that (1) holds. One can show that for any δ, the distribution of T
+
+and Y (1) agrees with the observable if g is properly chosen.
+
+
+
+
+                                                              3
+Definition 1 (The (f, ρ)-selection condition). Suppose f : R+ 7→ R is a convex function such that f (1) = 0.
+Let OR(x, u) be defined in (2). P satisfies the (f, ρ)-selection condition if for P-almost all x,
+                         Z                                  Z                                  
+                              f OR(x, U ) dPU |X=x,T =1 ,      f OR(x, U ) −1
+                                                                                  dPU | X=x,T =0 ≤ ρ.
+                                                                              
+          df (P) := max
+
+    This new model addresses the unbounded confounding issue in Example 1: even though the odds ratio
+is not uniformly bounded, it is controlled overall; in this case, our new model can be a more reasonable
+description of the practical situation. We will discuss shortly about more settings where our method may
+be sensible. Now, let us first address the concern in Example 1 using our framework.
+Example 1 (Continued). We take f (t) = t log t, a convex function with f (1) = 0. Continuing the compu-
+tation in Example 1, the first term of df (P) in Definition 1 can be computed as
+
+                                                                                     2eδu
+      Z                           Z                                Z
+                                                                                              1   2
+          f OR(U ) dPU | T =1 =       −δU · e−δU dPU | T =1 = −δ       u · e−δu ·          · √ e−u /2 du < ∞.
+                  
+                                                                                    1+e δu
+                                                                                              2π
+
+RThe right-handed  side is approximately 0.2 if we take δ = 1 and 0.6 if we take δ = 2. Note that
+   f OR(U ) dPU | T =1 can be interpreted as the overall deviation of OR(U ) from 1 in the treated (observed)
+            
+
+ group, which is bounded, even though OR(U ) → ∞ when U → −∞. In this way, one could seamlessly
+ use our framework to conduct sensitivity analysis; this will inform the impact of the overall strength of
+ unmeasured confounding on the treatment effects.                                                          
+   Two remarks on the (f, ρ)-selection condition are in order.
+Remark 1. If P satisfies the marginal Γ-selection condition (3), then it automatically satisfies the (f, ρ)-
+selection condition with any qualified f and ρ = max{f (1/Γ), f (Γ)}. This can easily be checked by noting
+that (3) implies f (OR(x, U )) ≤ max{f (1/Γ), f (Γ)} by convexity of f , and similarly by the symmetry of (3)
+f (OR(x, U )−1 ) ≤ max{f (1/Γ), f (Γ)}, thereby leading to the bound on df (P). It might appear that the
+(f, ρ)-selection condition is weaker than the marginal Γ-selection condition. However, we do note the two
+models give different characterizations, as for a distribution that satisfies marginal Γ-selection condition, it
+might satisfy (f, ρ)-selection condition for some ρ that is much smaller than max{f (1/Γ), f (Γ)}.
+Remark 2. In the definition of df (P), we take the maximum of two integrals, each from one direction. This
+is mainly to keep the condition symmetric with regards to the choice of the treated or control groups, and
+align with the convention in the sensitivity models in the literature (Tan, 2006). That said, as we would see
+shortly in Section 2.3, it might be more natural to only work with one of them (i.e. assume one of them be
+bounded by ρ) when one of the counterfactuals is of primal interest.
+
+2.2       Comparison with other sensitivity models
+To better interpret the (f, ρ)-selection condition and illustrate its difference from the (marginal) Γ-selection
+condition (3), we provide a unified perspective on the sensitivity models. We first note a crucial property of
+OR(X, U ), a key quantity that characterizes the impact of unmeasured confounding.
+Property 1. Let OR(x, u) be defined in (2). Then E OR(X, U ) | X, T = 1 = 1 almost surely, where
+                                                                                   
+
+the conditional distribution is induced by the joint distribution of (X, U, T ). Also, OR(X, U ) = 1 holds
+PX,U | T =1 -almost surely under the strong ignorability condition T (Y (1), Y (0)) | X.
+                                                                         |=
+
+
+
+
+    At a high level, both the (f, ρ)-selection and the marginal Γ-selection condition quantify how faraway
+the nonnegative mean-one random variable OR(x, U ) is from the constant one. The marginal Γ-selection
+condition (3) requires the maximum fluctuation of OR(x, U ) to be bounded within [1/Γ, Γ] all the time. The
+(f, ρ)-selection condition, on the other hand, characterizes the overall distance of OR(x, U ) from a constant.
+When we take f (x) = 12 |x − 1|, the (f, ρ)-selection condition is similar to bounds on the total variation
+(TV) distance; when f (x) = (x − 1)2 , the (f, ρ)-selection condition resembles bounds on the χ2 -distance
+between OR(x, U ) and one. Different choices of f pose different penalty for large values of confounding. For
+example, taking f (x) = 21 |x − 1|, the contribution to the confounding measure is proportional to the absolute
+
+
+                                                        4
+distance from 1. For f (x) = (x − 1)2 , the contribution to the confounding strength is larger for larger scale
+of confounding.
+    We now illustrate the distinction between the (f, ρ)-selection condition and the marginal Γ-selection
+condition in two cases. First, in the left panel of Figure 1 we see three possible OR(x, U ) as functions of
+U , all of which integrate to 1 and with U ∼ Unif[0, 1]. There, the solid line is a constant function and
+indicates no unmeasured confounding. Among the other two, intuitively, the dotted curve has “smaller”
+confounding because most of the time the odds ratio is quite close to 1; one could imagine that in these
+regions, erroneously making the strong ignorability assumption may not incur too much bias. However,
+the upper bound on OR(x, U ) is large due to a small proportion of severe confounding at the left. In this
+case, although we imagine that the impact of U for the dotted and dashed curves are drastically different,
+it requires the same Γ in (3) to characterize them. As a result, partial identification bounds for treatment
+effects under the marginal Γ-selection condition may be uninformative; a better measure for the confounding
+strength may instead be the overall fluctuation of OR(x, U ) around 1.
+
+
+
+                                                                 Γ
+
+        1                                                        1
+                                                                 1
+                                                                 Γ
+
+
+                                                     U                                                  U
+
+Figure 1: Left: examples of OR(x, U ) that are quite different but have similar upper bounds. Right: examples
+of OR(x, U ) that are similar but have drastically different upper bounds.
+
+    The right panel of Figure 1 plots another scenario where the uniform bound can be inaccurate. Here, the
+dotted and dashed lines describe two confounded cases where OR(x, U ) almost coincide except for the tail
+at the left end. The dotted thus requires a much larger Γ than the dashed one in the marginal sensitivity
+model, if not infinity. In this case, because the treatment probabilities (decided by the odds ratio) in these
+cases are so close and the tail region only takes a tiny part of the population, one could imagine the impact
+of confounding on the treatment effect to be close. Hence, besides the scale of confounding, a sensitivity
+model should also takes into account the change of having certain confounding strength.
+    Our (f, ρ)-selection condition exactly aims at resolving the above issues. For general choice of f , our
+sensitivity measure would give starkly different measures for the two cases in the left panel of Figure 1, while
+providing similar measures for those in the right panel. This is because it is an “average” measure of the
+deviation of OR(x, U ) from the constant one for strong ignorability. Correspondingly, sensitivity analysis
+from our model informs what would happen under a specific level of overall confounding strength.
+
+2.3    Distributional shifts under the f -sensitivity model
+The first observation in this paper relates the observables to the counterfactuals. We characterize the
+distributional shifts between the two under our f -sensitivity model, which identifies a new class of robust
+inference problems that, as far as we know, are new to the literature.
+     We cast causal inference as a counterfactual inference problem: one needs to impute the missing outcome,
+i.e., the counterfactual, to estimate treatment effects at the population level. For example, to estimate the
+ATC: E[Y (1) | T = 0] − E[Y (0) | T = 0], one needs to impute the first term, the counterfactual mean of Y (1)
+in the control group. The distribution of the unobservable (X, Y (1)) in the control group is
+
+                                   PX,Y (1) | T =0 = PX | T =0 × PY (1) | X,T =0 .
+                                                     | {z } |          {z      }
+                                                         (a)           (b)
+
+Here part (a) is identifiable from the observations, but part (b) is not when there is unmeasured confounding.
+Our first result states that under the (f, ρ)-selection condition, (b) is bounded from its counterpart in the
+
+
+                                                          5
+observable in terms of f -divergence.
+Definition 2 (f -divergence). Let P and Q be two probability distributions over a space Ω such that P is
+absolutely continuous with respect to Q. For a convex function f such that f (1) = 0, the f -divergence of P
+                                          dP           dP
+from Q is defined as Df (P k Q) = EQ f ( dQ  ) , where dQ is the Radon-Nikodym derivative.
+
+    Popular examples for f -divergence in the literature include the Kullback–Leibler (KL) divergence with
+f (t) = t log t, the total variation (TV) distance with f (t) = |t − 1|/2, Pearson χ2 -divergence with f (t) =
+(t − 1)2 , and the Cressie-Read family of f -divergences (Cressie and Read, 1984) parametrized by k, where
+            k
+
+              k(k−1) . Throughout this paper, we work with generic forms of f -divergence, and provide
+fk (t) := t −kt+k−1
+discussions on concrete examples where proper conditions are satisfied for our analysis.
+Lemma 1. Under the (f, ρ)-selection condition, we have
+                                                                                
+                                        Df PY (1) | X=x,T =0 k PY (1) | X=x,T =1 ≤ ρ
+
+for PX | T =1 -almost all x; that is, the f -divergence between the conditional distributions in the two groups are
+bounded by ρ for almost all X in group T = 1.
+Proof of Lemma 1. Suppose a distribution P over (X, U, T, Y (0), Y (1)) satisfies the (f, ρ)-selection condition.
+By condition (1) and the data-processing inequality,
+                                                                                                  
+            Df PY (1) | X=x,T =0 k PY (1) | X=x,T =1 ≤Df PY (1),U | X=x,T =0 k PY (1),U | X=x,T =1
+                                                                                                  
+                                                                              dPY (1),U | X=x,T =0 
+                                                      =EY (1),U | X=x,T =1 f                          .
+                                                                              dPY (1),U | X=x,T =1
+
+We note that the likelihood ratio can be decomposed as
+               dPY (1),U | X=x,T =0     dPY (1) | U,X=x,T =0 dPU | X=x,T =0
+                                    =                        ·
+               dPY (1),U | X=x,T =1     dPY (1) | U,X=x,T =1 dPU | X=x,T =1
+                                    (a) dPU | X=x,T =0      P(T = 0 | X = x, U ) P(T = 1 | X = x)
+                                    =                    =                      ·                 ,
+                                        dPU | X=x,T =1      P(T = 1 | X = x, U ) P(T = 0 | X = x)
+
+where step (a) is due to condition (1). Combining the above two facts yields
+                                                                                                   
+                                                                    P(T = 0 | X, U ) P(T = 1 | X) 
+          Df PY (1) | X,T =0 k PY (1) | X,T =1 ≤EY (1),U | X,T =1 f                  ·
+                                                                     P(T = 1 | X, U ) P(T = 0 | X)
+                                                                                               
+                                                                 P(T = 0 | X, U ) P(T = 1 | X) 
+                                                =EU | X,T =1 f                   ·                 ≤ρ
+                                                                 P(T = 1 | X, U ) P(T = 0 | X)
+
+almost surely, where the last inequality is due to the (f, ρ)-selection condition.
+   We complete our characterization of the counterfactual distributions PX,Y (1) | T =0 induced by all super-
+populations that agrees with the observables and satisfies our sensitivity models.
+Proposition 1. Let Psup be the true unknown super-population over (X, U, T, Y (0), Y (1)) and let P be the
+set of all distributions over (X, U, T, Y (0), Y (1)). Let Pobs
+                                                            X,Y,T be the joint distribution of all observable random
+variables (X, Y, T ). Define Q1,0 to be the ambiguity set of all counterfactual distributions that agrees with
+the observables and satisfies the (f, ρ) selection condition, i.e.,
+
+                    Q1,0 = PX,Y (1) | T =0 : P ∈ P, PX,Y,T = Pobs
+                           
+                                                                 X,Y,T , P satisfies Definition 1 .
+
+Then Psup
+      X,Y (1) | T =0 ∈ Q1,0 , and
+           n                                                                                                   o
+     Q1,0 ⊂ Q : dPdQ                                             Pobs                    obs
+                                                                              
+                                 (x) = r1,0 (x), Df QY | X=x      Y | X=x,T =1 ≤ ρ, for PX | T =t -almost all x ,
+                     X
+                  obs
+                      X | T =1
+
+
+                 (1−e(x))p1
+where r1,0 (x) = e(x)(1−p 1)
+                             , and e(x) = Pobs (T = 1 | X = x), p1 = Pobs (T = 1).
+
+
+                                                             6
+    We defer the proof of Proposition 1 to Appendix A, where we prove a stronger version that gives a tight
+characterization of Q1,0 . Symmetrically, we can also define Q0,1 as the identification set of PX,Y (0) | T =1 ; the
+tight characterization of Q0,1 is also given in Appendix A. From now on, we only consider the ambiguity
+sets in Proposition 1 to emphasize the more general distributional robustness aspect of this problem.
+    Proposition 1 identifies a new class of robust inference problems, where the target distribution has an
+identifiable X-shift and the unidentifiable conditional distribution is restricted in f -divergence ball; it is
+similar to the ambiguity set studied in Jin et al. (2021). This model is closely related to, but quite distinct
+from other ambiguity sets involving f -divergence in the literature (Duchi and Namkoong, 2021; Si et al.,
+2020; Andrews et al., 2020) that only concern marginal (joint) distributions.
+Remark 3 (Relation to other f -divergence bounds). Previous works in the literature (see Section 2.4 for a
+summary) often work under the f -divergence ball around the marginal distribution PX,Y , characterized by
+
+                                                                                                                (4)
+                                                          
+                                       Q
+                                       e = Q : Df QX,Y PX,Y ≤ ρ .
+
+While in our formulation, the ambiguity sets take the form
+                                n                                              o
+                           Q = Q : dQ                                                                           (5)
+                                                                         
+                                       X
+                                     dPX (x) =  r(x), D f Q Y | X PY | X   ≤ ρ  ,
+
+where r(x) is a known or identifiable function. Such distinction is similar to what has been observed in Jin
+et al. (2021, Remark 3). Instead of bounding the overall shift as in (4), the constraint in (5) actually allows
+freedom in the shift of X: the sets in (5) can be small as long as ρ is small. For counterfactual inference
+under the strong ignorability condition, the set (5) can be a singleton even if PX and P         eX are drastically
+different, while (4) might require a large ρ to hold. More generally, when there is a known (or estimable)
+large shift in PX but a relatively small shift in PY | X , (5) provides a tighter range of the target distributions,
+and the methods we develop in this paper can be directly applied.
+
+2.4    Related work
+This work falls within a strand of sensitivity analysis that models the impact of unmeasured confounding
+through bounds on selection bias. We summarize a few of them that are not mentioned above. Remarkably,
+Rosenbaum and Rubin (1983a) studies the impact of selection bias among matched pairs, which is further
+extended by a series of works (Rosenbaum, 1987; Gastwirth et al., 1998; Rosenbaum, 2002b,a) to sensitivity
+models that uniformly bounds the selection bias among samples with matching covariates. Also related to
+sensitivity analysis under uniformly bounded selection bias is Yadlowsky et al. (2018), which works under
+an extention of Rosenbaum’s sensitivity model that is similar to Tan (2006). Besides modelling the selection
+bias among treatment, observed covariates and unmeasured confounders, we mention in passing that Ding
+and VanderWeele (2016) considers the sensitivity analysis of other metrics than treatment effects.
+    We develop our framework based on observing the distributional shift between the observations and the
+counterfactuals. This perspective echos the ideas of several previous works (Jin et al., 2021; Yadlowsky
+et al., 2018; Dorn et al., 2021) on sensitivity analysis. In particular, we formulate the estimand via an
+optimization problem under constraints on distributional shifts, similar to Yadlowsky et al. (2018); Dorn
+et al. (2021). However, as we work under different sensitivity models, both the form of distributional shifts
+and the techniques for statistical estimation and inference are distinct.
+    f -divergence is often used to characterize discrepancy between distributions (Rényi, 1961; Morimoto,
+1963; Csiszár, 1964; Liese and Vajda, 2006; Rahman, 2016). In our work, we use a quantity similar to
+f -divergence to measure the deviation of the odds ratio from 1, hence characterizing the overall magnitude
+of the selection bias caused by unmeasured confounding. This in turn leads to the bounded f -divergence
+between the conditional distribution of the counterfactuals and that of the observations under our model,
+while the covariate distributional shift is identifiable from the data. To the best of our knowledge, this type
+of distributional shifts have not been studied before.
+    By connecting sensitivity analysis to distributionally robust optimization, this works is also related to
+a line of work on estimation, inference and learning under various types of distributional shifts, e.g., f -
+divergence, outside the task of inferring causal effects. Among them, Christensen and Connault (2019)
+places bounds on the marginal distributions of hidden variables in structural equation models; Andrews
+
+
+                                                         7
+et al. (2020) studies parameter estimation when the joint distributions of variables are within an f -divergence
+ball; Duchi and Namkoong (2021) studies the empirical risk minimization problem when the joint distribution
+of (X, Y ) shifts within an f -divergence ball; Si et al. (2020) studies the policy learning for contextual bandits
+under unknown marginal distribution shifts; Gupta and Rothenhäusler (2021) studies the estimation and
+inference of statistical parameters under distributional shifts in certain directions, etc. The new class of
+robust inference problems in our work is different from the settings of these works. We also develop a set of
+tools for estimation and inference under this new type of distributional shifts.
+    Finally, because the covariate shifts need to be estimated, we propose a debiasing technique to obtain
+root-n rate of inference when the nuisance components are estimated with slower convergence rates. This
+is also generally connected to a vast body of missing data literature with unknown missing mechanisms,
+although in different contexts and with different details. In particular, we use the cross-fitting (Schick, 1986;
+Zheng and Laan, 2011; Chernozhukov et al., 2018) technique to mitigate the error in nuisance component
+estimation; bias correction using a different dataset under covariate shift is also related to and inspired by
+the transductive inference technique in Jin and Rothenhäusler (2021).
+
+
+3     Sensitivity analysis under the new model
+3.1    Bounds on the treatment effects
+In this part, we study the (population-level) partial identification bounds on counterfactual means under
+our sensitivity model. They are provided as solutions to convex optimization problems that only involve
+identifiable quantities. We consider E[Y (1) | T = 0] for illustration.
+Proposition 2. Let µ−           +
+                    1,0 (resp. µ1,0 ) be the optimal objective function of the convex optimization problem
+
+                                                                                                         (6)
+                                                       
+           min(resp. max) E Y (1)L(X, Y (1)) T = 1
+               L(x,y) measurable
+
+                             s.t. E[L(x, Y (1)) | X = x, T = 1] = r1,0 (x)
+                                                                         
+                                  E f L(x, Y (1))/r1,0 (x) X = x, T = 1 ≤ ρ,       for almost all x,
+where all the expectations are induced by the observed distribution. Then µ−                         +
+                                                                           1,0 ≤ E[Y (1) | T = 0] ≤ µ1,0 under
+the (f, ρ)-selection condition.
+    As we have discussed, the counterfactual means are the building blocks for treatment effects. Proposition 2
+immediately implies bounds on the ATC: denote the observable group-wise means as µobs    t   := E[Y (t) | T = t]
+for t ∈ {0, 1}, then under the (f, ρ)-selection condition, the ATC is bounded as
+                               µ−      obs
+                                1,0 − µ0   ≤ E[Y (1) − Y (0) | T = 0] ≤ µ+      obs
+                                                                         1,0 − µ0 .                            (7)
+                                                                                                         −
+Switching the role of 1 and 0 in Proposition 2, one can obtain bounds on E[Y (0) | T = 1]; let µ+
+                                                                                                0,1 and µ0,1
+denote the upper and lower bound on E[Y (0) | T = 1], respectively, we then get bounds on the ATT:
+                                     +                                      −
+                               µobs                                    obs
+                                1 − µ0,1 ≤ E[Y (1) − Y (0) | T = 1] ≤ µ1 − µ0,1 .
+
+By the decomposition of ATE (average treatment effects), we also have the representation of lower and upper
+bounds for E[Y (1) − Y (0)]. Under the (f, ρ)-selection condition, we have
+                                −                                          −
+         p1 µobs     +                 obs
+                                             ≤ E[Y (1) − Y (0)] ≤ p1 µobs             +       obs
+                                                                                                        (8)
+                                                                                               
+              1 − µ0,1 + p0 µ1,0 − µ0                                 1 − µ0,1 + p0 µ1,0 − µ0       .
+Estimation of these bounds thus boil down to that of µ±   t,1−t under our sensitivity models, the optimal
+objective value of the convex optimization problems in Proposition 2.
+Remark 4. As we mentioned before, optimal objectives of the problems in Proposition 2 are not necessarily
+tight bounds for counterfactual means. To align with the literature and keep a relatively clean formulation
+of dual problems, we only account for the direction Df (PY (1) | X=x,T =0 k PY (1) | X,T =1 ) ≤ ρ when considering
+E[Y (1) | T = 0]. For completeness, we discuss the tight bounds on counterfactual means, hence ATT and
+ATC, in Section 6. We also note that combining sharp bounds on ATT and ATC does not necessarily lead to
+sharp bounds on ATE, as they might be attained by different super-populations. We leave the investigation
+of sharp bounds on ATEs for future pursuit.
+
+
+                                                        8
+3.2    From the primal to the dual
+It is hard to directly solve the infinite-dimensional optimization problem (6). We address this issue by
+translating to its dual form which might be easier to tackle. In the following, we primarily focus on µ−
+                                                                                                       1,0 , the
+lower bound on E[Y (1) | T = 0], and the same idea carries over to the upper bounds as well as bounds for
+other quantities. Proposition 3 represents µ−1,0 via a dual formulation, whose proof is in Appendix C.1.
+
+Proposition 3. The optimal objective of (6) is given by
+                                                                                       
+                                                   ∗ Y (1) + η(X)
+                                          n                                     o
+          −
+         µ1,0 = −      inf      E r1,0 (X) α(X)f                    + η(X) + α(X)ρ T = 1 ,                           (9)
+                  α(X)≥0,η(X)∈R                         −α(X)
+where f ∗ (s) = supt≥0 {st − f (t)} is the conjugate function of f . In particular, denoting `(α, η, x, y) =
+                                                     −
+αf ∗ ( y+η                          +
+                                                               ∗        ∗
+                                                                                               
+       −α ) + η + αρ for (α, η) ∈ R × R, we have µ1,0 = −E `(α (X), η (X), X, Y (1)) T = 1 , where for
+PX | T =1 -almost all x,
+                                                                                      
+                                                  ∗ Y (1) + η
+                                                             
+                        ∗     ∗
+                                                                                                         (10)
+                                  
+                      α (x), η (x) ∈ argmin E αf                + η + αρ X = x, T = 1 .
+                                     α≥0,η∈R           −α
+
+    Our task is then to estimate the dual formulation (9), which can be viewed as a risk minimization problem.
+However, in sharp contrast to ERM problems in the literature, it involves a typically unknown weight r1,0 (x)
+which depends on the propensity score e(x) = P(T = 1 | X = x). As the estimation rate of this quantity
+is often slower than root-n, directly solving (9) with plug-in weights might yield inaccurate estimators and
+prohibit root-n statistical inference.
+    To address this issue, we will make use of the second observation in Proposition 3: (α∗ (x), η ∗ (x)), the
+optimizer for (9), is also the minimizer of per-x conditional risk. This property crucially allows us to estimate
+α∗ (·) and η ∗ (·) without knowledge of r1,0 (·). Our general idea is to employ empirical risk minimization tools
+to estimate α∗ (·), η ∗ (·), and then estimate µ− 1,0 by plugging into (9). Still, the slow estimation rate for the
+weights and the optimizers poses additional challenges for statistical inference. We will also develop a novel
+adjustment technique to still achieve root-n inference when these quantities are estimated at a slow rate.
+    Before introducing our procedures, we present a result on the behavior of the optimizer α∗ (x): it is
+positive as long as PY (1) | X,T =1 does not have a large point mass at its essential infimum and the function f
+satisfy some regularity conditions in the limit. The proof of Proposition 4 is deferred to Appendix B.1.
+                                        
+Proposition 4. Define y(x) = sup t : P(Y (1) < t | X = x, T = 1) = 0 and p̄(x) = P Y (1) = y(x) | X =
+         
+x, T = 1 . We assume that p̄(x)f (1/p̄(x)) + (1 − p̄(x))f (0) > ρ for PX | T =1 -almost all x. Also suppose there
+exist constants L and U such that f (x)∗ ≥ L for x ∈ R, f ∗ (x) ≤ U for x ≤ 0, limx→−∞ f ∗ (x)/x = 0 and
+limx→∞ f ∗ (x)/x = ∞. Then the solution to (9) satistifies α∗ (x) > 0 for PX | T =1 -almost all x.
+     In particular, the conditions on f hold for a large variety of functions; concrete examples include KL
+divergence, where f (x) = x log x and f ∗ (x) = ex−1 , as well as χ2 -divergence, where f (x) = (x − 1)2 and
+f ∗ (x) = 14 ((x + 2)2+ − 1), etc.
+     In the following, we assume throughout that the conditions of Proposition 4 hold, hence by the compact-
+ness of X , there exists some  > 0 such that α∗ (x) >  for PX | T =1 -almost all x . An important implication
+is that, as α∗ (x) lies in the interior of [0, ∞), the gradient of the risk function is typically mean-zero at
+(α∗ (x), η ∗ (x)); this would play an important role in achieving root-n statistical inference.
+
+3.3    The estimation procedure
+We start with splitting samples in the treated and control groups into three equally sized folds, denoted as
+ (j)   (j)                                                                                 (j+1)      (j+1)
+I1 , I0 , j = 1, 2, 3, respectively. For each j = 1, 2, 3, we use samples in I1                  and I0     to obtain an
+estimator rb for r1,0 , and solve an empirical risk minimization (ERM) problem to obtain estimators α
+            (j)
+                                                                                                                     b(j)
+and ηb for (α , η ) without knowledge of r1,0 ; this empirical risk minimization step will be discussed shortly
+      (j)       ∗ ∗
+
+after. We then define the function
+                                                       y + ηb(j) (x) 
+                          H               b(j) (x)f ∗
+                           b (j) (x, y) = α                             + ηb(j) (x) + α
+                                                                                      b(j) (x)ρ.
+                                                         −bα(j) (x)
+
+
+                                                           9
+                (j+2)
+Using data in I1      , we run a regression algorithm to obtain an estimator b         h(j) for h̄(j) (x) := E H
+                                                                                                                 (j)
+                                                                                                                 b (X, Y (1)) X =
+           (j+1)                                                b (j) , as fixed functions (e.g., by conditioning on I (j+1)
+                  , where we view α  b(j) and ηb(j) , hence H
+                 
+x, T = 1, I1                                                                                                            1
+      (j)
+and I0 . Finally, we define the estimator
+                    (j)      1    X                                                    1     X
+                                        rb(j) (Xi ) H
+                                                    b (j) (Xi , Yi ) − bh(j) (Xi ) + (j)            h(j) (Xi ).
+                                                                                  
+                   µ
+                   b1,0 = (j)                                                                       b
+                          |I1 |     (j)                                              |I0 |      (j)
+                                     i∈I1                                                        i∈I0
+
+The above procedure is repeated for each j = 1, 2, 3, and we average the three estimators to obtain
+                                                                       3
+                                                                    1 X (j)
+                                                         b−
+                                                         µ1,0 = −        µ
+                                                                         b .
+                                                                    3 j=1 1,0
+
+                                                                                                              (k)
+The whole procedure is summarized in Algorithm 1. In the algorithm, we refer to I1 for some k > 3 as
+ (k mod 3)                                  (k)
+I1         ; the same principle applies to I0 . We let R(·, ·) to be a generic algorithm that uses data in I1
+and I0 to obtain an estimator R(I1 , I0 ) for r. We use ERM(·) to denote a generic ERM algorithm that
+uses any data I to output an estimator ERM(I) for (α∗ (·), η ∗ (·)). We let Reg(·) denote a generic regression
+algorithm that takes data (Xi , Zi )i∈I to output an estimator Reg(Zi ∼ Xi , i ∈ I) for E[Z | X = ·].
+
+Algorithm 1 Estimation procedure for µ−
+                                      1,0
+
+Input: Treated samples I1 ; control samples I0 ; the algorithm R for estimating r; the ERM algorithm
+   ERM(·) for estimating (α, η); the regression algorithm Reg(·) for obtaining h̄.
+                                                                              (j)     (j)
+ 1: Randomly split I1 and I0 into three equal-sized groups: I1                      , I0 , j = 1, 2, 3.
+ 2: for j = 1, 2, 3 do
+                                                   (j+1)      (j+1) 
+ 3:    Estimate r1,0 : obtain rb(j) (·) ← R I1            , I0         .
+                                                                             (j+1) 
+ 4:    Estimate (α , η ): obtain (b
+                   ∗ ∗                  (j)       (j)
+                                      α (·), ηb (·)) ← ERM I1
+ 5:    Conditional regression: b h(j) (·) ← Reg(H       b (j) (Xi , Yi ) ∼ Xi , i ∈ I (j+2) ).
+                                                                                           1
+                  (j)
+       Compute µ           1                                                                   1
+                                             (j)            (j)                   (j)
+                                                                                           
+ 6:             b1,0 ← (j)
+                                P
+                                       (j) r     (X i )  Hb     (X i , Y i ) −  h
+                                                                                b     (Xi )  + (j)
+                                                                                                   P        b (j) (Xi ).
+                                                                                                        (j) h
+                                  i∈I                                                               i∈I
+                                           b
+                             |I1 |          1                                                |I0 |        0
+ 7: end for
+                                       P3        (j)
+                  b−
+Output: Estimator µ        1
+                   1,0 = − 3                    b1,0 .
+                                            j=1 µ
+
+
+                                                                                                                             (j+1)
+    In Algorithm 1, the subroutines R(·, ·) and Reg(·) are standard: to estimate r1,0 , one could use I1       ∪
+  (j+1)
+I0       to estimate the propensity score e(x) with any regression algorithm, and then plug in the definition of
+r1,0 . Similarly, Reg(·) can be any regression algorithm that fits a conditional mean function given i.i.d. data.
+Widely adopted regression methods in the literature include localized nonparametric methods like kernel
+regression (Nadaraya, 1964; Watson, 1964), local polynomial regression (Cleveland, 1979; Cleveland and De-
+vlin, 1988), smoothing spline (Green and Silverman, 1993) and modern machine learning methods including
+regression trees (Breiman et al., 1984) and random forests (Ho, 1995), to name a few. The ERM step is
+relatively unique to our problem, and we discuss it in more details with rigorous guarantees as follows.
+
+3.4     Solving for α
+                    b(·) and ηb(·)
+We take a moment to elaborate on the estimation of θb(j) := (b  α(j) , ηb(j) ). From Proposition 3, θ∗ := (α∗ , η ∗ ) is
+also the population risk minimizer of E[`(θ, X, Y (1)) | T = 1] (i.e., removing r1,0 (x)), where the loss function
+                                                     y + η(x) 
+                               `(θ, x, y) = α(x)f ∗              + η(x) + α(x)ρ
+                                                       −α(x)
+                                                                                                                           (j+1)
+is convex in θ = (α, η). The empirical risk is correspondingly (recall that we run ERM with fold I1                                )
+                                               
+                              b n `(θ, X, Y (1)) =       1     X
+                              E                        (j+1)
+                                                                     `(θ, Xi , Yi ).
+                                                     |I1     | (j+1)
+                                                                           i∈I1
+
+
+
+                                                                  10
+We can thus consider a function class Θ, and solve for the empirical risk minimization (ERM) problem. This
+approach is similar to Yadlowsky et al. (2018); however, they express the bounds of conditional expectations
+of counterfactuals themselves as empirical risk minimizers, while we use this ERM step as an intermediate step
+and employ distinct downstream techniques. To solve this ERM problem, we use the method of sieves (Geman
+and Hwang, 1982); we consider an increasing sequence Θ1 ⊂ Θ2 ⊂ · · · of spaces of smooth functions, and let
+
+                                          θb(j) = argmin E
+                                                                          
+                                                         b n `(θ, X, Y (1)) .
+                                                      θ∈Θn
+
+We consider two examples of seives inspired by Yadlowsky et al. (2018).
+Example 2 (Polynomials). Let Pol(J) be the space of J-th order polynomials on [0, 1]:
+                                         n     PJ                  o
+                              Pol(J, ) = x 7→ k=0 ak xk : ak ∈ R ,
+
+and let Pol(J, ) be the space of J-th order polynomials on [0, 1] truncated at  > 0:
+                                          n            PJ                    o
+                               Pol(J, ) = x 7→ max{, k=0 ak xk : ak ∈ R .
+                                                                  Qd
+Then we define the sieve Θn = Θαn × Θn , where Θn = {x 7→
+                                       η               α
+                                                                   k=1 fk (xk ) : fk ∈ Pol(Jn , 0), k = 1, . . . , d} and
+             d
+Θn = {x 7→ k=1 fk (xk ) : fk ∈ Pol(Jn ), k = 1, . . . , d} for Jn → ∞.
+ η
+           Q
+
+    Compared to Yadlowsky et al. (2018), our function class additionally truncates the functions away from
+zero for α(x): we note that, if α∗ (x) is always positive (implied by the minimality of the risk function and
+Proposition 4) and continuous (satisfied if PY (1) | X=x,T =1 is smooth in x) and X is a compact set, then there
+exists a positive  > 0 such that inf x∈X α∗ (x) ≥ . In practice, we can set  to be small enough, or let  = n
+decays slowly to zero; this does not hurt the capability of function class or the convergence rates when n is
+sufficiently large.
+                                                                                      max       (t     −t )
+Example 3 (Splines). Let 0 = t0 < · · · < tJ+1 = 1 be knots that satisfy min0≤j≤J
+                                                                            0≤j≤J(t
+                                                                                    j+1   j
+                                                                                       −t )
+                                                                                            ≤ c for some
+                                                                                                 j+1    j
+c > 0. We define the space for r-th order splines with J knots as
+                                  n     Pr−1          PJ                             o
+                      Spl(r, J) = x 7→ k=0 ak xk + j=1 bj (x − tj )+
+                                                                   r−1
+                                                                       : ak , bk ∈ R
+
+and the truncated space for r-th order splines with J knots as
+                            n            Pr−1          PJ                            o
+                Spl(r, J) = x 7→ max , k=0 ak xk + j=1 bj (x − tj )+
+                                                                    r−1
+                                                                        : ak , bk ∈ R
+                                                                  Qd
+Then we define the sieve Θn = Θα n × Θn , where Θn = {x 7→
+                                       η               α
+                                                                   k=1 fk (xk ) : fk ∈ Spl(Jn , 0), k = 1, . . . , d} and
+           Qd
+Θn = {x 7→ k=1 fk (xk ) : fk ∈ Spl(Jn ), k = 1, . . . , d} for Jn → ∞.
+ η
+
+
+   We consider the classes of sufficiently smooth functions; for p1 = dpe − 1 and p2 = p − p1 , we define
+                  (                                                                           )
+              p            p1                   α                    |Dβ h(x) − Dβ h(x0 )|
+            Λc = h ∈ C (X ) :          sup    |D h(x)| +     sup                           ≤c
+                                    P x∈X                    / 0 ∈X
+                                                           x∈x            kx − x0 kp2
+                                         d                        Pd
+                                         l=1 αl <p1                l=1 βl =p1
+
+
+
+To ensure non-negativeness, we also define the truncated function class Λpc (X , ) := x 7→ max{f (x), } : f ∈
+                                                                                       
+
+Λpc (X ) , obtained by thresholding Λpc (X ) away from zero.
+     For notational convenience, we denote the risk function `(θ, x, y) = af ∗ y+b −a + b + aρ for θ = (a, b)
+                                                                                      
+
+as in Proposition 3. When there is no confusion, we equivalently use `(θ, x, y) = `((α(x), η(x)), x, y) when
+θ = (α, η) is a function. As preparation, we impose the following assumptions on the true optimizer and
+regularity conditions of the loss function.
+
+
+
+                                                             11
+                                          Qd
+Assumption 2. Supopse X = k=1 Xd is the Catesian product of compact intervals, and θ∗ ∈ Θ =
+Λpc (X , ) × Λpc (X ) for some c > 0. Suppose PX | T =1 has positive density on X . We assume the function
+E[`((a, b), x, Y ) | X = x] is λ-strongly convex at (a, b) = θ∗ (x) for all x ∈ X . Also, |`(θ, x, y) − `(θ∗ , x, y)| ≤
+¯ y)kθ(x) − θ∗ (x)k2 for kθ(x) − θ∗ (x)k2 <  for sufficiently small  > 0, where k · k2 is the Euclidean
+`(x,
+norm, and supx∈X E[`(x,     ¯ Y )2 | X = x, T = 1] < M for some constant M > 0. Furthermore, there exists a
+constant C1 such that E[`(θ, X, Y (1)) − `(θ∗ , X, Y (1)) | T = 1] ≤ C1 kθ − θ∗ k2L2 (P· | T =1 ) when θ ∈ Λpc (X )2 and
+kθ − θ∗ kL2 (P· | T =1 ) is sufficiently small.
+    We include a detailed discussion of Assumption 2 in Appendix B.2, where we provide concrete examples
+and justifications for these conditions. In Assumption 2, we assume the true optimizer is sufficiently smooth,
+so that function approximator can learn it well. It can be satisfied if the conditional distribution PY (1) | X,T
+is sufficiently “smooth” in x. We require the strong convexity of the conditional risk function at its minimizer
+θ∗ (x); it is typically the case if Y (1) is not deterministic given X. The stability condition at θ∗ (x) can be
+satisfied if Y is not heavy-tailed. We also assume that the population risk is stable in terms of L2 (P· | T =1 )
+norm of θ, which can be satisfied if E[`(θ, x, Y ) | X = x, T = 1] is smooth or have Lipschitz derivatives.
+    Under the above regularity conditions, we obtain convergence rates of the empirical risk minimizers
+ α(j) , ηb(j) ). The proof of the following theorem is in Appendix C.2.
+(b
+Theorem 1. Suppose Assumption 2 holds. We set Jn = ( logn n )1/(2p+d) for the sieve estimators in Examples 2
+                                                                         b n `(θ, X, Y (1)) − OP (( log n )2p/(2p+d) ).
+                                                                                        
+and 3, and suppose θb(j) satisfies E  b n `(θb(j) , X, Y (1)) ≤ inf θ∈Θ E
+                                                                       n                              n
+Then employing the function classes given in Examples 2 or 3, we have kθb(j) −θ∗ kL2 (P· | T =1 ) = OP ( logn n )p/(2p+d)
+                                                                                                                          
+                                   2        2
+and kθb(j) − θ∗ k∞ = OP ( log n )2p /(2p+d) .
+                              n
+
+    The above theorem shows that under reasonable smoothness of the optimizer and regularity conditions
+on the loss function, the empirical risk minimizer α
+                                                   b(j) , ηb(j) converges to the truth at certain rates. Besides
+the examples and guarantees we provide, similar results might be obtained for other function classes like
+wavelets (Daubechies, 1992), and the conditions in Assumption 2 might be weakened or modified to account
+for more generality. Such extension is beyond the scope of this work.
+
+
+4     Theoretical guarantees
+In this section, we provide the theroetical guarantees for our procedure in Section 3.3. We first show the
+consistency of the estimators, with the double robustness and one-side validity results. We then present
+inferential guarantees: we achieve root-n inference for µ−
+                                                         1,0 under slower-than-parametric convergence rates
+of the nuisance component estimation; moreover, even when the empirical risk minimization is not consistent
+to the optimum, our inference procedure can still be valid. Finally, we show how to leverage our procedure
+to construct bounds for treatment effects.
+
+4.1    Double consistency and one-side validity
+We first discuss the consistency of our estimator: we show that µ   b−1,0 from Algorithm 1 is doubly robust to
+nuisance estimation, which is in a similar spirit as many results in causal inference and missing data. Even
+more interestingly, our estimator is robust to the ERM step: given that either rb(j) or b    h(j) is consistent,
+it converges to the true bound if the ERM step is consistent; otherwise, our estimator converges to a
+conservative but still valid lower bound of µ−
+                                             1,0 . We call this “one-side validity”.
+    We impose a mild assumption on the convergence of ERM step; note that we do not assume the conver-
+gence to the true minimizer (α∗ , η ∗ ).
+Assumption 3. For each j, the empirical optimizer (b        α(j) , ηb(j) ) converges in sup-norm to some (α , η  ) such
+that for all x ∈ X , |`(θ (x), x, y) − `((a, b), x, y)| ≤ M (x, y)kθ (x) − (a, b)k2 for all kθ (x) − (a, b)k2 ≤  for
+some constant  > 0, and E[M (x, Y (1))2 | X = x, T = 1] ≤ M for some constant M > 0. Also, rb(j) are
+uniformly bounded, and H    b (j) , b
+                                    h(j) have uniformly bounded second moments almost surely.
+   In Assumption 3, we additionally assume a mild regularity condition on the first-order expansion at the
+limit; it is satisfied if the loss function ` is differentiable or locally Lipschitz. The second moment condition
+
+
+                                                           12
+is also mild and standard. The following theorem shows the double robustness as well as one-side validity of
+our estimator, whose proof is in Appendix C.3.
+Theorem 2. Suppose Assumption 3 holds for some fixed θ = (α , η  ). Assume either (i) kb
+                                                                                          r(j) −r1,0 kL2 (PX | T =1 ) =
+                h(j) − h̄(j) kL (P
+oP (1) or (ii) kb                 2) = oP (1). Then the following holds as n → ∞.
+                                      X | T =1
+
+
+                 ∗
+                                                        b−
+    • If θ = θ , i.e., the ERM step is consistent, then µ       −
+                                                         1,0 = µ1,0 + oP (1);
+
+                 b−
+    • otherwise, µ                                            −
+                  1,0 = µ1,0 + oP (1) for some constant µ1,0 ≤ µ1,0 .
+
+    The above double robustness property generalizes previous results in observational studies without un-
+measured confounding (Robins et al., 1994). Notably, in our partial identification setting, bh(j) only needs to
+be consistent for the conditional expectation for a upstream estimator H that might not be consistent for
+                                                                         b (j)
+
+its target. Even more interestingly, we allow for the inconsistency of the ERM step and still obtain a valid
+lower bound for µ1,0 . Similar one-side validity has been documented by a recent work of Dorn et al. (2021),
+where they work under the marginal sensitivity model of Tan (2006) and develop such property based on an
+exact characterization of the worst-case scenario. However, in our setting, the one-side validity is a relatively
+straightforward consequence of duality. It would be interesting to find connections between our results; for
+example, whether their result can also be implied by the duality.
+
+4.2     Wald-type inference for µ−
+                                 1,0
+We now turn to inferential guarantees. We show that our procedure yields valid Wald-type inference under
+slow convergence rates of nuisance estimations. We begin with some regularity conditions on the risk function.
+Assumption 4. Let θ∗ = (α∗ , η ∗ ) be the minimizer in (9). Suppose E[∇a,b `(a, b, x, Y (1)) | X = x, T =
+1] = ∇a,b E[`(a, b, x, Y (1)) | X = x, T = 1] = 0 at (a, b) = (α∗ (x), η ∗ (x)) for PX | T =1 -almost all x. Suppose
+ `(a, b, x, y)−`(θ∗ , x, y)−∇a,b `(α∗ (x), η ∗ (x), x, y)[α∗ (x)−a, η ∗ (x)−b] ≤ M (x, y)k(α∗ (x)−a, η ∗ (x)−b)k22 for
+some (a, b) in some neighborhood of (α∗ (x), η ∗ (x)), where E[M (x, Y (1)) | X = x, T = 1] ≤ M for some con-
+stant M > 0 for all x ∈ X . Furthermore, k`(θ, X, Y (1)) − `(θ∗ , X, Y (1))kL2 (P· | T =1 ) = O(kθ − θ∗ kL2 (PX | T =1 ) )
+for function θ in a small L2 (P· | T =1 )-neighborhood of θ∗ .
+
+   In Assumption 4, we require the risk function to be differentiable and admits a Taylor expansion near
+some optimizer, as well as a regularity condition on the exchangeability of differentiation and conditional
+expectation. These are mild conditions that are commonly adopted in the literature (Van der Vaart, 2000).
+The risk function is assumed to be stable, so that plugging in estimators of α∗ , η ∗ won’t cause large errors,
+which is also a mild condition that can be satisfied under a first-order Taylor expansion condition.
+   We assume the following convergence rates, where we assume the ERM step is oP (n−1/4 ) consistent, and
+the nuisance estimation error of rb(j) and b
+                                           h(j) has a product of order oP (n−1/2 ).
+
+Assumption 5. Suppose for each j, kb                                          h(j) − h̄(j) kL2 (PX | T =1 ) = oP (n−1/2 ), and k(b
+                                                r(j) −r1,0 kL2 (PX | T =1 ) ·kb                                                  α(j) −
+α∗ , ηb(j) − η ∗ )kL2 (PX | T =1 ) = oP (n−1/4 ) for some optimizer (α∗ (x), η ∗ (x)) of (9) satisfying Assumption 4.
+
+    In Assumption 5, the rate of rb(j) depends on the estimation of e(x) = P(T = 1 | X = x), a standard
+regression problem. The estimation of b     h(j) is also a regression problem viewing H b (j) as fixed. Convergence
+rate guarantees for such conditional mean estimation problems are well-established in the literature (Stone,
+1982; Mallat, 1999; Pagan et al., 1999; Shen and Wong, 1994; Wasserman, 2006; Simonoff, 2012). The
+estimation of (b
+               α(j) , ηb(j) ) has been discussed in Section 3.3.
+    Under the above two assumptions, we show that our estimator is asymptotically normal and the estima-
+tion error of nuisance component is negligible. The proof of Theorem 3 is deferred to Appendix C.4.
+                                                               √
+Theorem 3. Suppose Assumptions 4 and 5 hold. Then n(b               µ−      −
+                                                                     1,0 − µ1,0 ) N (0, Var(φ1,− (X, Y, T ))), where
+
+                                                  Ti                                   1 − Ti
+                         φ1,− (Xi , Yi , Ti ) =      r1,0 (Xi ) H(Xi , Yi (1)) − h(Xi ) +       h(Xi ).
+                                                  p1                                       p0
+
+
+
+                                                                  13
+Here p1 = P(T = 1) = 1 − p0 , and we define H(x, y) = `(θ∗ , x, y), h(x) = E H(X, Y (1)) X = x, T = 1 .
+                                                                                                    
+
+All the expectations (variances) are induced by the observed distribution. Furthermore, define
+                                                    2                                 2 
+                  2    1 1 X 2          1 X                 1 1 X 2          1 X
+                σ
+                b =              d1,i −         d1,i      +            d0,i −        d0,i
+                      pb1 n1             n1                 pb0 n0             n0
+                                  i∈I1             i∈I1                       i∈I0              i∈I0
+
+
+where pb1 = |I1 |/n, pb0 = |I0 |/n, d1,i = rb(j[i]) (Xi ) H
+                                                          b (j[i]) (Xi , Yi ) − b
+                                                                                h(j[i]) (Xi )), d0,i = b
+                                                                                                       h(j[i]) (Xi ), and j[i] ∈
+                                                      √     −        −
+{1, 2, 3} is the fold that sample i lies in. Then n(b     ν1,0 − ν1,0 )/b   σ    N (0, 1).
+
+   Similar results can be obtained for µ+
+                                        1,0 , if we simply flip the sign of Y (1) and flip back after running
+the same procedure. The above procedure can also be generalized to the inference of µ±   0,1 ; the simplest way
+might be just switching the two groups. We summarize these results in Appendix B.3 for completeness.
+
+4.3     Robustness to misspecification of ERM
+Our inferential guarantee in Theorem 3 relies on consistency of both the nonparametric regression and the
+ERM steps. While these conditions are relatively mild, in this part, we take a step further and note that
+our estimator is in particular robust to the ERM step.
+   The following theorem shows that even though our empirical risk minimizers α     b(j) and ηb(j) converge to
+something else, our procedure still provide valid, albeit more conservative, inference on the lower bound of
+E[Y (1) | T = 0]. The proof of Theorem 4 is in Appendix C.5.
+Theorem 4. Suppose Assumptions 4 and 5 with (α∗ , η ∗ ) replaced         by some fixed θ := (α , η  ), and the
+first condition of Assumption 4 is replaced by the local one: E r(X)∇a,b {`(α (X), η  (X), X, Y (1))[α (x) −
+                                                                 
+
+α(X), η  (X) − η(X)]} T = 1 = 0 for any (α, η) ∈ Θn in a small k · k∞ -neighborhood of θ . We additionally
+                                    √
+assume kθb − θ k∞ = oP (1). Then n(b   µ−       
+                                          1,0 − µ1,0 )  N (0, Var(φ1,− (X, Y, T ))), where µ1,0 ≤ µ−
+                                                                                                     1,0 , and
+
+                                       Ti                                         1 − Ti 
+                     φ1,− (Xi , Yi , Ti ) =
+                                          r1,0 (Xi ) H  (Xi , Yi (1)) − h (Xi ) +
+                                                    
+                                                                                         h (Xi ).
+                                       p1                                            p0
+
+Here we define H  (x, y) = `(θ , x, y) and h (x) = E H  (X, Y (1)) X = x, T = 1 . Furthermore, we have
+                                                                                         
+√
+    µ−
+  n(b       
+     1,0 − µ1,0 )/b
+                  σ   N (0, 1) for the variance estimator σ     b2 defined in Theorem 3.
+
+    In theorem 4, we only require the convergence of (b   α(j) , ηb(j) ) in L2 (P· | T =1 )-norm any pair of fixed func-
+tions. This might happen, for example, if the function class we employ does not approximate (α∗ , η ∗ ) very
+well, but our estimators still converge to a fixed in-class risk minimizer. In this case, our estimator converges
+to a conservative lower bound of the counterfactual mean and still yields valid inference.
+    In parallel to the mean-zero gradient property of θ∗ , we assume a local first-order condition for θ
+restricted to Θn , which is crucial for the double robustness to the estimation error. This condition is satisfied
+as long as θ is the population risk minimizer (with weight r(X)) among Θn . To obtain an estimator that
+converges to θ , we might slightly change the procedure: fit rb(j) (x) on one fold and and run the ERM with
+the fitted rb(j) (x) on a new fold. The convergence of the empirical risk minimizer can be satisfied if Θn is not
+too complex and rb(j) is consistent with a slow rate.
+    We also note that, as implied by Theorem 4, plugging in any fixed function into our procedure without
+ERM (or equivalently, setting Θn = {θ} for some fixed θ that satisfy the regularity conditions) also yields a
+valid lower bound. However, this is uninteresting as it may be way too conservative.
+
+4.4     Inference for treatment effects
+With the above estimator for counterfactual means in place, we briefly discuss the construction of confidence
+intervals for treatment effects. Let us first start with ATT/ATC. Following the preceding example of µ−   1,0 ,
+in view of (8), we can construct an estimator for the lower bound of ATC, defined as
+
+                                                  −                1 X
+                                                τbATC    b−
+                                                      := µ1,0 −        Yi ,
+                                                                   n0
+                                                                      i∈I0
+
+
+
+                                                              14
+where µb−
+        1,0 is constructed as in Section 3.3. Theorem 3 directly implies the following result of double
+                                            −
+robustness and asymptotic normality for τbATC  , and the proof is omitted for brevity.
+                                                           √     −      −
+Corollary 1. Under the same conditions of Theorem 3, n(b       τATC − τATC  )    N (0, Var(φ−
+                                                                                            ATC (Xi , Yi , Ti ))),
+       −        −
+where τATC = µ1,0 − E[Y (0) | T = 0] is a lower bound for ATC under the (f, ρ)-selection condition, and
+
+                                            Ti                                    1 − Ti
+                   φ−
+                                                                                                        
+                    ATC (Xi , Yi , Ti ) =      r1,0 (Xi ) H(Xi , Yi (1)) − h(Xi ) +       h(Xi ) + Yi (0) .
+                                            p1                                       p0
+
+   Similar to Theorem 3, a consistent estimator σ    2
+                                                    bATC,− can also be constructed for Var(φ− ATC (Xi , Yi , Ti )),
+enabling Wald-type inference. Based on the results of Section 4, we can similarly construct other bounds for
+ATT and ATC and combine them to obtain bounds on ATE. For example, let µ         0,1 estimate an upper bound
+                                                                                b+
+on E[Y (0) | T = 1] with influence function φ0,1 (see Appendix B.3 for details). We may construct
+                                             +
+
+
+
+                             −        1 X                          −              −            −
+                           τbATT :=            b+
+                                          Yi − µ0,1 ,        and τbATE := pb1 · τbATT + pb0 · τATC .
+                                      n1
+                                            i∈I1
+
+      √     −      −
+Then n(b   τATE −τATE )    N (0, Var(φ−                             −
+                                      ATE (Xi , Yi , Ti ))), where τATE is a lower bound for ATE under the (f, ρ)-
+selection condition, and the influence functions are φATE = p1 φ−
+                                                           −                    −          −
+                                                                     ATT + p0 φATC , and φATT = Ti Yi /p1 − φ0,1 .
+                                                                                                             +
+
+
+
+
+5     Numerical experiments
+We illustrate the performance of our procedure on simulated datasets. We focus on the estimation of the
+counterfactual mean E[Y (1) | T = 0] given confounded observational data and take f (t) = t log t.
+
+5.1    Simulation setting
+We fix the sample size at n = 15000 and the covariate dimension at p = 4. To generate the confounded
+dataset, setting U = Y (1), we fix the observed distribution of PX,Y (1) | T =1 and P(T = 1), and vary the
+                                                                      =0 | X=x,U =u)P(T =1 | X=x)
+counterfactual distribution PX,Y (1) | T =0 , so that OR(x, u) := P(T
+                                                                  P(T =1 | X=x,U =u)P(T =0 | X=x) satisfies (f, ρ)-
+selection condition for a sequence of ρ > 0. To be specific, we generate the covariates and treatment
+assignments with
+
+                                            X ∼ Unif[0, 1]p ,   T | X ∼ Bern(e(X)),
+
+where we set the observed propensity score as e(x) = logit(γ > x) for γ = (−0.531, 0.126, −0.312, 0.018)> .
+Finally, given δ ∈ R, we generate the potential outcomes via
+
+                                       Y (1) = X > β1 − δ · (1 − T )σ(X) + ε · σ(X),
+                                       Y (0) = X > β0 − δ · (1 − T )σ(X) + ε · σ(X),
+
+          i.i.d.
+where ε ∼ N (0, 1), and we set β1 = (0.531, 1.126, −0.312, 0.671)> , β0 = (−0.531, −0.126, −0.312, 0.671)>
+and σ 2 (x) = 1 + 1.25x21 . Put it another way, the observations of Y (1) in the treated group follow Y (1) | X =
+x, T = 1 ∼ N (x> β1 , σ 2 (x)), while Y (1) | X = x, T = 0 ∼ N (x> β1 − δ · σ(x), σ 2 (x)).
+    In this setting, the confounder is entirely driven by U := Y (1). The odds ratio is
+                                                           δ(u − x> β ) + δ 2 
+                                                                       1
+                                            OR(x, u) = exp −                     ,
+                                                                 2σ 2 (x)
+
+and we obtain an upper bound for the f -divergence as ρ = δ 2 /2. The same bound can be obtained for the
+other odds ratio of the control group. The observed dataset is thus {(Xi , Yi , Ti )}ni=1 , where Yi = Yi (Ti ).
+Intuitively, δ drives the direction and magnitude of confounding: when δ > 0, larger values of Y (1) has
+larger probability of getting treated even conditional on X; as a result, the observed Y (1) in the treated
+group is actually shifted to larger values, leading to overestimate of treatment effects if confounding is not
+
+
+                                                                15
+accounted for. The larger δ is, the more severe the impact of confounding is. On the other hand, when
+δ < 0, inference under the strong ignorability assumption tends to underestimate the treatment efects. In
+this setting, although we anticipate OR(X, U ) to be controlled overall, it does not admit a uniform upper
+bound; we plot several quantiles of OR(X, U ) in the treated group in Figure 2.
+
+
+                                                  quantiles      0.5    0.75    0.9     0.95   0.99
+
+                                              4
+
+
+                                              3
+                                 odds ratio
+                                              2
+
+
+                                              1
+
+
+                                              0
+                                                  0.0          0.5        1.0         1.5       2.0
+                                                              bound on KL−divergence (rho)
+
+        Figure 2: Quantiles of OR(X, U ) in the treated group for a sequence of δ and ρ (the x-axis).
+
+     We apply Algorithm 1 to obtain bounds and confidence intervals of E[Y (1) | T = 1]. The detailed
+implementation is as follows: the regression algorithm we use for both rb and b h is Random Forest Regressor
+from scikit-learn Python library (Pedregosa et al., 2011); we use cubic spline in Example 3 to approximate
+α∗ , η ∗ , where we threshold at  = 0.001 to guarantee positiveness of α∗ (yet our estimates turn out to be
+strictly larger than this threshold). We employ the Nelder-Mead optimizer implemented in SciPy Python
+library (Virtanen et al., 2020) to optimize the coefficients in the spline approximation.
+
+5.2     Sensitivity analysis with one dataset
+We first illustrate the estimators and confidence intervals we obtain under a fixed confounded data generating
+process. To be specific, we fix δ = 0.5 (hence ρ = 0.125) to generate the data, and apply our procedure to
+the fixed dataset for a series of ρ ∈ {0.05, 0.1, . . . , 0.95, 1.0}. We obtain 0.975-lower confidence bound (LCB)
+for the lower bound of ATC and 0.975-upper confidence bounds (UCB) for the upper bound of ATC (i.e.,
+the bounds in (7)), which together form a 0.95-CI for ATC under a hypothesized confounding level ρ. The
+results are plotted in Figure 3.
+    Without accounting for confounding, reweighting on the covariates tend to overestimate the ATC (indi-
+cated by the estimators for small ρ). The LCB crosses the ground truth at ρb = 0.1; this can be viewed as a
+lower confidence bound for the true confounding level ρ = 0.125 (we elaborate on this in the discussion when
+the ground truth is zero). Finally, the LCB hits zero at ρb0 = 0.65; we can thus conclude with 0.95-confidence
+that ATC is non-negative as long as the true confounding level does not exceed ρb0 .
+
+5.3     Validity and sharpness
+To show the validity and sharpness of our procedure, we first vary δ ∈ {0.1, 0.2, . . . , 1.5} in our data-
+generating process, and apply our procedure with the correct level ρ = δ 2 /2. Feeding the data into Al-
+gorithm 1 yields the estimator µ     b−
+                                      1,0 for the lower bound on E[Y (1) | T = 1]; changing the observations
+to Y (1) ← −Y (1), the negative of the output of Algorithm 1, denoted as µ                    1,0 , is an estimator for the
+                                                                                             b+
+upper bound µ1,0 . Based on the corresponding variance estimators σ
+                  +
+                                                                                    b1,0,± , we construct the confidence
+                                                                          √                             √
+interval for E[Y (1) | T = 0] as CImean := [b     µ−1,0  + z0.025 σ1,0,− /   n, µ+
+                                                                                 1,0 + z0.975 σb1,0,+ / n]; the confidence
+                                                                             √                           √
+                                                                  b             b
+interval for µ−1,0 is constructed as CIlower := [b   µ−1,0 + z0.025 σ
+                                                                    b1,0,− / n, µ b−
+                                                                                   1,0 + z0.975 σb1,0,− / n], and similarly
+                                   √                          √
+CIupper := [b
+            µ+1,0 + z0.025 σ           b+
+                           b1,0,+ / n, µ              b1,0,+ / n] for µ+
+                                         1,0 + z0.975 σ                   1,0 .
+
+
+
+                                                                        16
+                                                        Sorted    No     Yes    Type      lower   upper
+
+                           4
+      Estimated bounds
+
+                           3
+
+                           2
+
+                           1
+
+                           0
+                                   0.0                 0.2                       0.4                      0.6
+                                                                 Bound on KL divergence (rho)
+
+Figure 3: The 0.975-LCB for the lower bound of ATC (blue) and 0.975-UCB for the upper bound of ATC
+(red), obtained from one run of our procedure on one dataset. Solid lines are the original estimators from
+our procedure, while dashed lines are sorted to ensure they are monotone in ρ. The black dashed line is the
+actual ATC.
+
+
+    To obtain the ground truth of µ±  1,0 at each δ, we evaluate the bounds on E[Y (1) | X = x, T = 0] for each
+x by optimizing with a huge amount of samples from PY (1) | X=x,T =1 ;4 we then marginalize over X | T = 0
+to obtain an estimator the ground truth of µ±    1,0 . For each δ, this procedure is repeated and averaged over
+many runs to further reduce the random error.
+    The estimators for bounds of counterfactuals over N = 500 runs for each ρ are plotted in Figure 4 (they
+are evenly spaced on the x-axis). The simulation results show the sharpness and accuracy of our estimators:
+they are quite close to the ground truth, especially for small values of ρ; they get a bit conservative and have
+a larger variance when ρ is as large as 1. Interestingly, there are also a few outliers when ρ is very small,
+and the estimators seem to be the most stable for an medium scale of ρ (around 0.18 to 0.5). The actual
+value of E[Y (1) | T = 0] in our design, represented by the red triangles, are very close to the lower solid line,
+the ground truth of µ− 1,0 ; this means our simulation design is close to the worst case.
+    To further validate our inference procedure, we compute the empirical coverage of CIlower and CIupper for
+µ±
+ 1,0 over N = 500 runs. We also compute the ground truth of E[Y (1) | T = 0] under our design as a baseline,
+and compute the empirical coverage of CImean . They are plotted in Figure 5. Our empirical coverage is close
+to the nominal level 0.95 in almost all settings, showing the validity of our inference procedure.
+
+                                         lower bound                        upper bound                         actual mean
+                           1.000
+      Empirical coverage
+
+
+
+
+                           0.975
+
+                           0.950
+
+                           0.925
+
+                           0.900
+
+                           0.875
+                                   0.005
+                                    0.02
+                                   0.045
+                                    0.08
+                                   0.125
+                                    0.18
+                                   0.245
+                                    0.32
+                                   0.405
+                                      0.5
+                                   0.605
+                                    0.72
+                                   0.845
+                                    0.98
+                                   1.125
+                                                                 0.005
+                                                                  0.02
+                                                                 0.045
+                                                                  0.08
+                                                                 0.125
+                                                                  0.18
+                                                                 0.245
+                                                                  0.32
+                                                                 0.405
+                                                                    0.5
+                                                                 0.605
+                                                                  0.72
+                                                                 0.845
+                                                                  0.98
+                                                                 1.125
+                                                                                                   0.005
+                                                                                                    0.02
+                                                                                                   0.045
+                                                                                                    0.08
+                                                                                                   0.125
+                                                                                                    0.18
+                                                                                                   0.245
+                                                                                                    0.32
+                                                                                                   0.405
+                                                                                                      0.5
+                                                                                                   0.605
+                                                                                                    0.72
+                                                                                                   0.845
+                                                                                                    0.98
+                                                                                                   1.125
+
+
+
+
+                                                                  Bound on KL divergence (rho)
+
+Figure 5: Empirical coverage for µ−
+                                  1,0 (left), µ1,0 (middle), and E[Y (1) | T = 0] (right). The short vertical
+                                               +
+
+segments are the C.I.s computed with N = 500 replicates. The red dashed line is the nominal level 0.95.
+
+                                                                                                                      √
+    Figure 6 plots the empirical coverage of one-sided C.I.s for µ±
+                                                                  1,0 , defined as CIlower
+                                                                                     one-side
+                                                                                                  µ−
+                                                                                              := [b1,0 +z0.05 σ
+                                                                                                              b1,0,− / n, +∞)
+   4 This is feasible because in our setting, P
+                                               Y (1) | X=x,T =1 is normal distribution, and the target bounds are shift-invariant; we
+only need to evaluate the bounds for all values of ρ and a fine grid of σ(x).
+
+
+                                                                           17
+                                     5.0
+
+
+
+
+             Estimator for bounds
+                                     2.5
+
+
+
+
+                                     0.0
+
+
+
+
+                                    −2.5
+                                           0.005 0.02 0.045 0.08 0.125 0.18 0.245 0.32 0.405 0.5 0.605 0.72 0.845 0.98 1.125
+                                                                               Bound on KL divergence (rho)
+
+Figure 4: Boxplots for µ                      b−
+                           1,0 (red ones) and µ
+                          b+                   1,0 (blue ones) over N = 500 replicates with each value of
+ρ. The solid lines are the ground truths of µ1,0 and µ−
+                                               +
+                                                        1,0 . The red triangles represent the actual value of
+E[Y (1) | T = 0] in our simulation setting.
+
+                                               √
+and CIone-side
+        upper   := (−∞, µ b+           b1,0,+ / n]. Our theory shows that even though the ERM is off, these
+                           1,0 + z0.95 σ
+C.I.s still have valid asymptotic coverage; such robustness is also supported by empirical evidence.
+
+                                                                          lower bound                    upper bound
+                                                                1.000
+                                           Empirical coverage
+
+
+
+
+                                                                0.975
+
+                                                                0.950
+
+                                                                0.925
+
+                                                                0.900
+
+                                                                0.875
+                                                                        0.005
+                                                                         0.02
+                                                                        0.045
+                                                                         0.08
+                                                                        0.125
+                                                                         0.18
+                                                                        0.245
+                                                                         0.32
+                                                                        0.405
+                                                                           0.5
+                                                                        0.605
+                                                                         0.72
+                                                                        0.845
+                                                                         0.98
+                                                                        1.125
+                                                                                               0.005
+                                                                                                0.02
+                                                                                               0.045
+                                                                                                0.08
+                                                                                               0.125
+                                                                                                0.18
+                                                                                               0.245
+                                                                                                0.32
+                                                                                               0.405
+                                                                                                  0.5
+                                                                                               0.605
+                                                                                                0.72
+                                                                                               0.845
+                                                                                                0.98
+                                                                                               1.125
+
+
+
+
+                                                                                 Bound on KL divergence (rho)
+
+Figure 6: Empirical coverage of one-sided C.I.s for µ−
+                                                     1,0 (left), and µ1,0 (right). The short vertical segments
+                                                                      +
+
+are the C.I.s computed with N = 500 replicates. The red dashed line is the nominal level 0.95.
+
+
+6    Discussion
+In this work, we propose a new sensitivity model based on the f -divergence that characterizes the average
+effect of confounders on selection bias. Under the f -sensitivity model, we offer a scheme for the estimation
+and inference on the counterfactual and the ATE. We close the paper by a discussion on possible extensions.
+
+
+
+
+                                                                                          18
+Tightness. As mentioned before, the optimal value of (6) is not necessarily the tightest lower bound for
+E[Y (1) | T = 0]: the sharp one under (f, ρ)-selection condition is given by
+                                      n                                   o
+                                   inf Esup Y (1) T = 0 : Psup ∈ Q1,0 ,
+                                                          
+
+where Q1,0 is the identification set of all distributions that agree with the observed distribution and sat-
+isfy the (f, ρ)-selection condition. The constraints in (6) define a superset of Q1,0 , potentially leading to
+conservativeness.
+    Using the exact characterization of Q1,0 provided in Proposition 5, we can represent the sharp lower
+(resp. upper) bound of E[Y (1) | T = 0] under the (f, ρ)-selection condition as the optimal value of
+                                                   
+               min(resp. max) E Y (1)L(X) T = 1
+               L(x) measurable
+
+                           s.t. E[L(x) | X = x, T = 1] = r1,0 (x)
+                                E f L(x)/r1,0 (x) X = x, T = 1 ≤ ρ, for almost all x.
+                                                                
+
+                                E r1,0 (x)f r1,0 (x)/L(x) X = x, T = 1 ≤ ρ, for almost all x.
+                                                                    
+
+With the same argument, we can also develop the optimization problems for sharp bounds on the ATT and
+the ATC. Compared to the dual problems in Proposition 3, the additional constraints in the last line above
+leads to a dual form that is not as clean. Developing an efficient algorithm that solves this tight bound
+remains an interesting avenue for future research.
+
+Sensitivity analysis. In this paper, we have focused on conducting inference on the counterfactuals and
+treatment effects under the (f, ρ)-selection condition, with a prescribed confounding parameter ρ. Based
+on this, we can make robust causal conclusions and conduct sensitivity analysis by inverting the confidence
+intervals as follows. Suppose the goal is to detect if there is a nonzero ATE; we can consider a increasing
+sequence of ρ, and construct a level 1 − α confidence interval C(ρ)
+                                                               b     for the ATE using the method introduced
+in this paper at each value of ρ; finally let ρb be the smallest ρ such that C(ρ) contains zero. We can
+interprete the results as either there is a nonzero ATE, or there is a confounder as large as ρb to explain away
+the observed treatment effects.
+    More rigorously, let ρ∗ denote the true confounding level and suppose the constructed confidence intervals
+C(ρ) are nested in ρ: for any ρ1 ≤ ρ2 , C(ρ
+ b                                                 b 2 ). We then have
+                                          b 1 ) ⊂ C(ρ
+
+                        lim sup P(ATE = 0, ρ∗ < ρb) ≤ lim sup P(ATE ∈ b ∗ )) ≤ α,
+                                                                    / C(ρ
+                          n→∞                              n→∞
+
+if C(ρ
+   b ) is an asymptotically valid confidence interval for the ATE. In words, when the ATE is indeed zero, ρb
+      ∗
+
+is an asymptotic level-(1−α) confidence lower bound for ρ∗ . Similar to the case of Jin et al. (2021), here only
+point-wise validity is necessary, i.e., we only need our CIs to be asymptotically valid for each fixed ground
+truth of ρ. Finally, we note that the monotonicity of the confidence intervals is satisfied with a reasonable
+estimation procedure; one can also force the confidence intervals to be monotone by enlarging some of them
+to conform to those for smaller values of ρ, without hurting the asymptotic validity.
+
+Implications for the conditional average treatment effect (CATE). The mothodology proposed in
+this paper also provides bounds on CATE under the (f, ρ)-selection condition. For example, the proof of
+Propositions 2 and 3 implies that a lower bound for E[Y (1) | X = x, T = 1] is given by the optimal value of
+                                                                   
+                                  min       E Y (1)L | X = x, T = 1
+                             L≥0 measurable
+                                                              
+                                       s.t. E L | T = 1, X = x ,
+                                                                       
+                                                     L 
+                                            E f            | X = x, T = 1 ≤ ρ.
+                                                  r1,0 (x)
+The dual form of the above optimization problem is
+                                             Y (1) + η                       
+                                           ∗
+                      sup −r1,0 (x) · E αf −               + η + αρ X = x, T = 1 .                         (11)
+                    α≥0,η∈R                        α
+
+
+                                                      19
+Note that the optimizer (α∗ (x), η ∗ (x)) defined in (10) is exactly the optimizer of (11). In fact, µ    b(x) :=
+         h(j) (x) where rb(j) , b
+rb(j) (x)b                      h(j) are defined in Algorithm 1 is an estimator for the optimal objective in (11).
+These quantities are repeatedly estimated on distinct folds of data as intermediate steps of our procedure.
+While such sample splitting does not compromise the efficiency of inference due to the final averaging step,
+how to efficiently estimate these CATE bound functions with statistical guarantees might call for distinct
+considerations from ours. We leave this for future investigation.
+
+Marginal (f, ρ) selection condition. We might even relax the per-x uniform bound on the f -divergence
+in Definition 1 to a marginal fashion, so that the selection bias is controlled averaged over both U and X.
+More formally, we might consider the constraint that
+                             P(T = 0 | X = x, U ) P(T = 1 | X = x) 
+                       Z 
+                          f                                           dPU,X | T =1 ≤ ρ.
+                             P(T = 1 | X = x, U ) P(T = 0 | X = x)
+In this setting, the odds ratio can be very large for a small proportion of X | T = 1, but still controlled in
+the average sense. This type of marginal (f, ρ)-selection model leads to a larger class of distributional shifts
+than the (f, ρ)-selection condition here, and a different optimization problem for bounds on counterfactual
+means. Following similar arguments here, we see that the dual formulation, parallel to Proposition 3, can
+still be viewed as a risk minimization problem; however, the risk function would involve the unknown X-shift
+r1,0 , which might make the estimation and inference more complicated. The estimation and inference under
+this marginal f -sensitivity model is an ongoing work.
+
+
+7    Acknowledgement
+The authors thank Emmanuel Candès, Kevin Guo and Dominik Rothenhäusler for helpful discussions. Z.
+R. was partially supported by ONR grant N00014-20-1-2337, and NIH grants R56HG010812, R01MH113078
+and R01MH123157.
+
+
+References
+Andrews, I., Gentzkow, M., and Shapiro, J. M. (2020). On the informativeness of descriptive statistics for
+ structural estimates. Econometrica, 88(6):2231–2258.
+Breiman, L., Friedman, J. H., Olshen, R. A., and Stone, C. J. (1984). Classification and regression trees.
+  Wadsworth & Brooks/Cole Advanced Books & Software.
+Chen, X. (2007). Large sample sieve estimation of semi-nonparametric models. Handbook of econometrics,
+  6:5549–5632.
+Chen, X. and Shen, X. (1998). Sieve extremum estimates for weakly dependent data. Econometrica, pages
+  289–314.
+Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., and Robins, J. (2018).
+  Double/debiased machine learning for treatment and structural parameters.
+Christensen, T. and Connault, B. (2019).         Counterfactual sensitivity and robustness.       arXiv preprint
+  arXiv:1904.00989.
+Cleveland, W. S. (1979). Robust locally weighted regression and smoothing scatterplots. Journal of the
+  American Statistical Association, 74(368):829–836.
+Cleveland, W. S. and Devlin, S. J. (1988). Locally weighted regression: an approach to regression analysis
+  by local fitting. Journal of the American Statistical Association, 83(403):596–610.
+Cornfield, J., Haenszel, W., Hammond, E. C., Lilienfeld, A. M., Shimkin, M. B., and Wynder, E. L. (1959).
+  Smoking and lung cancer: recent evidence and a discussion of some questions. Journal of the National
+  Cancer institute, 22(1):173–203.
+
+
+                                                       20
+Cressie, N. and Read, T. R. (1984). Multinomial goodness-of-fit tests. Journal of the Royal Statistical
+  Society: Series B (Methodological), 46(3):440–464.
+Csiszár, I. (1964). Eine informationstheoretische ungleichung und ihre anwendung auf beweis der ergodizitaet
+  von markoffschen ketten. Magyer Tud. Akad. Mat. Kutato Int. Koezl., 8:85–108.
+
+Daubechies, I. (1992). Ten lectures on wavelets. SIAM.
+Ding, P. and VanderWeele, T. J. (2016). Sensitivity analysis without assumptions. Epidemiology (Cambridge,
+  Mass.), 27(3):368.
+Dorn, J. and Guo, K. (2021). Sharp sensitivity analysis for inverse propensity weighting via quantile bal-
+ ancing. arXiv preprint arXiv:2102.04543.
+
+Dorn, J., Guo, K., and Kallus, N. (2021). Doubly-valid/doubly-sharp sensitivity analysis for causal inference
+ with unmeasured confounding. arXiv preprint arXiv:2112.11449.
+Duchi, J. C. and Namkoong, H. (2021). Learning models with uniform performance via distributionally
+ robust optimization. The Annals of Statistics, 49(3):1378–1406.
+
+Fisher, R. (1958). Cigarettes, cancer, and statistics. The Centennial Review of Arts & Science, 2:151–166.
+Franks, A., D’Amour, A., and Feller, A. (2019). Flexible sensitivity analysis for observational studies without
+  observable implications. Journal of the American Statistical Association.
+Gastwirth, J. L., Krieger, A. M., and Rosenbaum, P. R. (1998). Dual and simultaneous sensitivity analysis
+ for matched pairs. Biometrika, 85(4):907–920.
+Geer, S. A., van de Geer, S., and Williams, D. (2000). Empirical Processes in M-estimation, volume 6.
+ Cambridge university press.
+Geman, S. and Hwang, C.-R. (1982). Nonparametric maximum likelihood estimation by the method of
+ sieves. The annals of Statistics, pages 401–414.
+
+Green, P. J. and Silverman, B. W. (1993). Nonparametric regression and generalized linear models: a
+  roughness penalty approach. CRC Press.
+Gupta, S. and Rothenhäusler, D. (2021). The s-value: evaluating stability with respect to distributional
+ shifts. arXiv preprint arXiv:2105.03067.
+
+Ho, T. K. (1995). Random decision forests. In Proceedings of 3rd international conference on document
+ analysis and recognition, volume 1, pages 278–282. IEEE.
+Imbens, G. W. (2003). Sensitivity to exogeneity assumptions in program evaluation. American Economic
+  Review, 93(2):126–132.
+
+Imbens, G. W. and Rubin, D. B. (2015). Causal inference in statistics, social, and biomedical sciences.
+  Cambridge University Press.
+Jin, Y., Ren, Z., and Candès, E. J. (2021). Sensitivity analysis of individual treatment effects: A robust
+  conformal inference approach. arXiv preprint arXiv:2111.12161.
+Jin, Y. and Rothenhäusler, D. (2021). One estimator, many estimands: fine-grained quantification of uncer-
+  tainty using conditional inference. arXiv preprint arXiv:2104.04565.
+Kallus, N., Mao, X., and Zhou, A. (2019). Interval estimation of individual-level causal effects under unob-
+ served confounding. In The 22nd international conference on artificial intelligence and statistics, pages
+ 2281–2290. PMLR.
+
+Kullback, S. and Leibler, R. A. (1951). On information and sufficiency. The annals of mathematical statistics,
+ 22(1):79–86.
+
+
+                                                      21
+Lee, K., Bargagli-Stoffi, F. J., and Dominici, F. (2020). Causal rule ensemble: Interpretable inference of
+  heterogeneous treatment effects. arXiv preprint arXiv:2009.09036.
+Liese, F. and Vajda, I. (2006). On divergences and informations in statistics and information theory. IEEE
+  Transactions on Information Theory, 52(10):4394–4412.
+
+Luenberger, D. G. (1997). Optimization by vector space methods. John Wiley & Sons.
+Mallat, S. (1999). A wavelet tour of signal processing. Elsevier.
+Morimoto, T. (1963). Markov processes and the h-theorem. Journal of the Physical Society of Japan,
+ 18(3):328–331.
+
+Nadaraya, E. A. (1964). On estimating regression. Theory of Probability & Its Applications, 9(1):141–142.
+Neyman, J. (1923). Sur les applications de la théorie des probabilités aux experiences agricoles: Essai des
+  principes. Roczniki Nauk Rolniczych, 10:1–51.
+Nie, X., Imbens, G., and Wager, S. (2021). Covariate balancing sensitivity analysis for extrapolating ran-
+  domized trials across locations. arXiv preprint arXiv:2112.04723.
+
+Pagan, A., Ullah, A., Gourieroux, C., Phillips, P. C., and Wickens, M. (1999). Nonparametric econometrics,
+  volume 10. Citeseer.
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer,
+  P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., and
+  Duchesnay, E. (2011). Scikit-learn: Machine learning in Python. Journal of Machine Learning Research,
+  12:2825–2830.
+Rahman, S. (2016). The f-sensitivity index. SIAM/ASA Journal on Uncertainty Quantification, 4(1):130–
+  162.
+Rényi, A. (1961). On measures of entropy and information. In Proceedings of the Fourth Berkeley Symposium
+  on Mathematical Statistics and Probability, Volume 1: Contributions to the Theory of Statistics, volume 4,
+  pages 547–562. University of California Press.
+Robins, J. M., Rotnitzky, A., and Zhao, L. P. (1994). Estimation of regression coefficients when some
+  regressors are not always observed. Journal of the American statistical Association, 89(427):846–866.
+
+Rosenbaum, P. (2002a). Observational Studies. Springer Series in Statistics. Springer.
+Rosenbaum, P. R. (1987). Sensitivity analysis for certain permutation inferences in matched observational
+  studies. Biometrika, 74(1):13–26.
+Rosenbaum, P. R. (2002b). Attributing effects to treatment in matched observational studies. Journal of
+  the American statistical Association, 97(457):183–192.
+
+Rosenbaum, P. R. and Rubin, D. B. (1983a). Assessing sensitivity to an unobserved binary covariate in an ob-
+  servational study with binary outcome. Journal of the Royal Statistical Society: Series B (Methodological),
+  45(2):212–218.
+Rosenbaum, P. R. and Rubin, D. B. (1983b). The central role of the propensity score in observational studies
+  for causal effects. Biometrika, 70(1):41–55.
+Rudin, W. et al. (1976). Principles of mathematical analysis, volume 3. McGraw-hill New York.
+Schick, A. (1986). On asymptotically efficient estimation in semiparametric models. The Annals of Statistics,
+  pages 1139–1151.
+
+Shen, X. and Wong, W. H. (1994). Convergence rate of sieve estimates. The Annals of Statistics, pages
+  580–615.
+
+
+                                                     22
+Si, N., Zhang, F., Zhou, Z., and Blanchet, J. (2020). Distributional robust batch contextual bandits. arXiv
+   preprint arXiv:2006.05630.
+Simonoff, J. S. (2012). Smoothing methods in statistics. Springer Science & Business Media.
+Stone, C. J. (1982). Optimal global rates of convergence for nonparametric regression. The annals of
+  statistics, pages 1040–1053.
+Tan, Z. (2006). A distributional approach for causal inference using propensity scores. Journal of the
+  American Statistical Association, 101(476):1619–1637.
+Timan, A. F. (2014). Theory of approximation of functions of a real variable. Elsevier.
+
+Van der Vaart, A. W. (2000). Asymptotic statistics, volume 3. Cambridge university press.
+Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., Burovski, E.,
+  Peterson, P., Weckesser, W., Bright, J., van der Walt, S. J., Brett, M., Wilson, J., Millman, K. J., Mayorov,
+  N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., Carey, C. J., Polat, İ., Feng, Y., Moore, E. W.,
+  VanderPlas, J., Laxalde, D., Perktold, J., Cimrman, R., Henriksen, I., Quintero, E. A., Harris, C. R.,
+  Archibald, A. M., Ribeiro, A. H., Pedregosa, F., van Mulbregt, P., and SciPy 1.0 Contributors (2020).
+  SciPy 1.0: Fundamental Algorithms for Scientific Computing in Python. Nature Methods, 17:261–272.
+Wasserman, L. (2006). All of nonparametric statistics. Springer Science & Business Media.
+Watson, G. S. (1964). Smooth regression analysis. Sankhyā: The Indian Journal of Statistics, Series A,
+ pages 359–372.
+
+Yadlowsky, S., Namkoong, H., Basu, S., Duchi, J., and Tian, L. (2018). Bounds on the conditional and
+  average treatment effect with unobserved confounding factors. arXiv preprint arXiv:1808.09521.
+Zhao, Q., Small, D. S., and Bhattacharya, B. B. (2017). Sensitivity analysis for inverse probability weighting
+  estimators via the percentile bootstrap. arXiv preprint arXiv:1711.11286.
+
+Zheng, W. and Laan, M. J. (2011). Cross-validated targeted minimum-loss-based estimation. In Targeted
+  Learning, pages 459–474. Springer.
+
+
+
+
+                                                      23
+A      Proofs for identification sets
+A.1      Proof of Proposition 1
+Here we prove a stronger result that directly implies Proposition 1. The following proposition is a tight
+characterization of the identification set induced by the f -sensitivity models.
+Proposition 5. Let (X, Y (0), Y (1), U, T ) ∼ Psup be the true unknown super-population over all random
+variables of interest. Let P be the set of all distributions over (X, Y (0), Y (1), U, T ). Let Pobs
+                                                                                                 X,Y,T be the joint
+distribution of all observable random variables (X, Y, T ). Let t ∈ {0, 1}. Define Qt,1−t as the set of all
+counterfactual distributions that agrees with the observables and satisfies the (f, ρ) selection condition, i.e.,
+
+                Qt,1−t = PX,Y (t) | T =1−t : P ∈ P, PX,Y,T = Pobs
+                          
+                                                                X,Y,T , P satisfies Definition 1 .
+
+Then Psup
+       X,Y (t) | T =1−t ∈ Qt,1−t , and
+            (
+                       dQX
+                                                                    Pobs                    obs
+                                                                                 
+  Qt,1−t = Q :                  (x) = rt,1−t (x), Df QY | X=x        Y | X=x,T =t ≤ ρ, for PX | T =t -almost all x,
+                     dPobs
+                       X | T =t
+                                                                                                                      )
+                                                                                          
+                                                    Df QY obs | X=x,T =t      QY | X=x ≤ ρ, for QX -almost all x ,
+
+
+where r1,0 (x) = (1−e(x))p 1              e(x)(1−p1 )
+                 e(x)(1−p1 ) , r0,1 (x) = (1−e(x))p1 , and e(x) = P
+                                                                   obs
+                                                                       (T = 1 | X = x), p1 = Pobs (T = 1).
+
+                                                                                    X,Y,T ,
+Proof of Proposition 5. Fix t = 1. For any PX,Y (1) | T =0 ∈ Q1,0 , since PX,Y,T = Pobs
+
+                                       dPX | T =0      dPX | T =0
+                                           obs
+                                                  =                 = r1,0 (x).
+                                       dPX | T =1      dPX | T =1
+
+By Lemma 1, Df PX,Y (1) | T =0 PX,Y (1) | T =1 ≤ ρ. On the other hand,
+                                                
+
+                                                                                         
+        Df PY (1) | X,T =1 k PY (1) | X,T =0 ≤Df PY (1),U | X,T =1 k PY (1),U | X,T =0
+                                                                                         
+                                                                      dPY (1),U | X,T =1 
+                                               =EPY (1),U | X,T =0 f
+                                                                      dPY (1),U | X,T =0
+                                                                                                
+                                                                  P(T = 1 | X, U ) P(T = 0 | X) 
+                                               =EU | X,T =0 f                       ·               ≤ ρ,
+                                                                  P(T = 0 | X, U ) P(T = 1 | X)
+where the last inequality is due to the (f, ρ)-selection condition. Combining the above, we establish the “⊂”
+direction. It remains to prove the reverse. We show the proof for the case of t = 1 here, and the t = 0 case
+follows from similar arguments.
+    Given any Q ∈ Q1,0 , we aim to find a distribution Psup over (X, Y (0), Y (1), U, T ) such that
+    • (Y (1), Y (0)) T | X, U
+                    |=
+
+
+
+
+    • Psup is compatible with Pobs
+                               X,T,Y ;
+
+    • Psup satisfies the (f, ρ)-selection condition;
+    • Psup
+       X,Y (1) | T =0 (x, y) = Q(x, y).
+
+To construct Psup , we first set Psup
+                                  X,T = PX,T . Then we specify the distribution of Y (1) | X, T via
+                                         obs
+
+
+                                Psup               obs
+                                 Y (1) | X,T =1 = PY | X,T =1 ,   Psup
+                                                                   Y (1) | X,T =0 = QY | X .
+
+So far the joint distribution of (X, T, Y (1)) has been determined. We let U = Y (1) be the unobserved
+confounder. Finally, the distribution of Y (0) | X, T, Y (1), U is specified via
+
+                                      Psup                    sup          obs
+                                       Y (0) | X,T,Y (1),U = PY (0) | X = PY | X,T =0 .
+
+
+
+                                                             24
+Having constructed Psup , we proceed the check that it satisfies the conditions. Conditional on X and U ,
+Y (1) becomes deterministic and the distribution of Y (0) only depends on X. Hence (Y (1), Y (0)) T | X, U .
+
+
+
+
+                                                                                                              |=
+By construction, it is straightforward to see that Psup is compatible with Pobs
+                                                                            X,T,Y . For any x, again by the
+construction of Psup ,
+                     sup
+                      dPY (1) | X=x,T =0 
+                                                                              
+                                                                   dQY | X=x                       obs
+                                                                                                                 
+EPsup               f   sup                  = EPobs           f    obs
+                                                                                   = Df QY | X=x k PY | X=x,T =1   ≤ ρ,
+  Y (1) | X=x,T =1    dPY (1) | X=x,T =1         Y | X=x,T =1     dPY | X=x,T =1
+
+where the last inequality is due to the definition of Q. On the other hand,
+
+dPsup
+  Y (1) | X=x,T =0       dPsup
+                           Y (1),T =0 | X=x     Psup (T = 1 | X = x)       Psup (T = 0 | Y (1), X = x) Psup (T = 1 | X = x)
+                     =                     · sup                =                            ·
+dPsup
+  Y (1) | X=x,T =1       dPsup
+                           Y (1),T =1 | X=x P    (T = 0 | X = x) Psup (T = 1 | Y (1), X = x) Psup (T = 0 | X = x)
+                                                                  sup                       sup
+                                                                           P (T = 0 | U, X = x) P (T = 1 | X = x)
+                                                                       =                          ·                     ,
+                                                                           Psup (T = 1 | U, X = x) Psup (T = 0 | X = x)
+
+where the last equality is because U = Y (1) under Psup . Combing the above, we have
+                                   sup
+                                    P (T = 0 | U, X = x) Psup (T = 1 | X = x) 
+                                                                                
+                   EPU | X=x,T =1 f sup
+                      sup                                  ·                      ≤ ρ.
+                                    P (T = 1 | U, X = x) Psup (T = 0 | X = x)
+
+Similarly,
+                                                                                          sup
+                                                                                           dPY (1) | X=x,T =1 
+                  sup
+                   P (T = 1 | U, X = x) Psup (T = 0 | X = x) 
+                                                                                                               
+ EPsup           f                        ·                        ≤ E sup               f
+   U | X=x,T =0    Psup (T = 0 | U, X = x) Psup (T = 1 | X = x)       PY (1) | X=x,T =0
+                                                                                           dPsup
+                                                                                             Y (1) | X=x,T =0
+                  obs
+                   dPY | X=x,T =1 
+                                    
+                                      = Df Pobs
+                                                                   
+=EPobs           f                          Y | X=x,T =1 k QY | X=x ≤ ρ.
+   Y | X=x,T =0      dQY | X=x
+
+Therefore, the super population Psup satisfies the (f, ρ)-selection condition. By construction, Psup
+                                                                                                 Y (1) | X,T =0 =
+QY | X . It remains to show that Psup
+                                  X | T =0 = QX . For  any measurable   set A,
+
+                                   dPsup
+                                                                      obs
+                                                                       dPX | T =0
+                                                                                                   
+                                     X | T =0
+Psup (X ∈ A | T = 0) =Esup                  · 1{X ∈ A} T = 1  = Esup
+                                                                                   · 1{X  ∈ A} T  = 1
+                                dPsup
+                                   X | T =1                            dPobs
+                                                                          X | T =1
+                                                                                                 
+                              h                          i            dQ X
+                         =Esup r1,0 (X) · 1{X ∈ A} T = 1 = Esup                 · 1{X  ∈ A}  T = 1  = Q(X ∈ A).
+                                                                   dPsup
+                                                                      X | T =1
+
+Since the above holds for any measuable set A, PX | T =0 = QX .
+   Finally, switching the role of 1 and 0 completes the proof.
+
+
+
+B     Deferred details and discussions
+B.1     Proof of Proposition 4
+Given X = x, suppose instead α∗ (x) = 0. We consider the following two cases:
+
+
+
+
+                                                             25
+   • If η ∗ (x) < −y(x), then
+                                   Y (1) + η ∗ (x)                             
+                   lim inf E αf ∗                      + η ∗ (x) + αρ X = x, T = 1
+                      α→0                 −α
+                                   Y (1) + η ∗ (x)  
+                = lim inf E αf ∗                       1 Y (1) ≤ −η ∗ (x)
+                      α→0                 −α
+                                Y (1) + η ∗ (x)                                  
+                        + αf ∗                    1 Y (1) > −η ∗ (x) X = x, T = 1 + η ∗ (x) + αρ
+                                       −α
+               (a)
+                                   Y (1) + η ∗ (x)                                     
+               ≥ lim inf E αf ∗                        1 Y (1) ≤ −η ∗ (x) − αL X = x, T = 1
+                      α→0                 −α
+                                         Y (1) + η                                       
+                        + lim inf αf ∗                  1 Y (1) > −η ∗ (x) − αL X = x, T = 1 + η ∗ (x)
+                             α→0               −α
+               (b)
+                ≥ + ∞,
+
+     where step (a) uses the fact that liminf n→∞ an + bn ≥ liminf n→∞ an + liminf n→∞ bn and step (b)
+     follows from Fatou’s lemma and the condition that f ∗ (x)/x → ∞ when x → ∞.
+
+   • If η ∗ (x) ≥ −y(x), then
+                               Y (1) + η ∗ (x)                             
+                    lim E αf ∗                     + η ∗ (x) + αρ X = x, T = 1
+                    α→0               −α
+                               Y (1) + η ∗ (x)                                         
+                 = lim E αf ∗                      1 Y (1) ≥ essinf Y (1) + αρ X = x, T = 1 + η ∗ (x)
+                    α→0               −α
+                                 Y (1) + η ∗ (x)  
+                                                                                         
+                (a)
+                = E lim αf ∗                       1 Y (1) ≥ essinf Y (1) + αρ X = x, T = 1 + η ∗ (x)
+                       α→0            −α
+                (b) ∗
+                = η (x).
+
+     Above, step (a) is due to the fact that f ∗ (x) is bounded when x ≤ 0 and the dominated convergence
+     theorem; step (b) is because f ∗ (x)/x → 0 as x → −∞.
+Combining the two cases above, we conclude that η ∗ (x) = −y(x) and the optimal value of the dual problem is
+−y(x). By the strong duality, the optimal value of the primal objective function is E r1,0 (X)y(X) | T = 1 . As
+                                                                                                          
+
+an implication, there exists a feasible L(x, y) such that E[Y (1)L(X, Y (1)) | T = 1] = E r1,0 (X)y(X) | T = 1 .
+                                                                                                             
+
+Let QY | X=x denote the measure induced by L(x, y):
+
+                                            dQY | X=x                 L(x, y)
+                                                              (y) =            .
+                                         dPY (1) | X=x,T =1           r1,0 (x)
+
+This is a valid transformation of measure because L(x, y) is feasible. Then Y (1) = y(X) a.s. under QY | X .
+Consequently,
+                                                 
+                                       L x, y(x)                                      L(x, y(x))
+                                                                                 
+                                                     
+    1 = Q Y (1) = y(X) | X = x = E                 · 1 Y (1) = y(x) X = x, T = 1 =               · p̄(x),
+                                        r1,0 (x)                                       r1,0 (x)
+    0 = L(x, Y (1)) · 1{Y (1) > y(x)}, a.s. under PY (1) | X=x,T =1 .
+
+Again since L is feasible,
+                                               
+                       L(x, Y (1))                            1              
+                ρ≥E f                X = x, T = 1 = p̄(x) · f        + 1 − p̄(x) · f (0).
+                        r1,0 (x)                               p̄(x)
+
+This is a contradiction to the condition. Hence α∗ (x) > 0.
+
+
+                                                        26
+B.2     Discussions on Assumption 2 on sieve estimation
+We provide additional discussion on Assumption 2 for sieve estimators in the context of (X, Y (1)) | T = 1. In
+particular, we first justify the smoothness of the optimizers when the conditional distributions are sufficiently
+smooth. We then verify the technical conditions for two choices of f -divergences: KL-divergence and χ2 -
+divergence. Then we discuss some considerations of relaxing the conditions with implementations in practice.
+
+Smoothness of the optimizers. We first provide some justifications for assuming the optimizers are
+continuously differentiable. By the strong convexity of f , its conjugate f ∗ is continuous, hence without
+loss of generality we always assume the differentiation and expectation are exchangeable. We also assume
+the conjugate f ∗ is sufficiently smooth, which is the case for many popular choices of f -divergence. As we
+discussed in Proposition 4, under mild conditions, the optimizers (α∗ (x), η ∗ (x)) lies in the interior of R+ × R.
+The optimizers are thus the solutions to
+                                                 h                                i          
+                                                       ∗ Y (1)+b
+                   α (x), η (x) = argzero ∇a,b aE f
+                    ∗       ∗
+                                                                
+                                                           −a      X = x, T = 1 + b + aρ ,
+
+where the right-hand side takes the form
+
+                               F (a, b, x) := E g(Y (1), a, b) X = x, T = 1 ∈ R2
+                                                                          
+
+
+for some differentiable or smooth function g decided by f ∗ and its derivative (f ∗ )0 . Thus F (a, b, x) is smooth
+in (a, b) when f ∗ is sufficiently smooth. Now let us assume the conditional distribution PY (1) | X=x,T =1 is
+smooth; for example, for some h ∈ X , PY (1) | X=x+th,T =1 = PY (1) | X=x,T =1 + t · Ph for some measure Ph
+on Y; and similar for higher-order expansions. This is a reasonable assumption if we are willing to assume
+that the conditional distributions of Y (1) are close for similar covariates. Concretely, such condition holds
+when Y (1) | X = x, T = 1 is a normal distribution with homoskedastic noise and a smooth mean function,
+or heteroskedastic noise with a smooth mean function and smooth standard deviation function, etc. When
+the conditional distributions are smooth in x, the function F (a, b, x) is also smooth in x by the linearity
+of conditional expectation. Finally, if the derivatives with respect to a, b is always invertible (which is the
+case under mild conditions for the examples we discuss shortly) and smooth, invoking the Implicit Function
+Theorem (Rudin et al., 1976), the minimizer can be smooth in x.
+
+KL-divergence. A popular choice for the function f is f (x) = x log x, which leads to the KL-divergence (Kull-
+back and Leibler, 1951). The dual function in this case is f ∗ (y) = ey−1 , and the loss function becomes
+                                                     y+η(x)
+                                   `(θ, x, y) = α(x)e −α(x) −1 + η(x) + α(x)ρ.
+
+The conditional expectation is
+                                                         Y (1)−b
+                 E `((a, b), x, Y (1)) X = x, T = 1 = aE e −a −1 X = x, T = 1 + b + aρ.
+                                                                           
+
+
+We first look at the strong convexity assumption. The conditional expectation is twice differentiable, with
+                                                      1 h         2 Y (1)+b           i
+           ∇2a E `((a, b), x, Y (1)) X = x, T = 1 = 3 E Y (1) + b e −a −1 X = x, T = 1 ,
+                                                
+                                                     a
+            2
+                                                 1 h Y (1)+b −1              i
+           ∇b E `((a, b), x, Y (1)) X = x, T = 1 = E e −a         X = x, T = 1 ,
+                                                     a
+                                                        1 h           Y (1)+b           i
+           ∇a,b E `((a, b), x, Y (1)) X = x, T = 1 = − 2 E Y (1) + b e −a −1 X = x, T = 1 .
+             2
+                                                  
+                                                        a
+Therefore, a simple calculation shows that as long as Y (1) is not deterministic at (α∗ (x), β ∗ (x)), the Hessian
+matrix is non-singular. Also, if the underlying distribution PY (1) | X=x,T =1 is continuous in x, the above
+derivatives, hence the eigenvalues of the Hessian matrix is continuous; since X is compact, there exists a
+positive uniform lower bound for the smallest eigenvalue of the Hessian matrix, leading to strong convexity.
+
+
+
+                                                        27
+                                                                            ¯ y)kθ(x) − θ∗ (x)k2 for kθ(x) −
+    We then consider the continuity condition |`(θ, x, y) − `(θ∗ , x, y)| ≤ `(x,
+ ∗                                                          ∗                                          ¯ Y (1))2 | X =
+θ (x)k2 <  for some sufficiently small  > 0, where kθ(x)−θ (x)k2 is the Euclidean norm, and supx∈X E[`(x,
+x, T = 1] < M for some constant M > 0. By Taylor expansion, we have
+
+                                 `(θ, x, y) − `(θ∗ , x, y) = ∇θ `(θ,
+                                                                  e x, y) θ∗ (x) − θ(x) ,
+                                                                                       
+
+
+where θ(x)
+      e    lies between θ(x) and θ∗ (x). We note that ∇θ is also a smooth function of θ, and the gradient is
+uniform bounded for θ(x) within a neighborhood of θ∗ (x) in terms of Euclidean L2 -norm. In particular,
+
+                    ∂                             y+b −1             ∂                         y+b
+                       `((a, b), x, y) = 1 − y+b
+                                              a   e −a    + ρ,           `((a, b), x, y) = 1 − e −a −1 .
+                    ∂a                                                ∂b
+For any k(a, b) − θ∗ (x)k2 ≤  for sufficiently small , we can take `(x,   ¯ y) as the uniform upper bound of the
+Euclidean norm of the gradient, which has finite second moment if Y (1) is not too heavy-tailed.
+    Finally, the last condition is that there exists a constant C1 such that E[`(θ, X, Y (1))−`(θ∗ , X, Y (1)) | T =
+1] ≤ C1 kθ − θ∗ k2L2 (P· | T =1 ) when θ ∈ Λpc (X ) × Λpc (X ) and kθ − θ∗ kL2 (P· | T =1 ) is sufficiently small. Similar to
+arguments in the proof of Theorem 1, sufficiently small kθ − θ∗ kL2 (P· | T =1 ) implies sufficiently small kθ − θ∗ k∞
+for this function class. Therefore, we can consider θ ∈ Λpc (X ) × Λpc (X ) such that kθ − θ∗ k∞ is sufficiently
+small. With a taylor expansion of the conditional expectation of the risk at (α∗ (x), η ∗ (x)), we have
+
+                      E `(θ, x, Y (1)) X = x, T = 1 − E `(θ∗ , x, Y (1)) X = x, T = 1
+                                                                                                
+
+                       = 1/2 · ∇2 E `(θ, e x, Y (1)) X = x, T = 1 [θ(x) − θ ∗ (x), θ(x) − θ∗ (x)]
+                                                                    
+                                 θ
+
+
+since the gradient is zero, where θ(x)
+                                  e    lies between θ(x) and θ∗ (x). Previous derivations have shown that the
+Hessian is continuous; also, by the compactness of X and continuity of θ∗ (x), there is a uniform lower bound
+ > 0 for α∗ (x). Thus, when kθ − θ∗ k∞ is sufficiently small, the Hessian is also bounded. Again by the
+compactness of X , this bound can be taken to be uniform for x ∈ X , which leads to the desired condition.
+
+χ2 -divergence. Another popular choice is f (x) = (x − 1)2 , so that f ∗ (y) = 41 ((y + 2)2+ − 1). The conjugate
+function is a quadratic function on [−2, ∞) and zero on (−∞, −2], with continuous gradient (f ∗ )0 (y) =
+( 2s + 1)+ , and second-order derivative (f ∗ )00 (y) = 21 1{y > −2}; the latter is almost-everywhere (under
+Lebesgue measure) except y = 2. We now proceed to verify the conditions. The loss function is
+
+                                            α(x) h y + η(x)    2  i
+                             `(θ, x, y) =                    + 1 − 1 + η(x) + α(x)ρ.
+                                             4       −α(x)       +
+
+Assuming Y (1) does not have point measure, the differentiation and expectation are exchangeable, and
+                                                    1 h        2                            i
+        ∇2a E `((a, b), x, Y (1)) X = x, T = 1 = 3 E Y (1) + b 1{ Y (1)+b
+                                             
+                                                                    −a     > −2} X = x, T = 1 ,
+                                                  2a
+         2
+                                                 1 h Y (1)+b                    i
+        ∇b E `((a, b), x, Y (1)) X = x, T = 1 =      E 1{ −a > −2} X = x, T = 1 ,
+                                                  2a
+                                                      1 h                                       i
+        ∇a,b E `((a, b), x, Y (1)) X = x, T = 1 = − 2 E Y (1) + b 1{ Y (1)+b
+         2
+                                                                
+                                                                       −a    > −2} X = x, T = 1 .
+                                                     2a
+Also, the gradient is given by
+                                          h            2                                       i
+ ∇a E `((a, b), x, Y (1)) X = x, T = 1 = E Y −2a
+                                              (1)+b
+                                                    + 1 + − 1 + Y (1)+b Y (1)+b
+                                                                               
+                                                                   a      −2a + 1 + X = x, T = 1 + ρ,
+                                            h                             i
+ ∇b E `((a, b), x, Y (1)) X = x, T = 1 = −E Y −2a
+                                                (1)+b
+                                                       
+                                                      + 1 + X = x, T = 1 + 1,
+
+which are both zero at (a, b) = (α∗ (x), η ∗ (x)). The form of the loss function implies that α∗ (x) > 0 for
+almost all x; hence there is a uniform lower bound  > 0 by the compactness of X . By Cauchy-Schwarz
+                                                                             ∗
+inequality, the Hessian at (a, b) = (α∗ (x), η ∗ (x)) is positive P( Y (1)+η
+                                                                       −α∗ (x)
+                                                                               (x)
+                                                                                   > −2 | X = x, T = 1) = 0 or
+                                     ∗
+(Y (1) + η ∗ (x) − c(x))1{ Y (1)+η
+                                −a
+                                   (x)
+                                       > −2} = 0 almost surely for some c(x) ∈ R. By the optimality condition,
+
+
+                                                             28
+the former is impossible, and the latter is also impossible if Y (1) is not deterministic conditional on X = x.
+Thus, as long as Y (1) | X = x is not deterministic for almost all x, the Hessian is positive definite for all
+x ∈ X . By compactness of X and the continuity, we know that the minimial eigenvalue of the Hessian is
+uniformly lower bounded away from zero, hence the strong convexity follows.
+   The other two conditions are easy to verify in this case: the conjugate function f ∗ is a truncation of a
+quadratic function. Since truncation is a contraction map, these results hold easily by the uniform bound-
+edness of second-order derivatives. We’ve thus verified the conditions in Assumption 2 for χ2 -divergence.
+
+Practical conderations. In practice, we might search for (α∗ (x), η ∗ (x)) within the function classes with
+a bounded range of coefficients in the two examples we give, leading to a compact function space. This is
+typically assumed in the contexts of M -estimators and sieve estimators (Van der Vaart, 2000; Geer et al.,
+2000; Chen and Shen, 1998; Chen, 2007). In this case, the regularity conditions are easier to verify given the
+uniform boundedness. The function space still provides finer and finer approximation to the targets if the
+bounded range enlarges properly with n.
+
+B.3     Estimators for bounds on counterfactual means
+In this section, we summarize the application of the procedure in Section 3.3 to estimate other lower and
+upper bounds on counterfactual means.
+
+(a) Upper bound of E[Y (1) | T = 0]: Let −b
+                                          µ+1,0 be the estimator obtained from the procedure in Section 3.3
+                                     √
+    with −Y (1) replacing Y (1). Then n(bµ1,0 − µ+
+                                          +
+                                                 1,0 )   N (0, Var(φ1,+ (X, Y, T ))), with influence function
+
+                                          Ti                                            1 − Ti
+                 φ1,+ (Xi , Yi , Ti ) =      r1,0 (Xi ) H1,+ (Xi , −Yi (1)) − h1,+ (Xi ) +       h1,+ (Xi ),
+                                          p1                                                p0
+                                     y+η ∗ (x) 
+    where H1,+ (x, y) = α1,+
+                          ∗                      ∗
+                             (x)f ∗ −α∗1,+(x) +η1,+       ∗
+                                                    (x)+α1,+  (x)ρ with (α1,+
+                                                                          ∗         ∗
+                                                                              (x), η1,+ (x)) being the minimizer
+                                        1,+
+            ∗ −Y (1)+η
+    of E[αf              + η + αρ | X = x, T = 1], and h1,+ (x) = E[H1,+ (X, −Y (1)) | X = x, T = 1].
+                       
+                −α
+
+(b) Lower bound of E[Y (0) | T = 1]: Let µ  b−0,1 be the estimator obtained from the procedure in Section 3.3
+                                                             √
+    switching the role of treated and control groups. Then n(b   µ−      −
+                                                                  0,1 − µ0,1 ) N (0, Var(φ0,− (X, Y, T ))) with
+    influence function
+                                           1 − Ti                                        Ti
+                  φ0,− (Xi , Yi , Ti ) =          r0,1 (Xi ) H0,− (X, Y (0)) − h0,− (Xi ) + h0,− (Xi ).
+                                             p0                                            p1
+                                   y+η ∗ (x) 
+    Here H0,− (x, y) = α0,−
+                         ∗                       ∗
+                            (x)f ∗ −α∗0,−(x) + η0,−         ∗
+                                                    (x) + α0,− (x)ρ, and (α0,−
+                                                                           ∗         ∗
+                                                                               (x), η0,− (x)) is the minimizer of
+                                      0,−
+         ∗ Y (0)+η
+                     + η + αρ | X = x, T = 0], and h0,− (x) = E[H0,− (X, Y (0)) | X = x, T = 0].
+                   
+    E[αf     −α
+
+(c) Upper bound of E[Y (0) | T = 1]: Let −b      0,1 be the estimator obtained from the procedure in Section 3.3
+                                                µ+
+                                                                                             √
+    switching the role of treated and control groups and replacing Y (0) with −Y (0). Then n(b   µ+      +
+                                                                                                   0,1 −µ0,1 )
+    N (0, Var(φ0,+ (X, Y, T ))) with influence function
+
+                                          1 − Ti                                            Ti
+                 φ0,+ (Xi , Yi , Ti ) =          r0,1 (Xi ) H0,+ (Xi , −Yi (0)) − h0,+ (Xi ) + h0,+ (Xi ),
+                                            p0                                                p1
+                                     y+η ∗ (x) 
+    where H0,+ (x, y) = α0,+
+                          ∗
+                             (x)f ∗ −α∗0,+(x) +η0,+
+                                                 ∗        ∗
+                                                    (x)+α0,+  (x)ρ with (α0,+
+                                                                          ∗         ∗
+                                                                              (x), η0,+ (x)) being the minimizer
+                                        0,+
+            ∗ −Y (0)+η
+    of E[αf              + η + αρ | X = x, T = 0], and h0,+ (x) = E[H0,+ (X, −Y (0)) | X = x, T = 0].
+                       
+                −α
+
+
+
+
+                                                             29
+C     Technical proofs
+C.1     Proof of Proposition 3
+Proof of Proposition 3. We first claim that solving (6) amounts to solving the following problem for each x:
+
+                                     min        E[Y (1)L(x) | X = x, T = 1]                                       (12)
+                              L(x) measurable
+
+                                            s.t. E[L(x) | X = x, T = 1] = r1,0 (x)
+                                                E[f (L(x)/r1,0 (x)) | X = x, T = 1] ≤ ρ.
+
+To be specific, denoting the optimal objective of (12) as µ(x) and that of (6) as µ−        1,0 , we are to show that
+µ−1,0 =  E[µ(X)  | T = 1]. To see why it is the case, suppose L∗
+                                                                 is the optimizer  of (6), then   it is measurable with
+                                                                                        ˙
+respect to X and Y (1) and satisfies the constraints of (6). Then L(x)(·) := L (x, ) is measurable with respect
+                                                                                   ∗
+
+to Y (1), and satisfy the constraints of (12). As a result, we have E[Y (1)L∗ (x, Y (1)) | X = x, T = 1] ≥ µ(x).
+Marginalizing over X yields µ−    1,0 = E[Y (1)L(X, Y (1)) | T = 1] ≥ E[µ(X) | T = 1]. On the other hand,
+suppose L∗ (x)(·) is measurable with respect to Y (1) and is the minimizer for (12) for PX | T =1 -almost all
+x. We let L(x, y) = L∗ (x)(y), so that it is measurable with respect to (X, Y (1)) and satisfy the constraints
+of (6). Thus we have E[L(X, Y (1))Y (1) | T = 1] = E[µ(X) | T = 1] ≥ µ−        1,0 . Combining the two directions
+leads to the equivalence.
+     In the following, we solve (12) and write Ex in place of E[· | X = x, T = 1] for simplicity. Invoking Luen-
+berger (1997, Theorem 8.6.1) to this convex problem, we have
+
+                                      min              Ex [Y (1)L(x)] = max    ϕ(α, η, x),
+                                  Ex [L]=r1,0 (x),                   α≥0,η∈R
+                             Ex [f (L/r1,0 (X))]−ρ≤0
+
+where the Slater’s condition is satisfied and strong duality holds, and
+
+                  ϕ(α, η, x) =        inf         L(α, η, L, x),
+                                 L≥0 measurable
+                                                                                                 
+                  L(α, η, L, x) = Ex [Y (1)L(x)] + ηEx [L − r1,0 (x)] + α Ex [f (L/r1,0 (x))] − ρ .
+
+The minimum of L(α, η, L, x) is thus given by
+                                                                                
+                                                                             
+                ϕ(α, η, x) = Ex min Y (1)z + ηz − ηr1,0 (x) + αf z/r1,0 (x) − αρ
+                                    z≥0
+                                                                             
+                                         ∗ r1,0 (x)
+                                                            
+                            = Ex − αf               Y (1) + η − ηr1,0 (x) − αρ .
+                                             −α
+
+Now we write α(x) and η(x) to emphasize its dependency on x. Therefore, by the equivalence discussed in
+the beginning, we have
+                                  h                                      i
+                          µ−
+                                                                  
+                           1,0 = E      max        ϕ α(X), η(X), X T = 1
+                                    α(X)≥0,η(X)∈R
+                                  h                           i
+                               = E ϕ α∗ (X), η ∗ (X), X T = 1 ,
+                                                       
+
+
+where for PX | T =1 -almost all x,
+                                             r (x)                                        
+                                                1,0           
+           α∗ (x), η ∗ (x) ∈ argmax E − αf ∗
+                          
+                                                     Y (1) + η − ηr1,0 (x) − αρ X = x, T = 1 .
+                             α≥0,η∈R             −α
+
+With a change-of-variable from α(x) to α(x)r1,0 (x), we have
+                                                                                                     
+                                                   ∗ Y (1) + η
+                                                              
+     ∗               ∗
+                         
+    α (x)/r1,0 (x), η (x) ∈ argmax E − αr1,0 (x)f                − ηr1,0 (x) − αr1,0 (x)ρ X = x, T = 1 .
+                            α≥0,η∈R                      −α
+
+
+                                                             30
+The minimum of (6) can thus be written as
+                                                    ∗
+                                                                                
+                                         ∗ Y (1) + η (X)
+                               n                                         o
+               −                  ∗                           ∗       ∗
+             µ1,0 = −E r1,0 (x) α (X)f                     + η (X) + α (X)ρ T = 1 ,
+                                              −α∗ (X)
+
+where for PX | T =1 -almost all x, it holds that
+                                                      Y (1) + η                       
+                      α∗ (x), η ∗ (x) ∈ argmin E αf ∗
+                                     
+                                                                    + η + αρ X = x, T = 1 .
+                                        α≥0,η∈R            −α
+
+Therefore, we complete the proof of Proposition 3.
+
+C.2     Proof of convergence of sieve estimator
+                                                                                                (j)
+Proof of Theorem 1. We analyze the behavior of θb(j) for each fold j. As |I1 |  n, we take the generic
+notation of θb and sample size n, so that
+
+                                              b n `(θ, X, Y (1)) − OP (( log n )2p/(2p+d) ),
+                                                             
+                            b X, Y (1)) ≥ inf E
+                      b n `(θ,
+                      E
+                                         θ∈Θn                              n
+
+where (Xi , Yi ) ∼ PX,Y (1) | T =1 are i.i.d. data. For some fixed b > 0, we denote the sequence
+                                                  Z δ q                                                            
+                                            1
+                 δn := inf δ ∈ (0, 1) : √                  log N (1+d/2p , Θ   n , k · kL2 (P· | T =1 ) ) d ≤ 1       ,
+                                            nδ 2   bδ 2
+
+where N (, Θn , k · kL2 (P· | T =1 ) ) is the -covering number of Θn in the L2 -norm under P· | T =1 . We employ the
+established convergence results for sieve estimators adapted from Chen (2007, Theorem 3.2) and Yadlowsky
+et al. (2018, Lemma B.3), stated in Lemma 2.
+Lemma 2. Let θ∗ ∈ Θ be a population risk minimizer. Supose there exists constants c1 , c2 > 0 such that
+c1 E[`(θ, X, Y )−`(θ∗ , X, Y )] ≤ d(θ, θ∗ )2 ≤ c2 E[`(θ, X, Y )−`(θ∗ , X, Y )] for θ in a neighborhood of θ∗ . Suppose
+the following conditions hold:
+ (i) For sufficiently small  > 0, Var(`(θ, X, Y ) − `(θ∗ , X, Y )) ≤ C1 2 for all θ ∈ Θn such that d(θ, θ∗ ) ≤ .
+ (ii) For any δ > 0, there exists a constant s ∈ (0, 2) and a measurable function Un (·) such that supn E[Un (X, Y )2 ] ≤
+      C3 and supθ∈Θn : d(θ,θ∗ )≤δ |`(θ, X, Y ) − `(θ∗ , X, Y )| ≤ δ s Un (X, Y ) for constant C3 > 0.
+
+Then d(θbn − θ∗ ) = OP (max{δn , inf θ0 ∈Θn d(θ0 , θ∗ )).
+    We define the distance as L2 -norm d(θ, θ0 ) = kθ − θ0 kL2 (P) , and verify the conditions in Lemma 2. We
+define Θ = Λpc (X ) × Λpc (X ) without truncation. The upper bound                            , X, Y ) | T = ∗1] is
+                                                                           E[`(θ, X, Y ) − `(θ ∗
+
+directly implied by Assumption 2. By the λ-strong convexity of E `((a, b), x, Y ) X = x is at (a, b) = θ (x),
+                                                                      
+
+                                                                                       2
+                    E `(θ(x), x, Y ) X = x − E `(θ∗ (x), x, Y ) X = x ≥ λ θ(x) − θ∗ (x) .
+                                                                  
+
+
+Integrating over X yields E[`(θ(X), X, Y )] − `(θ∗ (X), X, Y )] ≥ c00 d(θ, θ∗ ) for some constant c00 > 0.
+                                              
+
+    We then check condition (i). By the positive density condition, we have k · kL2 (λ)  k · kL2 (P) . Hence kθ −
+                                                                                                                            2p/(2p+d)
+θ∗ k∞ = o(1) once kθ − θ∗ kL2 (P) = o(1). By Lemma 2 of Chen and Shen (1998), we have kθk∞ . kθkL2 (λ)
+for any θ ∈ Θ, where λ is the Lebesgue measure. Therefore, sufficiently small kθ −θ∗ kL2 (P) implies sufficiently
+                                                                                          ¯ y)(θ(x) − θ∗ (x)) where
+small kθ − θ∗ k∞ . Since for kθ − θ∗ k∞ sufficiently small, |`(θ, x, y) − `(θ∗ , x, y)| ≤ `(x,
+   ¯ Y ) | X = x] ≤ M for all x, we have
+E[`(x,    2
+
+
+        Var `(θ, X, Y ) − `(θ∗ , X, Y ) ≤ E |`(θ, x, y) − `(θ∗ , x, y)|2 ≤ M E θ(X) − θ∗ (X))2 ≤ M 2
+                                                                                              
+
+
+
+
+                                                             31
+for all θ ∈ Θn such that d(θ, θ∗ ) ≤  for sufficiently small  > 0. Condition (ii) follows from the same argument
+                      ¯ y). Therefore, applying Lemma 2 we have kθbn −θ∗ kL (P) = OP (max{δn , inf θ0 ∈Θ d(θ0 , θ∗ )}).
+by taking Un (x, y) = `(x,                                                          2                         n
+Here according to Chen and Shen (1998) and Geer et al. (2000), we have
+                                                                             1
+                                    log N , Θηn , k · k2,P ) . dim(Θηn ) log ,
+                                                                             
+where dim(Θηn ) = Jnp . Since truncation is a contraction map, the covering number of Θα
+                                                                                       n is upper bounded
+by the above quantity. As a result, we have
+                                                                         1
+                                       log N , Θn , k · k2,P ) . Jnp log .
+                                                                         
+Similar to the results in Yadlowsky et al. (2018), we have
+                                                    r
+                                                      Jnd log n
+                                              δn               .
+                                                          n
+We finally bound the approximation error using Θn . Note that we take Θn to be truncated at . However,
+since the population minimizer θ∗ is uniformly bounded above , since truncation is a contraction map,
+we have inf θ∈Θn kθ − θ∗ kL2 (P) ≤ inf θ∈Θηn ×Θηn kθ − θ∗ kL2 (P) ≤ O(Jnp ), where the last inequality is a well-
+established result, see, e.g., Timan (2014). We now set Jn = (n/ log n)1/(2p+d) , so that kθb − θ∗ kL2 (P) =
+OP ((log n/n)p/(2p+d) ). This completes our proof.
+
+C.3     Proof of Theorem 2
+Proof of Theorem 2. We consider the general scenario where (b α(j) , ηb(j) ) converges in sup-norm to some fixed
+                            (j) P
+(α , η ), and show that −b
+    
+                          µ1,0 → E[r(X)`(θ (X), X, Y (1) | T = 1] for any fixed j, where the risk function `
+                                            
+
+is defined in Proposition 3. In the following, we drop the dependency on j for notational convenience; we
+are to show that with estimators rb, H
+                                     b and bh that are independent of I1 and I0 ,
+              1 X                                 1 Xb        P
+                                                       h(Xi ) → E r(X)`(θ (X), X, Y (1)) T = 1 .           (13)
+                                                                                             
+      µ
+      b :=                 b i , Yi ) − b
+                   rb(Xi ) H(X          h(Xi ) +
+             |I1 |                               |I0 |
+                 i∈I1                                    i∈I0
+
+
+Therefore, if θ = θ∗ , we have µb1,0 = µ−                     −
+                                           1,0 + oP (1) since µ1,0 = −E r(X)`(θ
+                                                                                  ∗
+                                                                                    (X), X, Y (1)) T = 1 by
+                                                                                                           
+
+Proposition 3. Otherwise, since E r(X)`(θ∗ (X), X, Y (1)) T = 1 ≤ E r(X)`(θ (X), X, Y (1)) T = 1 ,
+                                                                                                            
+                                           P
+we have the one-sided validity that µ b1,0 → −E r(X)`(θ (X), X, Y (1)) T = 1 ≤ µ−     1,0 , i.e., our estimator
+                                                                                
+
+converges to a valid lower bound.
+   It thus remains to show (13). We prove the results when either rb or bh is consistent.
+
+Consistent rb. We first show the case where rb is consistent for r1,0 , but not necessarily the regression
+function b
+         h. Recall that H(x,
+                        b    y) = `(θ(x),
+                                    b     x, y). Note that
+       1 X                                         1 X                               1 Xb
+ µ
+ b=         rb(Xi ) − r(Xi ) H(X
+                              b i , Yi ) − b
+                                           h(Xi ) +              b i , Yi ) − b
+                                                          r(Xi ) H(X          h(Xi ) +       h(Xi ).
+      |I1 |                                         |I1 |                              |I0 |
+          i∈I1                                                  i∈I1                                i∈I0
+
+The first summation can be controlled as (where the expectation is implicitly conditional on other folds
+         (j)    (j)
+except I0 ∪ I1 )
+                                                                     
+              1 X                                                 2
+        E               rb(Xi ) − r1,0 (Xi ) H(X
+                                              b i , Yi ) − b
+                                                           h(Xi )
+             |I1 |
+                   i∈I1
+             h                     2                       2      i
+         ≤ E rb(Xi ) − r1,0 (Xi ) E H(Xi , Yi ) − h(Xi )
+                                          b            b                   r − r1,0 k2L2 (PX | T =1 ) = oP (1).
+                                                                 Xi ≤ M · kb
+
+
+
+                                                        32
+Invoking Lemma 3, we can drop the conditioning and the first summation is oP (1). On the other hand,
+since the covariate shift between PX | T =1 and PX | T =0 is exactly r1,0 , we know that E[bh(X)r(X) | T = 1] =
+E[h(X) | T = 0], where we still implicitly condition on other folds. As a result,
+  b
+             1 X                           1 Xb
+         −            r1,0 (Xi )b
+                                h(Xi ) +             h(Xi )
+           |I1 |                          |I0 |
+                 i∈I1                           i∈I0
+                1 X                                               1 X b                         
+         =−                         h(Xi ) − E b
+                          r1,0 (Xi )b            h(X)r(X) T = 1 +              h(Xi ) − E r(X) T = 0 ,
+              |I1 |                                                |I0 |
+                     i∈I1                                                   i∈I0
+
+where both terms are unbiased. Thus by Cauchy-Schwarz inequality,
+                                                              2 
+                          1 X                        1 Xb
+                  E −            r1,0 (Xi )b
+                                           h(Xi ) +       h(Xi )
+                         |I1 |                      |I0 |
+                                        i∈I1                        i∈I0
+                           2                             2                  
+                        ≤       Var r1,0 (X)b
+                                            h(X) T = 1 +       Var b
+                                                                   h(X) T = 0 = oP (1)
+                          |I1 |                          |I0 |
+
+invoking the assumption that b     h as finite second moment. Drop the conditioning by Lemma 3, we know that
+this summation is also oP (1), hence
+         1 X
+   µ
+   b=              r(Xi )H(X
+                          b i , Yi ) + oP (1)
+        |I1 |
+              i∈I1
+         1 X                                     1 X
+                   r(Xi )` θ (Xi ), Xi , Yi +                      b i ), Xi , Yi − ` θ (Xi ), Xi , Yi + oP (1)
+                                                                                                     
+      =                                                    r(Xi ) ` θ(X
+        |I1 |                                   |I1 |
+              i∈I1                                    i∈I1
+                                                      1 X
+      = E r(Xi )`(θ (X), X, Y (1)) T = 1 +                            b i ), Xi , Yi − ` θ (Xi ), Xi , Yi + oP (1).
+                                                                                                       
+                                                              r(Xi ) ` θ(X
+                                                    |I1 |
+                                                        i∈I1
+
+Finally, once kθb − θ ∞,P              = oP (1), by the local expansion around θ (x), we have
+                             X | T =1
+
+
+                          b i ), Xi , Yi − ` θ (Xi ), Xi , Yi ≤ M (Xi , Yi ) θ(X
+                                                                              b i ) − θ (Xi ) ,
+                                                             
+                        ` θ(X                                                                  2
+
+hence (implicitly conditioning on other folds) we have
+                                                                                         
+                              1 X                                   
+                                                                                       2
+                         E              r(Xi ) ` θ(Xi ), Xi , Yi − ` θ (Xi ), Xi , Yi
+                                                 b
+                             |I1 |
+                                   i∈I1
+                             h                                            i
+                         ≤ E r(X)2 M (X, Y (1))2 θ(X b i ) − θ (Xi ) 2 = oP (1)
+                                                                        2
+
+since E[M (X, Y (1))2 | T = 1] ≤ M for some constant M > 0. We’ve thus completed the proof of (13).
+
+Consistent b       h. We then show the results when b    h is consistent, but not necessarily rb. In this case, kb
+                                                                                                                 h−
+h̄kL2 (PX | T =1 ) = oP (1), where h̄ = E[H(X, Y (1)) | X = x, T = 1] viewing H as fixed. Note that
+                                          b                                     b
+
+               1 X          b i , Yi ) − h̄(Xi ) + 1
+                                                       X                            1 Xb
+         µ
+         b=         rb(Xi ) H(X                           rb(Xi ) h̄(Xi ) − b
+                                                                            h(Xi ) +       h(Xi ).
+              |I1 |                               |I1 |                              |I0 |
+                     i∈I1                                       i∈I1                               i∈I0
+
+The first summation is unbiased conditional on other folds, hence
+                                                 
+           1 X                                 2      1                                        
+    E           rb(Xi ) H(Xi , Yi ) − h̄(Xi )
+                        b                            =       Var rb(X){H(X,
+                                                                       b    Y (1)) − h̄(X)} T = 1 = oP (1)
+         |I1 |                                         |I1 |
+              i∈I1
+
+due to the finite second moments. By Cauchy-Schwarz inequality, the second summation satisfies
+                                                    
+                           1 X                    2                   2
+                     E           h̄(Xi ) − b
+                                           h(Xi )       ≤ rb · (b
+                                                                h − h̄) L2 (P            = oP (1)
+                          |I1 |                                               X | T =1 )
+                                 i∈I1
+
+
+
+                                                               33
+                                                                            h(Xi ) = oP (1). Consequently,
+due to the boundedness of rb. Similarly, we know that |I10 | i∈I0 h̄(Xi ) − b
+                                                            P
+
+invoking Lemma 3 we drop the implicit conditioning and arrive at
+                                         1 X                      
+                                µ
+                                b=            h̄(Xi ) + oP (1) = E h̄(X) | T = 0] + oP (1)
+                                        |I0 |
+                                            i∈I0
+
+
+further using the finite second moment of h̄ (or H),b where we implicitly condition on other folds and view b   h
+as fixed. Finally, denoting h (x) = E[`(θ (x), x, Y (1)) | X = x, T = 1], we note that by Jensen’s inequality,
+                                 2                                                                2
+E h̄(X) | T = 0] − E h (X) T = 0 ≤ kh̄ − h k2L2 (PX | T =0 ) ≤ H(X, Y (1)) − `(θ (X), X, Y (1)) L (P
+                   
+                                                                 b                                                                         .
+                                                                                                                          2   · | T =0 )
+
+
+By the same argument as the previous case and due to the uniform boundedness of the covariate shift r1,0 (·),
+the above term is oP (1). Therefore, by the change-of-measure with r1,0 , we have
+
+b = E h (X) | T = 0] + oP (1) = E r(X)h (X) | T = 1] + oP (1) = E r(X)`(θ (X), X, Y (1)) T = 1 + oP (1)
+                                                                                              
+µ
+
+by the tower property of conditional expectations. We thus complete the proof of two cases and conclude
+the proof of Theorem 2.
+
+C.4     Proof of Theorem 3
+                                                      (j)    ∗,(j)       √
+Proof of Theorem 3. We show that for each j, we have µ      b1,0 + oP (1/ n), where
+                                                     b1,0 = µ
+
+                         ∗(j)       1     X                                                1     X
+                       µ
+                       b1,0 =       (j)
+                                                r1,0 (Xi ) H(Xi , Yi ) − h(Xi )       +     (j)
+                                                                                                          h(Xi ),
+                                  |I1 |     (j)                                           |I0 |     (j)
+                                        i∈I  1                                                  i∈I 0
+
+
+and we define
+                                   y + η ∗ (x) 
+         H(x, y) = α∗ (x)f ∗                        + η ∗ (x) + α∗ (x)ρ,
+                                                                                                             
+                                                                             h(x) = E H(X, Y (1)) X = x, T = 1 .
+                                     −α∗ (x)
+                                                                                                                    (j)       (j)
+We show this result for any j; we implicitly condition on all the remaining folds other than I1 and I0 , so
+                                                                                                      (j)        (j)
+that all nuisance components are viewed as fixed. To simplify notations, we write I1 := I1 , I0 := I0 and
+r := r1,0 , rb := rb(j) , b    h(j) , H
+                          h := b           b (j) , h̄ := h̄(j) . We also represent the parameters (functionals) with
+                                      b := H
+
+                                               b(j) (·), ηb(j) (·) ,          θ∗ (·) := α∗ (·), η ∗ (·) ,
+                                                                                                     
+                           θ(·)
+                           b = αb(·), ηb(·) := α
+
+and recall the generic function (where θ = (α(·), η(·)))
+                                                              y + η(x) 
+                                      `(θ, x, y) = α(x)f ∗                   + η(x) + α(x)ρ,
+                                                                −α(x)
+
+so that H(x, y) = `(θ∗ , x, y) and H(x,
+                                   b           b x, y). By definition, we have the decomposition
+                                        y) = `(θ,
+
+ (j)    ∗(j)      1 Xh                                                                      i    1 X b                    
+b1,0 − µ
+µ      b1,0 =                          b i , Yi ) − b
+                              rb(Xi ) H(X           h(Xi ) − r(Xi ) H(Xi , Yi ) − h(Xi ) +                   h(Xi ) − h(Xi )
+                 |I1 |                                                                            |I0 |
+                       i∈I1                                                                             i∈I0
+                  1 X                                         
+                                      b i , Yi ) − H(Xi , Yi ) −     1    X                                     
+               =             r(Xi ) H(X                                        rb(Xi ) − r(Xi ) bh(Xi ) − h̄(Xi )
+                 |I1 |                                              |I1 |
+                       i∈I1                                               i∈I1
+                         1   X                                              
+                   +               rb(Xi ) − r(Xi ) H(X
+                                                      b i , Yi ) − h̄(Xi )
+                       |I1 |
+                             i∈I1
+                         1 X                                   1 X b                      
+                   −              r(Xi ) bh(Xi ) − h(Xi ) +                 h(Xi ) − h(Xi ) .
+                       |I1 |                                   |I0 |
+                           i∈I1                                       i∈I0
+
+
+
+                                                                 34
+In the following, we are to bound the several summations sparately. Firstly, by Cauchy-Schwarz inequality,
+                                                    s                                  s
+     1 X                                             1 X                          2    1 X b                      2
+               rb(Xi ) − r(Xi ) h(Xi ) − h̄(Xi ) ≤
+                                 b                               rb(Xi ) − r(Xi )                    h(Xi ) − h̄(Xi )
+    |I1 |                                             |I1 |                              |I1 |
+          i∈I1                                              i∈I1                               i∈I1
+                                                                                                                √
+                                                  = OP kb r − rkL2 (PX | T =1 ) · kh − hkL2 (PX | T =1 ) = oP (1/ n)
+                                                                                   b
+
+under the given convergence rate of the product. Since h̄(x) = E H(X,    Y (1)) | X = x, T = 1] for the fixed
+                                                                   
+                                                                     b
+function H, the term rb(Xi ) − r(Xi ) H(Xi , Yi ) − h̄(Xi ) has mean zero, hence by Markov’s inequality,
+                                                          
+            b                           b
+
+       1 X                                                                                           √ 
+                                                       q
+                                              
+              rb(Xi ) − r(Xi ) h(Xi ) − h̄(Xi ) = OP
+                                b                            r(Xi ) − r(Xi ))(H(X
+                                                         Var(b                b i , Yi ) − h̄(Xi )))/ n ,
+      |I1 |
+          i∈I1
+                                                   √
+where by the consistency of rb, this term is oP (1/ n). Furthermore, note that
+                      1 X                                    1 X b                    
+                                r(Xi ) b h(Xi ) − h(Xi ) −              h(Xi ) − h(Xi )
+                     |I1 |                                   |I0 |
+                           i∈I1                                    i∈I0
+                           1   X                                                         
+                      =                       h(Xi ) − h(Xi ) − E r(X)(b
+                                       r(Xi ) b                           h(X) − h(X)) T = 1
+                         |I1 |
+                               i∈I1
+                                 1 X b
+                                                                                                                  (14)
+                                                                                         
+                            −              h(Xi ) − h(Xi ) − E[bh(Xi ) − h(Xi ) | T = 0] ,
+                               |I0 |
+                                  i∈I0
+
+where we use the equivalence of the two expectations: this is because there is a covariate shift r(X) from
+PX | T =1 to PX | T =0 , hence E[φ(X)r(X) | T = 1] = E[φ(X) | X = 0] for any integrable function φ : X → R.
+The two summations in (14) is thus both unbiased, indicating
+             1 X                                1 X b                       
+                              h(Xi ) − h(Xi ) −
+                       r(Xi ) b                              h(Xi ) − h(Xi )
+            |I1 |                               |I0 |
+                  i∈I1                                i∈I0
+                     q                                          q
+                                                                                                         
+             = OP       Var(r(X)(bh(X) − h(X)) | T = 1)/n + Var(r(X)(b         h(X) − h(X)) | T = 0)/n
+                                                           √                             √         √
+             = OP kr(X)(b    h(X) − h(X))kL2 (PX | T =1 ) / n + kbh − hkL2 (PX | T =0 ) / n = oP (1/ n),
+
+where the last equality follows from the L2 -consistency of b
+                                                            h to h̄ and the fact that kh̄ − hkL2 (PX | T =1 ) by the
+stability of the conditional expectations induced by the stability of g in Assumption 4. Finally, we turn to
+                                          1 X                                 
+                                                      b i , Yi ) − H(Xi , Yi ) .
+                                               r(Xi ) H(X
+                                         |I1 |
+                                             i∈I1
+
+Since `(θ, x, y) is a convex function in θ for any (x, y), for any (PX | T =1 -almost all) x,
+                                                                                    
+                                                    ∗ Y (1) + η(x)
+                                                                  
+           E `(θ, x, y) X = x, T = 1 = α(x)E f                        X = x, T = 1 + η(x) + α(x)ρ
+                                                          −α(x)
+is also convex and differentiable by the given regularity condition. In particular, by the optimality of
+(α∗ (x), η ∗ (x)) for the per-x minimization problem and the exchangeability of differentiation and expectation,
+
+         ∇θ E `(θ, x, Y (1)) X = x, T = 1 θ=(α∗ (x),η∗ (x)) = E ∇θ `(θ∗ (x), x, Y (1)) X = x, T = 1 = 0.
+                                                                                                
+
+
+Multiplying r(X) and integrating over X | T = 1, we know that
+
+                        E r(X)∇θ `(θ∗ (X), X, Y (1))[θ(X) − θ∗ (X)] T = 1 = 0.                                    (15)
+                                                                        
+                                                     b
+
+By Lemma 2 of Chen and Shen (1998), when both θb and θ∗ is smooth enough, sufficiently small kθb− θ∗ kL2 (P)
+implies sufficiently small kθb − θ∗ k∞ . As a result, when kθ(x)
+                                                            b − θ∗ (x)kL (P
+                                                                        2   · | T =1 )
+                                                                                       is sufficiently small, by the
+
+
+                                                           35
+condition that `(θ,
+                  b x, y) − `(θ∗ , x, y) − ∇θ `(θ∗ (x), x, y)[θ∗ (x) − θ(x)]
+                                                                       b                  b − θ∗ (x)k2 as well as
+                                                                             ≤ M (x, y)kθ(x)         2
+Jensen’s inequality, we have
+                                              
+        E H(X,
+            b    Y (1)) − H(X, Y (1)) T = 1
+              h    n                                                                            o      i
+                       b X, Y (1) − ` θ∗ , X, Y (1) − ∇θ ` θ∗ (X), X, Y (1) θ(X)      − θ∗ (X)
+                                                                             
+        = E r(X) ` θ,                                                             b                T =1
+             h                                                                                        i
+                      b X, Y (1) − ` θ∗ , X, Y (1) − ∇θ ` θ∗ (X), X, Y (1) θ(X)     − θ∗ (X) T = 1
+                                                                                          
+        ≤ E r(X) ` θ,                                                           b
+
+                                        − θ∗ (X)k22 T = 1 = M · kr(θb − θ)k2L2 (PX | T =0 ) .
+                                                           
+        ≤ E r(X)M (X, Y (1))kθ(X)
+                                b
+
+Returning to our problem, we note that due to unbiasedness,
+              1 Xh                                        
+                               b i , Yi ) − H(Xi , Yi ) − E H(X,
+                                                                                               i
+                        r(Xi ) H(X                           b       Y (1)) − H(X, Y (1)) T = 1
+             |I1 |
+                   i∈I1
+                                                                       √ 
+              = OP kr(X)H(X,b    Y (1)) − H(X, Y (1))kL2 (PX | T =1 ) / n ,
+where by the given conditions, we have
+                          Y (1)) − H(X, Y (1))kL2 (PX | T =1 ) = O kθb − θ∗ kL2 (PX | T =1 ) = oP (1).
+                                                                                            
+                kr(X)H(X,
+                     b
+
+As a result, we have
+           1 X                                            √                                       √
+                         b i , Yi ) − H(Xi , Yi ) ≤ oP (1/ n) + M kθb − θk2
+                                                 
+                  r(Xi ) H(X                                              L2 (PX | T =0 ) = oP (1/ n).
+          |I1 |
+               i∈I1
+                                                              (j)     ∗,(j)       √
+Putting these pieces together, we conclude the proof of µ    b1,0 = µb1,0 + oP (1/ n) for each j. Therefore,
+averaging over the three folds, we have
+                         √ X                                              √n X
+     √     −      −
+                          n                                         −                            √
+       n µb1,0 − µ1,0 =            r1,0 (Xi ) H(Xi , Yi ) − h(Xi ) − µ1,0 +         h(Xi ) + oP (1/ n),
+                          n1                                                 n0
+                                Ti =1                                                  Ti =0
+
+which, by CLT and Slutsky’s theorem, converges in distribution to N (0, σ ). Here n1 is the total number of
+                                                                                  2
+
+treated samples, and n0 is the number of control samples. The asymptotic variance is
+                     1                                             1
+               σ2 =
+                                                                                         
+                        Var r1,0 (X) H(X, Y (1)) − h(X) T = 1 +          Var h(X) | T = 0 .
+                     p1                                              p0
+where p1 = P(T = 1), p0 = P(T = 0) and all the expectations (variances) are induced by the observed
+distribution.
+                                                                                             p         p
+    It now remains to show that σ       b2 → σ 2 inPthe definition of Theorem     3. As pb1 →Pp1 , pb0 → p0 , by the
+                                                                                                                  law of
+large numbers, it suffices to show that n1 i∈I1 d1,i − (d1,i ) = oP (1) and n1 i∈I1 d1,i − d∗1,i = oP (1)
+                                                1                    ∗ 2                   1
+                                                            2
+                                                                         
+
+and similar for (d0,i , d∗0,i ), where we define the oracle counterparts
+                                  d∗1,i = r1,0 (Xi ) H(Xi , Yi ) − h(Xi ) , d∗0,i = h(Xi ).
+                                                                         
+
+By Cauchy-Schwarz inequality,
+        1 X 2                       1 X                 2  1 X
+                d1,i − (d∗1,i )2 =          d1,i − d∗1,i +           2 d1,i − d∗1,i d∗1,i
+                                                                                  
+        n1                          n1                      n1
+           i∈I1                        i∈I1                     i∈I1
+                                                            s                             s
+                                    1  X                  2    1 X                   2     1 X ∗ 2
+                                            d1,i − d∗1,i +              d1,i − d∗1,i ·
+                                                        
+                                  ≤                                                             d1,i .
+                                    n1                         n1                           n1
+                                          i∈I1                        i∈I1                       i∈I1
+
+                                        (j)
+Focusing on the summatin within I1 , we have
+                 1   X
+                                  ∗ 2
+                                            
+                                                 (j) b (j)     (j)                  2
+                                                                                                    
+                 (j)
+                          d1,i − d1,i   = OP   r
+                                               b    (H     − h
+                                                             b     ) − r1,0 (H − h) L2 (P· | T =1 )
+                                                                                                      ,
+               |I1 |  (j)
+                        i∈I1
+
+where the right-handed side is oP (1) under the conditions of Theorem 3. Other folds and other summation
+                                         P
+terms follow similar arguments hence σb2 → σ 2 . By Slutsky’s lemma, we conclude the proof of Theorem 3.
+
+
+                                                           36
+C.5     Proof of Theorem 4
+Proof of Theorem 4. The proof follows exactly the same arguments as the proof of Theorem 3 with θ in
+place of θ∗ , where all the errors are controlled in the same way; the only difference is to show that
+
+                              E r(X)∇θ ` θ (X), X, Y (1) [θ(X) − θ (X)] T = 1
+                                                                                
+                                                             b
+
+in parallel with (15) in the proof of Theorem 3. We note that this is directly implied by our local condition.
+Therefore, under the conditions of Theorem 4,
+                                1 X                                           1 X 
+                     b−             r1,0 (Xi ) H  (Xi , Yi (1)) − h (Xi ) −
+                                                                          
+                     µ1,0 = −                                                    h (Xi ).
+                                n1                                            n0
+                                  i∈I1                                          i∈I0
+
+The terms in the summation has expectation
+
+                              µ1,0 := −E r1,0 (Xi )H  (Xi , Yi (1)) T = 1 .
+                                                                          
+
+
+Since α∗ (x), η ∗ (x) is the per-x minimizer of E[`(θ, X, Y (1)) | X = x, T = 1], we have
+
+                         E H  (Xi , Yi (1)) X = x, T = 1 ≥ E H(Xi , Yi (1)) X = x, T = 1
+                                                                                       
+
+
+for PX | T =1 -almost all x, hence by tower property, we have µ1,0 ≤ µ−
+                                                                       1,0 . On the other hand, the consistency of
+b2 to Var(φ1,− (X, Y, T )) also follows the same arguments as the proof of Theorem 3 with θ , which concludes
+σ
+our proof of Theorem 4.
+
+
+D     Technical lemmas
+Lemma 3. Let Fn be a sequence of σ-algebra, and let An ≥ 0 be a sequence of nonnegative random variables.
+If E[An | Fn ] = oP (1), then An = oP (1).
+Proof of Lemma 3. By Markov’s inequality, for any  > 0, we have
+
+                                                            E[An | Fn ]
+                                  Bn := P(An >  | Fn ) ≤               = oP (1),
+                                                                
+                                                                                                 P
+and Bn ∈ [0, 1] are bounded random variables. For any subsequence {nk }k≥1 of N, since Bnk →0, there exists
+                                                   a.s.
+a subsequence {nki }i≥1 ⊂ {nk }k≥1 such that Bnki → 0 as i → ∞. By the dominated convergence theorem,
+we have E[Bnki ] → 0, or equivalently, P(Anki > ) → 0. Therefore, for any subsequence {nk }k≥1 of N, there
+                                                            P
+exists a subsequence {nki }i≥1 ⊂ {nk }k≥1 such that Anki →0 as i → ∞. By the arbitrariness of {nk }k≥1 , we
+         P
+know An →0 as n → ∞, which completes the proof.
+
+
+
+
+                                                       37
+

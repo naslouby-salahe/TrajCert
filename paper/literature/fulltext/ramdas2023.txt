@@ -1,0 +1,1700 @@
+                                           Submitted to Statistical Science
+
+
+
+
+                                           Game-Theoretic Statistics and
+                                           Safe Anytime-Valid Inference
+                                           Aaditya Ramdas, Peter Grünwald, Vladimir Vovk and Glenn Shafer
+
+
+                                                                              Abstract. Safe anytime-valid inference (SAVI) provides measures of statisti-
+                                                                              cal evidence and certainty—e-processes for testing and confidence sequences
+arXiv:2210.01948v2 [math.ST] 17 Jun 2023
+
+
+
+
+                                                                              for estimation—that remain valid at all stopping times, accommodating con-
+                                                                              tinuous monitoring and analysis of accumulating data and optional stopping
+                                                                              or continuation for any reason. These measures crucially rely on test martin-
+                                                                              gales, which are nonnegative martingales starting at one. Since a test mar-
+                                                                              tingale is the wealth process of a player in a betting game, SAVI centrally
+                                                                              employs game-theoretic intuition, language and mathematics. We summa-
+                                                                              rize the SAVI goals and philosophy, and report recent advances in testing
+                                                                              composite hypotheses and estimating functionals in nonparametric settings.
+                                                                              Key words and phrases: Test martingales, Ville’s inequality, universal in-
+                                                                              ference, reverse information projection, e-process, optional stopping, con-
+                                                                              fidence sequence, nonparametric composite hypothesis testing.
+
+                                                                          1. INTRODUCTION                                   subjects run, then 10, then 7, then 5. Back then
+                                                                                                                            this did not seem like p-hacking. It seemed like
+                                              Stop when you are ahead. Increase your bet to make up
+                                                                                                                            saving money (assuming your effect size was
+                                           ground when you are behind. This is called martingaling
+                                                                                                                            big enough and p-value was the only issue).
+                                           in the casino. It often succeeds in the short or medium
+                                           term, leading novice gamblers to think they can beat the                    Ten years ago, an anonymous survey of over 2000 psy-
+                                           odds and day traders to think they can beat the market                      chologists found 56% admitting to “deciding whether to
+                                           (Dimitrov, Shafer and Zhang, 2022). The same delusion                       collect more data after looking to see whether the results
+                                           arises in science, where sampling until a significant result                were significant” (John, Loewenstein and Prelec, 2012).
+                                           is obtained is an important source of irreproducibility.                      Bayesian inference with a prior defined by a statisti-
+                                              The fallacy of sampling until a significant result is ob-                cian’s beliefs before seeing any of the data is not affected
+                                           tained has been discussed by statisticians at least since the               by (planned) peeking. Problems quickly arise, however,
+                                           1940s, when Feller (1940) saw it happening in the study                     when default or pragmatic priors are used to test com-
+                                           of extra-sensory perception. Anscombe (1954) famously                       posite null hypotheses. These problems are especially se-
+                                           called it “sampling to a foregone conclusion”, and this in-                 vere for commonly used pragmatic priors that depend on
+                                           evitability was also pointed out by Robbins (1952).                         the sample size, covariates, or other aspects of the data
+                                              But disapproval by statisticians has hardly dented the                   (De Heide and Grünwald, 2021).
+                                           prevalence of the practice. In one widely publicized ex-                      As emphasized by Johari et al. (2022); Howard et al.
+                                           ample, a team of researchers apparently demonstrated                        (2021); Grünwald, De Heide and Koolen (2023); Shafer
+                                                                                                                       (2021); Pace and Salvan (2020), amongst others, we need
+                                           benefits from “power posing” (Carney, Cuddy and Yap,
+                                                                                                                       to go beyond disapproval of peeking, and we instead
+                                           2010). The lead author later disavowed the conclusion and
+                                                                                                                       should give researchers tools to fully accommodate it.
+                                           identified the team’s peeking at the data as one of her rea-
+                                                                                                                       The branch of mathematical statistics that enables this,
+                                           sons (Carney, Fact 5):
+                                                                                                                       sequential analysis, was brilliantly launched in the 1940s
+                                                    We ran subjects in chunks and checked the ef-                      and 1950s by Wald, Anscombe, Robbins, and others. The
+                                                    fect along the way. It was something like 25                       innovations introduced by Robbins, Darling, Siegmund
+                                                                                                                       and Lai included confidence sequences that are valid at
+                                           Carnegie Mellon University, Pittsburgh, USA (e-mail:                        any and all times and tests of power one. But these ideas
+                                           aramdas@cmu.edu). Centrum Wiskunde & Informatica,                           occupied only a small niche in sequential analysis re-
+                                           Amsterdam, Netherlands (e-mail: pdg@cwi.nl). Royal                          search until around 2017. Since then, interest has ex-
+                                           Holloway London, UK (e-mail: v.vovk@rhul.ac.uk). Rutgers                    ploded and much conceptual progress has been made in
+                                           University, USA (e-mail: gshafer@business.rutgers.edu).                     parallel threads, which we attempt to summarize.
+
+                                                                                                                   1
+2
+
+   This new methodology differs from traditional statisti-      each round so far. Because Skeptic is a free agent, the
+cal testing in the way it quantifies evidence against sta-      option of stopping or continuing or even switching to a
+tistical hypotheses. The traditional approach casts doubt       different experiment on the next round is intrinsic to the
+on a hypothesis when a selected test statistic takes too ex-    game, and the cumulative betting score or e-value quanti-
+treme a value. This leads to quantifying evidence against       fies the evidence against the Forecaster (and his probabil-
+the hypothesis by the p-value—the probability the hy-           ities): Skeptic refutes the odds by making money betting
+pothesis assigns to the test statistic being so large. The      at those odds; more money is more evidence that the odds
+new methodology instead casts doubt on a hypothesis             do not reflect reality.
+when a selected nonnegative statistic is large relative to         Betting games often fit statistical practice better than
+its expected value. Imagining that we bought the statis-        measure-theoretic probability models. In particular, they
+tic for its expected value when we selected it, we call         accommodate fully the opportunistic behavior that we
+the ratio of its realized to its expected value a betting       want to allow. George Barnard, in his review of Wald’s
+score and take this as a measure of our evidence. In the        book on sequential analysis (Barnard, 1947), called for
+case of a composite hypotheses, we use the infimum of           embedding statisticians in the sequential decision-making
+betting scores for the multiple hypotheses and call this        of experimental scientists, in which each batch of obser-
+an e-value. The sequential analog is an e-process—a se-         vations is followed by deliberation about whether to stop
+quence of e-values that monitor the accumulation of ev-         or to continue, perhaps with a modified experiment. The
+idence. E-processes permit anytime-valid inference; we          use of a prespecified stopping time, which prescribes con-
+can repeatedly decide whether to collect more data based        tinuing only until a certain data-dependent condition is
+on the current e-value without invalidating later assess-       met, obscures or erases this sequential deliberation, pre-
+ments, stopping whenever and for any reason whatsoever.         tending that all the decisions flow from a stopping strategy
+This anytime-validity is a form of safety. This safety may      adopted in advance. Barnard’s suggestion is better cap-
+come with a price, of course; there may (or may not) be         tured by our game-theoretic framework, where a single
+tradeoffs between safety and power; see Section B.              stopping rule is replaced by notions of evidence that re-
+   From a technical point of view, the new methodol-            main valid at any stopping time not specified in advance.
+ogy is based on the concept of a test martingale, along            Because most readers will be unfamiliar with game-
+with its betting interpretation. Although martingales be-       theoretic probability as developed by Shafer and Vovk
+came important in probability theory more than a half-          (2001, 2019), we use the relatively familiar apparatus of
+century ago, their potential has still not been fully ex-       measure theory (filtrations, stopping times, martingales,
+ploited in statistics, and the new emphasis on nonnega-         etc.) and new concepts defined within that apparatus (e-
+tive (super)martingales has produced a plethora of power-       values, e-processes, etc.). Frequently, however, we return
+ful new methods. These include confidence sequences for         to the betting story, where our martingales are wealth pro-
+many functionals that can be used with multi-armed ban-         cesses for Skeptic.
+dits and new sequential tests for composite null hypothe-
+                                                                1.1 Basic terminology
+ses. This responds to the need for rigorous methods in
+settings that have emerged with the development of infor-          We begin with a sample space Ω equipped with a fil-
+mation technology in the past half-century, including “liv-     tration F ≡ (Ft )t≥0 (an increasing nested sequence of σ-
+ing meta-analysis” (Ter Schure, Grünwald and Ly, 2021),         fields), and a set Π of probability distributions on (Ω, F).
+the industrial use of A/B testing (Johari et al., 2022) and     We assume that some distribution P ∈ Π governs our data
+bandit experiments (Howard and Ramdas, 2022).                   X ≡ (X1 , X2 , . . . ). The variables X1 , X2 , . . . need not be in-
+   The new methods can be most clearly presented in the         dependent and identically distributed (iid) under P. We
+language of game-theoretic probability (Shafer and Vovk,        use X t as a shorthand for X1 , . . . , Xt .
+2001, 2019). Here successive observations are Reality’s            When we say we are testing P, we mean that we are
+moves in a game. Two other players move before Reality          testing the null hypothesis H0 that P ∈ P. When we say
+on each round: Forecaster gives probabilities for the out-      we are testing P against Q, we mean that the alternative
+come, and Skeptic bets by choosing a real-valued func-          hypothesis H1 is that P ∈ Q. Typically, P and Q are either
+tion of the outcome, paying its expected value, and receiv-     non-intersecting or nested subsets of Π. We always use
+ing its realized value. If Skeptic always chooses nonneg-       boldface P, Q for sets of distributions, and a normal P, Q
+ative functions, then the factor by which he multiplies his     for a single distribution.
+money (the ratio of the realized to the expected value un-         A sequence of random variables Y ≡ (Yt )t≥0 is called a
+der forecaster’s probabilities) is his “betting score” or “e-   process if it is adapted to F—i.e., if Yt is measurable with
+value” (Shafer, 2021). If he reinvests his money on each        respect to Ft for every t. Often Ft := σ(X t ), with F0 being
+round, the betting scores multiply, producing cumulative        trivial (F = ∅, Ω}), and in this case Yt being measurable
+betting scores that are products of the betting scores for      with respect to Ft means that Yt is a measurable function
+                               GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                             3
+
+of X1 , . . . , Xt . But F is sometimes a coarser filtration (we          that will pay off S t (Xt ) units. One can buy as many tick-
+discard information, see e.g. Section 4.1.2) or a richer one              ets as one likes. (1) simply expresses that under the null,
+(we add external randomization).1 Y is called predictable                 one does not expect to get back more than one invests in
+if Yt is measurable with respect to Ft−1 .                                this game. At time 1, Skeptic invests 1 monetary unit; at
+   A stopping time (or rule) τ is a nonnegative integer val-              each time t, she reinvests all the money she observed so
+ued random variable such that {τ ≤ t} ∈ Ft for each t ≥ 0.                far. Skeptic’s wealth after t steps is then clearly given by
+                                                                          Qt
+In words: we know at each time whether the rule is telling                   i=1 S i (Xi ), which is nonnegative by definition, and eas-
+us to stop or keep going. Denote by T the set of all stop-                ily checked to be a supermartingale under P. If Q is ap-
+ping times, including ones that may never stop.                           propriately separated from P, good betting strategies can
+                                                                          force the wealth in setting (b) (alternative is true) to grow
+1.2 A terse technical summary of the paper
+                                                                          to infinity exponentially fast, and we wish to maximize
+   We give a short technical summary below, foreshadow-                   the exponent. Maximizing the exponent corresponds to
+ing topics to be defined and discussed in more depth later.               maximizing the expected logarithm of the wealth; such a
+   The field of safe anytime-valid inference (SAVI) aims                  “log-optimality” objective has information-theoretic roots
+to develop measures of statistical evidence and cer-                      dating back to Kelly (1956) and Breiman (1961), but also
+tainty that remain valid at arbitrary stopping times (pos-                (implicitly or explicitly) appears in the work of Ville,
+sibly unknown in advance), accommodating continuous                       Wald, Robbins, etc.
+monitoring and analysis of accumulating data and op-                         For testing a point null P against a point alternative Q,
+tional stopping or continuation for any reason. There is                  the log-optimal bet is simply given by the likelihood ratio
+a strong sense in which admissible SAVI methods —                         S t = dQt /dPt , where Pt and Qt are the conditional prob-
+power-one tests, confidence sequences, anytime-valid p-                   abilities for the tth observation given the past, under P
+values and e-processes — must rely centrally on nonneg-                   and Q respectively. Thus the realized likelihood ratio of
+ative martingales (Ramdas et al., 2020). Nonnegative (su-                 Q against P is precisely the optimal wealth of a gambler
+per)martingales are endowed with a strong and direct con-                 betting against P. This central fact provides much intu-
+nection to gambling: every nonnegative supermartingale                    ition for extensions and generalizations.
+corresponds to a wealth process in some game, and vice                       For composite alternatives Q, the Skeptic often hedges
+versa (every “fair/legal” gambling strategy to test the null              their bets by not betting all their money on a single Q ∈ Q,
+hypothesis results in a wealth process that is a nonnega-                 instead spreading their investment over Q using a mixture
+tive supermartingale).                                                    (“prior”) distribution R. To illustrate using the toy case in
+   These facts give rise to the following central principle               which Q is countable and R has mass function r, r(q) = a
+in game-theoretic statistics: “testing by betting”. In order              would mean that a fraction a of Skeptic’s money is in-
+to test a null hypothesis P against an alternative Q, we                  vested in q — importantly in general R neither has a fre-
+set up a game such that (a) if the null is true, meaning                  quentist (‘drawing from an urn’) nor a Bayesian (‘belief’)
+P ∈ P, then no betting strategy can reliably make money                   interpretation here. This method of mixtures plays a cen-
+(any gambler’s wealth is a nonnegative supermartingale),                  tral role in this paper: an instance of Laplace’s method
+and (b) if the null is false, meaning P ∈ Q, it is possible               for approximating a maximum by an integral, it appears
+to bet smartly to make money in that game. This principle                 directly within our anytime-valid context in Ville (1939)
+arguably has roots dating back (at least) to Ville (1939),                and Robbins (1970), and in broader sequential contexts in
+and was recently discussed in depth in the point null case                Wald (1947a) and Cover (1974), among many others.
+by Shafer et al. (2011) and Shafer (2021) and for com-                       The most interesting questions in this area involve com-
+posite nulls by Grünwald, De Heide and Koolen (2023);                     posite (and often nonparametrically specified) nulls P.
+Waudby-Smith and Ramdas (2023), etc.                                      Indeed, there really was no general theory for dealing
+   The game works as follows. Before observing Xt ∈ X,                    with composite nulls until 2017 — when, almost out of
+Skeptic puts forward a bet S t : X → [0, ∞], which satisfies              the blue, several generic proposals for dealing with com-
+                                                                          posite nulls appeared. Arguably, it is this development
+(1)             EP [S t (Xt )] ≤ 1 for every P ∈ P.
+                                                                          which caused the aforementioned explosion of interest in
+Then, Xt is revealed. The interpretation is that at each time             the area — suddenly there was an indication that eventu-
+t, one can buy, at the price of 1 monetary unit, a ticket                 ally almost any interesting statistical testing or estimation
+                                                                          problem could be converted into an anytime-valid version
+      1 The filtration may be coarsened, as explained by Alan Turing      with a gambling interpretation.
+(c 1941, p.1): “When the whole evidence. . . is taken into account it        For such composite P, a fascinating phenomenon some-
+may be extremely difficult to estimate the probability of the event,      times presents itself: for some “extremely rich” nulls P,
+. . . may be better to form an estimate based on a part of the evidence   the game described above is hopelessly restraining: the
+...”                                                                      constraint (1) is too stringent, and the only functions S t
+4
+
+that satisfy it are either constant or decreasing (meaning        In fact, our investigations reveal a curious phenomenon:
+that they cannot increase under any alternative). This hap-    at the heart of many (and plausibly, all) nonparametric
+pens, for example, when testing exchangeability or testing     testing and estimation problems is a “hidden” game (of-
+log-concavity; see Section 5.5 for references and details.     ten not unique: the same P and Q may be associated
+   Luckily, generalizing the above game protocol resusci-      with different filtrations and betting strategies that are e-
+tates the approach. There appear to be two different types     processses under P and make money under Q). Further,
+of generalized games: (a) one can restrict the amount of       explicitly bringing out such games (and betting well in
+information available to the Skeptic by introducing a third    them) can yield powerful new methodology as well as
+player (an “Intermediary”) who throws away some infor-         new theoretical insights (Howard et al., 2020)
+mation revealed by Reality (mathematically, Skeptic op-           A full understanding of when and why this happens
+erates in a shrunk filtration), (b) one can instead make       is open, but we provide one hint here. Likelihood ratios
+the Skeptic play many games in parallel, each against a        have been at the center of statistics for nearly a century.
+different subset of P, with the Skeptic’s net wealth be-       Nonnegative (super)martingales and e-processes are sim-
+ing their worst wealth across all the parallel games. In       ply nonparametric, composite generalizations of likeli-
+the first case, Skeptic’s wealth may remain a nonnega-         hood ratios, and these have been found to exist in dozens
+tive (super)martingale, but in the second case, their wealth   of problems where one cannot even begin to talk about
+is an e-process (under the null, their wealth is upper-        likelihood-ratio based methods. Thus, these tools give
+bounded by a different supermartingale in each game,           us a way to work implicitly with likelihood ratios, even
+and thus is bounded by one at any stopping time). While        when there appears to be no explicit way to do so. Given
+these solutions may seem almost magical at first glance,       the power (and sometimes optimality) of likelihood-ratio
+they both yield fruit for the same problem mentioned           based tests in parametric settings, we perhaps get a hint of
+above of testing exchangeability: approach (a) is used         the power of our game-theoretic approaches in composite
+in Vovk, Gammerman and Shafer (2022, Part III) and ap-         (often nonparametric) settings.
+proach (b) in Ramdas et al. (2022). The latter work, along        The rest of this paper will formally define the key con-
+with Ruf et al. (2022), together show the centrality of e-     cepts, and provide technical details of the aforementioned
+processes in game-theoretic statistics: e-processes exist      methods and phenomena in different problem settings.
+for many P for which nonnegative (super)martingales do
+not.                                                                              2. CENTRAL CONCEPTS
+   When P and Q have a common reference measure,                  In the sequel, we leave measurability assumptions and
+meaning that likelihood-ratio based methods are still in       other measure-theoretic details implicit so far as possible.
+play, two key ideas stand out: universal inference (Wasserman, Ramdas and Balakrishnan,
+                                                               2.1 E-values
+2020), and the reverse information projection (Grünwald, De Heide     and Koolen,
+2023). The former always yields an e-process, but lat-            An e-variable for P is a nonnegative random variable E
+ter always results in an e-value which can be multiplied       such that EP [E] ≤ 1 for all P ∈ P. Its realized value, after
+across batches of data to yield a supermartingale. But         observing the data, is an e-value.2 Often we call E itself
+sometimes the latter also directly yields an e-process (and    an e-value, blurring the distinction between the random
+when it does, it dominates universal inference).               variable and its realized value. (The term “p-value” is also
+   When P and Q do not have any common reference mea-          often used for both random variables and their values.)
+sures — and thus likelihood-ratio based methods may not           When EP [E] = 1, we call the e-value E a unit bet
+make any sense at the outset — the design of nonneg-           against P. This name evokes a story in which expected
+ative (super)martingales or e-processes occupies center        values are prices of payoff: the Forecaster predicts that
+stage. Sometimes, the nonparametric definition of P di-        X ∼ P, and in order to bet against them, a Skeptic could
+rectly yields a natural game, like when testing if a “sub-     buy one unit of E, for the price of 1, delivering the Skep-
+Gaussian” mean is positive (Darling and Robbins, 1967).        tic a payoff of E(X). Mathematically, a unit bet against P
+Other times, one must design new games in possibly             is simply3 a likelihood ratio dQ/dP for some alternative
+shrunk filtrations, which may not be obvious at the outset,    Q. This is elementary when we use probability densities:
+like in two-sample testing (Shekhar and Ramdas, 2021).
+   The entire discussion above was centered on testing by          2 Observe that we use boldface E for expectation and normal E for
+betting, because this typically forms the technical heart      e-values. The “e” in e-value stands both for “evidence” (because it
+of other problems that are not cast explicitly as testing.     quantifies statistical evidence against the null) and for “expectation”
+For example, appropriate duality concepts and inversions       (because its central property is its expectation).
+                                                                   3 In some sense, statisticians have always been using e-values (and
+allow us to translate many of these results into those for
+                                                               test martingales), because likelihood ratios are the most important ex-
+estimation of appropriate functionals using confidence se-     ample of e-values (and test martingales). But this direct analog only
+quences (Section 5). Both e-processes and confidence se-       holds when testing a single distribution P. The power and utility of e-
+quences can in turn be extended to other problems like         values, test (super)martingales and e-processes are truly realized only
+change detection (Section 5.7), model selection, etc.          dealing with a composite (and sometimes nonparametric) P.
+                               GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                                        5
+                                          R
+      • EP [E] = 1 can be written as E(x)p(x)dx=1, so                   2.3 Composite Test (Super)Martingales
+         that q := E × p is a density, and E = q/p.
+                                                                           A process M is a test (super)martingale for P if it
+      • RIf q and p are Q’s and P’s densities, then EP [q/p] =
+                                                                        is a test (super)martingale for every P ∈ P. Such com-
+            p(x) q(x)
+                 p(x) dx = 1.                                           posite test (super)martingales are important in this pa-
+  We use e-values when data are treated as a batch.                     per. Composite test martingales also decompose as in (4):
+Their dynamic counterparts are test martingales and e-                  for every P ∈ P, there is a Q that is absolutely contin-
+processes, introduced next.                                             uous with respect to P and satisfies Mt = q(X t )/p(X t );
+                                                                        see Ramdas et al. (2020, Proposition 4). In other words,
+2.2 Test (Super)Martingales
+                                                                        composite test martingales are simultaneous likelihood
+  A process M is a martingale for P if                                  ratios.
+                                                                           Trivially, the constant process Mt = 1 is a test martin-
+(2)                   EP [Mt | Ft−1 ] = Mt−1
+                                                                        gale for any P, and a decreasing process is a test super-
+for all t ≥ 1. M is a supermartingale for P if it satisfies (2)         martingale for any P. We call a test (super)martingale
+with “=” relaxed to “≤”. A (super)martingale is called a                nontrivial if it is not always a constant (or decreasing)
+test (super)martingale if it is nonnegative and M0 = 1.                 process. In particular, we would like test martingales for P
+   Game-theoretically, a test martingale for P is the wealth            that increase to infinity under the alternative Q. But there
+process of a gambler who bets against P. If M is a test                 may be no nontrivial test martingales if P is too large.
+martingale for P, then EP [Mt ] = 1 for any t ≥ 0, and                  In this case there may still be nontrivial test supermartin-
+thus each Mt is itself a unit bet against P; it is the fac-             gales (Section 5.1), but even these may not exist (Sec-
+tor by which M multiplies its money from time 0 to time                 tion 5.5). For this reason, we also need e-processes.
+t. Similarly, the optional stopping theorem implies that                2.4 E-processes
+for any stopping time τ — even potentially infinite —
+EP [Mτ ] ≤ 1, and thus each Mτ is also an e-value for P.                   A family (M P )P∈P is a test martingale family if M P is
+   The correspondence between unit bets against P and                   always a test martingale for P. A nonnegative process E
+likelihood ratios with P as the denominator extends to a                is called an e-process for P if there is a test martingale
+related correspondence for test martingales for P. If Q is              family (M P )P∈P such that
+absolutely continuous with respect to P, we can write
+                                                                        (6)              Et ≤ MtP for every P ∈ P, t ≥ 0.
+           q(X t ) q(X1 ) q(X2 | X1 )       q(Xt | X t−1 )
+(3)               =                   · · ·                ,            This type of definition was used by Howard et al. (2020),
+           p(X t ) p(X1 ) p(X2 | X1 )       p(Xt | X t−1 )              who used the name “sub-ψ process”. In parallel, Grünwald, De Heid
+where X t := (X1 , . . . , Xt ), p(X t ) is P’s density for X t , and   (2023) implicitly defined an e-process for P, also without
+q(X t ) is Q’s density for X t . Denote the sequence defined            using the name “e-process”, as a nonnegative process E
+by (3) as M; then M is a test martingale for P, and                     such that
+                                  Y
+                                  t
+                                               q(X t )                                  E[Eτ ] ≤ 1 for every τ ∈ T , P ∈ P.
+(4)                        Mt =         Bi =           ,
+                                  i=1
+                                               p(X t )                  In words, E must be an e-value at any stopping time.
+                                                                        Ramdas et al. (2020) proved that the two definitions are
+                                   q(Xt | X t−1 )
+(5)               where Bt :=                     .                     equivalent and that if P is “locally dominated”, then ad-
+                                   p(Xt | X t−1 )                       missible4 e-processes (see Section 8.2.3) must satisfy
+Note that each Bt is a unit bet against P, conditional on
+                                                                        (7)                          Et = inf MtP
+Ft−1 ; we call Bt M’s unit bet on round t.                                                                  P∈P
+   Test martingales for P are always of the form (4). So                for some test martingale family (M P )P∈P . (Technically, the
+choosing a test martingale for P comes down to choosing                 inf above is an “essential infimum”.)
+an alternative Q. In applications, constructing a test mar-                Whereas a test martingale for P is the wealth process
+tingale for P usually amounts to constructing the numer-                of a gambler who bets against P, an e-process for P re-
+ator q(Xt | X t−1 ) in (5); see Section 3.2. Test supermartin-          ports the minimum wealth across many simultaneous bet-
+gales can also be decomposed in the style of (4), where                 ting games, one against each P ∈ P, all with the same out-
+the Bt are single-round e-values (i.e. defined as function              comes X1 , X2 , . . . (Ramdas et al., 2022, Section 5.4).
+on a single outcome Xt ) conditional on Ft−1 .
+   Test martingales become more interesting objects in the                  4 An e-process E ≡ (E )
+                                                                                                    t t≥1 for P is inadmissible if there exists an-
+composite setting.
+                                                                        other e-process E ′ for P such that E ′ ≥ E (Et′ ≥ Et almost surely P,
+                                                                        for all P ∈ P and all t ≥ 1), and Et′ > Et with positive probability under
+                                                                        some P ∈ P and some t ≥ 1; E is admissible if it is not inadmissible.
+6
+
+  The evidence against a null hypothesis as measured by                   Equivalently, by Howard et al. (2021, Lemma 3),
+a test martingale or e-process may decrease as we col-
+lect more data (indeed, gamblers may lose money as they                   (10)      P(Eτ ≥ 1/α) ≤ α for every τ ∈ T , P ∈ P.
+play a game, even if the odds are stacked in their favor).                Ville’s inequality plays a central role in converting e-
+In order to obtain a measure of evidence that does not de-                processes into sequential tests or confidence sequences.
+crease with time, one can calculate the running maximum                     Recently, Wang and Ramdas (2023a) extended Ville’s
+of the e-process (sups≤t E s ) — which is not an e-process                inequality to apply to nonintegrable nonnegative super-
+— and then adjust it back to being an e-process using a                   martingales, such as those obtained when mixing likeli-
+lookback calibrator; see Shafer et al. (2011); Dawid et al.               hood ratios with an improper prior.
+(2011) and Ramdas et al. (2022, Section 4.7).
+                                                                          2.6 Sequential Tests and their Families
+2.5 Ville’s Theorem and Ville’s Inequality
+                                                                            We consider test martingales and e-processes bona fide
+   The notion of a test martingale was first formulated
+                                                                          measures of evidence, with no need for thresholding. But
+by Ville (1939), though he simply called it a martingale.
+                                                                          we may want to make a binary decision based on this evi-
+   Ville gave a proof, valid for any discrete-time stochas-
+tic process P, that an event A has measure zero under P                   dence. We define a (one-sided) sequential test in terms of
+if and only if there is a betting strategy that bets against              rejection decisions like (0, 0, 0, 0, 1, 1, 1, 1, . . .), where a 0
+P and becomes infinitely wealthy if A happens—i.e., a                     means that there is not yet enough evidence to reject the
+test martingale for P that grows to infinity on all of A.                 null, and a 1 means that there is. In this formalization, a
+Moreover, P(A) < ǫ if and only if there is a test martin-                 level-α sequential test ψ ≡ (ψt )t≥1 is an increasing process
+gale for P that exceeds 1/ǫ on all of A.5 These results                   consisting of 0-1 random variables such that
+have been called Ville’s theorem (Shafer and Vovk, 2019,                  (11)        P(∃t ≥ 0 : ψt = 1) ≤ α for all P ∈ P.
+Section 9.1). Ruf et al. (2022) generalize Ville’s theorem
+to composite P, but this cannot be accomplished by a test                 Howard et al. (2021, Lemma 3) proved that an equivalent
+martingale, requiring e-processes instead.                                definition, with optional stopping made more explicit, is
+   Ville also showed that if M is a test martingale for P,
+                                                                                       P(ψτ = 1) ≤ α for any τ ∈ T , P ∈ P.
+then for any α ≥ 1,
+                                   !                                         It is easy to obtain a sequential test from a test martin-
+                                       1
+(8)                  P sup Mt ≥ α ≤ .                                     gale or e-process: simply reject the null (and stop) the first
+                         t             α
+                                                                          time the process reaches or exceeds 1/α. Indeed, Ville’s
+Ville called this the theorem of gamblers’ ruin; a gam-                   inequality implies that ψt := 1(sups≤t M s ≥ 1/α) is a se-
+bler who begins with unit capital and keeps betting un-                   quential test. We call a family (ψP )P∈P , where ψP is a se-
+til he wins the casino’s entire capital α has little chance               quential test for P, a sequential test family.
+of succeeding. More recently, the theorem has become
+                                                                             Note that our sequential tests are different from Wald’s
+known as Ville’s inequality. For a self-contained proof see
+                                                                          original sequential tests, which dominated the area for
+Howard et al. (2020) or Crane and Shafer (2020).
+                                                                          a long time — in these, the null hypothesis may finally
+   Ville’s inequality holds with equality for continuous-
+                                                                          be accepted and the stopping rule is specified before-
+path (hence continuous-time) test martingales with un-
+                                                                          hand, determined by the desired Type-I/II error bounds
+bounded total variation: a classic example would be the
+process Mt = exp(λBt − tλ2 /2), where Bt is a standard                    α and β. Our framework resembles the “power-one tests”
+Brownian motion and λ is any nonzero constant. In dis-                    of Darling and Robbins (1968), where we do not commit
+crete time, the main source of looseness is from “over-                   to a stopping rule, and could keep going if we do not reject
+shoot”: continuous path martingales equal 1/α at the in-                  P.
+stant of crossing it (they do not overshoot), but discrete                2.7 Anytime-valid p-values
+time (and thus discrete path) test martingales are typically
+strictly larger than 1/α at the first time of crossing; this                 A random variable p is a p-value for P if P(p ≤ u) ≤
+causes some looseness. In practice (which is always in                    u for all P ∈ P and u ∈ [0, 1]. Like the e-value, this is a
+discrete time), Ville’s inequality is “quite tight” and over-             static concept. Anytime-valid p-values are the dynamic
+shoot is often considered a second order effect.                          counterparts of p-values.
+   Ville’s inequality extends to statements about compos-                    An anytime-valid p-value (Johari et al., 2022; Howard et al.,
+ite P: if E is an e-process for P, then for every α ∈ (0, 1),             2021) for P is a process p := (pt )t≥1 such that P(pτ ≤ u) ≤
+                                                                          u for any τ ∈ T , P ∈ P, u ∈ [0, 1]. Equivalently, P(inf t pt ≤
+(9)              sup P(∃t ≥ 1 : Et ≥ 1/α) ≤ α.
+                  P∈P                                                     u) = P(∃t ≥ 1 : pt ≤ u) ≤ u. In other words, with proba-
+                                                                          bility at least 1 − u an anytime-valid p-value will never
+   5 Shafer and Vovk (2019) turn this around into a definition of prob-   drop below u. So decisions to stop an experiment or to
+ability in the betting game.                                              continue to collect data based on the current value of an
+                           GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                           7
+
+anytime-valid p-value are safe; they will not violate type-I     symmetric method if we ignore the possibility of further
+error control.                                                   mixing with the constant e-value 1.)
+   It is easy to check that if M is an e-process for P then        Test (super)martingales and e-processes can also be
+1/(max s≤t M s ) is an anytime-valid p-value for P. In our       mixed, yielding mixture (super)martingales or e-processes.
+framework, test martingales and e-processes are central          This method of mixtures goes back to Ville (1939),
+objects for testing, and sequential tests and anytime-valid      Wald (1945), and Robbins (Darling and Robbins, 1968;
+p-values take a secondary and derivative role.                   Robbins, 1970; Robbins and Siegmund, 1974); see Howard et al.
+                                                                 (2021) for recent advances.
+2.8 Confidence Sequences
+                                                                 2.10 Multiplying e-values
+  When estimating some property of a distribution, like a
+mean (or a median), we think of it as a functional φ : Π →          Independent e-values can be combined by multiplica-
+Θ for some space Θ, which is often a subset of Rd .              tion. If B1 , . . . , Bn are independent e-values for P, then the
+  A (1 − α)-confidence sequence (CS) is a sequence               product B1 · · · Bn is also an e-value for P. As we saw in
+(Ct )t≥0 of sets Ct ⊆ Θ such that                                Section 2.2, a product of dependent e-values can also be
+        P(∀t ≥ 1 : φ(P) ∈ Ct ) ≥ 1 − α for all P ∈ Π.            an e-value. If, for all k, Bk is an e-value for P conditional
+                                                                 on the values of B1 , . . . , Bk−1 , i.e. if
+As before, Howard et al. (2021, Lemma 3) implies that a
+mathematically equivalent definition is to require                                 E[Bk | B1 , . . . , Bk−1 ] ≤ 1
+                                                                                       Q
+        P(φ(P) ∈ Cτ ) ≥ 1 − α for all τ ∈ T , P ∈ Π.             for k ≥ 1, then Mn = nk=1 Bk is an e-value for P. The se-
+                                                                 quence (Mn )n≥0 is a supermartingale with respect to the
+This dynamic concept can be contrasted with the concept          filtration generated by the Bk . In fact, in Section 2.2 we
+of a confidence set (or interval). A (1 − α) confidence set,     encountered, and in Sections 4 and 5 we again encounter,
+as usually defined, is required only to contain φ(P) with        at each time t a random variable S t which is a single-
+probability 1 − α for a sample of a fixed size or at a single    round e-variable conditional on the past,
+fixed stopping time rather than at all stopping times. Con-
+fidence sequences remain valid under continuous moni-            (13)           EP [S t | Ft−1 ] ≤ 1 for all P ∈ P.
+toring (or peeking) and optional stopping, but confidence                                                 Q
+                                                                 If (13) holds for all t, then Mn = nt=1 S t is an e-value
+sets require the sample size or the stopping time to be          for P. The sequence (Mn )n≥0 is a supermartingale with
+fixed in advance of seeing any data.                             respect to the (often richer) filtration F.
+   One can construct a confidence sequence by inverting
+a family of sequential tests, or thresholding a test mar-         3. GENERAL PRINCIPLES AND METHODOLOGY
+tingale family (M P )P∈Π : Ct := {φ(P) : P ∈ Π, MtP < 1/α}.
+Sometimes it is easier to construct a test martingale family        As mathematical statisticians learned nearly a century
+(M θ )θ∈Θ , where M θ is a test martingale for {P : φ(P) = θ}.   ago from Jerzy Neyman and E. S. Pearson, the choice of a
+In that case, we would define                                    test of a null hypothesis should be guided by the alterna-
+                                                                 tive hypotheses that are considered plausible. How should
+(12)             Ct := {θ ∈ Θ : Mtθ < 1/α}.                      this work when we are using a test martingale, or more
+2.9 Averaging e-values                                           generally a test supermartingale or an e-process?
+                                                                    Intuitively, a good supermartingale should grow (get
+   We can average e-values. By the linearity of expecta-         large) fast under the alternative so that we quickly build
+tions, if E1 and E2 are e-values for P, then (E1 + E2 )/2        up evidence against the null as the sample size increases.
+is as well, even if E1 and E2 are dependent (for exam-           So we want a test martingale or e-process with maximal
+ple, calculated in different ways using the same data).          expected rate of growth under the alternative.
+This observation generalizes to any number of e-values,             In this section, we first focus on testing a simple null
+and holds for convex combinations or mixtures that are           P = {P} against a simple alternative Q = {Q} and use this
+not equally weighted. Of course, the e-values to mix             case to develop our understanding of expected rate of
+and the weights for the mixture must be chosen with-             growth (Section 3.1). We then move to testing a simple
+out looking at the data; otherwise we are martingaling.          null against a composite alternative (Section 3.2), and to
+Recently, Wasserman, Ramdas and Balakrishnan (2020)              the most difficult case, where even the null is composite
+used such averaging techniques to derandomize univer-            (Section 3.3), introducing general methods for construct-
+sal inference (discussed in Section 3.3). Vovk and Wang          ing e-processes—some based directly on growth rate op-
+(2021) have shown that averaging is an admissible way of         timality, some more indirectly.
+combining e-values (for a particular definition of admis-           One danger we want to avoid throughout is an e-process
+sibility) without further information about the e-values or      becoming zero. Once this happens, the e-process can
+their dependence structure. (And it is the only admissible
+8
+
+never become positive again, and thus it can never recog-        such as 1/α, independently of α. It is also true that we will
+nize later evidence against the null, no matter how strong.      not “bet the farm”6 when we choose E to maximize the
+This can happen with positive probability under a particu-       expected logarithm, whereas this can happen if we maxi-
+lar alternative Q only if the e-process’s strategy for betting   mize the expectation of E itself or some polynomial func-
+for Q (i.e, the test martingale for P designed to become         tion of E. See also Shafer (2021), who compares expected
+large if Q is correct; remember that the e-process is an         logarithmic return to power in the Neyman-Pearson the-
+infimum for such test martingales for the different alter-       ory: both can be used to ask whether the alternatives for
+natives) is sometimes allowed to bet all its money, thus         which a test is effective are plausible.
+risking bankruptcy. We call this betting the farm, and we        3.2 Simple Null and Composite Alternative
+insist on choosing e-processes that avoid it.
+                                                                    How do we find a good test martingale for P when the
+3.1 Simple Null and Simple Alternative                           alternative Q is composite? In general, we cannot maxi-
+   This is the case where we are testing a probability dis-      mize the expected growth rate under all the distributions
+tribution P against an alternative probability distribution      in Q. But we can look for an alternative Q such that the
+Q. As we saw in Section 2.1, the likelihood ratio dQ/dP          test martingale defined by (4) has a reasonably high ex-
+is the natural test martingale in this case. (This assumes       pected growth rate under any distribution in Q that fits the
+that Q is absolutely continuous with respect to P.)              data X1 , X2 , . . . reasonably well. Because X1 , X2 , . . . are
+   What are the advantages of using this natural test mar-       revealed to us progressively, the natural procedure is to
+tingale? The most important advantage, perhaps, is that          construct this Q progressively. On betting round t, we use
+                                                                 the data so far, xt−1 , to choose the numerator q(Xt | X t−1 )
+it has the greatest expected growth as measured using
+                                                                 in (5). Another way to view this is to imagine the data
+the expected logarithmic return, a measure popularized
+                                                                 being drawn from (or best explained by) some unknown
+by Kelly (1956). The name logarithmic return is standard
+                                                                 Q∗ ∈ Q and — since we do not know Q∗ — to attempt
+in finance and hence appropriate when we consider wealth
+                                                                 to learn it from the data, at each round t plugging in a
+processes. When E is a unit bet against P, E’s logarithmic
+                                                                 q(Xt | X t−1 ) that is an estimate of q∗ based on data X t−1 .
+return is simply log E. The fact that the expected logarith-
+mic return EQ (log E) is maximized by E := dQ/dP can be             3.2.1 The Plug-in Method. This is natural when Q is
+obtained directly from Gibbs’ inequality (Shafer, 2021,          a parametric model. We use xt−1 to estimate the param-
+p. 413). Because Mt is a unit bet against P whenever M           eters, and this gives us an estimate Q̂t of the best fit-
+is a test martingale for P, it follows that the cumulative       ting (or the ‘true’) Q∗ . So our choice for q(Xt | X t−1 )
+likelihood ratio Et := (dP/dQ)(X t ) maximizes                   is q̂t (Xt | X t−1 ), where q̂t is Q̂t ’s density. Wald pro-
+                                                                 posed, in passing and without any further analysis, this
+(14)                     EQ (log Et )                            plug-in method (Wald, 1947b, Eq. 10.10); it was sub-
+and hence the growth rate EQ (log Et )/t for each t. By the      sequently analyzed by Robbins and Siegmund (1974),
+same argument, (dP/dQ)(X τ ) maximizes EQ (log Eτ ) for          who connect it directly to the mixture method (intro-
+every stopping time τ. Grünwald, De Heide and Koolen             duced in the next subsection). Similar ideas were pro-
+(2023) called the requirement that EQ (log Eτ ) be maxi-         posed independently by Dawid (1984) for prequential
+mized the GRO criterion, for “growth-rate optimality” rel-       model validation and by Rissanen (1984) as a pre-
+ative to τ. So we may summarize by saying that in a sim-         dictive version of Minimum Description Length learn-
+ple vs. simple test, the likelihood ratio is GRO.                ing. Recently, the plug-in method has been employed
+                                                                 by Wasserman, Ramdas and Balakrishnan (2020) in para-
+   Why use the logarithm of E rather than some other in-
+                                                                 metric models and Waudby-Smith and Ramdas (2020,
+creasing function of E? In finance, we average the loga-
+                                                                 2023) in nonparametric models.
+rithmic returns for successive time periods rather than the
+                                                                    We obtain a test martingale M no matter how we esti-
+simple percentage returns in order to account for com-
+                                                                 mate the Qt . But we should not use maximum likelihood,
+pounding. Kelly (1956) pointed out that this compound-
+                                                                 at least when data are discrete, lest we end up betting
+ing means that logarithmic returns add, and hence the
+                                                                 the farm (the maximum likelihood estimator may assign
+law of large numbers applies, allowing us to gain some           probability 0 to an outcome that may very well occur in
+foresight about the medium to long run. Breiman (1961)           the next round. Most of the authors just cited have found,
+showed that the logarithm has a number of other strong           however, that it often suffices to slightly smooth the maxi-
+optimality properties, especially in iid settings where the      mum likelihood estimator (often using a “prior”) to avoid
+wealth can be made to grow exponentially under the alter-        this problem, even in nonparametric settings.
+native, and this criterion maximizes the exponent. Using
+Wald’s identity as Breiman used it, one can show that, in           6 Advocates of Kelly betting in the stock market also use half Kelly
+iid settings, the logarithm asymptotically (as α → 0) min-       and fractional Kelly strategies, which make sense when you are not
+imizes expected time before E reaches a desired threshold        confident about the alternative Q (Maclean, Thorp and Ziemba, 2010).
+                          GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                    9
+
+   3.2.2 The Mixture Method. Another way to choose the        will focus on it below. Still, as will become clear in
+q(Xt | X t−1 ) in (5) is to average over the corresponding    Section 4, in some applications GROW is more appro-
+conditional distributions for the distributions in Q. We can  priate and in some applications they in fact coincide;
+vary the weights with t and with X t−1 . This is the mixture  (Grünwald, De Heide and Koolen, 2023) discuss the dif-
+method. The mixture method is not a special case of the       ferences in detail.
+plug-in method, because the mixed probability distribu-          Under slight regularity conditions, the e-variable Mτ
+tion Q we obtain may not be in Q (this may happen if          that maximizes (15) can be written as a Bayes factor de-
+Q is not “fork-convex”, to use a concept introduced in        fined relative to a specific prior Rτ , where Rτ varies with
+Ramdas et al. 2022). Since most models used in mathe-         τ and, in many cases, with γ. Still, in the cases consid-
+matical statistics are not fork-convex, Q is rarely in Q.     ered by Grünwald, De Heide and Koolen (2023) one can
+                                                              find priors R that get us close to the maximum for all τ.
+   3.2.3 Bayes Factors. We can use a probability distri-
+                                                              In some settings we do find a unique test martingale that
+bution on Q, say R, to define weights for a mixture mar-
+                                                              maximizes (15) for all τ. We will generalize (15) to the
+tingale. We update R on each round in the usual Bayesian
+                                            t−1               case of composite nulls below, and we will find a unique
+way. On round t, we use the update R(· | x ) in the aver-
+                                                              e-process that maximizes the criterion for all τ for the
+aging that produces q(Xt | X t−1 ).
+                                                              group invariance tests of Section 4.1.2.
+   Not surprisingly, a simple
+                       Q      calculation shows that the re-
+sulting unit bet Mt = ti=1 Bi is equal to the Bayes factor       Grünwald, De Heide and Koolen (2023) show that when
+                                                              Q  is an i.i.d. exponential family and P = {P} is simple, the
+defined by the distribution R on Q (Grünwald, De Heide and Koolen,
+                                            t       t
+2023). This Bayes factor is the ratio q(X )/p(X ), where      test martingale M obtained from Jeffreys’ prior is asymp-
+q is the density from mixing the distributions in Q with      totically  REGROW: for every τ set equal to a large t, Mt
+R. But for each t, the conditional probabilities given X t−1  maximizes     (15) up to an o(1) term among all e-variables
+obtained by mixing with R are the same as the conditional     that can be defined on X t , linking growth optimality to
+probabilities given X t−1 obtained with R(· | X t−1 ). Condi- description length (Section 8.1.3).
+tioning on the data so far commutes with averaging the            3.2.5 When Precise Alternatives are Hard to Come By.
+distributions in the model.                                    The previous development is based on the premise that
+   Bayes factors have been advocated by many statisti-         we take the alternative Q very seriously, as containing
+cians as measures of evidence against a null when the al-      distributions from which the data may actually be sam-
+ternative is composite (Berger, Pericchi and Varshavsky,       pled. More generally, we may simply have a set of dis-
+1998; Jeffreys, 1961). E-values measure evidence against       tributions available which we think may predict the data
+the null in a different way. Whereas a Bayes factor is used    reasonably well in terms of the log score, but which we
+to multiply prior odds, an e-value is intuitively the out-     would never believe to be ‘true’, so that taking an expec-
+come of a bet. Not surprisingly then, the correspondence       tation over them as in the GRO definition is not too mean-
+between mixture test martingales (or e-values) and Bayes       ingful. There is nothing that stops us from using such Q
+factors does not extend to composite nulls.                    in combination with e.g. the plug-in method; we will still
+   3.2.4 Minimizing the Worst. If we do not have a priori      have an e-process, we merely cannot claim its optimality
+knowledge to guide us when determining the ‘prior’ dis-        any more. We return to this more ‘Fisherian’ perspective
+tribution R in the method of mixtures, we may look for the     on testing in Section 8.1.3.
+distribution R that minimizes the worst possible shortfall        Alternatively, Waudby-Smith and Ramdas (2023)’s GRAPA
+from this best growth rate. This means that we measure         (Growth Rate Adaptive to the Particular Alternative)
+the quality of test martingale M stopped at time τ by          method uses, on round t, the empirical distribution of
+                                                             X t−1 , possibly smoothed, for the numerator in (5). In prac-
+(15)            inf EQ log Mτ − γ · log MτQ .                  tice, this yields efficient tests and (by inversion) confi-
+              Q∈Q
+                                                               dence sets. GRAPA tries to mimic the growth rate that
+where γ = 1 and M Q is the GRO e-process so that MτQ =         would be achieved by using a smoothed empirical dis-
+(dP/dQ)(X τ ), maximizing (14) with t replaced by τ. We        tribution as the alternative (or its projection onto Q when
+want this nonpositive quantity to be as large (as close        possible), while REGROW tries to match the Q∗ -expected
+to zero) as possible. Grünwald, De Heide and Koolen            growth rate by learning Q∗ by the method of mixtures.
+(2023) introduced this criterion and called it REGROW
+                                                               3.3 Composite Null and Alternative
+(RElative GRowth Optimality in Worst case). A varia-
+tion of this criterion, GROW, is obtained if we set γ = 0.        When the null P and alternative Q are both compos-
+We then search for the R that maximizes worst-case ex-         ite, we can usually handle them in a modular fashion. The
+pected logarithmic return EQ (log Mτ ) in an absolute rather   composite alternative can be handled as in the previous
+than relative sense. In most applications, we are inter-       section, using the plug-in method or the method of mix-
+ested in REGROW rather than GROW optimality so we              tures. Here we describe two relatively general ways of
+10
+
+handling the composite null: universal inference (UI)—                 Extending results of Li (1999); Li and Barron (2000),
+which always yields an e-process—and reverse informa-                Grünwald, De Heide and Koolen (2023, Theorem 1) show
+tion projection (RIPr)—which yields a sequence of e-                 that, provided the infimum below is finite, for every τ ∈ T ,
+variables that is sometimes an e-process. As mentioned in            there exists a unique measure Pτ for X τ satisfying
+Section 2.2, test (super)martingales for composite P may
+                                                                     (17)            D(Q̄τ kPτ ) = inf D(Q̄τ kPτW ),
+not exist. So we use the general concept of an e-process.                                            W∈W
+   UI and RIPr are not the only ways of handling com-                where D(·k·) is Kullback-Leibler divergence and Q̄τ (resp.
+posite nulls. In Section 5, we will see many other test              PτW ) is Q̄τ ’s (resp. PτW ’s) marginal for X τ . Further, Pτ has
+(super)martingales and e-processes for composite nulls.              the following nontrivial property: defining
+Most of these involve the method of mixtures applied di-
+rectly to a collection of e-variables rather than to distribu-                           Eτripr := q̄(X τ )/pτ (X τ ),
+tions in Q, as briefly introduced in Section 3.3.3 below.            where pτ is the density of Pτ , and q̄ is the density of Q̄,
+  3.3.1 Universal Inference (UI). This method, intro-                Eτripr is an e-variable; it is even the GRO e-variable rel-
+duced by Wasserman, Ramdas and Balakrishnan (2020)                   ative to τ, maximizing (14) over all e-variables that can
+uses e-processes of the form                                         be written as a measurable function of X τ . Pτ is called
+                                                                     the reverse information projection of Q̄ onto P. In some
+                             q̄(X t )     q̄(X t )                   cases (e.g. Section 4.2, 4.1.2) it is easy to calculate, in
+(16)           Etui :=                  =             ,
+                         sup p∈P p(X t ) p̂X t (X t )                others (e.g. Cox regression (Ter Schure et al., 2021)) it is
+                   Q                                                 not. In general, it is a sub-probability measure, i.e. pτ may
+where q̄(X t ) := ti=1 q̂X i−1 (Xi ), q̂X i−1 is any distribution    integrate to less than one; but in all cases of practical in-
+learnt from X i−1 , and p̂X t is the maximum likelihood es-          terest we have encountered so far, Pτ is a probability dis-
+timator (MLE) under P, the final equality holding when-              tribution. In particular, because of the convexity of KL
+ever the MLE is well-defined. Alternatively,R we     Qt can use      divergence and of the set of mixtures of P, the infimum
+                                               t
+the method of mixtures and set q̄(X ) :=                i=1 q(Xi |   is often achieved by some W ∈ W and then Pτ = PτW . The
+X i−1 )dR(q), where R is a distribution over Q. In either            sequence (Etripr )t≥1 is adapted to F.
+case, as in the preceding subsection, the numerator is                  Sometimes (i.e. for some problem setting Π, P, Q and
+equal to q̄(xt ) for some alternative Q̄ (usually not in Q),         choice of mixture or plug-in Q̄) it is an e-process; some-
+so that Etui is the infimum of the family of test martin-            times not. If it is (as happens e.g. in the tests described
+gales (q̄(X t )/p(X t )) p∈P and hence an e-process by (6). The      in Section 4.1.2), then (Etripr )t≥1 is an e-process relative to
+method is universal because it does not require regular-             an appropriately chosen Q̄. It then dominates UI when us-
+ity assumptions or asymptotics and, importantly, is appli-           ing the same mixture over Q: Etui ≤ Etripr , since they have
+cable in both parametric and nonparametric settings; see             the same numerator, but UI maximizes denominator like-
+Section 5.5 for an example of each.                                  lihood. If it is not an e-process, then variations of RIPr can
+   We can think of Etui as a middle ground between the               often still be used to obtain one. For example, in paramet-
+non-Bayesian generalized likelihood ratio (MLE in both               ric k-sample tests (Section 4.2), (Etripr )t≥1 is an e-process
+numerator and denominator) and the Bayes factor for a                when for Q̄ we take any fixed Q ∈ Q, but not when we
+composite null (mixtures in both numerator and denomi-               take a plug-in or mixture Q̄ that ‘learns’. To handle com-
+nator), neither of which leads to an e-process in general.           posite Q we must then combine RIPr with the method of
+By taking a supremum in the numerator, the generalized               mixtures in a different way, as we now describe.
+likelihood ratio exaggerates evidence for the alternative,
+                                                                        3.3.3 Mixing E-Processes. In all nonparametric, and
+requiring that this exaggeration be taken into account us-
+                                                                     some parametric cases, a natural way to proceed is to
+ing the ratio’s sampling distribution. By including poorly
+                                                                     first construct a parameterized collection of e-processes
+fitting distributions in its mixture in the denominator, the
+                                                                     {E λ : λ ∈ Λ}. We then need to come up with a final e-
+Bayes factor may downplay evidence for the null.
+                                                                     process to use in practice. For this, we can use the method
+   3.3.2 Reverse Information Projection (RIPr). This me-             of mixtures again, but now by putting a distribution R on
+thod, pioneered by Grünwald, De Heide and Koolen (2023)              the space Λ andR creating the new e-process E R with, for
+(original arXiv version 2019) finds, for each stopping time          each τ, EτR := Eτλ dR(λ), thus applying the method of
+τ, an e-variable Eτripr for P. To define Eτripr , we first choose    mixtures directly to e-processes rather than to the alter-
+a Q̄ via the plug-in or mixture method, exactly like we did          native hypothesis Q, as we did above when introducing
+above for UI. Then we consider the set W of all probabil-            UI and RIPr. For example, in the two examples referred to
+ity distributions on P, and for each W ∈ W, we denote by             above we have Q = {Qθ : θ ∈ Θ1 } a parametric set of distri-
+PW the distribution obtained by mixing the distributions             butions, and for each θ ∈ Θ1 , we define Mtθ := (Etripr(Qθ ) )t≥1
+in P with W.                                                         to be the sequence of RIPr e-variables relative to point al-
+                                                                     ternative Qθ , which, as stated above, is an e-process. This
+                             GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                              11
+
+is different from what we get if we try to use the method               4.1.1 Monotone LR Families; Logrank Test. Fix a 1-
+of mixtures directly to mix over Q, defining some Q̄ that            dimensional regular exponential family given in terms of
+‘learns’ Qθ : in that case (Etripr(Q̄) )t≥1 does not provide an e-   its densities {pθ : θ ∈ Θ} with Θ representing either its
+process in the k-sample test of Section 4.2 below. Indeed,           mean- or its natural parameterization. Fix θ0 < θ1 and sup-
+Section 4.1.2 successfully mixes over Q, Sections 4.2 and            pose that under the null, the Yi are i.i.d. ∼ Pθ for θ ≤ θ0 ,
+all of Section 5 mix over a collection of e-processes.               whereas under the alternative, θ = θ1 > θ0 . An easy cal-
+                                                                     culation (Grünwald, De Heide and Koolen, 2023, Exam-
+              4. PARAMETRIC EXAMPLES                                 ple 4) shows that  Qthe GRO e-variable for this problem is
+                                                                     given by Etθ := i≤t pθ (Yi )/pθ0 (Yi ), i.e. it coincides with
+   Examples of test martingales and e-processes for sim-             the likelihood ratio for a simple-vs.-simple testing prob-
+ple nulls abound in the Bayesian literature, since (a) every         lem. If the alternative is composite as well, i.e. θ ≥ θ1 for
+Bayes factor for a simple null also defines a test martin-           some θ1 > θ0 , we have a choice: the GROW e-variable
+gale. Further, (b) as pointed out by Darling and Robbins             ((15) with γ = 0) is given by setting θ = θ1 ; alternatively,
+(1968), if Xi are iid from P, and P has a finite MGF,                for a REGROW approach one can try to learn θ using the
+meaning Φ(λ)P := EP [exp(λXi )] < ∞ for a given λ > 0,               plug-in or mixture method as in Section 3.2.2. The cru-
+then exp(λ i≤t Xi )Φ(λ)−t forms a test martingale for P.             cial property needed for these results to hold is a mono-
+Construction (a) amounts to positing a specific alterna-             tone likelihood ratio property, which does not only hold
+tive (a mixture of elements of Q) and thus fits within both
+                                                                     for exponential families but also, for example, if pθ rep-
+a Neyman-Pearson and Bayesian view on testing. In (b)
+                                                                     resents a t-distribution with a fixed degree of freedom and
+there is no explicit alternative, and therefore it may per-
+                                                                     noncentrality parameter θ.
+haps be more in line with Fisher’s view on testing.
+                                                                        It also extends beyond the i.i.d. case: Ter Schure et al.
+   Below we emphasize examples with composite nulls,
+                                                                     (2021) use this idea to provide efficiently computable
+for which by now a plethora of e-variables have been
+                                                                     GROW e-variables and test martingales for the logrank
+designed. Some of these examples (logrank test, t-test,
+                                                                     test, a work-horse of medical statistics. The test martin-
+contingency tables) are implemented in the R package
+                                                                     gale they derive can be extended to the more general
+safestats on CRAN (Turner et al., 2022).
+                                                                     setting of the Cox regression model with covariates, for
+4.1 Reduction to a Simple Null                                       which computationally efficient implementation remains
+                                                                     a work in progress. For the simple logrank test without co-
+   One of the simplest practical ways to create e-processes
+                                                                     variates they provide extensive simulations showing that
+with composite parametric nulls is to reduce the testing
+                                                                     whether GRO is preferable over REGROW is a subtle
+problem to one with a simple null, for example by coars-
+                                                                     matter. Here we focus on this simple logrank test. One
+ening or conditioning on a sufficient statistic of the data,
+                                                                     starts with m0 subjects, partitioned into a treatment a and
+so that the resulting marginal or conditional likelihood ra-
+                                                                     a control group b; for example, one wants to test a COVID
+tio has the same distribution under all P ∈ P, making this
+                                                                     vaccine; at time 0 all ma,0 subjects in the treatment group
+likelihood ratio an e-process. This strategy has already
+                                                                     get the vaccine and all mb,0 = m − ma,0 subjects in the con-
+been applied in the early days of sequential testing with
+                                                                     trol get a placebo. At every time t = 1, 2, . . . an event (e.g.
+Wald’s sequential probability ratio test, which, while dif-
+                                                                     onset of covid) happens, either to somebody in the treat-
+ferent from ours (Section 2.6), is nevertheless based on
+                                                                     ment (Yi = a) or in the control (Yi = b) group. Under the
+a likelihood ratio between a simple null and a simple al-
+                                                                     null, treating patients does not yield any benefit, so that
+ternative. This led to sequential versions of the t-test (by
+                                                                     P(Yi = a | Y i−1 ) = θma,i /(θma,i + mb,i ) for some θ ≥ 1 (if
+marginalization, in 1950) and other group invariant test-
+                                                                     θ > 1 then the treatment harms). Under the alternative, one
+ing problems as well as to a sequential 2 × 2 contingency
+                                                                     assumes that this hazard ratio θ satisfies θ ≤ θmax for some
+table test (by conditioning, in 1945). As reviewed in Sec-
+                                                                     θmax < 1. Thus, at every i, one tests two separated sets of
+tion 4.1.2, it was recently discovered that for group invari-
+                                                                     Bernoulli distributions, which can be addressed using the
+ant problems, such a reduction to a simple null leads to
+                                                                     reduction to a null indicated above.
+e-processes that have both GROW and REGROW status,
+and are thus highly suitable for our anytime-valid context.             4.1.2 t-test, Regression, General Group Invariance.
+As reviewed in Section 4.1.3, the conditioning approach              Consider the following version of the t-test: according
+for the 2 × 2 table is suboptimal from a GRO perspective             to the null, the Xt are iid ∼ N(δ0 σ, σ) for some given
+though. We review in Section 4.2 a general approach to               effect size δ0 ; according to the alternative, they are iid
+e-processes for independence testing that does lead to an            N(δ1 σ, σ) for effect size δ1 . Under both null and alterna-
+optimal e-process for the 2 × 2 table. But first we show             tive, the nuisance parameter σ is unknown, making the
+that if H0 and H1 are separated, then optimal e-variables            hypotheses composite. We coarsen the original process to
+may sometimes simply be obtained by taking a likelihood              V1 , V2 , . . ., where Vi := Xi /|X1 |; of course, |V1 | = 1. Under
+ratio q/p0 where p0 represents a special element inside P.           the null, (Vt )t , by virtue of it being scale-free (it does not
+12
+
+change if all data points are divided by a fixed constant),              null becomes simple. This includes scale invariance such
+has a distribution Pδ0 that does not depend on the vari-                 as in the t-test above (if one divides all data points by
+ance; similarly, under each distribution in the alternative,             the same constant, the e-variable for the t-test above re-
+(Vt )t has the same marginal distribution Pδ1 . So by con-               mains invariant), but also location, rotation, and other in-
+sidering (Vt )t instead of (Xt )t we reduce the problem to a             variances. By considering the affine group, one can handle
+simple-vs-simple test as in Section 3.1, and the likelihood              linear regression problems with Gaussian errors as well.
+ratio Et := pδ1 (V t )/pδ0 (V t ) is a test martingale for the null
+                                                                            4.1.3 Conditional e-values. Suppose that, under the
+relative to a coarsened filtration. Essentially the same like-
+                                                                         null, Y ∼ Pθ , θ ∈ Θ, and Z is a sufficient statistic for Y, so
+lihood ratio was proposed by Rushton (1950) for classi-
+                                                                         that the density of Y conditional on Z is given by the same
+cal sequential testing. Cox (1952) noted (using different
+                                                                         p(Y | Z), for all θ ∈ Θ. Then, for any conditional probabil-
+terminology) that it can be rewritten as a Bayes factor ap-
+                                                                         ity density q(Y | Z), we have by the same reasoning as
+plied to the original data under the improper right-Haar
+                                                                         used already in Section 2.1 that S := q(Y | Z)/p(Y | Z) is
+prior, w(σ) = 1/σ, i.e.
+                       R                                                 an e-variable conditional on Z, and hence also uncondi-
+                             pδ1 σ,σ (X t )w(σ)dσ                        tionally, i.e. for all θ ∈ Θ,
+(18)             Et = Rσ>0                         ,
+                             p
+                         σ>0 δ0 σ,σ
+                                      (X t )w(σ)dσ                       (19)     EY∼Pθ [S | Z] = 1 and so E(Z,Y)∼Pθ [S ] = 1.
+where pµ,σ denotes the density of a N(µ, σ) distribution.                Such e-variables were already used implicitly by Wald
+Lai (1976) also noted the equality (18) and first proposed               (1945) in his approach to sequential independence test-
+to use Et in an anytime-valid context, and even inverted                 ing in the 2 × 2 contingency table, in which the null is
+the test to yield a closed-form confidence sequence for a                the Bernoulli model. The idea can be extended to more
+Gaussian mean with unknown variance.                                     general exponential family nulls, but as Hao et al. (2023)
+   More recently Pérez-Ortiz et al. (2022) showed that, for              show these usually do not have (RE)GRO(W) status.
+all τ, Eτ is both the GROW and the REGROW e-variable:
+                                                                         4.2 Parametric Alternative, Nonparametric Null
+among all e-variables for the given null it maximizes
+                                                                          A second broad class of e-variables arises when under
+                                         ripr(Pδ1 σ,σ )
+            inf EPδ1 σ,σ log Eτ − γ log Eτ                ,              the null, outcome Y is independent of some observed co-
+            σ>0
+                                                                         variate X (or more generally, the null says that some mea-
+for every γ ∈ R, including γ = 0 (GROW) and γ = 1 (RE-                   sure of dependence takes on a value at most δ); under the
+                                                      ripr(Pδ1 σ,σ )
+GROW), which is possible since EPδ1 σ,σ (log Eτ                      )   alternative, there is dependence (or more generally, the
+turns out to be constant in σ. Note that this is the appro-              dependence is stronger than δ′ for some δ′ > ρ). For sim-
+priate generalization of the (RE)GROW criterion ((15) to                 plicity assume Y, Y1 , Y2 , . . . are i.i.d. under both null and
+the present case, with Q set to {Pδ1 ,σ,σ : σ > 0} and since             alternative, and, for now, assume that X, X1 , X2 , . . . are also
+                                                      ripr(Pδ1 σ,σ )
+the null is now composite, MτQ now set to Eτ                         ,   i.i.d. (“random design”) according to some known distri-
+which is now the GRO e-variable relative to Q = Pδ1 σ,σ                  bution R, both under null and alternative. Then, with P
+(Section 3.3). This implies that the proposed e-process is               and Q distributions for (X, Y), for all P ∈ P , we have
+in fact optimal in a strong sense. They also demonstrate                 P(X) = R(X), P(Y | X) = P(Y), whereas under all Q ∈ Q,
+(RE)GROW optimality for the case (as in Section 4.1.1                    Q(X) = R(X) but Q(Y | X) , Q(Y) with nonzero probabil-
+above) that the defining constraint in either H0 or H1 or                ity. Assuming that all P ∈ P have density p, then for any
+both is replaced by an inequality, i.e. H0 expresses δ ≤ δ0              conditional density q(y | x), we define
+and/or H1 expresses δ ≥ δ1 , and for the case that, under                                                   q(Y | X)
+H0 , δ = 0 while under H1 , δ is equipped with a prior distri-           (20)             sq (X, Y) := R                   .
+                                                                                                           q(Y | x)dR(x)
+bution. In the latter case, if a heavy-tailed prior is used, the
+marginal of (18) with respect to this prior coincides with               The random variable S q := sq (X, Y) is trivially seen to be
+the Bayesian t-test (Jeffreys, 1961; Rouder et al., 2009)                an e-variable for arbitrary
+                                                                                            R           q. Grünwald, Henzi and Lardy
+which is thereby seen to have an e-process interpretation                (2023) show that q(Y | x)dR(x) is in fact the RIPr for
+and to provide Type-I error safety. Thus, in this composite              the point alternative on (X, Y) under which X ∼ R and
+setting (and in contrast to the composite settings we dis-               Y | X ∼ Q | R, and as a consequence, S q is the GRO e-
+cuss in the next sub-section), test martingales overlap with             variable for P as above and Q = {Q}, the simple alter-
+a specific popular type of Bayes factors. Pérez-Ortiz et al.             native corresponding to density q. For such simple Q,
+(2022) also extend these insights to the general setting of              it can be extended
+                                                                                    Q         to a test martingale/e-process by set-
+H0 and H1 that share nuisance parameters expressing a                    ting Mt := i≤t sq (Xi , Yi ). For composite Q, we can ‘learn’
+group invariance: under a mild regularity condition, the                 the right q using the plug-in or mixture methods (Sec-
+(RE)GROW e-variable turns out to be equivalent to a like-                tion 3.2.2). Related ideas can be found in Duan et al.
+lihood ratio for a coarsening of the data, under which the               (2020) and Shaer, Maman and Romano (2023).
+                              GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                                13
+
+                                                               where
+   This simple idea is surprisingly powerful: Grünwald, Henzi and  Lardyµi := EP [Xi | Fi−1 ]. Fixing σ, let Gµ be the set of
+(2023) extend it to design e-processes for conditional         sub-Gaussian distributions with parameter σ and µi = µ
+independence testing in which there is a third random          for all i; this is a nonparametric generalization of Gaus-
+variable Z and we test whether P(Y | X, Z) = P(Y | Z)          sianity. Darling and Robbins (1968) constructed CSs for
+under the model-X assumption (Candès et al., 2018),            µ. They observed that for any λ ∈ R,
+which holds, for example, in randomized clinical trials.                                                                        
+                                                                                                  X                  λ2 2 
+                                                                                                                                 
+Turner, Ly and Grünwald (2021); Turner and Grünwald            (21)         Mt (λ) := exp λ (Xi − µ) − 2 σ t
+                                                                                µ                  
+(2023a) provide another, quite different extension, with-                                            i≤t
+out Zi , in which Xi is not random. Rather, it may take                                                                          P
+                                                               is a test supermartingale for Gµ . Setting Yt := i≤t Xi , and
+on a finite number, say k, of values, and we observe k         choosing a centered Gaussian with variance ρ2 as a mix-
+data streams. To illustrate, consider the case k = 2 with      ing distribution F, they define
+Xi ∈ {a, b} binary, Xi = a denoting that Yi is an outcome in
+the ‘treatment’ group and Xi = b that Yi is in the ‘con-                           Z                                 ρ2 (Yt −tµ)2
+                                                                                                              exp( 2(tσ   2 ρ2 +1) )
+                                                                             µ              µ
+trol’ group. We then observe streams Y1,a , Y2,a , . . . and              Mt := Mt (λ)dF(λ) = p                                      ,
+Y1,b , Y2,b , . . .. This is a sequential two-sample test (re-                                                    tρ2 σ2 + 1
+visited in Section 5.9.3): the null now expresses that         which is also a test supermartingale for Gµ . It grows ex-
+both streams are i.i.d. according to the same P, under         ponentially fast under any P ∈ Gθ for any θ , µ, and it
+the alternative, the distributions differ. Although now        grows faster for θ farther from µ; thus, the evidence au-
+the Xi are not i.i.d. any more, we can ‘flatten’ the e-        tomatically adapts to the difficulty of the testing problem.
+variables (20) so that they can still be used in this con-     This  type of adaptivity is a commonly observed benefit of
+text. Turner, Ly and Grünwald (2021) show that varia-          the method of mixtures, if appropriately employed.
+tions of the resulting e-variables enjoy (RE)GROW op-              Using the inversion (12), we find that
+timality properties. Turner and Grünwald (2023a) further                             s
+extend the setting to the case that the null does not express                Yt             (tρ2 + 1)
+                                                               (22)               ±σ                     log((tρ2 + 1)/α2 )
+independence but rather that the strength of dependence                       t                t2 ρ2
+is bounded by some user-supplied effect size δ (such as
+                                                               is a CS for µ. If µi differs for each i, an identical ar-
+difference in mean or, if Yi ∈ {0, 1}, the odds-ratio), and
+                                                               gument shows that (22) is a CS for the                 p running mean
+use this to develop anytime-valid confidence sequences.        Pt                                               −1/2
+                                                                     µ
+                                                                  i=1 i /t. The   general      scaling    of σt          log t + log α−1 is
+Finally, Turner and Grünwald (2023b) allow addition of
+                                                               expected when using mixture distributions that are con-
+strata Z thus providing a safe Cochran-Mantel-Haenszel
+                                                               tinuous
+                                                                     p around the origin (Howard             p et al., 2021, Prop. 2).
+test.
+                                                               The log t can be changed to log log t at the expense
+                                                               of other constants using mixture distributions that are un-
+               5. NONPARAMETRIC EXAMPLES
+                                                               bounded at the origin; see Howard et al. (2021, Eq. (1)).
+   We present case studies that illustrate how one builds          Waudby-Smith and Ramdas (2023) observed that
+                                                                                                                       
+  (A) test martingales for composite nonparametric P de-                                X                     λ2i 2    
+        spite there being no common reference measure,                            exp        λi (Xi − µ) − 2 σ 
+                                                                                           i≤t
+  (B) test supermartingales when no martingales exist,
+  (C) e-processes when no supermartingales exist, and          is also a test supermartingale for Gµ , whenever λi is pre-
+  (D) confidence sequences (CSs) for functionals using         dictable. They invert test supermartingales of this form to
+        reversed submartingales instead of test martingales.   yield statistically efficient CSs.
+They are presented in an order that aids readability due                5.2 Heavy-Tailed, Robust Mean Estimation
+to complexity of concepts, rather than (A) to (D) above.                    (Case B)
+Many of the CSs have been implemented in C++ in the                       For a fixed σ > 0, let Vµ ⊃ Gµ be the set of distributions
+package confseq7 , with Python and R interfaces.                        on R∞ that yield observations with conditional mean µ
+5.1 Estimating Sub-Gaussian Means (Case B)                              and conditional variance bounded above by σ2 . Inspired
+                                                                        by Catoni (2012), Wang and Ramdas (2023b) prove that
+ A distribution P for real-valued X1 , X2 , . . . is sub-                                                               
+Gaussian with parameter σ > 0 if                                                               X                      
+                                                                                   Lt := exp  ϕ(λ(Xi − µ)) − λ σ2 t
+                                                                                    µ                             2
+                                                                                                                       2
+     ∀λ, i : EP [exp(λ(Xi − µi )) | Fi−1 ] ≤ exp(λ2 σ2 /2),                                       i≤t
+
+                                                                        is a test supermartingale for Vµ , where ϕ(x) equals log(1 +
+   7 https://github.com/gostevehoward/confseq                           x + x2 /2) if x ≥ 0 and − log(1 − x + x2 /2) if x < 0. They
+                                                                        then use the plug-in and inversion techniques discussed in
+14
+
+the previous cases to derive a CS for µ. Somewhat surpris-   is a (1 − α)-CS for µ.
+ingly, these CSs for µ (assuming P ∈ Vµ ) appear, visually,     The preceding techniques are interesting because they
+almost identical to the sub-Gaussian CSs one gets when       can be used even when the observations are not bounded.
+assuming P ∈ Gµ . In other words, for mean estimation, the   But for the bounded model ∪µ∈R Bµ , the most statistically
+sub-Gaussian assumption can be relaxed with almost no        powerful way to derive a CS for µ is to use plug-in test
+practical consequence. The authors also derive extensions    martingales for Bµ of the form
+for the case when the p-th moment is finite (p > 1).                                  Yt
+  There are other known test supermartingales for this       (24)
+                                                                                 µ
+                                                                               Kt :=
+                                                                                                µ
+                                                                                          (1 + λi (Xi − µ)),
+setting, for example by Dubins and Savage (1965) and Delyon                           i=1
+(2009, Proposition 12) but experiments show that these to              µ
+be significantly less powerful.                              where λi is a predictable process indexed by µ. As be-
+                                                                                 µ                                      µ
+  Wang and Ramdas (2023c) later extended these ideas to      fore, Ct := {µ : Kt < 1/α} is a (1 − α)-CS for µ. The λi
+derive “Huber-robust” test supermartingales and CSs that     are naturally interpreted as bets on the Xi ; they must be
+can handle adversarial corruptions to heavy-tailed data.     predictable because a bet on Xi must be made before see-
+                                                             ing Xi . This idea was suggested by Hendriks (2018), and
+5.3 Variance-Adaptive Estimation of Bounded                  was independently proposed and studied in more depth by
+     Means (Case A)                                          Waudby-Smith and Ramdas (2023), who derive betting
+  In the previous two examples, the sub-Gaussian param-      strategies that are adaptive to the underlying distribution
+eter or the variance bound σ must be provided (or an up-     P, in particular to its mean and variance, establishing con-
+per bound must be guessed) in advance by the statistician,   nections   to the Chernoff method, empirical and dual like-
+since it is provably impossible to learn σ from the data it- lihood,  and   other parts of the literature. Followup work
+self. For the subclass of bounded random variables, how-     by Orabona and Jun (2021) derives other betting strate-
+ever, variance-adaptive mean estimation is feasible.         gies via connections to Thomas Cover’s universal portfo-
+         µ                                          ∞
+  Let B denote the set of distributions P on [0, 1] such     lios.
+that EP [Xi | Fi−1 ] = µ. Howard et al. (2021) prove that for    5.4 Testing Symmetry (Case A)
+any λ ∈ [−1, 1], and any predictable µ̂i ∈ Fi−1 ,
+                                                                 Let P be the set of distributions on R∞ such that Xt and
+                        X                X           
+                                                       2        −Xt have the same distribution given Ft−1 , for every t ≥
+(23) Nt (λ) := exp λ (Xi − µ) − ψ(λ) (Xi − µ̂i )  ,
+         µ               
+                                                                 1. Extending an older result by Efron (1969), de la Peña
+                        i≤t                 i≤t
+                                                                 (1999, Lemma 6.1) establishes that for any λ ∈ R,
+where ψ(λ) := − log(1 − λ) − λ, is a test supermartin-                                                             
+gale for Bµ . Because ψ is the logarithm of the moment                                        X          X 
+                                                                                                             Xi2 
+                                                                                                          2
+                                                                 (25)        Rt (λ) := exp λ    Xi − λ
+                                                                                                        2
+generating function (MGF) of a centered unit-rate expo-                                       i≤t           i≤t
+nential distribution, we call N µ a subexponential super-
+martingale. As λ → 0, ψ(λ) behaves like the Gaussian log-        is a test supermartingale for P. Notice again the fully em-
+MGF λ2 /2, but unlike the sub-Gaussian supermartingale           pirical variance term, as in (23); these are also called self-
+in (21), we can employ a fully empirical variance term           normalized processes. As before, one can mix over λ or
+in (23). This generalizes a result of Fan, Grama and Liu         use the plug-in technique described earlier.
+(2015), who effectively proved the same claim with µ̂i :=           Recently, Ramdas et al. (2020) proved that Rt is inad-
+0 for all i. The extension to predictable µ̂i , obtained using   missible for testing symmetry by constructing a test mar-
+some tricky algebra, is useful in lowering the empirical         tingale Rot for P that is always at least as large as Rt , and
+variance. Mixing over λ with a (conjugate) gamma dis-            typically larger. In fact, M is a test martingale for P (and
+tribution leads to a closed form mixture supermartingale;        is admissible) if and only if the unit bets Bt at time t
+see Howard et al. (2021) for the resulting CS.                   in (5) are nonnegative and predictable, and Bt − 1 is an
+   Waudby-Smith and Ramdas (2023) note that for pre-             odd function of Xt . The unit bet underlying (25) takes the
+dictable λi ∈ Fi−1 ,                                             form g(x) := exp(λx − λ2 x2 /2). Since g(x) − 1 is not an
+                                                               odd function, mirroring it around one can improve it: us-
+                  X             X                           ing unit bets e g(x) := g(x)1 x≥0 + (2 − g(−x))1 x≤0 yields a
+        µ
+      Nt := exp  λi (Xi − µ) −     ψ(λi )(Xi − µ̂i ) 
+                                                       2
+
+                  i≤t              i≤t
+                                                                 strictly better (and admissible) test martingale Rot .
+
+is also a subexponential “plug-in” test supermartingale          5.5 Testing Exchangeability and Log-Concavity
+that can be tuned to closely mimic the earlier mixture su-           (Case C)
+permartingale. This means that                                     In the previous example, P is a rich, nonparametric
+        P                       P                                class of distributions (discrete and continuous, light and
+          i≤t λi Xi   log(2/α) + i≤t ψ(λi )(Xi − µ̂i )2
+         P          ±           P                                heavy tailed, etc.) with no common dominating measure.
+            i≤t λi                i≤t λi
+                            GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                           15
+
+Being able to find a single (nonconstant) process that is             process (φ(Pt ))t≥1 is a reverse submartingale with respect
+simultaneously a test martingale for every P in P is quite            to the exchangeable filtration. (An analogous statement
+atypical. (The same atypical situation also occurred with             also applies to divergences.)
+Bµ in the bounded case.) For example, there is no non-                    Recall that a reverse submartingale is a submartingale
+trivial test martingale for Gµ , the sub-Gaussian class dis-          when time is reversed and the process is viewed from time
+cussed earlier; nevertheless, we did exhibit a test super-            ∞ to zero. Reverse submartingales behave somewhat like
+martingale. It turns out that even this is atypical: a rather         forward supermartingales: their expectations are decreas-
+special structure is required for even a (nontrivial) test su-        ing as time increases. Nonnegative reverse submartingales
+permartingale to exist.                                               behave like test supermartingales in that there exists a re-
+   Ramdas et al. (2022) study the seemingly simple prob-              verse Ville’s inequality, with an identical statement to the
+lem of testing if a binary sequence is exchangeable, and              forward Ville’s inequality. Manole and Ramdas (2023)
+find that no nontrivial test supermartingale exists (in the           use this to derive confidence sequences for (say) the en-
+original filtration), but they exhibit a nontrivial and pow-          tropy of a distribution, as well as for divergences be-
+erful e-process based on universal inference.                         tween pairs of distributions in quite some generality. The
+   Remarkably, Vovk (2021) demonstrates that by shrink-               same technique also allows the authors to derive the first
+ing the filtration to include only conformal p-values, it is          tight CSs (in their dependence on sample size, dimension,
+once again possible to design nontrivial test martingales,            etc.) for suprema of Gaussian processes, Rademacher
+even though none exist in the richer data filtration. Vovk’s          complexities, U-statistics, quantile functions, and several
+method works for general observation spaces, but in the               other interesting objects.
+binary case, experiments by Vovk, Nouretdinov and Gammerman A game-theoretic interpretation of nonnegative re-
+(2021) demonstrate that it is not as powerful as the afore-           verse submartingales remains unknown, as does a game-
+mentioned e-process.                                                  theoretic derivation of the above CSs.
+   Another relevant example is that of testing log-concavity.
+                                                                      5.7 Sequential Change Detection
+Let Ld denote the set of distributions P on Rd with
+Lebesgue densities p such that log p(x) is concave in x. Ld               On observing a stream of data, the problem of se-
+is a nonparametric class that contains all Gaussian, logis-           quential change detection can be seen as an extension
+tic, exponential and Laplace distributions, as well as uni-           of sequential testing: either all the data is from some
+form distributions on any convex set. Gangrade, Rinaldo and Ramdas    P ∈ P, or at some time ν, it switches from P to some
+(2023) prove that there is no test supermartingale for Ld ,           Q ∈ Q. If there is indeed a change, we would like to
+but the universal inference approach yields a powerful e-             stop as quickly as possible and proclaim a change; if this
+process for Ld .                                                      happens, call the time at which a change is proclaimed
+   Of course, there are problems for which even no non-               as τ∗ . Measures of the performance of a change detec-
+trivial e-process exists and testing those nulls is futile;           tion procedure include average run length (ARL, also
+see Ruf et al. (2022) for examples.                                   called frequency of false alarms) and average detection
+                                                                      delay. These are respectively defined as inf P∈P EP [τ∗ ], and
+5.6 Estimating Convex Functionals and
+                                                                      supP∈P,ν>0,Q∈Q EP,ν,Q [τ∗ − ν | τ∗ > ν], where the subscript
+      Divergences by Reversing Time (Case D)
+                                                                      P, ν, Q means that the data come from P up through time
+   Consider a set of probability distributions Π that is              ν and from Q after ν. We would like the former to be as
+closed under convex combinations. A functional φ : Π 7→               large as possible with the latter being as small as possible.
+R≥0 is called convex if φ(aP + (1 − a)Q) ≤ aφ(P) + (1 −                   Extending Volkhonskiy et al. (2017), who use confor-
+a)φ(Q) for any P, Q ∈ Π and a ∈ [0, 1]. Classic exam-                 mal test martingales to detect deviations from exchange-
+ples are the entropy and the mean. Similarly, a divergence            ability of the Xi ’s, Shin, Ramdas and Rinaldo (2022) de-
+D : Π×Π 7→ R≥0 is called convex if D(aP +(1 −a)P′ , aQ+               scribe a general nonparametric game-theoretic framework
+(1 − a)Q′ ) ≤ aD(P, Q) + (1 − a)D(P′ , Q′ ). Examples in-             for change detection. They define an e-detector for P to
+clude the total variation distance, Kullback-Leibler diver-           be a nonnegative process M such that
+gence, kernel maximum mean discrepancy, Kolmogorov-
+                                                                                EP [Mτ ] ≤ EP [τ] for every τ ∈ T and P ∈ P.
+Smirnov distance, Wasserstein distance or any integral
+probability metric or f-divergence.                                   (Like an e-process, the definition only depends on P but
+   Suppose X1 , X2 , . . . , Xt , · · · ∼ P and let Pt denote the em- we measure its quality relative to a post-change class Q).
+pirical distribution of X t . The exchangeable filtration Et is       The authors show that if one can construct an e-process
+the decreasing filtration given by Et = σ(Pt , Xt+1 , Xt+2 . . . );   for P, then one can define an e-detector for P by summing
+in words: Xt+1 , Xt+2 . . . are known perfectly, but the order        e-processes started at consecutive times. Formally, Mt :=
+                                                                      P
+of X1 , X2 , . . . , Xt is forgotten. Manole and Ramdas (2023)           i≤t Ai is an e-detector for P, where Ai is an e-process for
+derive a curious property: for any convex functional φ, the           P that depends only on Xi , Xi+1 , . . . . Game-theoretically,
+16
+
+Mt is the wealth of a gambler who injects an extra dollar            With such goals in mind, Waudby-Smith et al. (2021)
+into the game at each time, and uses it to bet against P.         define “asymptotic confidence sequences”, which may
+   The above definition and construction may appear mys-          sound paradoxical at first. They mirror an analogous defi-
+terious, but yields methods with nontrivial properties.           nition of asymptotic CIs. Informally, a sequence of (mea-
+First, defining τ∗ := inf{t ≥ 1 : Mτ ≥ 1/α}, one can prove        surable) sets (Ct )t≥1 is called an asymptotic CS if there
+that the ARL is at least 1/α. Second, in certain para-            exists some unknown nonasymptotic CS (Dt )t≥1 , such that
+metric settings, if there is indeed a changepoint, then           the measure of the symmetric differencepbetween Ct and
+one can design e-detectors such that the detection de-            Dt almost surely vanishes faster than a log log t/t rate.
+lay is near-optimal in a particular sense: even if P, Q           Waudby-Smith et al. (2021) then derive a universality re-
+were known in advance, the best possible detection de-            sult: informally, as long as the data have more than two
+lay for any method with ARL at least 1/α scales like              moments (an almost necessary condition for inference),
+log(1/α)/D(P||Q), where (as before) D is the Kullback-            a universal asymptotic CS is given by (22) but with σ
+Leibler divergence. An e-detector based on likelihood ra-         replaced by an empirical variance σ̂t . This yields a time-
+tios recovers the famous Shiryaev-Roberts statistic and           uniform analog of the central limit theorem (CLT), and is
+can adaptively achieve this optimal scaling (up to lower          established using certain strong approximation theorems
+order terms) without knowing P, Q, by employing new               for Brownian motion. The authors then construct doubly-
+mixture and plug-in approaches. Third, e-detectors can be         robust asymptotic CSs for the ATE, yielding anytime ver-
+built for many nonparametric P using (for example) the            sions of the corresponding CIs.
+e-processes constructed earlier in this section. For many            Asymptotic CSs can be used in a variety of other set-
+such nonparametric problems, e-detectors provide, as far          tings where CLT-based CIs are the norm in the offline set-
+as we know, the first change detection procedures with            ting. These include M-estimation and other semiparamet-
+provable ARL control.                                             ric and nonparametric functional estimation problems;
+   E-detectors only work when P and Q are prespecified            see also Pace and Salvan (2020) and Johari et al. (2022).
+and non-intersecting (eg: we wish to detect mean changes             In complementary work, Duan, Ramdas and Wasserman
+from ≤ 0 to > 0). Shekhar and Ramdas (2023) develop               (2022) develop test martingale versions of rank based
+a complementary framework for change detection when               tests like the Wilcoxon, Kruskal-Wallis, and Friedman
+only such information is not available (eg: we wish to de-        tests. Batch versions of these tests are commonly used
+tect mean changes from anything to anything else) using a         for testing the strong global null (of no treatment effect)
+new notion of a “backward confidence sequence” (BCS).             in a randomized experiment with covariates.
+Here, one constructs two (1 − α)-confidence sequences
+                                                                  5.9 Other Nonparametric Problems
+— one forwards in time, and one backwards in time (i.e.
+forwards in time after reversing time) — and declares a             5.9.1 Compendium of Exponential Supermartingales.
+changepoint the first time that they do not intersect. One        In previous sections, we have encountered several non-
+can show that the ARL is controlled nonasymptotically,            parametric test supermartingales of the form
+and in parametric settings one achieves an optimal detec-
+                                                                              exp(λ · (sumt ) − ψ(λ) · (variancet )),
+tion delay up to constants. Due the plethora of CSs devel-
+oped for nonparametric settings, plugging them into the           where sumt is the sum of the observed random vari-
+BCS framework yields the first sequential change detec-           ables, and variancet captures their cumulative variance;
+tion method for many nonparametric problems.                      recall (21), (23), (25) for example. Likelihood ratios for
+                                                                  in exponential families also take an identical form, where
+5.8 Time-Uniform Central Limit Theory and
+                                                                  sumt adds the sufficient statistics. In a very concrete sense,
+    Asymptotic Confidence Sequences
+                                                                  we have been generalizing the likelihood ratio to compos-
+    The average treatment effect (ATE) is arguably the most       ite and nonparametric problems, and even to cases where
+popular estimand in causal inference, and one may ask if          there is no dominating measure. Just as likelihood ratios
+it is possible to estimate it sequentially. For brevity, we fo-   are fundamental objects for parametric inference, test (su-
+cus here on the observational setting, where finite-sample        per)martingales and e-processes are fundamental objects
+inference is not possible due to unknown biases caused by         for nonparametric inference. Howard et al. (2020) sum-
+confounding, but under suitable assumptions it is possi-          marize a large literature on test supermartingales and e-
+ble to design “doubly-robust” estimators for the ATE that         processes of the above exponential form, in discrete and
+have (nonsequential) asymptotic coverage guarantees. For          continuous time, for scalar-, vector- and matrix-valued
+a sequential analog, a suitable generalization of the con-        observations, and under a variety of nonparametric con-
+cept of confidence sequences is required, because (by def-        ditions. We have mentioned only some examples.
+inition) CSs have finite-sample validity guarantees that
+are already impossible in nonsequential settings.
+                           GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                              17
+
+   5.9.2 Quantiles. Howard and Ramdas (2022) derive             for testing such hypotheses (of the empirical Bern-
+confidence sequences based on iid data for any prespeci-        stein flavor in (23)), and invert them to construct CSs.
+fied quantile of an unknown probability distribution, im-       Waudby-Smith and Ramdas (2023) designed more pow-
+proving on those derived by Darling and Robbins (1967).         erful test martingales of the form (24) and the resulting
+They also derive CSs for the entire cumulative distribution     confidence sequences are the tightest known so far. These
+function (or quantile function) of any arbitrary univariate     were then applied quite successfully towards election au-
+random variable, proving a time-uniform extension of the        diting by Waudby-Smith, Stark and Ramdas (2021) and
+famous Dvoretzky-Kiefer-Wolfowitz inequality.                   more recently by Spertus and Stark (2022).
+   5.9.3 Two-Sample (and Independence) Testing. Here,
+                                                                         6. MULTIPLE HYPOTHESIS TESTING
+we observe two samples and want to know if they have
+the same distribution, making no other assumptions. This        6.1 Global Null Testing and Meta-Analysis
+is one of the best studied problems in statistics. Nonpara-
+                                                                   Based on test martingales, Ter Schure and Grünwald
+metric methods in the offline setting include the univari-
+                                                                (2022) propose ALL-IN (Any time Live and Leading
+ate Kolmogorov-Smirnov test and the multivariate kernel
+                                                                INterim) meta-analysis. This meta-analysis can be up-
+maximum mean discrepancy, amongst many others.
+                                                                dated any time, even after each new observation, while
+   As to sequential two-sample tests, we should distin-
+                                                                retaining type-I error guarantees. It is live: no need to
+guish between three approaches. We already discussed
+                                                                specify in advance the times when you will look and rean-
+the two-sample tests from Turner et al. (2023a; 2023b)
+                                                                alyze. And it can be the leading source of information for
+in which the alternative is parametric in Section 4.2. Al-
+                                                                deciding whether individual studies should be initiated,
+though we called these tests ‘parametric’, their null is bet-
+                                                                stopped early, or expanded.
+ter viewed as nonparametric. Second, in some works we
+                                                                   These authors illustrate the method for clinical trials
+can use arbitrary (e.g. deep learning based) sequential pre-
+                                                                involving time-to-event data, using a Gaussian approxi-
+dictors that attempt to predict, given an outcome, from
+                                                                mation to Section 4.1.1’s logrank test. Consider the case
+which of the two samples it was taken. These include
+                                                                where each study tests the null hypothesis that some effect
+Lhéritier and Cazals (2018) (although the likelihood ra-
+                                                                size δ (measuring, say, the efficacy of a medical treatment)
+tio process they use technically is not an e-process) and
+                                                                is 0; extensions to CIs are possible via inversion. In the
+Pandeva et al. (2022) (which may be re-interpreted as a
+                                                                simplest case, the evidence for the i-th study is measured
+modification of the above process based on UI, so that it
+                                                                by a unit bet S (i) ; the null is always the same (a “global
+does become an e-process);
+                                                                null”), but the alternative may change. For example, if the
+   Finally, one may directly attempt to obtain sequential
+                                                                first study is based on the mixture method of Section 3.2,
+analogs of large classes of existing offline nonparamet-
+                                                                the mixing distribution for later studies might be updated
+ric tests. Shekhar and Ramdas (2021) successfully pur-
+                                                                using the outcomes of the studies so far or changed be-
+sue this direction (even for non-i.i.d. data) in a general
+                                                                cause the next study samples from a different population.
+game-theoretic framework, and their e-processes perform
+                                                                The unit bets S (1) , S (2) , . . . generated this way can be mul-
+excellently in practice. The evidence grows slowly for                                                             Qj
+hard problems (when the two distributions are different         tiplied, so that the process E with E( j) := i=1       S (i) is a test
+but very similar) and quickly for easy ones (when the two       martingale at the “meta-level”, with individual outcomes
+distributions are very different), and it can be monitored      replaced by entire studies. We can always keep initiating
+and stopped adaptively. This is a major advantage over          and adding new studies as we want at the time, deciding
+offline tests when the problem difficulty is not known in       whether do so and choosing the unit bet for any new study
+advance. Extending the above, the first sequential non-         in light of the outcomes of the previous studies.
+parametric independence testing framework was devel-               In the terminology of Grünwald, De Heide and Koolen
+oped in Podkopaev et al. (2023), which allows random            (2023), the method is safe under optional continuation.
+variables to lie in general spaces and also handles non-        This is true when the study-level e-variables S ( j) are pro-
+i.i.d. settings.                                                duced by Section 3.3’s RIPr, even when the RIPr does
+                                                                not give an e-process at the individual outcome level. The
+  5.9.4 Sampling Without Replacement (WoR). Another             method is more flexible though when each study j is as-
+classical problem is that of estimating a mean when             sociated with an e-process. As Ter Schure and Grünwald
+sampling WoR. Here we have a bag of N numbers                   (2022) show, it is then possible to interleave the studies—
+{x1 , . . . , xN }, say all in the range
+                                       P [0, 1], and we wish    one may first observe some outcomes from study 1, then
+to estimate their average µ := i≤N xi /N, or (say) to           some from study 4, then some from study 1 again, etc.,
+test if it is at most a half. The randomness arises from        tracking the cumulative product of the e-variables result-
+the WoR sampling process. Waudby-Smith and Ramdas               ing from each batch. Again, one can decide at any time to
+(2020) construct powerful plug-in test supermartingales         stop an individual study, initiate or change studies, or stop
+18
+
+the meta-analysis all-together, while still retaining Type-I    can serve as unnormalized weights within standard FDR
+error guarantees throughout.                                    methods that use weighted p-values. The waiving of the
+   Without using the ALL-IN terminology, Duan et al.            need to normalize the weights (to sum to one) gives the
+(2020) design several martingale methods to sequentially        e-value weighted methods a distinct power advantage
+test a global null when each study ends with a p-value (in-     over the usual normalized weights that are employed in
+stead of e-value) that is valid conditional on all past stud-   weighted multiple testing.
+ies. These new methods can be seen as sequential analogs
+                                                                6.3 False Coverage Rate
+to several well known nonsequential p-value combination
+rules like Fisher’s or Stouffer’s. Alternatively, one could        Suppose data regarding K parameters has been col-
+calibrate the p-values into e-values (calibrators are de-       lected, a data-dependent selection rule S is applied to
+fined in Section 6.3) and multiply them as done above.          select a subset S of the parameters deemed of interest,
+                                                                and CIs for the selected parameters must be reported so
+6.2 False Discovery Rate
+                                                                as to keep the expected fraction of miscovering intervals
+   The false discovery rate (FDR) is probably the most          at α. The BY procedure (Benjamini and Yekutieli, 2005)
+popular error metric in modern large-scale multiple test-       is an analog of the BH procedure for this task: we re-
+ing. The BH procedure (Benjamini and Hochberg, 1995)            port (1 − αR/K)-CIs for the selected parameters, where
+is the standard procedure for controlling the FDR when          1 ≤ R ≤ |S | is some function of the selection rule and
+working with p-values. Given a target FDR level α, it pro-      dependence structure. Under certain dependence assump-
+claims as discoveries the hypotheses corresponding to the       tions, this is proven to control the FCR at level α.
+k∗ smallest p-values out of K, where                               In contrast, the e-BY procedure of Xu, Wang and Ramdas
+                                                                (2022) applies only to e-CIs, which are CIs constructed
+         k∗ := max{k ∈ {1, . . . , K} : p(k) ≤ αk/K},
+                                                                by inverting tests based on e-values (discussed next). The
+and p(k) represents the k-th smallest p-value. It is known      authors prove that reporting (1 − α|S |/K) e-CIs controls
+to control the false discovery rate when the null p-values      the FCR at α for any dependence structure, and any data-
+are independent of each other and of the non-nulls, as well     dependent selection rule S (including one that is fully
+as under a particular type of positive dependence known         aware of the corrected intervals).
+as PRDS (Benjamini and Yekutieli, 2001).                           Concrete examples of e-CIs include all confidence sets
+  Wang and Ramdas (2022) define an analogous e-BH               based on universal inference, any (arbitrarily) stopped
+procedure, which rejects hypotheses corresponding to the        confidence sequence, and CIs constructed using Chernoff-
+k∗ largest e-values, where                                      style concentration inequalities. Further, Xu, Wang and Ramdas
+                                                                (2022) show that any CI can be converted to an e-CI by
+         k∗ := max{k ∈ {1, . . . , K} : e[k] ≥ K/(kα)},         calibration. A calibrator f is nonincreasing function from
+                                                                                            R1
+and e[k] represents the k-th largest e-value. Surprisingly,     [0, 1] to [0, ∞) such that 0 f (x)dx = 1. If a calibrator f
+this procedure controls the FDR at α under arbitrary de-        is also continuous at 1/α, then any CI constructed at (the
+pendence between the e-values. The same result holds if         more stringent) level α′ := f −1 (1/α) is an e-CI at level α.
+one picks any set of S e-values that are all larger than        This e-CI is always larger than the original CI.
+K/(S α); an analogous result does not hold for p-values.           As before, the implications for bandit multiple testing
+  Xu, Wang and Ramdas (2021) extended these results to          are interesting. One can construct and continuously moni-
+bandit multiple testing. There, the data to test the K hy-      tor a CS for the effect size of each treatment, decide when
+potheses is not available in advance, but must be col-          to stop adaptively, select any subset for further study, and
+lected adaptively, for example by assigning later subjects      report corrected CIs using the stopped CSs at the e-BY
+to more promising treatments as revealed by the results         adjusted level. As one example, one could run e-BH con-
+on earlier subjects. For each of the K treatments, one can      tinually using the underlying e-processes, decide when to
+form an e-process to test the null hypothesis that the treat-   stop based on its rejections; then the corrected CIs will be
+ment effect is nonpositive. The K e-processes have a com-       congruent with the reported discoveries in the sense that
+plex dependence structure because of the adaptive assign-       all the corrected CIs will not contain the null parameter
+ment mechanism. Nevertheless, at any data-dependent             and both FDR and FCR will be controlled at level α.
+stopping time, the e-BH procedure applied to the stopped
+                                                                 6.4 The Inevitability of e-hacking
+e-processes controls the FDR.
+  When both p-values and e-values are available for                 Peeking at the data obtained so far in order to decide
+the same set of hypotheses (for example, from different          whether to continue is only one of many abuses of sta-
+datasets collected under different conditions), Ignatiadis, Wang tistical
+                                                                 and Ramdas
+                                                                          testing that have been classified as “p-hacking”.
+(2022) define generalizations of the above procedures that       Because of the interpretation in terms of betting, peeking
+use both sources of information. In particular, e-values         is legitimate when we test by e-values, but other abuses
+                           GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                     19
+
+are neither legitimized nor prevented. When statisticians       probabilistic forecasters are doing a good job (are cali-
+commit these abuses using e-values, they have merely            brated, for example), and how can we compare two dif-
+replaced “p-hacking” with “e-hacking”. A statistician is        ferent probabilistic forecasters? Such questions have been
+e-hacking, for example, whenever they implement many            addressed in a game-theoretic setup by several recent
+betting strategies with given data and report only the one      works that use test supermartingales (Henzi and Ziegel,
+that yields the greatest wealth.                                2022; Henzi, Arnold and Ziegel, 2023) or e-processes and
+   The fundamental principle of testing by betting is that      confidence sequences (Choe and Ramdas, 2021).
+a bet on an outcome must be made before the outcome                A fascinating general phenomenon, called Jeffreys’s
+is observed. Optional continuation is allowed in the case       law by Dawid (1984, Sect. 5.2) in honor of Harold Jef-
+of successive bets because this condition is still met for      freys, is that two reliable forecasters must agree in the
+each individual bet. But claiming you would have bet in a       long run: if they differ too much, a Skeptic observing
+certain way after you know the outcome is still humbug.         both of them will be able to discredit at least one of them
+We can only hope that the clarity of these principles, even     (Shafer and Vovk, 2019, Sect. 10.7).
+for laypeople, will make the possibilities for abuse more
+                                                                   Multi-Armed Bandits and Reinforcement Learning. In
+obvious and increase the pressure to distinguish between
+                                                                sequential decision making, as modeled by a contextual
+exploratory and confirmatory analysis.
+                                                                multi-armed bandit or a reinforcement learning prob-
+   In some situations, abuses can be prevented or miti-         lem, one sees a sequence of “contexts” xt ∈ X, and
+gated by a separation of roles. The use of e-values rather      one must decide which action at ∈ A to take in or-
+than p-values may be helpful in these situations.               der to maximize a (discounted) sum of observed re-
+   In academic disciplines where abuses may be driven by        wards R(xt , at ). A policy π is a mapping from X to A,
+the need to publish, for example, editors can encourage         and one usually attempts to understand the unknown
+preregistration of a study’s data collection and analysis. If   reward function R by playing some exploratory pol-
+we agree that the analysis should use the betting strategy      icy π0 . One central question is the following: if the
+that maximizes the expected logarithm of wealth under a         data was collected using some π0 , is it possible to es-
+reasonable alternative, then the proposed analysis neces-       timate the quality (called “value”) of some other policy
+sarily identifies the alleged reasonable alternative; Shafer    π1 that was never deployed? This is called “off-policy
+(2021) calls this the implied alternative. Editors and ref-     evaluation”, and is a central problem of great practical
+erees could reject proposed registrations for which this        interest. Recently, Karampatziakis, Mineiro and Ramdas
+implied alternative is not really plausible and even agree      (2021) developed confidence sequences for off-policy
+in advance to publish the study when it is plausible and in-    evaluation when the rewards are bounded, and extended
+teresting. This option does not arise when classical signif-    by Waudby-Smith et al. (2022) to settings with unbounded
+icance testing is used, because usually there is no unique      importance weights and time-varying policies. We remark
+alternative for which a test is most powerful.                  that outside of the off-policy setting, CSs are commonly
+   When the statistician is embedded in a larger scientific     used in contextual bandits (Abbasi-Yadkori, Pál and Szepesvári,
+enterprise, decisions about each step in data collection        2011; Chowdhury and Gopalan, 2017) and best arm iden-
+can be the result of consultation between the statistician      tification (Jamieson et al., 2014; Kaufmann and Koolen,
+and other scientists. In the first flush of excitement about    2021).
+Wald’s sequential analysis, Barnard (1947) saw this as the
+future of statistics, but it has been in tension with the no-                       8. DISCUSSION
+tion of a p-value based on a global test statistic. Testing
+by betting escapes this tension and can be used even in         8.1 Connections with Other Areas
+collaborative meta-analysis (Section 6.1).                         8.1.1 Bayesian and Evidentialist Approaches. We al-
+                                                                ready alluded to various connections between Bayesian
+              7. OTHER APPLICATIONS                             and game-theoretic statistics (Bayes factors, Section 3.2.3,
+  Game-theoretic statistics is rapidly evolving. Here are       Jeffreys’ prior, Section 3.2, Bayesian t-test Section 4.1.2).
+additional topics where it is relevant.                         Even though interpretations are very different, a precise
+                                                                comparison would fill up an entire paper. We do high-
+  Comparing/Evaluating Forecasters. Many experts and            light some relations in Appendix A, emphasizing that
+pundits now repeatedly make predictions about the weather,      e-processes generalize likelihood ratios and, like these,
+wars, sport games, business events, and elections proba-        can be interpreted as evidence. In the present section,
+bilistically, sometimes as the probability of an event (one     we restrict ourselves to one specific simple technique
+team beating another) or a predictive distribution (over the    to construct CSs, the prior-posterior ratio martingale
+amount of rain the next day). How can we test whether           (Waudby-Smith and Ramdas, 2020; Grünwald, 2023) so
+                                                                as to demonstrate how Bayesian tools can be transformed
+20
+
+into SAVI tools. Suppose the data are drawn from Pθ∗                       for any lossless code there is a distribution Q̄ such that
+for some unknown θ∗ ∈ Θ (extension to Bayesian non-                        this correspondence holds. In MDL approaches one pro-
+parametrics is straightforward (Neiswanger and Ramdas,                     ceeds by associating statistical models (sets of distribu-
+2021)). Let π0 (·) be a “prior” distribution over Θ; we call               tions) Q with ‘universal codes’, represented as distribu-
+this the working prior, because no assumptions are made                    tions q̄ such that the codelengths are − log q̄(xt ), designed
+about it. After seeing X1 , X2 , . . . , Xt , let πt (·) be the pos-       to give small codelengths to the data at hand whenever
+terior distribution obtained via Bayes’ rule. The central                  the code corresponding to any element P ∈ Q assigns a
+observation is that the density ratio dπ0 (θ∗ )/dπt (θ∗ ) is a             small codelength to the data. This very closely mirrors
+test martingale for Pθ∗ , termed the “prior-posterior ratio                the construction of q̄ via an estimator θ̂ or the method of
+martingale” (it is used for different purposes in Bayesian                 mixtures as in Section 3.2. MDL model selection between
+statistics, where it is called the Dickey-Savage ratio. Thus,              a number of parametric models Qγ , γ ∈ Γ works by first
+{θ ∈ Θ : dπ0 (θ)/dπt (θ) < 1/α} is a (1 − α)-CS for θ∗ .                   associating each Qγ with a q̄γ as above, and then picking
+Intriguingly, quite recently it has also been suggested                    as ‘the best explanation for data xt ’ the γ for which the
+within the Bayesian community (Wagenmakers et al.,                         associated codelength − log q̄γ (xt ) is minimal, reporting
+2020; Pawel, Ly and Wagenmakers, 2022) to use this CS,                     as evidence of model Qγ1 over Qγ2 the codelength dif-
+when applied to fixed t, as an alternative for the Bayesian                ference − log q̄γ2 (xt ) − [− log q̄γ1 (xt )]. As a result, if there
+posterior credible interval; we comment further in Ap-                     are just two models, γ ∈ {0, 1} and the null model is sim-
+pendix A. These are also closely related to Bayesian                       ple, the MDL approach is essentially equivalent to do-
+“snug regions” proposed8 by Hildreth (1963).                               ing a test between null Q0 and alternative Q1 and report-
+                                                                           ing as evidence the logarithm of the e-value q̄1 (xt )/q0 (xt )
+   8.1.2 Group-Sequential and Alpha Spending Methods.
+                                                                           (Grünwald and Roos, 2020) — exactly the same as in
+These methods are mostly used in the clinical trial lit-
+                                                                           Section 3.2 but with evidence expressed on a logarith-
+erature. Like our methods, they have their roots in the
+                                                                           mic scale. When the null is composite, MDL and SAVI
+work of Robbins, Siegmund, Lai and others on anytime-
+                                                                           methods diverge, but we conjecture that e-processes have
+valid tests in the 1970s. But they developed in quite a dif-
+                                                                           a codelength interpretation—but with different codes than
+ferent direction: although there are exceptions9 such as
+                                                                           in classical MDL approaches.
+Mingxiu, Cappelleri and Gordon Lan (2007)—group se-
+                                                                              One may also think of ‘universal codes’ q̄ as sequen-
+quential methods provide Type-I error control under mul-
+                                                                           tial prediction strategies that predict xt using q(xt | xt−1 )
+tiple looks at the data, but they typically require a pre-
+                                                                           and with loss assessed by the logarithmic loss function
+specified final sample size, and a prespecified set of times
+                                                                           − log q(xt | xt−1 ). The vast field of online learning is about
+at which one looks at the data. In contrast, e-processes
+                                                                           such sequential prediction and the logarithmic loss takes
+can be updated as long as new data is available; an exten-
+                                                                           an important special place in it. Not surprisingly then,
+sive comparison in the setting of the logrank test is per-
+                                                                           sequential prediction strategies from the online learning
+formed by Ter Schure, Grünwald and Ly (2021). Princi-
+                                                                           literature can often be converted to provide good (in some
+ples for designing e-processes, such as the GRO criteria,
+                                                                           cases optimal in some sense) betting strategies for sev-
+or the RIPr and UI methods, do not seem to have ana-
+                                                                           eral problems. These connections have been emphasized
+logues in the α-spending/group sequential literature. But
+                                                                           by Orabona and Jun (2021); Waudby-Smith and Ramdas
+a firmer understanding of connections is desirable.
+                                                                           (2023); Shekhar and Ramdas (2021); Ramdas et al. (2022);
+   8.1.3 Information Theory and Online Learning. We                        Casgrain, Larsson and Ziegel (2022) and others. Impor-
+touched on the relationship between our methods and                        tantly, whereas in this paper we emphasized the case that
+the information-theoretic Minimum Description Length                       Q is a class of alternatives that are seriously contem-
+(MDL) paradigm for model selection, learning and predic-                   plated as having generated the data, we may also do our
+tion (Barron, Rissanen and Yu, 1998; Grünwald and Roos,                    tests with q̄ that we suspect will predict the data reason-
+2020) when discussing the REGROW criterion in Sec-                         ably well but cannot be considered ‘potentially true’ in
+tion 3.2. The connection to MDL and the related idea                       any meaningful sense. For example, the q̄ may just be
+of universal coding runs quite deeply, due to Kraft’s in-                  an expert, a probabilistic predictor, the inner workings of
+equality, which states that for any probability distribu-                  which may be completely unknown to us.
+tion Q̄ with probability mass function q̄ and any stopping
+                                                                           8.2 Open Questions
+time τ, there is a lossless code such for every realization
+xτ , the codelength achieved with this code is equal, up                     8.2.1 Existence of e-processes. For what classes of
+to a negligible roundoff term, to − log q̄(xτ ); conversely,               distributions P are there nontrivial (a) test martingales,
+                                                                           (b) test supermartingales but no test martingales, (c) e-
+     8 We thank an anonymous reviewer for this reference.                  processes but no test supermartingales, (d) none of the
+     9 We thank J. Goeman and J. ter Schure for pointing this out to us.   above? While Ramdas et al. (2022); Ruf et al. (2022)
+                            GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                                  21
+
+have interesting examples separating the above concepts,           for agreement is an important open problem. Intriguingly,
+this separation is not yet fully understood in general. A re-      the use independent external randomization can signifi-
+cent preprint by Zhang, Ramdas and Wang (2023) yields              cantly alter the story (Ramdas and Manole, 2023).
+new insights via convex geometry and optimal transport.
+                                                                      8.2.4 Questions about RIPr. When exactly does the
+   8.2.2 Choice of Filtration. The choice of a filtration is       RIPr procedure applied to data X t separately for each
+a design choice, and one need not choose the richest one,          sample size t yield an e-process, as opposed to just a
+the one generated by the observations. The choice affects          sequence of e-variables? (Section 3.3). When the RIPr
+both safety (the set of stopping times τ for which the ex-         yields an e-process, there is strong justification to use it,
+pected value of Eτ does not exceed one under the null) and         but how much is lost if it is replaced by the (always appli-
+power (how fast the wealth grows under the alternative).           cable) universal inference e-process? Understanding the
+   Recall the example of testing exchangeability in Sec-           power of universal inference is itself quite open; progress
+tion 5.5. As explained, there is no nontrivial test martin-        was made in the Gaussian setting by Dunn et al. (2022).
+gale for the problem in the filtration of the observations,        In current applications the GRO-optimal RIPr e-variables
+but there is one in the coarsened filtration of conformal p-       are sometimes given by simple, analytic formulas (Sec-
+values. Despite the generality of conformal p-values, the          tion 4.2 and 4.1.2), but for other applications numerical
+coarsening implies safety under optional stopping for a            optimization is required (e.g. the logrank test as in Sec-
+smaller set of stopping times that cannot see the origi-           tion 4.1.1). An algorithm by Li (1999) is slow. Do there
+nal data, but only the conformal p-values. This sacrifice          exist practically effective algorithms?
+is unnecessary for data with a known discrete support, in
+                                                                     We end by pointing the reader to Appendix B, where
+which case an e-process is available in the original filtra-
+                                                                   we discuss the question of whether there is a “price” to
+tion, that appears in experiments to be at least as powerful
+                                                                   be paid by SAVI methods. We anticipate more discussion
+as the conformal test martingale.
+                                                                   around this (part philosophical, part technical) topic.
+   The picture is a little different for the test martingales in
+a shrunk filtration constructed by Pérez-Ortiz et al. (2022)
+                                                                                            REFERENCES
+for the problem of testing group-invariant hypotheses
+(such as the t-test example of Cox (1952) and Lai (1976)           Abbasi-Yadkori, Y., Pál, D. and Szepesvári, C. (2011). Improved algo-
+discussed in Section 4.1.2). These are not e-processes               rithms for linear stochastic bandits. Advances in Neural Information
+                                                                     Processing Systems 24.
+with respect to the original filtration, but are in the shrunk     Anscombe, F. J. (1954). Fixed-sample size analysis of sequential ob-
+one, and thus have a weaker guarantee under the null,                servations. Biometrics 10 89–100.
+but they still maximize the rate of growth amongst all e-          Barnard, G. A. (1947). Review of Abraham Wald’s Sequential Analy-
+processes, even those with respect to the original filtra-           sis. Journal of the American Statistical Association 42 658–665.
+tion. Thus, they have worse safety properties but better           Barron, A., Rissanen, J. and Yu, B. (1998). The Minimum Descrip-
+                                                                     tion Length principle in coding and modeling. IEEE transactions
+growth than (say) universal inference.
+                                                                     on information theory 44 2743-2760. Special Commemorative Is-
+   When can one coarsen the filtration in order to design            sue: Information Theory: 1948-1998.
+useful new e-processes, and when are these more or less            Bates, S., Jordan, M. I., Sklar, M. and Soloff, J. (2022). Principal-
+powerful than ones in the original filtration?                       Agent Hypothesis Testing. arXiv:2205.06812.
+                                                                   Benjamini, Y. and Hochberg, Y. (1995). Controlling the false discovery
+   8.2.3 Admissibility. Can one characterize admissibil-             rate: a practical and powerful approach to multiple testing. Journal
+ity of an e-process succinctly, with a condition that is both        of the Royal Statistical Society: Series B 57 289–300.
+necessary and sufficient? Ramdas et al. (2020) provide             Benjamini, Y. and Yekutieli, D. (2001). The control of the false discov-
+both necessary and sufficient conditions for admissibility,          ery rate in multiple testing under dependency. Annals of Statistics
+                                                                     1165–1188.
+but currently these do not match. For example, they prove
+                                                                   Benjamini, Y. and Yekutieli, D. (2005). False discovery rate–adjusted
+that, if there exists a common dominating measure, then              multiple confidence intervals for selected parameters. Journal of the
+E being admissible implies that Et = inf P∈P MtP , where             American Statistical Association 100 71–81.
+MtP is a test martingale for P. The universal inference e-         Berger, J. O., Pericchi, L. R. and Varshavsky, J. A. (1998). Bayes
+process has this form. But this condition is not sufficient          factors and marginal distributions in invariant situations. Sankhyā:
+for admissibility: e-processes satisfying Et = inf P∈P MtP           The Indian Journal of Statistics, Series A 307–321.
+                                                                   Breiman, L. (1961). Optimal gambling systems for favorable games.
+may not always be admissible (indeed, universal inference            Fourth Berkeley Symposium.
+has this form, and we know examples where it is inad-              Candès, E., Fan, Y., Janson, L. and Lv, J. (2018). Panning for Gold:
+missible). For admissibility, the {MtP }P∈P need to agree to         ‘Model-X’ Knockoffs for High Dimensional Controlled Variable
+some extent—they need to be large or small on similar                Selection. Journal of the Royal Statistical Society: Series B 80 551-
+events; if on each event, some test martingales are large            577.
+                                                                   Carney, D. R. My position on “Power Poses”. Accessed 5 June 2022,
+while others are small, the infimum will always be small.
+                                                                     Web link.
+Given that admissibility is a low bar, delineating this need
+22
+
+Carney, D. R., Cuddy, A. J. C. and Yap, A. J. (2010). Power posing:       Gangrade, A., Rinaldo, A. and Ramdas, A. (2023). A Sequential Test
+   Brief nonverbal displays cause changes in neuroendocrine levels           for Log-Concavity. arXiv preprint arXiv:2301.03542.
+   and risk tolerance. Psychological Science 21 1363–1368.                Grünwald, P. (2022). Beyond Neyman-Pearson. arXiv:2205.00901.
+Casgrain, P., Larsson, M. and Ziegel, J. (2022). Anytime-valid se-        Grünwald, P. (2023). The E-Posterior. Philosophical Transactions of
+   quential testing for elicitable functionals via supermartingales.         the Royal Society, Series A.
+   arXiv:2204.05680.                                                      Grünwald, P., De Heide, R. and Koolen, W. (2023). Safe Testing. Jour-
+Catoni, O. (2012). Challenging the empirical mean and empirical vari-        nal of the Royal Statistical Society, Series B (to appear, with discus-
+   ance: a deviation study. In Annales de l’IHP Probabilités et statis-      sion).
+   tiques 48 1148–1185.                                                   Grünwald, P. and Roos, T. (2020). Minimum Description Length Re-
+Choe, Y. J. and Ramdas, A. (2021). Comparing Sequential Forecasters.         visited. International Journal of Mathematics for Industry 11.
+   arXiv:2110.00115.                                                      Grünwald, P., Henzi, A. and Lardy, T. (2023). Anytime-Valid Tests of
+Chowdhury, S. R. and Gopalan, A. (2017). On kernelized multi-armed           Conditional Independence Under Model-X. Journal of the Ameri-
+   bandits. In International Conference on Machine Learning 844–             can Statistical Association 0 1-12.
+   853. PMLR.                                                             Hao, Y., Grünwald, P., Lardy, T., Long, L. and Adams, R.
+Cover, T. M. (1974). Universal gambling schemes and the complexity           (2023). E-values for k-Sample Tests With Exponential Families.
+   measures of Kolmogorov and Chaitin. Technical Report, no. 12.             arXiv:2303.0047.
+Cox, D. R. (1952). Sequential tests for composite hypotheses. Math-       Hendriks, H. (2018). Test Martingales for bounded random variables.
+   ematical Proceedings of the Cambridge Philosophical Society 48            arXiv:1801.09418.
+   290–299.                                                               Henzi, A., Arnold, S. and Ziegel, J. F. (2023). Sequentially valid tests
+Crane, H. and Shafer, G. (2020). Risk is random:                             for forecast calibration. Annals of Applied Statistics.
+   The magic of the d’Alembert. Working Paper #57 at                      Henzi, A. and Ziegel, J. F. (2022). Valid sequential inference on prob-
+   www.probabilityandfinance.com.                                            ability forecast performance. Biometrika.
+Darling, D. A. and Robbins, H. (1967). Confidence sequences for           Hildreth, C. (1963). Bayesian statisticians and remote clients. Econo-
+   mean, variance, and median. Proceedings of the National Academy           metrica: Journal of the Econometric Society 422–438.
+                                                                          Howard, S. R. and Ramdas, A. (2022). Sequential estimation of quan-
+   of Sciences of the United States of America 58 66–68.
+                                                                             tiles with applications to A/B testing and best-arm identification.
+Darling, D. and Robbins, H. (1968). Some nonparametric sequential
+                                                                             Bernoulli 28 1704–1728.
+   tests with power one. Proceedings of the National Academy of Sci-
+                                                                          Howard, S. R., Ramdas, A., McAuliffe, J. and Sekhon, J. (2020).
+   ences 61 804–809.
+                                                                             Time-uniform Chernoff bounds via nonnegative supermartingales.
+Dawid, A. P. (1984). Present position and potential developments:
+                                                                             Probability Surveys 17 257–317.
+   some personal views, statistical theory, the prequential approach.
+                                                                          Howard, S. R., Ramdas, A., McAuliffe, J. and Sekhon, J.
+   Journal of the Royal Statistical Society A 147 278–292.
+                                                                             (2021). Time-uniform, nonparametric, nonasymptotic confidence
+Dawid, A. P., De Rooij, S., Shafer, G., Shen, A., Vereshchagin, N. and
+                                                                             sequences. The Annals of Statistics 49 1055–1080.
+   Vovk, V. (2011). Insuring against loss of evidence in game-theoretic
+                                                                          Ignatiadis, N., Wang, R. and Ramdas, A. (2022). E-values as unnor-
+   probability. Statistics & Probability Letters 81 157–162.
+                                                                             malized weights in multiple testing. arXiv:2204.12447.
+De Heide, R. and Grünwald, P. D. (2021). Why optional stopping can       Jamieson, K., Malloy, M., Nowak, R. and Bubeck, S. (2014). lil’ucb:
+   be a problem for Bayesians. Psychonomic Bulletin & Review 28              An optimal exploration algorithm for multi-armed bandits. In Con-
+   795–812.                                                                  ference on Learning Theory 423–439. PMLR.
+de la Peña, V. H. (1999). A general class of exponential inequalities    Jeffreys, H. (1961). Theory of Probability, 3rd ed. Oxford University
+   for martingales and ratios. Annals of Probability 27 537–564.             Press, London.
+Delyon, B. (2009). Exponential inequalities for sums of weakly depen-     Johari, R., Koomen, P., Pekelis, L. and Walsh, D. (2022). Always
+   dent variables. Electronic Journal of Probability 14 752–779.             valid inference: Continuous monitoring of A/B tests. Operations
+Dimitrov, V., Shafer, G. and Zhang, T. (2022). The martingale index.         Research 70 1806–1821.
+   Working Paper #61 at www.probabilityandfinance.com.                    John, L. K., Loewenstein, G. and Prelec, D. (2012). Measuring the
+Duan, B., Ramdas, A. and Wasserman, L. (2022). Interactive rank test-        prevalence of questionable research practices with incentives for
+   ing by betting. In First conference on Causal Learning and Reason-        truth telling. Psychological science 23 524–532.
+   ing. PMLR.                                                             Karampatziakis, N., Mineiro, P. and Ramdas, A. (2021). Off-policy
+Duan, B., Ramdas, A., Balakrishnan, S. and Wasserman, L. (2020).             confidence sequences. In International Conference on Machine
+   Interactive martingale tests for the global null. Electronic Journal      Learning 5301–5310. PMLR.
+   of Statistics 14 4489–4551.                                            Kaufmann, E. and Koolen, W. M. (2021). Mixture Martingales Revis-
+Dubins, L. E. and Savage, L. J. (1965). A Tchebycheff-like inequality        ited with Applications to Sequential Tests and Confidence Intervals.
+   for stochastic processes. Proceedings of the National Academy of          J. Mach. Learn. Res. 22 246–1.
+   Sciences 53 274–275.                                                   Kelly, J. L. (1956). A New Interpretation of Information Rate. Bell
+Dunn, R., Ramdas, A., Balakrishnan, S. and Wasserman, L. (2022).             System Technical Journal 917–926.
+   Gaussian universal likelihood ratio testing. Biometrika.               Lai, T. L. (1976). On confidence sequences. Ann. Statist. 4 265–280.
+Edwards, A. W. F. (1992). Likelihood. Johns Hopkins University            Lhéritier, A. and Cazals, F. (2018). A sequential non-parametric mul-
+   Press.                                                                    tivariate two-sample test. IEEE Transactions on Information Theory
+Efron, B. (1969). Student’s t-test under symmetry conditions. Journal        64 3361–3370.
+   of the American Statistical Association 64 1278–1302.                  Li, J. Q. (1999). Estimation of Mixture Models, PhD thesis, Yale Uni-
+Fan, X., Grama, I. and Liu, Q. (2015). Exponential inequalities for          versity, New Haven, CT.
+   martingales with applications. Electronic Journal of Probability 20    Li, J. Q. and Barron, A. R. (2000). Mixture Density Estimation. In
+   1–22.                                                                     Advances in Neural Information Processing Systems 12 279–285.
+Feller, W. K. (1940). Statistical aspects of ESP. The Journal of Para-    Maclean, L. C., Thorp, E. O. and Ziemba, W. T. (2010). Long-term cap-
+   psychology 4 271–298.                                                     ital growth: the good and bad properties of the Kelly and fractional
+                                                                             Kelly capital growth criteria. Quantitative Finance 10 681-687.
+                                 GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                                         23
+
+Manole, T. and Ramdas, A. (2023). Sequential estimation of convex            Shekhar, S. and Ramdas, A. (2021). Nonparametric two sample testing
+   divergences using reverse submartingales and exchangeable filtra-            by betting. arXiv:2112.09162.
+   tions. IEEE Transactions on Information Theory.                           Shekhar, S. and Ramdas, A. (2023). Sequential change detection via
+Mingxiu, H., Cappelleri, J. C. and Gordon Lan, K. K. (2007). Apply-             backward confidence sequences. In International Conference on
+   ing the law of iterated logarithm to control type I error in cumulative      Machine Learning.
+   meta-analysis of binary outcomes. Clinical Trials.                        Shin, J., Ramdas, A. and Rinaldo, A. (2022). E-detectors: a
+Neiswanger, W. and Ramdas, A. (2021). Uncertainty quantification us-            nonparametric framework for online changepoint detection.
+   ing martingales for misspecified Gaussian processes. In Algorith-            arXiv:2203.03532.
+   mic Learning Theory 963–982. PMLR.                                        Spertus, J. V. and Stark, P. B. (2022). Sweeter than SUITE: Super-
+Orabona, F. and Jun, K.-S. (2021). Tight concentrations and                     martingale Stratified Union-Intersection Tests of Elections. In In-
+   confidence sequences from the regret of universal portfolio.                 ternational Joint Conference on Electronic Voting.
+   arXiv:2110.14099.                                                         Ter Schure, J. and Grünwald, P. (2022). ALL-IN meta-analysis:
+Pace, L. and Salvan, A. (2020). Likelihood, Replicability and Rob-              breathing life into living systematic reviews. F1000Research 11.
+   bins’ Confidence Sequences. International Statistical Review 88           Ter Schure, J., Grünwald, P. and Ly, A. (2021). Pandemic prepared-
+   599–615.                                                                     ness in data sharing; lessons learned from collaborating in a live
+Pandeva, T., Bakker, T., Naesseth, C. A. and Forré, P. (2022). E-              meta-analysis. StatOR 24 47–52.
+   Valuating Classifier Two-Sample Tests.                                    Ter Schure, J., Perez-Ortiz, M. F., Ly, A. and Grünwald, P. (2021).
+Pawel, S., Ly, A. and Wagenmakers, E.-J. (2022). Evidential Calibra-            The Safe Log Rank Test: Error Control under Continuous Monitor-
+   tion of Confidence Intervals. arXiv:2206.12290.                              ing with Unlimited Horizon. arXiv:1906.07801.
+Pérez-Ortiz, M. F., Lardy, T., De Heide, R. and Grünwald, P.               Turing, A. M. (c 1941). The Applications of Probability to Cryptogra-
+   (2022). E-Statistics, Group Invariance and Anytime Valid Testing.            phy. UK National Archives, HW 25/37. See arXiv:1505.04714 for
+   arXiv:2208.07610.                                                            a version set in Latex.
+Podkopaev, A., Bloebaum, P., Kasiviswanathan, S. and Ramdas, A.              Turner, R. and Grünwald, P. (2023a). Anytime-valid Confidence In-
+   (2023). Sequential kernelized independence testing. In Interna-              tervals for Contingency Tables and Beyond. Statistics and Proba-
+                                                                                bility Letters.
+   tional Conference on Machine Learning.
+                                                                             Turner, R. and Grünwald, P. (2023b). Safe Sequential Testing and Ef-
+Ramdas, A. and Manole, T. (2023). Randomized and Exchangeable
+                                                                                fect Estimation in Stratified Count Data. In Annual AI and Statistics
+   Improvements of Markov’s, Chebyshev’s and Chernoff’s Inequali-
+                                                                                Conference.
+   ties. arXiv preprint arXiv:2304.02611.
+                                                                             Turner, R., Ly, A. and Grünwald, P. (2021). Generic E-Variables for
+Ramdas, A., Ruf, J., Larsson, M. and Koolen, W. (2020). Admissible
+                                                                                Exact Sequential k-Sample Tests that allow for Optional Stopping.
+   anytime-valid sequential inference must rely on nonnegative mar-
+                                                                                arXiv:2106.02693.
+   tingales. arXiv:2009.03167.
+                                                                             Turner, R., Ly, A., Ortiz-Perez, M.-F., ter Schure, J. and Grün-
+Ramdas, A., Ruf, J., Larsson, M. and Koolen, W. M. (2022). Testing
+                                                                                wald, P. (2022). R-package safestats. CRAN.
+   exchangeability: Fork-convexity, supermartingales and e-processes.
+                                                                             Ville, J. (1939). Etude critique de la notion de collectif. Gauthier-
+   International Journal of Approximate Reasoning 141 83–109.
+                                                                                Villars.
+Rissanen, J. (1984). Universal coding, information, prediction and es-       Volkhonskiy, D., Burnaev, E., Nouretdinov, I., Gammerman, A. and
+   timation. IEEE Transactions on Information Theory 30 629–636.                Vovk, V. (2017). Inductive conformal martingales for change-point
+Robbins, H. (1952). Some aspects of the sequential design of experi-            detection. In Conformal and Probabilistic Prediction and Applica-
+   ments. Bulletin of the American Mathematical Society 58 527–535.             tions 132–153. PMLR.
+Robbins, H. (1970). Statistical methods related to the law of the iterated   Vovk, V. (2021). Testing randomness online. Statistical Science 36
+   logarithm. The Annals of Mathematical Statistics 41 1397–1409.               595–611.
+Robbins, H. and Siegmund, D. (1974). The expected sample size of             Vovk, V., Gammerman, A. and Shafer, G. (2022). Algorithmic Learn-
+   some tests of power one. The Annals of Statistics 2 415–436.                 ing in a Random World. Springer, Cham.
+Rouder, J. N., Speckman, P. L., Sun, D., Morey, R. D. and Iverson, G.        Vovk, V., Nouretdinov, I. and Gammerman, A. (2021). Conformal test-
+   (2009). Bayesian t-tests for accepting and rejecting the null hypoth-        ing: binary case with Markov alternatives. arXiv:2111.01885.
+   esis. Psychonomic Bulletin & Review 16 225–237.                           Vovk, V. and Wang, R. (2021). E-values: Calibration, combination,
+Royall, R. (1997). Statistical evidence: a likelihood paradigm. Chap-           and applications. Annals of Statistics 49 1736–1754.
+   man and Hall.                                                             Wagenmakers, E.-J., Gronau, Q. F., Dablander, F. and Etz, A. (2020).
+Ruf, J., Larsson, M., Koolen, W. M. and Ramdas, A. (2022).                      The support interval. Erkenntnis 1–13.
+   A composite generalization of Ville’s martingale theorem.                 Wald, A. (1945). Sequential Tests of Statistical Hypotheses. Ann.
+   arXiv:2203.04485.                                                            Math. Statist. 16 117-186.
+Rushton, S. (1950). On a Sequential t-test. biometrika 37 326–333.           Wald, A. (1947a). Sequential Analysis. Wiley, New York.
+Shaer, S., Maman, G. and Romano, Y. (2023). Model-Free Sequential            Wald, A. (1947b). Sequential Analysis. Wiley, New York.
+   Testing for Conditional Independence via Testing by Betting. In In-       Wang, R. and Ramdas, A. (2022). False discovery rate control with e-
+   ternational Conference on Artificial Intelligence and Statistics.            values. Journal of the Royal Statistical Society: Series B (Statistical
+Shafer, G. (2021). Testing by betting: a strategy for statistical and sci-      Methodology).
+   entific communication (with discussion and response). Journal of          Wang, H. and Ramdas, A. (2023a). The extended Ville’s inequal-
+   the Royal Statistic Society A 184 407–478.                                   ity for nonintegrable nonnegative supermartingales. arXiv preprint
+Shafer, G. and Vovk, V. (2001). Probability and Finance: It’s Only a            arXiv:2304.01163.
+   Game. Wiley, New York.                                                    Wang, H. and Ramdas, A. (2023b). Catoni-style confidence sequences
+Shafer, G. and Vovk, V. (2019). Game-Theoretic Foundations for                  for heavy-tailed mean estimation. Stochastic Processes and Appli-
+   Probability and Finance. Wiley, Hoboken, New Jersey.                         cations.
+Shafer, G., Shen, A., Vereshchagin, N. and Vovk, V. (2011). Test mar-        Wang, H. and Ramdas, A. (2023c). Huber-robust confidence se-
+   tingales, Bayes factors and p-values. Statistical Science 26 84–101.         quences. 26th International Conference on Artificial Intelligence
+                                                                                and Statistics.
+24
+
+Wasserman, L., Ramdas, A. and Balakrishnan, S. (2020). Universal       we find that, for any fixed prior density w on Θ ⊂ R, the
+  inference. Proceedings of the National Academy of Sciences 117       family of e-variables {Eτθ : θ ∈ Θ} for data X τ with
+  16880–16890.
+Waudby-Smith, I. and Ramdas, A. (2020). Confidence sequences for                                     1            pθ (X τ )
+                                                                                   P̄(θ | X τ ) :=       = R
+  sampling without replacement. Advances in Neural Information                                       Eτθ     pθ′ (X τ )w(θ′ )dθ′
+  Processing Systems 33 20204–20214.
+Waudby-Smith, I. and Ramdas, A. (2023). Estimating means of            (this is just the reciprocal of the prior-posterior ratio mar-
+  bounded random variables by betting. Journal of the Royal Statis-    tingale of Section 8.1.1 stopped at time τ) defines an e-
+  tical Society: Series B (Statistical Methodology). (to appear with
+                                                                       confidence interval at level (1 − α) as {θ : P̄(θ | τ) > α},
+  discussion).
+Waudby-Smith, I., Stark, P. B. and Ramdas, A. (2021). RiLACS: Risk     whenever the latter set is an interval. By Bayes’ theorem,
+  limiting audits via confidence sequences. In International Joint     the Bayes posterior based on the same prior w is given by
+  Conference on Electronic Voting 124–139. Springer.                                          w(θ) · pθ (X τ )
+Waudby-Smith, I., Arbour, D., Sinha, R., Kennedy, E. H. and Ram-            w(θ | X τ ) = R                           = w(θ) · P̄(θ | X τ ),
+  das, A. (2021). Time-uniform central limit theory and asymptotic                            pθ′ (X τ )w(θ′ )dθ′
+  confidence sequences. arXiv:2103.06476.
+Waudby-Smith, I., Wu, L., Ramdas, A., Karampatziakis, N. and           and defines a posterior credible interval at level (1 − α) as
+  Mineiro, P. (2022). Anytime-valid off-policy inference for contex-   [θL , θR ] chosen so that
+  tual bandits. arXiv preprint arXiv:2210.10768.                                                               Z θR
+                                                                                                         τ
+Xu, Z., Wang, R. and Ramdas, A. (2021). A unified framework for             Eθ∼W [1θ∈[θL ,θR ] · P̄(θ | X )] =      w(θ | X τ ) = 1 − α.
+  bandit multiple testing. Advances in Neural Information Processing                                             θL
+  Systems 34.
+Xu, Z., Wang, R. and Ramdas, A. (2022). Post-selection inference for   We see that all elements θ of an e-confidence interval must
+  e-value based confidence intervals. arXiv:2203.12572.                have P̄(θ | X τ ) ≥ α; for a Bayesian credible interval this
+Zhang, Z., Ramdas, A. and Wang, R. (2023). When do ex-                 only has to hold in average over the prior, causing the
+  act and powerful p-values and e-values exist? arXiv preprint         latter to be narrower in practice.
+  arXiv:2305.16539.                                                       Intriguingly though, some Bayesian statisticians have
+                                                                       noted that the standard Bayesian posterior credible inter-
+      APPENDIX A: SAVI AS A FREQUENTIST –                              val has no clear ‘evidential’ interpretation. They instead
+     EVIDENTIAL – BAYESIAN MIDDLE GROUND?                              propose a Bayesian support interval (Wagenmakers et al.,
+                                                                       2020)—also called ‘evidential support interval’— where
+   E-processes can be seen as quantifying evidence against             the k- support interval is the interval containing all param-
+a null hypothesis and are quite meaningful even without                eter values under which the observed data X τ are at least
+being used for a sequential test required to have some er-             k times as likely than under the Bayesian marginal distri-
+ror probability, and even in a batch setting such as the               bution’. As Pawel, Ly and Wagenmakers (2022) note, for
+multiple testing settings above. E-processes lack some of              simple nulls and k < 1, this actually coincides precisely
+the properties of p-values that make the latter less suit-             with the (1 − k)-e-confidence interval based on the fam-
+able to think of as ‘evidence’ (such as the p-value’s de-              ily of e-values based on the same prior density w as the
+pendency on whether or not particular actions are taken                Bayes marginal.
+in counterfactual situations, as exemplified by examples                  We would venture that, for models Π with parameter of
+in the literature such as Pratt’s volt-meter story (Edwards,           interest θ = φ(P) and additional nuisance parameters, and
+1992)) and generalize the likelihood ratio that is embraced            also in nonparametric settings, the e-confidence intervals
+by the likelihoodists as the ‘right’ formalization of rela-            based on a family {Eτθ : θ ∈ Θ} still have an ‘evidential’
+tive evidence (Royall, 1997).                                          interpretation, although in this case they will usually not
+   Comparing our methods to Bayesian ones, we see that,                be equal to a Bayesian support interval any more.
+with simple nulls, admissible e-processes and Bayes fac-                  Taking the ‘e-values are similar to, but different from
+tors always coincide; in parametric tests with composite               Bayes factors’ line of reasoning even further, one could
+nulls, e-processes and Bayes factors sometimes (e.g. in                daringly suggest to define P̄(θ | X τ ) := 1/Eτθ as an ana-
+the group invariant setting of Section 4.1.2) but not always           logue of the Bayesian posterior or confidence distribu-
+coincide; and with nonparametric tests they start differing            tions, even for multiparameter and nonparametric prob-
+quite a lot. If it comes to confidence sequences and e-                lems in which it does not coincide with the Savage-
+confidence intervals, we find that even in one-dimensonal              Dickey density ratio. This was done informally in Waudby-Smith an
+parametric settings, (1 − α)- e-confidence intervals (and              (2020, Appendix E7) who visualize uncertainty by draw-
+equivalently stopped confidence sequences) do not coin-                ing P̄(θ | X τ ) as a function of θ. Grünwald (2022, 2023)
+cide with Bayesian (1 −α)-posterior credible intervals, the            shows that this e-posterior can be motivated not just ev-
+latter being significantly narrower. To see this, note that,           identially, but also decision-theoretically. Just like the
+from Section 3.2 (and defining e-CIs as in Section 6.3),               Bayes posterior can, assuming the prior was chosen well,
+                                                                       be used to obtain optimal decisions for arbitrary loss
+                          GAME-THEORETIC STATISTICS AND SAFE ANYTIME-VALID INFERENCE                                     25
+
+functions by combining posterior and loss in a certain        test supermartingales, e-processes, etc.), the “type-I” er-
+way (minimizing Bayes-posterior expected loss), the e-        ror control corresponds to making sure the expectation of
+posterior can be used as a basis for obtaining decisions      the e-statistic is at most one under the null, and low “type
+with minimax optimality guarantees for arbitrary loss         II” error corresponds to finding an e-statistic whose ex-
+functions. The guarantees hold irrespective of the cho-       pected logarithmic value under the alternative is as large
+sen prior, but become weaker the more atypical the data       as possible.
+look with respect to the prior. In the same papers (see          Even talking about the “price” assumes that one set of
+also Bates et al. (2022)), it is shown that, even in a non-   metrics dominate the other, but we contend that our per-
+sequential context, standard Neyman-Pearson testing is        formance metrics are in fact more suitable in many situa-
+not adequate if the decision problem at hand (e.g. choose     tions, in that the resulting framework has a large number
+between the four actions { vaccinate no-one; only adults;     of benefits for reproducibility — even above the optional
+only the elderly; or everyone}) has more actions than just    stopping/continuation, the methods are very robust to de-
+the ‘reject’ and ‘accept’ of the Neyman-Pearson theory;       pendence (Section 6.2), it is easy to combine evidence
+with a decision rule based on e-variables one can effec-      from independent or dependent studies (Sections 2.9, 2.10
+tively deal with such—realistic—settings. This has direct     and 6.1), etc. Nevertheless, many SAVI papers directly
+repercussions for the reproducibility crisis: the standard    and extensively compare ‘real’ Type-I and Type-II errors
+Neyman-Pearson based approaches may simply not be             obtained with our approach (although that is not what we
+suitable for the complex real-world problems that we ap-      optimize for with the SAVI approach) to those obtained
+ply our test results to.                                      by classical frequentist approaches.
+   In conclusion, let us stress that we do not view the          As to a comparison to Bayesian approaches, it is also
+above observations as disqualifying the Bayesian, eviden-     difficult and of limited consequence to directly com-
+tial or Neyman-Pearsonian paradigm. Rather, we feel that      pare numbers, but in Appendix A we do give some feel
+SAVI methods effectively unify some of the fundamen-          about how Bayesian credible intervals compare to our
+tal ideas of each; respectively: they allow to infuse prior   anytime-valid confidence sets/intervals (which are wider
+knowledge into one’s procedures; they output numbers          than Bayesian credible intervals, but not wider than the
+with a clear evidential meaning; and they ensure error        support interval).
+control and coverage.                                            It is true that, if we compare an e-variable with GRO
+                                                              status for testing a specific H0 and H1 at a fixed sam-
+   APPENDIX B: DOES SAVI COME AT A PRICE?                     ple size to the uniformly most powerful Neyman-Pearson
+                                                              test at that sample size (assuming it exists), the latter has
+   We often receive questions like: “does the much greater    more power. The exact difference (as well as, relatedly,
+flexibility allowed by SAVI methods compared to tradi-        difference of width between standard confidence intervals
+tional Neyman-Pearson testing come at a price? Is there,      and anytime-valid confidence sequences, which tend to
+for example, a loss of power or a need for larger samples     get between 1.5 and 2 times as wide) is investigated in
+before conclusions can be drawn? How competitive are          detail, both theoretically and by simulation by the earlier
+SAVI methods with classical ones?”                            cited papers (and many others).
+   Let us not be too starry-eyed here. There is always a         On the other hand, if one allows for optional stopping
+fundamental information-theoretic tradeoff between dif-       and stops as soon as one can reject the null, then expected
+ferent types of errors that is unavoidable by any frame-      minimal stopping times under the alternative are about the
+work, including ours.                                         same or even smaller than the fixed n needed to get the
+   At one level, one may view game-theoretic statistics as    same power with a Neyman-Pearson test — illustrating
+trading off the two errors differently from classical statis- that it all depends how one measures performance quality.
+tics — we ask for a more stringent form of “type-I error”        This suggests that (and indeed we feel that) really, the
+that even holds under optional stopping or continuation       wrong    questions are often being asked: the SAVI methods
+of experiments, but accept a (slightly) higher “type-II er-   are  optimizing   for different criteria — a measure of evi-
+ror” in return, and many of the cited papers do detailed      dence (wealth) that grows fast under any alternative, and
+analysis on the quantitative nature of the aforementioned     does not grow under any null — which arguably are often
+qualitative tradeoff, e.g. Grünwald, De Heide and Koolen      more suitable in the applied sciences in which replicabil-
+(2023); Ter Schure, Grünwald and Ly (2021); Waudby-Smith and  ity Ramdas
+                                                                  issues abound. Thus, comparison in terms of power is
+(2023); Howard et al. (2021); Wang and Ramdas (2022).         only   of limited use.
+   However, the errors are in quotes because even our def-       Grünwald (2022, 2023) also shows that based on e-
+initions of type-I and type-II errors themselves differ from  processes,   one has the flexibility to make decisions based
+classical statistics — instead of minimizing the probabil-    on  arbitrary  loss functions that are determined post-hoc,
+ity of each error, when constructing e-statistics (e-values,  which    is arguably  highly relevant for practice yet also is
+                                                              not captured by power.
+

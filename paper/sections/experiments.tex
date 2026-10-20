@@ -1,0 +1,40 @@
+\section{Experimental design}\label{sec:design}
+\subsection{Synthetic laws and matched information comparisons}
+All primary evidence is synthetic, so the harmful prevalence and full joint law are known. At the finest resolution $K^*=8$, conditional band probabilities are
+\begin{equation}\label{eq:law}
+ w_k(\lambda)=\frac{\exp\{\lambda(k-(K^*+1)/2)\}}
+ {\sum_{j=1}^{K^*}\exp\{\lambda(j-(K^*+1)/2)\}},\qquad
+ \Pbb(J^*=k\mid L=\ell)=(1-q_\ell)w_k(\lambda_\ell),
+\end{equation}
+with $\Pbb(J^*=\infty\mid L=\ell)=q_\ell$ and $L\sim\operatorname{Bernoulli}(\theta)$. Positive $\lambda$ shifts resolved mass later. Analyses at $K=1,2,4,8$ merge adjacent bands of the same finest law; they do not regenerate a different timing distribution. Terminal age is fixed at eight synthetic time units.
+
+\begin{table}[!htbp]\centering
+\caption{Principal generating laws. The two strong-timing rows share $\theta,q_1,q_0$, hence identical endpoint masses. Additional validity and boundary laws are specified in the Supplement.}\label{tab:laws}
+\begin{tabular}{lrrrrr}\toprule
+Law & $\theta$ & $q_1$ & $q_0$ & $\lambda_1$ & $\lambda_0$\\\midrule
+Timing and terminal, harmful late & .05 & .30 & .05 & .45 & -.15\\
+Strong timing & .02 & .30 & .20 & 1.50 & -.60\\
+Matched no timing & .02 & .30 & .20 & 0 & 0\\
+Low prevalence & .01 & .30 & .05 & .45 & -.15\\
+Independent resolution & .05 & .10 & .10 & 0 & 0\\\bottomrule
+\end{tabular}
+\end{table}
+
+The population decision study crosses six laws, 15 sensitivity budgets, four partitions and six risk budgets. It therefore contains 90 law--sensitivity cells, 360 distinct partition-specific risk profiles, and 2,160 decision rows. Each compatible production upper endpoint is compared with an independent direct-information oracle. The oracle evaluates the full contingency-table information at 100 decimal digits, locates its minimum without the production profile solver, and brackets the admissible endpoints. This checks numerical agreement, separately from the analytical sharpness proof.
+
+\subsection{Frozen certification-power evaluation}
+The confirmatory power design contains 13 scenarios and 32 scenario--partition cells, each with 100 independent event streams. The strong-timing law was selected by a population-feasibility search to exhibit a substantial timing advantage. Its matched null removes only the timing slopes. The laws, budgets, partitions and checkpoint grids were frozen on 19 October 2026, before the confirmatory evaluation. Exploratory indices were below 1,000,000; confirmatory indices are 1,000,000--1,000,099. Within a law, partition comparisons reuse the same finest-resolution event streams. Thus streams are independent within a cell, but cells sharing streams are not independent replications.
+
+At every matured event, the procedure updates its categorical confidence sequence and records exclusion of the known true observable law. It computes risk decisions at prespecified checkpoints. The strong-timing and matched-control grids are 2,000, 5,000, 10,000, 20,000 and 50,000; the endpoint-uncertifiable comparison uses 10,000, 20,000 and 50,000. Low prevalence uses 500, 1,000, 2,000, 5,000, 10,000 and 20,000. Other grids and all final-cell outcomes appear in the Supplement. All sample horizons count matured events, rather than elapsed calendar time. The error level is $\delta=0.05$ for each fixed partition. The population class and its certification margin are determined before generating the streams.
+
+The primary power statistic is the proportion of all 100 streams that have ever certified by a checkpoint, with exact two-sided 95\% Clopper--Pearson intervals \citep{clopper1934}. These intervals describe Monte Carlo uncertainty about certification probability; they are not intervals for $\theta$. First-certification times are checkpoint times, with administrative right-censoring at the horizon. No-certification streams are retained. A stopped empty-region path contributes no later updates but remains in the ever-certified denominator. The prespecified final-horizon power target is met when the lower exact limit is at least 0.8 for a population-certifiable cell. No inference treats repeated looks as independent observations. Intervals are conditionwise, without across-cell multiplicity adjustment.
+
+\subsection{Validity, comparators and numerical cost}
+The separate validity study retains seven scenarios, each with 500 independent streams of 500 matured events, and risk checkpoints every 100 events. It checks the categorical construction and its risk projection, including a 32-band law and a minimum-information completion. Exact one-sided 95\% binomial upper limits for ever-violation probabilities are compared with the configured acceptance limit 0.06. The theoretical error guarantee remains 0.05. This horizon is used for validity diagnostics, not certification power.
+
+The principal comparator is endpoint-only TrajCert with the same $\rho$, risk budget, stream and time-uniform construction. Two additional references answer different questions. Repeated-static monitoring projects Bonferroni-adjusted per-category Wilson intervals afresh at each checkpoint, using the same sensitivity model and numerical optimization. It has no time-uniform guarantee; its finite-sample fixed-time coverage is also approximate. The ignorable-delay reference applies a Bernoulli mixture confidence sequence to the resolved labels and uses stronger identification assumptions; it is interpreted as applicable only on laws with $q_1=q_0$ and $\lambda_1=\lambda_0$. Assumption-violated runs are diagnostics, not evidence of superiority over a valid comparator.
+
+Numerical validation includes direct-oracle comparisons, theorem-identity checks and an independent feasible-risk check on stored finite-sample envelopes. Scaling uses $K=1,2,4,8,16,32,64,128$, five warmups and 30 measured invocations per target in isolated processes with numerical-library thread limits set to one. Each $K$ regenerates the specified conditional-law form for this computational benchmark and uses its own true information plus 0.01 nats, outside the timed region. Thus this is a cost benchmark, not a nested-refinement experiment. The outer target includes the generation and sequential processing of a deterministic 500-event balanced-prefix ledger and its final projection, so its runtime is broader than the isolated optimizer call. The software is Python with NumPy, SciPy, mpmath and python-flint; exact dependency locks accompany the repository. The archived benchmark does not record enough hardware information for a portable speed claim.
+
+\subsection{Evidence provenance}\label{sec:provenance}
+All reported numerical values were traced to the completed scientific records and their publication tables. The current configuration matches its frozen copy byte for byte. We checked the report's 116 rendered-artifact hashes against their sources and destinations and reconstructed all power-checkpoint certification counts from the saved stream records. The dependency identities include configuration, dependency locks and parent artifacts, but not a source-code digest. Power runs precede a runtime optimization used for coverage runs. Selected output-equivalence checks are recorded in the campaign, rather than a complete rerun of every power cell. The Supplement gives the configuration digest, recorded report commit, current inspected commit and the scope of the available equivalence evidence. OpenAI Codex assisted in writing the manuscript-side Matplotlib script, which re-renders stored numerical data without changing observations or rerunning experiments.

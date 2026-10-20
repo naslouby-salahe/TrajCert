@@ -1,0 +1,1525 @@
+                                             A stableness of resistance model for nonresponse adjustment
+                                                                   with callback data
+                                                                         Wang Miao*, Xinyu Li, Ping Zhang,
+                                                     Department of Probability and Statistics, Peking University, Beijing, China
+                                                                                   and Baoluo Sun∗
+arXiv:2112.02822v5 [stat.ME] 1 Jun 2025
+
+
+
+
+                                                Department of Statistics and Data Science, National University of Singapore, Singapore
+
+
+
+                                                                                                  Summary
+
+                                          Nonresponse arises frequently in surveys and follow-ups are routinely made to increase the response rate. In
+                                          order to monitor the follow-up process, callback data have been used in social sciences and survey studies
+                                          for decades. In modern surveys, the availability of callback data is increasing because the response rate is
+                                          decreasing and follow-ups are essential to collect maximum information. Although callback data are helpful
+                                          to reduce the bias in surveys, such data have not been widely used in statistical analysis until recently. We
+                                          propose a stableness of resistance assumption for nonresponse adjustment with callback data. We establish
+                                          the identification and the semiparametric efficiency theory under this assumption, and propose a suite of
+                                          semiparametric estimation methods including doubly robust estimators, which generalize existing paramet-
+                                          ric approaches for callback data analysis. We apply the approach to a Consumer Expenditure Survey dataset.
+                                          The results suggest an association between nonresponse and high housing expenditures.
+
+                                          K EYWORDS: Callback; Doubly robust estimation; Missing data; Paradata; Semiparametric efficiency.
+
+                                                                                     1. INTRODUCTION
+                                          Nonresponse often leads to substantially biased statistical inference and is frequently encountered in surveys
+                                          and observational studies in many areas of scientific research. It has been a persistent concern of statisti-
+                                          cians and applied researchers for many years. The missingness is said to be at random (MAR) or ignorable
+                                          if it does not depend on the missing values conditional on fully-observed covariates, and otherwise it is
+                                          called missing not at random (MNAR) or nonignorable. A large body of work for nonresponse adjustment
+                                          has been based on MAR. However, there is suspicion that the missingness mechanism is MNAR in many
+                                          situations. For example, social stigma in sensitive questions (e.g., HIV status, income, or drug use) makes
+                                          nonresponse dependent on unobserved variables. The missing data process and the outcome distribution are
+                                          identified under MAR, but under MNAR identification in general fails to hold without extra information,
+                                          which substantially jeopardizes statistical inference. Identification means that the parameter or distribution
+                                          of interest is uniquely determined from the observed-data distribution; it is crucial for missing data analysis,
+                                          without which statistical inference may be misleading and is of limited interest. Although one can achieve
+                                          identification if the impact of the outcome on the missingness is completely known, this should be used
+                                              * Co-corresponding authors: Wang Miao, Department of Probability and Statistics, Peking University, 5 Yiheyuan Road, Bei-
+
+                                          jing 100871, China; E-mail: mwfy@pku.edu.cn. Baoluo Sun, Department of Statistics and Data Science, National University of
+                                          Singapore, Singapore 119077; E-mail: stasb@nus.edu.sg
+
+
+
+                                                                                                       1
+rather as a sensitivity analysis because in practice such information is seldom available, see e.g. Robins
+et al. (2000). Otherwise, identification does not hold even for fully parametric models, except for several
+fairly restrictive ones (e.g., Heckman, 1979; Miao et al., 2016). For semiparametric and nonparametric mod-
+els, identification and inference under MNAR essentially require the use of auxiliary data, for example, an
+instrumental variable (Sun et al., 2018; Liu et al., 2020; Tchetgen Tchetgen and Wirth, 2017) or a shadow
+variable (D’Haultfœuille, 2010; Wang et al., 2014; Miao and Tchetgen Tchetgen, 2016). Researchers have
+traditionally sought such auxiliary variables from the sampling frame, but it could be difficult in multipur-
+pose studies where multiple survey variables are concerned and multiple auxiliary variables are necessitated.
+Moreover, such auxiliary variable methods break down if the auxiliary variables also have missing values
+due to failure of contact in surveys.
+     In contrast to the paucity of auxiliary variables in the sampling frame, callback data offer an important
+source of auxiliary information for nonresponse adjustment. In the presence of nonresponse, the interviewer
+may continue to contact nonrespondents, and the contact process is recorded with callback data, sometimes
+called level-of-effort data (Biemer et al., 2013). For instance in the 2018 Consumer Expenditure Survey, the
+maximum number of contact attempts the interviewers made is about 30, and the number of calls made to
+contact each unit is recorded with the callback data. Callback data have been widely used in epidemiological,
+economic, social and political surveys for a long time since the 1940’s. Such data are particularly useful
+to monitor response rates and to study how design features affect the data collection. Examples include
+Politz and Simmons (1949); Filion (1976); Drew and Fuller (1980); Lin and Schaeffer (1995); Potthoff et al.
+(1993); Wood et al. (2006); Jackson et al. (2010); Peress (2010); Biemer et al. (2013); Clarsen et al. (2021),
+and see Groves and Couper (1998); Olson (2013); Kreuter (2013) for a comprehensive review. Although not
+all surveys could provide callback data, their availability is increasing in modern surveys. The underlying
+reason is that the response rate in modern surveys is decreasing and follow-ups are essentially required.
+Examples include the National Health Interview Survey (NHIS), the National Survey of Family Growth
+(NSFG), the National Survey on Drug Use and Health (NSDUH), the European Social Survey (ESS), the
+Behavioral Risk Factor Surveillance System (BRFSS), and the Consumer Expenditure Survey (CES).
+     However, callback data have not been widely used in statistical analysis until recently, although their
+usefulness for nonresponse adjustment has been recognized since Politz and Simmons (1949). The call-
+back design is analogous to the two/multi-phase sampling (Deming, 1953) by viewing the follow-ups as
+the second-phase sample, but it differs in that nonresponse may still occur in the follow-up sample and is
+possibly not at random. Hence, nonresponse adjustment remains difficult even if callbacks are available, due
+to the challenge for identification and inference under MNAR. In order to do nonresponse adjustment, the
+notion of “continuum of resistance” assumes that nonrespondents are more similar to delayed respondents
+than they are to early respondents, so that the most reluctant respondents are used to approximate the nonre-
+spondents. This assumption has been asserted in social and survey researches for decades despite conflicting
+evidence of its validity (Lin and Schaeffer, 1995; Clarsen et al., 2021). Other approaches include modeling
+the joint likelihood of callbacks and frame variables (Biemer et al., 2013); Heckman-type models (Chen
+et al., 2018; Zhang et al., 2018); sensitivity analysis (Rotnitzky and Robins, 1995 unpublished manuscript;
+Daniels et al., 2015); etc. Most notably, Alho (1990), Kim and Im (2014), Qin and Follmann (2014), and
+Guan et al. (2018) use callback data to estimate response propensity scores and propose inverse probability
+weighted and empirical likelihood-based estimation methods, where they impose a fully parametric linear
+logistic propensity score model and a common-slope assumption that individual characteristics influence the
+missingness process in the same way across the survey contacts. These previous approaches rest on strong
+parametric models to achieve identification, which circumvent the underlying sources for identification and
+limit their use in complex data application.
+     In order to further investigate the usefulness of callback data and promote their application, we take a
+
+
+                                                      2
+fundamentally nonparametric identification strategy, accompanied with practical parametric/semiparametric
+estimation methods. Our contributions are threefold. First, we characterize a stableness of resistance as-
+sumption and establish the identification under this assumption, which is a nonparametric generalization of
+the parametric approach of Alho (1990). The stableness of resistance assumption states that the impact of
+the missing outcome on the response propensity is stable in the first two call attempts. This assumption
+does not impose parametric functional restrictions on the propensity score, does not restrict the impact of
+covariates on the missingness, and admits any type (discrete or continuous) of variables. Second, under the
+stableness of resistance assumption we establish the semiparametric theory, which is for the first time in this
+field. We characterize the tangent space, the efficient influence function and the semiparametric efficiency
+bound for estimating a general full-data functional. Third, we propose a suite of semiparametric estimation
+methods including an inverse probability weighted (IPW) estimator, an outcome regression-based (REG)
+estimator, and a doubly robust (DR) one. The proposed IPW estimator is a generalization of the calibration
+estimator of Kim and Im (2014) by allowing for nonlinear propensity score models and call-specific effects
+of covariates on nonresponse. The IPW and REG estimators rest on correct specification of certain work-
+ing models; otherwise, they are no longer consistent. However, the doubly robust estimator affords double
+protection against misspecification of working models: it remains consistent if the working models for ei-
+ther the IPW or the REG estimation is correct, but not necessarily both; moreover, it attains the efficiency
+bound for the nonparametric model when all working models are correct. To alleviate the concern about
+misspecification of parametric working models, we further propose a more robust approach that uses more
+flexible working models to estimate nuisance functions and plugs in the nuisance estimators into the efficient
+influence function to obtain the estimator of the functional of interest. This approach extends the methods
+for nonignorable missing data analysis by allowing for flexible estimation of the odds ratio function, instead
+of requiring it to be known or follow a parametric model. We show that the resultant estimator has second
+order bias, which affords more robust inference provided that the nuisance estimators converge sufficiently
+fast. The characterization of the bias involves a more sophisticated analysis rather than directly applying the
+second-order Taylor expansion technique. This technical contribution may shed some light on the analysis
+of complicated estimators.
+     The rest of this paper proceeds as follows. In Section 2, we further discuss the challenge for identifi-
+cation with callback data. In Section 3, we characterize the stableness of resistance assumption for using
+callback data to identify the full-data distribution and establish the identification results. In Sections 4 and
+5, we establish the semiparametric theory and describe the IPW, REG, DR estimators, including one based
+on flexible working models. We show their asymptotic properties. Section 6 includes extensions to estima-
+tion of a general full-data functional and to the setting with multiple callbacks. Sections 7 and 8 include
+numerical illustrations with simulations and a real data application to the Consumer Expenditure Survey
+(CES; National Research Council, 2013) dataset, respectively. Section 9 concludes with discussions on
+other extensions and limitations of the proposed approach.
+
+                  2. PRELIMINARIES AND CHALLENGES TO IDENTIFICATION
+Throughout the paper, we let (X, Y ) denote the frame variables that are released in a survey or observational
+study for investigation of a particular scientific purpose, where X denotes a vector (possibly a null set) of
+fully observed covariates and Y the outcome prone to missing values. The frame variables X and Y can
+be either continuous or discrete, either univariate or multivariate. Suppose in the data collection process the
+interviewer has continued to contact a unit until he/she responds or the maximum number of call attempts
+K is achieved. We let Rk denote the availability status of Y after the kth call, with Rk = 1 if Y is available
+after the kth call and Rk = 0 otherwise. By this definition, we have Rk+1 ≥ Rk ; because if Rk = 1, i.e. Y
+is already obtained in the kth call, then by definition Rk+1 = 1 ≥ Rk . The observations of (R1 , . . . , RK )
+
+
+                                                       3
+recording the response process in the survey are known as callback data. This setting differs from the
+classical monotone missingness pattern and should not be viewed as a longitudinal setting, because the
+callback data represent the availability status of exactly the same outcome in different call attempts, while
+the monotone missingness or longitudinal setting concerns the missingness of different outcomes. Let f
+denote a generic probability density or mass function. The full data can be viewed as n independent and
+identically distributed samples from the joint distribution f (X, Y, R1 , . . . , RK ), and in the observed data the
+values of Y with RK = 0 are missing. Table 1 illustrates the data structure of a survey with callbacks, where
+the final availability status RK can be created based on the availability status of frame data but the callback
+data (R1 , . . . , RK ) contain much more information about the response process than solely RK does. To
+ground ideas, we will focus on the setting with two calls or when only the first two calls are considered for
+analysis and then discuss the extension to multiple calls in Section 6 and the supplement. Our primary goal
+is to make inference about the outcome mean µ = E(Y ) based on the observed data and extension to a
+general functional of the full-data distribution f (X, Y ) will be considered in Section 6.
+
+
+               Table 1: Data structure of a survey with callbacks; NA denotes missing values
+                                    Frame data              Callbacks
+                                 ID X         Y       R1 R2 . . . RK
+                                  1 x1 y1              1     1 ···      1
+                                  2 x2 y2              0     1 ···      1
+                                  :     :    NA        0     0 ···      0
+                                  :     :    NA        0     0 ···      0
+                                  n xn yn              0     0 ···      1
+
+    Traditionally, only the final response status RK is used for missing data analysis. Beyond RK , callback
+data (R1 , . . . , RK−1 ) reflect the reluctance of units to respond and how the reluctance is related to the out-
+come, which is particularly informative about the nonresponse process. However, callback data still do not
+suffice for identification. Consider a toy example of survey on a binary outcome Y with two calls; the joint
+distribution f (Y, R1 , R2 ) contains six unknown parameters {f (Y, R1 = 0, R2 ), f (Y, R1 = 1, R2 = 1) :
+Y = 0, 1 and R2 = 0, 1} with a constraint that they sum to one; the observed-data distribution is captured
+by f (Y, R1 = 1, R2 = 1) and f (Y, R1 = 0, R2 = 1) with Y = 0, 1, and only offers four constraints
+on the unknown parameters. These five constraints do not suffice to identify f (Y, R1 , R2 ) without further
+restrictions. To achieve identification with callback data, Alho (1990), Kim and Im (2014), and Qin and
+Follmann (2014) consider a common-slope linear logistic model for the propensity scores.
+
+Example 1 (A common-slope linear logistic model). Alho (1990) assumes that for k = 1, . . . , K,
+
+         logit f (Rk = 1 | Rk−1 = 0, X, Y ) = αk0 + αk1 X + γk Y,           with αk1 = α1 ,       γk = γ.       (1)
+
+    Hereafter, we let logit x = log{x/(1 − x)} be the logit transformation of x and expit x = exp(x)/{1 +
+exp(x)} its inverse. Example 1 is a restrictive model: the propensity score for each callback follows a linear
+(in parameters) logistic model and the effects of both the covariate X and the outcome Y do not vary across
+call attempts. Daniels et al. (2015) mention an identification result that allows for call-specific coefficients
+of X but requires constant coefficients of Y across all call attempts. Guan et al. (2018) relax the common
+slope assumption by only requiring α11 = α21 and γ1 = γ2 . This enables identification with only two
+call attempts, but their identifying strategy based on a meticulous analysis of the logistic model only admits
+continuous covariates and outcome. In order to make full use of callback data for nonresponse adjustment, it
+is of great interest to establish identification for other types of models than the linear logistic model. So far,
+
+                                                         4
+however, identification and inference of semiparametric and nonparametric propensity score models with
+callbacks are not available.
+
+         3. IDENTIFICATION UNDER A STABLENESS OF RESISTANCE ASSUMPTION
+3.1 The stableness of resistance assumption
+An all-important step for identification under MNAR is to characterize the degree to which the missingness
+departs from MAR. The odds ratio function is a particularly useful measure widely used in the missing data
+literature to characterize the association between the outcome and response propensity (e.g. Rotnitzky et al.,
+2001; Osius, 2004; Chen, 2007; Kim and Yu, 2011; Miao and Tchetgen Tchetgen, 2016; Franks et al., 2020;
+Malinsky et al., 2020). We define the odds ratio functions for the response propensity in the first and second
+calls as follows,
+                               f (R1 = 1 | X, Y )f (R1 = 0 | X, Y = 0)
+              Γ1 (X, Y ) = log                                         ,                                   (2)
+                               f (R1 = 0 | X, Y )f (R1 = 1 | X, Y = 0)
+                               f (R2 = 1 | R1 = 0, X, Y )f (R2 = 0 | R1 = 0, X, Y = 0)
+              Γ2 (X, Y ) = log                                                         .                   (3)
+                               f (R2 = 0 | R1 = 0, X, Y )f (R2 = 1 | R1 = 0, X, Y = 0)
+
+The odds ratio functions Γ1 (X, Y ) and Γ2 (X, Y ) measure the impact of the outcome on the missingness in
+the first and second calls, respectively, by quantifying the change in the odds of response caused by a shift
+of Y from a common reference value Y = 0 to a specific level while controlling for covariates. Probabilities
+f (R1 = 1 | X, Y = 0) and f (R2 = 1 | R1 = 0, X, Y = 0) are referred to as baseline propensity scores
+evaluated at the reference value Y = 0. Any other value within the support of Y can be chosen as the
+reference value. Therefore, the odds ratio function is a measure of the resistance to respond caused by the
+outcome. A positive odds ratio function evaluated at (x, y) indicates that for participants with X = x, those
+with Y = y are more likely to respond than those with Y = 0, and a larger odds ratio means a stronger
+willingness to respond. The setting with odds ratio functions equal to zero corresponds to MAR where the
+outcome does not influence the response. Our identification strategy rests on the following assumption.
+
+Assumption 1.      (i) Stableness of resistance: Γ1 (X, Y ) = Γ2 (X, Y ) = Γ(X, Y ) for some Γ(X, Y );
+
+  (ii) Positivity: 0 < f (R1 = 1 | X, Y ) < 1 and 0 < f (R2 = 1 | R1 = 0, X, Y ) < 1 for all (X, Y ).
+
+     Condition (ii) is a standard positivity assumption in missing data analysis, which ensures sufficient
+overlap between nonrespondents and respondents in each call attempt. Condition (i) is the key identifying
+condition, which reveals that the impact of the outcome on the response propensity remains the same in the
+first two calls. Whether Condition (i) holds or not does not depend on the choice of the reference value in the
+definition of the odds ratio functions. Although Assumption 1 is concerned with the missingness process, it
+in fact imposes certain sophisticated restrictions on the outcome distribution. This is because under MNAR
+the missingness process is not ancillary to the outcome distribution; see Lemma ?? in the supplement for the
+apparent dependence between the missingness process, the outcome distribution and the odds ratio function.
+     Similar to various missing data problems, Assumption 1 is untestable based on observed data. Thus, the
+justification of its validity requires domain-specific knowledge and needs to be investigated on a case-by-
+case basis. Assumption 1 is motivated from the idea that the individual characteristics may influence the
+missingness process in the same way across the survey contacts. Similar ideas have been used since Alho
+(1990), Kim and Im (2014), Qin and Follmann (2014), and Guan et al. (2018). Assumption 1 is plausible if
+the nonignorable missingness is caused by certain social stigma (or other issues such as difficulty to reach)
+and the social stigma attached to the units does not change during the first two calls or the contacts are made
+
+
+                                                      5
+in a short period of time. Besides, sensitivity analysis can be applied to assess how results would change if
+Assumption 1 were to be violated; see the simulation and application in Sections 7 and 8, respectively.
+    We provide a generative model based on the discrete choice theory (McFadden, 2001; Train, 2009) to
+further illustrate the intuition behind Assumption 1. Suppose
+
+                       Y = β0 + β1 X + C,
+                       U1 = ᾱ10 + ᾱ11 X + γ1 C + ε1 ,     U2 = ᾱ20 + ᾱ21 X + γ2 C + ε2 ,
+                       R1 = I(U1 > 0),       R2 = R1 + (1 − R1 ) × I(U2 > 0),
+
+where X is the observed covariate and C is an unmeasured factor (such as social stigma) correlated with
+both the outcome and missingness mechanism. Variables U1 and U2 are the utilities (or net benefits) that
+a subject obtains from responding as opposed to not responding at the first and second calls, respectively,
+and ε1 and ε2 are independent error terms, both following a logistic distribution and independent of X and
+C. The generating process of R1 , R2 reveals how the subjects decide to respond: a subject will respond in
+the first call (i.e., R1 = 1) if utility U1 > 0; for those not responded in the first call, he/she will respond at
+the second call (i.e., R1 = 0, R2 = 1) if utility U2 > 0. We show in Section S1 of the supplement that the
+above discrete choice model induces the linear logistic propensity score model: logit f (Rk = 1 | Rk−1 =
+0, X, Y ) = αk0 + αk1 X + γk Y , with αk0 = ᾱk0 − γk β0 and αk1 = ᾱk1 − γk β1 for k = 1, 2. In this
+model, the stableness of resistance stating that γ1 = γ2 in fact means the effects of the unmeasured factor C
+on the utilities U1 and U2 remain the same. However, the stableness of resistance does not require ᾱ11 and
+ᾱ21 to be equal, which admits varying effects of the observed covariate X on the utilities and the response
+in different calls.
+    The biggest difference between Assumption 1 and Model (1) is that, the former is about social reality
+that researchers can justify based on domain-specific knowledge, whereas the latter further depends on
+functional form restrictions that may lack real-world justification. Besides, Assumption 1 has several major
+differences from Model (1), while including the latter as a special case. Under Assumption 1 the propensity
+scores have the following representation:
+
+                                 f (R1 = 1 | X, Y ) = expit {A1 (X) + Γ(X, Y )},                              (4)
+                        f (R2 = 1 | R1 = 0, X, Y ) = expit {A2 (X) + Γ(X, Y )},                               (5)
+
+where A1 (X) = logit f (R1 = 1 | X, Y = 0) and A2 (X) = logit f (R2 = 1 | R1 = 0, X, Y = 0) are the
+logit transformations of the corresponding baseline propensity scores which capture impacts of covariates
+on the missingness, and Γ(X, Y ) is the common odds ratio function that measures the impact of the outcome
+on the missingness in the first and second calls. The functions A1 (X), A2 (X), Γ(X, Y ) are unrestricted.
+Therefore, Assumption 1 admits nonlinear and nonparametric effects of covariates and missing outcomes on
+the missingness, which is a much larger, and in fact, infinite-dimensional model; it accommodates any types
+of outcomes. The assessment of Assumption 1 only concerns the first two calls and does not depend on the
+number of callbacks, while the missingness in the remaining calls are left completely unrestricted; it only
+requires the effects of missing outcomes, captured by the odds ratio, to be stable, while admiting call-specific
+impacts of covariates on nonresponse. In contrast, Model (1) is fully parametric and the effects of covariates
+and missing outcomes on the missingness must be linear, which is a restrictive model indexed by several
+parameters. Model (1) is a special case of Assumption 1 where A1 (X) = α10 +α1T X, A2 (X) = α20 +α1T X,
+and Γ(X, Y ) = γY encode the effects of variables on the missingness with the regression coefficients. This
+is best suited for continuous or binary outcomes, but may not be suitable for other types of outcomes.
+Model (1) imposes parametric functional restrictions on all contact attempts and assumes stable effects of
+all variables entering the model; however, this may not hold for the entire time range when K is large or
+
+                                                        6
+callback data are from a long period. In short, Model (1) is a restrictive model making strong parametric
+functional restrictions beyond the parameter (e.g. the outcome mean) of interest. Assumption 1 makes much
+less restrictive assumptions and has much greater flexibility.
+
+3.2 Nonparametric identification
+We will show that Assumption 1 suffices for identification of the joint distribution f (X, Y, R1 , R2 ). We
+first briefly explain why callback data are useful and how to leverage them for identification. Consider
+identification of f (Y, R1 | X), which hinges on identification of f (Y, R1 = 0 | X), i.e., the missing data
+distribution in the first call. In the presence of nonignorable missing data, we need to determine the selection
+bias, captured by
+                                      f (Y, R1 = 1 | X)    f (R1 = 1 | X, Y )
+                                                         =                    .
+                                      f (Y, R1 = 0 | X)    f (R1 = 0 | X, Y )
+With callback data, a natural idea for estimating this selection bias is to approximate f (Y, R1 = 0 | X)
+with f (Y, R1 = 0, R2 = 1 | X), where f (Y, R1 = 0, R2 = 1 | X) is the distribution of the data
+obtained in the second call. This is analogous to the two-phase sampling (Deming, 1953). However, the
+challenge here is that nonresponse still occurs in the second call and is possibly not at random, and as a result,
+f (Y, R1 = 0, R2 = 1 | X) is not necessarily equal to f (Y, R1 = 0 | X) and this crude approximation does
+not suffice for identification. Nonetheless, under Assumption 1 we are able to characterize and can further
+identify the bias of this approximation as shown in Proposition 1 and Theorem 1 below.
+Proposition 1. Letting D(X) = A2 (X) − A1 (X), then under Assumption 1 we have that
+
+                      f (R1 = 1 | X, Y )            f (Y, R1 = 1 | X)
+                                              =                            − exp{−D(X)},
+                      f (R1 = 0 | X, Y )        f (Y, R2 = 1, R1 = 0 | X)
+              f (R2 = 1 | R1 = 0, X, Y )                        f (Y, R1 = 1 | X)
+                                              = exp{D(X)}                             − 1.
+              f (R2 = 0 | R1 = 0, X, Y )                    f (Y, R2 = 1, R1 = 0 | X)
+    We prove this result in the supplement. Proposition 1 also implies an inequality:
+                                    f (Y, R1 = 1 | X)
+                                                          > exp{−D(X)},                                       (6)
+                                f (Y, R2 = 1, R1 = 0 | X)
+i.e., given X the density ratio on the left hand side is uniformly bounded from zero. This is a restriction on
+the observed-data distribution imposed by Assumption 1.
+     In Proposition 1, f (Y, R1 = 1 | X)/f (Y, R2 = 1, R1 = 0 | X) is used to approximate f (R1 = 1 |
+X, Y )/f (R1 = 0 | X, Y ) and the approximation bias is captured by D(X). We can further show that
+D(X) is identified under Assumption 1, and thus the selection bias f (R1 = 1 | X, Y )/f (R1 = 0 | X, Y )
+is identified, and then the identification of f (Y, R1 | X) and f (X, Y, R1 , R2 ) is straightforward.
+Theorem 1. Under Assumption 1, D(X) is identified, and as a result, f (X, Y, R1 , R2 ) is identified from
+the observed-data distribution.
+Proof. Proposition 1 implies that
+f (R2 = 0 | R1 = 0, X)            f (R2 = 0 | R1 = 0, X, Y )
+                               Z
+                          =                                  f (Y | R2 = 1, R1 = 0, X)dY
+f (R2 = 1 | R1 = 0, X)            f (R2 = 1 | R1 = 0, X, Y )
+                               Z                                      −1
+                                   exp{D(X)} · f (Y, R1 = 1 | X)
+                          =                                         −1      f (Y | R2 = 1, R1 = 0, X)dY
+                                      f (Y, R2 = 1, R1 = 0 | X)
+                          ≡ L{D(X)}.                                                                 (7)
+
+                                                        7
+This is an equation with D(X) unknown while all the other quantities are available from the observed-data
+distribution. Identification of D(X) can be assessed by checking uniqueness of the solution to this equation.
+For any fixed x and any D(x) such that (6) is satisfied, L{D(x)} is strictly decreasing in D(x) because
+                                         f (Y,R1 =1|X=x)
+ ∂L{D(x)}
+                   Z       exp{D(x)} f (Y,R 2 =1,R1 =0|X=x)
+          =−                                                 i2 f (Y | R2 = 1, R1 = 0, X = x)dY < 0.
+  ∂D(x)
+                       h
+                                      f (Y,R1 =1|X=x)
+                        exp{D(x)} f (Y,R 2 =1,R1 =0|X=x)
+                                                         − 1
+
+Therefore, for any fixed x the solution to (7) is unique. Applying this argument to all x, then D(X) is
+identified and f (R1 = 1 | X, Y ), f (R2 = 1 | R1 = 0, X, Y ) are identified according to Proposition 1.
+Then it is straightforward to show that f (X, Y ) and f (X, Y, R1 , R2 ) are identified.
+
+    We achieve nonparametric identification of f (X, Y, R1 , R2 ) with callback data under the stableness of
+resistance assumption. The nonparametric identification elucidates the underlying source for identification
+with callback data, other than invoking parametric functional restrictions; it extends the application of call-
+back data and opens the way to novel estimation methods. To our knowledge, Assumption 1 is so far the
+most parsimonious condition characterizing the most flexible model for identification with callbacks, and
+Theorem 1 is so far the most general identification result. Back to the binary outcome example, Assumption
+1 can be viewed as an additional constraint on the parameters so that we have sufficient number of con-
+straints to identify the joint distribution; see Section S1 in the supplement for the details about the parameter
+count interpretation of identification. Note that Assumption 1 is sufficient but not necessary for identifica-
+tion of the joint distribution. There exist different conditions that can achieve identification. For instance,
+in a similar spirit, it is of interest and possible to establish identification with stableness of resistance on
+other scales of the propensity scores, say risk ratio scale, because it also introduces certain constraints on
+the parameters. In principle, the union of all such conditions constitutes the if and only if condition for
+identification. However, it may not be worth the chase because such an if and only if condition will be very
+complicated with difficulty in interpretation and justification in practice, and is thus less preferred in contrast
+to a sufficient and meaningful condition like the one we propose in the paper. Applying Theorem 1 to the
+linear logistic model immediately gives the following result.
+
+Proposition 2. Assuming that logit f (Rk = 1 | Rk−1 = 0, X, Y ) = αk0 + αk1 X + γY for k = 1, 2, then
+αk0 , αk1 , and γ are identified.
+
+    Proposition 2 generalizes the identification of Model (1) by admitting call-specific coefficients of X in
+the propensity scores and only requiring the coefficients of Y to be equal for the first two calls. Model (1)
+also reveals a continuum-of-resistance model where nonrespondents are more similar to late respondents
+than to early ones due to a common odds ratio for all call attempts. However, in the model in Proposition
+2 nonrespondents may depart further from late respondents than from early ones, depending on the form of
+odds ratio functions in later calls. In this case, continuum-of-resistance models are not suitable.
+    For estimation, we can in principle first estimate f (Y | R2 = 1, R1 = 0, X), f (Y, R2 = 1, R1 =
+0 | X), f (Y, R1 = 1 | X), and f (R2 = 1 | R1 = 0, X), then plug them into equation (7) to solve for
+D(X), and finally obtain the estimate of f (X, Y, R1 , R2 ) according to Proposition 1. The first step can be
+achieved by standard nonparametric estimation and the third step only involves basic arithmetic; however,
+solving equation (7) in the second step is in general complicated. In the next section, we consider a feasible
+parametrization for the joint distribution f (X, Y, R1 , R2 ) and develop estimation methods.
+
+
+
+
+                                                        8
+      4.   INVERSE PROBABILITY WEIGHTED AND OUTCOME REGRESSION-BASED
+                                           ESTIMATION
+4.1 Parametrization
+Under Assumption 1, we introduce the following factorization of the joint distribution as the basis for
+parametrization and estimation.
+f (Y, R1 , R2 | X) = c1 (X) · f (R1 | X, Y = 0) · exp{(R1 − 1)Γ(X, Y )} · f (Y | R2 = 1, R1 = 0, X)
+                     ·{f (R2 | R1 = 0, X, Y )}1−R1 · {f (R2 = 0 | R1 = 0, X, Y )}−1 ,          (8)
+                          f (R1 = 1 | X)                              1
+            c1 (X) =                                                                           ,
+                     f (R1 = 1 | X, Y = 0) E{1/f (R2 = 0 | R1 = 0, X, Y ) | R2 = 1, R1 = 0, X}
+where c1 (X) is a normalizing function of X that makes the right hand side of (8) a valid density func-
+tion. We prove (8) in Lemma ?? in the supplement. This factorization enables a convenient and congenial
+specification of four components of the joint distribution:
+    • two baseline propensity scores f (R1 = 1 | X, Y = 0) and f (R2 = 1 | R1 = 0, X, Y = 0);
+    • the odds ratio function Γ(X, Y );
+    • and the outcome distribution for the second call f (Y | R2 = 1, R1 = 0, X).
+This kind of factorization of a joint density into a combination of univariate conditionals and odds ratio is
+widely applicable; see Osius (2004), Chen (2007), Kim and Yu (2011), and Franks et al. (2020) for examples
+in missing data analysis and causal inference. For notational convenience, we let π1 (X, Y ) = f (R1 = 1 |
+X, Y ) and π2 (X, Y ) = f (R2 = 1 | R1 = 0, X, Y ) denote the propensity scores, A1 (X) = logit f (R1 =
+1 | X, Y = 0) and A2 (X) = logit f (R2 = 1 | R1 = 0, X, Y = 0) the logit transformations of the
+corresponding baseline propensity scores, and f2 (Y | X) = f (Y | R2 = 1, R1 = 0, X) the outcome
+model for the second call. Note that π1 (X, Y ) and π2 (X, Y ) are determined by A1 (X), A2 (X), Γ(X, Y )
+as in equations (4)–(5) and that the joint distribution is determined once given A1 , A2 , Γ, f2 . We will write
+π1 , π2 , A1 , A2 , f2 , Γ for short where it does not cause confusion.
+     One may have concern that inequality (6) makes the range of f (R2 = 1 | R1 = 0, X, Y ) dependent
+on the value of f (R1 = 1 | X, Y ). However, we do not model these two propensity scores separately,
+and we model A1 (X), A2 (X) and Γ(X, Y ) instead. We show in Lemma 1 in the supplement that these
+four components A1 , A2 , f2 , Γ of the joint distribution are indeed variationally independent. In the next,
+we consider semiparametric estimation under correct specification of a subset of these four models. If one
+would like to consider a different parametrization of the joint distribution, we refer to Richardson et al.
+(2017) about how to address the issue of variational dependence.
+
+4.2 Inverse probability weighting
+We specify parametric working models for two baseline propensity scores A1 (X; α1 ), A2 (X; α2 ), and the
+odds ratio function Γ(X, Y ; γ). By definition, we require Γ(X, Y = 0; γ) = 0. This is equivalent to
+specifying propensity score models π1 (X, Y ; α1 , γ) and π2 (X, Y ; α2 , γ). The logistic model in Proposition
+2 is an example. The following equations characterize the propensity scores,
+                                                           
+                                           R1
+                              0 = E            − 1 | X, Y ,                                                 (9)
+                                           π1
+                                                                           
+                                           R2 − R1
+                              0 = E                    − (1 − R1 ) | X, Y ,                                (10)
+                                               π2
+                                                                            
+                                           R2 − R1 1 − π1
+                              0 = E                    −        R1 | X, Y .                                (11)
+                                               π2          π1
+
+                                                       9
+The first equation follows from the definition of π1 and the other two echo the definition of π2 by noting that
+E {(R2 − R1 )/π2 − (1 − R1 ) | X, Y } = E{(1 − R1 )(R2 /π2 − 1) | X, Y } = 0. These three conditional
+moment equations motivate the following marginal moment equations for estimating (α1 , α2 , γ):
+                                                               
+                                          R1
+                         0 = Ê                   − 1 · V1 (X) ,                                          (12)
+                                      π1 (α1 , γ)
+                                                                      
+                                       R2 − R1
+                         0 = Ê                   − (1 − R1 ) · V2 (X) ,                                  (13)
+                                      π2 (α2 , γ)
+                                                                                
+                                       R2 − R1       1 − π1 (α1 , γ)
+                         0 = Ê                   −                  R1 · U (X, Y ) ,                     (14)
+                                      π2 (α2 , γ)      π1 (α1 , γ)
+
+where Ê denotes the empirical mean operator and V1 (X) = ∂A1 (X; α1 )/∂α1 , V2 (X) = ∂A2 (X; α2 )/∂α2 ,
+U (X, Y ) = ∂Γ(X, Y ; γ)/∂γ. For instance, in the linear logistic model with A1 (X; α1 ) = (1, X T )α1 ,
+A2 (X; α2 ) = (1, X T )α2 , Γ(X, Y ; γ) = Y γ, one may use V1 (X) = V2 (X) = (1, X T )T , U (X, Y ) = Y .
+Note that V1 , V2 , U can be chosen as other user-specified functions; see Tsiatis (2006, page 30).
+    Equations (12)–(14) only involve the observed data. The generalized method of moments (Hansen,
+1982) can be implemented to solve these equations. Letting (α̂1,ipw , α̂2,ipw , γ̂ipw ) be the nuisance estimators
+obtained from (12)–(14), π̂1 = π1 (α̂1,ipw , γ̂ipw ) and π̂2 = π2 (α̂2,ipw , γ̂ipw ) the estimated propensity scores,
+and p̂2 = π̂1 + π̂2 (1 − π̂1 ) an estimator of p2 = f (R2 = 1 | X, Y ), we propose the following IPW estimator
+of the outcome mean,
+                                                               
+                                                           R2
+                                              µ̂ipw = Ê       Y .                                               (15)
+                                                           p̂2
+    Preceding our proposal, Kim and Im (2014) developed a calibration estimator under the common-slope
+logistic model (1). Our IPW estimator can be viewed as a generalization of the calibration estimator, which
+can in fact be obtained from our IPW estimator by choosing appropriate functions V1 , V2 , U . However,
+the calibration estimator may be biased if the slopes of covariates X differ in the two propensity score
+models, while our IPW estimator works in this case. We include a numerical simulation comparing these
+two estimators in Section S6.1 of the supplement. Under the common-slope linear logistic model, Qin and
+Follmann (2014) and Guan et al. (2018) developed empirical likelihood-based estimation that is convenient
+to incorporate auxiliary information to achieve higher efficiency; it is of interest to extend their approach to
+the setting with call-specific slopes for covariates.
+
+4.3 Outcome regression-based estimation
+Alternatively, the outcome mean can be obtained by estimation or imputation of the missing values. We
+specify and fit working models π1 (α1 , γ), f2 (Y | X; β) for the first-call propensity score f (R1 = 1 | X, Y )
+and the second-call outcome distribution f (Y | X, R2 = 1, R1 = 0), and impute the missing values with
+                                                   exp(−Γ)f (Y | X, R2 = 1, R1 = 0)
+                        f (Y | X, R2 = 0) =                                         ,                           (16)
+                                                   E{exp(−Γ) | X, R2 = 1, R1 = 0}
+which is known as the exponential tilting or Tukey’s representation (Kim and Yu, 2011; Vansteelandt et al.,
+2007; Franks et al., 2020). To obtain the nuisance estimators (β̂, α̂1,reg , γ̂reg ), we solve
+                                                       
+                                    ∂ log f2 (Y | X; β)
+          0 = Ê (R2 − R1 ) ·                             ,                                          (17)
+                                             ∂β
+                                                                                            
+                            R1
+          0 = Ê                    − R2 U (X, Y ) − (1 − R2 )E{U (X, Y ) | X, R2 = 0; β, γ} ,       (18)
+                        π1 (α1 , γ)
+
+                                                         10
+where E(· | X, R2 = 0; β, γ) is evaluated according to (16) and U (X, Y ) = {∂A1 (X; α1 )/∂α1 , ∂Γ(X, Y ; γ)/∂γ}.
+Note that U (X, Y ) can be chosen as other user-specified functions; see Tsiatis (2006, page 30). Equa-
+tion (17) is the score equation of f2 (Y | X; β). Equation (18) is motivated by the equation Ê[(1 −
+R2 ){U (X, Y ) − E{U (X, Y ) | R2 = 0, X}}] = 0, but the evaluation of Ê{U (X, Y )} is untenable due to
+missing values of Y , and thus we replace with Ê{R1 U (X, Y )/π1 }. An estimator of the outcome mean by
+imputing the missing outcome values with E(Y | X, R2 = 0; β̂, γ̂reg ) is
+
+                          µ̂reg = Ê{R2 Y + (1 − R2 )E(Y | X, R2 = 0; β̂, γ̂reg )}.                          (19)
+
+We refer to this approach as the outcome regression-based (REG) estimation, although the first-call propen-
+sity score model is also involved.
+    Guan et al. (2018) have previously proposed an estimator that involves the full-data outcome regres-
+sion E(Y | X) whereas our REG estimation involves E(Y | R2 = 1, R1 = 0, X) that only concerns
+the observed data and enjoys the ease for model specification and estimation. Moreover, estimation of
+their outcome regression model requires estimating the propensity scores for all call attempts, but our REG
+estimation only requires estimating the first-call propensity score.
+    Note that (12)–(15) are unbiased estimating equations for (α1 , α2 , γ, µ) in model
+
+         Mipw = {f (X, Y, R1 , R2 ) : Assumption 1 holds; π1 (α1 , γ) and π2 (α2 , γ) are correct},
+
+and (17)–(19) are unbiased estimating equations for (β, α1 , γ, µ) in model
+
+        Mreg = {f (X, Y, R1 , R2 ) : Assumption 1 holds; π1 (α1 , γ) and f2 (Y | X; β) are correct}.
+
+As a consequence, consistency and asymptotic normality of (α̂1,ipw , α̂2,ipw , γ̂ipw , µ̂ipw ) in model Mipw and
+of (β̂, α̂1,reg , γ̂reg , µ̂reg ) in model Mreg can be established under standard regularity conditions (see e.g.,
+Newey and McFadden, 1994) by following the theory of estimating equations, which we will not replicate
+here. The choice of user-specified functions V1 (X), V2 (X), U (X, Y ) depends on the working models and
+influences the efficiency of the estimators. In principle, the optimal choice can be obtained by deriving the
+efficient influence function for the nuisance parameters in models Mipw and Mreg , respectively. However,
+the potential prize of attempting to attain local efficiency for nuisance parameters may not always be worth
+the chase because it depends on correct modeling of additional components of the joint distribution beyond
+the working models, and as pointed out by Stephens et al. (2014) such additional modeling efforts seldom
+deliver the anticipated efficiency gain. Besides, consistency of the estimators is undermined if the required
+working models are incorrect. Therefore, we next propose a doubly robust and locally efficient approach.
+
+          5. SEMIPARAMETRIC THEORY AND DOUBLY ROBUST ESTIMATION
+5.1 Semiparametric theory
+We consider the model Mnp characterized by Assumption 1,
+
+ Mnp = {f (X, Y, R1 , R2 ) : Assumption 1 holds; A1 (X), A2 (X), Γ(X, Y ), f2 (Y | X) are unrestricted.}
+
+Although the stableness of resistance assumption does impose an inequality constraint (6) on the observed-
+data distribution, we refer to Mnp as the (locally) nonparametric model because no parametric models are
+imposed in Mnp and as established in the following, the observed-data tangent space under Mnp is the
+entire Hilbert space. We aim to derive the set of influence functions for all regular and asymptotically linear
+(RAL) estimators of µ and the efficient influence function under Mnp . To achieve this goal, the primary
+step is to derive the observed-data tangent space for model Mnp . Hereafter, we let O = (X, Y, R1 , R2 ) if
+R2 = 1 and O = (X, R1 , R2 ) if R2 = 0 denote the observed data.
+
+                                                       11
+Proposition 3. The observed-data tangent space for Mnp is
+
+       T = {h(O) = R1 h1 (X, Y ) + R2 h2 (X, Y ) + h3 (X); E{h(O)} = 0, E{h2 (O)} < ∞},
+
+where h1 (X, Y ), h2 (X, Y ) and h3 (X) are arbitrary measurable and square-integrable functions.
+    This proposition states that the observed-data tangent space for Mnp is the entire Hilbert space of
+observed-data functions with mean zero and finite variance, equipped with the usual inner product. Hence,
+the stableness of resistance assumption does not impose any local restriction on the observed-data distribu-
+tion. As a result, there exits a unique influence function for µ in model Mnp , which must be the efficient
+one. We have derived the closed form for the efficient influence function.
+Theorem 2. The efficient influence function for µ in the nonparametric model Mnp is
+                                                                        
+             R2 − R1 1 − π1 R1 R1                     E(Y /π2 | X, R2 = 0)    E(Y /π2 | X, R2 = 0)
+IF(O; µ) =       2     −             +          Y −                         +                      −µ.
+                π2           π1 π2       π1           E(1/π2 | X, R2 = 0)     E(1/π2 | X, R2 = 0)
+    If we know a priori that the missingness mechanism is at random, i.e., in the submodel of Mnp with
+Γ(X, Y ) = 0, or equivalently R1 ⊥  ⊥ Y | (X, R2 ) and R2 ⊥⊥ Y | (X, R1 ), we can show that the efficient
+influence function is
+                                                                       
+                                      R2                    R2
+               IFaipw (O; µ) =                 Y −                   − 1 E(Y | X) − µ.
+                                f (R2 = 1 | X)        f (R2 = 1 | X)
+Proposition 4. IFaipw (O; µ) is the efficient influence function for µ in model Mmar = {f (X, Y, R1 , R2 ) :
+f (X, Y, R1 , R2 ) ∈ Mnp and Γ(X, Y ) = 0}.
+    The tangent space of Mmar is no longer the entire Hilbert space and Proposition 4 does not contra-
+dict Theorem 2. It is well known that IFaipw (O; µ) is the efficient influence function for µ in the model
+{f (X, Y, R2 ) : R2 ⊥ ⊥ Y | X} when the final availability R2 is MAR. The availability of callback data R1
+does not change this efficiency bound when missingness in both calls are at random.
+    From Theorem 2, the semiparametric efficiency bound for estimating µ in Mnp is E{IF(O; µ)2 }. A
+locally efficient estimator attaining this semiparametric efficiency bound can be constructed by plugging
+nuisance estimators of π1 , π2 , E(· | R2 = 0, X) that converge sufficiently fast into the efficient influence
+function and then solving Ê{IF(O; µ)} = 0. However, one may not be confident that these nuisance pa-
+rameters can be modeled correctly. It is therefore of interest to develop a doubly robust estimation approach,
+which delivers valid inferences about the outcome mean provided that a subset but not necessarily all low
+dimensional models for the nuisance parameters are specified correctly.
+
+5.2 Doubly robust estimation
+To construct a doubly robust (DR) estimator, we specify working models {A1 (X; α1 ), A2 (X; α2 ), Γ(X, Y ; γ),
+f2 (Y | X; β)} and estimate the nuisance parameters by solving
+                                                  
+                               ∂ log f2 (Y | X; β)
+      0 = Ê (R2 − R1 ) ·                            ,                                                 (20)
+                                        ∂β
+                                           
+                       R1
+      0 = Ê                   − 1 · V1 (X) ,                                                          (21)
+                   π1 (α1 , γ)
+                                                  
+                   R2 − R1
+      0 = Ê                   − (1 − R1 ) · V2 (X) ,                                                  (22)
+                   π2 (α2 , γ)
+                                                                                                
+                   R2 − R1       1 − π1 (α1 , γ)
+      0 = Ê                   −                 R1 · {U (X, Y ) − E(U (X, Y ) | X, R2 = 0; β, γ)} , (23)
+                   π2 (α2 , γ)     π1 (α1 , γ)
+
+                                                     12
+where V1 (X) = ∂A1 (X; α1 )/∂α1 , V2 (X) = ∂A2 (X; α2 )/∂α2 , U (X, Y ) = ∂Γ(X, Y ; γ)/∂γ. Note
+that V1 , V2 , U can be chosen as other user-specified functions; see discussions in Section 4.3 and Tsiatis
+(2006, page 30). Let (β̂, α̂1,dr , α̂2,dr , γ̂dr ) denote the solution to (20)–(23) and π̂1 = π1 (α̂1,dr , γ̂dr ), π̂2 =
+π2 (α̂2,dr , γ̂dr ), then an estimator of µ motivated from the influence function in Theorem 2 is
+                                                               
+                                R2 − R1 1 − π̂1 R1 R1
+              µ̂dr = Ê                     −            +         Y
+                                   π̂22         π̂1 π̂2     π̂1
+                              "                                                                         #
+                                  R2 − R1 1 − π̂1 R1 R1                  E(Y /π̂2 | X, R2 = 0; β̂, γ̂dr )
+                          −Ê                 −             +      −1                                       .        (24)
+                                       π̂22        π̂1 π̂2     π̂1       E(1/π̂2 | X, R2 = 0; β̂, γ̂dr )
+
+Equations (20)–(22) for estimating (β, α1 , α2 ) remain the same as (17), (12), and (13) in the IPW and REG
+estimation, respectively; equation (23) is a doubly robust estimating equation for γ. We summarize the
+double robustness of the estimators.
+
+Theorem 3. Under Assumption 1 and regularity conditions described by Newey and McFadden (1994, The-
+orems 2.6 and 3.4), (α̂1,dr , γ̂dr , µ̂dr ) are consistent and asymptotically normal provided one of the following
+conditions holds:
+
+    • A1 (X; α1 ), Γ(X, Y ; γ), and A2 (X; α2 ) are correctly specified; or
+
+    • A1 (X; α1 ), Γ(X, Y ; γ), and f2 (Y | X; β) are correctly specified.
+
+Furthermore, µ̂dr attains the semiparametric efficiency bound for the nonparametric model Mnp at the
+intersection model Mipw ∩ Mreg where all models {A1 (X; α1 ), A2 (X; α2 ), Γ(X, Y ; γ), f2 (Y | X; β)} are
+correct.
+
+     This theorem states that (α̂1,dr , γ̂dr , µ̂dr ) are doubly robust against misspecification of the second-call
+baseline propensity score A2 (X; α2 ) and the second-call outcome distribution f2 (Y | X; β), provided that
+the first-call propensity score π1 (X, Y ; α1 , γ) (i.e., A1 (X; α1 ) and Γ(X, Y ; γ)) is correctly specified. More-
+over, µ̂dr is locally efficient if all working models are correct, regardless of the efficiency of the nuisance
+estimators. The outcome mean estimator µ̂dr has an analogous form to the conventional augmented in-
+verse probability weighted (AIPW) estimator: the first part is an IPW estimator and the second part is an
+augmentation term involving the outcome regression model. Compared to the IPW and REG estimators in
+the previous section, the doubly robust estimator offers one more chance to correct the bias due to model
+misspecification. However, the DR estimator is not anticipated to have a smaller variance than the IPW or
+the REG estimator, because Mnp is a larger model with a semiparametric efficiency bound no smaller than
+that of Mipw or Mreg . Besides, if both A2 (X; α2 ) and f2 (Y | X; β) are incorrect, the proposed doubly
+robust estimator will generally also be biased. The odds ratio Γ(X, Y ; γ) is essential for all three proposed
+estimation methods, because it encodes the degree to which the outcome and the missingness process are
+correlated. In order to estimate the outcome mean, one must be able to account for this correlation. The
+first-call baseline propensity score A1 (X; α1 ) needs to be correct for estimation of the odds ratio, and as
+a result, α̂1,dr is also doubly robust. If π1 (α1 , γ) is incorrect, µ̂dr is in general not consistent even if both
+A2 (X; α2 ) and f2 (Y | X; β) are correct—because the latter two models only concern the second call. Vari-
+ance estimation and confidence intervals for the doubly robust approach also follow from the general theory
+for estimation equations (see e.g., Newey and McFadden, 1994), which can be constructed based on the
+normal approximation or bootstrap under standard regularity conditions.
+     Doubly robust methods have been advocated in recent years for missing data analysis, causal inference,
+and other problems with data coarsening. Previous proposals have assumed that the odds ratio function
+
+
+                                                           13
+Γ(X, Y ) is either known exactly with the special case of MAR (e.g., Scharfstein et al., 1999; Lipsitz et al.,
+1999; Tan, 2006; van der Laan and Rubin, 2006; Vansteelandt et al., 2007; Okui et al., 2012), or can be
+estimated with the aid of an extra instrumental or shadow variable (e.g., Miao and Tchetgen Tchetgen,
+2016; Sun et al., 2018; Ogburn et al., 2015). We offer an alternative approach that achieves doubly robust
+estimation of both the odds ratio model and the outcome mean with the aid of callback data. The double
+robustness of the DR estimator in Theorem 3 requires A1 (X; α1 ) and Γ(X, Y ; γ) to be correctly specified.
+In Section S3 of the supplement, we also derive the closed form of the efficient influence function in this
+semiparametric model
+
+         Mpar = {f (X, Y, R1 , R2 ) : Assumption 1 holds; A1 (X; α1 ) and Γ(X, Y ; γ) are correct}.
+
+Although the efficient influence function in Mpar is anticipated to be more efficient than that in the nonpara-
+metric model Mnp , the validity of this efficient influence function relies on the correctness of parametric
+working models for A1 (X) and Γ(X, Y ). Instead, it is preferable to use flexible or nonparametric working
+models to estimate all the nuisance functions and then plug in them into the efficient influence function
+IF(O; µ) in the nonparametric model Mnp to estimate µ. The following theorem establishes that such
+an estimator can deliver valid n1/2 inference for the functional of interest even if the nuisance estimators
+could have convergence rates considerably slower than n1/2 . Let Â1 , Â2 , Γ̂ and fˆ2 denote the nuisance
+estimators using some flexible   estimation methods, with the following norms R that measure the convergence
+rates, ||Â1 − A1 ||2 = [ {Â1 (x) − A1 (x)}2 f (x)dx]1/2 , ||Â2 − A2 ||2 = [ {Â2 (x) − A2 (x)}2 f (x)dx]1/2 ,
+                         R
+
+||Γ̂ − Γ||2 = [ {Γ̂(x, y) − Γ(x, y)}2 f2 (y | x)dyf (x)dx]1/2 , ||fˆ2 − f2 || = [ { |fˆ2 (y | x) − f2 (y |
+                RR                                                                    R R
+
+x)|dy}2 f (x)dx]1/2 .
+
+Theorem 4. Under Assumption 1, suppose c ≤ π1 , π2 ≤ 1 − c for some constant c > 0, |Y | ≤ M for
+some constant M > 0, and the nuisance estimators satisfy that (i) c ≤ π̂1 , π̂2 ≤ 1 − c; (ii) ||Â1 − A1 ||2 =
+op (1), ||Â2 − A2 ||2 = op (1), ||Γ̂ − Γ||2 = op (1), ||fˆ2 − f2 || = op (1); and (iii) Â1 , Â2 , Γ̂, fˆ2 and A1 , A2 , Γ,
+f2 are in a Donsker class. Letting
+                                                                        
+                                      R2 − R1 1 − π̂1 R1 R1
+                  µ̂dr2 = Ê                      −             +           Y
+                                         π̂ 2         π̂1 π̂2        π̂1
+                                    " 2                                                               #
+                                                                                   ye /π̂2 fˆ2 dy
+                                                                                R −Γ̂
+                                        R2 − R1 1 − π̂1 R1 R1
+                              −Ê                   −               +       −1 R                          ,            (25)
+                                             π̂22        π̂1 π̂2        π̂1         e−Γ̂ /π̂2 fˆ2 dy
+
+then we have
+
+                             µ̂dr2 − µ = Ê{IF(O; µ)} + Op (Rem) + op (n−1/2 ),
+
+where
+
+        Rem = ||Â1 − A1 ||22 + ||Γ̂ − Γ||22 + ||Â1 − A1 ||2 · ||Γ̂ − Γ||2 + ||Â2 − A2 ||2 · ||fˆ2 − f2 ||
+              +(||Â1 − A1 ||2 + ||Γ̂ − Γ||2 ) · (||Â2 − A2 ||2 + ||fˆ2 − f2 ||).                                      (26)
+
+    Theorem 4 generalizes the parametric doubly robust estimation. Theorem 4 implies that µ̂dr2 has in-
+fluence function IF(O; µ) if the bias term Rem, a function of estimation errors of nuisance estimators, is
+of order op (n−1/2 ). The bias of µ̂dr2 is of second order, i.e., it only depends on squared errors of nui-
+sance estimators. This result opens the way to implement more sophisticated estimation methods built on
+flexible, data-adaptive machine learning or nonparametric nuisance models to achieve n1/2 -consistent es-
+timation of the functional of interest, provided that the nuisance estimators have estimation error of order
+
+                                                             14
+smaller than n−1/4 . For example, one can use sieve estimation with polynomials as basis functions to ap-
+proximate nuisance functions. Suppose A1 (X) and A2 (X) are unrestricted, Γ(X, Y ) = G(X)Y , f2 (Y |
+X) ∼ N (B1 (X), exp{B2 (X)}) for some unknown functions G, B1 , B2 of X, and let {ψj (X)}∞              j=1 denote
+a sequence of polynomials of X and Vi,n (X) = {ψ1 (X), . . . , ψJi,n (X)}T for some Ji,n , i = 1, . . . , 5, then
+                                                              T                             T
+we approximate the nuisance functions by A1,n (X) = α1,n         V1,n (X), A2,n (X) = α2,n     V2,n (X), Gn (X) =
+  T                             T                        T
+γn V3,n (X), B1,n (X) = β1,n V4,n (X), B2,n (X) = β2,n V5,n (X). The nuisance estimators are obtained with
+α1,n , α2,n , γn , β1,n , β2,n estimated by solving equations (20)-(23). Finally, µ̂dr2 is obtained by plugging in
+the nuisance estimators into (25). Theorem 4 imposes the Donsker condition (van der Vaart and Wellner,
+1996) on the complexity of the nuisance models. It could be relaxed to admit more complicated working
+models by employing the cross-fitting method (e.g., Robins et al., 2008; Chernozhukov et al., 2018).
+    Estimation methods with second-order bias have been extensively studied by Benkeser et al. (2017);
+Kennedy et al. (2017); Athey et al. (2018); Tan (2020); Rotnitzky et al. (2021); Dukes and Vansteelandt
+(2021); Chernozhukov et al. (2018), and Theorem 4 contributes to this literature with an instance in non-
+ignorable missingness data analysis. Theorem 4 reveals the mixed bias property (Rotnitzky et al., 2021) in
+the nonignorable missing data setting when the odds ratio function needs to be estimated: if A1 and Γ are
+estimated parametrically, the bias of µ̂dr2 only depends on ||Â2 − A2 ||2 and ||fˆ2 − f2 || through their prod-
+uct. The justification of this result involves a more sophisticated analysis of the bias term instead of directly
+applying the second-order Taylor expansion technique, and our technical contribution may shed some light
+on characterizing the bias terms of estimators with multiple nuisance components.
+
+                                           6. EXTENSIONS
+6.1 Estimation of a general full-data functional
+We extend the proposed IPW, REG, and DR methods to estimation of a general smooth full-data functional
+θ, defined as the unique solution to a given estimating equation E{m(X, Y ; θ)} = 0. Familiar examples
+include the outcome mean with m(X, Y ; µ) = Y − µ; the least squares coefficient with m(X, Y ; θ) =
+X(Y − θT X); and the instrumental variable estimand in causal inference with m(X, Y ; θ) = Z(Y − θT W ),
+where W and Z are subvectors of X, θ is the causal effect of W on Y and is subject to unmeasured
+confounding and Z is a set of instrumental variables used for confounding adjustment in causal inference.
+Given estimators of the nuisance parameters, the IPW and REG estimators of θ can be obtained by solving
+                                                                
+                                                 R2
+                                        0 = Ê        m(X, Y ; θ) ,
+                                                  p̂2
+
+                  0 = Ê[R2 m(X, Y ; θ) + (1 − R2 )E{m(X, Y ; θ) | X, R2 = 0; β̂, γ̂reg }],
+respectively. Letting m(θ) ≡ m(X, Y ; θ), the efficient influence function for θ in model Mnp is
+
+                    ∂E{m(θ)} −1
+                            
+   IF(O; θ) = −
+                        ∂θ
+                                                                                             
+                 R2 − R1 1 − π1 R1 R1                           E(m(θ)/π2 | X, R2 = 0)
+            ·              −           +      −1       m(θ) −                               + m(θ) . (27)
+                    π22       π1 π2        π1                      E(1/π2 | X, R2 = 0)
+We prove this result in the supplement. Then a doubly robust and locally efficient estimator of θ can be
+constructed by solving Ê{IF(O; θ)} = 0, after obtaining nuisance estimators.
+
+6.2 Estimation with multiple callbacks
+When multiple calls (K ≥ 3) are available, identification of f (X, Y, R1 , . . . , RK ) equally holds under
+Assumption 1, even if the propensity scores and outcome distributions for the third and later call attempts
+
+                                                       15
+are completely unrestricted. Besides, identification can be achieved if Assumption 1 holds for at least
+two known adjacent calls. To see this, suppose that the stableness of resistance holds for the kth and
+k + 1th calls. By viewing the kth and k + 1th calls as the first two calls in a subsurvey on nonrespondents
+from the first k − 1th calls (i.e., Rk−1 = 0) and by applying the proposed approach, we can identify
+f (X, Y, Rk , Rk+1 | Rk−1 = 0). Noting that f (X, Y, Rk , Rk+1 | Rk−1 = 1) is available from the observed
+data, we can identify f (X, Y, Rk−1 , Rk , Rk+1 ) and thus f (X, Y ). Identifying f (X, Y ) suffices to identify
+f (X, Y, R1 , . . . , RK ). In this case, the proposed IPW, REG, and DR estimation methods developed for the
+setting with two calls still work but they are agnostic to the data obtained in later calls. In Section S4 of the
+supplement, we extend the proposed IPW, REG, and DR estimators to the setting with multiple callbacks,
+which can incorporate all observations on (X, Y ).
+
+                                            7. SIMULATION
+We evaluate the performance of the proposed estimators and assess their robustness against misspecification
+of working models and violation of the key identifying assumption via simulations. We conduct simulations
+for both continuous and binary outcome settings. Simulation results for these two settings are analogous,
+and to save space, here we only present simulations for the continuous setting and defer the binary setting
+to Section S6.3 of the supplement.
+    Let X = (1, X1 , X2 )T and Xe = (1, X 2 , X 2 ) with X1 , X2 independent following a uniform distribution
+                                          1    2
+Unif(−1, 1). We consider four data generating scenarios according to different choices for the second-call
+baseline propensity score and the second-call outcome distribution. The following Table 2 presents the data
+generating mechanisms and the working models for estimation.
+                     Table 2: Data generating model and working model for estimation
+                                                 Data generating model
+               π1 = expit (α1 X + γY ), π2 = expit (α2T W1 + γY ), f2 (Y | X) ∼ N (β T W2 , σ 2 )
+                                T
+
+                                  Four scenarios with different choices of (W1 , W2 )
+                       TT                      FT                     TF                    FF
+              W1 = X, W2 = X W1 = X, W2 = X W1 = X, W2 = X W1 = X, W2 = X
+                                              e                                e           e          e
+        α1T       (0, 0.6, 0.5)         (-0.35, -0.5, 0.7)       (-1, 1, -0.1)        (-0.3, -0.5, 1)
+        α2T     (1.4, -0.5, 0.2)          (-0.5, 1.8, 1)        (0.5, 1, -0.1)         (-0.4, 0.8, 0)
+        βT      (0.6, 1.0, 0.3)           (-0.8, 5, 3.5)         (-0.5, 5, -1)          (-1.5, 4, 3)
+        γ             0.13                    0.12                    0.5                  0.25
+        σ               3                       2                     0.4                  0.25
+                                            Working model for estimation
+                 π1 = expit (α1 X + γY ), π2 = expit (α2T X + γY ), f2 (Y | X) ∼ N (β T X, σ 2 )
+                                  T
+
+
+
+
+     Hence, the working model for the second-call baseline propensity score is correct in Scenarios (TT) and
+(TF), the second-call outcome model is correct in Scenarios (TT) and (FT), and they both are incorrect in
+Scenario (FF). The first-call baseline propensity score and the odds ratio models are correct in all scenarios.
+For estimation, we implement the proposed IPW, REG, and DR methods (µ̂ipw ,µ̂reg , µ̂dr ) based on paramet-
+ric working models to estimate the outcome mean and the odds ratio parameter. We compute the variance
+of these estimators and then construct the confidence interval based on the normal approximation and eval-
+uate the coverage rate. For comparison, we also implement standard IPWmar , REGmar , DRmar estimators
+(µ̂mar    mar mar
+   ipw ,µ̂reg , µ̂dr ) that are based on MAR, with the number of callbacks included as an additional covariate.
+     For each scenario, we replicate 1000 simulations at sample size 5000. Figures 1 and 2 show the bias for
+estimators of the outcome mean and the odds ratio parameter, respectively, and Table 3 shows the coverage
+rates for the corresponding confidence intervals. In Scenario (TT) where all working models are correct,
+
+                                                       16
+all three proposed estimators have little bias and the 95% confidence intervals have coverage rates close
+to 0.95; in Scenario (FT) the second-call baseline propensity score model is incorrect but the second-call
+outcome model is correct, then the IPW estimator has large bias with coverage rate well below 0.95 and
+the REG estimator has little bias with the coverage rate close to 0.95; conversely, in Scenario (TF) the
+second-call baseline propensity score model is correct but the second-call outcome model is incorrect, then
+the IPW estimator has little bias with an appropriate coverage rate and the REG estimator has large bias
+with an undersized coverage rate. The DR estimator has little bias with appropriate coverage rates in all
+the three scenarios when at least one of these two working models is correct. In Scenario (FF) where both
+working models are incorrect, all three proposed estimators are biased. These numerical results show the
+robustness of µ̂dr against partial misspecification of working models. We compute the standard deviations
+of the three proposed estimators in Table ?? in the supplement, which are close when all working models
+are correct. However, the three standard MAR estimators have large bias in all four scenarios. Therefore,
+we recommend the proposed methods for nonresponse adjustment with callback data, and we suggest to use
+different working models to gain more robust inferences.
+     In Section S6.2 of the supplement, we conduct additional simulations to compare the performance of
+µ̂dr2 using flexible nuisance models and the IPW, REG and DR estimators that are based on parametric
+working models. We consider six data generating scenarios, including two scenarios where all parametric
+working models are correct or incorrect, respectively, and four scenarios where each of A1 , A2 , f2 , Γ is
+incorrect, respectively. The estimator µ̂dr2 has little bias with appropriate coverage rates in all six scenarios.
+But the IPW, REG and DR estimators could have large bias if the required working models are incorrect; in
+particular, these three estimators are biased if the odds ratio model is incorrectly specified. The numerical
+results show the robustness of µ̂dr2 , which delivers valid inference in scenarios where the nuisance models
+are complicated and parametric working models are more likely to be misspecified.
+     In addition to model misspecification, we also evaluate sensitivity of the inference against violation of
+the identifying assumption. We include a sensitivity analysis to evaluate the performance of the proposed
+estimators when call-specific odds ratios arise, i.e., the stableness of resistance assumption is not met. The
+difference between the odds ratios is used as the sensitivity parameter to capture the degree to which the sta-
+bleness of resistance assumption is violated. The proposed estimators exhibit small bias when the difference
+of odds ratios varies within a moderate range but it could become severe if there were a big gap between the
+odds ratios. To obtain reliable inferences in practice, we recommend such sensitivity analysis for assessing
+robustness of inference against violation of the stableness of resistance assumption.
+
+
+
+
+                                                       17
+                                                            TT                                                                                  FT
+
+
+
+
+                                                                                                       0.6
+            0.2
+
+
+
+
+                                                                                                       0.2
+            0.0
+
+
+
+
+                                                                                                       −0.2
+            −0.2
+
+
+
+
+                           ^
+                           µ          ^
+                                      µ             ^            ^ mar
+                                                                 µ           ^ mar
+                                                                             µ          ^ mar
+                                                                                        µ                             ^
+                                                                                                                      µ         ^
+                                                                                                                                µ        ^           ^ mar
+                                                                                                                                                     µ        ^ mar
+                                                                                                                                                              µ        ^ mar
+                                                                                                                                                                       µ
+                             ipw        reg         µ dr           ipw         reg        dr                            ipw       reg    µ dr          ipw      reg      dr
+
+                                                            TF                                                                                  FF
+
+
+
+
+                                                                                                       0.3
+           0.2
+
+
+
+
+                                                                                                       0.2
+                                                                                                       0.1
+           0.0
+
+
+
+
+                                                                                                       0.0
+           −0.2
+
+
+
+
+                                                                                                       −0.1
+
+
+
+
+                        ^
+                        µ             ^
+                                      µ           ^           ^ mar
+                                                              µ             ^ mar
+                                                                            µ           ^ mar
+                                                                                        µ                             ^
+                                                                                                                      µ         ^
+                                                                                                                                µ        ^         ^ mar
+                                                                                                                                                   µ          ^ mar
+                                                                                                                                                              µ        ^ mar
+                                                                                                                                                                       µ
+                          ipw           reg       µ dr          ipw           reg         dr                            ipw       reg    µ dr        ipw        reg      dr
+
+
+                                   Figure 1: Bias for estimators of µ in the continuous outcome setting.
+
+
+                   TT                                                    FT                                              TF                                           FF
+0.06
+
+
+
+
+                                                                                                0.4
+                                              0.10
+
+
+
+
+                                                                                                                                                0.1
+0.02
+
+
+
+
+                                                                                                0.2
+                                              0.00
+
+
+
+
+                                                                                                                                                −0.1
+−0.02
+
+
+
+
+                                                                                                0.0
+                                              −0.20 −0.10
+−0.06
+
+
+
+
+                                                                                                −0.2
+
+
+
+
+                                                                                                                                                −0.3
+
+
+
+
+        ^γ         ^γ          ^γ                            ^γ          ^γ      ^γ                           ^γ        ^γ        ^γ                       ^γ      ^γ      ^γ
+          ipw        reg         dr                            ipw         reg     dr                           ipw       reg       dr                       ipw     reg     dr
+
+
+                                   Figure 2: Bias for estimators of γ in the continuous outcome setting.
+
+
+
+
+                                                                                                18
+                                 Table 3: Coverage rate of 95% confidence interval in the continuous outcome setting
+                                                                 µ                                          γ
+                             Scenarios IPW REG            DR    IPWmar REGmar DRmar                IPW REG           DR
+                                TT      0.955 0.955 0.950        0.109      0.362       0.363      0.955 0.955 0.956
+                                FT      0.629 0.948 0.952        0.000      0.442       0.426      0.322 0.957 0.945
+                                TF      0.944 0.125 0.952        0.000      0.000       0.000      0.947 0.501 0.944
+                                FF      0.286 0.446 0.287        0.000      0.000       0.000      0.489 0.614 0.675
+
+
+                                      8. REAL DATA APPLICATION
+The Consumer Expenditure Survey (CES; National Research Council, 2013) is a nationwide survey con-
+ducted by the U.S. Bureau of Labor Statistics to find out how American households make and spend money.
+It comprises two surveys: the Quarterly Interview Survey on large and recurring expenditures such as rent
+and utilities, and the Diary Survey on small and high frequency purchases, such as food and clothing. The
+survey data are released annually since 1980, which contain detailed callback history. We analyze the
+public-use microdata from the Quarterly Interview Survey in the fourth quarter of 2018, available from
+https://www.bls.gov/cex/pumd data.htm#csv. The nonresponse of frame variables is con-
+current due to contact failure or refusal and no fully-observed baseline covariates are available in this dataset.
+For illustration, we analyze this dataset to study the expenditures on housing and on utilities, fuels and public
+services. This survey contains 9986 households and 277 of them with extremely large or small expenditures
+are removed in our analysis. The maximum number of contact attempts the interviewers made in this survey
+is about 30. Figure 3 (a) shows the cumulative response rate. The overall response rate is about 0.6 and
+80% of the respondents completed the survey within the first five contact attempts. Let (Y1 , Y2 ) denote the
+logarithm of the expenditure on housing and on utilities, fuels and public services, respectively. Figure 3 (b)
+shows the mean of (Y1 , Y2 ) for respondents to each call attempt. The mean of Y1 for respondents gradually
+increases with the number of contacts, and the mean of Y2 has a sharp increase in the second and third con-
+tacts and fluctuates in later contacts. These results suggest that the delayed respondents are likely to have
+higher expenditures and the nonresponse is likely dependent on the expenditures, in particular, on Y1 .
+
+
+
+                            0.6                                                         8.1                                                         6.4
+ cumulative response rate
+
+
+
+
+                                                               ●   ●   ●
+                                                                                                                                   ●                                              ●
+                                                           ●
+                                                                                                                                                                              ●               ●
+                                                       ●
+                                                   ●                                                                                                              ●
+                                                                                                                                                                      ●
+                                                                           mean of Y1
+
+
+
+
+                                                                                                                                       mean of Y2
+
+
+
+
+                                                                                                                               ●
+                            0.4                ●
+                                                                                        7.9                                                         6.3       ●                           ●
+                                                                                                                   ●   ●
+                                                                                                                           ●
+                                                                                                                                                                          ●           ●
+                                           ●
+                                                                                                               ●
+                                                                                                           ●
+                                                                                                  ●   ●
+                                       ●
+                            0.2                                                         7.7                                                         6.2
+                                                                                                                                                          ●
+
+                                  ●                                                           ●
+
+
+                             0                                                          7.5                                                         6.1
+
+                                  1    2   3   4   5   6   7                                  1   2   3    4   5   6   7                                  1   2   3   4   5   6   7
+                                                                +
+
+
+
+
+                                                                                                                            +
+
+
+
+
+                                                                                                                                                                                       +
+                                                           13 2
+
+
+
+
+                                                                                                                       13 2
+
+
+
+
+                                                                                                                                                                                  13 2
+                                                                6
+
+
+
+
+                                                                                                                            6
+
+
+
+
+                                                                                                                                                                                       6
+                                                               1
+
+
+
+
+                                                                                                                           1
+
+
+
+
+                                                                                                                                                                                      1
+                                                             17
+
+
+
+
+                                                                                                                         17
+
+
+
+
+                                                                                                                                                                                    17
+                                                             −1
+
+
+
+
+                                                                                                                         −1
+
+
+
+
+                                                                                                                                                                                    −1
+                                                            8−
+
+
+
+
+                                                                                                                        8−
+
+
+
+
+                                                                                                                                                                                   8−
+
+
+
+
+                                        number of contacts                                        number of contacts                                          number of contacts
+                            (a) Cumulative response rate                                                                   (b) Outcomes mean
+
+                                      Figure 3: Response rates and outcomes mean for respondents in the CES application.
+
+   We apply the proposed methods to estimate the outcomes mean µ = (µ1 , µ2 ) = (E(Y1 ), E(Y2 )).
+Analogous to previous survey studies (e.g., Qin and Follmann, 2014; Boniface et al., 2017), we split the
+
+                                                                                                      19
+contact attempts into two stages: 1–2 calls (early contact) and 3+ calls (late contact). Among the 9709
+households we analyze, 1992 responded in the first stage, 3287 responded later, and 4430 never responded.
+We fit the data with working models π1 = expit (α1 + γ1 Y1 + γ2 Y2 ), π2 = expit (α2 + γ1 Y1 + γ2 Y2 ) and
+f2 (Y ) ∼ N (µ, Σ), and apply the proposed IPW, REG, and DR methods to estimate the outcomes mean. The
+common odds ratio parameters (γ1 , γ2 ) reveal that the resistance to respond caused by the outcomes remain
+the same in these two contact stages. We also compute the complete-case (CC) sample mean and apply
+standard inverse probability weighting, regression and doubly robust estimation methods that are based
+on MAR and include the number of contacts as a covariate, which are respectively denoted by IPWmar ,
+REGmar , and DRmar .
+     Table 4 presents the estimates. The DR point estimate of µ1 is 7.842 with 95% confidence interval
+(7.800, 7.884), and of µ2 is 6.345 with (6.296, 6.393). The CC estimate of µ1 is 7.756 (7.734, 7.778)
+and of µ2 is 6.285 (6.264, 6.306); the DRmar estimate of µ1 is 7.767 (7.744, 7.790) and of µ2 is 6.287
+(6.266, 6.309). The IPW and REG methods produce estimates close to DR; however, the CC and standard
+MAR estimates of the outcomes mean, in particular of µ1 , are well below the DR estimate. As shown
+in Figure 3 (b), this can be partially explained by the fact that the outcomes mean in early respondents is
+lower than in the delayed, and therefore, the outcomes mean in the respondents is likely lower than in the
+nonrespondents. The estimation results of the odds ratio parameters reinforce this conjecture: the IPW,
+REG, and DR estimates of the odds ratio parameters are all negative, suggesting that high-spending people
+are more reluctant to respond or more difficult to contact. The odds ratio estimate for expenditure on housing
+is statistically significant at level 0.01, although it is not significant for expenditure on utilities, fuels and
+public services. This is evidence for missingness not at random. These results indicate that the expenditure
+on housing play a more important role in the response process; this may be because the survey takes personal
+home visit as one of the main modes of interview and people with high expenditure on housing are more
+difficult to reach. Increasing the variety of interview modes may potentially alleviate such nonignorable
+nonresponse.
+
+         Table 4: Point estimate, 95% confidence interval, and p-value for the CES application
+                                         µ1                                             γ1
+            IPW      REG       DR IPWmar REGmar DRmar                CC        IPW REG         DR
+  Estimate 7.859 7.861 7.842           7.767    7.769      7.767 7.756        -0.269 -0.258 -0.238
+  CI or       (7.785, (7.810, (7.800, (7.744,        (7.746,   (7.744, (7.734,
+                                                                                     0.004 0.001         0
+  p-value     7.932) 7.912) 7.884) 7.789)            7.791)    7.790) 7.778)
+                                             µ2                                              γ2
+              IPW       REG       DR      IPWmar REGmar DRmar              CC        IPW REG        DR
+  Estimate    6.346     6.350    6.345     6.287  6.288 6.287             6.285     -0.028 -0.042 -0.056
+  CI or       (6.269, (6.297, (6.296, (6.266 ,       (6.267,   (6.266, (6.264,
+                                                                                     0.812 0.658      0.521
+  p-value     6.423) 6.403) 6.393) 6.309)            6.310)    6.309) 6.306)
+
+    We further conduct sensitivity analysis to assess robustness of the above results against violation of
+the stableness of resistance assumption. The sensitivity analysis shows that our results are not sensitive
+to mild violations of the stableness of resistance assumption. In particular, when the sensitivity parameter
+varies within a moderate range, the DR estimate of µ1 remains larger than the complete-case (CC) sample
+mean and the estimates based on MAR, and the estimate of γ1 remains significantly negative. Such results
+reinforce our finding that high-spending people are more reluctant to respond or more difficult to contact.
+Details of the sensitivity analysis are relegated to Section S7 of the supplement.
+
+
+                                                       20
+                                                9. DISCUSSION
+We establish a novel framework for nonresponse adjustment with callback data, which further illustrates
+the usefulness and extends the application of callback data. Although not all surveys provide callback data,
+their availability is increasing in modern surveys. The stableness of resistance assumption is key to our
+framework. Under this assumption, we establish nonparametric identification and propose a suite of novel
+estimators including a doubly robust one, which extend previous parametric approaches and further elucidate
+the underlying source for nonresponse adjustment with callback data. We caution that the stableness of
+resistance assumption is untestable based on observed data. Therefore, analogous to various missing data
+problems (Molenberghs et al., 2008; Miao and Tchetgen Tchetgen, 2016; Sun et al., 2018), its validity
+should be justified based on domain-specific knowledge and needs to be investigated on a case-by-case basis.
+We have clarified the motivation, implication and limitation of the stableness of resistance assumption to
+facilitate the justification in practice. Even if the assumption does not hold, our approach constitutes a valid
+test of whether the missingness is entirely MAR–because the stableness of resistance assumption naturally
+holds under the null hypothesis of MAR. Besides, sensitivity analysis is warranted to assess robustness of
+inference against violation of the assumption.
+     We have employed an odds ratio parametrization and adopted practical parametric working models in
+the IPW, REG and DR estimators. There exist other parametrizations and we describe estimation under
+an alternative parametrization in Section S2 of the supplement. Kang and Schafer (2007) cautioned for
+potentially disastrous bias of certain DR estimators under MAR when all parametric working models are
+incorrect. However, previous authors have proposed alternative constructions of nuisance estimators and
+DR estimators to alleviate this problem, see e.g. Tan (2010); Vermeulen and Vansteelandt (2015); Tsiatis
+et al. (2011) and the discussions alongside Kang and Schafer (2007). Besides, multiply robust estimation in
+the sense of Vansteelandt et al. (2007) is also of interest. In addition, our nonparametric identification and
+estimation results open the way to more sophisticated estimation methods built on complex models, such as
+series or sieve estimation. In particular, our proposal in Theorem 4 allows for flexible estimation of the odds
+ratio function, without requiring it to be known or follow a parametric model, which extends the methods
+for nonignorable missing data analysis. For large to high-dimensional covariates, a heuristic approach for
+variable selection is to include penalties (e.g. LASSO) into the optimization of estimating equations for
+the nuisance parameters (e.g. Garcia et al., 2010; Fang and Shao, 2016). However, there remain challenges
+to the variable selection in the presence of nonignorable missing data and callbacks. It is of interest to
+incorporate these approaches to improve the proposed estimation methods.
+     We considered a single action response process—a call attempt either succeeds or fails; however, there
+may exist several dispositions, e.g., interview, refusal, other non-response or final non-contact (Biemer et al.,
+2013). Concurrent nonresponse is often the case when the missingness is due to failure of contact, but in
+practice different frame variables may be observed in different call attempts. In this case one may combine
+the callback design and the graphical model (e.g., Sadinle and Reiter, 2017; Malinsky et al., 2020; Mohan
+and Pearl, 2021) to account for complex patterns of missingness. In addition to nonresponse adjustment,
+callback data are also useful for the design and organization of surveys, e.g., allocation of time and staff
+resources. The integration of the callback design and other tools (e.g., instrumental variables) may be useful
+for handling simultaneous problems of nonresponse and confounding or other deficiencies in survey and
+observational studies. It is of interest to pursue these extensions.
+
+                                       ACKNOWLEDGEMENTS
+We are grateful for valuable comments from the editor, the associate editor and three anonymous reviewers.
+This work is partially supported by National Key R&D Program of China (2022YFA1008100) and National
+Natural Science Foundation of China (12292983, 12071015).
+
+
+                                                       21
+                                     SUPPLEMENTARY MATERIAL
+Supplementary materials online include further illustration for the stableness of resistance assumption, esti-
+mation under an alternative parametrization, the efficient influence function under the semiparametric model
+that A1 (X; α1 ), Γ(X, Y ; γ) are correctly specified, estimation with multiple callbacks, proof of theorems,
+propositions, and important equations, additional simulations and real data analysis results, and codes and
+data for reproducing the simulations and application.
+
+                                            REFERENCES
+Alho, J. M. (1990). Adjusting for nonresponse bias using logistic regression. Biometrika 77, 617–624.
+
+Athey, S., G. W. Imbens, and S. Wager (2018). Approximate residual balancing: debiased inference of
+  average treatment effects in high dimensions. Journal of the Royal Statistical Society: Series B 80, 597–
+  623.
+
+Benkeser, D., M. Carone, M. V. D. Laan, and P. Gilbert (2017). Doubly robust nonparametric inference on
+  the average treatment effect. Biometrika 104, 863–880.
+
+Biemer, P. P., P. Chen, and K. Wang (2013). Using level-of-effort paradata in non-response adjustments with
+  application to field surveys. Journal of the Royal Statistical Society: Series A 176, 147–168.
+
+Boniface, S., S. Scholes, N. Shelton, and J. Connor (2017). Assessment of non-response bias in estimates
+  of alcohol consumption: Applying the continuum of resistance model in a general population survey in
+  england. PloS ONE 12, e0170892.
+
+Chen, B., P. Li, and J. Qin (2018). Generalization of Heckman selection model to nonignorable nonresponse
+  using call-back information. Statistica Sinica 28, 1761–1785.
+
+Chen, H. Y. (2007). A semiparametric odds ratio model for measuring association. Biometrics 63, 413–421.
+
+Chernozhukov, V., D. Chetverikov, M. Demirer, E. Duflo, C. Hansen, W. Newey, and J. Robins (2018).
+  Double/debiased machine learning for treatment and structural parameters. The Econometrics Journal 21,
+  C1–C68.
+
+Clarsen, B., J. C. Skogen, T. S. Nilsen, and L. E. Aarø (2021). Revisiting the continuum of resistance model
+  in the digital age: a comparison of early and delayed respondents to the norwegian counties public health
+  survey. BMC Public Health 21, 730.
+
+Daniels, M. J., D. Jackson, W. Feng, and I. R. White (2015). Pattern mixture models for the analysis of
+  repeated attempt designs. Biometrics 71, 1160–1167.
+
+Deming, W. E. (1953). On a probability mechanism to attain an economic balance between the resultant
+  error of response and the bias of nonresponse. Journal of the American Statistical Association 48(264),
+  743–772.
+
+D’Haultfœuille, X. (2010). A new instrumental method for dealing with endogenous selection. Journal of
+  Econometrics 154, 1–15.
+
+Drew, J. and W. A. Fuller (1980). Modeling nonresponse in surveys with callbacks. In Proceedings of the
+  Section on Survey Research Methods of the American Statistical Association, pp. 639–642.
+
+
+
+                                                     22
+Dukes, O. and S. Vansteelandt (2021). Inference for treatment effect parameters in potentially misspecified
+  high-dimensional models. Biometrika 108, 321–334.
+
+Fang, F. and J. Shao (2016). Model selection with nonignorable nonresponse. Biometrika 103, 861–874.
+
+Filion, F. (1976). Exploring and correcting for nonresponse bias using follow-ups of non respondents.
+   Pacific Sociological Review 19, 401–408.
+
+Franks, A. M., A. D’Amour, and A. Feller (2020). Flexible sensitivity analysis for observational studies
+  without observable implications. Journal of the American Statistical Association 115, 1730–1746.
+
+Garcia, R. I., J. G. Ibrahim, and H. Zhu (2010). Variable selection for regression models with missing data.
+  Statistica Sinica 20(1), 149.
+
+Groves, R. M. and M. P. Couper (1998). Nonresponse in Household Interview Surveys. John Wiley & Sons.
+
+Guan, Z., D. H. Leung, and J. Qin (2018). Semiparametric maximum likelihood inference for nonignorable
+  nonresponse with callbacks. Scandinavian Journal of Statistics 45, 962–984.
+
+Hansen, L. P. (1982). Large sample properties of generalized method of moments estimators. Economet-
+  rica 50, 1029–1054.
+
+Heckman, J. J. (1979). Sample selection bias as a specification error. Econometrica 47, 153–161.
+
+Jackson, D., I. R. White, and M. Leese (2010). How much can we learn about missing data?: an exploration
+  of a clinical trial in psychiatry. Journal of the Royal Statistical Society: Series A 173, 593–612.
+
+Kang, J. D. and J. L. Schafer (2007). Demystifying double robustness: A comparison of alternative strategies
+  for estimating a population mean from incomplete data. Statistical Science 22, 523–539.
+
+Kennedy, E. H., Z. Ma, M. D. McHugh, and D. S. Small (2017). Non-parametric methods for doubly
+  robust estimation of continuous treatment effects. Journal of the Royal Statistical Society: Series B 79,
+  1229–1245.
+
+Kim, J. K. and J. Im (2014). Propensity score adjustment with several follow-ups. Biometrika 101, 439–448.
+
+Kim, J. K. and C. L. Yu (2011). A semiparametric estimation of mean functionals with nonignorable missing
+  data. Journal of the American Statistical Association 106, 157–165.
+
+Kreuter, F. (2013). Improving surveys with paradata. New Jersey, Hoboken: John Wiley & Sons.
+
+Lin, I.-F. and N. C. Schaeffer (1995). Using survey participants to estimate the impact of nonparticipation.
+  Public Opinion Quarterly 59, 236–258.
+
+Lipsitz, S. R., J. G. Ibrahim, and L. P. Zhao (1999). A weighted estimating equation for missing covariate
+  data with properties similar to maximum likelihood. Journal of the American Statistical Association 94,
+  1147–1160.
+
+Liu, L., W. Miao, B. Sun, J. Robins, and E. Tchetgen Tchetgen (2020). Identification and inference for
+  marginal average treatment effect on the treated with an instrumental variable. Statistica Sinica 30, 1517–
+  1541.
+
+
+
+                                                     23
+Malinsky, D., I. Shpitser, and E. J. Tchetgen Tchetgen (2020). Semiparametric inference for non-monotone
+ missing-not-at-random data: the no self-censoring model. Journal of the American Statistical Association.
+
+McFadden, D. (2001). Economic choices. American Economic Review 91, 351–378.
+
+Miao, W., P. Ding, and Z. Geng (2016). Identifiability of normal and normal mixture models with nonignor-
+ able missing data. Journal of the American Statistical Association 111, 1673–1683.
+
+Miao, W. and E. Tchetgen Tchetgen (2016). On varieties of doubly robust estimators under missingness not
+ at random with a shadow variable. Biometrika 103, 475–482.
+
+Mohan, K. and J. Pearl (2021). Graphical models for processing missing data. Journal of the American
+ Statistical Association 116, 1023–1037.
+
+Molenberghs, G., C. Beunckens, C. Sotto, and M. G. Kenward (2008). Every missingness not at random
+ model has a missingness at random counterpart with equal fit. Journal of the Royal Statistical Society:
+ Series B 70, 371–388.
+
+National Research Council (2013). Measuring what we spend: Toward a new consumer expenditure survey.
+  National Academies Press.
+
+Newey, W. K. and D. McFadden (1994). Large sample estimation and hypothesis testing. In R. F. Engle and
+  D. L. McFadden (Eds.), Handbook of Econometrics, Volume 4, pp. 2111–2245. Amsterdam: Elsevier.
+
+Ogburn, E. L., A. Rotnitzky, and J. M. Robins (2015). Doubly robust estimation of the local average
+  treatment effect curve. Journal of the Royal Statistical Society. Series B 77, 373–396.
+
+Okui, R., D. S. Small, Z. Tan, and J. M. Robins (2012). Doubly robust instrumental variable regression.
+  Statistica Sinica 22, 173–205.
+
+Olson, K. (2013). Paradata for nonresponse adjustment. The Annals of the American Academy of Political
+  and Social Science 645, 142–170.
+
+Osius, G. (2004). The association between two random elements: A complete characterization and odds
+  ratio models. Metrika 60, 261–277.
+
+Peress, M. (2010). Correcting for survey nonresponse using variable response propensity. Journal of the
+  American Statistical Association 105, 1418–1430.
+
+Politz, A. and W. Simmons (1949). An attempt to get the “not at homes” into the sample without callbacks.
+  Journal of the American Statistical Association 44, 9–16.
+
+Potthoff, R. F., K. G. Manton, and M. A. Woodbury (1993). Correcting for nonavailability bias in surveys by
+  weighting based on number of callbacks. Journal of the American Statistical Association 88, 1197–1207.
+
+Qin, J. and D. A. Follmann (2014). Semiparametric maximum likelihood inference by using failed contact
+  attempts to adjust for nonignorable nonresponse. Biometrika 101, 985–991.
+
+Richardson, T. S., J. M. Robins, and L. Wang (2017). On modeling and estimation for the relative risk and
+  risk difference. Journal of the American Statistical Association 112, 1121–1130.
+
+
+
+
+                                                    24
+Robins, J., L. Li, E. Tchetgen Tchetgen, and A. van der Vaart (2008). Higher order influence functions
+  and minimax estimation of nonlinear functionals. In D. Nolan and T. Speed (Eds.), Probability and
+  Statistics: Essays in Honor of David A. Freedman, Volume 2, pp. 335–421. Beachwood, Ohio: Institute
+  of Mathematical Statistics.
+
+Robins, J. M., A. Rotnitzky, and D. O. Scharfstein (2000). Sensitivity analysis for selection bias and unmea-
+  sured confounding in missing data and causal inference models. In Statistical Models in Epidemiology,
+  the Environment, and Clinical Trials, pp. 1–94. Springer.
+
+Rotnitzky, A., D. Scharfstein, T.-L. Su, and J. Robins (2001). Methods for conducting sensitivity analysis
+  of trials with potentially nonignorable competing causes of censoring. Biometrics 57, 103–113.
+
+Rotnitzky, A., E. Smucler, and J. M. Robins (2021). Characterization of parameters with a mixed bias
+  property. Biometrika 108, 231–238.
+
+Sadinle, M. and J. P. Reiter (2017). Itemwise conditionally independent nonresponse modelling for incom-
+  plete multivariate data. Biometrika 104, 207–220.
+
+Scharfstein, D. O., A. Rotnitzky, and J. M. Robins (1999). Adjusting for nonignorable drop-out using
+  semiparametric nonresponse models. Journal of the American Statistical Association 94, 1096–1120.
+
+Stephens, A., E. Tchetgen Tchetgen, and V. De Gruttola (2014). Locally efficient estimation of marginal
+  treatment effects when outcomes are correlated: is the prize worth the chase? The International Journal
+  of Biostatistics 10, 59–75.
+
+Sun, B., L. Liu, W. Miao, K. Wirth, J. Robins, and E. Tchetgen Tchetgen (2018). Semiparametric estimation
+  with data missing not at random using an instrumental variable. Statistica Sinica 28, 1965–1983.
+
+Tan, Z. (2006). A distributional approach for causal inference using propensity scores. Journal of the
+  American Statistical Association 101, 1619–1637.
+
+Tan, Z. (2010). Bounded, efficient and doubly robust estimation with inverse weighting. Biometrika 97,
+  661–682.
+
+Tan, Z. (2020). Model-assisted inference for treatment effects using regularized calibrated estimation with
+  high-dimensional data. The Annals of Statistics 48, 811–837.
+
+Tchetgen Tchetgen, E. J. and K. E. Wirth (2017). A general instrumental variable framework for regression
+  analysis with outcome missing not at random. Biometrics 73, 1123–1131.
+
+Train, K. E. (2009). Discrete choice methods with simulation. Cambridge University Press.
+
+Tsiatis, A. (2006). Semiparametric theory and missing data. New York: Springer.
+
+Tsiatis, A. A., M. Davidian, and W. Cao (2011). Improved doubly robust estimation when data are mono-
+  tonely coarsened, with application to longitudinal studies with dropout. Biometrics 67, 536–545.
+
+van der Laan, M. J. and D. Rubin (2006). Targeted maximum likelihood learning. The International Journal
+  of Biostatistics 2(1).
+
+van der Vaart, A. and J. A. Wellner (1996). Weak convergence and empirical processes: with applications
+  to statistics. Springer Science & Business Media.
+
+
+                                                     25
+Vansteelandt, S., A. Rotnitzky, and J. Robins (2007). Estimation of regression models for the mean of
+  repeated outcomes under nonignorable nonmonotone nonresponse. Biometrika 94, 841–860.
+
+Vermeulen, K. and S. Vansteelandt (2015). Biased-reduced doubly robust estimation. Journal of the Amer-
+  ican Statistical Association 110, 1024–1036.
+
+Wang, S., J. Shao, and J. K. Kim (2014). An instrumental variable approach for identification and estimation
+ with nonignorable nonresponse. Statistica Sinica 24, 1097–1116.
+
+Wood, A. M., I. R. White, and M. Hotopf (2006). Using number of failed contact attempts to adjust for
+ non-ignorable non-response. Journal of the Royal Statistical Society: Series A 169, 525–542.
+
+Zhang, Y., H. Chen, and N. Zhang (2018). Bayesian inference for nonresponse two-phase sampling. Statis-
+  tica Sinica 28, 2167–2187.
+
+
+
+
+                                                    26
+

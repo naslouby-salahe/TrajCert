@@ -1,0 +1,66 @@
+{
+  "status": "PASS",
+  "date": "2026-10-20",
+  "abstract_word_count_whitespace": 195,
+  "references": 17,
+  "doi_verified": 17,
+  "downloaded_cited_pdfs": 13,
+  "additional_cited_fulltext_xml": 1,
+  "main_figures": 3,
+  "main_tables": 4,
+  "supplementary_tables": 1,
+  "labels": 48,
+  "pdf": {
+    "main": {
+      "pages": 17,
+      "sha256": "aa6510bda5beb59049aedfd4d55864d86efc95eda0e319b2a7aac868c6cb0cfc",
+      "all_fonts_embedded": true,
+      "no_missing_refs_or_bad_boxes": true,
+      "page_text_lengths": [
+        3304,
+        4070,
+        3547,
+        3127,
+        3391,
+        3987,
+        4047,
+        4071,
+        3899,
+        3897,
+        3789,
+        3956,
+        3924,
+        4134,
+        3991,
+        3097,
+        2438
+      ]
+    },
+    "supplement": {
+      "pages": 6,
+      "sha256": "8828371644dc038e70570cd056416685e45ce5e34065eda6568c2bdcb1239e0e",
+      "all_fonts_embedded": true,
+      "no_missing_refs_or_bad_boxes": true,
+      "page_text_lengths": [
+        3767,
+        4661,
+        5000,
+        5505,
+        4708,
+        1479
+      ]
+    }
+  },
+  "initial_tracked_files_unchanged": 427,
+  "existing_evidence_files_unchanged": 12950,
+  "git_head_unchanged": "6a37400fc10e977d4c568d7e94d88f3f49dd67aa",
+  "git_status_outside_paper_unchanged": true,
+  "git_status_current": "?? paper/\n",
+  "index_unchanged": true,
+  "report_source_hashes_verified": 33,
+  "scientific_experiments_rerun": false,
+  "review_passes": 5,
+  "journal_specific_guide": "NOT_VERIFIED_403",
+  "remaining_author_information": true,
+  "source_attestation": "UNRESOLVED_REQUIRES_NEW_EVIDENCE"
+}

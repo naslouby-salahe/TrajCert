@@ -1,0 +1,141 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        3,
+        31
+      ]
+    ],
+    "date-time": "2026-03-31T21:21:40Z",
+    "timestamp": 1774992100419,
+    "version": "3.50.1"
+  },
+  "reference-count": 0,
+  "publisher": "Oxford University Press (OUP)",
+  "issue": "3",
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [
+    "Biometrika"
+  ],
+  "published-print": {
+    "date-parts": [
+      [
+        1990
+      ]
+    ]
+  },
+  "DOI": "10.1093/biomet/77.3.617",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2007,
+        1,
+        4
+      ]
+    ],
+    "date-time": "2007-01-04T09:06:02Z",
+    "timestamp": 1167901562000
+  },
+  "page": "617-624",
+  "source": "Crossref",
+  "is-referenced-by-count": 32,
+  "title": [
+    "Adjusting for nonresponse bias using logistic regression"
+  ],
+  "prefix": "10.1093",
+  "volume": "77",
+  "author": [
+    {
+      "given": "JUHA M.",
+      "family": "ALHO",
+      "sequence": "first",
+      "affiliation": [],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    }
+  ],
+  "member": "286",
+  "container-title": [
+    "Biometrika"
+  ],
+  "original-title": [],
+  "language": "en",
+  "link": [
+    {
+      "URL": "http://academic.oup.com/biomet/article-pdf/77/3/617/705144/77-3-617.pdf",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2017,
+        8,
+        23
+      ]
+    ],
+    "date-time": "2017-08-23T00:03:11Z",
+    "timestamp": 1503446591000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://academic.oup.com/biomet/article-lookup/doi/10.1093/biomet/77.3.617"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        1990
+      ]
+    ]
+  },
+  "references-count": 0,
+  "journal-issue": {
+    "issue": "3",
+    "published-print": {
+      "date-parts": [
+        [
+          1990
+        ]
+      ]
+    }
+  },
+  "URL": "https://doi.org/10.1093/biomet/77.3.617",
+  "relation": {},
+  "ISSN": [
+    "0006-3444",
+    "1464-3510"
+  ],
+  "issn-type": [
+    {
+      "value": "0006-3444",
+      "type": "print"
+    },
+    {
+      "value": "1464-3510",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published": {
+    "date-parts": [
+      [
+        1990
+      ]
+    ]
+  }
+}

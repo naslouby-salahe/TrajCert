@@ -1,0 +1,811 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        19
+      ]
+    ],
+    "date-time": "2026-10-19T00:33:15Z",
+    "timestamp": 1792369995381,
+    "version": "4.4.0"
+  },
+  "reference-count": 122,
+  "publisher": "Institute of Mathematical Statistics",
+  "issue": "4",
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [
+    "Statist. Sci."
+  ],
+  "published-print": {
+    "date-parts": [
+      [
+        2023,
+        11,
+        1
+      ]
+    ]
+  },
+  "abstract": "<jats:p>Safe anytime-valid inference (SAVI) provides measures of statistical evidence and certainty\u2014e-processes for testing and confidence sequences for estimation\u2014that remain valid at all stopping times, accommodating continuous monitoring and analysis of accumulating data and optional stopping or continuation for any reason. These measures crucially rely on test martingales, which are nonnegative martingales starting at one. Since a test martingale is the wealth process of a player in a betting game, SAVI centrally employs game-theoretic intuition, language and mathematics. We summarize the SAVI goals and philosophy, and report recent advances in testing composite hypotheses and estimating functionals in nonparametric settings.</jats:p>",
+  "DOI": "10.1214/23-sts894",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2023,
+        11,
+        7
+      ]
+    ],
+    "date-time": "2023-11-07T01:17:50Z",
+    "timestamp": 1699319870000
+  },
+  "page": "576-601",
+  "source": "Crossref",
+  "is-referenced-by-count": 106,
+  "title": [
+    "Game-Theoretic Statistics and Safe Anytime-Valid Inference"
+  ],
+  "prefix": "10.1214",
+  "volume": "38",
+  "author": [
+    {
+      "given": "Aaditya",
+      "family": "Ramdas",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Aaditya Ramdas is Assistant Professor, Statistics and Data Science, and Machine Learning, Carnegie Mellon University, Pittsburgh, Pennsylvania 15213, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Peter",
+      "family": "Gr\u00fcnwald",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Peter Gr\u00fcnwald is Head, Machine Learning Group, Centrum Wiskunde & Informatica, Amsterdam, The Netherlands, and Professor of Statistics at Leiden University, The Netherlands"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Vladimir",
+      "family": "Vovk",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Vladimir Vovk is Professor, Computer Science, Royal Holloway, University of London, UK"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Glenn",
+      "family": "Shafer",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Glenn Shafer is University Professor, Rutgers University, Piscataway, New Jersey 08854-8019, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "member": "108",
+  "reference": [
+    {
+      "key": "11",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Cand\u00e8s, E.</small>, <small>Fan, Y.</small>, <small>Janson, L.</small> and <small>Lv, J.</small> (2018). Panning for gold: \u2018model-X\u2019 knockoffs for high dimensional controlled variable selection. <i>J. R. Stat. Soc. Ser. B. Stat. Methodol.</i> <b>80</b> 551\u2013577.",
+      "DOI": "10.1111/rssb.12265"
+    },
+    {
+      "key": "46",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>HENZI, A.</small> and <small>ZIEGEL, J. F.</small> (2022). Valid sequential inference on probability forecast performance. <i>Biometrika</i> <b>109</b> 647\u2013663.",
+      "DOI": "10.1093/biomet/asab047"
+    },
+    {
+      "key": "48",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>HOWARD, S. R.</small> and <small>RAMDAS, A.</small> (2022). Sequential estimation of quantiles with applications to A/B testing and best-arm identification. <i>Bernoulli</i> <b>28</b> 1704\u20131728.",
+      "DOI": "10.3150/21-bej1388"
+    },
+    {
+      "key": "75",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>RAMDAS, A.</small>, <small>RUF, J.</small>, <small>LARSSON, M.</small> and <small>KOOLEN, W. M.</small> (2022). Testing exchangeability: Fork-convexity, supermartingales and e-processes. <i>Internat. J. Approx. Reason.</i> <b>141</b> 83\u2013109.",
+      "DOI": "10.1016/j.ijar.2021.06.017"
+    },
+    {
+      "key": "114",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>WASSERMAN, L.</small>, <small>RAMDAS, A.</small> and <small>BALAKRISHNAN, S.</small> (2020). Universal inference. <i>Proc. Natl. Acad. Sci. USA</i> <b>117</b> 16880\u201316890.",
+      "DOI": "10.1073/pnas.1922664117"
+    },
+    {
+      "key": "58",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Kelly, J. L. Jr.</small> (1956). A new interpretation of information rate. <i>Bell Syst. Tech. J.</i> <b>35</b> 917\u2013926.",
+      "DOI": "10.1002/j.1538-7305.1956.tb03809.x"
+    },
+    {
+      "key": "85",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>SHAFER, G.</small> (2021). Testing by betting: A strategy for statistical and scientific communication. <i>J. Roy. Statist. Soc. Ser. A</i> <b>184</b> 407\u2013478.",
+      "DOI": "10.1111/rssa.12647"
+    },
+    {
+      "key": "106",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>VOVK, V.</small> and <small>WANG, R.</small> (2021). E-values: Calibration, combination and applications. <i>Ann. Statist.</i> <b>49</b> 1736\u20131754.",
+      "DOI": "10.1214/20-AOS2020"
+    },
+    {
+      "key": "7",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>BENJAMINI, Y.</small> and <small>YEKUTIELI, D.</small> (2001). The control of the false discovery rate in multiple testing under dependency. <i>Ann. Statist.</i> <b>29</b> 1165\u20131188.",
+      "DOI": "10.1214/aos/1013699998"
+    },
+    {
+      "key": "113",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>WANG, R.</small> and <small>RAMDAS, A.</small> (2022). False discovery rate control with e-values. <i>J. R. Stat. Soc. Ser. B. Stat. Methodol.</i> <b>84</b> 822\u2013852.",
+      "DOI": "10.1111/rssb.12489"
+    },
+    {
+      "key": "23",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DAWID, A. P.</small> (1984). Statistical theory. The prequential approach. <i>J. Roy. Statist. Soc. Ser. A</i> <b>147</b> 278\u2013292.",
+      "DOI": "10.2307/2981683"
+    },
+    {
+      "key": "103",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>VOVK, V.</small> (2021). Testing randomness online. <i>Statist. Sci.</i> <b>36</b> 595\u2013611.",
+      "DOI": "10.1214/20-sts817"
+    },
+    {
+      "key": "76",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>RISSANEN, J.</small> (1984). Universal coding, information, prediction, and estimation. <i>IEEE Trans. Inf. Theory</i> <b>30</b> 629\u2013636.",
+      "DOI": "10.1109/TIT.1984.1056936"
+    },
+    {
+      "key": "102",
+      "unstructured": "<small>VOLKHONSKIY, D.</small>, <small>BURNAEV, E.</small>, <small>NOURETDINOV, I.</small>, <small>GAMMERMAN, A.</small> and <small>VOVK, V.</small> (2017). Inductive conformal martingales for change-point detection. In <i>Conformal and Probabilistic Prediction and Applications</i> 132\u2013153. PMLR."
+    },
+    {
+      "key": "1",
+      "unstructured": "<small>ABBASI-YADKORI, Y.</small>, <small>P\u00c1L, D.</small> and <small>SZEPESV\u00c1RI, C.</small> (2011). Improved algorithms for linear stochastic bandits. In <i>Advances in Neural Information Processing Systems</i> <b>24</b>."
+    },
+    {
+      "key": "2",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>ANSCOMBE, F. J.</small> (1954). Fixed-sample size analysis of sequential observations. <i>Biometrics</i> <b>10</b> 89\u2013100.",
+      "DOI": "10.2307/3001665"
+    },
+    {
+      "key": "3",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>BARNARD, G. A.</small> (1947). Review of Abraham Wald\u2019s <i>Sequential Analysis</i>. <i>J. Amer. Statist. Assoc.</i> <b>42</b> 658\u2013665.",
+      "DOI": "10.2307/2280027"
+    },
+    {
+      "key": "4",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>BARRON, A.</small>, <small>RISSANEN, J.</small> and <small>YU, B.</small> (1998). The Minimum Description Length principle in coding and modeling. <i>IEEE Trans. Inf. Theory</i> <b>44</b> 2743\u20132760. Special Commemorative Issue: Information Theory: 1948\u20131998.",
+      "DOI": "10.1109/18.720554"
+    },
+    {
+      "key": "5",
+      "unstructured": "<small>BATES, S.</small>, <small>JORDAN, M. I.</small>, <small>SKLAR, M.</small> and <small>SOLOFF, J.</small> (2022). Principal-agent hypothesis testing. Available at <a href=\"https://arxiv.org/abs/arXiv:2205.06812\">arXiv:2205.06812</a>."
+    },
+    {
+      "key": "8",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>BENJAMINI, Y.</small> and <small>YEKUTIELI, D.</small> (2005). False discovery rate\u2013adjusted multiple confidence intervals for selected parameters. <i>J. Amer. Statist. Assoc.</i> <b>100</b> 71\u201381.",
+      "DOI": "10.1198/016214504000001907"
+    },
+    {
+      "key": "9",
+      "unstructured": "<small>BERGER, J. O.</small>, <small>PERICCHI, L. R.</small> and <small>VARSHAVSKY, J. A.</small> (1998). Bayes factors and marginal distributions in invariant situations. <i>Sankhya, Ser. A</i> <b>60</b> 307\u2013321."
+    },
+    {
+      "key": "10",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>BREIMAN, L.</small> (1961). Optimal gambling systems for favorable games. In <i>Proc</i>. 4<i>th Berkeley Sympos. Math. Statist. and Prob</i>., <i>Vol. I</i> 65\u201378. Univ. California Press, Berkeley, CA.",
+      "DOI": "10.21236/AD0402290"
+    },
+    {
+      "key": "12",
+      "unstructured": "<small>CARNEY, D. R.</small> My position on \u201cPower Poses\u201d. Accessed 5 June 2022. Available at <a href=\"http://faculty.haas.berkeley.edu/dana_carney/pdf_mypositiononpowerposes.pdf\">http://faculty.haas.berkeley.edu/dana_carney/pdf_mypositiononpowerposes.pdf</a>."
+    },
+    {
+      "key": "13",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>CARNEY, D. R.</small>, <small>CUDDY, A. J. C.</small> and <small>YAP, A. J.</small> (2010). Power posing: Brief nonverbal displays affect neuroendocrine levels and risk tolerance. <i>Psychol. Sci.</i> <b>21</b> 1363\u20131368.",
+      "DOI": "10.1177/0956797610383437"
+    },
+    {
+      "key": "14",
+      "unstructured": "<small>CASGRAIN, P.</small>, <small>LARSSON, M.</small> and <small>ZIEGEL, J.</small> (2022). Anytime-valid sequential testing for elicitable functionals via supermartingales. Available at <a href=\"https://arxiv.org/abs/arXiv:2204.05680\">arXiv:2204.05680</a>."
+    },
+    {
+      "key": "16",
+      "unstructured": "<small>CHOE, Y. J.</small> and <small>RAMDAS, A.</small> (2023). Comparing sequential forecasters. <i>Oper. Res.</i> To appear. Available at <a href=\"https://arxiv.org/abs/arXiv:2110.00115\">arXiv:2110.00115</a>."
+    },
+    {
+      "key": "17",
+      "unstructured": "<small>CHOWDHURY, S. R.</small> and <small>GOPALAN, A.</small> (2017). On kernelized multi-armed bandits. In <i>International Conference on Machine Learning</i> 844\u2013853. PMLR."
+    },
+    {
+      "key": "18",
+      "unstructured": "<small>COVER, T. M.</small> (1974). Universal gambling schemes and the complexity measures of Kolmogorov and Chaitin. Technical Report, No. 12. Stanford Univ., Stanford, CA."
+    },
+    {
+      "key": "19",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>COX, D. R.</small> (1952). Sequential tests for composite hypotheses. <i>Proc. Camb. Philos. Soc.</i> <b>48</b> 290\u2013299.",
+      "DOI": "10.1017/s030500410002764x"
+    },
+    {
+      "key": "20",
+      "unstructured": "<small>CRANE, H.</small> and <small>SHAFER, G.</small> (2020). Risk is random: The magic of the d\u2019Alembert. Available at: <a href=\"http://www.probabilityandfinance.com/articles/57.pdf\">http://www.probabilityandfinance.com/articles/57.pdf</a>."
+    },
+    {
+      "key": "22",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DARLING, D. A.</small> and <small>ROBBINS, H.</small> (1968). Some nonparametric sequential tests with power one. <i>Proc. Natl. Acad. Sci. USA</i> <b>61</b> 804\u2013809.",
+      "DOI": "10.1073/pnas.61.3.804"
+    },
+    {
+      "key": "24",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DAWID, A. P.</small>, <small>DE ROOIJ, S.</small>, <small>SHAFER, G.</small>, <small>SHEN, A.</small>, <small>VERESHCHAGIN, N.</small> and <small>VOVK, V.</small> (2011). Insuring against loss of evidence in game-theoretic probability. <i>Statist. Probab. Lett.</i> <b>81</b> 157\u2013162.",
+      "DOI": "10.1016/j.spl.2010.10.013"
+    },
+    {
+      "key": "25",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DE HEIDE, R.</small> and <small>GR\u00dcNWALD, P. D.</small> (2021). Why optional stopping can be a problem for Bayesians. <i>Psychon. Bull. Rev.</i> <b>28</b> 795\u2013812.",
+      "DOI": "10.3758/s13423-020-01803-x"
+    },
+    {
+      "key": "26",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DELYON, B.</small> (2009). Exponential inequalities for sums of weakly dependent variables. <i>Electron. J. Probab.</i> <b>14</b> 752\u2013779.",
+      "DOI": "10.1214/EJP.v14-636"
+    },
+    {
+      "key": "27",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DE LA PE\u00d1A, V. H.</small> (1999). A general class of exponential inequalities for martingales and ratios. <i>Ann. Probab.</i> <b>27</b> 537\u2013564.",
+      "DOI": "10.1214/aop/1022677271"
+    },
+    {
+      "key": "28",
+      "unstructured": "<small>DIMITROV, V.</small>, <small>SHAFER, G.</small> and <small>ZHANG, T.</small> (2022). The martingale index. Available at: <a href=\"http://www.probabilityandfinance.com/articles/61.pdf\">http://www.probabilityandfinance.com/articles/61.pdf</a>."
+    },
+    {
+      "key": "29",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DUAN, B.</small>, <small>RAMDAS, A.</small>, <small>BALAKRISHNAN, S.</small> and <small>WASSERMAN, L.</small> (2020). Interactive martingale tests for the global null. <i>Electron. J. Stat.</i> <b>14</b> 4489\u20134551.",
+      "DOI": "10.1214/20-EJS1790"
+    },
+    {
+      "key": "30",
+      "unstructured": "<small>DUAN, B.</small>, <small>RAMDAS, A.</small> and <small>WASSERMAN, L.</small> (2022). Interactive rank testing by betting. In <i>Proceedings First Conference on Causal Learning and Reasoning</i> PMLR."
+    },
+    {
+      "key": "31",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DUBINS, L. E.</small> and <small>SAVAGE, L. J.</small> (1965). A Tchebycheff-like inequality for stochastic processes. <i>Proc. Natl. Acad. Sci. USA</i> <b>53</b> 274\u2013275.",
+      "DOI": "10.1073/pnas.53.2.274"
+    },
+    {
+      "key": "32",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>DUNN, R.</small>, <small>RAMDAS, A.</small>, <small>BALAKRISHNAN, S.</small> and <small>WASSERMAN, L.</small> (2023). Gaussian universal likelihood ratio testing. <i>Biometrika</i> <b>110</b> 319\u2013337.",
+      "DOI": "10.1093/biomet/asac064"
+    },
+    {
+      "key": "33",
+      "unstructured": "<small>EDWARDS, A. W. F.</small> (1992). <i>Likelihood</i>, Expanded ed. Johns Hopkins Univ. Press, Baltimore, MD."
+    },
+    {
+      "key": "34",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>EFRON, B.</small> (1969). Student\u2019s <i>t</i>-test under symmetry conditions. <i>J. Amer. Statist. Assoc.</i> <b>64</b> 1278\u20131302.",
+      "DOI": "10.1080/01621459.1969.10501056"
+    },
+    {
+      "key": "35",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>FAN, X.</small>, <small>GRAMA, I.</small> and <small>LIU, Q.</small> (2015). Exponential inequalities for martingales with applications. <i>Electron. J. Probab.</i> <b>20</b> 1\u201322.",
+      "DOI": "10.1214/EJP.v20-3496"
+    },
+    {
+      "key": "36",
+      "unstructured": "<small>FELLER, W. K.</small> (1940). Statistical aspects of ESP. <i>J. Parapsychol.</i> <b>4</b> 271\u2013298."
+    },
+    {
+      "key": "37",
+      "unstructured": "<small>GANGRADE, A.</small>, <small>RINALDO, A.</small> and <small>RAMDAS, A.</small> (2023). A sequential test for log-concavity. ArXiv preprint. Available at <a href=\"https://arxiv.org/abs/arXiv:2301.03542\">arXiv:2301.03542</a>."
+    },
+    {
+      "key": "38",
+      "unstructured": "<small>GR\u00dcNWALD, P.</small> (2022). Beyond Neyman\u2013Pearson. Available at <a href=\"https://arxiv.org/abs/arXiv:2205.00901\">arXiv:2205.00901</a>."
+    },
+    {
+      "key": "39",
+      "unstructured": "<small>GR\u00dcNWALD, P.</small>, <small>DE HEIDE, R.</small> and <small>KOOLEN, W.</small> (2023). Safe testing. <i>J. Roy. Statist. Soc. Ser. B</i>. To appear, with discussion."
+    },
+    {
+      "key": "40",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>GR\u00dcNWALD, P.</small>, <small>HENZI, A.</small> and <small>LARDY, T.</small> (2023). Anytime-valid tests of conditional independence under model-X. <i>J. Amer. Statist. Assoc.</i>",
+      "DOI": "10.1080/01621459.2023.2205607"
+    },
+    {
+      "key": "41",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>GR\u00dcNWALD, P.</small> and <small>ROOS, T.</small> (2020). Minimum description length revisited. <i>Int. J. Math. Ind.</i> <b>11</b>.",
+      "DOI": "10.1142/S2661335219300018"
+    },
+    {
+      "key": "42",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>GR\u00dcNWALD, P. D.</small> (2023). The e-posterior. <i>Philos. Trans. R. Soc. A</i> <b>381</b> 20220146.",
+      "DOI": "10.1098/rsta.2022.0146"
+    },
+    {
+      "key": "43",
+      "unstructured": "<small>HAO, Y.</small>, <small>GR\u00dcNWALD, P.</small>, <small>LARDY, T.</small>, <small>LONG, L.</small> and <small>ADAMS, R.</small> (2023). E-values for k-sample tests with exponential families. Available at <a href=\"https://arxiv.org/abs/arXiv:2303.0047\">arXiv:2303.0047</a>."
+    },
+    {
+      "key": "44",
+      "unstructured": "<small>HENDRIKS, H.</small> (2018). Test martingales for bounded random variables. Available at <a href=\"https://arxiv.org/abs/arXiv:1801.09418\">arXiv:1801.09418</a>."
+    },
+    {
+      "key": "45",
+      "unstructured": "<small>HENZI, A.</small>, <small>ARNOLD, S.</small> and <small>ZIEGEL, J. F.</small> (2023). Sequentially valid tests for forecast calibration. <i>Ann. Appl. Stat.</i>"
+    },
+    {
+      "key": "47",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>HILDRETH, C.</small> (1963). Bayesian statisticians and remote clients. <i>Econometrica</i> <b>31</b> 422\u2013438.",
+      "DOI": "10.2307/1909982"
+    },
+    {
+      "key": "50",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>HOWARD, S. R.</small>, <small>RAMDAS, A.</small>, <small>MCAULIFFE, J.</small> and <small>SEKHON, J.</small> (2021a). Time-uniform, nonparametric, nonasymptotic confidence sequences. <i>Ann. Statist.</i> <b>49</b> 1055\u20131080.",
+      "DOI": "10.1214/20-aos1991"
+    },
+    {
+      "key": "51",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>IGNATIADIS, N.</small>, <small>WANG, R.</small> and <small>RAMDAS, A.</small> (2022). E-values as unnormalized weights in multiple testing. <i>Biometrika</i>. To appear.",
+      "DOI": "10.1093/biomet/asad057"
+    },
+    {
+      "key": "52",
+      "unstructured": "<small>JAMIESON, K.</small>, <small>MALLOY, M.</small>, <small>NOWAK, R.</small> and <small>BUBECK, S.</small> (2014). Lil\u2019UCB: An optimal exploration algorithm for multi-armed bandits. In <i>Conference on Learning Theory</i> 423\u2013439. PMLR."
+    },
+    {
+      "key": "54",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>JOHARI, R.</small>, <small>KOOMEN, P.</small>, <small>PEKELIS, L.</small> and <small>WALSH, D.</small> (2022). Always valid inference: Continuous monitoring of A/B tests. <i>Oper. Res.</i> <b>70</b> 1806\u20131821.",
+      "DOI": "10.1287/opre.2021.2135"
+    },
+    {
+      "key": "55",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>JOHN, L. K.</small>, <small>LOEWENSTEIN, G.</small> and <small>PRELEC, D.</small> (2012). Measuring the prevalence of questionable research practices with incentives for truth telling. <i>Psychol. Sci.</i> <b>23</b> 524\u2013532.",
+      "DOI": "10.1177/0956797611430953"
+    },
+    {
+      "key": "56",
+      "unstructured": "<small>KARAMPATZIAKIS, N.</small>, <small>MINEIRO, P.</small> and <small>RAMDAS, A.</small> (2021). Off-policy confidence sequences. In <i>International Conference on Machine Learning</i> 5301\u20135310. PMLR."
+    },
+    {
+      "key": "57",
+      "unstructured": "<small>KAUFMANN, E.</small> and <small>KOOLEN, W. M.</small> (2021). Mixture martingales revisited with applications to sequential tests and confidence intervals. <i>J. Mach. Learn. Res.</i> <b>22</b> 246."
+    },
+    {
+      "key": "59",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>LAI, T. L.</small> (1976a). On confidence sequences. <i>Ann. Statist.</i> <b>4</b> 265\u2013280.",
+      "DOI": "10.1214/aos/1176343406"
+    },
+    {
+      "key": "60",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>LH\u00c9RITIER, A.</small> and <small>CAZALS, F.</small> (2018). A sequential non-parametric multivariate two-sample test. <i>IEEE Trans. Inf. Theory</i> <b>64</b> 3361\u20133370.",
+      "DOI": "10.1109/TIT.2018.2800658"
+    },
+    {
+      "key": "61",
+      "unstructured": "<small>LI, J. Q.</small> (1999). Estimation of Mixture Models Ph.D. thesis Yale Univ. New Haven, CT."
+    },
+    {
+      "key": "62",
+      "unstructured": "<small>LI, J. Q.</small> and <small>BARRON, A. R.</small> (2000). Mixture density estimation. In <i>Advances in Neural Information Processing Systems</i> <b>12</b> 279\u2013285."
+    },
+    {
+      "key": "63",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>MACLEAN, L. C.</small>, <small>THORP, E. O.</small> and <small>ZIEMBA, W. T.</small> (2010). Long-term capital growth: The good and bad properties of the Kelly and fractional Kelly capital growth criteria. <i>Quant. Finance</i> <b>10</b> 681\u2013687.",
+      "DOI": "10.1080/14697688.2010.506108"
+    },
+    {
+      "key": "64",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>MANOLE, T.</small> and <small>RAMDAS, A.</small> (2023). Martingale methods for sequential estimation of convex functionals and divergences. <i>IEEE Trans. Inform. Theory</i>. <b>69</b> 4641\u20134658.",
+      "DOI": "10.1109/TIT.2023.3250099"
+    },
+    {
+      "key": "65",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>MINGXIU, H.</small>, <small>CAPPELLERI, J. C.</small> and <small>GORDON LAN, K. K.</small> (2007). Applying the law of iterated logarithm to control type I error in cumulative meta-analysis of binary outcomes. <i>Clin. Trials</i> <b>4</b> 329\u2013340.",
+      "DOI": "10.1177/1740774507081219"
+    },
+    {
+      "key": "66",
+      "unstructured": "<small>NEISWANGER, W.</small> and <small>RAMDAS, A.</small> (2021). Uncertainty quantification using martingales for misspecified Gaussian processes. In <i>Algorithmic Learning Theory</i> 963\u2013982. PMLR."
+    },
+    {
+      "key": "67",
+      "unstructured": "<small>ORABONA, F.</small> and <small>JUN, K.-S.</small> (2021). Tight concentrations and confidence sequences from the regret of universal portfolio. Available at <a href=\"https://arxiv.org/abs/arXiv:2110.14099\">arXiv:2110.14099</a>."
+    },
+    {
+      "key": "68",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>PACE, L.</small> and <small>SALVAN, A.</small> (2020). Likelihood, replicability and Robbins\u2019 confidence sequences. <i>Int. Stat. Rev.</i> <b>88</b> 599\u2013615.",
+      "DOI": "10.1111/insr.12355"
+    },
+    {
+      "key": "69",
+      "unstructured": "<small>PANDEVA, T.</small>, <small>BAKKER, T.</small>, <small>NAESSETH, C. A.</small> and <small>FORR\u00c9, P.</small> (2022). E-Valuating Classifier Two-Sample Tests."
+    },
+    {
+      "key": "70",
+      "unstructured": "<small>PAWEL, S.</small>, <small>LY, A.</small> and <small>WAGENMAKERS, E.-J.</small> (2022). Evidential calibration of confidence intervals. Available at <a href=\"https://arxiv.org/abs/arXiv:2206.12290\">arXiv:2206.12290</a>."
+    },
+    {
+      "key": "71",
+      "unstructured": "<small>P\u00c9REZ-ORTIZ, M. F.</small>, <small>LARDY, T.</small>, <small>DE HEIDE, R.</small> and <small>GR\u00dcNWALD, P.</small> (2022). E-statistics, group invariance and anytime valid testing. Available at <a href=\"https://arxiv.org/abs/arXiv:2208.07610\">arXiv:2208.07610</a>."
+    },
+    {
+      "key": "72",
+      "unstructured": "<small>PODKOPAEV, A.</small>, <small>BLOEBAUM, P.</small>, <small>KASIVISWANATHAN, S.</small> and <small>RAMDAS, A.</small> (2023). Sequential kernelized independence testing. In <i>International Conference on Machine Learning</i>."
+    },
+    {
+      "key": "73",
+      "unstructured": "<small>RAMDAS, A.</small> and <small>MANOLE, T.</small> (2023). Randomized and exchangeable improvements of Markov\u2019s, Chebyshev\u2019s and Chernoff\u2019s inequalities. ArXiv preprint. Available at <a href=\"https://arxiv.org/abs/arXiv:2304.02611\">arXiv:2304.02611</a>."
+    },
+    {
+      "key": "74",
+      "unstructured": "<small>RAMDAS, A.</small>, <small>RUF, J.</small>, <small>LARSSON, M.</small> and <small>KOOLEN, W.</small> (2020). Admissible anytime-valid sequential inference must rely on nonnegative martingales. Available at <a href=\"https://arxiv.org/abs/arXiv:2009.03167\">arXiv:2009.03167</a>."
+    },
+    {
+      "key": "80",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>ROUDER, J. N.</small>, <small>SPECKMAN, P. L.</small>, <small>SUN, D.</small>, <small>MOREY, R. D.</small> and <small>IVERSON, G.</small> (2009). Bayesian t-tests for accepting and rejecting the null hypothesis. <i>Psychon. Bull. Rev.</i> <b>16</b> 225\u2013237.",
+      "DOI": "10.3758/PBR.16.2.225"
+    },
+    {
+      "key": "82",
+      "unstructured": "<small>RUF, J.</small>, <small>LARSSON, M.</small>, <small>KOOLEN, W. M.</small> and <small>RAMDAS, A.</small> (2022). A composite generalization of Ville\u2019s martingale theorem. Available at <a href=\"https://arxiv.org/abs/arXiv:2203.04485\">arXiv:2203.04485</a>."
+    },
+    {
+      "key": "83",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>RUSHTON, S.</small> (1950). On a sequential <i>t</i>-test. <i>Biometrika</i> <b>37</b> 326\u2013333.",
+      "DOI": "10.1093/biomet/37.3-4.326"
+    },
+    {
+      "key": "84",
+      "unstructured": "<small>SHAER, S.</small>, <small>MAMAN, G.</small> and <small>ROMANO, Y.</small> (2023). Model-free sequential testing for conditional independence via testing by betting. In <i>International Conference on Artificial Intelligence and Statistics</i>."
+    },
+    {
+      "key": "87",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>SHAFER, G.</small> and <small>VOVK, V.</small> (2001a). <i>Probability and Finance</i>: <i>It\u2019s Only a Game! Wiley Series in Probability and Statistics. Financial Engineering Section</i>. Wiley Interscience, New York.",
+      "DOI": "10.1002/0471249696"
+    },
+    {
+      "key": "89",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>SHEKHAR, S.</small> and <small>RAMDAS, A.</small> (2023a). Nonparametric two sample testing by betting. <i>IEEE Trans. Inform. Theory</i>. To appear.",
+      "DOI": "10.1109/TIT.2023.3305867"
+    },
+    {
+      "key": "90",
+      "unstructured": "<small>SHEKHAR, S.</small> and <small>RAMDAS, A.</small> (2023b). Sequential change detection via backward confidence sequences. In <i>International Conference on Machine Learning</i>."
+    },
+    {
+      "key": "91",
+      "unstructured": "<small>SHIN, J.</small>, <small>RAMDAS, A.</small> and <small>RINALDO, A.</small> (2022). E-detectors: A nonparametric framework for online changepoint detection. Available at <a href=\"https://arxiv.org/abs/arXiv:2203.03532\">arXiv:2203.03532</a>."
+    },
+    {
+      "key": "92",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>SPERTUS, J. V.</small> and <small>STARK, P. B.</small> (2022). Sweeter than SUITE: Supermartingale stratified union-intersection tests of elections. In <i>International Joint Conference on Electronic Voting</i>.",
+      "DOI": "10.1007/978-3-031-15911-4_7"
+    },
+    {
+      "key": "93",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>TER SCHURE, J.</small> and <small>GR\u00dcNWALD, P.</small> (2022). ALL-IN meta-analysis: Breathing life into living systematic reviews. <i>F</i>1000<i>Res.</i> <b>11</b> 549.",
+      "DOI": "10.12688/f1000research.74223.1"
+    },
+    {
+      "key": "94",
+      "unstructured": "<small>TER SCHURE, J.</small>, <small>GR\u00dcNWALD, P.</small> and <small>LY, A.</small> (2021). Pandemic preparedness in data sharing; lessons learned from collaborating in a live meta-analysis. <i>STAtOR</i> <b>24</b> 47\u201352."
+    },
+    {
+      "key": "95",
+      "unstructured": "<small>TER SCHURE, J.</small>, <small>PEREZ-ORTIZ, M. F.</small>, <small>LY, A.</small> and <small>GR\u00dcNWALD, P.</small> (2021). The safe log rank test: Error control under continuous monitoring with unlimited horizon. Available at <a href=\"https://arxiv.org/abs/arXiv:1906.07801\">arXiv:1906.07801</a>."
+    },
+    {
+      "key": "96",
+      "unstructured": "<small>TURING, A. M.</small> (1941). The Applications of Probability to Cryptography. UK National Archives, HW 25/37. See <a href=\"https://arxiv.org/abs/arXiv:1505.04714\">arXiv:1505.04714</a> for a version set in Latex."
+    },
+    {
+      "key": "97",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>TURNER, R.</small> and <small>GR\u00dcNWALD, P.</small> (2023a). Anytime-valid confidence intervals for contingency tables and beyond. <i>Statist. Probab. Lett</i> <b>198</b>.",
+      "DOI": "10.1016/j.spl.2023.109835"
+    },
+    {
+      "key": "98",
+      "unstructured": "<small>TURNER, R.</small> and <small>GR\u00dcNWALD, P.</small> (2023b). Safe sequential testing and effect estimation in stratified count data. In <i>Annual AI and Statistics Conference</i>. PMLR."
+    },
+    {
+      "key": "99",
+      "unstructured": "<small>TURNER, R.</small>, <small>LY, A.</small> and <small>GR\u00dcNWALD, P.</small> (2021). Generic E-variables for exact sequential k-sample tests that allow for optional stopping. Available at <a href=\"https://arxiv.org/abs/arXiv:2106.02693\">arXiv:2106.02693</a>."
+    },
+    {
+      "key": "100",
+      "unstructured": "<small>TURNER, R.</small>, <small>LY, A.</small>, <small>ORTIZ-PEREZ, M.-F.</small>, <small>TER SCHURE, J.</small> and <small>GR\u00dcNWALD, P.</small> (2022). R-package <math xmlns=\"http://www.w3.org/1998/Math/MathML\" overflow=\"scroll\" id=\"eq_1\"><mi mathvariant=\"monospace\">safestats</mi></math>. CRAN."
+    },
+    {
+      "key": "101",
+      "unstructured": "<small>VILLE, J.</small> (1939). <i>Etude Critique de la Notion de Collectif</i>. Gauthier-Villars, Paris."
+    },
+    {
+      "key": "104",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>VOVK, V.</small>, <small>GAMMERMAN, A.</small> and <small>SHAFER, G.</small> (2022). <i>Algorithmic Learning in a Random World</i>. Springer, Cham.",
+      "DOI": "10.1007/978-3-031-06649-8"
+    },
+    {
+      "key": "105",
+      "unstructured": "<small>VOVK, V.</small>, <small>NOURETDINOV, I.</small> and <small>GAMMERMAN, A.</small> (2021). Conformal testing: Binary case with Markov alternatives. Available at <a href=\"https://arxiv.org/abs/arXiv:2111.01885\">arXiv:2111.01885</a>."
+    },
+    {
+      "key": "107",
+      "unstructured": "<small>WAGENMAKERS, E.-J.</small>, <small>GRONAU, Q. F.</small>, <small>DABLANDER, F.</small> and <small>ETZ, A.</small> (2020). The support interval. <i>Erkenntnis</i> 1\u201313."
+    },
+    {
+      "key": "110",
+      "unstructured": "<small>WANG, H.</small> and <small>RAMDAS, A.</small> (2023a). The extended Ville\u2019s inequality for nonintegrable nonnegative supermartingales. ArXiv preprint. Available at <a href=\"https://arxiv.org/abs/arXiv:2304.01163\">arXiv:2304.01163</a>."
+    },
+    {
+      "key": "111",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>WANG, H.</small> and <small>RAMDAS, A.</small> (2023b). Catoni-style confidence sequences for heavy-tailed mean estimation. <i>Stochastic Process. Appl.</i> <b>163</b> 168\u2013202.",
+      "DOI": "10.1016/j.spa.2023.05.007"
+    },
+    {
+      "key": "112",
+      "unstructured": "<small>WANG, H.</small> and <small>RAMDAS, A.</small> (2023c). Huber-robust confidence sequences. <i>26th International Conference on Artificial Intelligence and Statistics</i>."
+    },
+    {
+      "key": "115",
+      "unstructured": "<small>WAUDBY-SMITH, I.</small>, <small>ARBOUR, D.</small>, <small>SINHA, R.</small>, <small>KENNEDY, E. H.</small> and <small>RAMDAS, A.</small> (2021). Time-uniform central limit theory and asymptotic confidence sequences. Available at <a href=\"https://arxiv.org/abs/arXiv:2103.06476\">arXiv:2103.06476</a>."
+    },
+    {
+      "key": "116",
+      "unstructured": "<small>WAUDBY-SMITH, I.</small> and <small>RAMDAS, A.</small> (2020). Confidence sequences for sampling without replacement. In <i>Advances in Neural Information Processing Systems</i> <b>33</b> 20204\u201320214."
+    },
+    {
+      "key": "117",
+      "unstructured": "<small>WAUDBY-SMITH, I.</small> and <small>RAMDAS, A.</small> (2023). Estimating means of bounded random variables by betting. <i>J. R. Stat. Soc. Ser. B. Stat. Methodol.</i> To appear, with discussion."
+    },
+    {
+      "key": "118",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>WAUDBY-SMITH, I.</small>, <small>STARK, P. B.</small> and <small>RAMDAS, A.</small> (2021). RiLACS: Risk limiting audits via confidence sequences. In <i>International Joint Conference on Electronic Voting</i> 124\u2013139. Springer, Berlin.",
+      "DOI": "10.1007/978-3-030-86942-7_9"
+    },
+    {
+      "key": "119",
+      "unstructured": "<small>WAUDBY-SMITH, I.</small>, <small>WU, L.</small>, <small>RAMDAS, A.</small>, <small>KARAMPATZIAKIS, N.</small> and <small>MINEIRO, P.</small> (2022). Anytime-valid off-policy inference for contextual bandits. ArXiv preprint. Available at <a href=\"https://arxiv.org/abs/arXiv:2210.10768\">arXiv:2210.10768</a>."
+    },
+    {
+      "key": "120",
+      "unstructured": "<small>XU, Z.</small>, <small>WANG, R.</small> and <small>RAMDAS, A.</small> (2021). A unified framework for bandit multiple testing. In <i>Advances in Neural Information Processing Systems</i> <b>34</b>."
+    },
+    {
+      "key": "121",
+      "unstructured": "<small>XU, Z.</small>, <small>WANG, R.</small> and <small>RAMDAS, A.</small> (2022). Post-selection inference for e-value based confidence intervals. Available at <a href=\"https://arxiv.org/abs/arXiv:2203.12572\">arXiv:2203.12572</a>."
+    },
+    {
+      "key": "122",
+      "unstructured": "<small>ZHANG, Z.</small>, <small>RAMDAS, A.</small> and <small>WANG, R.</small> (2023). On the existence of powerful p-values and e-values for composite hypotheses. ArXiv preprint. Available at <a href=\"https://arxiv.org/abs/arXiv:2305.16539\">arXiv:2305.16539</a>."
+    },
+    {
+      "key": "6",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>Benjamini, Y.</small> and <small>Hochberg, Y.</small> (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. <i>J. Roy. Statist. Soc. Ser. B</i> <b>57</b> 289\u2013300.",
+      "DOI": "10.1111/j.2517-6161.1995.tb02031.x"
+    },
+    {
+      "key": "77",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Robbins, H.</small> (1952). Some aspects of the sequential design of experiments. <i>Bull. Amer. Math. Soc.</i> <b>58</b> 527\u2013535.",
+      "DOI": "10.1090/S0002-9904-1952-09620-8"
+    },
+    {
+      "key": "15",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Catoni, O.</small> (2012). Challenging the empirical mean and empirical variance: A deviation study. <i>Ann. Inst. Henri Poincar\u00e9 Probab. Stat.</i> <b>48</b> 1148\u20131185.",
+      "DOI": "10.1214/11-AIHP454"
+    },
+    {
+      "key": "21",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Darling, D. A.</small> and <small>Robbins, H.</small> (1967). Confidence sequences for mean, variance, and median. <i>Proc. Natl. Acad. Sci. USA</i> <b>58</b> 66\u201368.",
+      "DOI": "10.1073/pnas.58.1.66"
+    },
+    {
+      "key": "49",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Howard, S. R.</small>, <small>Ramdas, A.</small>, <small>McAuliffe, J.</small> and <small>Sekhon, J.</small> (2020). Time-uniform Chernoff bounds via nonnegative supermartingales. <i>Probab. Surv.</i> <b>17</b> 257\u2013317.",
+      "DOI": "10.1214/18-PS321"
+    },
+    {
+      "key": "78",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Robbins, H.</small> (1970). Statistical methods related to the law of the iterated logarithm. <i>Ann. Math. Stat.</i> <b>41</b> 1397\u20131409.",
+      "DOI": "10.1214/aoms/1177696786"
+    },
+    {
+      "key": "79",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>Robbins, H.</small> and <small>Siegmund, D.</small> (1974). The expected sample size of some tests of power one. <i>Ann. Statist.</i> <b>2</b> 415\u2013436.",
+      "DOI": "10.1214/aos/1176342704"
+    },
+    {
+      "key": "86",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Shafer, G.</small>, <small>Shen, A.</small>, <small>Vereshchagin, N.</small> and <small>Vovk, V.</small> (2011). Test martingales, Bayes factors and <i>p</i>-values. <i>Statist. Sci.</i> <b>26</b> 84\u2013101.",
+      "DOI": "10.1214/10-STS347"
+    },
+    {
+      "key": "108",
+      "doi-asserted-by": "publisher",
+      "unstructured": "<small>Wald, A.</small> (1945). Sequential tests of statistical hypotheses. <i>Ann. Math. Stat.</i> <b>16</b> 117\u2013186.",
+      "DOI": "10.1214/aoms/1177731118"
+    },
+    {
+      "key": "109",
+      "unstructured": "<small>Wald, A.</small> (1947). <i>Sequential Analysis</i>. Wiley, New York."
+    },
+    {
+      "key": "81",
+      "unstructured": "<small>Royall, R. M.</small> (1997). <i>Statistical Evidence</i>: <i>A Likelihood Paradigm</i>. <i>Monographs on Statistics and Applied Probability</i> <b>71</b>. CRC Press, London."
+    },
+    {
+      "key": "53",
+      "unstructured": "<small>Jeffreys, H.</small> (1961). <i>Theory of Probability</i>, 3rd ed. Clarendon Press, Oxford."
+    },
+    {
+      "key": "88",
+      "doi-asserted-by": "crossref",
+      "unstructured": "<small>Shafer, G.</small> and <small>Vovk, V.</small> (2019). <i>Game-Theoretic Foundations for Probability and Finance</i>. Wiley, Hoboken, NJ.",
+      "DOI": "10.1002/9781118548035"
+    }
+  ],
+  "container-title": [
+    "Statistical Science"
+  ],
+  "original-title": [],
+  "deposited": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        7
+      ]
+    ],
+    "date-time": "2026-10-07T18:19:55Z",
+    "timestamp": 1791397195000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://projecteuclid.org/journals/statistical-science/volume-38/issue-4/Game-Theoretic-Statistics-and-Safe-Anytime-Valid-Inference/10.1214/23-STS894.full"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        2023,
+        11,
+        1
+      ]
+    ]
+  },
+  "references-count": 122,
+  "journal-issue": {
+    "issue": "4",
+    "published-online": {
+      "date-parts": [
+        [
+          2023,
+          11,
+          1
+        ]
+      ]
+    }
+  },
+  "URL": "https://doi.org/10.1214/23-sts894",
+  "relation": {},
+  "ISSN": [
+    "0883-4237",
+    "2168-8745"
+  ],
+  "issn-type": [
+    {
+      "value": "0883-4237",
+      "type": "print"
+    },
+    {
+      "value": "2168-8745",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published": {
+    "date-parts": [
+      [
+        2023,
+        11,
+        1
+      ]
+    ]
+  }
+}

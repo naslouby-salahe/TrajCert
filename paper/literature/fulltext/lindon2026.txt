@@ -1,0 +1,1392 @@
+                                           Design-Based Anytime-Valid Inference for Randomized Experiments
+                                                     with Delayed Outcomes and Staggered Entry
+                                                             Michael Lindon                                Nathan Kallus
+                                                      Netflix, Los Gatos, CA, USA                Cornell University, Ithaca, NY, USA
+                                                     michael.s.lindon@gmail.com
+arXiv:2603.25971v2 [stat.ME] 29 May 2026
+
+
+
+
+                                                                                           Abstract
+                                                     Delayed outcomes are ubiquitous in online experimentation: treatment can affect whether
+                                                 an outcome occurs, when it occurs, and its realized value. To accommodate staggered entry
+                                                 while remaining robust to environmental nonstationarity and unit-level heterogeneity, we adopt
+                                                 a design-based perspective and target the sample cumulative reward in each arm as a function
+                                                 of calendar time. Our confidence sequences allow practitioners to continuously monitor the
+                                                 counterfactual incremental reward, such as revenue, that would have been realized by calendar
+                                                 time t had all entered units been assigned to treatment rather than control. The main technical
+                                                 challenge is the choice of design-based filtration, complicated by the presence of asynchronous
+                                                 potential outcome times. We show that the IPW treatment-effect estimation error is not a
+                                                 martingale with respect to any filtration, while each arm-specific IPW estimation error is a
+                                                 martingale with respect to a carefully chosen arm-specific event-time filtration. We therefore
+                                                 construct a confidence sequence for the treatment effect by combining two arm-level confidence
+                                                 sequences with a union bound, and further demonstrate that this can outperform the traditional
+                                                 design-based variance upper bound. Finally, we characterize the class of augmentations for which
+                                                 the per-arm AIPW estimation error remains a martingale.
+
+
+                                           1    Introduction
+                                           In many randomized experiments, the outcome of interest is not realized immediately after treatment
+                                           assignment, but is observed after some delay. Crucially, the treatment can affect the value of the
+                                           outcome, the timing of its realization, and the proportion of units that ever realize an event at
+                                           all (with ti (w) = ∞ denoting units for which no event ever occurs). In conversion experiments,
+                                           for example, the treatment may affect (i) the conversion rate, (ii) the time to conversion, and
+                                           (iii) the value of the conversion (e.g. revenue). Similarly, in marketing A/B tests comparing ad
+                                           campaigns, the treatment may accelerate the outcome arrival, sometimes referred to in marketing as
+                                           a “pull-forward” effect (Neslin et al., 1985; Ailawadi et al., 2007; Gupta, 1988). Yet, while treatment
+                                           outcomes arrive sooner, they may be of lesser value, or fewer in eventuality, presenting a trade-off
+                                           between treatment and control.
+                                                In this work, we aim to enable continuous monitoring of experiments with delayed outcomes
+                                           using anytime-valid inference methods. At any analysis time t, the data is right-censored : the
+                                           outcomes for some units have not yet been observed. Crucially, the treatment itself influences this
+                                           censoring. Not only are unit outcomes random, but the order in which units are observed is also
+                                           random.
+                                                Our contributions are as follows. To remain robust to temporal heterogeneity and nonstationarity,
+                                           we formulate delayed-outcome experimentation with staggered entry in a design-based framework
+                                           where both outcome time and value are unknown fixed potential outcomes. As treatment assignment
+
+                                                                                                1
+is the only source of randomness, this enables us to provide confidence sequences under a minimal
+set of assumptions. We target the sample cumulative reward as a function of time, a causal estimand
+that avoids modeling the unobserved future or assuming a superpopulation. We characterize the
+augmented estimators that preserve a martingale structure under a specific design-based filtration:
+the augmentation must activate at the event time and remain constant thereafter. We then prove a
+negative result: the treatment effect estimation error is not a martingale under any filtration. This
+impossibility result arises from the dependence between arms induced by randomized assignment
+and the temporal misalignment caused by differentially delayed outcomes. We resolve this via a
+union bound over single-arm confidence sequences—a necessity analogous to the variance upper
+bound in classical design-based inference, where cross-arm dependence cannot be estimated from
+observed data. We demonstrate that this union bound actually yields tighter intervals than the
+variance upper bound when treatment induces asymmetry in outcome arrival rates.
+
+
+2     Background
+2.1   Design-Based vs. Superpopulation
+Randomization (design-based) inference treats potential outcomes as fixed and averages only over the
+treatment assignment (Fisher, 1935; Splawa-Neyman et al., 1990; Cochran, 1977; Rosenbaum, 2002;
+Rubin, 1974; Imbens and Rubin, 2015; Freedman, 2008). By contrast, superpopulation analyses
+additionally posit that the observed experimental units are draws from an underlying distribution
+and target population-average parameters (Abadie et al., 2020). Both perspectives are widely used;
+the differences between the estimand (sample vs. population) and the uncertainty quantification
+(randomization vs. sampling) can be subtle (Ding, 2017).
+    Our focus is the design-based perspective because online experiments are often entangled with
+time-varying behavior. Units entering the experiment through time, as opposed to being randomly
+sampled simultaneously from a superpopulation, are fundamentally heterogeneous. Seasonality,
+promotions, and new product releases introduce nonstationarity in the observed outcomes. The
+heterogeneity mix of units combined with the nonstationarity of the environment make the joint
+superpopulation distribution of outcome times and values hard to justify. In view of this, uncensored
+observations from an earlier-admitted unit cannot be used to infer anything about a censored
+outcome of a later-admitted unit, ruling out the use of survival-analytical solutions. Related
+discussions emphasize that superpopulation assumptions are typically unverifiable and can be
+fragile under interference, heterogeneity, and non-random sampling (Freedman, 2008). Conversely,
+the design-based perspective does not make assumptions about the joint distribution of outcome
+times and values, and only assumes the potential outcomes exist. Our estimand is the sample
+cumulative reward (and its treatment-control difference) as a function of calendar time, i.e., what
+would have been observed up to time t had all enrolled units been assigned to a given arm. This
+aligns with common product metrics such as cumulative revenue or conversions, and crucially,
+avoids extrapolating beyond the currently observed censoring horizon, focusing instead on the
+counterfactual of having used just one or the other campaign to this point.
+
+2.2   Anytime-Valid Inference
+Continuous monitoring invalidates classical fixed-horizon p-values and confidence intervals due
+to optional stopping. A large literature in sequential analysis addresses this via time-uniform
+guarantees, including confidence sequences (Wald, 1947; Darling and Robbins, 1967; Robbins, 1970;
+
+
+
+                                                 2
+Table 1: First five rows of Dataset 5.1. Staggered entry times Ei , potential time and outcome
+values ti (w) and yi (w) for w ∈ {0, 1}, treatment assignment wi , probability of treatment πi (1), and
+observed time ti and outcome yi . A hyphen indicates that the corresponding event never occurs, so
+the outcome value does not apply.
+
+
+                    i    Ei     ti (0)   ti (1)   yi (0)       yi (1)   wi   πi (1)    ti   yi
+                    0   .0506    ∞       1.29       –          0.79     0     0.5      ∞     –
+                    1   .0552   19.49    1.48     1.20         0.69     1     0.5     1.48 0.69
+                    2   .0695    ∞       1.00       –          0.75     1     0.5     1.00 0.75
+                    3   .0920   19.53     ∞       1.43           –      1     0.5      ∞    –
+                    4   .1084   9.46      ∞       1.59           –      0     0.5     9.46 1.59
+
+
+
+Robbins and Siegmund, 1970; Howard et al., 2021) and, more recently, game-theoretic/e-value
+approaches (Shafer, 2021; Ramdas et al., 2023; Grünwald et al., 2024).
+    Most anytime-valid constructions assume a fixed sequence (or order of units) with random
+outcomes. Differentially delayed outcomes break this approach because treatment can change
+which units have a realized outcome by time t, so the sequence itself becomes treatment-dependent.
+For this reason we provide confidence sequences with respect to an external clock t instead of
+an enumeration over units. Closest to our setting are (i) design-based confidence sequences for
+randomized experiments without delay (Ham et al., 2022), (ii) proportional hazards-based sequential
+logrank tests (Gu and Lai, 1991; ter Schure et al., 2024), and (iii) anytime-valid inference for
+counting processes (Lindon and Malek, 2022; Lindon and Kallus, 2025). We contribute to this
+related-work landscape by developing design-based, time-uniform inference for cumulative reward
+processes under delayed outcomes and staggered entry, avoiding proportional hazards assumptions
+and targeting a calendar-time estimand that does not require modeling unobserved tails.
+    In the presence of nonstationarity, the purpose of anytime-valid inference is not to stop the
+experiment early and declare an optimal treatment arm. Instead it concerns providing honest
+inference about what is known so far, without contradicting ourselves in the future. Indeed, even
+with fully observed outcomes, which arm is better may depend on how long one waits, given that
+the fraction or value of conversions may well be inversely related to how soon they are realized.
+Declaring an arm optimal at any point t would require making very strong assumptions about the
+kind of nonstationarity that can occur in the future. We provide this inference to the researcher
+as the experiment progresses, and defer to them to take the appropriate action (if any). In many
+cases, this may involve continuously monitoring the experiment until all units are observed for a
+pre-specified window.
+
+
+3    Observations, Estimands, and Estimators
+To formalize our design-based approach to delayed outcomes, we consider the time of realization
+itself as a potential outcome (see Table 1), as interventions can affect both the timing and the value
+of the outcome.
+    Let Ei denote the entry time of unit i and assume units are enumerated in increasing order of
+entry time. Note, however, that the order in which unit outcomes are observed depends upon the
+realized treatment assignments. Let (ti (w), yi (w)) denote the potential time and outcome of unit
+i under treatment w ∈ {0, 1}. We define the potential reward process for unit i under treatment
+
+
+
+                                                           3
+w ∈ {0, 1} as
+                                     rit (w) = yi (w)1[ti (w) ≤ t],                               (1)
+where 1[ti (w) ≤ t] denotes the indicator function. This formulation models a single delayed event
+per unit. Let Et := {i : Ei ≤ t} be the index set of units who have entered the experiment by time
+t, and let Nt := |Et | denote the number of entered units by time t. We further sum over all units
+who have entered the experiment by time t to define the total reward process under treatment w by
+time t:                                            X
+                                          rt (w) =    rit (w).                                  (2)
+                                                   i∈Et
+
+This defines an estimand of primary interest – how much revenue would have been generated as
+a function of time if all units were assigned to treatment w. We can then define the difference to
+determine the incremental reward, as a function of time, provided by the treatment:
+
+                                         ∆t := rt (1) − rt (0).                                   (3)
+
+Notice our estimand is not a property of a distribution, it directly targets the business metric of
+interest (e.g. incremental revenue) and circumvents the need for distributional assumptions as the
+only source of randomness is via treatment assignment. We further remark that this estimand
+is in fact already implicit in common industry practice: when analyzing an experiment at time
+t, practitioners routinely impute the outcome as zero for any unit whose event has not yet been
+observed. Although often regarded as an ad-hoc convenience, this is precisely the yi (w)1[ti (w) ≤ t]
+term in equation (1).
+    We assume a randomized experiment in which units are independently assigned to arm w with
+probability πi (w) = P[Wi = w], where πi (w) > πmin > 0. All expectations and variances throughout
+are taken with respect to this randomization distribution, treating potential outcomes as fixed.
+Under standard SUTVA assumptions (no interference, no multiple versions of treatment), we can
+write the observed quantities for unit i in terms of the potential outcomes through the switching
+equations:
+
+                                   yi = wi yi (1) + (1 − wi )yi (0),                              (4)
+                                    ti = wi ti (1) + (1 − wi )ti (0),                             (5)
+                                   rit = wi rit (1) + (1 − wi )rit (0),                           (6)
+
+denoting the observed outcome, observed time, and observed revenue process for unit i. We assume
+the potential outcomes are bounded: |yi (w)| ≤ B for all i and w ∈ {0, 1}.
+   We assume access to a vector of pre-treatment covariates Xi for each unit, and let mit (w) =
+m(Xi , w, t) denote a pointwise prediction of rit (w). The augmented inverse probability weighted
+(AIPW) estimator is:
+                                                     1[wi = w]
+                                r̂it (w) = mit (w) +           eit (w),                        (7)
+                                                       πi (w)
+where eit (w) = rit (w) − mit (w) is the residual of the working model (Robins et al., 1994). Setting
+mit (w) = 0 recovers the Horvitz-Thompson (IPW) estimator (Horvitz and Thompson, 1952). Under
+randomization, we have
+
+                                   E[r̂it (w)] = rit (w),                                         (8)
+                                                 1 − πi (w)
+                                   V[r̂it (w)] =            eit (w)2 .                            (9)
+                                                    πi (w)
+
+                                                    4
+    The unbiasedness holds for any choice of mit (w), while the variance depends on the squared
+                                                 ˆ it = r̂it (1) − r̂it (0) and ∆it = rit (1) − rit (0), we have
+residual eit (w)2 it induces. Similarly defining ∆
+                                 ˆ it ] = ∆it ,
+                               E[∆                                                                         (10)
+                                 ˆ it ] = 1 − πi (1) eit (1)2 + 1 − πi (0) eit (0)2
+                               V[∆
+                                            πi (1)                πi (0)
+                                          + 2eit (1)eit (0)                                                (11)
+                                          2         eit (1)2 eit (0)2
+                                       ≤ σit :=             +         .                                    (12)
+                                                     πi (1)   πi (0)
+
+The last inequality is the traditional design-based upper bound on the variance, σit 2 , commonly used
+
+to compute conservative pointwise confidence intervals in the classical setting (Splawa-Neyman et al.,
+1990; Imbens and Rubin, 2015). It is necessary because we cannot estimate the cross term, since we
+do not simultaneously observe both potential outcomes. As we describe later in Remark 4.11, an
+analogous phenomenon manifests in the sequential setting, whereby the dependence between arms
+precludes the existence of a common filtration under which both arms are martingales.
+    An unbiased estimator of the upper bound on the variance is:
+                                                2
+                                              σ̂it = êit (1)2 + êit (0)2 ,                               (13)
+
+where êit (w) = r̂it (w) − mit (w) = 1[w i =w]
+                                       πi (w) eit (w) is the IPW-weighted residual. We similarly define
+our estimators of the cumulative and incremental reward processes as
+                                       X
+                             r̂t (w) =      r̂it (w), and ∆ ˆ t = r̂t (1) − r̂t (0).               (14)
+                                       i∈Et
+
+
+
+4                                         ˆt
+     Confidence Sequences for r̂t (w) and ∆
+Our goal in this section is to construct asymptotic confidence sequences for rt (w) and ∆t . The
+route is through strong approximation (Strassen, 1964, 1967): under the regularity conditions of
+Lemma 4.5 and an appropriate martingale structure, the estimation error process can be coupled
+to a time-changed Brownian motion. Inverting the normal-mixture boundary for this Brownian
+approximation then yields an asymptotic confidence sequence (Waudby-Smith et al., 2024). The
+central issue is therefore to choose a filtration under which the estimation error is both adapted and
+has zero conditional drift.
+    In the design-based framework, we condition on the realized entry times, covariates, and potential
+outcomes. Conditional on these quantities, the only random variables are the treatment assignments.
+Define the centered assignment weight
+                                                         1[wi = w]
+                                          Zi (w) :=                − 1.
+                                                           πi (w)
+For a fixed arm w, the unit-level estimation error is
+
+                                Mit (w) := r̂it (w) − rit (w) = Zi (w)eit (w),                             (15)
+
+and the cumulative estimation error is
+                                                                       X
+                                  Mt (w) := r̂t (w) − rt (w) =                 Mit (w).                    (16)
+                                                                       i∈Et
+
+
+                                                            5
+This decomposition isolates the filtration problem. The potential reward path rit (w) is fixed by
+conditioning, while a candidate augmentation path must be fixed in advance or measurable from
+information available before it is used. Thus the new randomness in the unit-i jump enters through
+Zi (w). If the filtration exposes Zi (w) before the residual can jump, the jump is generally predictable;
+if it exposes Zi (w) after the residual has jumped, the process is not adapted. We therefore compare
+three candidate filtrations. The conditioned-on quantities appearing in these filtrations record
+calendar-time availability; they are not additional sources of randomness.
+Definition 4.1 (Designer Filtration). Let Gt = σ({(Ei , Xi , wi ) : Ei ≤ t}). This corresponds to the
+filtration where the treatment assignment wi is revealed at the entry time Ei .
+Definition 4.2 (Observer Filtration). Let
+                             Ht := σ({(Ei , Xi ) : Ei ≤ t} ∪ {wi : ti ≤ t}) .
+This corresponds to the filtration where the treatment assignment wi is revealed at the observation
+time ti .
+Definition 4.3 (Single-Arm Filtration). For each arm w, let
+                         Ft (w) := σ({(Ei , Xi ) : Ei ≤ t} ∪ {wi : ti (w) ≤ t}) .
+This corresponds to the w-specific filtration where the treatment assignment wi is revealed at the
+potential event time ti (w).
+    The designer filtration is natural from the experimenter’s perspective: users are randomized
+when they enter, so the assignment is immediately available to the experiment designer. For the
+IPW estimator this makes the arm-w error process adapted, but it reveals the assignment too early
+for a martingale argument. Consider the IPW special case mit (w) = 0. At the instant before the
+arm-w event, Gti (w)− already contains wi , while yi (w) and ti (w) are fixed by conditioning. The
+unit-level jump is therefore predictable:
+                                                                          
+                               E Mi,ti (w) (w) − Mi,ti (w)− (w) | Gti (w)−
+                                                                                               (17)
+                                  = Zi (w)yi (w).
+This conditional expectation is generally nonzero, so the unit-level martingale decomposition already
+fails under Gt .
+    The observer filtration has the opposite problem. It reveals wi only when the observed outcome
+is realized at ti = ti (wi ). This is the realized event time, whereas the arm-w error process jumps at
+the potential event time ti (w). Consequently, Mt (w) need not be adapted to Ht . For example, in
+the IPW special case, suppose ti (1) < ti (0) and wi = 0. For any s such that ti (1) < s < ti (0), the
+arm-1 error has already jumped and equals
+                                                               
+                                                   1[wi = 1]
+                                      Mis (1) =              − 1 yi (1),
+                                                     πi (1)
+whose value depends on wi . But wi is not yet part of Hs because the observed event has not
+occurred. Thus the unit-level arm-1 error is not Hs -measurable.
+     The single-arm filtration is aligned with the arm-w jump time. It hides wi before ti (w) and
+reveals it exactly when the arm-w potential event occurs. This is not generally an observed-data
+filtration, because it depends on the counterfactual event time ti (w) for units assigned to the
+other arm. It is nevertheless the filtration aligned with the design-based randomization needed for
+single-arm martingale structure: among the three candidates above, it is the only one that reveals
+assignment at the same time as the corresponding arm-specific jump.
+
+                                                    6
+4.1   Single-Arm Inference
+We now characterize when the unit-level arm-w error process is a martingale under Ft (w). The
+condition is unitwise. At time ti (w), the filtration reveals wi ; immediately before that time, wi is
+still unrevealed. Thus any augmentation value multiplied by Zi (w) at the jump must already be
+determined from the strict past. For nontrivial augmentations, we therefore require mi,ti (w) (w) to
+be Fti (w)− (w)-measurable. This rules out using unit i’s own treatment assignment, but permits
+functions of pre-treatment covariates and of outcomes or assignments available strictly before ti (w).
+
+Theorem 4.4 (Unit-Level Single-Arm Martingale Condition). Fix an arm w and a unit i, and
+let Mit (w) be as in equation (15). Suppose mi,ti (w) (w) and πi (w) are Fti (w)− (w)-measurable, with
+P(wi = w | Fti (w)− (w)) = πi (w). Then (Mit (w))t is adapted to Ft (w) and has zero conditional mean
+increments if and only if
+                                mit (w) = 0            for all t < ti (w),
+                              mit (w) = mi,ti (w) (w) for all t ≥ ti (w).
+Equivalently, since the increments are bounded, (Mit (w))t is a martingale with respect to Ft (w).
+
+   Under the conditions of Theorem 4.4, all unit-level processes are martingales with respect to the
+same filtration, so linearity of conditional expectation implies that the cumulative estimation error
+process                                            X
+                                          Mt (w) =     Mit (w)
+                                                        i∈Et
+
+is also a martingale with respect to Ft (w). Theorem 4.4 shows that the martingale requirement
+is highly restrictive. For each unit, the only martingale-preserving augmentations are event-time
+augmentations,
+                                     mit (w) = fi (w)1[ti (w) ≤ t],
+where fi (w) is Fti (w)− (w)-measurable. Thus the augmentation must be zero before the arm-w
+potential event time and constant afterward. This characterization is structural but generally oracle:
+for a fixed arm w, computing the activation indicator requires knowing ti (w) for every unit, whereas
+randomized assignment reveals ti (w) only for units assigned to arm w. Thus nontrivial event-time
+AIPW estimators are not generally constructible from the realized data. The IPW estimator remains
+the directly practical special case (fi (w) = 0), while event-time AIPW serves as an oracle target for
+what practical AIPW procedures should approximate.
+      To see the martingale structure, order the units by their potential event times ti (w) such that
+tσ(1) (w) ≤ tσ(2) (w) ≤ · · · . The process Mt (w) changes value only at the discrete event times
+(tσ(i) (w))i∈N . At each jump, Zi (w) is revealed for the first time under Ft (w), while the residual
+ei,ti (w) (w) is measurable from the strict past by Theorem 4.4. Thus each jump has conditional mean
+zero. Let
+                                               X 1 − πi (w)
+                                  Vt (w) :=                       eit (w)2 ,                      (18)
+                                                         πi (w)
+                                               i∈Et
+                                               X
+                                  V̂t (w) :=          (1 − πi (w))êit (w)2 ,                     (19)
+                                               i∈Et
+
+denote the predictable quadratic variation and its plug-in estimator. Under the event-time condition,
+eit (w) = 0 before ti (w) and is constant thereafter, so Vt (w) increases only at arm-w potential event
+times. The estimator V̂t (w) is adapted to Ft (w) under the event-time condition. It is also estimable
+
+
+                                                         7
+from the observed arm-w samples: random assignment reveals (ti (w), yi (w)) for units with wi = w,
+and these observed residual jumps provide an unbiased sample for the squared-jump clock.
+    Since (Mt (w))t is a square-integrable martingale with bounded increments, we can approximate
+it via a strong invariance principle.
+
+Lemma 4.5 (Strassen (1964, 1967)). Fix an arm w ∈ {0, 1} and suppose the event-time condition
+of Theorem 4.4 holds. Assume the arm-w residual jumps are uniformly bounded, propensities are
+bounded away from zero, and Vt (w) → ∞. Then, on a potentially enriched probability space, there
+exist independent standard Gaussians (Gi )i≥1 such that:
+
+                                 r̂t (w) − rt (w) =
+                                                                            
+                                                                                                             (20)
+                                      X
+                                           νi Gi + oa.s. Vt (w)3/8 log Vt (w) ,
+                                 i:ti (w)≤t
+
+
+where νi2 = 1−π  i (w)           2
+             πi (w) ei,ti (w) (w) .
+
+    Such strong approximations are now standard in developing asymptotic anytime-valid procedures
+(Waudby-Smith et al., 2024; Bibaut et al., 2022; Ham et al., 2022).
+    Following Waudby-Smith et al. (2024), we say that intervals (θ̂t ± Lt )t form a (1 − α)-asymptotic
+confidence sequence for (θt )t if they approximate some nonasymptotic (1 − α)-confidence sequence
+with bounds L∗t such that L∗t /Lt → 1 almost surely. Leveraging the strong approximation and a
+mixture martingale provided in the appendix, we establish the following result for any estimator
+satisfying the event-time condition of Theorem 4.4.
+
+Theorem 4.6 (Asymptotic Confidence Sequence for rt (w)). Assume outcomes are bounded (|yi (w)| ≤
+B), propensities are bounded away from zero (πi (w) ≥ πmin > 0), and Vt (w) → ∞ as t → ∞. For
+any η 2 > 0, define the boundary for the error process r̂t (w) − rt (w) as
+                                          s
+                                            V η2 + 1
+                                                           2         
+                                                             Vη +1
+                               b(V ; α) =            log               .                    (21)
+                                               η2              α2
+
+Then r̂t (w) ± b(V̂t (w); α) is a (1 − α) asymptotic confidence process for rt (w).
+
+    The boundary b(V ; α) is the normal-mixture boundary from Howard et al. (2021) and is used
+similarly in Waudby-Smith et al. (2024); Ham et al. (2022). Note that the asymptotic definition
+above requires only that the ratio L∗t /Lt → 1, not that the intervals shrink. The intervals need
+not shrink on the cumulative scale, because rt (w) itself grows with t. If desired, one can divide
+both arm-level intervals by Nt to obtain intervals for average cumulative reward. Under bounded
+residuals and growing Nt , these rescaled intervals tighten with time. This common rescaling does
+not change whether the two arm-level intervals overlap at a fixed time. We therefore work on the
+cumulative scale, which matches the objective of comparing total rewards.
+
+4.2    Multiple-Arm Inference
+Under the event-time condition of Theorem 4.4, the arm-level errors are martingales, but with
+respect to different filtrations: (r̂t (1) − rt (1))t is a martingale under Ft (1), while (r̂t (0) − rt (0))t is a
+martingale under Ft (0). The treatment-effect error
+                                ˆ t − ∆t = (r̂t (1) − rt (1)) − (r̂t (0) − rt (0))
+                                ∆
+
+
+                                                        8
+therefore cannot be handled by simply subtracting two martingales under a common filtration. The
+                                                                         ˆ t − ∆t is not a martingale
+following covariance argument shows a stronger obstruction: generically, ∆
+under any filtration.
+Lemma 4.7. Let (Xt )t≥0 be a square-integrable martingale with respect to some filtration, and
+suppose X0 = 0. Then, for any 0 ≤ s ≤ t,
+                                           Cov(Xs , Xt ) = Var(Xs ).                                 (22)
+Proposition 4.8. The covariance of the error process is
+                                    ˆ s − ∆s , ∆
+                                Cov(∆            ˆ t − ∆t ) = Cov(∆
+                                                                  ˆ s, ∆
+                                                                       ˆ t)
+                                  X
+                                =     E[∆ˆ is ∆
+                                              ˆ it ] − ∆is ∆it
+                                    i∈Et
+                                    X  eis (1)eit (1)          eis (0)eit (0)
+                                =                           +
+                                               πi (1)               πi (0)
+                                    i∈Et
+                                    −(eis (1) − eis (0))(eit (1) − eit (0))} ,                       (23)
+while the variance is
+                                                    X  eis (1)2             eis (0)2
+                                   ˆ s − ∆s ) =
+                               Var(∆                                     +
+                                                                πi (1)        πi (0)
+                                                    i∈Es
+                                    −(eis (1) − eis (0))2 .                                          (24)
+    By the contrapositive of Lemma 4.7, if there exist s < t such that
+                                           Cov(Xs , Xt ) ̸= Var(Xs ),
+then the process (Xt )t cannot be a martingale with respect to any filtration. Proposition 4.8 shows
+                                        ˆ t − ∆t in general. Thus the treatment-effect error is not, in
+that this covariance identity fails for ∆
+general, a martingale under any filtration. The martingale “violation” Cov(∆ ˆ s, ∆
+                                                                                  ˆ t ) − Var(∆
+                                                                                              ˆ min(s,t) )
+for Dataset 5.1 is visualized in Figure 6 (Appendix B). The same obstruction applies to both IPW
+and oracle event-time AIPW, except in degenerate cases where the residual products cancel.
+    Since the treatment-effect error is not itself a martingale, we construct valid inference arm by
+arm. Applying Theorem 4.6 separately to rt (1) and rt (0) and then taking a union bound yields a
+confidence sequence for ∆t .
+Theorem 4.9 (Asymptotic Confidence Sequence for ∆t ). Under the assumptions          of Theorem 4.6 for 
+                                                                       ˆ t ± b(V̂t (0); α/2) + b(V̂t (1); α/2)
+both w = 0 and w = 1, let b(V ; α) be defined as in that theorem. Then ∆
+is a (1 − α) asymptotic confidence process for ∆t .
+   The proof follows by applying Theorem 4.6 separately to each arm at level α/2 and taking a
+union bound.
+Corollary 4.10 (Asymptotic Sequential P-Value). Consider testing the null hypothesis H0 : ∆t = 0
+(no treatment effect at time t). The sequential p-value is defined as
+                                                      ˆ t | > b(V̂t (0); α/2)
+                               pt = inf{α ∈ (0, 1] : |∆
+                                               + b(V̂t (1); α/2)},                                   (25)
+with the convention that pt = 1 if the set is empty. When the set is nonempty and the infimum is
+attained in (0, 1), pt equivalently solves
+                                  ˆ t | = b(V̂t (0); pt /2) + b(V̂t (1); pt /2).
+                                 |∆                                                                  (26)
+
+                                                        9
+Remark 4.11 (Cross-Arm Dependence in Fixed-Sample and Sequential Settings). The union bound
+approach mirrors a familiar phenomenon in fixed-sample design-based inference. In the classical
+                         ˆ it decomposes as
+setting, the variance of ∆
+                                        ˆ it ) = Var(r̂it (1)) + Var(r̂it (0))
+                                    Var(∆
+                                                 − 2Cov(r̂it (1), r̂it (0)),                             (27)
+
+where Cov(r̂it (1), r̂it (0)) = −eit (1)eit (0) arises from the perfect negative correlation between 1[wi = 1]
+and 1[wi = 0]. This covariance term involves both potential outcomes and is therefore unestimable,
+forcing practitioners to use the variance upper bound σit        2 which drops it.
+
+    In the sequential setting, the same cross-arm dependence manifests differently: the covariance
+structure Cov(∆  ˆ s, ∆ˆ t ) ̸= Var(∆
+                                    ˆ s ) for s < t (Proposition 4.8) violates the martingale property under
+any filtration. Both phenomena stem from a single root cause: treatment assignment induces
+dependence between arm estimators that cannot be jointly characterized. In fixed-sample inference,
+this dependence renders a variance component unestimable; in sequential inference, it precludes the
+existence of a common filtration under which both arm processes are martingales.
+    The union bound is thus the sequential analog of the variance upper bound: both treat each
+arm separately, where valid inference is available, and combine the results conservatively.
+
+4.3    Union Bound vs Variance Upper Bound
+The union-bound construction may appear conservative because it avoids a direct boundary for
+ˆ t − ∆t . However, the natural direct variance for this error process is not estimable even at a fixed
+∆
+time. As described in Section 3, the exact design-based variance in (11) contains the cross-potential
+residual product eit (1)eit (0), while random assignment reveals only one potential residual per unit.
+Classical practice therefore uses the upper bound σit2 in (12). Here we compare our valid sequential
+
+boundary to the corresponding cumulative upper-bound benchmark. For constant assignment
+probability πi (1) = π, write
+                                    X
+                             σt2 :=      2
+                                       σit
+                                    i∈Et
+                                    X  eit (1)2        eit (0)2
+                                                                   
+                                                                           Vt (1)   Vt (0)
+                                =                     +                =          +        .             (28)
+                                             π          1−π                1−π        π
+                                    i∈Et
+
+Because Proposition 4.8 shows that ∆ˆ t − ∆t is not generally a martingale, b(σ 2 ; α) should be read
+                                                                               t
+as a benchmark rather than a valid confidence-sequence boundary. The next proposition shows that,
+asymptotically, the valid union-bound boundary need not be wider than this benchmark, and can
+be narrower when the arm-level variance clocks are imbalanced.
+Proposition 4.12 (Relative Width: Union vs. Variance Upper Bound). Let α ∈ (0, 1), η > 0, and
+let the treatment assignment probability be πi (1) = π ∈ (0, 1) for all i. Define the generalized relative
+width function Rπ (V0 , V1 ) as:
+                                                      b(V0 ; α/2) + b(V1 ; α/2)
+                                    Rπ (V0 , V1 ) =                                                    (29)
+                                                              V1
+                                                         b 1−π    + Vπ0 ; α
+
+If V0 + V1 → ∞ and V0 /(V0 + V1 ) → ρ ∈ [0, 1], then
+                                                √    √
+                                                  ρ+ 1−ρ
+                          Rπ (V0 , V1 ) → p                       ≤ 1.                                   (30)
+                                            ρ/π + (1 − ρ)/(1 − π)
+
+                                                          10
+                    600       rt(1)
+                              rt(0)                                                                200
+                    500       rt(1)
+                              rt(0)
+                                                                                                   100
+                    400
+Cumulative Reward
+
+
+
+
+                                                                                Treatment Effect
+                                                                                                     0
+                    300
+                                                                                                   100
+                    200
+                                                                                                   200
+                    100
+                                                                                                   300        t
+                                                                                                              t
+                      0                                                                                      CI Miscoverage
+                                                                                                   400
+                          0    5      10   15    20         25   30   35   40                            0    5       10      15    20    25   30   35   40
+                                                Time                                                                               Time
+
+Figure 1: A single realization from Dataset 5.1 comparing classical pointwise confidence intervals
+(dark shaded) from equation (31) with the anytime-valid confidence processes from Theorems 4.6
+and 4.9 (light shaded). Left panel: cumulative rewards rt (w) and estimates r̂t (w) for control (gray)
+and treatment (blue), showing the “pull-forward” effect where treatment outcomes arrive earlier
+but control accumulates higher reward over time. Right panel: treatment effect ∆t and estimate ∆   ˆ t.
+Red dots indicate times where the pointwise interval fails to cover the truth.
+
+                              p                                             √
+Consequently, Rπ (V, V ) → 2 π(1 − π) in the symmetric case, Rπ (V0 , V1 ) → 1 − π when V0 =
+                           √
+o(V1 ), and Rπ (V0 , V1 ) → π when V1 = o(V0 ).
+    An additional benefit of the union bound is that one can report confidence sequences for each
+arm separately, in addition to the difference, without the need for further multiple testing correction,
+as it is already present. In Figure 4 in Appendix B, we illustrate the tightness of the boundary
+b(Vt (0); α/2) + b(Vt (1); α/2) with respect to a hypothetical boundary b(2(Vt (0) + Vt (1)); α) (which
+equals b(σt2 ; α) under balanced assignment) for comparison.
+
+
+5                         Simulation Study
+We evaluate the empirical coverage of our confidence processes using synthetic data that mimics
+the structure of our motivating application. The data-generating process is designed to capture a
+scenario where treatment accelerates outcome realization but reduces outcome magnitude.
+Dataset 5.1 (Synthetic Nonstationary Delayed Outcomes). We generate N = 500 units with
+                                                      iid
+staggered entry times Ei ∼ Uniform(0, 10) and balanced assignment πi (1) = 0.5. The data-
+generating process is designed to have four features:
+                    1. Arm-specific never-event fractions. With probabilities (θ0 , θ1 ) = (0.20, 0.35), a unit has
+                       ti (w) = ∞ under arm w, so the corresponding reward does not contribute to the cumulative
+                       process.
+                    2. Treatment pull-forward. Conditional on not being a never-event unit, ti (w) is generated
+                       by thinning from
+                                          λ(t | E, w) = λbase (t − E, w)λcycle (t)λshock (t, w).
+
+                                                                                11
+                                                  Reward vs Holding Time                                                            Reward vs External Time
+                       1.8                                                                               1.8
+                                 Control                                                                           Control
+                                 Treatment                                                                         Treatment
+                       1.6                                                                               1.6
+
+                       1.4                                                                               1.4
+          Reward (y)
+
+
+
+
+                                                                                            Reward (y)
+                       1.2                                                                               1.2
+
+                       1.0                                                                               1.0
+
+                       0.8                                                                               0.8
+
+                       0.6                                                                               0.6
+
+                             0               10   20            30         40      50                          0          10   20          30          40     50   60
+                                                       Holding Time (s)                                                                 External Time (t)
+
+
+Figure 2: Illustration of outcome dependence on treatment, internal time, and external time for
+Dataset 5.1. The potential outcome yi (w) depends on treatment w (which determines the baseline
+βw ), internal time si = ti (w) − Ei (time since entry, contributing a logarithmic growth), and external
+time ti (w) (contributing cyclical variation).
+
+
+     The baseline hazard is log-normal with (µ0 , σ0 ) = (2.5, 0.5) for control and (µ1 , σ1 ) = (0.3, 0.3)
+     for treatment, so treatment events typically arrive earlier.
+
+  3. Calendar-time nonstationarity. The hazard includes the cyclical term
+
+                                                                            λcycle (t) = 1 + 0.2 sin(2πt/7)
+
+      and localized shocks
+                                                                                        X
+                                                       λshock (t, w) = 1 +                     ajw exp{−(t − cj )2 /(2σj2 )}.
+                                                                                        j
+
+     The shocks are centered at c1 = 8 and c2 = 15, with arm-specific intensities (a1,0 , a1,1 ) =
+     (1.5, 2.0) and (a2,0 , a2,1 ) = (1.0, 0.8).
+
+  4. Outcome-time dependence. For finite event times, rewards are
+                                                                yi (w) = βw {1 + 0.15 log(1 + ti (w) − Ei )}
+                                                                                × {1 + 0.1 sin(2πti (w)/7)}ϵi ,
+
+     where (β0 , β1 ) = (1.0, 0.6) and ϵi ∼ Uniform(0.9, 1.1).
+Together, these features create a setting where treatment appears better early because outcomes
+arrive sooner, while control eventually wins in cumulative reward because its outcomes have larger
+magnitude. Figure 2 illustrates the dependence of rewards on treatment, internal time, and external
+time.
+    We restrict the main simulation study to IPW, the directly observable estimator covered by
+Theorem 4.6. Entry-frozen AIPW augmentations can be attractive for variance reduction, but their
+anytime-valid analysis requires controlling the error introduced by activating the augmentation
+at entry rather than at the unit’s potential event time. This extra term is not covered by the
+martingale argument in Section 4. We leave such extensions to future work.
+    Figure 1 provides a comparison of classical pointwise confidence intervals:
+                                   q                           q
+                          r̂t (w) ± χ21,1−α V̂t (w) and ∆ˆ t ± χ2         2
+                                                                  1,1−α σ̂t                 (31)
+
+                                                                                            12
+with our IPW confidence sequences. The red dots show clear coverage violations for the classical
+pointwise confidence intervals, whereas the IPW confidence sequences cover the estimand at all
+times.
+   We examine empirical time-uniform coverage of the IPW confidence sequences by repeatedly
+drawing treatment assignments while holding the potential outcomes fixed. For each replication,
+we evaluate whether rt (w) and ∆t are contained in their confidence sequences for all monitoring
+times t. Across 200 treatment-assignment resamples, the empirical time-uniform coverage of the
+IPW confidence sequences was 96.0% for rt (0), 97.0% for rt (1), and 99.0% for ∆t , compared with
+nominal anytime coverage levels of 97.5% for each arm and 95% for the treatment effect.
+
+
+6    Case Study: Out-of-Memory Errors
+In software delivery, A/B “Canary” Tests are often used as quality control gates to compare
+the release candidate (treatment) against the existing software version (control) in a production
+environment (Lindon et al., 2022). Devices are randomized into a treatment arm at app-startup
+(staggered entry) and emit logging events whenever an error occurs.
+    Out-of-memory (OOM) errors are a particularly important class of software defects where delayed
+outcomes arise naturally. A memory leak occurs when a program allocates memory but fails to
+release it when no longer needed; over time, memory usage grows until the system cannot satisfy
+an allocation request, triggering an OOM error. The delay between when a device starts running
+the buggy software and when the OOM error manifests depends on usage patterns and available
+memory - some devices may crash within minutes, others after hours. This makes OOM errors an
+ideal application for our methodology: the outcome (an OOM crash) is inherently delayed.
+    Anytime-valid inference is imperative for this setting. Due to the large-scale nature of such
+technology experiments, it is crucial to abort the canary test and roll back the release if the treatment
+arm is significantly worse than the control arm. A number of anytime-valid rank-based statistics
+could be considered for this setting (ter Schure et al., 2024; Lindon and Malek, 2022; Gu and Lai,
+1991); however, these all assume a proportional hazards model for the hazard rate of errors, which
+is violated when resource depletion drives event timing.
+    We apply our methodology here in the special case yi (w) = 1 for all i and w, yielding a simple
+count-based approach. This addresses the counterfactual question “How many unique devices
+would have encountered an OOM error by the current time t, had they all been assigned to the
+treatment arm?”. This corresponds to a counterfactual reality in which the release engineer had
+simply deployed the release candidate to all global production devices. The same question can be
+asked for the control arm, and compared with the treatment.
+    We apply this methodology to telemetry data from a real production canary test, where devices
+were randomized 50/50 between the release candidate and the existing software version. Using the
+IPW estimator, Figure 3 shows the design-based confidence sequences constructed using Theorems 4.6
+and 4.9 and the sequential p-value from Corollary 4.10. Almost immediately, we can detect an
+increase in OOM errors among devices running the newer treatment software.
+
+
+7    Conclusion
+Delayed-outcome experiments are difficult because treatment can affect more than a single scalar
+outcome. It can change the probability that an event ever occurs, the delay until that event occurs,
+and the value realized when it occurs. Rather than choosing one of these dimensions as the outcome,
+we collapse them into the sample cumulative reward process rt (w): the total reward that would
+
+
+                                                   13
+                            Design-Based CS: rt(0) and rt(1)                                            Design-Based CS: t                                               Design-Based Sequential P-value
+                                                                                          1600                                                                  1.0
+                               rt(0)                                                                t                                                                                                  = 0.05
+                   1600                                                                                                                                                                                = 0.01
+                               rt(1)                                                      1400
+                   1400                                                                                                                                         0.8
+                                                                                          1200
+                   1200
+
+
+
+
+                                                                                                                                           Sequential P-value
+                                                                      Incremental Count
+Cumulative Count
+
+
+
+
+                                                                                          1000                                                                  0.6
+                   1000
+                   800                                                                    800
+                                                                                                                                                                0.4
+                   600                                                                    600
+                   400                                                                    400
+                                                                                                                                                                0.2
+                   200                                                                    200
+                     0                                                                      0                                                                   0.0
+                      0.0      0.2     0.4          0.6   0.8   1.0                          0.0   0.2      0.4          0.6   0.8   1.0                           0.0      0.2    0.4          0.6   0.8       1.0
+                                             Time                                                                 Time                                                                   Time
+
+
+Figure 3: Design-based confidence sequences for OOM error counts. Left: single-arm confidence
+sequences for rt (0) and rt (1). Center: treatment effect confidence sequence for ∆t = rt (1) − rt (0).
+Right: sequential p-value for testing H0 : ∆t = 0.
+
+
+have been observed by calendar time t had all entered units been assigned to arm w. This gives a
+time-indexed causal estimand that directly represents what experimenters monitor in practice.
+    Staggered entry introduces an additional layer of complexity. Units entering the experiment at
+different times may differ systematically, so units separated by entry time are often heterogeneous.
+At the same time, external factors such as product changes, seasonality, or economic conditions may
+affect outcome timing and value, introducing nonstationarity in the outcome distribution. Together,
+these features make a stable superpopulation model for delayed outcomes hard to justify. For this
+reason, we adopt a design-based framework and target a sample causal estimand: we condition on
+the entry times, covariates, and potential outcomes, leaving only the treatment assignments random.
+    Our main technical contribution is to show that, in this design-based setting, the treatment-effect
+estimation error is not a martingale with respect to any filtration. This obstruction is the sequential
+analogue of the classical fixed-sample variance problem: the exact design-based variance contains
+an unobservable cross-potential-outcome term, so classical practice replaces it with a variance
+upper bound. Sequentially, the same cross-arm dependence prevents a direct martingale confidence
+sequence for ∆t . We therefore construct confidence sequences arm by arm, where valid martingale
+inference is possible, and combine them using a union bound.
+    For a single arm, the appropriate filtration reveals unit i’s treatment indicator at its arm-
+w potential event time ti (w). Under this filtration, the IPW estimation error is a martingale,
+yielding design-based confidence sequences for arm-level cumulative rewards. The same analysis
+also characterizes the oracle event-time AIPW estimators that preserve the martingale property:
+nonzero augmentations must activate at the potential event time and remain fixed thereafter. The
+IPW estimator is the directly observable special case covered by the main theory.
+    The union-bound construction is not merely a convenience; it plays the same role sequentially
+that the variance upper bound plays at fixed sample sizes. It treats the arms separately, where
+valid inference is available, and then combines the two arm-level confidence sequences into a
+confidence sequence for ∆t . Perhaps surprisingly, this need not be a severe price: asymptotically, the
+union-bound boundary can be no wider, and often narrower, than the usual variance-upper-bound
+benchmark when the arm-level variance clocks are imbalanced.
+    The resulting method provides anytime-valid IPW inference for cumulative rewards under
+
+
+                                                                                                            14
+staggered entry and delayed outcomes without distributional assumptions on event times or rewards.
+Simulations and the telemetry case study illustrate the practical value of this perspective: the
+method tracks the evolving counterfactual reward processes while maintaining time-uniform error
+control. The main open direction is variance reduction. Although AIPW estimators are fixed-time
+unbiased under randomization, the martingale-preserving augmentations identified by our theory
+require oracle event-time information: they must activate at ti (w) for every unit, but randomized
+assignment reveals ti (w) only for units assigned to arm w. Thus the only directly observable
+estimator covered by the present anytime-valid theory is IPW. Developing confidence sequences that
+leverage predictions of both yi (w) and 1[ti (w) ≤ t] to reduce uncertainty is the focus of future work.
+
+
+References
+Alberto Abadie, Susan Athey, Guido W Imbens, and Jeffrey M Wooldridge. Sampling-based versus
+  design-based uncertainty in regression analysis. Econometrica, 88(1):265–296, 2020.
+
+Kusum L Ailawadi, Karen Gedenk, Christian Lutzky, and Scott A Neslin. Decomposition of the
+ sales impact of promotion-induced stockpiling. Journal of Marketing Research, 44(3):450–467,
+ 2007.
+
+Aurelien Bibaut, Nathan Kallus, and Michael Lindon. Near-optimal non-parametric sequential tests
+ and confidence sequences with possibly dependent observations. arXiv preprint arXiv:2212.14411,
+ 2022.
+
+W. G. Cochran. Sampling Techniques. Wiley Series in Probability and Mathematical Statistics.
+ John Wiley & Sons, New York, 3 edition, 1977. ISBN 9780471162407.
+
+Donald A Darling and Herbert Robbins. Confidence sequences for mean, variance, and median.
+ Proceedings of the National Academy of Sciences, 58(1):66–68, 1967.
+
+Peng Ding. A paradox from randomization-based causal inference. Statistical Science, pages 331–345,
+  2017.
+
+R. A. Fisher. The Design of Experiments. Oliver and Boyd, Edinburgh and London, 1935.
+
+David A Freedman. Randomization does not justify logistic regression. Statistical Science, 23(2):
+ 237–249, 2008.
+
+Peter Grünwald, Rianne de Heide, and Wouter Koolen. Safe testing. Journal of the Royal Statistical
+  Society Series B: Statistical Methodology, 86(5):1091–1128, 03 2024. ISSN 1369-7412. doi:
+  10.1093/jrsssb/qkae011. URL https://doi.org/10.1093/jrsssb/qkae011.
+
+Ming Gao Gu and Tze Leung Lai. Weak convergence of time-sequential censored rank statistics
+ with applications to sequential testing in clinical trials. The Annals of Statistics, 19(3):1403–1433,
+ 1991.
+
+Sunil Gupta. Impact of sales promotions on when, what, and how much to buy. Journal of Marketing
+  Research, 25(4):342–355, 1988.
+
+Dae Woong Ham, Iavor Bojinov, Michael Lindon, and Martin Tingley. Design-based confidence
+ sequences: A general approach to risk mitigation in online experimentation. arXiv preprint
+ arXiv:2210.08639, 2022.
+
+
+                                                  15
+Daniel G Horvitz and Dudley J Thompson. A generalization of sampling without replacement from
+  a finite universe. Journal of the American Statistical Association, 47(260):663–685, 1952.
+
+Steven R Howard, Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. Time-uniform, non-
+  parametric, nonasymptotic confidence sequences. The Annals of Statistics, 49(2):1055–1080,
+  2021.
+
+G.W. Imbens and D.B. Rubin. Causal Inference for Statistics, Social, and Biomedical Sciences: An
+  Introduction. Cambridge University Press, 2015. ISBN 9781316094396. URL https://books.
+  google.com/books?id=FYeSBwAAQBAJ.
+
+Michael Lindon and Nathan Kallus. Anytime-valid a/b testing of counting processes. In Yingzhen Li,
+ Stephan Mandt, Shipra Agrawal, and Emtiyaz Khan, editors, Proceedings of The 28th International
+ Conference on Artificial Intelligence and Statistics, volume 258 of Proceedings of Machine Learning
+ Research, pages 3529–3537. PMLR, 03–05 May 2025. URL https://proceedings.mlr.press/
+ v258/lindon25a.html.
+
+Michael Lindon and Alan Malek. Anytime-valid inference for multinomial count data. Advances in
+ Neural Information Processing Systems, 35:2817–2831, 2022.
+
+Michael Lindon, Chris Sanden, and Vaché Shirikian. Rapid regression detection in software
+ deployments through sequential testing. In Proceedings of the 28th ACM SIGKDD Conference on
+ Knowledge Discovery and Data Mining, pages 3336–3346, 2022.
+
+Scott A Neslin, Caroline Henderson, and John Quelch. Consumer promotions and the acceleration
+  of product purchases. Marketing Science, 4(2):147–165, 1985.
+
+Aaditya Ramdas, Peter Grünwald, Vladimir Vovk, and Glenn Shafer. Game-theoretic statistics and
+  safe anytime-valid inference. Statistical Science, 38(4):576–601, 2023.
+
+Herbert Robbins. Statistical methods related to the law of the iterated logarithm. The Annals of
+ Mathematical Statistics, 41(5):1397–1409, 1970.
+
+Herbert Robbins and David Siegmund. Boundary Crossing Probabilities for the Wiener Process
+  and Sample Sums. The Annals of Mathematical Statistics, 41(5):1410–1429, 1970. doi: 10.1214/
+  aoms/1177696787. URL https://doi.org/10.1214/aoms/1177696787.
+
+James M Robins, Andrea Rotnitzky, and Lue Ping Zhao. Estimation of regression coefficients when
+  some regressors are not always observed. Journal of the American Statistical Association, 89(427):
+  846–866, 1994.
+
+Paul R. Rosenbaum. Observational Studies. Springer, New York, 2 edition, 2002.
+
+Donald B. Rubin. Estimating causal effects of treatments in randomized and nonrandomized studies.
+ Journal of Educational Psychology, 66(5):688–701, 1974.
+
+Glenn Shafer. Testing by betting: A strategy for statistical and scientific communication. Journal of
+  the Royal Statistical Society. Series A: Statistics in Society, 184(2):407–431, 2021. ISSN 0964-1998.
+  doi: 10.1111/rssa.12647. URL https://doi.org/10.1111/rssa.12647.
+
+Jerzy Splawa-Neyman, D. M. Dabrowska, and T. P. Speed. On the Application of Probability
+  Theory to Agricultural Experiments. Essay on Principles. Section 9. Statistical Science, 5(4):
+  465–472, 1990. doi: 10.1214/ss/1177012031. URL https://doi.org/10.1214/ss/1177012031.
+
+                                                  16
+Volker Strassen. An invariance principle for the law of the iterated logarithm. Zeitschrift für
+ Wahrscheinlichkeitstheorie und verwandte Gebiete, 3(3):211–226, 1964.
+
+Volker Strassen. Almost sure behavior of sums of independent random variables and martingales. In
+  Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability, volume 3,
+  page 315. Univ of California Press, 1967.
+
+Judith ter Schure, Muriel F. Pérez-Ortiz, Alexander Ly, and Peter D. Grünwald. The anytime-
+  valid logrank test: Error control under continuous monitoring with unlimited horizon. The
+  New England Journal of Statistics in Data Science, 2(2):190–214, 2024. ISSN 2693-7166. doi:
+  10.51387/24-NEJSDS65.
+
+Jean Ville. Étude critique de la notion de collectif. 1939. URL http://eudml.org/doc/192893.
+
+Abraham Wald. Sequential Analysis. John Wiley & Sons, 1947.
+
+Ian Waudby-Smith, David Arbour, Ritwik Sinha, Edward H Kennedy, and Aaditya Ramdas. Time-
+  uniform central limit theory and asymptotic confidence sequences. The Annals of Statistics, 52
+  (6):2613–2640, 2024.
+
+
+
+
+                                                17
+A     Proofs
+A.1    Proof of Theorem 4.4
+Proof. We prove both directions for the unit-level process.
+
+If direction. Assume mit (w) = 0 for all t < ti (w) and mit (w) = mi,ti (w) (w) for all t ≥ ti (w).
+     We first verify adaptedness. For t < ti (w), the residual is eit (w) = rit (w) − mit (w) = 0 − 0 = 0,
+so Mit (w) = 0 regardless of the unobserved wi . For t ≥ ti (w), the treatment assignment wi is
+Ft (w)-measurable, and mi,ti (w) (w) is Fti (w)− (w)-measurable by assumption, hence Ft (w)-measurable.
+Therefore eit (w) = yi (w) − mi,ti (w) (w) and Mit (w) = Zi (w)eit (w) are Ft (w)-measurable.
+     Next, we establish the zero conditional mean increment property. Since mit (w) is constant on
+[ti (w), ∞), the process (Mit (w))t changes value only at ti (w). The increment at ti (w) is:
+
+                             ∆Mi,ti (w) (w) = Zi (w) · (yi (w) − mi,ti (w) (w)).                        (32)
+
+According to the filtration, the treatment assignment wi is not revealed until time ti (w). By the
+predictability and correct specification of the propensity,
+
+                                                    P(wi = w | Fti (w)− (w))
+                       E[Zi (w) | Fti (w)− (w)] =                            − 1 = 0.                   (33)
+                                                            πi (w)
+
+Since yi (w) − mi,ti (w) (w) is Fti (w)− (w)-measurable, it factors out:
+
+          E[∆Mi,ti (w) (w) | Fti (w)− (w)] = (yi (w) − mi,ti (w) (w)) · E[Zi (w) | Fti (w)− (w)] = 0.   (34)
+
+As the expected increment is zero at the only jump time and the process is constant otherwise,
+(Mit (w))t≥0 has zero conditional mean increments.
+
+Only if direction. We show that violating either condition prevents adaptedness or the zero
+conditional mean increment property.
+   Case 1: mit (w) ̸= 0 for some t < ti (w). At such a time, eit (w) = −mit (w) ̸= 0 (since rit (w) = 0).
+Since t < ti (w), the treatment assignment wi is not Ft (w)-measurable, so Mit (w) = Zi (w)eit (w) is
+not Ft (w)-measurable. The process fails to be adapted.
+   Case 2: mit (w) is not constant on [ti (w), ∞). Suppose mit (w) = 0 for t < ti (w) and the post-
+event values mit (w) are Ft (w)-measurable, so the process is adapted, but there exist ti (w) ≤ s < t
+such that mis (w) ̸= mit (w). Over this interval, rit (w) = ris (w) = yi (w), so
+
+                             Mit (w) − Mis (w) = Zi (w){mis (w) − mit (w)}.                             (35)
+
+Since wi is already Fs (w)-measurable, this is a predictable nonzero change, so its conditional
+expectation given Fs (w) equals the increment itself rather than zero. This violates the zero
+conditional mean increment property.
+
+A.2    Proof of Theorem 4.6
+Proof. The proof follows standard arguments for asymptotic confidence sequences under non-
+identical variances (Waudby-Smith et al., 2024; Ham et al., 2022), which we include for the sake of
+completeness. The boundedness assumption ensures the Lindeberg condition is satisfied.
+
+
+
+                                                      18
+Step 1: Strong approximation. Let νi2 := 1−π           i (w)
+                                                   πi (w)    ei,t (w) (w)2 denote the variance contribution
+                                                         P i
+from unit i, so the cumulative variance is Vt (w) = i:ti (w)≤t νi2 . By Lemma 4.5, on a potentially
+enriched probability space there exist i.i.d. standard Gaussians (Gi )i≥1 such that
+                                     X                                               
+                  r̂t (w) − rt (w) =        νi Gi + oa.s. (Vt (w) log log Vt (w))1/2 .                 (36)
+                                            i:ti (w)≤t
+
+
+Step 2: Gaussian mixture martingale for non-identical variances. For any λ ∈ R, the
+process                                                  
+                                     X             2 2
+                                                         
+                                                    λ νi
+                      M
+                      ft (λ) := exp        λνi Gi −                            (37)
+                                                    2    
+                                                         i:ti (w)≤t
+
+is a nonnegative martingale starting at one. Mixing over λ with a mean-zero Gaussian distribution
+with variance η 2 > 0, we obtain the closed-form mixture martingale
+                                                              ( P            2 )
+                                                                                     η2     i:ti (w)≤t νi Gi
+                                                                              exp         2(Vt (w)η 2 +1)
+                                                                2
+                       Z                                         
+              M
+              ft :=        ft (λ) p 1
+                           M
+                                              λ
+                                         exp − 2                      dλ =          p                          ,    (38)
+                       λ∈R         2πη 2      2η                                     Vt (w)η 2 + 1
+
+which is also a nonnegative martingale with M
+                                            f0 = 1.
+
+Step 3: Applying Ville’s inequality and variance estimation. By Ville’s inequality (Ville,
+              ft ≥ 1/α) ≤ α. Inverting this bound, with probability at least (1 − α),
+1939), P(∃t : M
+                                                  s
+                                                      Vt (w)η 2 + 1           Vt (w)η 2 + 1
+                             X                                                               
+             ∀t > 0,                    νi Gi <                     log                           = b(Vt (w); α).   (39)
+                                                           η2                      α2
+                           i:ti (w)≤t
+
+Combining with Step 1, we have with probability at least (1 − α),
+                                                                                      
+           ∀t > 0, |r̂t (w) − rt (w)| < b(Vt (w); α) + oa.s. (Vt (w) log log Vt (w))1/2 .                           (40)
+
+    It remains to show that V̂t (w) can replace Vt (w). For the unaugmented IPW estimator, the
+potential outcomes are fixed constants, so taking the unconditional expectation over treatment
+assignments yields E[V̂t (w)] = Vt (w). However, when using an event-time augmentation like
+the running mean, the residuals eit (w) depend on past assignments, making the true predictable
+quadratic variation Vt (w) a random process. Because the augmentation mit (w) is strictly Fti (w)− (w)-
+measurable, the residual eit (w) is deterministic conditional on the strict past. Therefore, the expected
+increment of the variance estimator conditional on the past exactly matches the increment of the
+true variance process: E[V̂t (w) − V̂t− (w) | Ft− (w)] = Vt (w) − Vt− (w). Because both the past
+estimator V̂t− (w) and the true variance target Vt (w) are Ft− (w)-measurable, rearranging this yields
+E[V̂t (w) − Vt (w) | Ft− (w)] = V̂t− (w) − Vt− (w), fulfilling the strict definition of a martingale for the
+difference V̂t (w) − Vt (w). Since outcomes are bounded (|yi (w)| ≤ B) and propensities are bounded
+away from zero, the increments of this martingale are uniformly bounded. By the Strong Law of
+                                            t (w) a.s.                                                a.s.
+Large Numbers for Martingales, V̂t (w)−V
+                                       Vt (w)     −−→ 0 as Vt (w) → ∞, which implies V̂t (w)/Vt (w) −−→ 1.
+
+
+
+
+                                                              19
+Step 4: Showing that V̂t (w) can replace Vt (w). We now show that b(Vt (w); α) = b(V̂t (w); α)(1+
+o(1)). Writing V̂t (w) − Vt (w) = o(Vt (w)), we have Vt (w) = V̂t (w) + o(V̂t (w)). Substituting into the
+boundary:
+
+                         Vt (w)η 2 + 1         Vt (w)η 2 + 1
+                                                            
+                     2
+        b(Vt (w); α) =                   log
+                                 η2                 α2
+                                                                                             !
+                         (V̂t (w) + o(V̂t (w)))η 2 + 1         (V̂t (w) + o(V̂t (w)))η 2 + 1
+                       =                                log
+                                        η2                                     α2
+                                                                                        !
+                         V̂t (w)η 2 + 1 + o(V̂t (w))        V̂t (w)η 2 + 1
+                       =                             log                     (1 + o(1))
+                                       η2                          α2
+                                                        !                           !                !
+                            V̂t (w)η 2 + 1                           V̂t (w)η 2 + 1
+                       =                   + o(V̂t (w))     log                       + log(1 + o(1)) .
+                                   η2                                      α2
+
+Since log(1 + x) = x + o(1) for small x, we have log(1 + o(1)) = o(1). Expanding and noting that
+the cross terms are o(V̂t (w) log V̂t (w)):
+
+                           b(Vt (w); α)2 = b(V̂t (w); α)2 + o(V̂t (w) log V̂t (w)).
+
+This gives b(Vt (w); α)2 /b(V̂t (w); α)2 = 1 + o(1), and since (1 + o(1))1/2 = 1 + o(1):
+
+                                  b(Vt (w); α) = b(V̂t (w); α)(1 + o(1)).
+
+Combined with the strong approximation error being oa.s. ((Vt (w) log log Vt (w))1/2 ) = o(b(Vt (w); α)),
+this establishes that r̂t (w) ± b(V̂t (w); α) is a (1 − α) asymptotic confidence process for rt (w).
+
+A.3    Proof of Lemma 4.7
+Proof. Since (Xt )t is a martingale with X0 = 0, it follows that E[Xt ] = E[X0 ] = 0 for all t ≥ 0.
+Consequently, the covariance reduces to the expectation of the product:
+
+                          Cov(Xs , Xt ) = E[Xs Xt ] − E[Xs ]E[Xt ] = E[Xs Xt ].                     (41)
+
+By the Law of Iterated Expectations, we condition on Fs :
+
+                                      E[Xs Xt ] = E [E[Xs Xt | Fs ]] .                              (42)
+
+Since Xs is Fs -measurable, it factors out of the conditional expectation:
+
+                                 E [E[Xs Xt | Fs ]] = E [Xs E[Xt | Fs ]] .                          (43)
+
+Applying the martingale property E[Xt | Fs ] = Xs for s ≤ t, we obtain:
+
+                                  E [Xs E[Xt | Fs ]] = E Xs2 .
+                                                         
+                                                                                                    (44)
+
+Finally, noting that Var(Xs ) = E[Xs2 ] − (E[Xs ])2 = E[Xs2 ], we conclude that Cov(Xs , Xt ) =
+Var(Xs ).
+
+
+
+
+                                                     20
+A.4    Proof of Covariance Formula (23)
+                                                     ˆ s, ∆
+Proof. Since units are randomized independently, Cov(∆    ˆ t) =               P             ˆ       ˆ
+                                                                                 i∈Et Cov(∆is , ∆it ). For a single
+unit i, we have
+                      ˆ is , ∆
+                  Cov(∆      ˆ it ) = E[∆
+                                        ˆ is ∆
+                                             ˆ it ] − E[∆
+                                                        ˆ is ]E[∆
+                                                                ˆ it ] = E[∆
+                                                                           ˆ is ∆
+                                                                                ˆ it ] − ∆is ∆it .             (45)
+                               ˆ it = (mit (1) − mit (0)) + Ait , where
+   Write the AIPW estimator as ∆
+
+                                           1[wi = 1]           1[wi = 0]
+                                   Ait =             eit (1) −           eit (0).                              (46)
+                                             πi (1)              πi (0)
+
+Note that E[Ait ] = eit (1) − eit (0).
+   Expanding the product and taking expectations:
+                       ˆ is ∆
+                     E[∆    ˆ it ] = (mis (1) − mis (0))(mit (1) − mit (0))
+                                      + (mis (1) − mis (0))(eit (1) − eit (0))
+                                      + (mit (1) − mit (0))(eis (1) − eis (0)) + E[Ais Ait ].                  (47)
+
+   Similarly, since ∆it = (mit (1) − mit (0)) + (eit (1) − eit (0)):
+
+                              ∆is ∆it = (mis (1) − mis (0))(mit (1) − mit (0))
+                                            + (mis (1) − mis (0))(eit (1) − eit (0))
+                                            + (mit (1) − mit (0))(eis (1) − eis (0))
+                                            + (eis (1) − eis (0))(eit (1) − eit (0)).                          (48)
+
+   Therefore:
+                   ˆ is ∆
+                 E[∆    ˆ it ] − ∆is ∆it = E[Ais Ait ] − (eis (1) − eis (0))(eit (1) − eit (0)).               (49)
+
+   To compute E[Ais Ait ], note that when wi = 1:
+
+                                                          eis (1)eit (1)
+                                              Ais Ait =                  ,                                     (50)
+                                                             πi (1)2
+and when wi = 0:
+                                                          eis (0)eit (0)
+                                              Ais Ait =                  .                                     (51)
+                                                             πi (0)2
+   Thus:
+                                  eis (1)eit (1)            eis (0)eit (0)   eis (1)eit (1) eis (0)eit (0)
+         E[Ais Ait ] = πi (1) ·             2
+                                                 + πi (0) ·          2
+                                                                           =               +               .   (52)
+                                     πi (1)                    πi (0)            πi (1)         πi (0)
+
+   Combining and summing over all units yields (23).
+
+A.5    Proof of Proposition 4.12
+Proof. Let S = V0 + V1 and ρS = V0 /S, so that ρS → ρ and V1 /S → 1 − ρ. We first record the
+scaling of the denominator. Since
+                                                           
+                                  V1   V0       1 − ρS   ρS
+                                     +    =S           +      ,                         (53)
+                                1−π    π        1−π      π
+
+                                                          21
+and the term in braces converges to
+                                                  1−ρ  ρ
+                                          cρ :=       + > 0,                                 (54)
+                                                  1−π π
+the normal-mixture boundary satisfies
+                                                           
+                                               V1   V0
+                                      b       1−π + π ; α  √
+                                           √          → cρ .                                 (55)
+                                             S log S
+                                              p
+Indeed, this follows directly from b(V ; δ) = V log(V η 2 /δ 2 )(1 + o(1)) whenever V → ∞.
+   For the numerator, the same expansion gives
+
+                                          b(V0 ; α/2)  √
+                                           √          → ρ,
+                                             S log S
+                                          b(V1 ; α/2)  p
+                                           √          → 1 − ρ.                               (56)
+                                             S log S
+
+The endpoint cases are included in these limits: if, for example, V0 = o(S), then V0 ≤ S and
+b(V0 ; α/2)2 = O((V0 + 1) log S) = o(S log S). Therefore
+
+                             b(V0 ; α/2) + b(V1 ; α/2)  √   p
+                                     √                 → ρ + 1 − ρ.                          (57)
+                                       S log S
+Dividing the numerator limit by the denominator limit gives
+                                                 √     √
+                                                   ρ+ 1−ρ
+                             Rπ (V0 , V1 ) → p                      .                        (58)
+                                              ρ/π + (1 − ρ)/(1 − π)
+
+Finally, the limiting ratio is at most one by Cauchy’s inequality:
+                            √     p      2  ρ     1−ρ
+                                                           
+                                ρ+ 1−ρ ≤           +         (π + 1 − π).                    (59)
+                                                 π 1−π
+
+The symmetric and asymmetric limits follow by substituting ρ = 1/2, ρ = 0, and ρ = 1.
+
+
+B    Supplemental Figures
+
+
+
+
+                                                     22
+                        rt(0) rt(0)                                                                rt(1) rt(1)                                                   t       t
+ 100                                                                       40                                                        150
+
+  75                                                                       30                                                        100
+  50                                                                       20
+                                                                                                                                      50
+  25                                                                       10
+   0                                                                        0                                                            0
+
+  25                                                                       10
+                                                                                                                                      50
+  50                                                                       20
+                                                                           30                                                        100
+  75
+
+ 100                                                                       40                                                        150
+       0   100   200   300    400    500   600             700       800            0   20   40    60       80   100    120   140            0    250   500   750 1000 1250 1500 1750
+                             Vt(0)                                                                      Vt(1)                                                        2
+                                                                                                                                                                     t
+
+
+
+Figure 4: Sample paths of IPW estimation errors from 100 Monte Carlo replications of Dataset 5.1.
+Left panel: r̂t (0)−rt (0) plotted against the oracle variance clock Vt (0), with boundary ±b(Vt (0); α/2).
+Center panel: r̂t (1) − rt (1) plotted against Vt (1), with boundary ±b(Vt (1); α/2). Right panel:
+ˆ t − ∆t plotted against the variance-upper-bound clock σ 2 , with the union-bound boundary
+∆                                                                   t
+±{b(Vt (0); α/2) + b(Vt (1); α/2)} in green and the benchmark boundary ±b(σt2 ; α) in red.
+
+
+
+
+                                                               600
+                                                                                rt(0)
+                                                                                rt(1)
+                                                               500              rt(0)
+                                                                                rt(1)
+
+                                                               400
+                                           Cumulative Reward
+
+
+
+
+                                                               300
+
+
+                                                               200
+
+
+                                                               100
+
+
+                                                                 0
+                                                                      0         5       10        15        20         25     30    35       40
+                                                                                                        Time
+
+Figure 5: Ten realizations of r̂t (1) and r̂t (0) obtained by resampling treatment indicators wi ,
+compared with true values rt (1) and rt (0), for Dataset 5.1.
+
+
+
+
+                                                                                                       23
+                          Cov( s, t)                                Cov( s, t) Var( min(s, t))
+
+               5                                 100            5                                     6
+
+              10                                               10                                     4
+                                                 50
+              15                                               15                                     2
+
+              20                                 0             20                                     0
+          s
+
+
+
+
+                                                           s
+
+
+
+
+              25                                               25                                         2
+                                                     50
+              30                                               30                                         4
+              35                                     100       35                                         6
+              40                                               40
+                     10       20       30   40                        10       20        30      40
+                              t                                                 t
+
+                                                  ˆ s, ∆
+Figure 6: Example of martingale violation for Cov(∆    ˆ t ) ̸= Var(∆
+                                                                    ˆ s ) for Dataset 5.1, using random
+                              iid                                   iid
+augmentation terms mit (0) ∼ Uniform(0.5, 2.0) and mit (1) ∼ Uniform(0.2, 1.0).
+
+
+
+
+                                                       24
+C                         Comparison to Lindon and Kallus (2025)
+Lindon and Kallus (2025) model the arrival of OOM errors through time as an inhomogeneous Poisson
+process with cumulative intensity Λt (w), constructing confidence sequences via conjugate Gamma
+mixtures. In the restrictive special case when assignment probabilities are constant (πi (w) = π(w)
+for all i), the design-based IPW estimator and the Poisson-based estimator are closely related.
+    Under the design-based framework, the IPW estimator for arm w is
+                                                                                                    X                yi     Nt (w)
+                                                               r̂t (w) =                                                  =        ,                                                                         (60)
+                                                                                                                   πi (w)   π(w)
+                                                                                                i:wi =w,ti ≤t
+
+where Nt (w) is the observed count in arm w by time t. Under the Poisson model, Nt (w) ∼
+Poisson(Λt (w)) is treated as the realization of a time-inhomogeneous Poisson process with cumulative
+intensity Λt (w) = E[Nt (w)]. Lindon and Kallus (2025) construct confidence processes on Λt (1),
+Λt (0), and the difference Λt (1) − Λt (0), which can be simply rescaled by 1/π(w) to adjust for
+unbalanced assignment. Figure 7 shows the Poisson-based confidence sequences on the same data,
+scaled by 1/π(w) = 2.
+
+
+                                         (0) and t(1)
+                            Poisson CS: t(0)                                                                     (1)
+                                                                                                    Poisson CS: t(1)            t(0)
+                                                 (1)                                                                            (0)                                         Poisson Sequential P-value
+                                                                                                                                                                   1.0
+                   1750      t(0)                                                      1600         t(1)   t(0)                                                                                         = 0.05
+                             (0)                                                                    (1)    (0)                                                                                          = 0.01
+                   1500      t(1)
+                             (1)
+                                                                                       1400                                                                        0.8
+                   1250                                                                1200
+                                                                                                                                              Sequential P-value
+                                                                   Incremental Count
+Cumulative Count
+
+
+
+
+                                                                                       1000                                                                        0.6
+                   1000
+                                                                                       800
+                   750                                                                                                                                             0.4
+                                                                                       600
+                   500                                                                 400                                                                         0.2
+                   250                                                                 200
+                     0                                                                   0                                                                         0.0
+                      0.0   0.2     0.4          0.6   0.8   1.0                          0.0      0.2       0.4          0.6     0.8   1.0                           0.0    0.2    0.4          0.6   0.8       1.0
+                                          Time                                                                     Time                                                                   Time
+
+
+Figure 7: Poisson process confidence sequences for the same data, scaled by 1/π(w) = 2 to target
+the same estimand rt (w) as the design-based approach. Left: confidence sequences for rt (0) and
+rt (1). Center: confidence sequence for ∆t = rt (1) − rt (0). Right: sequential p-value. The point
+estimates are identical to Figure 3; the confidence intervals differ only due to the distinct boundary
+functions used by each method.
+
+
+    Both approaches yield identical point estimates when the Poisson estimates are scaled by 1/π(w).
+They differ, however, fundamentally in how they handle uncertainty. The uncertainty in Lindon and
+Kallus (2025) is model-based, whereas the uncertainty in our approach is design-based, leveraging the
+randomization of treatment assignment. The former requires the modeling assumption of a Poisson
+arrival process, which is a critical assumption as it allows a martingale property to be established
+via the memoryless independent increments property. However, the Poisson model is not always
+appropriate, and, as we demonstrate here, not necessary. We achieve the martingale property in
+the design-based framework via randomization and SUTVA; no modeling assumptions are required.
+Moreover, the Poisson approach does not naturally accommodate varying assignment probabilities
+πi (w) across units, which precludes release engineers from using adaptive experimental designs
+
+
+                                                                                                             25
+to carefully roll-out new software. In short, the design-based approach makes no distributional
+assumptions and is more flexible.
+
+
+
+
+                                              26
+

@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "source_archive_members": 24,
+  "both_clean_builds_succeeded": true,
+  "both_extracted_pdf_texts_match_canonical": true,
+  "evidence_archive_members": 524,
+  "evidence_archive_sha256": "022f20172dd125aa092ad8894cbbdd7fbe28929c3c28ad41a23473a3076efd23"
+}

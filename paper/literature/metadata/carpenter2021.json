@@ -1,0 +1,735 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        17
+      ]
+    ],
+    "date-time": "2026-10-17T15:52:52Z",
+    "timestamp": 1792252372915,
+    "version": "4.4.0"
+  },
+  "reference-count": 91,
+  "publisher": "Wiley",
+  "issue": "5",
+  "license": [
+    {
+      "start": {
+        "date-parts": [
+          [
+            2021,
+            2,
+            24
+          ]
+        ],
+        "date-time": "2021-02-24T00:00:00Z",
+        "timestamp": 1614124800000
+      },
+      "content-version": "vor",
+      "delay-in-days": 0,
+      "URL": "http://creativecommons.org/licenses/by-nc/4.0/"
+    }
+  ],
+  "content-domain": {
+    "domain": [
+      "onlinelibrary.wiley.com"
+    ],
+    "crossmark-restriction": true
+  },
+  "short-container-title": [
+    "Biometrical J"
+  ],
+  "published-print": {
+    "date-parts": [
+      [
+        2021,
+        6
+      ]
+    ]
+  },
+  "abstract": "<jats:title>Abstract</jats:title>\n                  <jats:p>Missing data are ubiquitous in medical research, yet there is still uncertainty over when restricting to the complete records is likely to be acceptable, when more complex methods (e.g. maximum likelihood, multiple imputation and Bayesian methods) should be used, how they relate to each other and the role of sensitivity analysis. This article seeks to address both applied practitioners and researchers interested in a more formal explanation of some of the results. For practitioners, the framework, illustrative examples and code should equip them with a practical approach to address the issues raised by missing data (particularly using multiple imputation), alongside an overview of how the various approaches in the literature relate. In particular, we describe how multiple imputation can be readily used for sensitivity analyses, which are still infrequently performed. For those interested in more formal derivations, we give outline arguments for key results, use simple examples to show how methods relate, and references for full details. The ideas are illustrated with a cohort study, a multi\u2010centre case control study and a randomised clinical\u00a0trial.</jats:p>",
+  "DOI": "10.1002/bimj.202000196",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2021,
+        2,
+        24
+      ]
+    ],
+    "date-time": "2021-02-24T06:56:19Z",
+    "timestamp": 1614149779000
+  },
+  "page": "915-947",
+  "update-policy": "https://doi.org/10.1002/crossmark_policy",
+  "source": "Crossref",
+  "is-referenced-by-count": 204,
+  "title": [
+    "Missing data: A statistical framework for practice"
+  ],
+  "prefix": "10.1002",
+  "volume": "63",
+  "author": [
+    {
+      "ORCID": "https://orcid.org/0000-0003-3890-6206",
+      "authenticated-orcid": false,
+      "given": "James R.",
+      "family": "Carpenter",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Department of Medical Statistics London School of Hygiene &amp; Tropical Medicine  London UK"
+        },
+        {
+          "name": "MRC Clinical Trials Unit at UCL  London UK"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0002-1594-1458",
+      "authenticated-orcid": false,
+      "given": "Melanie",
+      "family": "Smuk",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Department of Medical Statistics London School of Hygiene &amp; Tropical Medicine  London UK"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "member": "311",
+  "published-online": {
+    "date-parts": [
+      [
+        2021,
+        2,
+        24
+      ]
+    ]
+  },
+  "reference": [
+    {
+      "key": "e_1_2_13_2_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/pst.1954"
+    },
+    {
+      "key": "e_1_2_13_3_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/aje/kwv114"
+    },
+    {
+      "key": "e_1_2_13_4_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/1536867X1501500206"
+    },
+    {
+      "key": "e_1_2_13_5_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/0962280214521348"
+    },
+    {
+      "key": "e_1_2_13_6_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biostatistics/kxw019"
+    },
+    {
+      "key": "e_1_2_13_7_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1186/1471-2288-14-118"
+    },
+    {
+      "key": "e_1_2_13_8_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1016/S0091-6749(98)70353-7"
+    },
+    {
+      "key": "e_1_2_13_9_1",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Carpenter J. R.(2019).Mulitple imputation based sensitivity analysis InF.Ruggeri W.Piegorsch M.Davidian R.Kenett G.Molenberghs &N. T.Longford(Eds.) Wiley statistics reference online.https://doi.org/10.1002/9781118445112.stat07852",
+      "DOI": "10.1002/9781118445112.stat07852"
+    },
+    {
+      "key": "e_1_2_13_10_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.18637/jss.v045.i05"
+    },
+    {
+      "key": "e_1_2_13_11_1",
+      "unstructured": "Carpenter J. R. &Kenward M. G.(2008).Missing data in clinical trials \u2013 A practical guide. National Health Service Co\u2010ordinating Centre for Research Methodology. Available free fromhttps://researchonline.lshtm.ac.uk/id/eprint/4018500/(accessed Feb 4th 2021)"
+    },
+    {
+      "key": "e_1_2_13_12_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/9781119942283"
+    },
+    {
+      "key": "e_1_2_13_13_1",
+      "first-page": "435",
+      "volume-title": "Handbook of missing data methodology",
+      "author": "Carpenter J. R.",
+      "year": "2015"
+    },
+    {
+      "key": "e_1_2_13_14_1",
+      "first-page": "23",
+      "volume-title": "Handbook of missing data methodology",
+      "author": "Carpenter J. R.",
+      "year": "2015"
+    },
+    {
+      "key": "e_1_2_13_15_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.1467-985X.2006.00407.x"
+    },
+    {
+      "key": "e_1_2_13_16_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1136/bmjopen-2012-002299"
+    },
+    {
+      "key": "e_1_2_13_17_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.4135/9781446268261.n28"
+    },
+    {
+      "key": "e_1_2_13_18_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/10543406.2013.834911"
+    },
+    {
+      "key": "e_1_2_13_19_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1016/S0140-6736(05)71879-1"
+    },
+    {
+      "key": "e_1_2_13_20_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/1467-9868.00109"
+    },
+    {
+      "key": "e_1_2_13_21_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1037/1082-989X.6.4.330"
+    },
+    {
+      "key": "e_1_2_13_22_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/rssa.12423"
+    },
+    {
+      "key": "e_1_2_13_23_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.8569"
+    },
+    {
+      "key": "e_1_2_13_24_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1016/j.csda.2011.10.006"
+    },
+    {
+      "key": "e_1_2_13_25_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.2517-6161.1977.tb01600.x"
+    },
+    {
+      "key": "e_1_2_13_26_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.0006-341X.2002.00021.x"
+    },
+    {
+      "key": "e_1_2_13_27_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/rssa.12022"
+    },
+    {
+      "key": "e_1_2_13_28_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/1471082X0800900301"
+    },
+    {
+      "key": "e_1_2_13_29_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/1740774517711443"
+    },
+    {
+      "key": "e_1_2_13_30_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1952.10483446"
+    },
+    {
+      "key": "e_1_2_13_31_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/0962280214526216"
+    },
+    {
+      "key": "e_1_2_13_32_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1186/1471-2288-14-28"
+    },
+    {
+      "key": "e_1_2_13_33_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1214/aos/1034276631"
+    },
+    {
+      "key": "e_1_2_13_34_1",
+      "unstructured": "International Council for Harmonisation of Technical Requirements for Pharmaceuticals for Human Use(2019).Addendum on estimands and sensitivity analysis in clinical trials to the guideline on statistical principles for clinical trials E9(R1). European Medicines Agency."
+    },
+    {
+      "key": "e_1_2_13_35_1",
+      "unstructured": "Kennickel A. B.(1991).Imputation of the 1989 survey of consumer finances. InProceedings of the Section on Survey Research Methods 1990."
+    },
+    {
+      "key": "e_1_2_13_36_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.7842"
+    },
+    {
+      "key": "e_1_2_13_37_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.1467-9868.2006.00546.x"
+    },
+    {
+      "key": "e_1_2_13_38_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/aje/kwn071"
+    },
+    {
+      "key": "e_1_2_13_39_1",
+      "unstructured": "Lee K. J. Tilling K. Cornish R. P. Little R. J. Bell M. L. Goetghebeur E. Hogan J. W. Carpenter J. R. &the STRATOS initiative(2020).Framework for the treatment and reporting of missing data in observational studies: The TARMOS framework.Journal of Clinical Epidemiology Pre\u2010print at arXiv:2004.14066."
+    },
+    {
+      "key": "e_1_2_13_40_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/aje/kwaa225"
+    },
+    {
+      "key": "e_1_2_13_41_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/0962280217713032"
+    },
+    {
+      "key": "e_1_2_13_42_1",
+      "first-page": "65",
+      "article-title": "Significance levels from repeated p\u2010values with multiply imputed data",
+      "volume": "1",
+      "author": "Li K. H.",
+      "year": "1991",
+      "journal-title": "Statistica Sinica"
+    },
+    {
+      "key": "e_1_2_13_43_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.2307/2290525"
+    },
+    {
+      "key": "e_1_2_13_44_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/9781119013563"
+    },
+    {
+      "key": "e_1_2_13_45_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/9781119482260"
+    },
+    {
+      "key": "e_1_2_13_46_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.2307/2532847"
+    },
+    {
+      "key": "e_1_2_13_47_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.1467-9876.2011.00763.x"
+    },
+    {
+      "key": "e_1_2_13_48_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.2517-6161.1982.tb01203.x"
+    },
+    {
+      "key": "e_1_2_13_49_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/1740774517711442"
+    },
+    {
+      "key": "e_1_2_13_50_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/1740774517711442"
+    },
+    {
+      "key": "e_1_2_13_51_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1186/s12874-020-00930-2"
+    },
+    {
+      "key": "e_1_2_13_52_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1017/S0013091500034428"
+    },
+    {
+      "key": "e_1_2_13_53_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1214/ss/1177010269"
+    },
+    {
+      "key": "e_1_2_13_54_1",
+      "first-page": "267",
+      "article-title": "Performing likelihood ratio tests with multiply\u2010imputed data sets",
+      "volume": "89",
+      "author": "Meng X.",
+      "year": "1992",
+      "journal-title": "Biometrika"
+    },
+    {
+      "key": "e_1_2_13_55_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.5935"
+    },
+    {
+      "key": "e_1_2_13_56_1",
+      "volume-title": "The Prevention and Treatment of Missing Data in Clinical Trials",
+      "author": "National Research Council",
+      "year": "2010"
+    },
+    {
+      "key": "e_1_2_13_57_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.3731"
+    },
+    {
+      "key": "e_1_2_13_58_1",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Orchard T. &Woodbury M.(1972).A missing information principle: Theory and applications. InL. M. L.Cam J.Neyman &E. L.Scott(Eds.) Proceedings of the Sixth Berkely Symposium on Mathematics Statistics and Probability Volume 1. (pp.697\u2013715).University of California Press.",
+      "DOI": "10.1525/9780520325883-036"
+    },
+    {
+      "issue": "3",
+      "key": "e_1_2_13_59_1",
+      "first-page": "683",
+      "article-title": "A comparison of multiple\u2010imputation methods for handling missing data in repeated measurements observational studies",
+      "volume": "179",
+      "author": "Oya K.",
+      "year": "2015",
+      "journal-title": "Journal of the Royal Statistical Society: Series A (Statistics in Society)"
+    },
+    {
+      "key": "e_1_2_13_60_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.6837"
+    },
+    {
+      "key": "e_1_2_13_61_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/bimj.201800222"
+    },
+    {
+      "key": "e_1_2_13_62_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/jssam/smz036"
+    },
+    {
+      "key": "e_1_2_13_63_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.32614/RJ-2019-028"
+    },
+    {
+      "key": "e_1_2_13_64_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1007/BF02295939"
+    },
+    {
+      "key": "e_1_2_13_65_1",
+      "first-page": "85",
+      "article-title": "A multivariate technique for multiply imputing missing values using a sequence of regression models",
+      "volume": "27",
+      "author": "Raghunathan T. E.",
+      "year": "2001",
+      "journal-title": "Survey Methodology"
+    },
+    {
+      "key": "e_1_2_13_66_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biomet/asm028"
+    },
+    {
+      "key": "e_1_2_13_67_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1198/016214507000000932"
+    },
+    {
+      "key": "e_1_2_13_68_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1995.10476493"
+    },
+    {
+      "key": "e_1_2_13_69_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/biomet/63.3.581"
+    },
+    {
+      "key": "e_1_2_13_70_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/9780470316696"
+    },
+    {
+      "key": "e_1_2_13_71_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1201/9781439821862"
+    },
+    {
+      "key": "e_1_2_13_72_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1037/10409-012"
+    },
+    {
+      "key": "e_1_2_13_73_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1080/01621459.1999.10473862"
+    },
+    {
+      "key": "e_1_2_13_74_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1136/bmj.c332"
+    },
+    {
+      "key": "e_1_2_13_75_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1186/1471-2288-12-46"
+    },
+    {
+      "key": "e_1_2_13_76_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.1541-0420.2011.01666.x"
+    },
+    {
+      "key": "e_1_2_13_77_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/aje/kwt312"
+    },
+    {
+      "key": "e_1_2_13_78_1",
+      "unstructured": "Smuk M. J.(2015).Missing data methodology: Sensitivity analysis after multiple imputation(Ph.D. thesis).London School of Hygiene & Tropical Medicine London UK."
+    },
+    {
+      "key": "e_1_2_13_79_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1186/s12874-017-0301-0"
+    },
+    {
+      "key": "e_1_2_13_80_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1093/aje/kwq137"
+    },
+    {
+      "key": "e_1_2_13_81_1",
+      "first-page": "157",
+      "article-title": "Multiple imputation for missing data in epidemiological and clinical research: Potential and pitfalls",
+      "volume": "339",
+      "author": "Sterne J. A. C.",
+      "year": "2009",
+      "journal-title": "British Medical Journal"
+    },
+    {
+      "key": "e_1_2_13_82_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1016/j.jclinepi.2016.07.004"
+    },
+    {
+      "key": "e_1_2_13_83_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.7643"
+    },
+    {
+      "key": "e_1_2_13_84_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/0962280206074463"
+    },
+    {
+      "key": "e_1_2_13_85_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1201/9780429492259"
+    },
+    {
+      "key": "e_1_2_13_86_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/(SICI)1097-0258(19990330)18:6<681::AID-SIM71>3.0.CO;2-R"
+    },
+    {
+      "key": "e_1_2_13_87_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1027/1614-2241/a000005"
+    },
+    {
+      "key": "e_1_2_13_88_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1111/j.1467-9531.2009.01215.x"
+    },
+    {
+      "key": "e_1_2_13_89_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1002/sim.6184"
+    },
+    {
+      "key": "e_1_2_13_90_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1016/j.csda.2010.04.005"
+    },
+    {
+      "key": "e_1_2_13_91_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1191/1740774504cn032oa"
+    },
+    {
+      "key": "e_1_2_13_92_1",
+      "doi-asserted-by": "publisher",
+      "DOI": "10.1177/1471082X1001100404"
+    }
+  ],
+  "container-title": [
+    "Biometrical Journal"
+  ],
+  "original-title": [],
+  "language": "en",
+  "link": [
+    {
+      "URL": "https://onlinelibrary.wiley.com/doi/pdf/10.1002/bimj.202000196",
+      "content-type": "application/pdf",
+      "content-version": "vor",
+      "intended-application": "text-mining"
+    },
+    {
+      "URL": "https://onlinelibrary.wiley.com/doi/full-xml/10.1002/bimj.202000196",
+      "content-type": "application/xml",
+      "content-version": "vor",
+      "intended-application": "text-mining"
+    },
+    {
+      "URL": "https://onlinelibrary.wiley.com/doi/pdf/10.1002/bimj.202000196",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2023,
+        8,
+        30
+      ]
+    ],
+    "date-time": "2023-08-30T15:06:57Z",
+    "timestamp": 1693408017000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://onlinelibrary.wiley.com/doi/10.1002/bimj.202000196"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        2021,
+        2,
+        24
+      ]
+    ]
+  },
+  "references-count": 91,
+  "journal-issue": {
+    "issue": "5",
+    "published-print": {
+      "date-parts": [
+        [
+          2021,
+          6
+        ]
+      ]
+    }
+  },
+  "alternative-id": [
+    "10.1002/bimj.202000196"
+  ],
+  "URL": "https://doi.org/10.1002/bimj.202000196",
+  "archive": [
+    "Portico"
+  ],
+  "relation": {},
+  "ISSN": [
+    "0323-3847",
+    "1521-4036"
+  ],
+  "issn-type": [
+    {
+      "value": "0323-3847",
+      "type": "print"
+    },
+    {
+      "value": "1521-4036",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published": {
+    "date-parts": [
+      [
+        2021,
+        2,
+        24
+      ]
+    ]
+  },
+  "assertion": [
+    {
+      "value": "2020-06-23",
+      "order": 0,
+      "name": "received",
+      "label": "Received",
+      "group": {
+        "name": "publication_history",
+        "label": "Publication History"
+      }
+    },
+    {
+      "value": "2020-11-24",
+      "order": 1,
+      "name": "accepted",
+      "label": "Accepted",
+      "group": {
+        "name": "publication_history",
+        "label": "Publication History"
+      }
+    },
+    {
+      "value": "2021-02-24",
+      "order": 2,
+      "name": "published",
+      "label": "Published",
+      "group": {
+        "name": "publication_history",
+        "label": "Publication History"
+      }
+    }
+  ]
+}

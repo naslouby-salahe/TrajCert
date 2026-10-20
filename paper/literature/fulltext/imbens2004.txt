@@ -1,0 +1,1379 @@
+CONFIDENCE INTERVALS FOR PARTIALLY
+             IDENTIFIED PARAMETERS
+
+                             Guido W. Imbens
+                            Charles F. Manski
+
+
+
+
+                THE INSTITUTE FOR FISCAL STUDIES
+                 DEPARTMENT OF ECONOMICS, UCL
+              cemmap working paper CWP09/03
+           Confidence Intervals for Partially Identified Parameters∗
+                         Guido W. Imbens                         Charles F. Manski
+                       UC Berkeley, and NBER                   Northwestern University
+
+                                           This Draft: May 29, 2003
+
+
+
+                                                     Abstract
+
+              In the last decade a growing body of research has studied inference on partially identified
+         parameters (e.g., Manski, 1990, 2003). In many cases where the parameter of interest is real-
+         valued, the identification region is an interval whose lower and upper bounds may be estimated
+         from sample data. Confidence intervals may be constructed to take account of the sampling
+         variation in estimates of these bounds. Horowitz and Manski (1998, 2000) proposed and applied
+         interval estimates that asymptotically cover the entire identification region with fixed probabil-
+         ity. Here we introduce conceptually diﬀerent interval estimates that asymptotically cover each
+         element in the identification region with fixed probability (but not necessarily every element
+         simultaneously). We show that these two types of interval estimate are diﬀerent in practice,
+         the latter in general being shorter. The diﬀerence in length (in excess of the length of the iden-
+         tification set itself) can be substantial, and in large samples is comparable to the diﬀerence of
+         one — and two—sided confidence intervals. A complication arises from the fact that the simplest
+         version of the proposed interval is discontinuous in the limit case of point identification, leading
+         to coverage rates that are not uniform in important subsets of the parameter space. We develop
+         a modification depending on the width of the identification region that restores uniformity. We
+         show that under some conditions, using the estimated width of the identification region instead
+         of the true width maintains uniformity.
+
+       JEL Classification:
+       Keywords: Bounds, Partial Identification, Identification Regions, Confidence Intervals
+
+
+
+
+   ∗
+    We are grateful to to Joerg Stoye for excellent research assistance, to Michael Jansson, Francesca Molinari and
+Tom Rothenberg for helpful comments, and to the NSF for financial support through grants SES 0136789 (Imbens)
+and SES 0001436 (Manski).
+1    Introduction
+In the last decade a growing body of research has studied inference in settings where parameters
+of interest are partially identified (e.g., Manski, 1990, 2003). Such methods have been applied and
+extended to a wide variety of settings, including the analysis of labor market programs (Blundell, et
+al., 2002), interval measurement (Manski and Tamer, 2002), auctions (Haile and Tamer, 2003), the
+eﬀect of teenage pregnancies on labor market outcomes (Hotz, Mullins and Sanders. 1997, Mullins,
+2003), measurement error (Horowitz and Manski, 1995; Bollinger, 1996, Molinari, 2002, Dominitz
+and Sherman, 2003), and selection problems (Manski, 1990; Lee, 2002). In many cases where the
+parameter is real-valued, the identification region is an interval whose lower and upper bounds may
+be estimated from sample data. Confidence intervals (CIs) may be constructed to take account
+of the sampling variation in estimates of these bounds. Early on, Manski, Sandefur, McLanahan
+and Powers (1992) computed separate confidence intervals for the lower and upper bounds of
+the identification regions of such parameters. Subsequently, Horowitz and Manski (1998, 2000)
+proposed and applied intervals that asymptotically cover the entire identification region with fixed
+probability. Chernozhukov, Hong, and Tamer (2003) extend this approach of constructing CIs that
+cover the entire identification region to problems with vector valued parameters and identification
+regions defined through minimization problems. They also develop a new implementation of such
+intervals through subsampling bootstrap methods.
+     Here, we introduce a conceptually diﬀerent type of confidence interval. Rather than cover the
+entire identification region with fixed probability, we propose CIs that asymptotically cover the true
+value of the parameter with fixed probability. We show that, in general, coverage of a parameter is
+a less demanding objective than is coverage of the entire identification region. We prove that any
+specified confidence interval has a weakly larger coverage probability for the parameter than for its
+identification region. It follows that if a given interval achieves a specified coverage probability
+for the identification region, there exists a subset of this interval that achieves the same coverage
+probability for the parameter.
+     To illustrate the basic nature of our CIs for partially identified parameters, and to address
+some subtleties, we study in depth the construction of CIs for the mean of a bounded random
+variable when some data are missing and the distribution of missing data is unrestricted (beyond
+the bounds on their values). Initially we assume that the propensity score (i.e., the probability of
+observing an outcome) is known. We prove that, for any specified asymptotic coverage probability,
+CIs for the parameter are proper subsets of ones for the identification region, with the diﬀerence
+in width related to the diﬀerence in critical values for one— and two—sided tests. However, we find
+that the exact coverage probabilities of the simplest version of our new CIs do not converge to
+their nominal values uniformly across diﬀerent values for the width of the identification region.
+Specifically, uniformity fails when the width of the region shrinks to zero; that is, as the parameter
+becomes point-identified. An unattractive consequence is that confidence intervals can be wider
+when the parameter is point—identified than when it is set-identified. To avoid this anomaly, we
+
+
+                                                 [1]
+modify the proposed CI to ensure that its exact coverage probabilities do converge uniformly to
+their nominal values. We motivate the modified CI by showing that its exact and nominal coverage
+probabilities coincide when outcomes are normally distributed.
+    We then discuss implementation of the new CIs at a more general level, and provide conditions
+under which CIs with uniform asymptotic coverage can be constructed by substituting estimates for
+unknown nuisance parameters, including the width of the identification region. Finally we provide
+a brief empirical illustration.
+
+
+2    Confidence Intervals for Parameters and for Their Identification
+     Regions
+Many problems of partial identification have the following abstract structure. Let (Ω, A, P ) be
+a specified probability space, and let P be a space of probability distributions on (Ω, A). The
+distribution P is not known, but a random sample of size N is available, with empirical distribution
+PN . Let λ be a quantity which is known only to belong to a specified set Λ. Let f (·, ·) : P × Λ → R
+be a specified real-valued function. The object of interest is the real parameter θ = f (P, λ).
+Then the identification region for f (P, λ) is the set {f (P, λ0 ), λ0 ∈ Λ}. A natural estimate for the
+identification region is its sample analog {f (PN , λ0 ), λ0 ∈ Λ}.
+    Suppose that λl (P ) = argminλ0 ∈Λ f (P, λ0 ) and λu (P ) = argmaxλ0 ∈Λ f (P, λ0 ) exist for all P ∈ P.
+Then the identification region necessarily is a subset of the closed interval [f (P, λl (P )), f (P, λu (P ))].
+We focus on the class of problems in which the identification region is this closed interval. Manski
+(2003) describes various problems in this class, including ones that arise when data are missing
+or contaminated. A particularly simple and important leading case will be examined in detail in
+Sections 3 and 4.
+    It is natural to estimate the identification region [f (P, λl (P )), f (P, λu (P ))] by its sample analog
+[f (PN , λl (PN )), f (PN , λu (PN ))], which is consistent under standard regularity conditions. It is also
+natural to construct confidence intervals for [f (P, λl (P )), f (P, λu (P ))] of the form [f (PN , λl (PN )) −
+CN0 , f (PN , λu (PN ))+CN1 ], where (CN0 , CN1 ) are specified non-negative numbers that may depend
+on the sample data. In their study of nonparametric regression analysis with missing outcome or
+covariate data, Horowitz and Manski (2000) proposed CIs of this form and showed how (CN 0 , CN1 )
+may be chosen to achieve a specified asymptotic probability of coverage of the identification region.
+Chernozhukov, Hong and Tamer (2003) study confidence sets with the same property in more gen-
+eral settings with vector valued parameters and identification regions defined through minimization
+of general objective functions.
+    In this paper, we study the use of intervals of the form [f (PN , λl (PN )) − CN0 , f (PN , λu (PN )) +
+CN1 ] as CIs for the partially identified parameter f (P, λ). Our most basic finding is Lemma 2.1:
+
+Lemma 2.1 Let CN0 ≥ 0, CN1 ≥ 0, λ ∈ Λ, and P ∈ P. The probability that the interval
+[f (PN , λl (PN )) − CN0 , f (PN , λu (PN )) + CN 1 ] covers the parameter f (P, λ) is at least as large as
+
+                                                      [2]
+the probability that it covers the entire identification region [f (P, λl (P )), f (P, λu (P ))].
+
+    Proof: The coverage probability for the parameter f (P, λ) is
+
+      αN (P, λ) = Pr (f (P, λ) ∈ [f (PN , λl (PN )) − CN0 , f (PN , λu (PN )) + CN 1 ])                     (2.1)
+
+             = P r (f (PN , λl (PN )) ≤ f (P, λ) + CN0 ∩ f (PN , λu (PN )) ≥ f (P, λ) − CN1 ) .
+
+The coverage probability for the identification region [f (P, λl (P )), f (P, λu (P ))] is
+
+    aN (P ) = P r ([f (P, λl (P )), f (P, λu (P ))] ⊂ [f (PN , λl (PN )) − CN 0 , f (PN , λu (PN )) + CN1 ]) (2.2)
+
+             = P r (f (PN , λl (PN )) ≤ f (P, λl (P )) + CN0 ∩ f (PN , λu (PN )) ≥ f (P, λu (P )) − CN1 ) .
+
+Then αN (P, λ) ≥ aN (P ) because
+
+      f (PN , λl (PN )) ≤ f (P, λl (P )) + CN0 ∩ f (PN , λu (PN )) ≥ f (P, λu (P )) − CN1                   (2.3)
+
+             =⇒ f (PN , λl (PN )) ≤ f (P, λ) + CN 1 ∩ f (PN , λu (PN )) ≥ f (P, λ) − CN 1 .
+
+¤
+    Lemma 2.1 implies that the coverage probability for the parameter is at least as large as that
+for the identification region. The coverage probabilities αN (P, λ) and aN (P ) are functions of the
+unknown quantities (P, λ). The uniform coverage probabilities are
+
+      αN =          inf    αN (P, λ)
+             (P,λ)∈(P×Λ)
+
+      aN = inf aN (P )
+             P ∈P
+
+The lemma implies that αN ≥ aN .
+    It is common in the construction of CIs to choose an interval that achieves at least a specified
+coverage probability, say α. Suppose that (CN0 , CN1 ) is chosen to achieve at least coverage prob-
+ability α for the identification region. Lemma 2.1 implies that there exists a subset of the interval
+[f (PN , λl ) − CN 0 , f (PN , λu ) + CN1 ] that achieves at least coverage probability α for the parameter.
+    Finally, note that the inequalities proved in Lemma 2.1 are weak, not strict. They cannot be
+strict in general: if the parameter of interest is point-identified the two will be identical. Sections 3
+and 4 shows that in settings where the parameter of interest is not point-identified the inequalities
+are strict given some conditions.
+    Given the potential diﬀerences between the two types of CIs, the researcher faces a substantive
+choice whether to consider intervals that cover the entire identification region or the true parameter
+value with some fixed probability. Although generally both intervals converge to the identification
+region as N → ∞, their diﬀerences may be substantial in finite samples and the question cannot
+be avoided. In general, the answer depends on the application and the focus of the researcher.
+
+
+
+                                                       [3]
+3     Means with Missing Data and Known Propensity Score
+In this section we construct CIs for the mean of a bounded random variable when some data
+are missing and the distribution of missing data is unrestricted. Let (Y, W ) be a pair of random
+variables, where Y has compact support Y and W is binary with support {0, 1}; without loss of
+generality, let the smallest and largest elements of Y be 0 and 1 respectively. The parameter of
+interest is θ = E[Y ]. The researcher has a random sample of (Wi , Yi · Wi ), i = 1, . . . , N , so Wi is
+always observed and Yi is only observed if Wi = 1. Let µ = E[Y |W = 1] and λ = E[Y |W = 0] be
+the conditional means of Y in the two subpopulations, let σ 2 = V(Y |W = 1) be the conditional
+variance in the subpopulation with W = 1 and let p = E[W ], with 0 < p ≤ 1, be the propensity
+score. In this section we assume, for purposes of exposition, that p is known. Later we will allow
+for unknown p, but assume that it is bounded away from zero by a positive number p0 .
+    Let F (y) be the conditional distribution function of Y given W = 1. The distribution function
+F (·) is in the set of distribution functions F with variance σ 2 ≤ σ 2 ≤ σ 2 where σ 2 and σ 2 are known
+positive lower and upper bounds on the conditional variance of Y given W = 1. The conditional
+distribution of Y given W = 0 is unknown other than that λ = E[Y |W = 0] is in the interval
+Λ = [0, 1]. Given these definitions, the parameter of interest can be written as θ = µ · p + λ · (1 − p).
+The identification region for θ is the closed interval
+
+      [θl , θu ] = [µ · p, µ · p + 1 − p] .
+
+   With the probability p of observing Y known, the only unknown component of the interval
+boundaries is the conditional mean µ. This parameter can be estimated by its sample analog
+         PN
+             i=1 Wi · Yi
+     µ̂ = P    N
+                         .
+               i=1 Wi
+
+Given this estimator for µ, the identification region [θl , θu ] can be estimated as
+
+      [θ̂l , θ̂u ] = [µ̂ · p, µ̂ · p + 1 − p] .
+
+This estimator is consistent for the identification region [θl , θu ].
+
+
+3.1    Symmetric Confidence Intervals for the Parameter and its Identification
+       Region
+The first step towards constructing CIs is to consider inference for µ. Using standard large sample
+results we have
+      √             d
+        N (µ̂ − µ) −→ N (0, σ 2 /p).
+
+A consistent estimator for σ 2 is
+                         N
+                 1 X
+      σ̂ 2 =          Wi · (Yi − µ̂)2 ,
+               N1 − 1
+                        i=1
+
+
+                                                    [4]
+               PN
+where N1 =        i=1 Wi . Hence the standard 100 · α% confidence interval for µ is
+
+
+               ·                                            ¸
+                                  σ̂                     σ̂
+      CIαµ =    µ̂ − z(α+1)/2 · √    , µ̂ + z(α+1)/2 · √      ,                                   (3.4)
+                                 p·N                    p·N
+                                                                                     R zτ 1 −y2 /2
+where zτ is the τ quantile of the standard normal distribution, so that Φ(zτ ) = −∞       √ e
+                                                                                           2π      dy =
+τ.
+    Now consider symmetric CIs for the identification region [θl , θu ] and for the parameter θ. In each
+case, let the desired asymptotic coverage probability be α. Lemma 3.1 shows that the symmetric
+interval
+
+                       ·µ                     ¶     µ                     ¶       ¸
+                                           σ̂                          σ̂
+      CIα[θl ,θu ] =     µ̂ − z(α+1)/2 · √      · p, µ̂ + z(α+1)/2 · √      ·p+1−p                (3.5)
+                                          p·N                         p·N
+
+asymptotically covers [θl , θu ] with probability α, and Lemma 3.2 shows that the interval
+            ·µ                    ¶      µ               ¶          ¸
+       θ                     σ̂                       σ̂
+    CIα =      µ̂ − zα · √           · p, µ̂ + zα · √      ·p+1−p                                 (3.6)
+                            p·N                      p·N
+
+asymptotically covers θ with at least probability α. Thus, Lemma 3.1 shows that the entire interval
+                                                                   [θ ,θ ]
+[θl , θu ] will, in large samples, be in the confidence interval CIα l u with probability α, and Lemma
+3.2 shows that, whatever the value of the unidentified parameter λ may be, the parameter of interest
+θ = p · µ + (1 − p) · λ will be in the confidence interval CIαθ with at least probability α, as long as
+p < 1. The second interval diﬀers from the first only in that its cutoﬀ points are based on zα rather
+than z(α+1)/2 , making the second interval strictly shorter than the first.
+
+                                                  [θ ,θ ]
+Lemma 3.1 (Coverage properties of CIα l u )
+                   ³                         ´
+      inf    lim Pr [θl , θu ] ⊂ CIα[θl ,θu ] = α.                                                (3.7)
+      F ∈F,p0 ≤p≤1 N→∞
+
+   Proof: See Appendix.
+
+Lemma 3.2 (Coverage properties of CIαθ )
+                      ³        ´
+        inf     lim Pr θ ∈ CIαθ ≥ α, with equality when α ≥ 0.5.                                  (3.8)
+      F ∈F,λ∈Λ,p0 ≤p<1 N→∞
+
+   Proof: See Appendix.
+
+
+
+
+                                                   [5]
+3.2   A Uniform Confidence Interval for the Parameter
+Although the confidence interval CIαθ has in large samples the appropriate confidence level for all
+values of p in the open interval (0, 1), it has an unattractive feature. In this subsection we first
+describe in details this feature, and then propose a modification to eliminate it. The issue is that
+for any N one can find a value of p such that the coverage is arbitrarily close to 100 · (2α − 1)%,
+rather than the nominal 100 · α%. To see this, let us look at an example with Y |W = 1 normal
+with mean µ and known variance σ 2 . For ease of exposition we consider a slight modification of
+CIαθ with the estimated variance σ̂ 2 replaced by the true variance σ 2 :
+             ·µ                  ¶     µ               ¶            ¸
+         θ                   σ                      σ
+      CI α =    µ̂ − zα · √        · p, µ̂ + zα · √      ·p+1−p .                              (3.9)
+                            p·N                    p·N
+                                 θ
+The coverage probability of CI α for θ = µ · p + λ · (1 − p) at λ = 0 (so θ = µ · p) is
+        ³         ´       µµ                ¶            µ                ¶          ¶
+                θ                       σ                             σ
+     Pr θ ∈ CI α = Pr        µ̂ − zα · √      p ≤ µp ≤ µ̂ + zα ·    √        p+1−p
+                                        pN                            pN
+                    µµ                 ¶        ¶       µµ                  ¶                ¶
+                                   σ                                    σ
+           = 1 − Pr     µ̂ − zα · √      p > µp − Pr        µ̂ + zα · √       p + 1 − p < µp
+                                    pN                                  pN
+                    µ                    ¶      Ã                                 √ !
+                      µ̂ − µ p                    µ̂ − µ p                 (1 − p) N
+           = 1 − Pr             pN > zα − Pr               pN < −zα −           √
+                         σ                           σ                        σ p
+                                Ã               √ !         Ã               √ !
+                                         (1 − p) N                   (1 − p) N
+           = 1 − Φ (−zα ) − Φ −zα −           √         = Φ zα +          √        − Φ (−zα ) .
+                                            σ p                         σ p
+For any fixed p ∈ (0, 1), this coverage probability approaches α as N → ∞. However, for any fixed
+N < ∞, the coverage probability approaches 2α − 1 as p → 1. The finite-sample coverage of CIαθ
+is less than its asymptotic coverage because the asymptotic calculation sets to zero the probability
+that the lower bound of the identification region exceeds the estimate of the upper bound. This
+probability is generically positive in finite samples, and its magnitude increases as p → 1.
+     This example shows that the asymptotic coverage result in Lemma 3.2 is very delicate. The
+statement of the lemma supposes that p < 1. At p = 1 the parameter of interest θ = µp+λ(1−p) = µ
+is point-identified, and the standard 100α% confidence interval for θ is CIαµ , given in (3.4). Interval
+                                       √
+CIαµ , which has width 2z(α+1)/2 · σ̂/ ·N , is not the limit of interval CIαθ as p → 1. The width
+                            √ √
+of interval CIαθ is 2zα · σ̂ p/ N + 1 − p. For any fixed value of N , the width of CIαθ converges
+            √
+to 2zα · σ̂/ N as p → 1. Since zα < z(α+1)/2 , this is strictly less than the width of the standard
+interval for p = 1. Thus, there is a discontinuity in the width of the confidence interval at p = 1.
+     The discontinuity at p = 1 is unsettling, especially its direction. It is counterintuitive that the
+CI for θ should be shorter when the parameter is partially identified than when it is point-identified.
+The anomaly arises because the coverage of CIαθ is not uniform in (F, λ, p), and in particular not
+uniform in p. Formally, Lemma 3.2 shows only that the coverage of interval CIαθ converges to
+
+
+
+                                                  [6]
+100α% as N → ∞, for every value of (F, λ, p). It does not show that the lowest coverage rate will
+converge to 100α%. In other words, it may be true that
+                            ³        ´
+      lim       inf      Pr θ ∈ CIαθ < α.
+      N→∞ F ∈F,λ∈Λ,p0 ≤p<1
+
+
+
+      Uniformity of confidence intervals is not always feasible. For example, in instrumental variables
+settings uniformity of confidence intervals over parameter values where the structural parameters
+are not identified implies that the expected length of the intervals must be infinite (Gleser and
+Hwang, 1987; Dufour, 1997). In that case it has been argued that the parameter space should be
+restricted to regions where the structural parameters are identified, and uniformity should only be
+required to hold over the restricted parameter space. Here the issue is arguably diﬀerent. The
+point-identified case with p = 1 is of great interest, and any reasonable parameter space would
+include it. We therefore think it desirable to construct confidence intervals that are uniform in p,
+at least for p ∈ [p0 , 1], for some p0 > 0.
+      We propose here a modification of CIαθ whose coverage probability does converge uniformly in p;
+indeed it converges uniformly in (F, λ, p). To motivate the modification, it is helpful to first consider
+the case where Y |W = 1 is normally distributed with unknown mean µ and known variance σ 2 . In
+this case, we will be able to derive the exact (finite sample) coverage rate of confidence intervals.
+                                                                P
+A pair of suﬃcient statistics for θ is (µ̂, p̂), where p̂ =       i Wi /N is also ancillary. Note that
+               2
+µ̂|p̂ ∼ N (µ, σ /(N p̂)). Again we consider symmetric intervals of the form
+       h                 i
+        θ̂l − D, θ̂u + D .
+
+The conditional coverage probability for such an interval, for a specific value of θ, is
+         ³                        ¯ ´       ³                                                 ¯ ´
+                                  ¯                                                           ¯
+      Pr θ̂l − D ≤ θ ≤ θ̂u + D¯p̂ = Pr µ̂ · p − D ≤ µ · p + λ · (1 − p) ≤ µ̂ · p + 1 − p + D¯p̂
+                    ³                                                     ¯ ´
+                                                                          ¯
+             = Pr −D − λ · (1 − p) ≤ (µ − µ̂) · p ≤ (1 − λ) · (1 − p) + D¯p̂
+                    µ                                                                              ¶
+                       p       D + λ · (1 − p) p         µ − µ̂ p       D + (1 − λ) · (1 − p) ¯¯
+             = Pr − N p̂ ·                      ≤ N p̂ ·       ≤ N p̂ ·                        ¯p̂
+                                     σp                    σ                      σp
+                    µ                              ¶     µ                        ¶
+                     p       D + (1 − λ) · (1 − p)          p     D + λ · (1 − p)
+             =Φ       N p̂ ·                         − Φ − N p̂ ·                   .
+                                      σp                                σp
+This probability has local minima at the end points λ = 0, 1, with the probabilities identical at
+both end points, which are therefore the global minimum.1 Thus, to get the coverage rate to be at
+least α for all values of λ, one needs to choose D to solve:
+        µ                       ¶      µ              ¶
+          p         D + (1 − p)            p       D
+      Φ      N p̂ ·               − Φ − N p̂ ·          = α.
+                        σp                         σp
+   1
+     That the probabilities are identical at the endpoints is immediate. The endpoints give the local minima because
+the second derivative of the probability with respect to λ is negative for all values of λ. The first derivative with
+respect to λ is
+                     µ µ                             ¶     µ                                ¶¶
+       p        1−p          p       D + λ · (1 − p)         p        D + (1 − λ) · (1 − p)
+         N p̂ ·     · φ − N p̂ ·                       −φ      N p̂ ·                          .
+                 σp                         σp                                σp
+
+                                                         [7]
+This yields an exact CI conditional on p̂. To facilitate the comparison with the previous interval
+            √
+let CN = D N p̂/(pσ). Then CN is chosen to solve
+        µ                  ¶
+               p      1−p
+      Φ CN + N p̂ ·           − Φ (−CN ) = α,
+                        σp
+with the corresponding confidence interval
+      ·                                                  ¸
+                    pσ                             pσ
+       µ̂ · p − CN √      , µ̂ · p + (1 − p) + CN √        .
+                     N p̂                           N p̂
+
+For any fixed 0 < p < 1, limN→∞ CN = zα , which would give us the interval CIαθ back. With p
+very close to one, however, there will be a substantial modification for finite N . With p = 1 the
+interval estimate is now identical to the standard one. For 0 < p < 1 the confidence interval is
+strictly wider than the interval for p = 1.
+    For the general case with unknown distribution for Y |W = 1 we construct a confidence interval
+by replacing σ by σ̂ and p̂ by p as these modifications do not aﬀect the asymptotic unconditional
+coverage rate:
+              h³            p       ´    ³           p      ´           i
+       f θα = µ̂ − CN · σ̂/ p · N · p, µ̂ + CN · σ̂/ p · N · p + 1 − p ,
+       CI                                                                                   (3.10)
+
+where CN satisfies
+       µ                ¶
+               √   1−p
+     Φ CN + N · √         − Φ (−CN ) = α.                                                        (3.11)
+                   σ̂ p
+
+Lemma 3.3 shows that the new interval has a coverage rate that converges uniformly in (F, λ, p):
+
+                                  f θα )
+Lemma 3.3 (Coverage properties of CI
+                      ³       ´
+    lim     inf           f α ≥ α.
+                   Pr θ ∈ CI
+       N→∞ F ∈F,λ∈Λ,p0 ≤p≤1
+
+    Proof: see Appendix.
+                                                    [θ ,θ ]             f θα , in terms of the constants
+    It is useful to compare the three intervals, CI α l u , CI θα , and CI
+                   √
+that multiply σ̂/ p · N , the standard error of µ̂. Since the form of the intervals is the same for
+all three cases, and since the width of the intervals is strictly increasing in this constant we can
+                                                                                     [θ ,θ ]
+compare the width by directly comparing these constants. For the first CI, CI α l u , the constant
+is z(α+1)/2 , which solves
+
+       Φ (C) − Φ (−C) = α.                                                                       (3.12)
+The second derivative is
+      µ              ¶2 ·      µ                           ¶ µ                            ¶
+        p        1−p               p       D + λ · (1 − p)       p        D + λ · (1 − p)
+          N p̂ ·         · −φ − N p̂ ·                        ·    N p̂ ·
+                  σp                              σp                           σp
+                  µp                              ¶ µp                                ¶¸
+                            D + (1 − λ) · (1 − p)               D + (1 − λ) · (1 − p)
+              −φ     N p̂ ·                         ·    N p̂ ·                           ≤ 0.
+                                    σp                                    σp
+
+
+
+                                                            [8]
+For the second interval CI θα , the constant is zα , which solves
+
+      Φ (∞) − Φ (−C) = 1 − Φ (−C) = α,                                                             (3.13)
+
+                                                      f θα , the constant solves
+and which is strictly smaller. For the third interval CI
+       µ                  ¶
+              √      1−p
+     Φ C+ N· √              − Φ (−C) = α.                                                          (3.14)
+                     σ̂ p
+
+This is strictly between the first two constants, leading to the general result that zα < CN < z(α+1)/2
+and
+                 θ
+             f α ⊂ CIα[θl ,θu ] .
+      CIαθ ⊂ CI
+
+Thus, the uniform confidence interval for the parameter is strictly narrower than the confidence
+interval for the identification region.
+
+
+4     The General Case
+In this section we develop a confidence interval that converges uniformly in more general settings,
+including ones in which the width of the identification region is a nuisance parameter that must be
+estimated. We then apply this to the case of missing data with unknown propensity score.
+
+4.1   Confidence Intervals With Uniform Coverage Probabilities
+We use the same structure as in Section 2. Let (Ω, A, P ) be a specified probability space, and
+let P be a space of probability distributions on (Ω, A). The distribution P is not known, but
+a random sample of size N is available, with empirical distribution PN . Let λ be a quantity
+which is known only to belong to a specified set Λ. Let f (·, ·) : P × Λ → R be a specified real-
+valued function. The object of interest is the real-valued parameter θ = f (P, λ). Suppose that
+λl (P ) = argminλ0 ∈Λ f (P, λ0 ) and λu (P ) = argmaxλ0 ∈Λ f (P, λ0 ) exist. The first assumption requires
+that these functions do not depend on the probability distribution:
+
+Assumption 4.1 (Invariance of Lower and Upper Bound)
+λl (P ) = λl and λu (P ) = λu for all P ∈ P.
+
+    Define θl = f (P, λl ), θu = f (P, λu ), with corresponding estimators θ̂l and θ̂u . In many
+cases, although this is not necessary for the following argument, these estimators will be ob-
+tained as the sample-analogs, θ̂l = f (PN , λl ) and θ̂u = f (PN , λu ) Then the identification region
+[f (P, λl ), f (P, λu )] = [θl , θu ] is naturally estimated by its sample analog [θ̂l , θ̂u ].
+    The next assumption ensures that well behaved estimators for the lower and upper bound exist:
+
+
+
+
+                                                   [9]
+Assumption 4.2 (Uniform Estimation of Bounds)
+There are estimators for the lower and upper bound θ̂l and θ̂u that satisfy:
+     √                d               √               d
+       N (θ̂l − θl ) −→ N (0, σ 2l ),   N(θ̂u − θu ) −→ N (0, σ 2u ),
+
+uniformly in P ∈ P, and there are estimators for σ 2l and σ 2u that converge to the true values
+uniformly in P ∈ P.
+
+    Third, we impose some conditions on the set of probability distributions:
+
+Assumption 4.3 (Set of Probability Distributions)
+For all P ∈ P,
+(i) σ 2 ≤ σ 2l , σ 2u ≤ σ 2 for some positive and finite σ 2 and σ 2 ,
+(ii) θu − θl ≤ ∆ < ∞.
+
+    The fourth assumption ensures that the implied estimator for the width of the interval is well
+behaved. Specifically, when the true interval width ∆ = θu − θl is close to zero (and the parameter
+                                                         ˆ = θ̂u − θ̂l cannot be allowed to be very
+is close to being point-identified), the estimated width ∆
+large. This assumption is key to ensuring that the estimated width of the identification region can
+be used instead of the true width in the construction of the confidence interval. It allows one to
+avoid assuming a lower bound on the width of the identification region, which would rule out the
+point-identified case.
+
+Assumption 4.4 (Convergence of Interval Width)
+For all > 0 there are ν > 0, C, and N0 such that for N ≥ N0
+        ³√                    ´
+     Pr   N |∆ˆ − ∆| > C · ∆ν < ,
+
+uniformly in P ∈ P.
+
+    Given these assumptions we construct the confidence interval as:
+             h                 √                      √ i
+         θ
+      CI α = θˆl − C N · σ̂ l / N , θ̂u + C N · σ̂ u / N ,                                   (4.15)
+
+where C N satisfies
+       Ã                                     !
+                √            ˆ
+                             ∆                      ¡    ¢
+     Φ CN + N ·                                  − Φ −C N = α.                               (4.16)
+                         max(σ̂ l , σ̂ u )
+
+The following Lemma gives the general uniform coverage result.
+
+                                                         θ
+Lemma 4.1 (Coverage properties of CI α )
+Suppose Assumptions 4.1-4.4 hold. Then
+                    ³          ´
+                             θ
+      lim   inf Pr θ ∈ CI α ≥ α.
+      N→∞ P ∈P,λ∈Λ
+
+    Proof: see Appendix.
+
+                                                         [10]
+4.2    The Missing Data Problem With Unknown Propensity Score
+Here we return to the missing data problem of Section 3. We allow for an unknown propensity
+score (assuming p is bounded away from zero) and show that this problem fits the four assumptions
+suﬃcient for the application of Lemma 4.1. We continue to assume that the conditional variance
+of Y given W = 1 is bounded and bounded away from zero, guaranteeing that Assumption 4.3 is
+satisfied.
+    In this case Λ = [0, 1], θ = µ · p + λ · (1 − p), so that λl (P ) = 0 and λu (P ) = 1 for all P , and
+Assumption 4.1 is satisfied.
+    The lower bound can be estimated by
+                 N
+            1 X
+      θ̂l =     Wi · Yi .
+            N
+                i=1
+
+The upper bound can be estimated by
+                 N
+              1 X
+      θ̂u =       (Wi · Yi + 1 − Wi ) .
+              N
+                i=1
+
+Both estimators are asymptotically normal, with
+     √                d  ¡       ¢        √              d  ¡       ¢
+       N (θ̂l − θl ) −→ N 0, σ 2l ,   and N (θ̂u − θu ) −→ N 0, σ 2u ,
+
+where σ 2l = σ 2 · p + µ2 · p · (1 − p) and σ 2u = σ 2 · p + µ2 · p · (1 − p) + p · (1 − p) − 2 · µ · p · (1 − p).
+Since the convergence is also uniform in P , Assumption 4.2 is satisfied.
+    Finally, consider Assumption 4.4. Let ν = 1/2, and N0 = 1. In the missing data case ∆             ˆ = 1 − p̂.
+The variance of ∆  ˆ is ∆(1 − ∆)/N . Hence, E[N · (∆     ˆ − ∆) ] ≤ ∆. Now apply Chebyshev’s inequality,
+                                                                2
+              √                  ³√                        ´       ³                          ´
+with C = 1/ , so that Pr               ˆ − ∆| > C · ∆ν = Pr N (∆
+                                    N |∆                                 ˆ − ∆)2 > C 2 · ∆2ν < E[N · (∆       ˆ −
+   2     2  2ν            2   2ν         2
+∆) ]/(C ∆ ) ≤ ∆/(C ∆ ) = 1/C = . Hence Assumption 4.4 is satisfied, and Lemma 4.1 can
+be used to construct a CI by substituting p̂ for p in CI     f θα given in 3.10.
+
+
+5     An Empirical Illustration
+In this section we use real data to illustrate the confidence intervals proposed in this paper. The
+data were originally analyzed by Meyer, Viscusi, and Dubin (1995), who wanted to learn how an
+increase in the level of disability benefits aﬀects the number of weeks a worker spent on disability;
+this variable is measured in whole weeks, and its distribution is highly skewed. The increase in
+benefits applies only to high-earning workers, not to low-earning ones. Meyer, Viscusi and Dubin
+estimated diﬀerence-in-diﬀerence models of the form
+
+      Yi = β 0 + β 1 · Ti + β 2 · Gi + β 3 · Ti · Gi + i ,
+
+where Yi is the outcome, the binary variable Ti indicates the post-change period, and the binary
+variable Gi indicates the high-earning group (the group aﬀected by the change in benefits). The
+
+                                                       [11]
+coeﬃcient on the interaction, β 3 , is the parameter of interest, expressing the eﬀect of the change
+in benefits on disability durations. Meyer, Viscusi and Dubin reported results when the outcome
+is measured in weeks and in log-weeks.
+    Athey and Imbens (2002) suggest a generalization of the diﬀerence-in-diﬀerence model that
+they label the changes-in-changes model. Letting Yi denote the observed outcome for individual i,
+and YiN the outcome in the absence of the change in the benefits (equal to Yi and observed unless
+Ti = Gi = 1), their model assumes that YiN satisfies
+
+      YiN = h(Ti , i ),
+
+with i ⊥ Ti |Gi . Group diﬀerences are expressed by diﬀerences in the conditional distribution of
+ i |Gi = g by g. Athey and Imbens take the parameter of interest to be
+
+
+      τ = E[Y |T = 1, G = 1] − E[Y N |T = 1, G = 1],
+
+the diﬀerence between the expected outcome for the high earners in the second period, E[Y |T =
+1, G = 1], and the expected outcome for the high earners in the second period in the absence of the
+change in benefits, E[Y N |T = 1, G = 1]. A key assumption is that h(t, ) is weakly monotone in
+ . Athey and Imbens show that with discrete data the parameter of interest is not point-identified
+and that sharp bounds can be constructed. These have the form
+           · h ¯              i    ·                ¯             ¸
+                ¯                                   ¯
+                                      −1            ¯
+      τ ∈ E Y ¯T = 1, G = 1 − E FY,01 (FY,00 (Y ))¯T = 0, G = 1 ,
+
+              h ¯             i   ·                    ¯            ¸¸
+                 ¯                                     ¯
+             E Y ¯T = 1, G = 1 − E FY,01 (F Y,00 (Y ))¯¯T = 0, G = 1 ,
+                                    −1
+
+
+                                                                                              −1
+where FY,gt (y) = P r(Y ≤ y|T = t, G = g), F Y,gt (y) = P r(Y < y|T = t, G = g), and FY,gt        (q) =
+inf{y|FY,gt (y) ≥ q}.
+    We estimate these bounds by substituting maximum likelihood estimates (with the outcome
+discrete this is straightforward). We then use the results in Athey and Imbens on asymptotic
+normality of these estimators and estimate the standard errors. These are used in Table 1 to
+construct three confidence intervals. First, we calculate the CI for the entire identification region,
+   [θl ,θu ]                                                                θ . Third, we calculate the
+CI0.95       . Second, we calculate the CI for the parameter of interest, CI0.95
+                                                                       θ
+CI for the parameter adjusted to ensure uniform convergence, CI 0.95 , using the estimated width of
+the identification region. We calculate this both for the outcome in levels and in logarithms.
+    We find that modifying the CI to have the appropriate coverage only for the parameter of
+interest, rather than for the entire identification region, makes a considerable diﬀerence. For the
+analysis in levels, ensuring that the convergence is uniform leads to an additional substantial change.
+
+
+
+
+                                                 [12]
+Table 1: Confidence Intervals for Effect of Benefit Change on Injury Durations in
+Discrete Changes-In-Changes Model (Meyer-Viscusi-Dubin Data)
+
+
+
+
+                                                                                [θ ,θ ]
+                                                                                 l u            θ                 θ
+ Estimand                                       θ̂l       θ̂u      CN        CI0.95           CI0.95          CI 0.95
+                                              (s.e.)    (s.e.)
+
+
+
+ Average Eﬀect on Treated (levels)             0.15      1.14     1.753    [-3.17,4.42]    [-2.63,3.89]    [-2.82,4.08]
+                                              (1.69)    (1.67)
+
+ Average Eﬀect on Treated (logs)               0.14      0.58     1.655    [-0.12,0.91]    [-0.08,0.86]    [-0.08,0.86]
+                                              (0.13)    (0.17)
+
+
+
+Three 95% CIs (in square brackets) are reported for both parameters of interest. The first CI is based on the estimator
+of the lower bound minus 1.96, and the estimator of the upper bound plus 1.96 times their standard errors. The
+second CI is equal to the estimator of the lower bound minus 1.645, and the estimator of the upper bound plus 1.645
+times their standard errors. The third CI is the adjusted interval for the parameter, given in (4.15)
+
+
+
+6     Conclusion
+In the last decade a growing body of research has studied inference in settings where parameters of
+interest are partially identified. Less attention has been focused on the construction of confidence
+intervals in such settings. When confidence intervals have been estimated, they have typically been
+constructed to provide coverage for the entire identification region with fixed probability. In this
+paper we introduce a conceptually diﬀerent type of confidence interval that asymptotically covers
+the true value of the parameter with fixed probability. We show that, in general, coverage of a
+parameter is a less demanding objective than is coverage of the entire identification region. We show
+in a simple setting with missing data that CIs for the parameter are proper subsets of ones for the
+identification region, with the diﬀerence in width related to the diﬀerence in critical values for one—
+and two—sided tests. However, we find that the exact coverage probabilities of the simplest version
+of our new CIs do not converge to their nominal values uniformly across diﬀerent values for the
+width of the identification region. Specifically, uniformity fails when the width of the region shrinks
+to zero; that is, as the parameter becomes point-identified. To avoid this anomaly, we modify the
+proposed CI to ensure that its exact coverage probabilities do converge uniformly to their nominal
+values. We motivate the modified CI by showing that its exact and nominal coverage probabilities
+
+
+                                                         [13]
+coincide when outcomes are normally distributed. We also provide more general results on the
+implementation of the new CIs, and provide conditions under which CIs with uniform asymptotic
+coverage can be constructed by substituting estimates for unknown nuisance parameters, including
+the width of the identification region. Finally, in a brief empirical illustration we show that these
+results can lead to substantially diﬀerent confidence intervals.
+
+
+
+
+                                                [14]
+7    Appendix
+Proof of Lemma 3.1: Fix F and p. Then
+        ³                         ´
+     Pr [θl , θu ] ⊂ CIα[θl ,θu ]
+           µ     µ                         ¶                 µ                         ¶          ¶
+                                    σ̂                                           σ̂
+      = P r θl ≥ µ̂ − z(α+1)/2 · √            · p and θu ≤ µ̂ + z(α+1)/2 · √             ·p+1−p
+                                    p·N                                        p·N
+               µ      µ                          ¶             µ                         ¶          ¶
+                                          σ̂                                        σ̂
+      = 1 − P r θl < µ̂ − z(α+1)/2 ·  √            · p or θu > µ̂ + z(α+1)/2 ·  √          ·p+1−p
+                                          p·N                                       p·N
+               µ      µ                          ¶ ¶          µ     µ                         ¶       ¶
+                                          σ̂                                              σ̂
+      = 1 − P r θl < µ̂ − z(α+1)/2 · √             · p − P r θu > µ̂ + z(α+1)/2 · √             ·p+1−p
+                                          p·N                                             p·N
+               µ        µ                          ¶ ¶
+                                             σ̂
+      = 1 − P r µ · p < µ̂ − z(α+1)/2 · √             ·p
+                                             p·N
+                 µ                µ                           ¶          ¶
+                                                          σ̂
+            −P r µ · p + 1 − p > µ̂ + z(α+1)/2 · √              ·p+1−p
+                                                         p·N
+               µ                             ¶         µ                             ¶
+                                       σ̂                                      σ̂
+      = 1 − P r µ < µ̂ − z(α+1)/2 · √            − P r µ > µ̂ + z(α+1)/2 · √
+                                      p·N                                    p·N
+      −→ 1 − (1 − α) /2 − (1 − α) /2 = α
+
+Note that the second step in the above derivation is an equality, rather than a weak inequality, because the
+two events whose union is taken are mutually exclusive. ¤
+Proof of Lemma 3.2: Consider the three possibilities for λ: λ = 0, λ = 1, and 0 < λ < 1. In the first
+case, with λ = 0, we have θ = µ · p. Hence the coverage probability of CIαθ is
+                         µµ                   ¶                µ                ¶         ¶
+                                          σ̂                                σ̂
+      Pr(θ ∈ CIαθ ) = Pr     µ̂ − zα · √          · p ≤ µ · p ≤ µ̂ + zα · √       ·p+1−p
+                                         p·N                               p·N
+               µµ                   ¶              ¶       µ       µ                ¶       ¶
+                                σ̂                                             σ̂
+      ≥ 1 − Pr     µ̂ − zα · √         · p > µ · p − Pr µ · p > µ̂ + zα · √           ·p+1−p .
+                               p·N                                             p·N
+When α ≥ 0.5, which is the usual case of interest, the above weak inequality is an equality because zα ≥ 0,
+which implies that the two events whose union is taken are mutually exclusive. Consider the two probabilities
+on the righthand side. The second probability equals
+         µ        µ                ¶            ¶       µ                                  ¶
+                               σ̂                               √     1−p √         µ̂ − µ
+      Pr µ · p > µ̂ + zα · √         · p + 1 − p = Pr −zα − N · √ > N · √                    ,
+                              p·N                                     σ̂ p          σ̂/ p
+                                               √          √
+which goes to zero as N goes to infinity since N (µ̂ − µ) p/σ̂ converges to a standard normal distribution.
+The first probability satisfies
+          µµ                  ¶            ¶     µ                ¶
+                         σ̂                       √    µ̂ − µ
+      Pr     µ̂ − zα · √        · p > µ · p = Pr   N · √ > zα −→ 1 − α.
+                        p·N                            σ̂/ p
+
+Hence for this value of λ the coverage of the interval converges to α. The same argument works for λ = 1.
+Now consider intermediate values for λ. In that case we have
+                         µµ                 ¶                            µ                      ¶
+                θ                       σ̂                                            σ̂
+     Pr(θ ∈ CIα ) = Pr      µ̂ − zα · √       · p ≤ µ · p + λ · (1 − p) ≤ µ̂ + zα · √    ·p+1−p .
+                                       p·N                                           p·N
+
+
+                                                    [15]
+              µµ                   ¶                           ¶
+                              σ̂
+      ≥ 1 − Pr   µ̂ − zα · √         · p > µ · p + λ · (1 − p)
+                             p·N
+         µ                       µ                  ¶            ¶
+                                               σ̂
+      −Pr µ · p + λ · (1 − p) > µ̂ + zα · √            ·p+1−p
+                                              p·N
+For the first probability on the righthand side we have:
+          µ                                           ¶      µ                          ¶
+                                                   σ̂         √   µ̂ − µ   √       1−p
+      Pr µ · p + λ · (1 − p) < µ̂ · p − zα · p · √      = Pr   N · √ > zα + N · λ · √     ,
+                                                  p·N             σ̂/ p            σ̂ p
+
+which goes to zero as N goes to infinity, as long as λ > 0. Similarly, the second probability goes to zero
+with N . Hence for all intermediate values of λ the asymptotic coverage is 100%, irrespective of the nominal
+coverage rate. Thus, the lowest asymptotic coverage across all values of λ is 100α% when α ≥ 0.5 and is at
+least 100α% when α < 0.5. ¤
+    Before presenting a proof of Lemma 3.3 we present a number of preliminary results. First we state a
+result for uniform convergence to a central limit theorem.
+
+Lemma 7.1 (Uniform Central Limit Theorem, Berry-Esseen) Suppose X1 , X2 , . . . are independent
+and identically distributed random variables with distribution function F ∈ F. Let µ(F ) = EF [X], σ 2 (F ) =
+EF [(X − µ)2 ], and let 0 < σ 2 ≤ σ 2 (F ) ≤ σ̄ 2 < ∞, and EF [X 3 ] < ∞ for all F ∈ F. Then
+                     ¯ µ        µ           ¶      ¶       ¯
+                     ¯     √      X̄N − µ                  ¯
+           sup       ¯ Pr    N                 < a − Φ (a)¯¯ −→ 0,
+      −∞<a<∞,F ∈F
+                     ¯                σ
+              PN
+where X̄N =      i=1 Xi /N .
+
+
+    For a formal proof see, for example, Shorack and Wellner (1986). Next, we show that uniform convergence
+still holds if we use an estimated variance.
+
+Lemma 7.2 (Uniform Central Limit Theorem with Estimated Variance)
+                  ¯ µ     µ         ¶    ¶        ¯
+                  ¯    √    X̄N − µ               ¯
+         sup      ¯ Pr  N             < a − Φ (a)¯¯ −→ 0
+      −∞<a<∞,F ∈F
+                  ¯            σ̂
+
+    Proof of Lemma 7.2: By the triangle inequality
+                  ¯ µ        µ          ¶    ¶        ¯
+                  ¯      √     X̄N − µ                ¯
+          sup     ¯ Pr    N               < a − Φ (a)¯¯
+      −∞<a<∞,F ∈F
+                  ¯               σ̂
+                     ¯ µ       µ          ¶    ¶        ¯
+                     ¯     √     X̄N − µ                ¯
+      ≤      sup     ¯ Pr    N              < a − Φ (a)¯¯
+        −∞<a<∞,F ∈F
+                     ¯               σ
+                     ¯ µ       µ          ¶    ¶     µ      µ         ¶    ¶¯
+                     ¯     √     X̄N − µ                √     X̄N − µ        ¯
+      +     sup      ¯Pr    N               < a − Pr      N             < a ¯¯
+        −∞<a<∞,F ∈F
+                     ¯               σ̂                          σ
+By lemma 7.1, the first term on the righthand side converges to zero, and all we need to prove is that
+                    ¯ µ      µ          ¶    ¶       µ    µ          ¶     ¶¯
+                    ¯     √    X̄N − µ                √     X̄N − µ          ¯
+         sup        ¯ Pr   N              < a − Pr      N              < a ¯¯ −→ 0
+      −∞<a<∞,F ∈F
+                    ¯             σ̂                            σ
+
+First, note that σ̂ converges to σ uniformly in F because of the moment conditions on X. Since σ is bounded
+away from zero, this implies that (σ̂ − σ)/σ converges to zero, also uniformly in F . So for any > 0 and
+
+                                                     [16]
+η > 0, there is an N0 such that, for N > N0 and for all F , Pr((σ̂ − σ)/σ > ) < η. By the Berry-Esseen
+theorem there is also for all δ > 0 an N1 such that for N ≥ N1
+      ¯ µ       µ          ¶     ¶        ¯
+      ¯    √      X̄N − µ                 ¯
+      ¯Pr    N                < a − Φ (a)¯¯ < δ,
+      ¯              σ
+
+uniformly in a. For N ≥ max(N0 , N1 ) we have
+                    ¯ µ       µ         ¶    ¶         µ     µ         ¶     ¶¯
+                    ¯    √      X̄N − µ                 √      X̄N − µ        ¯
+           sup      ¯Pr   N               < a   −   Pr    N              < a  ¯
+      −∞<a<∞,F ∈F
+                    ¯              σ̂                             σ           ¯
+                      ¯ µ       µ         ¶          ¶       µ     µ         ¶    ¶¯
+                      ¯     √     X̄N − µ     σ̂              √      X̄N − µ       ¯
+      =       sup     ¯Pr    N              <     · a   − Pr     N             < a ¯
+        −∞<a<∞,F ∈F
+                      ¯               σ       σ                         σ          ¯
+                         µ¯     µ         ¶     ¯         ¶
+                          ¯√      X̄N − µ       ¯
+      ≤       sup     Pr ¯¯ N               − a¯¯ < |a| ·    +η
+        −∞<a<∞,F ∈F                   σ
+      ≤       sup       Φ (a + |a| · ) − Φ (a − |a| · ) + η + 2δ
+          −∞<a<∞,F ∈F
+
+      ≤           sup           2 · φ (a + ω · |a| · ) · |a| · + η + 2δ,
+          −∞<a<∞,F ∈F,ω∈[0,1]
+
+For < 1/2 there is a bound on φ (a + ω · |a| · ) · |a| that does not depend on , so that by choosing , η and
+δ small enough we can make the entire expression arbitrarily small. ¤
+
+   The previous two results, Lemmas 7.1-7.2, can be used to show that coverage for the standard confidence
+interval for the sample mean is uniform with respect to the underlying distribution.
+
+Lemma 7.3 (Uniform Coverage for Confidence Interval for the Sample Mean)
+              µ                                                        ¶
+                                σ̂                       σ̂
+       inf Pr X̄N − z(α+1)/2 · √ ≤ µ ≤ X̄N + z(α+1)/2 · √                  −→ α
+      F ∈F                       N                        N
+
+Proof of Lemma 7.3:
+             µ                                             ¶
+                               σ̂                       σ̂
+      inf Pr X̄N − z(α+1)/2 · √ ≤ µ ≤ X̄N + z(α+1)/2 · √
+     F ∈F                       N                        N
+               µ                                     ¶
+                            √     X̄N − µ
+     = inf Pr −z(α+1)/2 ≤ N ·             ≤ z(α+1)/2
+        F ∈F                         σ̂
+which goes to α. ¤ Proof of Lemma 3.3: For fixed λ the coverage probability is
+        ³³            p     ´                           ³             p     ´            ´
+      Pr µ̂ − CN · σ̂/ p · N · p ≤ µ · p + λ · (1 − p) ≤ µ̂ + CN · σ̂/ p · N · p + 1 − p
+          µ                                                          ¶
+              σ̂ √   λ · (1 − p) √   µ − µ̂ σ̂ √   (1 − λ) · (1 − p)
+      = Pr −CN − N ·       √    ≤ N · √ ≤ CN + N ·         √
+              σ        σ· p          σ/ p   σ           σ· p
+For any > 0 there almost surely exists an N0 such that for N > N0 , |(σ̂ − σ)/σ| < , so that > 1 − σ̂/σ.
+Therefore for N ≥ N0 ,
+        µ                                                                           ¶
+                σ̂ √    λ · (1 − p) √        µ − µ̂       σ̂ √    (1 − λ) · (1 − p)
+      Pr −CN − N ·            √      ≤   N ·   √    ≤ CN    + N ·          √
+                σ         σ· p               σ/ p         σ             σ· p
+           µ                                                                                     ¶
+                         √      λ · (1 − p) √       µ − µ̂               √     (1 − λ) · (1 − p)
+      ≥ Pr −CN (1 − ) − N ·           √    ≤ N · √ ≤ CN (1 − ) + N ·                   √
+                                  σ· p              σ/ p                            σ· p
+
+                                                          [17]
+For N large enough this can be made arbitrarily close to
+        µ                                     ¶    µ                                ¶
+                     √      (1 − λ) · (1 − p)                     √     λ · (1 − p)
+     Φ CN (1 − ) + N ·              √           − Φ −CN (1 − ) − N ·          √
+                                 σ· p                                     σ· p
+          µ                              ¶      µ                       ¶
+                 √     (1 − λ) · (1 − p)                √   λ · (1 − p)
+     = Φ CN + N ·               √          − Φ −CN − N ·          √       + 2 CN φ(ω),
+                             σ· p                             σ· p
+for some ω. Because CN ≤ z(α+1)/2 (see the definition of CN ), and since φ(·) is bounded, the last term
+can be made arbitrarily small by choosing small. The sum of the first two terms has a negative second
+derivative with respect to λ, and so it is minimized at λ = 0 or λ = 1. By the definition of CN it follows
+that at those values for λ the value of the sum is α. Hence for any ν > 0, for N large enough we have
+         ³³             p       ´                         ³            p       ´          ´
+      Pr µ̂ − CN · σ̂/ p · N · p ≤ µ · p + λ · (1 − p) ≤ µ̂ + CN · σ̂/ p · N · p + 1 − p ≥ α − ν.
+
+¤
+    Before proving Lemma 4.1 we establish a couple of preliminary results. Define C̆N and C̈N by:
+        µ                            ¶    ³    ´
+                √        ∆
+      Φ C̆N + N ·                      − Φ −C̆N = α,
+                     max(σ l , σ u )
+        Ã                            !
+                √        ˆ
+                         ∆                ³    ´
+      Φ C̈N + N ·                      − Φ −C̈N = α.
+                     max(σ l , σ u )
+                                                        ˆ while C̆N is a sequence of constants.
+Note that C N and C̈N are stochastic (as they depend on ∆),
+
+Lemma 7.4 (Difference Between C N and C̈N )
+Suppose Assumptions 4.1-4.4 hold. Then
+     ¯          ¯
+     ¯          ¯
+     ¯C N − C̈N ¯ −→ 0,
+
+uniformly in P ∈ P.
+
+    Proof of Lemma 7.4:
+By Assumption 4.2 σ̂ l and σ̂ u converge to their probability limits uniformly in P ∈ P. Since both σ l and
+σ u are bounded away from zero on P, this implies that 1/ max(σ̂ u , σ̂ l ) converges to its probability limit
+                      ˆ max(σ l , σ u ) and λ̂ = ∆/
+uniformly. Define λ = ∆/                         ˆ max(σ̂ l , σ̂ u ). Then λ̂/λ converges to one uniformly.
+    By the definition of C N and C̈N ,
+        ³       √      ´     ³      ´  ³ √   ´   ¡    ¢
+      Φ C̈N + N · λ − Φ −C̈N = Φ C N + N · λ̂ − Φ −C N = α.
+
+Hence
+        ¯ ³            ´   ³     ´ µ µ                  ¶    µ        ¶¶¯
+        ¯         √                              √                      ¯
+        ¯Φ C̈N + N · λ − Φ −C̈N − Φ C N · λ + N · λ − Φ −C N · λ        ¯                               (7.17)
+        ¯                                     λ̂                   λ̂   ¯
+               ¯ ³             ´             µ µ               ¶   µ          ¶¶¯
+               ¯         √         ¡     ¢           λ √                   λ     ¯
+               ¯
+             ≤ ¯Φ C N + N · λ̂ − Φ −C N − Φ C N · + N · λ − Φ −C N ·             ¯
+                                                     λ̂                    λ̂    ¯
+                ¯ ³            ´   µ              ¶¯    ¯          µ          ¶¯
+                ¯        √                λ √      ¯ ¯ ¡       ¢           λ ¯¯
+             ≤ ¯¯Φ C N + N · λ̂ − Φ C N · + N · λ ¯¯ + ¯¯Φ −C N − Φ −C N ·
+                                          λ̂                               λ̂ ¯
+
+                                                     [18]
+             ¯ Ã     µ            ¶!    µ             ¶¯¯ ¯¯ Ã             !    µ         ¶¯
+             ¯   λ̂       λ √                 λ √              λ̂       λ               λ ¯¯
+             ¯                                          ¯ ¯
+           = ¯Φ     · CN · + N · λ   − Φ C N · + N · λ ¯ + ¯Φ − · C N ·      − Φ −C N ·    ¯
+             ¯   λ        λ̂                  λ̂        ¯ ¯    λ        λ̂              λ̂ ¯
+                                                                                                                (7.18)
+
+By the mean value theorem, there exists a γ ∈ [0, 1] such that Φ(a · b) − Φ(a) = φ(a · (1 + γ · (b − 1)) · a · (b − 1).
+Hence, with |λ̂/λ − 1| < , the first term of (7.18) can be bounded by
+      ¯ µ          µ                   ¶¶      µ                 ¶¯
+      ¯                       √                       λ √         ¯
+      ¯φ (1 + ˜) · C N · λ + N · λ        ·  ·  C   ·    +  N · λ ¯,
+      ¯                  λ̂
+                                                  N
+                                                      λ̂          ¯
+
+for some |˜| ≤ , and the second term by
+      ¯ µ                   ¶           ¯
+      ¯                                 ¯
+      ¯φ (1 + ¯) · C N · λ · · C N · λ ¯ ,
+      ¯                  λ̂          λ̂ ¯
+for some |¯| ≤ . These expressions can be made arbitrarily small by choosing small enough, implying that
+(7.17) can be made arbitrarily small. Using a mean value theorem, equation (7.17) can be written, for some
+γ ∈ [0, 1], as
+       ¯ µ           µ            ¶           ¶ µ               ¶
+       ¯                               √
+       ¯φ C̈N + γ · C N · λ − C̈N + N · λ · C̈N − C N · λ
+       ¯                   λ̂                                λ̂
+                        µ         µ             ¶¶ µ                ¶¯
+                                         λ                        λ ¯¯
+                     +φ C̈N + γ · C N · − C̈N       · C̈N − C N ·
+                                         λ̂                       λ̂ ¯
+                 ¯ µ          µ             ¶         ¶     µ          µ             ¶¶¯ ¯                   ¯
+                 ¯                  λ          √                              λ          ¯ ¯              λ ¯¯
+                 ¯
+               = ¯φ C̈N + γ · C N · − C̈N + N · λ + φ C̈N + γ · C N · − C̈N              ¯   ¯
+                                    λ̂                                        λ̂         ¯ · ¯C̈N − C N · λ̂ ¯
+
+This can only be small if |C̈N − C N · (λ/λ̂)| is small, which, given uniform convergence of λ/λ̂ to one requires
+|C N − C̈N | → 0. ¤
+
+Lemma 7.5 For all > 0 there is an N0 such that for N ≥ N0 ,
+ ¯ ³                   √                          √ ´    ³                 √                          √ ´¯¯
+ ¯
+ ¯Pr θ̂l − C N · σ̂ l / N ≤ θl ≤ θ̂u + C N · σ̂u / N − Pr θ̂l − C̈N · σ l / N ≤ θl ≤ θ̂u + C̈N · σ u / N ¯ < ,
+
+uniformly in P ∈ P.
+
+    Proof of Lemma 7.5:
+First, by uniform convergence of σ̂ l and σ̂ u to their probability limits, and by uniform convergence of C N −C̈N
+to zero, there is for all positive 1 and 2 an N0 such that for N > N0 , Pr(|C N σ̂ l /σ l − C̈N | > 1 ) < 2 . Also,
+                                                            √
+there is an N1 such that for N > N1 , supz |Φ(z) − Pr( N (θ̂l − θl )/σ l < z)| < 3 . Next,
+       ¯ ³                  √                          √ ´         ³              √                        √ ´¯¯
+       ¯
+       ¯Pr θ̂l − C N · σ̂l / N ≤ θ ≤ θ̂u + C N · σ̂ u / N − Pr θ̂l − C̈N · σ l / N ≤ θ ≤ θ̂u + C̈N · σ u / N ¯
+                ¯ ³                   √     ´    ³                 √     ´¯
+                ¯                                                         ¯
+              ≤ ¯Pr θ̂l − C N · σ̂ l / N > θ − Pr θ̂l − C̈N · σ l / N > θ ¯                                     (7.19)
+                      ¯ ³                      √ ´        ³                 √ ´¯¯
+                      ¯
+                   + ¯Pr θ > θ̂u + C N · σ̂ u / N − Pr θ > θ̂u + C̈N · σ u / N ¯                                (7.20)
+We will show that (7.19) can be made arbitrarily small. The same argument can be used to show that (7.20)
+can be made arbitrarily small. To show that (7.19) can be made arbitrarily small we write
+         ³                 √     ´    ³                 √      ´
+      Pr θ̂l − C N · σ̂ l / N > θ − Pr θ̂l − C̈N · σ l / N > θ
+
+
+                                                         [19]
+           µ                             ¯¯                    ¯         ¶      µ¯                  ¯       ¶
+                               √         ¯¯       σ̂ l         ¯                   ¯     σ̂ l       ¯
+      = Pr θ̂l − C N · σ̂l / N > θ¯¯ ¯¯C N − C̈N ¯¯ < 1 · Pr ¯¯C N − C̈N ¯¯ < 1
+                                                  σl                                     σl
+           µ                            ¯¯                    ¯          ¶     µ¯                 ¯      ¶    ³                ´
+                               √        ¯¯       σ̂l          ¯                  ¯    σ̂ l        ¯                          √
+      +Pr θ̂l − C N · σ̂ l / N > θ¯ ¯C N − C̈N ¯ ≥ 1 ·Pr ¯C N − C̈N ¯¯ ≥ 1 −Pr θ̂l − C̈N · σl / N > θ
+                                        ¯  ¯                  ¯                  ¯
+                                                 σl                                   σl
+           µ                             ¯¯                    ¯         ¶      µ¯                  ¯       ¶
+                               √         ¯¯       σ̂ l         ¯                   ¯     σ̂ l       ¯
+                                         ¯  ¯                  ¯
+      ≤ Pr θ̂l − C N · σ̂l / N > θ¯ ¯C N − C̈N ¯ < 1 · Pr ¯C N − C̈N ¯ < 1         ¯                ¯
+                                                  σl                                     σl
+                 µ¯                   ¯        ¶          ³                               ´
+                   ¯      σ̂ l        ¯                                        √
+            +Pr ¯¯C N − C̈N ¯¯ ≥ 1 − Pr θ̂l − C̈N · σ l / N > θ
+                          σl
+           µ                                               ¯¯                   ¯      ¶        µ¯             ¯     ¶
+                               √               √           ¯¯       σ̂ l        ¯                 ¯    σ̂ l    ¯
+      ≤ Pr θ̂l − C̈N · σ l / N + 1 σ l / N > θ¯¯ ¯¯C N − C̈N ¯¯ < 1 · Pr ¯¯C N − C̈N ¯¯ < 1
+                                                                    σl                                 σl
+                        ³                    √           ´
+            + 2 − Pr θ̂l − C̈N · σ l / N > θ
+           ³                   √               √          ´                  ³                √          ´
+      ≤ Pr θ̂l − C̈N · σ l / N + 1 σ l / N > θ + 2 − Pr θ̂l − C̈N · σ l / N ≥ θ
+           Ã                                                        !                Ã                                       !
+             √     θ̂l − θl √             θ − θl                  1
+                                                                                       √       θ̂l − θl √       θ − θl
+      = Pr     N·              > N·                 + C̈N −              + 2 − Pr          N·           > N·           + C̈N
+                       σl                     σl                 σl                                σl             σl
+           Ã                                                                                     !
+             √     θ − θl                √        θ̂l − θl       √         θ − θl              1
+      = Pr     N·              + C̈N > N ·                  > N·                   + C̈N −          + 2
+                      σl                               σl                    σl               σl
+               Ã                                   !
+                   √        θ̂l − θl             1
+      ≤ sup Pr z N ·                  >z−               + 2
+         z                      σl              σl
+            µ             µ           ¶¶
+                                    1
+      ≤ sup Φ(z) − Φ z −                   +2 3+ 2
+         z                         σl
+             φ
+      ≤ 1·      + 2 + 2 3,
+             σl
+                               √
+where φ = supz φ(z) = φ(0) = 1/ 2π. Following the same logic one can show that
+        ³                  √     ´    ³                 √     ´        φ
+      Pr θ̂l − C N · σ̂ l / N > θ − Pr θ̂l − C̈N · σ l / N > θ ≥ − 1 ·    − 2 − 2 3.
+                                                                       σl
+Together the two imply that (7.19) can be made arbitrarily small. ¤
+
+
+Lemma 7.6 For any η, > 0, there is an N0 such that for N ≥ N0
+        µ µ                                    ¶      ³    ´       ¶
+                √                ∆
+      Pr Φ C̈N + N ·                               − Φ −C̈N < α − η < ,
+                             max(σ l , σ u )
+
+uniformly in P ∈ P.
+
+Proof of Lemma 7.6:
+                                                                    √
+First, the statement in the Lemma is, because C̈N satisfies Φ(C̈N + N λ) − Φ(−C̈N ) = α, equivalent to
+          µ³ ³               ´   ³       ´´ µ µ                                  ¶    ³     ´¶    ¶
+                      √                                    √         ∆
+       Pr Φ C̈N + N · λ − Φ −C̈N           − Φ C̈N + N ·                           − Φ −C̈N    > η < ε,
+                                                                 max(σ l , σ u )
+
+          ˆ max(σ l , σu ).
+where λ = ∆/
+
+                                                           [20]
+    By Assumption 4.4 there are ν > 0, C > 0, and N0 , such that with δ = ν/5, and N ≥ max(N0 , C 1/δ ),
+so that
+         ³√                  ´      ³√                   ´
+      Pr      ˆ − ∆| > N δ ∆ν ≤ Pr
+           N |∆                            ˆ − ∆| > C∆ν < .
+                                        N |∆
+
+Then:
+        ³ ³     √     ´   ³     ´´ µ µ     √                       ∆
+                                                                                ¶      ³     ´¶
+         Φ C̈N + N · λ − Φ −C̈N   − Φ C̈N + N ·                                     − Φ −C̈N
+                                                               max(σl , σ u )
+            ³           ´   µ                                 ¶
+                  √               √        ∆
+         = Φ C̈N + N · λ − Φ C̈N + N ·
+                                       max(σ l , σ u )
+                     µ ³           ´   µ                           ¶¶
+                             √                  √         ∆
+             ˆ ≤ ∆} · Φ C̈N + N · λ − Φ C̈N + N ·
+         = 1{∆
+                                                    max(σ l , σu )
+                                          µ ³           ´      µ                                             ¶¶
+                   √                              √                   √                        ∆
+             ˆ > ∆, N |∆
+          +1{∆         ˆ − ∆| ≤ N δ ∆ν } · Φ C̈N + N · λ − Φ C̈N + N ·
+                                                                                           max(σ l , σ u )
+                                       µ ³           ´   µ                               ¶¶
+                   √                           √               √             ∆
+             ˆ         ˆ         δ ν
+          +1{∆ > ∆, N |∆ − ∆| > N ∆ } · Φ C̈N + N · λ − Φ C̈N + N ·
+                                                                         max(σ l , σ u )
+                                           µ ³           ´   µ                          ¶¶
+                    √                              √               √        ∆
+             ˆ > ∆, N |∆
+         ≤ 1{∆          ˆ − ∆| ≤ N δ ∆ν } · Φ C̈N + N · λ − Φ C̈N + N ·
+                                                                        max(σ l , σ u )
+             n√                   o
+          +1       ˆ − ∆| > N δ ∆ν .
+                N |∆
+
+The event in the second indicator function has probability less than . The first expression is, by a mean
+value theorem, equal to:
+                                    Ã                                                   !
+            √                               √         ∆             √      ˆ −∆
+                                                                           ∆               √     ˆ −∆
+                                                                                                 ∆
+  1{∆ˆ > ∆, N |∆−∆|
+                 ˆ          δ  ν
+                         ≤ N ∆ }·φ C̈N + N ·                     +γ· N ·                  · N·                 ,
+                                                 max(σ l , σ u )         max(σ l , σu )        max(σ l , σ u )
+
+for some 0 ≤ γ ≤ 1. Because the entire expression is zero unless ∆            ˆ > ∆, and C̈N and ∆ are nonnegative,
+this can be bounded from above by its value at γ = 0 with C̈N dropped:
+                                              µ                      ¶               ˆ −∆
+                √                              √              ∆            √         ∆
+         ˆ > ∆, N |∆
+       1{∆            ˆ − ∆| ≤ N δ ∆ν } · φ      N·                      · N·
+                                                     max(σ l , σ u )               max(σ l , σ u )
+                                                  µ                            ¶
+                       √                             √             ∆                 N δ ∆ν
+              ˆ > ∆, N |∆
+          ≤ 1{∆            ˆ − ∆| ≤ N δ ∆ν } · φ         N·                      ·
+                                                               max(σ l , σ u )     max(σ l , σ u )
+                     µ                     ¶
+                      √         ∆                 2δ
+                                                N ∆      ν
+          ≤ N −δ · φ    N·                   ·                 .                                             (7.21)
+                           max(σ l , σ u )     max(σ l , σ u )
+Maximizing
+       µ                          ¶
+        √           ∆              N 2δ ∆ν
+     φ    N·                          ·          ,                                                          (7.22)
+                max(σ l , σ u )  max(σ l , σ u )
+                                 √
+over ∆ gives ∆ = max(σ l , σ u )· ν ·N −1/2 . Substituting this into (7.22) gives an expression that is decreasing
+in N if δ < 4ν, and which is therefore bounded, with the bound independent of the value of ∆ and thus
+uniform over P ∈ P. Hence (7.21) can be made smaller than η by choosing N large enough, uniformly in
+P ∈ P, completing the proof. ¤
+
+
+
+                                                       [21]
+Lemma 7.7 (Difference Between C̈N and C̆N )
+For any η, > 0, there is an N0 such that for N ≥ N0
+        ³              ´
+      Pr C̈N < C̆N − η < ,
+
+uniformly in P ∈ P.
+
+    Proof of Lemma 7.7:
+                                ...
+Let φ = φ(z(α+1)/2 ). Note that C N and C̆N are positive and less than z(α+1)/2 , and thus φ(C̈N ) ≥ φ and
+φ(C̆N ) ≥ φ Using Lemma 7.6 there is an N0 such that for N ≥ N0
+        µ µ                                    ¶      ³    ´           ¶
+                √                ∆
+      Pr Φ C̈N + N ·                               − Φ −C̈N < α − η · φ < ,
+                             max(σ l , σ u )
+
+uniformly in P ∈ P. Conditional on
+        µ                             ¶    ³     ´
+                √          ∆
+      Φ C̈N + N ·                       − Φ −C̈N > α − η · φ,
+                      max(σ l , σ u )
+                                             √
+and by the fact that C̆N satisfies Φ(C̆N + N · ∆/ max(σ l , σ u )) − Φ(−C̆N ) = α, we have
+        µ                             ¶    µ                          ¶    ³     ´     ³   ´
+                √          ∆                      √        ∆
+      Φ C̈N + N ·                       − Φ C̆N + N ·                   − Φ −C̈N + Φ −C̆N > −η · φ
+                      max(σ l , σ u )                 max(σ l , σ u )
+
+By a mean value theorem this implies
+     µ µ                                                ¶   ³                       ´¶ ³         ´
+                √         ∆
+       φ C̈N + N ·                    + γ · (C̆N − C̈N ) + φ C̆N + γ · (C̈N − C̆N )   · C̈N − C̆N > −η · φ,
+                      max(σ l , σ u )
+
+for some γ ∈ [0, 1], and thus C¨N > C̆N − η with probability 1 − . ¤
+
+   The combination of Lemmas 7.4 and 7.7 implies that for any             > 0 we can find an N0 such that for
+N ≥ N0 ,
+         ³            ´
+     Pr C N < C̆N − η < ,
+
+uniformly in P ∈ P. Note that Lemma 7.7 does not imply that |C N − C̆N | converges to zero uniformly.
+This is not necessarily true unless we are willing to rule out values of ∆ close to zero, which is exactly the
+point-identified area we are concerned with.
+
+Proof of Lemma 4.1:
+We will prove that for any positive , for N suﬃciently large, the probability that
+                        √                          √
+      θˆl − C N · σ̂ l / N ≤ θ ≤ θ̂u + C N · σ̂ u / N ,
+
+is at least α − , uniformly in P ∈ P. We will prove this for θ = θu . The proof for θ = θl is analogous, and
+similar to previous cases the coverage probability is minimized at the boundary of the identification region.
+     For arbitrary positive 1 , 2 , and 3 , choose N large enough so that the following conditions are satisfied
+              √                                                    √
+(i), supz |Pr( N (θ̂l − θl )/σ l ≤ z) − Φ(z)| ≤ 1 , (ii), supz |Pr( N (θ̂u − θu )/σ u ≤ z) − Φ(z)| ≤ 1 , and (iii),
+
+
+                                                           [22]
+Pr(C̈N − C̆N < − 2 ) < 3 . Existence of such an N follows for conditions (i) and (ii) from Assumption 4.2,
+and for condition (iii) from Lemma 7.7.
+   Define the following events, E1 , E2 , E3 , E4 , and E5 :
+                               √                           √
+        E1 ≡ θˆl − C N · σ̂ l / N ≤ θu ≤ θ̂u + C N · σ̂ u / N ,
+                              √                          √
+        E2 ≡ θˆl − C̈N · σ l / N ≤ θu ≤ θ̂u + C̈N · σ u / N ,
+                                     √                                √
+        E3 ≡ θˆl − (C̆N − 2 ) · σ l / N ≤ θu ≤ θ̂u + (C̆N − 2 ) · σu / N ,
+                              √                          √
+        E4 ≡ θˆl − C̆N · σ l / N ≤ θu ≤ θ̂u + C̆N · σ u / N ,
+
+        E5 ≡ C̈N − C̆N > − 2 ,
+
+and let E5c be the complement of E5 . Note that (E5 ∩ E3 ) ⇒ E2 and thus (E5 ∩ E3 ) ⇒ (E2 ∩ E3 ). Define
+also
+                            √
+        P3 ≡ Φ(C̆N − 2 +     N · ∆/σ l ) − Φ(−C̆N + 2 ).
+                       √
+        P4 ≡ Φ(C̆N +    N · ∆/σ l ) − Φ(−C̆N ) = α.
+
+By conditions (i) and (ii), |P3 − Pr(E3 )| ≤ 2 1 and |P4 − Pr(E4 )| ≤ 2 1 . Also, |P3 − P4 | ≤ 2 2 φ, and by
+(iii), Pr(E6c ) < 3 . By Lemma 7.5 it follows that for any 4 > 0 we can choose N large enough so that
+|Pr(E1 ) − Pr(E2 )| < 4 . Then, by elementary set theory:
+
+        Pr(E1 ) ≥ Pr(E2 ) − 4 ≥ Pr(E2 ∩ E3 ) − 4 ≥ Pr(E5 ∩ E3 ) − 4 ≥ Pr(E3 ) − Pr(E5c ) − 4
+
+               ≥ P3 − 2 1 − 3 − 4 ≥ P4 − 2 1 − 3 − 2 2 φ̄ − 4 = α − 2 1 − 3 − 2 2 φ̄ − 4 .
+
+Since   1 , . . . , 4 were chosen arbitrarily, one can make Pr(E1 ) > α −    for any   > 0. ¤
+
+                                                REFERENCES
+ Athey, S., and G. Imbens (2002), "Identification and Inference in Nonlinear Diﬀerence-in-Diﬀerences Mod-
+        els," NBER technical working paper t0280.
+
+ Blundell, R., A. Gosling, H. Ichimura, and C. Meghir, (2002) "Changes in the Distribution of Male and
+        Female Wages Accounting for Employment Compositional Change," Institute for Fiscal Studies.
+
+ Bollinger, C. (1996), "Bounding Mean Regressions when a Binary Regressor is Mismeasured," Journal of
+        Econometrics, 73, 387-399.
+
+ Chernozhukov, V., H. Hong and E. Tamer, (2003), “Parameter Set Inference in a Class of Econometric
+        Models,” unpublished manuscript, Department of Economics, Princeton University.
+
+ Dominitz, J. and R. Sherman (2003), "Nonparametric Analysis of Mixture Models with Verification,"
+        California Institute of Technology.
+
+ Dufour, J.-M., (1997), “Some Impossibility Theorems in Econometrics With Applications to Structural and
+        Dynamic Models,” Econometrica, 65, 6: 1365-1387.
+
+                                                          [23]
+Gleser, L., and J. Hwang, (1987), “The Nonexistence of 100(1 − α) Confidence Sets of Finite Expected
+     Diameter in Errors in Variables and Related Models,” The Annals of Statistics, 15, 1351-1362.
+
+Haile, P. and E. Tamer (2003), "Inference with an Incomplete Model of English Auctions," Journal of
+     Political Economy, 111, 1-51.
+
+Horowitz, J. and C. Manski (1995), "Identification and Robustness with Contaminated and Corrupted
+     Data," Econometrica, 63, 281-302.
+
+Horowitz, J. and C. Manski (1998), “Censoring of Outcomes and Regressors due to Survey Nonresponse:
+     Identification and Estimation Using Weights and Imputations,” Journal of Econometrics, 84, 37-58.
+
+Horowitz, J., and C. Manski, (2000): “Nonparametric Analysis of Randomized Experiments with Missing
+     Covariate and Outcome Data” Journal of the American Statistical Association, 95, 77-84.
+
+Hotz, J., C. Mullins, and S. Sanders (1997), "Bounding Causal Eﬀects Using Data from a Contaminated
+     Natural Experiment: Analyzing the Eﬀects of Teenage Childbearing," Review of Economic Studies,
+     64, 575-603.
+
+Lee, D. (2002), “Trimming for Bounds on Treatment Eﬀects with Missing Outcomes,” NBER technical
+     working paper t0277.
+
+Manski, C. (1990), “Nonparametric Bounds on Treatment Eﬀects,” American Economic Review Papers
+     and Proceedings, 80, 319-323.
+
+Manski, C. (2003), Partial Identification of Probability Distributions, New York: Springer-Verlag.
+
+Manski, C., G. Sandefur, S. McLanahan, and D. Powers (1992), “Alternative Estimates of the Eﬀect of
+     Family Structure During Adolescence on High School Graduation,” Journal of the American Statistical
+     Association, 87, 25-37.
+
+Manski, C. and E. Tamer (2002), "Inference on Regressions with Interval Data on a Regressor or Outcome,"
+     Econometrica, 70, 519-546.
+
+Meyer, B., K. Viscusi and D. Durbin (1995), “Workers’ Compensation and Injury Duration: Evidence from
+     a Natural Experiment,” American Economic Review, 85, 322-340.
+
+Molinari, F. (2002), "Identification of Probability Distributions with Misclassified Data," Department of
+     Economics, Northwestern University.
+
+Mullins, C. (2003), “Bounding Treatment Eﬀects with Contaminated and Censored Data: Assessing the
+     Impract of Early Childbearing on Children,” VanderBilt University.
+
+Shorack, G., and J. Wellner, (1986), Empirical Processes with Applications to Statistics, Wiley, New York,
+     NY.
+
+
+
+                                                  [24]
+

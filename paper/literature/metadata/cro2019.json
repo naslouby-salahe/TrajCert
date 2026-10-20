@@ -1,0 +1,664 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        9,
+        29
+      ]
+    ],
+    "date-time": "2026-09-29T06:47:49Z",
+    "timestamp": 1790664469491,
+    "version": "4.1.0"
+  },
+  "reference-count": 35,
+  "publisher": "Oxford University Press (OUP)",
+  "issue": "2",
+  "license": [
+    {
+      "start": {
+        "date-parts": [
+          [
+            2023,
+            3,
+            6
+          ]
+        ],
+        "date-time": "2023-03-06T00:00:00Z",
+        "timestamp": 1678060800000
+      },
+      "content-version": "vor",
+      "delay-in-days": 1571,
+      "URL": "http://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "funder": [
+    {
+      "DOI": "10.13039/501100000265",
+      "name": "Medical Research Council London Hub for Trials Methodology Research",
+      "doi-asserted-by": "publisher",
+      "award": [
+        "MC_EX_G0800814"
+      ],
+      "award-info": [
+        {
+          "award-number": [
+            "MC_EX_G0800814"
+          ]
+        }
+      ],
+      "id": [
+        {
+          "id": "10.13039/501100000265",
+          "id-type": "DOI",
+          "asserted-by": "publisher"
+        }
+      ]
+    },
+    {
+      "DOI": "10.13039/501100000265",
+      "name": "Medical Research Council London Hub for Trials Methodology Research",
+      "doi-asserted-by": "publisher",
+      "award": [
+        "MC_UU_12023/21"
+      ],
+      "award-info": [
+        {
+          "award-number": [
+            "MC_UU_12023/21"
+          ]
+        }
+      ],
+      "id": [
+        {
+          "id": "10.13039/501100000265",
+          "id-type": "DOI",
+          "asserted-by": "publisher"
+        }
+      ]
+    },
+    {
+      "DOI": "10.13039/501100000265",
+      "name": "Medical Research Council London Hub for Trials Methodology Research",
+      "doi-asserted-by": "publisher",
+      "award": [
+        "MC_UU_12023/29"
+      ],
+      "award-info": [
+        {
+          "award-number": [
+            "MC_UU_12023/29"
+          ]
+        }
+      ],
+      "id": [
+        {
+          "id": "10.13039/501100000265",
+          "id-type": "DOI",
+          "asserted-by": "publisher"
+        }
+      ]
+    }
+  ],
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [],
+  "published-print": {
+    "date-parts": [
+      [
+        2019,
+        2,
+        1
+      ]
+    ]
+  },
+  "abstract": "<jats:title>Summary</jats:title><jats:p>Analysis of longitudinal randomized clinical trials is frequently complicated because patients deviate from the protocol. Where such deviations are relevant for the estimand, we are typically required to make an untestable assumption about post-deviation behaviour to perform our primary analysis and to estimate the treatment effect. In such settings, it is now widely recognized that we should follow this with sensitivity analyses to explore the robustness of our inferences to alternative assumptions about post-deviation behaviour. Although there has been much work on how to conduct such sensitivity analyses, little attention has been given to the appropriate loss of information due to missing data within sensitivity analysis. We argue that more attention needs to be given to this issue, showing that it is quite possible for sensitivity analysis to decrease and increase the information about the treatment effect. To address this critical issue, we introduce the concept of information-anchored sensitivity analysis. By this we mean sensitivity analyses in which the proportion of information about the treatment estimate lost because of missing data is the same as the proportion of information about the treatment estimate lost because of missing data in the primary analysis. We argue that this forms a transparent, practical starting point for interpretation of sensitivity analysis. We then derive results showing that, for longitudinal continuous data, a broad class of controlled and reference-based sensitivity analyses performed by multiple imputation are information anchored. We illustrate the theory with simulations and an analysis of a peer review trial and then discuss our work in the context of other recent work in this area. Our results give a theoretical basis for the use of controlled multiple-imputation procedures for sensitivity analysis.</jats:p>",
+  "DOI": "10.1111/rssa.12423",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2018,
+        11,
+        17
+      ]
+    ],
+    "date-time": "2018-11-17T04:41:41Z",
+    "timestamp": 1542429701000
+  },
+  "page": "623-645",
+  "source": "Crossref",
+  "is-referenced-by-count": 40,
+  "title": [
+    "Information-Anchored Sensitivity Analysis: Theory and Application"
+  ],
+  "prefix": "10.1093",
+  "volume": "182",
+  "author": [
+    {
+      "given": "Suzie",
+      "family": "Cro",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "University College London UK"
+        },
+        {
+          "name": "London School of Hygiene and Tropical Medicine, and Imperial College London UK"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "James R.",
+      "family": "Carpenter",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "University College London UK"
+        },
+        {
+          "name": "London School of Hygiene and Tropical Medicine UK"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Michael G.",
+      "family": "Kenward",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Ashkirk, UK"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "member": "286",
+  "published-online": {
+    "date-parts": [
+      [
+        2018,
+        11,
+        16
+      ]
+    ]
+  },
+  "reference": [
+    {
+      "key": "2023030708140185700_",
+      "volume-title": "Reference based sensitivity analysis for time-to-event data",
+      "author": "Atkinson",
+      "year": "2018"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "130",
+      "DOI": "10.1001/jama.2017.20373",
+      "article-title": "Effect of idalopirdine as adjunct to cholinesterase inhibitors on change in cognition in patients with Alzheimer disease: three randomized clinical trials",
+      "volume": "319",
+      "author": "Atri",
+      "year": "2018",
+      "journal-title": "J. Am. Med. Ass."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "211",
+      "DOI": "10.1080/10543406.2013.859148",
+      "article-title": "A multiple-imputation-based approach to sensitivity analyses and effectiveness assessments in longitudinal clinical trials",
+      "volume": "24",
+      "author": "Ayele",
+      "year": "2014",
+      "journal-title": "J. Biopharm. Statist."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "1009",
+      "DOI": "10.2337/dc17-1114",
+      "article-title": "Efficacy and safety of ideglira versus basal-bolus insulin therapy in patients with type 2 diabetes uncontrolled on metformin and basal insulin; dual vii randomized clinical trial",
+      "volume": "41",
+      "author": "Billings",
+      "year": "2018",
+      "journal-title": "Diab. Care."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "457",
+      "DOI": "10.1016/S0091-6749(98)70353-7",
+      "article-title": "Budesonide delivered by Turbuhaler is effective in a dose-dependent fashion when used in the treatment of adult patients with chronic asthma",
+      "volume": "101",
+      "author": "Busse",
+      "year": "1998",
+      "journal-title": "J. All. Clin. Immunol."
+    },
+    {
+      "key": "2023030708140185700_",
+      "volume-title": "Missing Data in Clinical Trials\u2014a Practical Guide",
+      "author": "Carpenter",
+      "year": "2008"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1002/9781119942283",
+      "volume-title": "Multiple Imputation and Its Application",
+      "author": "Carpenter",
+      "year": "2013"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "1363",
+      "DOI": "10.1080/10543406.2014.960085",
+      "article-title": "Response to comments by Seaman et al. on \u2018Analysis of longitudinal trials with protocol deviation: a framework for relevant, accessible assumptions and inference via Multiple Imputation",
+      "volume": "24",
+      "author": "Carpenter",
+      "year": "2014",
+      "journal-title": "J. Biopharm. Statist."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "1352",
+      "DOI": "10.1080/10543406.2013.834911",
+      "article-title": "Analysis of longitudinal trials with protocol deviation:\u2014a framework for relevant accessible assumptions and inference via multiple imputation",
+      "volume": "23",
+      "author": "Carpenter",
+      "year": "2013",
+      "journal-title": "J. Biopharm. Statist."
+    },
+    {
+      "key": "2023030708140185700_",
+      "volume-title": "Guideline on Missing Data in Confirmatory Clinical Trials",
+      "author": "Committee for Medicinal Products for Human Use",
+      "year": "2010"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "443",
+      "DOI": "10.1177/1536867X1601600211",
+      "article-title": "Reference-based sensitivity analysis via multiple imputation for longitudinal trials with protocol deviation",
+      "volume": "16",
+      "author": "Cro",
+      "year": "2016",
+      "journal-title": "Stata J."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "49",
+      "DOI": "10.2307/2986113",
+      "article-title": "Informative drop-out in longitudinal data analysis (with discussion)",
+      "volume": "43",
+      "author": "Diggle",
+      "year": "1994",
+      "journal-title": "Appl. Statist."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "368",
+      "DOI": "10.1177/1740774517711443",
+      "article-title": "Commentary on \u2018Development of a practical approach to expert elicitation for randomised controlled trials with missing health outcomes: application to the IMPROVE Trial by Mason et al",
+      "volume": "14",
+      "author": "Heitjan",
+      "year": "2017",
+      "journal-title": "Clin. Trials"
+    },
+    {
+      "key": "2023030708140185700_",
+      "volume-title": "Draft ICH E9 (R1) addendum on estimands and sensitivity analysis in clinical trials to the guideline on statistical principles for clinical trials",
+      "author": "International Conference on Harmonisation of Technical Requirements for Registration of Pharmaceuticals for Human Use",
+      "year": "2017"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "1298",
+      "DOI": "10.1111/jcpp.12443",
+      "article-title": "Does intensive multimodal treatment for maternal ADHD improve the efficacy of parent training for children with ADHD?: A randomized controlled multicenter trial",
+      "volume": "56",
+      "author": "Jans",
+      "year": "2015",
+      "journal-title": "J. Chld Psychol. Psychiatr."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "2723",
+      "DOI": "10.1002/(SICI)1097-0258(19981215)17:23<2723::AID-SIM38>3.0.CO;2-5",
+      "article-title": "Selection models for repeated measurements with non-random dropout: an illustration of sensitivity",
+      "volume": "17",
+      "author": "Kenward",
+      "year": "1998",
+      "journal-title": "Statist. Med."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "471",
+      "DOI": "10.2307/2532847",
+      "article-title": "Intent-to-treat analysis for longitudinal studies with drop-outs",
+      "volume": "52",
+      "author": "Little",
+      "year": "1996",
+      "journal-title": "Biometrics"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "924",
+      "DOI": "10.1080/10543406.2015.1094810",
+      "article-title": "On analysis of longitudinal clinical trials with missing data using reference-based imputation",
+      "volume": "26",
+      "author": "Liu",
+      "year": "2016",
+      "journal-title": "J. Biopharm. Statist."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "1134",
+      "DOI": "10.1002/sim.6008",
+      "article-title": "An analytic method for the placebo-based pattern-mixture model",
+      "volume": "33",
+      "author": "Lu",
+      "year": "2014",
+      "journal-title": "Statist. Med."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1017/CBO9781139381666",
+      "volume-title": "Preventing and Treating Missing Data in Longitudinal Clinical Trials: a Practical Guide",
+      "author": "Mallinckrodt",
+      "year": "2013"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "357",
+      "DOI": "10.1177/1740774517711442",
+      "article-title": "Development of a practical approach to expert elicitation for randomised controlled trials with missing health outcomes: application to the improve trial",
+      "volume": "14",
+      "author": "Mason",
+      "year": "2017",
+      "journal-title": "Clin. Trials"
+    },
+    {
+      "key": "2023030708140185700_",
+      "first-page": "538",
+      "article-title": "Multiple-imputation inferences with uncongenial sources of input (with discussion)",
+      "volume": "10",
+      "author": "Meng",
+      "year": "1994",
+      "journal-title": "Statist. Sci."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "153",
+      "DOI": "10.1111/1467-9574.00075",
+      "article-title": "Missing data mechanisms and pattern-mixture models",
+      "volume": "52",
+      "author": "Molenberghs",
+      "year": "1998",
+      "journal-title": "Statist. Neerland."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "1471",
+      "DOI": "10.1177/0962280213490014",
+      "article-title": "Sensitivity analysis of incomplete longitudinal data departing from the missing at random assumption: methodology and application in a clinical trial with drop-outs",
+      "volume": "25",
+      "author": "Moreno-Betancur",
+      "year": "2016",
+      "journal-title": "Statist. Meth. Med. Res."
+    },
+    {
+      "key": "2023030708140185700_",
+      "volume-title": "The Prevention and Treatment of Missing Data in Clinical Trials",
+      "author": "National Research Council",
+      "year": "2010"
+    },
+    {
+      "key": "2023030708140185700_",
+      "first-page": "284",
+      "volume-title": "Multiple Imputation",
+      "author": "O\u2019Kelly",
+      "year": "2014"
+    },
+    {
+      "key": "2023030708140185700_",
+      "first-page": "1199",
+      "article-title": "Effects of group psychotherapy, individual counseling, methylphenidate, and placebo in the treatment of adult attention-deficit/hyperactivity disorder: a randomized clinical trial",
+      "volume": "72",
+      "author": "Philipsen",
+      "year": "2015",
+      "journal-title": "J. Am. Med Ass. Psychiatr."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "337",
+      "DOI": "10.1002/pst.1549",
+      "article-title": "Missing data in clinical trials: from clinical assumptions to statistical analysis using pattern mixture models",
+      "volume": "12",
+      "author": "Ratitch",
+      "year": "2013",
+      "journal-title": "Pharm. Statist."
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "243",
+      "DOI": "10.2307/3318576",
+      "article-title": "Likelihood-based inference with singular information matrix",
+      "volume": "6",
+      "author": "Rotnitzky",
+      "year": "2000",
+      "journal-title": "Bernoulli"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "DOI": "10.1002/9780470316696",
+      "volume-title": "Multiple Imputation for Nonresponse in Surveys",
+      "author": "Rubin",
+      "year": "1987"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "673",
+      "DOI": "10.1136/bmj.38023.700775.AE",
+      "article-title": "Effects of training on quality of peer review: randomised controlled trial",
+      "volume": "328",
+      "author": "Schroter",
+      "year": "2004",
+      "journal-title": "Br. Med. J."
+    },
+    {
+      "key": "2023030708140185700_",
+      "volume-title": "Stata Statistical Software: Release 14",
+      "author": "StataCorp",
+      "year": "2015"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "1379",
+      "DOI": "10.1111/biom.12702",
+      "article-title": "On the multiple imputation variance estimator for control-based and delta-adjusted pattern mixture models",
+      "volume": "73",
+      "author": "Tang",
+      "year": "2017",
+      "journal-title": "Biometrics"
+    },
+    {
+      "key": "2023030708140185700_",
+      "doi-asserted-by": "crossref",
+      "first-page": "125",
+      "DOI": "10.1177/1740774507077849",
+      "article-title": "Eliciting and using expert opinions about non-response bias in randomised controlled trials",
+      "volume": "4",
+      "author": "White",
+      "year": "2007",
+      "journal-title": "Clin. Trials"
+    },
+    {
+      "key": "2023030708140185700_",
+      "first-page": "1485",
+      "article-title": "Dissecting multiple imputation from a multi-phase inference perspective: what happens when gods, imputers and analysts models are uncongenial?",
+      "volume": "27",
+      "author": "Xie",
+      "year": "2017",
+      "journal-title": "Statist. Sin."
+    }
+  ],
+  "container-title": [
+    "Journal of the Royal Statistical Society Series A: Statistics in Society"
+  ],
+  "original-title": [],
+  "language": "en",
+  "link": [
+    {
+      "URL": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1111%2Frssa.12423",
+      "content-type": "application/pdf",
+      "content-version": "vor",
+      "intended-application": "text-mining"
+    },
+    {
+      "URL": "https://onlinelibrary.wiley.com/doi/pdf/10.1111/rssa.12423",
+      "content-type": "application/pdf",
+      "content-version": "vor",
+      "intended-application": "text-mining"
+    },
+    {
+      "URL": "https://onlinelibrary.wiley.com/doi/full-xml/10.1111/rssa.12423",
+      "content-type": "application/xml",
+      "content-version": "vor",
+      "intended-application": "text-mining"
+    },
+    {
+      "URL": "https://academic.oup.com/jrsssa/article-pdf/182/2/623/49428876/jrsssa_182_2_623.pdf",
+      "content-type": "application/pdf",
+      "content-version": "vor",
+      "intended-application": "syndication"
+    },
+    {
+      "URL": "https://academic.oup.com/jrsssa/article-pdf/182/2/623/49428876/jrsssa_182_2_623.pdf",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2023,
+        9,
+        7
+      ]
+    ],
+    "date-time": "2023-09-07T06:12:23Z",
+    "timestamp": 1694067143000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://academic.oup.com/jrsssa/article/182/2/623/7070172"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        2018,
+        11,
+        16
+      ]
+    ]
+  },
+  "references-count": 35,
+  "journal-issue": {
+    "issue": "2",
+    "published-online": {
+      "date-parts": [
+        [
+          2018,
+          11,
+          16
+        ]
+      ]
+    },
+    "published-print": {
+      "date-parts": [
+        [
+          2019,
+          2,
+          1
+        ]
+      ]
+    }
+  },
+  "URL": "https://doi.org/10.1111/rssa.12423",
+  "relation": {},
+  "ISSN": [
+    "0964-1998",
+    "1467-985X"
+  ],
+  "issn-type": [
+    {
+      "value": "0964-1998",
+      "type": "print"
+    },
+    {
+      "value": "1467-985X",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published-other": {
+    "date-parts": [
+      [
+        2019,
+        2
+      ]
+    ]
+  },
+  "published": {
+    "date-parts": [
+      [
+        2018,
+        11,
+        16
+      ]
+    ]
+  }
+}

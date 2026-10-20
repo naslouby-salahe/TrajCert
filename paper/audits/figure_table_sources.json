@@ -1,0 +1,26 @@
+[
+  {
+    "path": "results/experiments/trajectory-decision-value/tables/main/trajectory_decision_value.csv",
+    "sha256": "64cb23effaf07e9d88806256331281c2a4d065d8cb8c89d3cbcffae071f6001e"
+  },
+  {
+    "path": "results/experiments/anytime-certification-power/tables/main/certification_power.csv",
+    "sha256": "62e6fbf3c34a6c559c98092d51889ba6a0ac9877a5c77f1c638246edfd8b1447"
+  },
+  {
+    "path": "results/experiments/anytime-certification-power/tables/main/certification_power_summary.csv",
+    "sha256": "a1fa5e49f52fc1b053ee09d3bcfac9b368252c5928ee2bc022928c13a9a3267e"
+  },
+  {
+    "path": "results/experiments/anytime-coverage-stress/tables/main/anytime_coverage.csv",
+    "sha256": "9c255a401cdec6509735ed8959f9fda380fd86412a61111fcbf81865ceced516"
+  },
+  {
+    "path": "results/experiments/computational-scaling/tables/main/computational_scaling.csv",
+    "sha256": "969c3b148c2e461cddeb963d1661a00d30a1db07b9180b7c858ba3ccf1a76922"
+  },
+  {
+    "path": "outputs/experiments/safety-and-intrinsic-impossibility/evaluations/aggregates/figure_information_profile.parquet",
+    "sha256": "14c5618758923f8225babe92558fbecca03d728a9c0141737b1fd11aacbe7637"
+  }
+]

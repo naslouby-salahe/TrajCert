@@ -1,0 +1,24 @@
+\section{Observation model and sensitivity assumption}\label{sec:model}
+Fix a terminal horizon $H$ and a partition $0=H_0<H_1<\cdots<H_K=H$. Let $L\in\{0,1\}$ indicate a harmful outcome. Write $J_\Pi=k$ when verification first resolves in $(H_{k-1},H_k]$, and $J_\Pi=\infty$ when it remains unresolved through $H$. The observed category is $Y=(k,L)$ in a finite band and $Y=\infty$ otherwise. Thus the observable law has $d=2K+1$ cells,
+\begin{equation}\label{eq:masses}
+ a_k=\Pbb(J_\Pi=k,L=1),\qquad b_k=\Pbb(J_\Pi=k,L=0),\qquad c=\Pbb(J_\Pi=\infty).
+\end{equation}
+Set $A=\sum_k a_k$, $G=\sum_k b_k$, and $r=A+G=1-c$. The only unidentified cell split is
+\begin{equation}\label{eq:hidden}
+ u=\Pbb(J_\Pi=\infty,L=1)\in[0,c],\qquad \theta=A+u.
+\end{equation}
+Resolved labels are assumed correct. The horizon, partition and observation rules are fixed before the corresponding outcomes are inspected.
+
+The finest categorical representation $J^*$ is prespecified. Every analysis partition is a deterministic coarsening $J_\Pi=g_\Pi(J^*)$ that preserves the unresolved category and the terminal horizon. Our structural assumption is
+\begin{equation}\label{eq:pis}
+ I(L;J^*)\le\rho,\qquad \rho\ge0.
+\end{equation}
+All logarithms are natural. The same $\rho$ implies $I(L;J_\Pi)\le\rho$ for each coarsening. A sharp interval at partition $\Pi$ refers to all joint laws of $(L,J_\Pi)$ satisfying its observed margins and this induced constraint. If finer observed margins are retained, their identified set can be smaller; a coarse interval is a relaxation of that more informative experiment.
+
+We use the continuous binary entropy $h(x)=-x\log x-(1-x)\log(1-x)$, with $0\log0=0$, and the homogeneous mass entropy
+\begin{equation}\label{eq:massentropy}
+ q(a,b)=(a+b)h\{a/(a+b)\},\qquad q(0,0)=0.
+\end{equation}
+Let $T_\Pi=\sum_k q(a_k,b_k)$. Empty bands contribute zero; their harmful proportions need not be defined. The risk budget $\beta\in[0,1]$ is distinct from $\rho$. Population certification means that the compatible risk set is nonempty and its upper endpoint does not exceed $\beta$.
+
+The budget $\rho$ is an assumption axis. Increasing it permits more dependence and can widen the identified interval. Decreasing it can contradict the observed timing information. Independently adjudicated validation data could inform a range of budgets, with uncertainty and transport assumptions, but the partially observed stream does not determine the true information. In particular, a small absolute information budget is not a universal guarantee of weak selection for a rare outcome: $I(L;J^*)\le h(\theta)$ even under strong dependence. Reported budgets are sensitivity choices, not empirically validated operating values.

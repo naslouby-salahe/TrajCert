@@ -1,0 +1,166 @@
+[
+  {
+    "key": "manski2005",
+    "doi": "10.1016/j.ijar.2004.10.006",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Partial identification with missing data: concepts and findings",
+    "attempts": [],
+    "pdf_status": "NOT_OBTAINED"
+  },
+  {
+    "key": "little1993",
+    "doi": "10.1080/01621459.1993.10594302",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Pattern-Mixture Models for Multivariate Incomplete Data",
+    "attempts": [
+      {
+        "url": "https://escholarship.org/content/qt9jb3w254/qt9jb3w254.pdf",
+        "error": "HTTP Error 403: Forbidden"
+      }
+    ],
+    "pdf_status": "NOT_OBTAINED"
+  },
+  {
+    "key": "shardell2009",
+    "doi": "10.1080/10543400903242779",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Sensitivity Analysis of Informatively Coarsened Data Using Pattern Mixture Models",
+    "attempts": [],
+    "pdf_status": "NOT_OBTAINED"
+  },
+  {
+    "key": "kline2013",
+    "doi": "10.3982/QE176",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Sensitivity to missing data assumptions: Theory and an evaluation of the U.S. wage structure",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://www.econstor.eu/bitstream/10419/150349/1/v4-i2-p231-267-QE176.pdf"
+  },
+  {
+    "key": "miao2025",
+    "doi": "10.1093/jrsssb/qkae097",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "A stableness of resistance model for nonresponse adjustment with callback data",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://arxiv.org/pdf/2112.02822"
+  },
+  {
+    "key": "jiang2018",
+    "doi": "10.1214/17-AOAS1133",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Using missing types to improve partial identification with application to a study of HIV prevalence in Malawi",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "SEE_PREVIOUS_FETCH_LOG"
+  },
+  {
+    "key": "alho1990",
+    "doi": "10.1093/biomet/77.3.617",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Adjusting for nonresponse bias using logistic regression",
+    "attempts": [],
+    "pdf_status": "NOT_OBTAINED"
+  },
+  {
+    "key": "imbens2004",
+    "doi": "10.1111/j.1468-0262.2004.00555.x",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Confidence Intervals for Partially Identified Parameters",
+    "attempts": [],
+    "pdf_status": "NOT_OBTAINED"
+  },
+  {
+    "key": "howard2021",
+    "doi": "10.1214/20-AOS1991",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Time-uniform, nonparametric, nonasymptotic confidence sequences",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "SEE_PREVIOUS_FETCH_LOG"
+  },
+  {
+    "key": "waudby2024",
+    "doi": "10.1093/jrsssb/qkad009",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Estimating means of bounded random variables by betting",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://rss.org.uk/RSS/media/File-library/Events/Discussion%20meetings/Estimating-means-of-bounded-random-variables-by-betting.pdf"
+  },
+  {
+    "key": "ramdas2023",
+    "doi": "10.1214/23-STS894",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Game-Theoretic Statistics and Safe Anytime-Valid Inference",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://arxiv.org/pdf/2210.01948"
+  },
+  {
+    "key": "johari2022",
+    "doi": "10.1287/opre.2021.2135",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Always Valid Inference: Continuous Monitoring of A/B Tests",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://arxiv.org/pdf/1512.04922"
+  },
+  {
+    "key": "clopper1934",
+    "doi": "10.1093/biomet/26.4.404",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "THE USE OF CONFIDENCE OR FIDUCIAL LIMITS ILLUSTRATED IN THE CASE OF THE BINOMIAL",
+    "attempts": [],
+    "pdf_status": "NOT_OBTAINED"
+  },
+  {
+    "key": "cro2019",
+    "doi": "10.1111/rssa.12423",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Information-Anchored Sensitivity Analysis: Theory and Application",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://arxiv.org/pdf/1805.05795"
+  },
+  {
+    "key": "carpenter2021",
+    "doi": "10.1002/bimj.202000196",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Missing data: A statistical framework for practice",
+    "attempts": [
+      {
+        "url": "https://onlinelibrary.wiley.com/doi/pdf/10.1002/bimj.202000196",
+        "error": "HTTP Error 403: Forbidden"
+      }
+    ],
+    "pdf_status": "NOT_OBTAINED"
+  },
+  {
+    "key": "christensen2023",
+    "doi": "10.3982/ECTA17232",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Counterfactual Sensitivity and Robustness",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://arxiv.org/pdf/1904.00989"
+  },
+  {
+    "key": "jin2026",
+    "doi": "10.1287/opre.2023.0001",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "Sensitivity Analysis Under the\n                    <i>f</i>\n                    -Sensitivity Model: A Distributional Robustness Perspective",
+    "attempts": [],
+    "pdf_status": "DOWNLOADED",
+    "pdf_url": "https://arxiv.org/pdf/2203.04373"
+  },
+  {
+    "key": "csiszar1975",
+    "doi": "10.1214/aop/1176996454",
+    "registration": "CROSSREF_VERIFIED",
+    "title": "$I$-Divergence Geometry of Probability Distributions and Minimization Problems",
+    "attempts": [],
+    "pdf_status": "NOT_OBTAINED"
+  }
+]

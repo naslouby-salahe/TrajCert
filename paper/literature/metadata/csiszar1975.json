@@ -1,0 +1,149 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        16
+      ]
+    ],
+    "date-time": "2026-10-16T21:41:44Z",
+    "timestamp": 1792186904865,
+    "version": "4.4.0"
+  },
+  "reference-count": 0,
+  "publisher": "Institute of Mathematical Statistics",
+  "issue": "1",
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [
+    "Ann. Probab."
+  ],
+  "published-print": {
+    "date-parts": [
+      [
+        1975,
+        2,
+        1
+      ]
+    ]
+  },
+  "abstract": "<jats:p>Some geometric properties of PD's are established, Kullback's $I$-divergence playing the role of squared Euclidean distance. The minimum discrimination information problem is viewed as that of projecting a PD onto a convex set of PD's and useful existence theorems for and characterizations of the minimizing PD are arrived at. A natural generalization of known iterative algorithms converging to the minimizing PD in special situations is given; even for those special cases, our convergence proof is more generally valid than those previously published. As corollaries of independent interest, generalizations of known results on the existence of PD's or nonnegative matrices of a certain form are obtained. The Lagrange multiplier technique is not used.</jats:p>",
+  "DOI": "10.1214/aop/1176996454",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2007,
+        12,
+        17
+      ]
+    ],
+    "date-time": "2007-12-17T12:40:20Z",
+    "timestamp": 1197895220000
+  },
+  "page": "146-158",
+  "source": "Crossref",
+  "is-referenced-by-count": 1163,
+  "title": [
+    "$I$-Divergence Geometry of Probability Distributions and Minimization Problems"
+  ],
+  "prefix": "10.1214",
+  "volume": "3",
+  "author": [
+    {
+      "given": "I.",
+      "family": "Csiszar",
+      "sequence": "first",
+      "affiliation": [],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "member": "108",
+  "container-title": [
+    "The Annals of Probability"
+  ],
+  "original-title": [],
+  "link": [
+    {
+      "URL": "http://projecteuclid.org/download/pdf_1/euclid.aop/1176996454",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        16
+      ]
+    ],
+    "date-time": "2026-10-16T21:16:31Z",
+    "timestamp": 1792185391000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://projecteuclid.org/journals/annals-of-probability/volume-3/issue-1/I-Divergence-Geometry-of-Probability-Distributions-and-Minimization-Problems/10.1214/aop/1176996454.full"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        1975,
+        2,
+        1
+      ]
+    ]
+  },
+  "references-count": 0,
+  "journal-issue": {
+    "issue": "1",
+    "published-online": {
+      "date-parts": [
+        [
+          1975,
+          2,
+          1
+        ]
+      ]
+    }
+  },
+  "URL": "https://doi.org/10.1214/aop/1176996454",
+  "relation": {},
+  "ISSN": [
+    "0091-1798",
+    "2168-894X"
+  ],
+  "issn-type": [
+    {
+      "value": "0091-1798",
+      "type": "print"
+    },
+    {
+      "value": "2168-894X",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published": {
+    "date-parts": [
+      [
+        1975,
+        2,
+        1
+      ]
+    ]
+  }
+}

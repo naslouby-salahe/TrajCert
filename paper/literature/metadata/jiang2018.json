@@ -1,0 +1,439 @@
+{
+  "indexed": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        15
+      ]
+    ],
+    "date-time": "2026-10-15T03:41:38Z",
+    "timestamp": 1792035698238,
+    "version": "4.4.0"
+  },
+  "reference-count": 47,
+  "publisher": "Institute of Mathematical Statistics",
+  "issue": "3",
+  "content-domain": {
+    "domain": [],
+    "crossmark-restriction": false
+  },
+  "short-container-title": [
+    "Ann. Appl. Stat."
+  ],
+  "published-print": {
+    "date-parts": [
+      [
+        2018,
+        9,
+        1
+      ]
+    ]
+  },
+  "abstract": "<jats:p>Frequently, empirical studies are plagued with missing data. When the data are missing not at random, the parameter of interest is not identifiable in general. Without additional assumptions, we can derive bounds of the parameters of interest, which, unfortunately, are often too wide to be informative. Therefore, it is of great importance to sharpen these worst-case bounds by exploiting additional information. Traditional missing data analysis uses only the information of the binary missing data indicator, that is, a certain data point is either missing or not. Nevertheless, real data often provide more information than a binary missing data indicator, and they often record different types of missingness. In a motivating HIV status survey, missing data may be due to the units\u2019 unwillingness to respond to the survey items or their hospitalization during the visit, and may also be due to the units\u2019 temporarily absence or relocation. It is apparent that some missing types are more likely to be missing not at random, but other missing types are more likely to be missing at random. We show that making full use of the missing types results in narrower bounds of the parameters of interest. In a real-life example, we demonstrate substantial improvement of more than 50% reduction in bound widths for estimating the prevalence of HIV in rural Malawi. As we illustrate using the HIV study, our strategy is also useful for conducting sensitivity analysis by gradually increasing or decreasing the set of types that are missing at random. In addition, we propose an easy-to-implement method to construct confidence intervals for partially identified parameters with bounds expressed as the minimums and maximums of finite parameters, which is useful for not only our problem but also many other problems involving bounds.</jats:p>",
+  "DOI": "10.1214/17-aoas1133",
+  "type": "journal-article",
+  "created": {
+    "date-parts": [
+      [
+        2018,
+        9,
+        11
+      ]
+    ],
+    "date-time": "2018-09-11T04:04:07Z",
+    "timestamp": 1536638647000
+  },
+  "page": "1831-1852",
+  "source": "Crossref",
+  "is-referenced-by-count": 6,
+  "title": [
+    "Using missing types to improve partial identification with application to a study of HIV prevalence in Malawi"
+  ],
+  "prefix": "10.1214",
+  "volume": "12",
+  "author": [
+    {
+      "given": "Zhichao",
+      "family": "Jiang",
+      "sequence": "first",
+      "affiliation": [],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Peng",
+      "family": "Ding",
+      "sequence": "additional",
+      "affiliation": [],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "member": "108",
+  "reference": [
+    {
+      "key": "41",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Scharfstein, D. O., Rotnitzky, A. and Robins, J. M. (1999). Adjusting for nonignorable drop-out using semiparametric nonresponse models. <i>J. Amer. Statist. Assoc.</i> <b>94</b> 1096\u20131146.",
+      "DOI": "10.1080/01621459.1999.10473862"
+    },
+    {
+      "key": "3",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Angrist, J. D., Imbens, G. W. and Rubin, D. B. (1996). Identification of causal effects using instrumental variables. <i>J. Amer. Statist. Assoc.</i> <b>91</b> 444\u2013455.",
+      "DOI": "10.1080/01621459.1996.10476902"
+    },
+    {
+      "key": "32",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Mealli, F. and Rubin, D. B. (2015). Clarifying missing at random and related definitions, and implications when coupled with exchangeability. <i>Biometrika</i> <b>102</b> 995\u20131000.",
+      "DOI": "10.1093/biomet/asv035"
+    },
+    {
+      "key": "31",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Mealli, F. and Pacini, B. (2013). Using secondary outcomes to sharpen inference in randomized experiments with noncompliance. <i>J. Amer. Statist. Assoc.</i> <b>108</b> 1120\u20131131.",
+      "DOI": "10.1080/01621459.2013.802238"
+    },
+    {
+      "key": "5",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Balke, A. and Pearl, J. (1997). Bounds on treatment effects from studies with imperfect compliance. <i>J. Amer. Statist. Assoc.</i> <b>92</b> 1171\u20131176.",
+      "DOI": "10.1080/01621459.1997.10474074"
+    },
+    {
+      "key": "18",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Jin, H. and Rubin, D. B. (2008). Principal stratification for causal inference with extended partial compliance. <i>J. Amer. Statist. Assoc.</i> <b>103</b> 101\u2013111.",
+      "DOI": "10.1198/016214507000000347"
+    },
+    {
+      "key": "19",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Kang, J. D. Y. and Schafer, J. L. (2007). Demystifying double robustness: A comparison of alternative strategies for estimating a population mean from incomplete data. <i>Statist. Sci.</i> <b>22</b> 523\u2013539.",
+      "DOI": "10.1214/07-STS227"
+    },
+    {
+      "key": "1",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Andrews, D. W. K. (2000). Inconsistency of the bootstrap when a parameter is on the boundary of the parameter space. <i>Econometrica</i> <b>68</b> 399\u2013405.",
+      "DOI": "10.1111/1468-0262.00114"
+    },
+    {
+      "key": "2",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Anglewicz, P., Adams, J., Obare, F., Kohler, H.-P. and Watkins, S. (2009). The Malawi Diffusion and Ideational Change Project 2004\u201306: Data collection, data quality, and analysis of attrition. <i>Demogr. Res.</i> <b>20</b> 503\u2013540.",
+      "DOI": "10.4054/DemRes.2009.20.21"
+    },
+    {
+      "key": "4",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Arpino, B., De Cao, E. and Peracchi, F. (2014). Using panel data for partial identification of human immunodeficiency virus prevalence when infection status is missing not at random. <i>J. Roy. Statist. Soc. Ser. A</i> <b>177</b> 587\u2013606.",
+      "DOI": "10.1111/rssa.12027"
+    },
+    {
+      "key": "6",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Bang, H. and Robins, J. M. (2005). Doubly robust estimation in missing data and causal inference models. <i>Biometrics</i> <b>61</b> 962\u2013972.",
+      "DOI": "10.1111/j.1541-0420.2005.00377.x"
+    },
+    {
+      "key": "7",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Cheng, J. and Small, D. S. (2006). Bounds on causal effects in three-arm trials with non-compliance. <i>J. R. Stat. Soc. Ser. B. Stat. Methodol.</i> <b>68</b> 815\u2013836.",
+      "DOI": "10.1111/j.1467-9868.2006.00568.x"
+    },
+    {
+      "key": "8",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Chernozhukov, V., Lee, S. and Rosen, A. M. (2013). Intersection bounds: Estimation and inference. <i>Econometrica</i> <b>81</b> 667\u2013737.",
+      "DOI": "10.3982/ECTA8718"
+    },
+    {
+      "key": "10",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Copas, J. B. and Li, H. G. (1997). Inference for non-random samples. <i>J. Roy. Statist. Soc. Ser. B</i> <b>59</b> 55\u201395.",
+      "DOI": "10.1111/1467-9868.00055"
+    },
+    {
+      "key": "11",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Ding, P. and Geng, Z. (2014). Identifiability of subgroup causal effects in randomized experiments with nonignorable missing covariates. <i>Stat. Med.</i> <b>33</b> 1121\u20131133.",
+      "DOI": "10.1002/sim.6014"
+    },
+    {
+      "key": "12",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Harel, O. and Schafer, J. L. (2009). Partial and latent ignorability in missing-data problems. <i>Biometrika</i> <b>96</b> 37\u201350.",
+      "DOI": "10.1093/biomet/asn069"
+    },
+    {
+      "key": "13",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Horowitz, J. L. and Manski, C. F. (1998). Censoring of outcomes and regressors due to survey nonresponse: Identification and estimation using weights and imputations. <i>J. Econometrics</i> <b>84</b> 37\u201358.",
+      "DOI": "10.1016/S0304-4076(97)00077-8"
+    },
+    {
+      "key": "14",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Horowitz, J. L. and Manski, C. F. (2000). Nonparametric analysis of randomized experiments with missing covariate and outcome data. <i>J. Amer. Statist. Assoc.</i> <b>95</b> 77\u201388.",
+      "DOI": "10.1080/01621459.2000.10473902"
+    },
+    {
+      "key": "15",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Imbens, G. W. and Manski, C. F. (2004). Confidence intervals for partially identified parameters. <i>Econometrica</i> <b>72</b> 1845\u20131857.",
+      "DOI": "10.1111/j.1468-0262.2004.00555.x"
+    },
+    {
+      "key": "16",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Jiang, Z. and Ding, P. (2018). Supplement to \u201cUsing missing types to improve partial identification with application to a study of HIV prevalence in Malawi.\u201d <a href=\"DOI:10.1214/17-AOAS1133SUPP\">DOI:10.1214/17-AOAS1133SUPP</a>.",
+      "DOI": "10.1214/17-AOAS1133SUPP"
+    },
+    {
+      "key": "17",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Jiang, Z., Ding, P. and Geng, Z. (2016). Principal causal effect identification and surrogate end point evaluation by multiple trials. <i>J. R. Stat. Soc. Ser. B. Stat. Methodol.</i> <b>78</b> 829\u2013848.",
+      "DOI": "10.1111/rssb.12135"
+    },
+    {
+      "key": "20",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Kitagawa, T. (2015). A test for instrument validity. <i>Econometrica</i> <b>83</b> 2043\u20132063.",
+      "DOI": "10.3982/ECTA11974"
+    },
+    {
+      "key": "21",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Lee, D. S. (2009). Training, wages, and sample selection: Estimating sharp bounds on treatment effects. <i>Rev. Econ. Stud.</i> <b>76</b> 1071\u20131102.",
+      "DOI": "10.1111/j.1467-937X.2009.00536.x"
+    },
+    {
+      "key": "22",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Little, R. J. (1993). Pattern-mixture models for multivariate incomplete data. <i>J. Amer. Statist. Assoc.</i> <b>88</b> 125\u2013134.",
+      "DOI": "10.1080/01621459.1993.10594302"
+    },
+    {
+      "key": "24",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Little, R. J., Rubin, D. B. and Zangeneh, S. Z. (2017). Conditions for ignoring the missing-data mechanism in likelihood inferences for parameter subsets. <i>J. Amer. Statist. Assoc.</i> <b>112</b> 314\u2013320.",
+      "DOI": "10.1080/01621459.2015.1136826"
+    },
+    {
+      "key": "25",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Long, D. M. and Hudgens, M. G. (2013). Sharpening bounds on principal effects with covariates. <i>Biometrics</i> <b>69</b> 812\u2013819.",
+      "DOI": "10.1111/biom.12103"
+    },
+    {
+      "key": "26",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Ma, W.-Q., Geng, Z. and Hu, Y.-H. (2003). Identification of graphical models for nonignorable nonresponse of binary outcomes in longitudinal studies. <i>J. Multivariate Anal.</i> <b>87</b> 24\u201345.",
+      "DOI": "10.1016/S0047-259X(03)00043-5"
+    },
+    {
+      "key": "29",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Manski, C. F. and Pepper, J. V. (2000). Monotone instrumental variables: With an application to the returns to schooling. <i>Econometrica</i> <b>68</b> 997\u20131010.",
+      "DOI": "10.1111/1468-0262.00144"
+    },
+    {
+      "key": "30",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Mattei, A., Mealli, F. and Pacini, B. (2014). Identification of causal effects in the presence of nonignorable missing outcome values. <i>Biometrics</i> <b>70</b> 278\u2013288.",
+      "DOI": "10.1111/biom.12136"
+    },
+    {
+      "key": "33",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Miao, W., Ding, P. and Geng, Z. (2016). Identifiability of normal and normal mixture models with nonignorable missing data. <i>J. Amer. Statist. Assoc.</i> <b>111</b> 1673\u20131683.",
+      "DOI": "10.1080/01621459.2015.1105808"
+    },
+    {
+      "key": "34",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Molenberghs, G., Kenward, M. G. and Goetghebeur, E. (2001). Sensitivity analysis for incomplete contingency tables: The Slovenian plebiscite case. <i>J. R. Stat. Soc. Ser. C. Appl. Stat.</i> <b>50</b> 15\u201329.",
+      "DOI": "10.1111/1467-9876.00217"
+    },
+    {
+      "key": "35",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Romano, J. P. and Shaikh, A. M. (2010). Inference for the identified set in partially identified econometric models. <i>Econometrica</i> <b>78</b> 169\u2013211.",
+      "DOI": "10.3982/ECTA6706"
+    },
+    {
+      "key": "36",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Rotnitzky, A., Scharfstein, D., Su, T.-L. and Robins, J. (2001). Methods for conducting sensitivity analysis of trials with potentially nonignorable competing causes of censoring. <i>Biometrics</i> <b>57</b> 103\u2013113.",
+      "DOI": "10.1111/j.0006-341X.2001.00103.x"
+    },
+    {
+      "key": "37",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Rubin, D. B. (1976). Inference and missing data. <i>Biometrika</i> <b>63</b> 581\u2013592. With comments by R. J. A. Little and a reply by the author.",
+      "DOI": "10.1093/biomet/63.3.581"
+    },
+    {
+      "key": "39",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Rubin, D. B. (2005). Comment on \u201cMultiple-bias modelling for analysis of observational data\u201d by S. Greenland. <i>J. Roy. Statist. Soc. Ser. A</i> <b>168</b> 302.",
+      "DOI": "10.1111/j.1467-985X.2004.00349.x"
+    },
+    {
+      "key": "40",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Scharfstein, D. O., Manski, C. F. and Anthony, J. C. (2004). On the construction of bounds in prospective studies with missing ordinal outcomes: Application to the good behavior game trial. <i>Biometrics</i> <b>60</b> 154\u2013164.",
+      "DOI": "10.1111/j.0006-341X.2004.00158.x"
+    },
+    {
+      "key": "42",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Seaman, S., Galati, J., Jackson, D. and Carlin, J. (2013). What is meant by \u201cmissing at random\u201d? <i>Statist. Sci.</i> <b>28</b> 257\u2013268.",
+      "DOI": "10.1214/13-STS415"
+    },
+    {
+      "key": "43",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Shao, J. and Wang, L. (2016). Semiparametric inverse propensity weighting for nonignorable missing data. <i>Biometrika</i> <b>103</b> 175\u2013187.",
+      "DOI": "10.1093/biomet/asv071"
+    },
+    {
+      "key": "44",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Tang, G., Little, R. J. A. and Raghunathan, T. E. (2003). Analysis of multivariate missing data with nonignorable nonresponse. <i>Biometrika</i> <b>90</b> 747\u2013764.",
+      "DOI": "10.1093/biomet/90.4.747"
+    },
+    {
+      "key": "45",
+      "unstructured": "Vansteelandt, S., Goetghebeur, E., Kenward, M. G. and Molenberghs, G. (2006). Ignorance and uncertainty regions as inferential tools in a sensitivity analysis. <i>Statist. Sinica</i> <b>16</b> 953\u2013979."
+    },
+    {
+      "key": "46",
+      "doi-asserted-by": "publisher",
+      "unstructured": "Yang, S. and Kim, J. K. (2016). A note on multiple imputation for method of moments estimation. <i>Biometrika</i> <b>103</b> 244\u2013251.",
+      "DOI": "10.1093/biomet/asv073"
+    },
+    {
+      "key": "47",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Yang, F. and Small, D. S. (2016). Using post-outcome measurement information in censoring-by-death problems. <i>J. R. Stat. Soc. Ser. B. Stat. Methodol.</i> <b>78</b> 299\u2013318.",
+      "DOI": "10.1111/rssb.12113"
+    },
+    {
+      "key": "27",
+      "unstructured": "Manski, C. F. (2003). <i>Partial Identification of Probability Distributions</i>. Springer, New York."
+    },
+    {
+      "key": "9",
+      "unstructured": "Cochran, W. G. (1953). <i>Sampling Techniques</i>. Wiley, New York."
+    },
+    {
+      "key": "23",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Little, R. J. A. and Rubin, D. B. (2002). <i>Statistical Analysis with Missing Data</i>, 2nd ed. Wiley-Interscience, Hoboken, NJ.",
+      "DOI": "10.1002/9781119013563"
+    },
+    {
+      "key": "28",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Manski, C. F. (2009). <i>Identification for Prediction and Decision</i>. Harvard Univ. Press, Cambridge.",
+      "DOI": "10.2307/j.ctv219kxm0"
+    },
+    {
+      "key": "38",
+      "doi-asserted-by": "crossref",
+      "unstructured": "Rubin, D. B. (2004). <i>Multiple Imputation for Nonresponse in Surveys</i>. Wiley-Interscience, Hoboken, NJ. Reprint of the 1987 edition.",
+      "DOI": "10.1002/9780470316696"
+    }
+  ],
+  "container-title": [
+    "The Annals of Applied Statistics"
+  ],
+  "original-title": [],
+  "link": [
+    {
+      "URL": "https://projecteuclid.org/download/pdfview_1/euclid.aoas/1536652976",
+      "content-type": "unspecified",
+      "content-version": "vor",
+      "intended-application": "similarity-checking"
+    }
+  ],
+  "deposited": {
+    "date-parts": [
+      [
+        2026,
+        10,
+        8
+      ]
+    ],
+    "date-time": "2026-10-08T17:25:54Z",
+    "timestamp": 1791480354000
+  },
+  "score": 1,
+  "resource": {
+    "primary": {
+      "URL": "https://projecteuclid.org/journals/annals-of-applied-statistics/volume-12/issue-3/Using-missing-types-to-improve-partial-identification-with-application-to/10.1214/17-AOAS1133.full"
+    }
+  },
+  "subtitle": [],
+  "short-title": [],
+  "issued": {
+    "date-parts": [
+      [
+        2018,
+        9,
+        1
+      ]
+    ]
+  },
+  "references-count": 47,
+  "journal-issue": {
+    "issue": "3",
+    "published-online": {
+      "date-parts": [
+        [
+          2018,
+          9,
+          1
+        ]
+      ]
+    }
+  },
+  "URL": "https://doi.org/10.1214/17-aoas1133",
+  "relation": {},
+  "ISSN": [
+    "1932-6157",
+    "1941-7330"
+  ],
+  "issn-type": [
+    {
+      "value": "1932-6157",
+      "type": "print"
+    },
+    {
+      "value": "1941-7330",
+      "type": "electronic"
+    }
+  ],
+  "subject": [],
+  "published": {
+    "date-parts": [
+      [
+        2018,
+        9,
+        1
+      ]
+    ]
+  }
+}

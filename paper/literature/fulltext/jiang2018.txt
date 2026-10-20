@@ -1,0 +1,1426 @@
+                                           Submitted to the Annals of Applied Statistics
+
+
+
+
+                                                USING MISSING TYPES TO IMPROVE PARTIAL
+                                              IDENTIFICATION WITH APPLICATION TO A STUDY
+                                                      OF HIV PREVALENCE IN MALAWI
+
+                                                                     By Zhichao Jiang∗ and Peng Ding†
+                                                     Princeton University∗ and University of California, Berkeley†
+arXiv:1610.01198v6 [stat.ME] 11 Sep 2018
+
+
+
+
+                                                             Frequently, empirical studies are plagued with missing data. When
+                                                        the data are missing not at random, the parameter of interest is not
+                                                        identifiable in general. Without additional assumptions, we can de-
+                                                        rive bounds of the parameters of interest, which, unfortunately, are
+                                                        often too wide to be informative. Therefore, it is of great importance
+                                                        to sharpen these worst-case bounds by exploiting additional infor-
+                                                        mation. Traditional missing data analysis uses only the information
+                                                        of the binary missing data indicator, that is, a certain data point
+                                                        is either missing or not. Nevertheless, real data often provide more
+                                                        information than a binary missing data indicator, and they often
+                                                        record different types of missingness. In a motivating HIV status sur-
+                                                        vey, missing data may be due to the units’ unwillingness to respond
+                                                        to the survey items or their hospitalization during the visit, and may
+                                                        also be due to the units’ temporarily absence or relocation. It is ap-
+                                                        parent that some missing types are more likely to be missing not at
+                                                        random, but other missing types are more likely to be missing at
+                                                        random. We show that making full use of the missing types results in
+                                                        narrower bounds of the parameters of interest. In a real-life example,
+                                                        we demonstrate substantial improvement of more than 50% reduc-
+                                                        tion in bound widths for estimating the prevalence of HIV in rural
+                                                        Malawi. As we illustrate using the HIV study, our strategy is also
+                                                        useful for conducting sensitivity analysis by gradually increasing or
+                                                        decreasing the set of types that are missing at random. In addition,
+                                                        we propose an easy-to-implement method to construct confidence in-
+                                                        tervals for partially identified parameters with bounds expressed as
+                                                        the minimums and maximums of finite parameters, which is useful
+                                                        for not only our problem but also many other problems involving
+                                                        bounds.
+
+
+                                              1. An introduction to missing data and partial identification.
+                                           Missing data is a common problem for both experimental and observational
+                                           studies in social and biomedical sciences. Rubin (1976) first clarified the
+                                           missing at random and missing not at random mechanisms. Intuitively, the
+                                           missing at random assumption requires the missing data mechanism be inde-
+                                           pendent of the missing values themselves conditional on the observed data,
+                                             Keywords and phrases: Longitudinal data, Partial identification, Sensitivity analysis,
+                                           Sharp bound, Testable condition
+                                                                                           1
+2                         JIANG, Z. AND DING, P.
+
+but missing not at random allows for such dependence (Rubin, 1976). For
+more subtle discussion of these concepts, see Mealli and Rubin (2015), Rubin
+(1976) and Seaman et al. (2013). Missing at random is a sufficient condition
+to justify many missing data methods, including likelihood and Bayesian
+inference (Little and Rubin, 2002; Yang and Kim, 2016), multiple impu-
+tation (Rubin, 2004), and inverse probability weighting and doubly robust
+estimation (Bang and Robins, 2005; Kang and Schafer, 2007).
+   Unfortunately, however, the missing at random assumption is untestable
+and it can be too strong in practice. Without making such assumption,
+researchers derived bounds of the parameters of interest, considering the
+worst-case scenarios of the missing data (Ding and Geng, 2014; Horowitz
+and Manski, 1998, 2000; Manski, 2003; Mattei, Mealli and Pacini, 2014).
+In fact, this idea had an early root in survey nonresponse, but was aban-
+doned by its inventor Cochran (1953) because the bounds are often too
+wide to be useful. Recognizing the drawbacks of the extreme bounds, some
+researchers suggested conducting sensitivity analysis to obtain a range of
+estimates for the parameters corresponding to a plausible range of the sensi-
+tivity parameter (Copas and Li, 1997; Molenberghs, Kenward and Goetghe-
+beur, 2001; Rotnitzky et al., 2001; Scharfstein, Rotnitzky and Robins, 1999;
+Vansteelandt et al., 2006). Some researchers incorporated expert opinions
+(Scharfstein, Manski and Anthony, 2004) to derive narrower bounds. Other
+researchers imposed parametric assumptions (Miao, Ding and Geng, 2016)
+or used instrumental variables (Ma, Geng and Hu, 2003; Shao et al., 2016;
+Tang, Little and Raghunathan, 2003) to identify parameters of interest.
+   Motivated by a longitudinal survey of HIV prevalence in rural Malawi
+(Arpino, De Cao and Peracchi, 2014), we propose an alternative approach
+to improve the inference by exploiting the information about different miss-
+ing types of the outcomes. For instance, the data have recorded that the
+units’ HIV statuses were missing due to different reasons, i.e., the outcomes
+have different missing types. Some of them were unwilling to respond, some
+of them were in hospital, some of them were temporarily absent in the sur-
+vey, some of them moved to another place to live, and some outcomes were
+missing due to other reasons. It is evident that some missing types may
+depend on the HIV status, and other missing types are very likely to be
+independent of the HIV status. Carefully utilizing the information of the
+missing types can lead to narrower bounds of the partially identified param-
+eters compared to bounds that use only the binary missing data indicators
+as in the traditional analysis. Moreover, the HIV status satisfies a natural
+monotonicity, because a person infected at any given time point must be
+infected at later time points, whereas a person not infected at any given
+      USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                    3
+
+time point cannot be infected at earlier time points. Therefore, we can fur-
+ther improve the bounds with longitudinal HIV data. We establish theory
+to quantify the improvement of bounds in both cross-sectional and longitu-
+dinal data, and show that the consequential bounds of the HIV prevalence
+are substantially narrower in theory and in our application.
+   Although it is straightforward to estimate the bounds, it is challenging
+to construct confidence intervals for the parameters of interest. Importantly,
+the estimators of our bounds do not follow asymptotic normal distributions
+as required by Imbens and Manski (2004) and Vansteelandt et al. (2006),
+and the bootstrap may lead to invalid asymptotic confidence intervals (An-
+drews, 2000; Romano and Shaikh, 2010). We propose a method to construct
+confidence intervals for partially identified parameters with upper and lower
+bounds expressed as the minimums and maximums of finite parameters.
+Our method is easy to implement, and is useful for not only our problem
+but also many other problems involving bound analysis in the missing data
+and causal inference literature (Manski, 2003; Cheng and Small, 2006; Mealli
+and Pacini, 2013; Mattei, Mealli and Pacini, 2014; Yang and Small, 2016).
+   More practically, our paper offers a novel strategy to conduct sensitivity
+analysis with respect to the missing data mechanism. Illustrated by the HIV
+study, we can gradually increase or decrease the set of types that are missing
+at random, and therefore obtain a sequence of results under assumptions
+with different restrictions on the missing data mechanism.
+
+  2. Missing data at a single time point.
+
+   2.1. Traditional bounds with data missing not at random. We first con-
+sider the case with a single observational time point t. Let Yt be a binary
+outcome of interest. For example, in our application, Yt is the HIV status
+at a given time t, with Yt = 1 if infected and Yt = 0 otherwise. We focus
+on a binary outcome, and will comment on general outcomes in Section 6.
+We condition on covariates implicitly in the theoretical discussion, and all
+conclusions hold within each stratum of covariates. Let St be the survival
+status at a given time t, with St = 1 if survive and St = 0 otherwise. The
+outcome Yt is well-defined only for people alive at time point t, i.e., for units
+with St = 0, we define Yt = ∗. In addition, Yt is missing for some alive
+units. Let R̃t be the missing data indicator, with R̃t = 1 if the outcome is
+observed, R̃t = 0 if the outcome is missing, and R̃t = ∗ if the unit is dead.
+In many real-world applications, an important quantity of interest is
+
+                           πt = pr(Yt = 1 | St = 1),
+4                            JIANG, Z. AND DING, P.
+
+which, in the HIV example, is the prevalence of HIV of the alive people at
+time point t.
+   The pattern mixture decomposition (Little and Rubin, 2002) of the out-
+come distribution is
+
+            πt = pr(Yt = 1 | R̃t = 1, St = 1)pr(R̃t = 1 | St = 1)
+(2.1)               +pr(Yt = 1 | R̃t = 0, St = 1)pr(R̃t = 0 | St = 1).
+
+An advantage of the above decomposition is its transparency for identifi-
+cation analysis. For the right-hand side of (2.1), the observed data of sur-
+vivors allow for identification of pr(R̃t = 1 | St = 1), pr(R̃t = 0 | St = 1)
+and pr(Yt = 1 | R̃t = 1, St = 1), but do not contain any information about
+pr(Yt = 1 | R̃t = 0, St = 1) without further assumptions. Consequently, in
+general, we can obtain only the bounds of πt by setting pr(Yt = 1 | R̃t =
+0, St = 1) to its extreme values. Because 0 ≤ pr(Yt = 1 | R̃t = 0, St = 1) ≤ 1,
+the lower and upper bounds of πt are LBt ≤ πt ≤ UBt , where
+(2.2) LBt    =   pr(Yt = 1 | R̃t = 1, St = 1)pr(R̃t = 1 | St = 1),
+(2.3) UBt    =   pr(Yt = 1 | R̃t = 1, St = 1)pr(R̃t = 1) + pr(R̃t = 0 | St = 1).
+
+
+   This type of bound analysis, considering the worst case scenarios, has a
+long history in statistics at least dating back to Cochran (1953)’s discussion
+in survey nonresponse. Similar ideas are extensively explored in econometrics
+(Manski, 2003). Although the bounds in (2.2) and (2.3) do not rely on
+any assumptions about the missing data mechanism, they often correspond
+to unrealistic extreme cases that all the missing outcomes are 1 or 0, and
+consequently they are too wide to be useful as pointed out by Cochran
+(1953). Rubin (2005) echoed this view. Therefore, to make useful inference
+with data missing not at random, we need to exploit more information from
+the data and background knowledge to sharpen the bounds.
+
+   2.2. Using nonresponse types to sharpen bounds of a single time point.
+The discussion in Section 2.1 uses only the binary information of the miss-
+ing data indicator. In many applications, the data provide additional infor-
+mation about different types of nonresponse. For theoretical discussion, we
+consider a generic case with a four-valued type-specific missing data indica-
+tor. Let Rt = 1 if the outcome is observed, Rt = −1 if nonresponse is due
+to reasons related to the missing outcome, Rt = 0 if nonresponse is due to
+other reasons unrelated to the missing outcome, and Rt = ∗ if the unit is
+dead. Real problems, such as the HIV study considered in Section 5, often
+record many reasons of nonresponse, but we can collapse the reasons into
+      USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                5
+
+two categories of nonresponse with Rt = −1 or 0. An example for the first
+type with Rt = −1 is that the unit refuses to answer the survey item about
+the outcome, and an example of the second type with Rt = 0 is that the
+unit moves to another place during the visit. Therefore, the coarsened binary
+missing data indicator R̃t equals 1 if and only if the type-specific missing
+data indicator Rt equals 1, R̃t equals 0 if Rt = 0 or −1, and R̃t equals ∗ if
+Rt = ∗.
+  The bounds in (2.2) and (2.3) do not take into account the difference in
+nonresponse types. We can improve them, by making full use of the missing
+data indicator Rt and the following assumption.
+
+  Assumption 1.      pr(Yt = 1 | Rt = 0, St = 1) = pr(Yt = 1 | St = 1).
+
+    Assumption 1 states that among survivors, the outcome distribution of
+the individuals with Rt = 0 is the same as the outcome distribution of the
+whole population. According to Bayes’ Theorem, Assumption 1 is equivalent
+to pr(Rt = 0 | Yt = 1, St = 1) = pr(Rt = 0 | St = 1). Therefore, Assumption
+1 means that the type with Rt = 0 is missing completely at random, but it is
+weaker than the usual missing completely at random assumption. Recall that
+in the theoretical discussion, we condition on all the covariates implicitly.
+With covariates Xt at time t, Assumption 1 becomes pr(Yt = 1 | Xt , Rt =
+0, St = 1) = pr(Yt = 1 | Xt , St = 1), meaning that the type with Rt = 0
+is missing at random. Therefore, we refer to Assumption 1 as the partial
+missing at random assumption.
+    In our motivating example, Assumption 1 means that the nonresponse
+corresponding to Rt = 0 is due to reasons unrelated to the HIV status.
+In the data, some individuals’ HIV status is missing due to carelessness in
+data collection, which is purely random. Some individuals’ HIV status is
+missing because he/she moved to another place during the survey, which is
+also independent of his/her HIV status. It is plausible to assume that units
+with these missing types constitute a simple random sample of all the units,
+or, equivalently, Assumption 1 holds. In addition to these reasons, there are
+some other reasons such as “hospitalization” and “refused to answer,” which
+are probably related to the HIV status. As a result, we define these reasons
+as Rt = −1. Not surprisingly, Assumption 1 helps to sharpen the bounds of
+πt .
+
+                                                             ft ≤
+   Theorem 1. Under Assumption 1, the sharp bounds of πt are LB
+πt ≤ UBt , where
+     g
+
+f t = pr(Yt =1,Rt =1|St =1) ,
+LB                              gt = pr(Yt =1,Rt =1|St =1)+pr(Rt =−1|St =1) .
+                                UB
+       1−pr(Rt =0|St =1)                       1−pr(Rt =0|St =1)
+6                           JIANG, Z. AND DING, P.
+
+Moreover, [LB    gt ] ⊆ [LBt , UBt ], with [LB
+           f t , UB                               gt ] ⊂ [LBt , UBt ] ⊂ [0, 1] if
+                                            f t , UB
+pr(Rt = 0) > 0.
+
+   Theorem 1 demonstrates that by considering different nonresponse types,
+we can sharpen the bounds of πt in (2.2) and (2.3). The reduction in width
+of the bounds depends on pr(Rt = 0 | St = 1), the proportion of units with
+outcomes missing at random. When pr(Rt = 0 | St = 1) = 0, the bounds
+are the same as the traditional bounds (2.2) and (2.3); when pr(Rt = 0 |
+St = 1) = 1 − pr(Rt = 1 | St = 1), i.e., pr(Rt = −1 | St = 1) = 0, the
+bounds collapse to a point, and πt is pointly identifiable. A larger value of
+pr(Rt = 0 | St = 1) leads to a larger reduction in the width of the bounds
+by taking into account the difference in nonresponse types. A practical issue
+of applying Theorem 1 to our real data is that we do not know whether
+some reasons depend on the HIV status or not. We would obtain different
+bounds if we define different reasons as Rt = 0. To deal with this issue, we
+will propose an approach in Section 5.4 to conducting sensitivity analysis
+based on Theorem 1.
+   Assumption 1 is weaker than missing at random, because it imposes a
+partial missing at random assumption that one category of nonresponse is
+independent of the missing outcome. Assumption 1 is similar to the identi-
+fying restrictions in pattern mixture model (Little, 1993), where the param-
+eters for the non-respondents are assumed to be the same as those for the
+respondents. In the literature, Harel and Schafer (2009) and Little, Rubin
+and Zangeneh (2017) discussed the role of some other partial missing at
+random assumptions in likelihood and Bayesian inference. We focus on non-
+parametric identification and bound analysis without imposing parametric
+modeling assumptions that are often required by likelihood and Bayesian
+inferences.
+
+    3. Longitudinal data missing not at random.
+
+   3.1. Improving bounds using nonresponse types with longitudinal data.
+When longitudinal data are available, the information across different time
+points can help improve the bounds, as recognized by Arpino, De Cao and
+Peracchi (2014). For instance, HIV infection is an absorbing state, i.e., a per-
+son infected at any given time point must be infected at later time points,
+whereas a person not infected at any given time point cannot be infected at
+earlier time points. Mathematically, for the people alive at both time points
+s and t with s < t, if Yt = 0 then Ys = 0, and if Ys = 1 then Yt = 1. We
+formally state this assumption.
+      USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                                   7
+
+  Assumption 2.          For any s < t, if St = Ss = 1, then Ys ≤ Yt .
+
+   Assumption 2 imposes monotonicity on the individual level outcomes,
+which holds naturally for diseases like HIV. Under monotonicity, for s < t,
+if Ys = 1, Rs = 1 and St = 1, then we can infer Yt = 1. Note that we do not
+set the value of Rt to 1 in this case because the original missing mechanism
+contains information for the bounds. Other different forms of monotonicity
+are also used as identification assumptions (e.g., Angrist, Imbens and Rubin,
+1996; Jin and Rubin, 2008; Jiang, Ding and Geng, 2016).
+   Under Assumption 2, we can sharpen the bounds in Theorem 1 with data
+at multiple time points.
+
+  Theorem 2. With data at time points t − I, . . . , t, . . . , t + J, under As-
+                                              f It ≤ πt ≤ UB
+sumptions 1 and 2, the sharp bounds of πt are LB                gJt , where
+                    PI
+   f It = max
+                n
+                      i=1 pr(Yt−i =1,Rt−i =1,Rt−i+1 6=1,...,Rt−1 6=1,Rt =−1|St =1)
+   LB                                    1−pr(Rt =0|St =1)
+                                                                                     + LB
+                                                                                       f t,
+                    PI                                                                            o
+                      i=1 pr(Yt−i = 1, Rt−i = 1, Rt−i+1 6= 1, . . . , Rt−1 6= 1 | Rt = 0, St = 1) ,
+                           PJ
+   gJt = min
+                n               pr(Yt+j =0,Rt+j =1,Rt+j−1 6=1,...,Rt+1 6=1,Rt =−1,St+j =1|St =1)
+   UB               UBt − j=1
+                    g
+                                                   1−pr(Rt =0|St =1)
+                                                                                                 ,
+                        PJ                                                                                   o
+                    1 − j=1 pr(Yt+j = 0, Rt+j = 1, Rt+j−1 6= 1, . . . , Rt+1 6= 1, St+j = 1 | Rt = 0, St = 1) ,
+
+recalling LB
+          f t and UB
+                  gt are defined in Theorem 1.
+
+   Because people alive at time point t must be alive at time points before
+t, for t0 < t, we can observe Rt0 for units with St = 1. Thus, we can cal-
+culate LBf I from the observed data. Similarly, for units with St+j = 1, we
+           t
+                                                                      gJ from
+observe (Rt+j , Rt+j−1 , . . . , Rt ), and thus we can also calculate UB t
+the observed data. Note that, to obtain the bounds of πt with longitudinal
+data, we require Assumption 1 holds only for time point t. Theorem 2 shows
+that the data at time points later than t do not have any information to
+improve the lower bound of πt . Intuitively, this is because the monotonicity
+assumption is one-sided, i.e., for a positive j, we can infer Yt = 0 as long
+as Yt+j = 0, but we are unsure of Yt if Yt+j = 1. Thus, the data at time
+points later than t can rule out only the possibility that some units’ Yt ’s take
+value 1 but not 0, and hence do not affect the lower bound. From a more
+theoretical view, with data at time points later than t, the unidentifiable
+term pr(Yt = 1 | Rt = −1, St = 1) can no longer attain the extreme value 1
+as in Theorem 1, but it can always attain the extreme value 0, which keeps
+the lower bound unchanged. Similar discussion applies to the upper bound.
+   Comparing Theorems 1 and 2, we can see that the bounds with multiple
+time points are narrower than the bounds with a single time point. Therefore,
+8                           JIANG, Z. AND DING, P.
+
+collecting data at more time points can always improve the bounds, as long
+as Assumptions 1 and 2 hold.
+   In our application, monotonicity holds automatically for the HIV infec-
+tion. For other diseases or other types of outcomes, this assumption may be
+violated. However, without monotonicity, we can still improve the bounds
+of Arpino, De Cao and Peracchi (2014) with Assumption 1 as shown in
+Theorem 1.
+
+   3.2. Testable conditions for Assumptions 1 and 2. Assumptions 1 and 2
+are crucial for our theory. Therefore, it is important to check their validity
+empirically. Requiring the lower bound to be less than or equal to the upper
+bound in Theorem 2, we can obtain testable conditions implied by Assump-
+tions 1 and 2. Moreover, because the bounds in Theorem 2 are sharp, these
+conditions include all testable conditions. Specifically, LB       gJt implies
+                                                            f It ≤ UB
+four testable inequalities. For simplicity, we give the testable conditions with
+two or three time points in the main text which are adequate for our em-
+pirical application. We can similarly derive the general testable conditions
+implied by Theorem 2, but to avoid notational complexity we give them in
+the supplementary material.
+
+   Corollary 1. With data at time points t and t+1, a testable condition
+for Assumptions 1 and 2 is LB  f t ≤ 1 − pr(Yt+1 = 0, Rt+1 = 1, St+1 = 1 |
+Rt = 0, St = 1), and it is the only testable condition.
+
+   The condition in Corollary 1 is testable because it depends only on the
+distribution of the observed data, but does not depend on any missing values.
+Therefore, the testable condition allows us to falsify Assumptions 1 and 2
+by the observed data in some scenarios. If the condition is violated, then the
+data invalidate the fundamental assumptions we make. We give a numerical
+example to illustrate Corollary 1.
+
+   Example 1. Suppose that we have data at time points t and t + 1, and
+for simplicity, all the units are alive at both time points. Thus, we omit St
+and St+1 in probabilities. Let the distributions of Yt be pr(Yt = 1) = 2/5,
+and assume the following conditional distribution of Rt given Yt :
+              pr(Rt = r | Yt = y)     Rt = −1     Rt = 0    Rt = 1
+                    Yt = 1               0         1/4       3/4
+                    Yt = 0              1/2        1/2         0
+We further assume that the conditional distribution of (Yt+1 , Rt+1 ) on (Yt , Rt )
+can be decomposed as pr(Yt+1 , Rt+1 | Yt , Rt ) = pr(Yt+1 | Yt )pr(Rt+1 | Rt )
+       USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                                9
+
+with pr(Yt+1 = 1 | Yt = 1) = 1 and pr(Yt+1 = 1 | Yt = 0) = 1/6. There-
+fore, Assumption 2 holds, and pr(Yt+1 = 1) = 1/2. The probabilities of the
+conditional distribution of Rt+1 on Rt are
+            pr(Rt+1 = rt+1 | Rt = rt )       Rt = −1       Rt = 0     Rt = 1
+            Rt+1 = 1                           1/2            1        1/2
+            Rt+1 = 0                           1/2            0        1/2
+            Rt+1 = −1                           0             0          0
+Therefore, the data generating process violates Assumption 1.
+  From the observed data, we can verify that LB     f t = 1/2 > 3/8 = 1 −
+pr(Yt+1 = 0, Rt+1 = 1 | Rt = 0), which violates the condition in Corollary 1.
+Therefore, the observed distribution falsifies the conjunction of Assumptions
+1 and 2. If we have the prior knowledge that Assumption 2 holds as in the
+motivating HIV example, then the observed data can falsify Assumption 1.
+As a result, our bounds are not applicable in this case.
+
+   Corollary 1 shows that, although the missing data mechanism in Assump-
+tion 1 cannot be tested alone, it can be tested when Assumption 2 holds a
+priori. For related discussion on testable conditions in other contexts, please
+see Balke and Pearl (1997), Cheng and Small (2006) and Kitagawa (2015).
+The following corollary gives the testable condition with time points t − 1
+and t.
+
+   Corollary 2. With data at time points t−1 and t, a testable condition
+for Assumptions 1 and 2 is pr(Yt−1 = 1, Rt−1 = 1 | Rt = 0, St = 1) ≤ UB
+                                                                     gt ,
+and it is the only testable condition.
+
+   Because our HIV example has three time points, we present theoretical
+results that are directly applicable. With three time points t − 1, t and t + 1,
+the sharp lower and upper bounds of πt are LB   f 1 and UB
+                                                         g1 . Thus, we have
+                                                   t        t
+the following corollary.
+
+  Corollary 3. With data at time points t − 1, t and t + 1, testable
+conditions for Assumptions 1 and 2 are
+ pr(Yt+1 = 0, Rt+1 = 1, St+1 = 1 | Rt = −1, St = 1)    +   pr(Yt−1 = 1, Rt−1 = 1 | Rt = −1, St = 1)   ≤   1,
+   pr(Yt+1 = 0, Rt+1 = 1, St+1 = 1 | Rt = 0, St = 1)   +   pr(Yt−1 = 1, Rt−1 = 1 | Rt = 0, St = 1)    ≤   1,
+                                                           pr(Yt−1 =1,Rt−1 =1,Rt =−1|St =1)
+   pr(Yt+1 = 0, Rt+1 = 1, St+1 = 1 | Rt = 0, St = 1)   +           1−pr(Rt =0|St =1)
+                                                                                                      ≤   1 − LB
+                                                                                                              f t,
+                                                           pr(Yt+1 =0,Rt+1 =1,Rt =−1,St+1 =1|St =1)
+            pr(Yt−1 = 1, Rt−1 = 1 | Rt = 0, St = 1)    +               1−pr(Rt =0|St =1)
+                                                                                                      ≤   UBt .
+                                                                                                          g
+
+
+  In practice, we should first check the testable conditions before reporting
+the bounds. If the conditions are violated, then the data provide evidence
+10                         JIANG, Z. AND DING, P.
+
+against Assumptions 1 and 2. In Section 5, our real data have observations
+at three time points and Assumption 2 holds by nature of HIV. Fortunately,
+the data do not contradict any testable conditions. Therefore, although the
+data cannot validate Assumption 1, they provide no evidence against it.
+
+   4. Confidence intervals for partially identified parameters. It is
+relatively easy to obtain point estimates of the lower and upper bounds by
+replacing the probabilities by their sample frequencies. To account for sam-
+ple variability, we need to construct a confidence interval for πt . However,
+because the lower and upper bounds are the minimums or maximums of
+some parameters, their moment estimators are not asymptotically normal.
+Thus, we cannot use traditional techniques without further modifications
+(Andrews, 2000; Imbens and Manski, 2004; Vansteelandt et al., 2006; Ro-
+mano and Shaikh, 2010). In this section, we propose a method to obtain valid
+confidence intervals for partially identified parameters of certain forms.
+
+   4.1. Method and theory conditioning on covariates. We drop the sub-
+script t for notational simplicity. In the previous sections, the parameter of
+interest, π, has bounds of the following form:
+(4.1)     max{L(1), . . . , L(Q)} ≤ π ≤ min{U(1), . . . , U(R)},
+where the L(q)’s and U(r)’s are all functions of some population moments.
+For example, in Theorem 2, Q = R = 2, and {L(1), L(2)} and {U(1), U(2)}
+are the two terms in the expressions of LB  f I and UB
+                                                    gJ , respectively. For any
+                                               t       t
+q and r, the point estimators of L(q) and U(r) are L(q)
+                                                     b     and U(r),
+                                                                b    which are
+asymptotically normal with means L(q) and U(r) and estimated standard
+errors σbL (q) and σbU (r).
+   Imbens and Manski (2004) proposed a method to construct confidence
+intervals for partially identified parameters, but their method requires that
+the estimators for the upper and lower bounds follow a joint bivariate normal
+distribution asymptotically. Chernozhukov, Lee and Rosen (2013) proposed
+a general method, but the construction of their confidence interval is non-
+trivial. Fortunately, the bounds in our paper have a nice feature: the lower
+bounds are the maximums of some parameters, and the upper bounds are
+the minimums of some parameters. This feature allows us to extend Imbens
+and Manski (2004)’s method to construct confidence intervals for π. We first
+review their method. They considered a simple case in which the parameter
+of interest has bounds L(q) ≤ π ≤ U(r) for fixed q and r, and proposed to
+use
+                         h                                    i
+(4.2)        CI(q, r) = L(q)
+                           b −C ×σ   bL (q), U(r)
+                                             b    +C ×σ bU (r) ,
+       USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                        11
+
+as a (1−α)-level confidence interval for π, where Φ(·) is the cumulative distri-
+bution function of a standard normal random variable, and C is determined
+by
+              "                           #
+                        U(r)
+                        b     − L(q)
+                                b
+(4.3)       Φ C+                            − Φ(−C) = 1 − α.
+                     max{bσL (q), σ
+                                  bU (r)}
+
+Note that with large samples, the solution of C in equation (4.3) is close
+to Φ−1 (1 − α), the one-sided critical value based on a standard normal
+distribution. See Vansteelandt et al. (2006) for similar discussion.
+   However, the bounds in (4.1) have more complicated forms. If we know the
+true indices of the bounds q0 = arg max1≤q≤Q L(q) and r0 = arg min1≤r≤R U(r),
+then the bounds in (4.1) are simply L(q0 ) ≤ π ≤ U(r0 ), and we can use
+CI(q0 , r0 ) as a confidence interval for π. In our case, the true values of q0 and
+r0 are unknown, we can first obtain their estimators qb = arg max1≤q≤Q L(q)          b
+and rb = arg min1≤r≤R U(r),
+                          b       and then use CI(b   q , rb) as a confidence interval for
+π. In the following subsection, we will prove the validity of this new method
+for constructing confidence intervals.
+   Intuitively, as the large sample size goes to infinity, qb and rb will converge
+to the true values q0 and r0 , and CI(b      q , rb) will then converge to CI(q0 , r0 ).
+Because CI(q0 , r0 ) has a correct asymptotic coverage rate as shown in Imbens
+and Manski (2004), CI(b    q , rb) also has a correct asymptotic coverage rate for
+π. The following theorem formally ensures the validity of this new confidence
+interval.
+
+  Theorem 3. If (1) {L(1), . . . , L(Q)} have a unique maximum value
+L(q0 ), and {U(1), . . . , U(R)} have a unique minimum value U(r0 ); (2) for
+any q and r, the asymptotic distribution of {L(q),
+                                                 b    U(r)}
+                                                       b    is bivariate normal
+with means {L(q), U(r)} and estimated standard errors {b    σL (q), σ
+                                                                    bU (r)}, then
+   q , rb) has a coverage rate at least as large as 1 − α asymptotically.
+CI(b
+
+   Technically, in Theorem 3 there are two types of coverage rates (the point-
+wise and uniform coverage rates), and they require different regularity con-
+ditions (Imbens and Manski, 2004; Vansteelandt et al., 2006; Romano and
+Shaikh, 2010; Chernozhukov, Lee and Rosen, 2013). For simplicity we rel-
+egate the technical discussions to the online supplementary material. Intu-
+itively, these conditions rule out the extreme cases that the L(q)’s and U(r)’s
+are too close. In our application, the estimated bounds are wide enough for
+us to believe that L(q)’s and U(r)’s are not close even in the presence of
+statistical uncertainty. Therefore, the confidence intervals calculated in our
+12                          JIANG, Z. AND DING, P.
+
+application are likely to have coverage rates at least as large as 95% asymp-
+totically. According to Theorem 3, for each possible value of the parameter,
+CI(bq , rb) has a coverage rate at least as large as 1 − α asymptotically, and in
+the case of partial identification it is inevitable that for some values of the
+parameter, CI(b    q , rb) will have higher coverage rates than the nominal level.
+We give a numerical example to illustrate the procedure of Theorem 3 for
+constructing confidence intervals.
+
+   Example 2. Suppose that the parameter of interest, π, has bounds max{L(1), L(2)} ≤
+π ≤ min{U(1), U(2)}. Suppose further that, from the observed data, we have
+point estimates L(1)
+                 b     = −0.2, U(1)
+                                b       = 0.5, L(2)
+                                               b    = −0.1 and U(2)
+                                                                 b    = 0.8, with
+asymptotic standard errors σ  bL (1) = 0.01, σ  bU (1) = 0.04, σ
+                                                               bL (2) = 0.02 and
+σbU (2) = 0.03. Note that these numbers are artificial, not from the motivating
+example.
+   We can construct the confidence interval of π in the following steps. First,
+we calculate qb = arg maxq=1,2 L(q) = 2 and rb = arg minr=1,2 U(r) = 1. Sec-
+ond, we obtain C = 1.645 by solving (6) with q and r replaced by qb = 2 and
+rb = 1. Third, we calculate CI(bq , rb) = CI(2, 1) = [−0.133, 0.566] according to
+(5), which is a confidence interval for π.
+
+   The bounds with a single time point correspond to the case with Q =
+R = 1, and CI(b  q , rb) reduces to the one proposed by Imbens and Manski
+(2004). The bounds with multiple time points correspond to the case with
+Q = R = 2, and we can use CI(b      q , rb) to construct a confidence interval for
+parameter πt in our missing data problem.
+   In the supplementary material, we conduct simulation studies to evaluate
+the method for constructing confidence intervals. The simulation studies
+show that the coverage rates of the confidence intervals are close to the
+nominal levels in a wide range of situations with moderate sample sizes.
+   Although it is not the focus of our main paper, in the supplementary
+material, we also consider constructing confidence intervals for the bounds
+themselves. Because of the coverage guarantees for the bounds, the method
+in the supplementary material can be used to construct confidence intervals
+for the parameter of interest when condition (1) in Theorem 3 fails.
+
+   4.2. Extension to the case adjusting for discrete covariates. In our data,
+there are some discrete covariates such as gender and region, which are prog-
+nostic to the HIV status. We also find that these two covariates are related
+to the missing data indicator. It is therefore more reasonable to impose As-
+sumption 1 conditioning on these covariates. In this subsection, we show how
+to use our method to construct confidence intervals with discrete covariates.
+        USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                                13
+
+In practice, covariates help to improve inference in three ways. First, the
+assumptions will generally be more plausible conditional on covariates. Sec-
+ond, we can first calculate the bounds conditional on the covariates and then
+average over them to obtain tighter bounds of the whole population (Lee,
+2009; Long and Hudgens, 2013; Mealli and Pacini, 2013). Third, covariates
+help to improve the estimation precision.
+   Consider a discrete covariate X corresponding to K subpopulations, with
+wk = pr(X = k) being the proportion of subpopulation k. We fix the wk ’s at
+the sample frequencies of X, and treat them as known constants. Therefore,
+our inference is conditional on the proportions of the subpopulations. The
+parameter of interest in subpopulation k, πk , has bounds of the following
+forms
+
+(4.4) max{Lk (1), . . . , Lk (Qk )} ≤ πk ≤ min{Uk (1), . . . , Uk (Rk )}.
+
+where the subscript k is the index for the quantities of the k-th subpopulation
+analogues
+    PK of those in Section 4.1. We are interested in the overall bounds of
+π = k=1 wk πk . We first consider the following simple form of bounds with
+known and fixed qk ’s and rk ’s:
+                          K
+                          X                         K
+                                                    X
+                                wk Lk (qk ) ≤ π ≤         wk Uk (rk ).
+                          k=1                       k=1
+
+If the joint distribution of the estimators of the upper and lower bounds are
+asymptotically normal, then we can again construct a confidence interval for
+π using Imbens and Manski (2004)’s method, denoted by CI(q1 , . . . , qk , r1 , . . . , rk ).
+Let the true indices for the k-th subpopulation bounds be qk0 = arg max1≤q≤Qk Lk (q)
+and rk0 = arg min1≤r≤Rk Uk (r). They are unknown, but can be consis-
+tently estimated by the sample analogues qbk0 = arg max1≤q≤Qk L                      b k (q) and
+rbk0 = arg min1≤r≤Rk Uk (r). We then construct the final confidence interval
+                              b
+for π as CI(b q1 , . . . , qbk , rb1 , . . . , rbk ). The following corollary extends Theorem
+3, justifying the above confidence interval with a discrete covariate.
+
+   Corollary 4. If (1) for all k, {Lk (1), . . . , Lk (Qk )} have a unique max-
+imum value, and {Uk (1), . . . , Uk (Rk )} have a unique   nP   minimum value; (2)
+                                                                   K
+for any qk ’s and rk ’s, the asymptotic distribution of            k=1 wk Lk (qk ) ,
+                                                                                b
+PK                o
+   k=1 wk Uk (rk )  is bivariate normal, then CI(b  q1 , . . . , qbk , rb1 , . . . , rbk ) has a
+          b
+coverage rate at least as large as 1 − α asymptotically.
+
+  For continuous covariates, we need to assume parametric or semipara-
+metric models, and we leave this topic for future research. For time-varying
+14                         JIANG, Z. AND DING, P.
+
+covariates, we can treat them as covariates at different time points, and
+obtain the bounds and confidence intervals with the same procedure.
+
+     5. Application.
+
+   5.1. Background and motivation. Credible estimates of the prevalence
+of HIV are essential for policy makers to plan control programs and in-
+terventions. However, population-based surveys may be affected by missing
+data on respondents’ HIV status (Arpino, De Cao and Peracchi, 2014). The
+Malawi Diffusion and Ideational Change Project is a longitudinal survey
+conducted in rural Malawi every two years since 1998. The survey is from
+a collaboration between the University of Pennsylvania and the College of
+Medicine and Chancellor College at the University of Malawi. The data can
+be downloaded from http://www.malawi.pop.upenn.edu and include the
+outcomes of HIV tests for the years 2004, 2006 and 2008. We will give a
+data description that is relevant to our context, and refer to the original
+study (Anglewicz et al., 2009) for more details. The project started with
+a main survey, which collected information on household structure, sexual
+relations, marriage and partnership histories, etc. Starting from 2004, the
+Voluntary Consulting and Test survey was added to the main survey, which
+consisted of a short questionnaire and free tests for HIV and other sexually
+transmitted infections.
+   However, the HIV status is missing for a substantial fraction of the sam-
+ple. There are different types of missing data, including temporary absence,
+loss of results, relocation, hospitalization and refusal to participate. In the
+analysis of Arpino, De Cao and Peracchi (2014), they ignored different types
+of missing data, and used the binary missing data indicator to obtain the
+bounds of the HIV prevalence. With cross-sectional data, they calculate the
+worst-case bounds; with longitudinal data, they improve their bounds un-
+der monotonicity. Unfortunately, the bounds they obtained are quite wide,
+e.g., the bound of the HIV prevalence in the south region in 2008 is [0.035,
+0.529] with cross-sectional data and [0.082,0.529] with longitudinal data. In
+the following analysis, we are aiming to improve the inference by taking into
+account the difference in missing types.
+
+   5.2. Data description. Following the analysis of Arpino, De Cao and Per-
+acchi (2014), we focus on people who were interviewed in 2004, and drop
+units who were never successfully contacted. We use the data in years 2004,
+2006 and 2008. Because HIV prevalence is defined for the population of alive
+individuals, we consider only the alive people when computing HIV preva-
+lences for each of the years 2004, 2006 and 2008. The data are available
+      USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                            15
+
+                                       Table 1
+  Numbers of missing types by year with proportions in parentheses. The sample sizes
+           across years differ because some units died before observations.
+                 Year      R = −1          R=0            R=1
+                 2004    386 (9.5%)     799 (19.7%)    2877 (70.8%)
+                 2006    323 (8.0%)    1164 (29.0%)    2531 (63.0%)
+                 2008    453 (11.5%)   1253 (31.8%)    2233 (56.7%)
+
+
+
+from the online materials of Arpino, De Cao and Peracchi (2014). The to-
+tal sample size is 4062. The HIV status is missing for 1185, 1487 and 1706
+individuals in 2004, 2006 and 2008, with missing proportions 29.2%, 36.6%
+and 42.0%, respectively. In the data, the reasons for the missing data in
+the main survey are categorized as “refused,” “hospitalized,” “not known,”
+“temporarily absent,” “moved.” Other reasons are classified as the resid-
+ual category “other,” consisting mainly of people who did not fill in the
+questionnaire because they were too old or too sick, or for unspecified rea-
+sons that may also include migration (Arpino, De Cao and Peracchi, 2014).
+The reasons for the missing data in the Voluntary Consulting and Test sur-
+vey are categorized as “refused,” “hospitalized,” “temporarily absent,” “not
+known,” “moved” and “results lost.” Other reasons for item non-response
+are classified as the category “other.” The HIV status is missing if either
+data from the main survey or the Voluntary Consulting and Test survey are
+missing. In our analysis, we define Rt = −1 if the reason of missingness in
+either of the two surveys belongs to the categories “refused,” “hospitalized”
+or “others.” For the rest of the reasons of missingness, we define Rt = 0.
+Table 1 summarizes the distributions of the missing types.
+   In our data, there may be some reasons that are related to the HIV
+status but we classify them as missing at random. To deal with this, we will
+propose an approach to conducting sensitivity analysis in Section 5.4. We
+will not consider measurement error, because as stated in Arpino, De Cao
+and Peracchi (2014), measurement error in the two types of test (oral swabs
+and blood test) appears to be small.
+
+   5.3. Data analysis. The survey was carried out in three administrative
+regions: center, south and north. Because these regions have very differ-
+ent demographic characteristics, we conduct analyses within subpopulations
+stratified by region and gender. Within each level of region and gender, it
+is plausible that the absence of the individual or the loss of the individual’s
+result does not depend on the individual’s HIV status, i.e., Assumption 1
+holds. Because of the feature of HIV infection discussed in Section 3.1, As-
+sumption 2 holds. Therefore, we can apply Theorems 1 and 2 to calculate the
+16                         JIANG, Z. AND DING, P.
+
+bounds of HIV prevalence. The upper and lower bounds have explicit forms,
+and we can estimate the bounds by replacing the probability parameters by
+their sample frequency analogues, and then apply the method in Section 4 to
+construct confidence intervals. We empirically check the testable conditions
+for all three years, and find that the conditions hold in all subpopulations
+and years. Therefore, the data provide no evidence against Assumption 1,
+because Assumption 2 holds automatically.
+   Figure 1 shows the estimated bounds and confidence intervals for the
+HIV prevalence from our method and Arpino, De Cao and Peracchi (2014)’s
+method for the three administrative regions of the country separated by
+gender. For descriptive convenience, we call Arpino, De Cao and Peracchi
+(2014)’s method the “A method,” and our method the “JD method” from
+now on. For women in the north region in 2006 (the third plot of Figure 1(b)),
+the A method gives bounds (0.047, 0.237), and the JD method gives bounds
+(0.058, 0.067); the JD method reduces 95.3% of the width of the bounds.
+For men in the south region in 2004 (the second plot of Figure 1(a)), the
+A method gives bounds (0.045, 0.172), and the JD method gives bounds
+(0.054, 0.129); the JD method reduces 40.6% of the width of the bounds.
+The reductions in the widths of the bounds in these two subpopulations are
+the largest and smallest among all subpopulations, respectively. For men in
+the north region in 2006 (the third plot of Figure 1(a)), the A method gives
+a confidence interval (0.013, 0.382), and the JD method gives a confidence
+interval (0.019, 0.113); the JD method reduces 75.2% of the width of the
+confidence interval. For men in the south region in 2004 (the second plot of
+Figure 1(a)), the A method gives a confidence interval (0.032, 0.195), and
+the JD method gives a confidence interval (0.037, 0.154); the JD method
+reduces 28.5% of the width of the confidence interval. The reductions in the
+widths of the confidence intervals in these two subpopulations are the largest
+and smallest among all subpopulations, respectively.
+   Figure 2 shows the histograms of the ratios of the widths of the bounds
+and confidence intervals obtained by the JD method divided by those ob-
+tained by the A method. For all the results with a single time point and
+multiple time points, the ratios of the widths of the bounds range from
+0.043 to 0.594, and the ratios of the widths of the confidence intervals range
+from 0.255 to 0.715. In most subpopulations, the reductions in widths of the
+bounds and confidence intervals are larger than 50%, demonstrating sub-
+stantial improvement in inference by taking into account the different types
+of missing data.
+   We can obtain the overall bounds of men and women by first calculating
+the bounds in each region and then averaging the bounds over regions. Figure
+        USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                                                                                               17
+
+
+
+  0.5                   Center                                                South                                                 North
+        JD      A       JD      A       JD      A             JD      A       JD      A       JD      A             JD      A       JD    A       JD   A
+                −                                                                                     −−
+
+
+
+
+                                                        0.6
+                                                −−                                                                                                     −−
+
+
+
+
+                                                                                                              0.5
+                                                                                                      −−
+                −                               −−                                                                                                     −−
+                                −
+  0.4
+
+
+
+
+                                −                                                     −
+
+
+
+
+                                                        0.5
+
+
+
+
+                                                                                                              0.4
+                                                                                      −
+                                                                                                                                          −
+                                                                                          −                                               −
+
+
+
+
+                                                        0.4
+  0.3
+
+
+
+
+                                    −                                                     −
+
+
+
+
+                                                                                                              0.3
+                                    −                                                                                       −                 −   −−
+                                                                      −
+                                                                      −                       −−                            −                 −
+
+
+
+
+                                                        0.3
+                                                                                                                                                  −−
+        −                                                                                     −−
+  0.2
+
+
+
+
+                    −
+
+
+
+
+                                                                                                              0.2
+        −           −   −                                                     −
+                                        −−                                                                          −
+
+                                                        0.2
+                                                              −           −   −−
+                        −−              −−                                                                          −
+                                                              −           −     −                                               −
+            −            −                                        −
+                                                                                                                                −
+  0.1
+
+
+
+
+                                                                  −                                                                 −
+
+
+
+
+                                                                                                              0.1
+            −                                                                                                                         −
+                                                                                                                                    −
+                                                        0.1
+
+                                                                                                                        −             −
+                                            −                                     −               −                     −
+        −−
+        −− −−             −                         −         −− −−               −       −               −                                         −
+                              −             −                 −− −−                       −       −       −         −− −−           −− −−         −−    −
+           −−           −     −         −           −                         −               −                                                   −   −−
+                        −− −−           −       −                             −       −
+                                                                                      −       −       −
+                                                                                                      −
+                                                                                                                    −− −−           −− −−             −
+                                                −
+  0.0
+
+
+
+
+                                                        0.0
+
+
+
+
+                                                                                                              0.0
+            2004            2006            2008                  2004            2006            2008                  2004         2006          2008
+
+
+
+                                    (a) Men in the three administrative regions.
+                        Center                                                South                                                 North
+  0.5
+
+
+
+
+                                                                                                              0.5
+        JD      A       JD      A       JD      A             JD      A       JD      A       JD      A             JD      A       JD    A       JD   A
+
+                                −                                                                     −−
+                                                        0.5
+
+
+
+
+                −                                                                                                                                      −−
+                                −               −−                                                    −−
+                −                                                                                                                                      −−
+  0.4
+
+
+
+
+                                                                                                              0.4
+                                                −−                                    −
+                                                                                      −
+                                                        0.4
+
+
+
+
+                                                                                                                                          −
+                                                                                                                                          −
+  0.3
+
+
+
+
+                                                                                                              0.3
+
+
+
+
+                                    −                                 −                   −
+                                                                                                                            −
+                                    −                                 −                   −   −−                                              −
+                                                        0.3
+
+
+
+
+                                                                                                                            −
+                                                                                              −−                                              −
+        −                                                                     −                                                                   −−
+  0.2
+
+
+
+
+                                                                                                              0.2
+
+
+
+
+                    −
+        −               −                                                     −
+                    −                   −−                                                                          −                             −−
+                                                              −                   −
+                                                        0.2
+
+
+
+
+                        −               −−                                −                                         −
+                            −                                 −                   −                                             −
+                                                                          −
+            −               −                                                                                                   −   −
+                                                                  −
+  0.1
+
+
+
+
+                                                                                                              0.1
+
+
+
+
+            −                                                                                                           −
+                                                                  −                                                     −           −−
+                                                                                                  −
+                                            −                                                                                         −             −
+                                                        0.1
+
+
+
+
+        −−                −                  −                                  −                         −                           −                 −
+        −− −−           −−    −                                                     −                                                    −        −−
+           −−           −   −−          −−   −                −−              −     −             −       −         −− −−           −    −        −   −−
+                                        −  −
+                                                              −− −−                           −                     −− −−           −− −              −
+                            −              −                     −−           −− −            −       −
+                                                                                                                                       −
+  0.0
+
+
+
+
+                                                                                                              0.0
+
+
+
+
+                                                                                  −                   −
+
+            2004            2006            2008                  2004            2006            2008                  2004         2006          2008
+
+
+
+                             (b) Women in the three administrative regions.
+
+Fig 1: The solid lines are the bounds and the dotted extended lines are the
+95% confidence intervals for the HIV prevalence in the corresponding years.
+The grey lines are the results with a single time point and the black lines
+are the results with multiple time points. The label “JD” corresponds to
+the result of our method, and the label “A” corresponds to the results of
+Arpino, De Cao and Peracchi (2014)’s method.
+18                                                        JIANG, Z. AND DING, P.
+
+                                                Bounds                                           Confidence intervals
+
+            0 1 2 3 4 5 6 7
+
+
+
+
+                                                                                       6
+                                                                                       5
+Frequency
+
+
+
+
+                                                                           Frequency
+
+                                                                                       4
+                                                                                       3
+                                                                                       2
+                                                                                       1
+                                                                                       0
+                              0.0   0.1   0.2     0.3    0.4   0.5   0.6                   0.3     0.4    0.5    0.6    0.7
+
+                                                 Ratio                                                   Ratio
+
+
+Fig 2: Ratios of the widths of the bounds and confidence intervals for the
+HIV prevalence obtained by the JD and A methods. The grey histograms
+are the results with a single time point and the white histograms are the
+results with multiple time points.
+
+
+3 shows the overall bounds and corresponding confidence intervals using the
+A and JD methods. The reductions in widths of the bounds and confidence
+intervals are large by the JD method.
+   According to Figure 1, in years 2006 and 2008, the lower bound of the HIV
+prevalence in Southern Malawi is the highest among the three regions for
+both men and women. But in 2004, the central region has the highest lower
+bound. This is similar for the upper bound. However, because the bounds
+and confidence intervals overlap, we make no attempt to draw inference
+about the differences in HIV prevalence across different regions. In Figure
+3, the lower bounds and upper bounds in 2008 are the highest among the
+three years for both men and women, suggesting an increasing trend of the
+HIV prevalence.
+   Note that Arpino, De Cao and Peracchi (2014) used some variables as
+instrumental variables or monotone instrumental variables to further narrow
+their bounds (Manski, 2003; Manski and Pepper, 2000), which, however,
+invoked additional assumptions. As a future work, we can further narrow our
+bounds by combining with some of these instrumental variable assumptions.
+
+   5.4. Sensitivity analysis. The classification of the reasons of missingness
+requires prior knowledge, and sometimes it is hard to justify whether a
+specific reason is missing at random or not at random. For example, in our
+application, it is possible that absence of the individual is related to HIV
+status in various ways. As a result, the reason “temporarily absent” may
+be missing not at random, but in previous analysis, we define it as Rt = 0.
+          USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                                             19
+
+
+
+
+                                Men                                               Women
+
+
+
+
+                                                            0.5
+            JD      A       JD      A       JD      A             JD      A       JD      A       JD   A
+                                                    −−
+    0.5
+
+
+
+
+                                                    −−                                                 −−
+                                                                                                       −−
+                                                                                          −
+
+
+
+                                                            0.4
+                                    −                                                     −
+                                    −
+    0.4
+
+
+
+
+                                                                          −
+                    −                                                     −
+                                                            0.3
+                    −                   −
+                                        −                                                     −
+    0.3
+
+
+
+
+                                                                                              −
+                                            −−                                                    −−
+                                                                                                  −−
+                                                            0.2
+
+                                            −−                    −
+    0.2
+
+
+
+
+                                                                  −           −   −
+            −           −                                                     −   −
+            −           −   −                                                         −
+                            −−                                                        −
+                              −                                       −
+                                                            0.1
+
+
+
+
+                −                                                     −
+    0.1
+
+
+
+
+                −                                                                   −               −
+                                                                  −−− −−            −   −           −   −
+                                                                                                        −
+            −                   −               −                 −               −
+                                                                                  −     −         −
+                                                                                                  −
+            −−− −
+                −−−         −
+                                −     −
+                                      −     −
+                                                −       −
+                                                        −             −−              −
+                                                                                      −               −
+                                                                                                      −
+                            −       −       −       −
+    0.0
+
+
+
+
+                                                            0.0
+
+
+
+
+                2004            2006            2008                  2004            2006         2008
+
+
+Fig 3: The solid lines are the bounds and the dotted extended lines are the
+95% confidence intervals for the HIV prevalence in the corresponding years.
+The grey lines are the results with a single time point and the black lines
+are the results with multiple time points. The label “JD” corresponds to
+the result of our method, and the label “A” corresponds to the results of
+Arpino, De Cao and Peracchi (2014)’s method.
+20                         JIANG, Z. AND DING, P.
+
+In this case, we can conduct a sensitivity analysis by gradually increasing
+or decreasing the set of reasons that are missing at random. Specifically,
+we start with the analysis that assumes all the reasons are missing not at
+random. Then, we change the categories of the reasons of missingness from
+Rt = −1 to Rt = 0 one by one. As a result, we can see how the bounds
+and confidence intervals change as we strengthen the assumption about the
+missing types.
+   We conduct the sensitivity analysis for the bounds with multiple time
+points in 2004 in the subpopulation of women. We start with the method
+in Arpino, De Cao and Peracchi (2014), which classifies all the reasons of
+missingness as Rt = −1. We then change the categories of reasons “moved,”
+“results lost or not known,” and “temporarily absent” to Rt = 0 one by
+one. The results in Figure 4 show that even with a single reason classified
+as missing at random, we have meaningful improvement, and with three
+reasons classified as missing at random, we have substantial improvement.
+Analogously, we can conduct sensitivity analyses for other subpopulations,
+but we omit the results to save space.
+
+   6. Discussion. We discussed binary outcomes in Sections 2 and 3. For
+general outcomes, we can dichotomize the outcomes, and apply our results
+for binary outcomes to obtain bounds on the distribution functions. Further-
+more, bounds on the distribution function can be used to construct bounds
+on quantiles as suggested by Manski (2009).
+   In the application, there are many types of missing data. We collapsed
+them into two categories: one is more likely to be missing at random, and
+the other tends to be related to the missing outcome itself. By doing this,
+we do not need to model the detailed missing data patterns. Ideally, we
+could further distinguish the detailed missing types. But this will require
+more assumptions about the missing data mechanism. From the HIV data,
+although we know there are different missing types, we do not have very
+clear understanding about the missing data mechanism. If we are willing
+to impose parametric models, it is promising that more efficient estimates
+could be obtained. Our paper, however, focuses more on nonparametric and
+robust analyses.
+   The current bounds are sharp, that is, without imposing further assump-
+tions beyond Assumptions 1 and 2, we cannot improve these bounds. In
+particular, we do not impose any assumptions about the transition proba-
+bilities of the missing indicator Rt . If we are willing to model the transition
+probability matrix, then we can obtain narrower bounds. However, from the
+HIV study, it does not seem obvious how to impose assumptions on this
+       USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                      21
+
+
+
+
+                           Sensitivity analysis for women in 2004
+0.30
+
+
+
+
+         A   JD1 JD2 JD3              A   JD1 JD2 JD3           A   JD1 JD2 JD3
+0.25
+0.20
+
+
+
+
+         −
+                                      −
+         −                                −
+                                      −
+                                          −
+0.15
+
+
+
+
+                                              −    −
+             −                                −                 −
+                                                   −
+             −   −    −                                         −
+0.10
+
+
+
+
+                 −    −                                             −
+                                                                    −   −    −
+                                                                        −    −
+0.05
+
+
+
+
+             −   −    −                   −   −    −
+         −       −    −               −       −    −
+         −   −                        −   −                     −   −   −    −
+                                                                −   −   −    −
+0.00
+
+
+
+
+             Center                       South                     North
+
+
+Fig 4: The solid lines are the bounds and the dotted extended lines are the
+95% confidence intervals. The label “A” corresponds to the results of Arpino,
+De Cao and Peracchi (2014)’s method. The label “JD1” corresponds to the
+result of our method with Rt = 0 indicating “moved.” The label “JD2”
+corresponds to the result of our method with Rt = 0 indicating “moved”
+and “results lost or not known”. The label “JD3” corresponds to the result
+of our method with Rt = 0 indicating “moved,” “results lost or not known”
+and “temporarily absent”, which is the same as what we did in Section 5.3.
+22                             JIANG, Z. AND DING, P.
+
+transition probability matrix. Therefore, we do not explore this direction in
+our current paper, but leave it to future research.
+   From the perspective of study designs, our results suggest that in addition
+to recording the binary missing indicator, researchers should also collect
+nonresponse types and, if possible, distinguish between types related to the
+outcomes and types unrelated to the outcomes.
+
+   Acknowledgements. Drs. Avi Feller and Shu Yang edited early ver-
+sions of the paper. Professors Peter Bickel and Eric Tchetgen Tchetgen gave
+us insightful comments on pointwise and uniform coverage properties of con-
+fidence intervals. We thank the Editor, Associate Editor and a reviewer for
+careful reading and many constructive comments.
+
+                        SUPPLEMENTARY MATERIAL
+   Supplement Material:
+(https://projecteuclid.org/euclid.aoas/1536652976#supplemental). The sup-
+plementary material consists of four parts. Section S1 gives the proofs of the
+theorems of the bounds. Section S2 gives the testable conditions with mul-
+tiple time points. Section S3 gives the proofs of the theorem and corollary
+for constructing confidence interval. Section S4 shows the results of the sim-
+ulation studies.
+
+References.
+Andrews, D. W. (2000). Inconsistency of the bootstrap when a parameter is on the
+  boundary of the parameter space. Econometrica 68 399–405.
+Anglewicz, P. et al. (2009). The Malawi Diffusion and Ideational Change Project 2004–
+  06: Data collection, data quality, and analysis of attrition. Demographic research 20
+  503.
+Angrist, J. D., Imbens, G. W. and Rubin, D. B. (1996). Identification of causal effects
+  using instrumental variables. Journal of the American statistical Association 91 444–
+  455.
+Arpino, B., De Cao, E. and Peracchi, F. (2014). Using panel data for partial identi-
+  fication of human immunodeficiency virus prevalence when infection status is missing
+  not at random. Journal of the Royal Statistical Society: Series A (Statistics in Society)
+  177 587–606.
+Balke, A. and Pearl, J. (1997). Bounds on treatment effects from studies with imperfect
+  compliance. Journal of the American Statistical Association 92 1171–1176.
+Bang, H. and Robins, J. M. (2005). Doubly robust estimation in missing data and causal
+  inference models. Biometrics 61 962–973.
+Cheng, J. and Small, D. S. (2006). Bounds on causal effects in three-arm trials with non-
+  compliance. Journal of the Royal Statistical Society: Series B (Statistical Methodology)
+  68 815–836.
+Chernozhukov, V., Lee, S. and Rosen, A. M. (2013). Intersection bounds: estimation
+  and inference. Econometrica 81 667–737.
+       USING MISSING TYPES TO IMPROVE PARTIAL IDENTIFICATION                             23
+
+Cochran, W. G. (1953). Sampling Techniques, 1st ed. New York: John Wiley & Sons.
+Copas, J. B. and Li, H. (1997). Inference for Non-random Samples (with discussion).
+   Journal of the Royal Statistical Society: Series B (Statistical Methodology) 59 55–95.
+Ding, P. and Geng, Z. (2014). Identifiability of subgroup causal effects in randomized
+   experiments with nonignorable missing covariates. Statistics in Medicine 33 1121–1133.
+Harel, O. and Schafer, J. L. (2009). Partial and latent ignorability in missing-data
+   problems. Biometrika 96 37–50.
+Horowitz, J. L. and Manski, C. F. (1998). Censoring of outcomes and regressors due
+   to survey nonresponse: Identification and estimation using weights and imputations.
+   Journal of Econometrics 84 37–58.
+Horowitz, J. L. and Manski, C. F. (2000). Nonparametric analysis of randomized ex-
+   periments with missing covariate and outcome data. Journal of the American statistical
+   Association 95 77–84.
+Imbens, G. W. and Manski, C. F. (2004). Confidence intervals for partially identified
+   parameters. Econometrica 72 1845–1857.
+Jiang, Z., Ding, P. and Geng, Z. (2016). Principal causal effect identification and sur-
+   rogate end point evaluation by multiple trials. Journal of the Royal Statistical Society:
+   Series B (Statistical Methodology) 78 829–848.
+Jin, H. and Rubin, D. B. (2008). Principal stratification for causal inference with extended
+   partial compliance. Journal of the American Statistical Association 103 101–111.
+Kang, J. D. and Schafer, J. L. (2007). Demystifying double robustness: A comparison
+   of alternative strategies for estimating a population mean from incomplete data (with
+   discussion). Statistical Science 22 523–539.
+Kitagawa, V. (2015). A test for instrument validity. Econometrica 83 2043–2063.
+Lee, D. S. (2009). Training, wages, and sample selection: Estimating sharp bounds on
+   treatment effects. The Review of Economic Studies 76 1071–1102.
+Little, R. J. (1993). Pattern-mixture models for multivariate incomplete data. Journal
+   of the American Statistical Association 88 125–134.
+Little, R. J. and Rubin, D. B. (2002). Statistical Analysis with Missing Data (2nd ed.).
+   New York: John Wiley & Sons.
+Little, R. J., Rubin, D. B. and Zangeneh, S. Z. (2017). Conditions for ignoring the
+   missing-data mechanism in likelihood inferences for parameter Subsets. Journal of the
+   American Statistical Association 112 314–320.
+Long, D. M. and Hudgens, M. G. (2013). Sharpening bounds on principal effects with
+   covariates. Biometrics 69 812–819.
+Ma, W. Q., Geng, Z. and Hu, Y. H. (2003). Identification of graphical models for nonig-
+   norable nonresponse of binary outcomes in longitudinal studies. Journal of Multivariate
+   Analysis 87 24–45.
+Manski, C. F. (2003). Partial Identification of Probability Distributions. New York:
+   Springer.
+Manski, C. F. (2009). Identification for Prediction and Decision. Cambridge: Harvard
+   University Press.
+Manski, C. F. and Pepper, J. V. (2000). Monotone instrumental variables: With an
+   application to the returns to schooling. Econometrica 68 997–1010.
+Mattei, A., Mealli, F. and Pacini, B. (2014). Identification of causal effects in the
+   presence of nonignorable missing outcome values. Biometrics 70 278–288.
+Mealli, F. and Pacini, B. (2013). Using secondary outcomes to sharpen inference in
+   randomized experiments with noncompliance. Journal of the American Statistical As-
+   sociation 108 1120–1131.
+Mealli, F. and Rubin, D. B. (2015). Clarifying missing at random and related definitions,
+24                              JIANG, Z. AND DING, P.
+
+  and implications when coupled with exchangeability. Biometrika 102 995–1000.
+Miao, W., Ding, P. and Geng, Z. (2016). Identifiability of normal and normal mixture
+  models with nonignorable missing data. Journal of the American Statistical Association
+  111 1673–1683.
+Molenberghs, G., Kenward, M. G. and Goetghebeur, E. (2001). Sensitivity analysis
+  for incomplete contingency tables: the Slovenian plebiscite case. Journal of the Royal
+  Statistical Society: Series C (Applied Statistics) 50 15–29.
+Romano, J. P. and Shaikh, A. M. (2010). Inference for the identified set in partially
+  identified econometric models. Econometrica 78 169–211.
+Rotnitzky, A., Scharfstein, D., Su, T.-L. and Robins, J. (2001). Methods for con-
+  ducting sensitivity analysis of trials with potentially nonignorable competing causes of
+  censoring. Biometrics 57 103–113.
+Rubin, D. B. (1976). Inference and missing data (with discussion). Biometrika 63 581–
+  592.
+Rubin, D. B. (2004). Multiple Imputation for Nonresponse in Surveys. New York: John
+  Wiley & Sons.
+Rubin, D. B. (2005). Comment on “Multiple-bias modelling for analysis of observational
+  data” by Greenland, S. Journal of the Royal Statistical Society: Series A (Statistics in
+  Society) 168 302.
+Scharfstein, D. O., Manski, C. F. and Anthony, J. C. (2004). On the construction of
+  bounds in prospective studies with missing ordinal outcomes: application to the good
+  behavior game trial. Biometrics 60 154–164.
+Scharfstein, D. O., Rotnitzky, A. and Robins, J. M. (1999). Adjusting for nonig-
+  norable drop-out using semiparametric nonresponse models. Journal of the American
+  Statistical Association 94 1096–1120.
+Seaman, S., Galati, J., Jackson, D., Carlin, J. et al. (2013). What Is Meant by
+  “Missing at Random”? Statistical Science 28 257–268.
+Shao, J., Wang, L. et al. (2016). Semiparametric inverse propensity weighting for non-
+  ignorable missing data. Biometrika 103 175–187.
+Tang, G., Little, R. J. and Raghunathan, T. E. (2003). Analysis of multivariate
+  missing data with nonignorable nonresponse. Biometrika 90 747–764.
+Vansteelandt, S., Goetghebeur, E., Kenward, M. G. and Molenberghs, G. (2006).
+  Ignorance and uncertainty regions as inferential tools in a sensitivity analysis. Statistica
+  Sinica 16 953–979.
+Yang, S. and Kim, J. K. (2016). A note on multiple imputation for method of moments
+  estimation. Biometrika 103 244–251.
+Yang, F. and Small, D. S. (2016). Using Post-Quality of Life Measurement Information
+  in Censoring by Death Problems. Journal of the Royal Statistical Society: Series B
+  (Statistical Methodology) 78 299–318.
+
+       Department of Politics, Princeton University, New Jersey 08544, USA
+       E-mail: zhichaoj@princeton.edu
+       Department of Statistics, University of California, Berkeley, California, USA
+       E-mail: pengdingpku@berkeley.edu
+
