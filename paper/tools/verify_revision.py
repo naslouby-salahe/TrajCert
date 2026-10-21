@@ -1,9 +1,3 @@
-"""Reconstruct revision summaries from frozen records without running experiments.
-
-Run from any directory with the repository Python. The only output is JSON on
-stdout; redirect it to retain the verification record. No scientific file is
-modified. The older audit_evidence.py additionally checks publication exports.
-"""
 
 import csv
 import hashlib
