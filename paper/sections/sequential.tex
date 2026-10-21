@@ -7,6 +7,8 @@ An event enters inference once, when its age reaches $H$, even if its label was 
 \end{equation}
 Independent identically distributed categorical observations satisfy this assumption. A fixed policy, verification regime, horizon and label semantics define the stable stream to which a certificate applies. Equation~\eqref{eq:stable} does not cover arbitrary drift or arbitrary informative reordering.
 
+The target risk $\theta$ and unresolved harmful mass $u$ refer to one fixed full law of matured events. Equation~\eqref{eq:stable} additionally specifies the conditional stability of the observable categories needed for sequential inference. Stability of the observed categories alone does not identify a changing latent risk.
+
 Write $S_{j,n}=\sum_{i\le n}\ind\{Y_i=j\}$. For $x\in(0,1)$, the per-category Jeffreys mixture likelihood ratio is
 \begin{equation}\label{eq:mixture}
  M_{j,n}(x)=\frac{B(S_{j,n}+1/2,n-S_{j,n}+1/2)}
@@ -21,6 +23,8 @@ The construction allocates $\delta/d$ per category and gives
 \begin{equation}\label{eq:CSguarantee}
  \Pbb\{p\in\Cset_n\text{ for every }n\}\ge1-\delta.
 \end{equation}
+The mixture-martingale and maximal-inequality arguments follow established confidence-sequence principles \citep{howard2021,ramdas2023}. The coordinatewise construction is used because its intervals admit simple aggregate envelopes; joint multinomial regions provide an alternative \citep{lindon2022}.
+
 Endpoint nulls $p_j=0,1$ use their limiting likelihoods. Numerical inversion returns the outer endpoints of root brackets, not their midpoints. The region is updated at every matured event, even when risk optimization is performed only at selected checkpoints.
 
 \subsection{Conservative projection and computation}
@@ -50,11 +54,11 @@ Because the information constraint decreases in $T$, the relaxed upper projectio
  0\le u\le c,\ h(A+u)-T_U-q(u,c-u)\le\rho
  \end{array}\right\}.
 \end{equation}
-A nonempty feasible union in \eqref{eq:idealprojection} is contained in this relaxation. The method reports a numerical upper enclosure $\widehat U_n\ge V_n$, capped by one.
+A nonempty feasible union in \eqref{eq:idealprojection} is contained in this relaxation. The numerical search is designed to upper-bound the relaxation $V_n$. The time-uniform guarantee applies when the reported bound is a conservative enclosure, as required by Theorem~\ref{thm:anytime}.
 
-Deterministic branch-and-bound uses boxes in three aggregate coordinates. A box is discarded only if its geometric constraints are impossible or a lower enclosure of the information exceeds $\rho$. Every remaining box contributes its objective upper bound $\min(1,A_{\rm hi}+u_{\rm hi})$ to the global bound. Verified feasible joint tables provide lower incumbents, not certificates. Entropy enclosures use Arb ball arithmetic at 128 bits, with outward conversion and explicit allowances for floating-point aggregate arithmetic. The uncertainty of the global entropy envelope need not shrink within a search box, so a small box does not imply a small objective gap.
+Deterministic branch-and-bound uses boxes in three aggregate coordinates. A box is discarded only if its geometric constraints are impossible or a lower enclosure of the information exceeds $\rho$. Every remaining box contributes its objective upper bound $\min(1,A_{\rm hi}+u_{\rm hi})$ to the global bound. Candidate feasible joint tables supply lower incumbents, not certificates. Entropy enclosures use Arb ball arithmetic at 128 bits \citep{johansson2017}. The revised implementation uses directed mass and objective arithmetic, interval-verified likelihood-ratio signs, outward summary metadata and conservative singleton brackets. The Supplement gives a source-level enclosure argument for the confidence inversion, projection, feasible witnesses and both rejection searches, under the stated arithmetic and execution assumptions. The archived experiments predate these numerical repairs; their saved decisions are empirical results, without a new end-to-end numerical certification. The uncertainty of the global entropy envelope need not shrink within a search box, so a small box does not imply a small objective gap.
 
-The computation returns the largest retained upper bound on node exhaustion, stall, box-resolution termination or conservative arithmetic fallback. Objective convergence is recorded only when the upper-minus-incumbent gap meets the declared tolerance. Decision-targeted search can stop once the global upper bound is at most $\beta$, or once a verified feasible risk exceeds $\beta$. The latter justifies withholding certification; it does not show that the true risk exceeds $\beta$. Full derivations and the bounding invariant appear in the Supplement.
+The computation returns the largest retained upper bound on node exhaustion, stall, box-resolution termination or conservative arithmetic fallback. Objective convergence is recorded only when the upper-minus-incumbent gap meets the declared tolerance. Decision-targeted search can stop once the global upper bound is at most $\beta$, or once a candidate feasible risk exceeds $\beta$. With a numerically verified feasible incumbent, the latter justifies withholding certification; it does not show that the true risk exceeds $\beta$. Full derivations and the bounding invariant appear in the Supplement.
 
 \begin{theorem}[Time-uniform sensitivity certificate]\label{thm:anytime}
 Suppose \eqref{eq:stable} holds, the true full law satisfies \eqref{eq:pis}, and each reported numerical bound conservatively encloses the projection described above. For a fixed analysis partition and its per-category allocation,
@@ -70,6 +74,6 @@ For the true $p_j\in(0,1)$, \eqref{eq:mixture} is a nonnegative mixture martinga
 The statement is per prespecified partition. Comparing four partitions in a simulation does not allocate a joint four-partition error budget. Choosing a partition from the same data and issuing whichever certificate is most favorable requires a simultaneous allocation across those procedures or a common finest-law region. Likewise, the theorem concerns monitoring within one stable stream, not a familywise guarantee over many streams.
 
 \subsection{Decision states}
-After data and numerical validity checks, the implemented evidence gate requires at least 200 matured and 50 resolved events. It then assigns, in order: \emph{model incompatible} if a conservative lower bound on every plausible compatibility floor exceeds $\rho$; \emph{intrinsically uncertifiable} if a conservative lower bound on every compatible minimum-information risk exceeds $\beta$; \emph{certified} if $\widehat U_n\le\beta$; and \emph{uncertified} otherwise. Count shortfalls give \emph{insufficient evidence}. The strong intrinsic state is withheld if zero resolved population mass remains plausible. Numerical comparison guards make the first two rejections conservative.
+After data and numerical validity checks, the implemented evidence gate requires at least 200 matured and 50 resolved events. It then assigns, in order: \emph{model incompatible} if a conservative lower bound on every plausible compatibility floor exceeds $\rho$; \emph{intrinsically uncertifiable} if a conservative lower bound on every compatible minimum-information risk exceeds $\beta$; \emph{certified} if $\widehat U_n\le\beta$; and \emph{uncertified} otherwise. Count shortfalls give \emph{insufficient evidence}. The strong intrinsic state is withheld if zero resolved population mass remains plausible. The first two rejections require conservative numerical lower bounds; comparison guards alone do not establish that contract.
 
 An empty running confidence region is a realized confidence-sequence failure event. The affected procedure stops issuing updates; the stream remains in the simulation denominator. It is not replaced by another seed. A technical execution failure is different from any of these scientific states. No state asserts that compatibility has verified the unobserved sensitivity assumption.

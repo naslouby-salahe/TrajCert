@@ -16,7 +16,7 @@ Here $\tau_\Pi=r I(L;J_\Pi\mid J_\Pi<\infty)$ is observable. The sharp identifie
 \begin{equation}\label{eq:sharp}
  \Thset_\Pi(\rho)=\{A+u:0\le u\le c,\ \Sprof_\Pi(u)\le\rho\}.
 \end{equation}
-It is empty for $\rho<\tau_\Pi$, a singleton $\{\td\}$ for $\rho=\tau_\Pi$, and a closed interval for $\rho>\tau_\Pi$. If $c=0$, the compatible set is $\{A\}$. If $r=0$, it is $[0,1]$ for every $\rho\ge0$.
+It is empty for $\rho<\tau_\Pi$, a singleton $\{\td\}$ for $\rho=\tau_\Pi$, and a closed interval for $\rho>\tau_\Pi$. If $c=0$, the identified set is $\{A\}$ for $\rho\ge\tau_\Pi$, and is empty otherwise. If $r=0$, it is $[0,1]$ for every $\rho\ge0$.
 \end{theorem}
 \begin{proof}
 Entropy decomposition gives $I(L;J_\Pi)=H(L)-H(L\mid J_\Pi)$, which is \eqref{eq:profile}. For $c>0$ and $0<u<c$, differentiation yields
@@ -60,6 +60,8 @@ For a partition and its endpoint coarsening, the identity is particularly transp
 \end{equation}
 The endpoint set on the right uses the same $A,G,c$. Thus timing deducts an observable amount from the information allowance for terminal selection. At equal excess budgets $\rho-\tau_\Pi$, common endpoint masses yield identical risk intervals; the information advantage is the one implied by a common absolute finest-path budget.
 
+The total-information restriction accounts for both dependence expressed in resolved timing and dependence through terminal nonresolution. Under a common absolute budget, the observed timing contribution leaves less information available for terminal selection. This tightening is conditional on the total-budget assumption; it does not establish that selection among unresolved outcomes is weak. An application that instead fixes a separate allowance for terminal selection poses a different sensitivity question.
+
 This is a fixed-budget comparison. Changing $\rho$ separately for each partition would mix information gain with a change in assumptions. Refinement can also increase $\tau$ above the declared budget. That outcome is model incompatibility, not successful risk certification. Conversely, positive timing information need not lower an upper endpoint that already saturates the worst-case bound at both resolutions.
 
 \subsection{Certification geometry}
@@ -81,7 +83,7 @@ The frontier shift gives a decision interpretation of timing information. Provid
 
 \begin{figure}[!htbp]
 \centering\includegraphics[width=\linewidth]{figures/identification.pdf}
-\caption{Population information geometry for the timing-and-terminal harmful-late law ($\theta=0.05$, $q_1=0.30$, $q_0=0.05$, $\lambda_1=0.45$, $\lambda_0=-0.15$). (a) Eight-band information profile from the stored 1,001-point grid. Shading marks the compatible hidden masses at $\rho=0.05$; the vertical line marks $\ud$. (b) Sharp upper risks at the stored sensitivity budgets, under nested coarsenings of one eight-band law. The horizontal line is $\beta=0.06$. Incompatible values are absent; joining segments guide the eye and are not additional evaluations.}\label{fig:identification}
+\caption{Population information geometry for the timing-and-terminal harmful-late law ($\theta=0.05$, $q_1=0.30$, $q_0=0.05$, $\lambda_1=0.45$, $\lambda_0=-0.15$). (a) Eight-band information profile on a 1,001-point grid. Shading marks the compatible hidden masses at $\rho=0.05$; the vertical line marks $\ud$. (b) Sharp upper risks at the evaluated sensitivity budgets, under nested coarsenings of one eight-band law. The horizontal line is $\beta=0.06$. Incompatible values are absent; joining segments guide the eye and are not additional evaluations.}\label{fig:identification}
 \end{figure}
 
 \FloatBarrier
