@@ -1,0 +1,34 @@
+rules:
+  - id: TC-PRIMITIVE-001
+    languages: [python]
+    severity: ERROR
+    message: Domain identifiers and budgets require named domain types.
+    patterns:
+      - pattern-either:
+          - pattern: "def $F(..., client_id: str, ...): ..."
+          - pattern: "def $F(..., event_id: str, ...): ..."
+          - pattern: "def $F(..., seed: int, ...): ..."
+          - pattern: "def $F(..., rho: float, ...): ..."
+  - id: TC-PRIMITIVE-002
+    languages: [python]
+    severity: ERROR
+    message: Generic untyped domain boundaries are forbidden.
+    patterns:
+      - pattern-either:
+          - pattern: "def $F(..., $X: dict[str, Any], ...): ..."
+          - pattern: "def $F(..., $X: dict[str, object], ...): ..."
+          - pattern: "def $F(..., $X: Any, ...): ..."
+          - pattern: "cast(Any, ...)"
+  - id: TC-PRIMITIVE-003
+    languages: [python]
+    severity: ERROR
+    message: Generic numeric building blocks are canonical only in trajcert/types.py.
+    paths:
+      exclude:
+        - "**/types.py"
+    pattern-regex: "(?<![A-Za-z0-9_])(StrictInt|StrictFloat|NonNegativeInt|PositiveInt|NonNegativeFloat|PositiveFloat|UnitInterval|OpenUnitInterval|FiniteFloat|SignedInt)(?![A-Za-z0-9_])"
+  - id: TC-PRIMITIVE-004
+    languages: [python]
+    severity: ERROR
+    message: Anonymous Polars to_dicts() rows cross a domain boundary as dict[str, Any].
+    pattern: $FRAME.to_dicts()

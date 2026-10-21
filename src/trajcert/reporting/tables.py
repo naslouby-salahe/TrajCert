@@ -1,0 +1,116 @@
+from __future__ import annotations
+
+import csv
+import io
+from dataclasses import dataclass
+from pathlib import Path
+from typing import cast
+
+import pyarrow as pa
+
+from trajcert.exceptions import InvalidScientificDataError
+from trajcert.paths import PublicationExtension
+from trajcert.reporting.source_data import VerifiedSourceData
+from trajcert.schemas import (
+    PublicationFormat,
+    PublicationSourceRole,
+    RenderedPublicationArtifact,
+)
+from trajcert.storage import atomic_write_bytes
+from trajcert.types import ColumnName, TableRow, TabularCellValue
+
+
+@dataclass(frozen=True, slots=True)
+class TableRenderResult:
+    csv: RenderedPublicationArtifact
+    tex: RenderedPublicationArtifact
+
+
+def render_table(source: VerifiedSourceData, destination_directory: Path) -> TableRenderResult:
+    if source.descriptor.source_role is PublicationSourceRole.FIGURE:
+        raise InvalidScientificDataError("table renderer requires a table source descriptor")
+    basename = source.descriptor.source_path.stem
+    csv_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.CSV}")
+    tex_path = (destination_directory / basename).with_suffix(f".{PublicationExtension.TEX}")
+    csv_digest = atomic_write_bytes(csv_path, _csv_payload(source.table))
+    tex_digest = atomic_write_bytes(tex_path, _tex_payload(source.table))
+    return TableRenderResult(
+        csv=RenderedPublicationArtifact(
+            source_path=source.descriptor.source_path,
+            source_sha256=source.lineage.source_sha256,
+            destination_path=csv_path,
+            destination_sha256=csv_digest,
+            publication_format=PublicationFormat.CSV,
+        ),
+        tex=RenderedPublicationArtifact(
+            source_path=source.descriptor.source_path,
+            source_sha256=source.lineage.source_sha256,
+            destination_path=tex_path,
+            destination_sha256=tex_digest,
+            publication_format=PublicationFormat.TEX,
+        ),
+    )
+
+
+def _csv_payload(table: pa.Table) -> bytes:
+    stream = io.StringIO(newline="")
+    writer = csv.writer(stream, lineterminator="\n")
+    writer.writerow(table.column_names)
+    for row in table.to_pylist():
+        typed_row = cast(TableRow, row)
+        writer.writerow(
+            _format_csv_value(typed_row[ColumnName(column)]) for column in table.column_names
+        )
+    return stream.getvalue().encode("utf-8")
+
+
+def _tex_payload(table: pa.Table) -> bytes:
+    columns = tuple(ColumnName(column) for column in table.column_names)
+    alignment = "l" * len(columns)
+    lines = [f"\\begin{{tabular}}{{{alignment}}}", "\\toprule"]
+    lines.append(" & ".join(_escape_tex(column) for column in columns) + r" \\")
+    lines.append("\\midrule")
+    for row in table.to_pylist():
+        typed_row = cast(TableRow, row)
+        rendered = tuple(_format_tex_value(typed_row[column]) for column in columns)
+        lines.append(" & ".join(rendered) + r" \\")
+    lines.extend(("\\bottomrule", "\\end{tabular}", ""))
+    return "\n".join(lines).encode("utf-8")
+
+
+def _format_csv_value(value: TabularCellValue) -> str:
+    if value is None:
+        return ""
+    return _format_scalar(value)
+
+
+def _format_tex_value(value: TabularCellValue) -> str:
+    if value is None:
+        return r"\text{null}"
+    return _escape_tex(_format_scalar(value))
+
+
+def _format_scalar(value: TabularCellValue) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, float):
+        return repr(value)
+    return str(value)
+
+
+_TEX_ESCAPE_MAP = {
+    "\\": r"\textbackslash{}",
+    "&": r"\&",
+    "%": r"\%",
+    "$": r"\$",
+    "#": r"\#",
+    "_": r"\_",
+    "{": r"\{",
+    "}": r"\}",
+    "~": r"\textasciitilde{}",
+    "^": r"\textasciicircum{}",
+}
+
+
+def _escape_tex(value: str) -> str:
+    return "".join(_TEX_ESCAPE_MAP.get(character, character) for character in value)

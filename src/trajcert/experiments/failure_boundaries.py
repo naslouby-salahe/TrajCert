@@ -1,0 +1,488 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+from time import perf_counter_ns
+
+from trajcert.config import active_config
+from trajcert.data.laws import LAW_DISPLAY_NAMES, LawParameters, build_full_law
+from trajcert.data.maturity import mature_ledger
+from trajcert.data.partitions import TrajectoryPartition, build_partition, coarsen_mass_vector
+from trajcert.data.summaries import (
+    ObservableSummary,
+    summarize_full_law,
+    summarize_observable_masses,
+)
+from trajcert.data.synthetic import generate_balanced_prefix_ledger
+from trajcert.experiments.anytime import run_sequential_trace
+from trajcert.inference.projection import ProjectionTerminationReason
+from trajcert.math.bounds import SharpRiskSet, sharp_risk_set
+from trajcert.math.information import minimum_information_point, observed_timing_information
+from trajcert.math.oracle import direct_mutual_information
+from trajcert.types import (
+    BandCount,
+    ConvergenceGap,
+    Count,
+    DomainModel,
+    EventCount,
+    FailureBoundaryLevel,
+    FailureBoundaryProbe,
+    InformationNats,
+    LawKey,
+    Mass,
+    OuterMaxNodes,
+    Probability,
+    RiskBudget,
+    RiskOffset,
+    RiskValue,
+    RuntimeMilliseconds,
+    ScientificState,
+    SensitivityBudget,
+    TimingContrast,
+    mass_tuple,
+)
+
+_BASE_LAW = LawKey.TIMING_TERMINAL_HARMFUL_LATE
+_CERTIFICATION_LAW = LawKey.LOW_PREVALENCE
+
+
+class FailureBoundaryAxis(StrEnum):
+    TERMINAL_UNRESOLVED_SEVERITY = "terminal-unresolved-severity"
+    TIMING_CONTRAST = "timing-contrast"
+    HARMFUL_PREVALENCE = "harmful-prevalence"
+    PATH_RESOLUTION = "path-resolution"
+    INFORMATION_MARGIN = "information-margin"
+    RISK_OFFSET = "risk-offset"
+    MATURED_SAMPLE_SIZE = "matured-sample-size"
+    TERMINAL_SELECTION_ASYMMETRY = "terminal-selection-asymmetry"
+    OPTIMIZER_NODE_BUDGET = "optimizer-node-budget"
+    COMPATIBLE_PATH_RESOLUTION = "compatible-path-resolution"
+    CERTIFICATION_SAMPLE_SIZE = "certification-sample-size"
+
+
+class FailureBoundaryResult(DomainModel):
+    axis: FailureBoundaryAxis
+    level: FailureBoundaryLevel
+    band_count: BandCount
+    sensitivity_budget: SensitivityBudget
+    risk_budget: RiskBudget
+    tau: InformationNats | None
+    operational_state: ScientificState
+    risk_upper: RiskValue
+    compatibility_lower: InformationNats | None
+    intrinsic_risk_lower: RiskValue | None
+    optimizer_gap: ConvergenceGap | None
+    optimizer_nodes: Count | None
+    termination_reason: ProjectionTerminationReason | None
+    runtime_ms: RuntimeMilliseconds | None
+
+
+def evaluate_failure_boundary(
+    axis: FailureBoundaryAxis,
+    level: FailureBoundaryProbe,
+) -> FailureBoundaryResult:
+    config = active_config.get()
+    if axis is FailureBoundaryAxis.MATURED_SAMPLE_SIZE:
+        return _finite_sample_size(_sample_size_level(level))
+    if axis is FailureBoundaryAxis.CERTIFICATION_SAMPLE_SIZE:
+        return _certification_sample_size(_sample_size_level(level))
+    if axis is FailureBoundaryAxis.COMPATIBLE_PATH_RESOLUTION:
+        return _compatible_path_resolution(_band_count_level(level))
+    if axis in {
+        FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
+        FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET,
+    }:
+        raise ValueError(f"{axis} requires its dedicated evaluator")
+    parameters, partition, rho, beta = _population_coordinate(axis, level)
+    summary = _summary(parameters, partition)
+    tau = _tau(summary)
+    if axis is FailureBoundaryAxis.INFORMATION_MARGIN:
+        rho = (tau or 0.0) + _information_margin_level(level)
+    if axis is FailureBoundaryAxis.RISK_OFFSET:
+        minimum = minimum_information_point(summary)
+        offset = _risk_offset_level(level)
+        if minimum is None:
+            beta = max(0.0, min(1.0, offset))
+        else:
+            beta = max(0.0, min(1.0, minimum.latent_risk + offset))
+    solved = sharp_risk_set(
+        summary=summary,
+        sensitivity_budget=rho,
+        root_atol=config.numerics.root_atol,
+        identity_atol=config.numerics.identity_atol,
+    )
+    population_state = _population_state(solved, rho, beta)
+    return FailureBoundaryResult(
+        axis=axis,
+        level=FailureBoundaryLevel(str(level)),
+        band_count=partition.band_count,
+        sensitivity_budget=rho,
+        risk_budget=beta,
+        tau=tau,
+        operational_state=population_state.operational_state,
+        risk_upper=population_state.risk_upper,
+        compatibility_lower=population_state.compatibility_lower,
+        intrinsic_risk_lower=population_state.intrinsic_risk_lower,
+        optimizer_gap=None,
+        optimizer_nodes=None,
+        termination_reason=None,
+        runtime_ms=None,
+    )
+
+
+def evaluate_terminal_selection_asymmetry(
+    q1: Probability,
+    q0: Probability,
+) -> FailureBoundaryResult:
+    config = active_config.get()
+    parameters = _base_parameters().model_copy(update={"q1": q1, "q0": q0})
+    partition = _partition(config.method.finest_bands)
+    summary = _summary(parameters, partition)
+    rho = config.budgets.information_nats
+    beta = config.budgets.risk
+    solved = sharp_risk_set(summary, rho, config.numerics.root_atol, config.numerics.identity_atol)
+    population_state = _population_state(solved, rho, beta)
+    return FailureBoundaryResult(
+        axis=FailureBoundaryAxis.TERMINAL_SELECTION_ASYMMETRY,
+        level=FailureBoundaryLevel(f"q1={q1},q0={q0}"),
+        band_count=partition.band_count,
+        sensitivity_budget=rho,
+        risk_budget=beta,
+        tau=_tau(summary),
+        operational_state=population_state.operational_state,
+        risk_upper=population_state.risk_upper,
+        compatibility_lower=population_state.compatibility_lower,
+        intrinsic_risk_lower=population_state.intrinsic_risk_lower,
+        optimizer_gap=None,
+        optimizer_nodes=None,
+        termination_reason=None,
+        runtime_ms=None,
+    )
+
+
+def evaluate_optimizer_node_budget(
+    node_budget: OuterMaxNodes,
+) -> FailureBoundaryResult:
+    config = active_config.get()
+    if node_budget <= 0:
+        raise ValueError("optimizer node budget must be positive")
+    parameters = _base_parameters()
+    partition = _partition(config.method.finest_bands)
+    sample_size = config.failure_boundary.optimizer_sample_size
+    ledger = generate_balanced_prefix_ledger(
+        parameters=parameters,
+        partition=partition,
+        stream_index=config.determinism.fixture_stream_index,
+        event_count=sample_size,
+    )
+    full_law = build_full_law(parameters, partition.band_count)
+    truth = summarize_full_law(partition, full_law, config.numerics.comparison_guard)
+    true_information = _true_information(truth, full_law.terminal_harmful)
+    rho = true_information + config.failure_boundary.optimizer_information_margin
+    start = perf_counter_ns()
+    trace = run_sequential_trace(
+        events=mature_ledger(ledger, partition),
+        identity=ledger.identity,
+        partition=partition,
+        sensitivity_budget=rho,
+        risk_budget=config.budgets.risk,
+        checkpoint_every=sample_size,
+        outer_max_nodes=node_budget,
+    )
+    elapsed_ms = (perf_counter_ns() - start) / active_config.get().units.nanoseconds_per_millisecond
+    checkpoint = trace.checkpoints[-1]
+    projection = checkpoint.projection
+    state = checkpoint.assessment.scientific_state or ScientificState.UNCERTIFIED
+    return FailureBoundaryResult(
+        axis=FailureBoundaryAxis.OPTIMIZER_NODE_BUDGET,
+        level=FailureBoundaryLevel(str(node_budget)),
+        band_count=partition.band_count,
+        sensitivity_budget=rho,
+        risk_budget=config.budgets.risk,
+        tau=_tau(truth),
+        operational_state=state,
+        risk_upper=projection.proven_upper,
+        compatibility_lower=projection.compatibility_lower_bound,
+        intrinsic_risk_lower=projection.intrinsic_risk_lower_bound,
+        optimizer_gap=projection.final_gap,
+        optimizer_nodes=projection.visited_nodes,
+        termination_reason=projection.termination_reason,
+        runtime_ms=elapsed_ms,
+    )
+
+
+def _finite_sample_size(sample_size: EventCount) -> FailureBoundaryResult:
+    if sample_size <= 0:
+        raise ValueError("matured sample size must be positive")
+    config = active_config.get()
+    parameters = _base_parameters()
+    partition = _partition(config.method.finest_bands)
+    ledger = generate_balanced_prefix_ledger(
+        parameters=parameters,
+        partition=partition,
+        stream_index=config.determinism.fixture_stream_index,
+        event_count=sample_size,
+    )
+    truth = _summary(parameters, partition)
+    start = perf_counter_ns()
+    trace = run_sequential_trace(
+        events=mature_ledger(ledger, partition),
+        identity=ledger.identity,
+        partition=partition,
+        sensitivity_budget=config.budgets.information_nats,
+        risk_budget=config.budgets.risk,
+        checkpoint_every=sample_size,
+    )
+    elapsed_ms = (perf_counter_ns() - start) / active_config.get().units.nanoseconds_per_millisecond
+    checkpoint = trace.checkpoints[-1]
+    state = checkpoint.assessment.scientific_state or ScientificState.UNCERTIFIED
+    return FailureBoundaryResult(
+        axis=FailureBoundaryAxis.MATURED_SAMPLE_SIZE,
+        level=FailureBoundaryLevel(str(sample_size)),
+        band_count=partition.band_count,
+        sensitivity_budget=config.budgets.information_nats,
+        risk_budget=config.budgets.risk,
+        tau=_tau(truth),
+        operational_state=state,
+        risk_upper=checkpoint.projection.proven_upper,
+        compatibility_lower=checkpoint.projection.compatibility_lower_bound,
+        intrinsic_risk_lower=checkpoint.projection.intrinsic_risk_lower_bound,
+        optimizer_gap=checkpoint.projection.final_gap,
+        optimizer_nodes=checkpoint.projection.visited_nodes,
+        termination_reason=checkpoint.projection.termination_reason,
+        runtime_ms=elapsed_ms,
+    )
+
+
+def _certification_sample_size(sample_size: EventCount) -> FailureBoundaryResult:
+    config = active_config.get()
+    parameters = _certification_parameters()
+    partition = _partition(config.method.finest_bands)
+    rho = config.failure_boundary.certification_sample_rho
+    ledger = generate_balanced_prefix_ledger(
+        parameters=parameters,
+        partition=partition,
+        stream_index=config.determinism.fixture_stream_index,
+        event_count=sample_size,
+    )
+    start = perf_counter_ns()
+    trace = run_sequential_trace(
+        events=mature_ledger(ledger, partition),
+        identity=ledger.identity,
+        partition=partition,
+        sensitivity_budget=rho,
+        risk_budget=config.budgets.risk,
+        checkpoint_every=sample_size,
+    )
+    elapsed_ms = (perf_counter_ns() - start) / config.units.nanoseconds_per_millisecond
+    checkpoint = trace.checkpoints[-1]
+    projection = checkpoint.projection
+    return FailureBoundaryResult(
+        axis=FailureBoundaryAxis.CERTIFICATION_SAMPLE_SIZE,
+        level=FailureBoundaryLevel(str(sample_size)),
+        band_count=partition.band_count,
+        sensitivity_budget=rho,
+        risk_budget=config.budgets.risk,
+        tau=_tau(_summary(parameters, partition)),
+        operational_state=checkpoint.assessment.scientific_state or ScientificState.UNCERTIFIED,
+        risk_upper=projection.proven_upper,
+        compatibility_lower=projection.compatibility_lower_bound,
+        intrinsic_risk_lower=projection.intrinsic_risk_lower_bound,
+        optimizer_gap=projection.final_gap,
+        optimizer_nodes=projection.visited_nodes,
+        termination_reason=projection.termination_reason,
+        runtime_ms=elapsed_ms,
+    )
+
+
+def _compatible_path_resolution(band_count: BandCount) -> FailureBoundaryResult:
+    config = active_config.get()
+    finest = max(config.failure_boundary.bands)
+    parameters = _base_parameters()
+    fine = _partition(finest)
+    coarse = build_partition(finest, band_count, config.method.terminal_horizon)
+    law = build_full_law(parameters, finest)
+    summary = summarize_observable_masses(
+        coarse,
+        coarsen_mass_vector(law.harmful_resolved, fine, coarse),
+        coarsen_mass_vector(law.correct_resolved, fine, coarse),
+        law.unresolved,
+        config.numerics.comparison_guard,
+    )
+    rho = config.failure_boundary.compatible_resolution_rho
+    beta = config.budgets.risk
+    solved = sharp_risk_set(summary, rho, config.numerics.root_atol, config.numerics.identity_atol)
+    population_state = _population_state(solved, rho, beta)
+    return FailureBoundaryResult(
+        axis=FailureBoundaryAxis.COMPATIBLE_PATH_RESOLUTION,
+        level=FailureBoundaryLevel(str(band_count)),
+        band_count=band_count,
+        sensitivity_budget=rho,
+        risk_budget=beta,
+        tau=_tau(summary),
+        operational_state=population_state.operational_state,
+        risk_upper=population_state.risk_upper,
+        compatibility_lower=population_state.compatibility_lower,
+        intrinsic_risk_lower=population_state.intrinsic_risk_lower,
+        optimizer_gap=None,
+        optimizer_nodes=None,
+        termination_reason=None,
+        runtime_ms=None,
+    )
+
+
+def _certification_parameters() -> LawParameters:
+    law = active_config.get().laws[_CERTIFICATION_LAW]
+    return LawParameters(
+        key=_CERTIFICATION_LAW,
+        name=LAW_DISPLAY_NAMES[_CERTIFICATION_LAW],
+        theta=law.theta,
+        q1=law.q1,
+        q0=law.q0,
+        lambda1=law.lambda1,
+        lambda0=law.lambda0,
+    )
+
+
+def _population_coordinate(
+    axis: FailureBoundaryAxis,
+    level: FailureBoundaryProbe,
+) -> tuple[LawParameters, TrajectoryPartition, SensitivityBudget, RiskBudget]:
+    config = active_config.get()
+    parameters = _base_parameters()
+    bands = config.method.finest_bands
+    rho = config.budgets.information_nats
+    beta = config.budgets.risk
+    if axis is FailureBoundaryAxis.TERMINAL_UNRESOLVED_SEVERITY:
+        severity = _probability_level(axis, level)
+        parameters = parameters.model_copy(update={"q1": severity, "q0": severity})
+    elif axis is FailureBoundaryAxis.TIMING_CONTRAST:
+        contrast = _timing_contrast_level(level)
+        parameters = parameters.model_copy(
+            update={"lambda1": contrast / 2.0, "lambda0": -contrast / 2.0}
+        )
+    elif axis is FailureBoundaryAxis.HARMFUL_PREVALENCE:
+        parameters = parameters.model_copy(update={"theta": _probability_level(axis, level)})
+    elif axis is FailureBoundaryAxis.PATH_RESOLUTION:
+        bands = _band_count_level(level)
+    elif axis not in {FailureBoundaryAxis.INFORMATION_MARGIN, FailureBoundaryAxis.RISK_OFFSET}:
+        raise ValueError(f"unsupported population failure-boundary axis: {axis}")
+    return parameters, _partition(bands), rho, beta
+
+
+def _probability_level(axis: FailureBoundaryAxis, level: FailureBoundaryProbe) -> Probability:
+    if not isinstance(level, float):
+        raise ValueError(f"{axis} probe must be a probability")
+    return level
+
+
+def _timing_contrast_level(level: FailureBoundaryProbe) -> TimingContrast:
+    if not isinstance(level, float):
+        raise ValueError("timing-contrast probe must be a contrast magnitude")
+    return level
+
+
+def _information_margin_level(level: FailureBoundaryProbe) -> InformationNats:
+    if not isinstance(level, float):
+        raise ValueError("information-margin probe must be an information magnitude")
+    return level
+
+
+def _risk_offset_level(level: FailureBoundaryProbe) -> RiskOffset:
+    if not isinstance(level, float):
+        raise ValueError("risk-offset probe must be a finite level")
+    return level
+
+
+def _band_count_level(level: FailureBoundaryProbe) -> BandCount:
+    if not isinstance(level, int):
+        raise ValueError("path-resolution probe must be a band count")
+    return level
+
+
+def _sample_size_level(level: FailureBoundaryProbe) -> EventCount:
+    if not isinstance(level, int):
+        raise ValueError("matured-sample-size probe must be an event count")
+    return level
+
+
+def _base_parameters() -> LawParameters:
+    law = active_config.get().laws[_BASE_LAW]
+    return LawParameters(
+        key=_BASE_LAW,
+        name=LAW_DISPLAY_NAMES[_BASE_LAW],
+        theta=law.theta,
+        q1=law.q1,
+        q0=law.q0,
+        lambda1=law.lambda1,
+        lambda0=law.lambda0,
+    )
+
+
+def _partition(bands: BandCount) -> TrajectoryPartition:
+    return build_partition(
+        finest_band_count=bands,
+        band_count=bands,
+        terminal_horizon=active_config.get().method.terminal_horizon,
+    )
+
+
+def _summary(parameters: LawParameters, partition: TrajectoryPartition) -> ObservableSummary:
+    return summarize_full_law(
+        partition,
+        build_full_law(parameters, partition.band_count),
+        active_config.get().numerics.comparison_guard,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _PopulationState:
+    operational_state: ScientificState
+    risk_upper: RiskValue
+    compatibility_lower: InformationNats | None
+    intrinsic_risk_lower: RiskValue | None
+
+
+def _population_state(
+    solved: SharpRiskSet,
+    rho: SensitivityBudget,
+    beta: RiskBudget,
+) -> _PopulationState:
+    compatibility = solved.solve_result.compatibility
+    minimum = compatibility.minimum_information_point
+    compatibility_floor = None if minimum is None else minimum.information_floor
+    intrinsic = None if minimum is None else minimum.latent_risk
+    if solved.latent_risk is None:
+        return _PopulationState(
+            ScientificState.MODEL_INCOMPATIBLE, 1.0, compatibility_floor, intrinsic
+        )
+    upper = solved.latent_risk.upper
+    if compatibility_floor is not None and compatibility_floor > rho:
+        state = ScientificState.MODEL_INCOMPATIBLE
+    elif intrinsic is not None and intrinsic > beta:
+        state = ScientificState.INTRINSICALLY_UNCERTIFIABLE
+    elif upper <= beta:
+        state = ScientificState.CERTIFIED
+    else:
+        state = ScientificState.UNCERTIFIED
+    return _PopulationState(state, upper, compatibility_floor, intrinsic)
+
+
+def _true_information(
+    summary: ObservableSummary,
+    hidden_terminal_harmful: Mass,
+) -> InformationNats:
+    config = active_config.get()
+    harmful = mass_tuple(summary.harmful_by_band)
+    correct = mass_tuple(summary.correct_by_band)
+    return direct_mutual_information(
+        harmful,
+        correct,
+        summary.unresolved_mass,
+        hidden_terminal_harmful,
+        config.numerics.oracle_digits,
+    )
+
+
+def _tau(summary: ObservableSummary) -> InformationNats | None:
+    return observed_timing_information(summary)

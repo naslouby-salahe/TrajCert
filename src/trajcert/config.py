@@ -1,0 +1,1094 @@
+from __future__ import annotations
+
+from collections.abc import Hashable, Mapping
+from contextvars import ContextVar
+from enum import StrEnum
+from itertools import pairwise
+from math import isclose
+from pathlib import Path
+from types import MappingProxyType
+from typing import Final, cast
+
+import yaml
+from pydantic import field_serializer, field_validator, model_validator
+
+from trajcert.constants import BINARY_MAX_INFORMATION_NATS
+from trajcert.exceptions import ConfigurationError
+from trajcert.types import (
+    AbsoluteTightening,
+    AcceptanceUpperLimit,
+    AnytimeConfidenceDelta,
+    ArbitraryPrecisionBits,
+    AxisPaddingFraction,
+    BandCount,
+    BatchSize,
+    CaseIndex,
+    CategoryIndex,
+    ClientId,
+    CoefficientValue,
+    ConfidenceLevel,
+    ConfigAgreementTolerance,
+    ConfigFieldPath,
+    ConfigurationSchemaVersion,
+    Count,
+    CoverageStressCaseName,
+    DatasetChecksumHex,
+    DatasetColumnName,
+    DatasetFilename,
+    DatasetSourceReference,
+    DomainModel,
+    EventCount,
+    EventIndexWidth,
+    FigureMargin,
+    FixedNotationExponent,
+    GammaSensitivity,
+    GridColumnCount,
+    GridPointCount,
+    HazardProbability,
+    InformationNats,
+    IterationBudget,
+    LawCount,
+    LawKey,
+    Mass,
+    NanosecondsPerMillisecond,
+    NanosecondsPerSecond,
+    OracleDigits,
+    OrderedConfigValue,
+    OuterMaxNodes,
+    PanelGap,
+    PixelCount,
+    PowerScenarioName,
+    Probability,
+    RawDatasetRoot,
+    RealTrajectoryDatasetName,
+    RefinementCandidateCount,
+    RefinementStepCount,
+    RelativeUnresolvedGain,
+    RepetitionCount,
+    RhoValueCount,
+    RiskBudget,
+    RiskOffset,
+    RoundoffUlpCount,
+    SeedIndex,
+    SensitivityBudget,
+    SensitivityOffset,
+    SerializedConfigJson,
+    SignificanceLevel,
+    SlopeValue,
+    StreamCount,
+    TerminalHorizon,
+    TimingContrast,
+    ToleranceValue,
+    WarmupRepetitionCount,
+)
+
+type YamlValue = (
+    None | bool | int | float | str | tuple["YamlValue", ...] | Mapping[str, "YamlValue"]
+)
+type RawYamlScalar = None | bool | int | float | str
+type RawYamlValue = RawYamlScalar | list["RawYamlValue"] | dict[RawYamlScalar, "RawYamlValue"]
+
+
+active_config: ContextVar[TrajCertConfig] = ContextVar("active_config")
+
+_EXACT_AGREEMENT_RELATIVE_TOLERANCE: Final[ConfigAgreementTolerance] = ConfigAgreementTolerance(0.0)
+_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE: Final[ConfigAgreementTolerance] = ConfigAgreementTolerance(
+    1e-12
+)
+
+
+class ConfigModel(DomainModel):
+    pass
+
+
+class MethodConfig(ConfigModel):
+    finest_bands: BandCount
+    endpoint_band_count: BandCount
+    terminal_horizon: TerminalHorizon
+
+    @model_validator(mode="after")
+    def validate_endpoint_partition(self) -> MethodConfig:
+        if self.endpoint_band_count != 1:
+            raise ValueError(
+                "method.endpoint_band_count must define the one-band endpoint partition"
+            )
+        if self.endpoint_band_count > self.finest_bands:
+            raise ValueError("method.endpoint_band_count cannot exceed method.finest_bands")
+        return self
+
+
+class BudgetsConfig(ConfigModel):
+    risk: RiskBudget
+    information_nats: InformationNats
+
+    @model_validator(mode="after")
+    def validate_information_budget(self) -> BudgetsConfig:
+        if self.information_nats > BINARY_MAX_INFORMATION_NATS:
+            raise ValueError("information_nats cannot exceed log(2) for binary latent outcomes")
+        return self
+
+
+class ConfidenceConfig(ConfigModel):
+    anytime_delta: AnytimeConfidenceDelta
+    level: ConfidenceLevel
+    alpha: SignificanceLevel
+
+    @model_validator(mode="after")
+    def validate_level_alpha_pair(self) -> ConfidenceConfig:
+        if not isclose(
+            self.level,
+            1.0 - self.alpha,
+            rel_tol=_EXACT_AGREEMENT_RELATIVE_TOLERANCE,
+            abs_tol=_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE,
+        ):
+            raise ValueError("confidence.level must equal 1 - confidence.alpha")
+        return self
+
+
+class MinimumEvidenceConfig(ConfigModel):
+    matured_events: EventCount
+    resolved_events: EventCount
+
+    @model_validator(mode="after")
+    def validate_resolved_not_greater_than_matured(self) -> MinimumEvidenceConfig:
+        if self.resolved_events > self.matured_events:
+            raise ValueError("resolved_events cannot exceed matured_events")
+        return self
+
+
+class LawConfig(ConfigModel):
+    theta: Probability
+    q1: Probability
+    q0: Probability
+    lambda1: SlopeValue
+    lambda0: SlopeValue
+
+
+class TimingInformationExpectation(StrEnum):
+    ZERO = "ZERO"
+    POSITIVE = "POSITIVE"
+
+
+class StrictTimingCaseConfig(ConfigModel):
+    law: LawKey
+    fine_bands: BandCount
+    coarse_bands: BandCount
+    expectation: TimingInformationExpectation
+
+    @model_validator(mode="after")
+    def validate_refinement(self) -> StrictTimingCaseConfig:
+        if self.fine_bands <= self.coarse_bands:
+            raise ValueError("strict timing fine partition must refine the coarse partition")
+        if self.fine_bands % self.coarse_bands != 0:
+            raise ValueError("strict timing partitions must be deterministic nested coarsenings")
+        return self
+
+
+class LegacyPartitionIncoherenceConfig(ConfigModel):
+    gamma: tuple[GammaSensitivity, ...]
+    q: tuple[HazardProbability, ...]
+    latent_outcome_probabilities: tuple[Probability, Probability]
+    fine_band_count: BandCount
+    endpoint_band_count: BandCount
+
+    @model_validator(mode="after")
+    def validate_grid(self) -> LegacyPartitionIncoherenceConfig:
+        _require_unique(
+            self.gamma, ConfigFieldPath("study_design.legacy_partition_incoherence.gamma")
+        )
+        _require_unique(self.q, ConfigFieldPath("study_design.legacy_partition_incoherence.q"))
+        _require_strictly_increasing(
+            self.gamma, ConfigFieldPath("study_design.legacy_partition_incoherence.gamma")
+        )
+        _require_strictly_increasing(
+            self.q, ConfigFieldPath("study_design.legacy_partition_incoherence.q")
+        )
+        if not isclose(
+            sum(self.latent_outcome_probabilities),
+            1.0,
+            rel_tol=_EXACT_AGREEMENT_RELATIVE_TOLERANCE,
+            abs_tol=_EXACT_AGREEMENT_ABSOLUTE_TOLERANCE,
+        ):
+            raise ValueError("legacy latent outcome probabilities must sum exactly to one")
+        if any(value <= 0.0 for value in self.latent_outcome_probabilities):
+            raise ValueError("legacy latent outcome probabilities must be positive")
+        return self
+
+
+class CoverageStressSensitivityReference(StrEnum):
+    TRUE_INFORMATION = "TRUE_INFORMATION"
+    COMPATIBILITY_FLOOR = "COMPATIBILITY_FLOOR"
+
+
+class CoverageStressCaseConfig(ConfigModel):
+    name: CoverageStressCaseName
+    law: LawKey
+    band_count: BandCount
+    rho_offset: SensitivityOffset
+    sensitivity_reference: CoverageStressSensitivityReference
+    beta_offset: SensitivityOffset | None = None
+    minimum_information_completion: bool = False
+
+    @model_validator(mode="after")
+    def validate_reference(self) -> CoverageStressCaseConfig:
+        requires_completion = (
+            self.sensitivity_reference is CoverageStressSensitivityReference.COMPATIBILITY_FLOOR
+        )
+        if requires_completion != self.minimum_information_completion:
+            raise ValueError(
+                "compatibility-floor stress must be the declared minimum-information completion"
+            )
+        return self
+
+
+class DecisionValueConfig(ConfigModel):
+    laws: tuple[LawKey, ...]
+    beta: tuple[RiskBudget, ...]
+
+    @model_validator(mode="after")
+    def validate_decision_value(self) -> DecisionValueConfig:
+        _require_unique(self.laws, ConfigFieldPath("study_design.decision_value.laws"))
+        _require_strictly_increasing(self.beta, ConfigFieldPath("study_design.decision_value.beta"))
+        return self
+
+
+class StudyDesignConfig(ConfigModel):
+    utility_and_coherence_laws: tuple[LawKey, ...]
+    sharpness_oracle_laws: tuple[LawKey, ...]
+    safety_and_impossibility_laws: tuple[LawKey, ...]
+    strict_timing_cases: tuple[StrictTimingCaseConfig, ...]
+    legacy_partition_incoherence: LegacyPartitionIncoherenceConfig
+    coverage_stress_cases: tuple[CoverageStressCaseConfig, ...]
+    foreign_heterogeneity: tuple[Probability, ...]
+    decision_value: DecisionValueConfig
+    partition_coherence_figure_rho: SensitivityBudget
+    sharp_set_offsets: tuple[SensitivityOffset, ...]
+    oracle_offsets: tuple[SensitivityOffset, ...]
+    timing_offsets: tuple[SensitivityOffset, ...]
+    population_rho_value_count: RhoValueCount
+    representative_stream_indices: tuple[SeedIndex, ...]
+
+    @model_validator(mode="after")
+    def validate_registry_cardinalities(self) -> StudyDesignConfig:
+        for field_name, values in (
+            ("utility_and_coherence_laws", self.utility_and_coherence_laws),
+            ("sharpness_oracle_laws", self.sharpness_oracle_laws),
+            ("safety_and_impossibility_laws", self.safety_and_impossibility_laws),
+        ):
+            _require_unique(values, ConfigFieldPath(f"study_design.{field_name}"))
+        _require_unique(
+            tuple(case.name for case in self.coverage_stress_cases),
+            ConfigFieldPath("study_design.coverage_stress_cases.name"),
+        )
+        _require_unique(
+            tuple(
+                (case.law, case.fine_bands, case.coarse_bands) for case in self.strict_timing_cases
+            ),
+            ConfigFieldPath("study_design.strict_timing_cases"),
+        )
+        for field_name, offsets in (
+            ("sharp_set_offsets", self.sharp_set_offsets),
+            ("oracle_offsets", self.oracle_offsets),
+            ("timing_offsets", self.timing_offsets),
+        ):
+            _require_unique(offsets, ConfigFieldPath(f"study_design.{field_name}"))
+            _require_strictly_increasing(offsets, ConfigFieldPath(f"study_design.{field_name}"))
+        _require_strictly_increasing(
+            self.foreign_heterogeneity, ConfigFieldPath("study_design.foreign_heterogeneity")
+        )
+        if self.foreign_heterogeneity[-1].as_integer_ratio() != (1, 1):
+            raise ValueError("study_design.foreign_heterogeneity must end at full heterogeneity")
+        _require_unique(
+            self.representative_stream_indices,
+            ConfigFieldPath("study_design.representative_stream_indices"),
+        )
+        return self
+
+
+class GridsConfig(ConfigModel):
+    partitions: tuple[BandCount, ...]
+    scaling_bands: tuple[BandCount, ...]
+    rho: tuple[SensitivityBudget, ...]
+    same_endpoint_rho: tuple[SensitivityBudget, ...]
+    beta: tuple[RiskBudget, ...]
+
+    @model_validator(mode="after")
+    def validate_grids(self) -> GridsConfig:
+        _require_unique(self.partitions, ConfigFieldPath("grids.partitions"))
+        _require_unique(self.scaling_bands, ConfigFieldPath("grids.scaling_bands"))
+        _require_unique(self.rho, ConfigFieldPath("grids.rho"))
+        _require_unique(self.same_endpoint_rho, ConfigFieldPath("grids.same_endpoint_rho"))
+        _require_unique(self.beta, ConfigFieldPath("grids.beta"))
+        _require_strictly_decreasing(self.partitions, ConfigFieldPath("grids.partitions"))
+        _require_strictly_increasing(self.scaling_bands, ConfigFieldPath("grids.scaling_bands"))
+        _require_strictly_increasing(self.rho, ConfigFieldPath("grids.rho"))
+        _require_strictly_increasing(
+            self.same_endpoint_rho, ConfigFieldPath("grids.same_endpoint_rho")
+        )
+        _require_strictly_increasing(self.beta, ConfigFieldPath("grids.beta"))
+        if self.partitions[-1] != 1:
+            raise ValueError("grids.partitions must end with the endpoint-only partition")
+        if self.rho[-1] > BINARY_MAX_INFORMATION_NATS:
+            raise ValueError("grids.rho cannot exceed log(2)")
+        if self.same_endpoint_rho[-1] > BINARY_MAX_INFORMATION_NATS:
+            raise ValueError("grids.same_endpoint_rho cannot exceed log(2)")
+        return self
+
+
+class NumericsConfig(ConfigModel):
+    root_atol: ToleranceValue
+    identity_atol: ToleranceValue
+    comparison_guard: ToleranceValue
+    oracle_digits: OracleDigits
+    anytime_root_atol: ToleranceValue
+    outer_gap: ToleranceValue
+    outer_max_nodes: OuterMaxNodes
+    arbitrary_precision_bits: ArbitraryPrecisionBits
+    profile_grid_points: GridPointCount
+    sharp_diagnostic_grid_points: GridPointCount
+    oracle_bracket_width: ToleranceValue
+    projection_refinement_candidates: RefinementCandidateCount
+    projection_refinement_steps: RefinementStepCount
+    compatibility_floor_offset: ToleranceValue
+    sharpness_diagnostic_offset: ToleranceValue
+    log2_match_tolerance: ToleranceValue
+    proof_check_tolerance: ToleranceValue
+    information_roundoff_ulps: RoundoffUlpCount
+    resolved_harm_boundary_offset: ToleranceValue
+    arb_search: ArbSearchConfig
+
+
+class ArbSearchConfig(ConfigModel):
+    incumbent_bisection_iterations: IterationBudget
+    root_scan_grid_points: GridPointCount
+    root_scan_envelope_span_floor: ToleranceValue
+    projection_stall_minimum_visited: OuterMaxNodes
+    projection_stall_window_visited: OuterMaxNodes
+    projection_stall_improvement_floor: ToleranceValue
+    decision_stall_minimum_visited: OuterMaxNodes
+    decision_stall_window_visited: OuterMaxNodes
+    decision_stall_improvement_floor: ToleranceValue
+
+
+class LegacyPatternMixtureConfig(ConfigModel):
+    c: tuple[Count, ...]
+    coefficient_bounds: tuple[CoefficientValue, CoefficientValue]
+    ftol: ToleranceValue
+    gtol: ToleranceValue
+    max_iterations: IterationBudget
+    initial_clip: ToleranceValue
+    gradient_acceptance: ToleranceValue
+    boundary_distance: ToleranceValue
+    minimum_nonempty_bands: BandCount
+    initial_slope: SlopeValue
+
+    @model_validator(mode="after")
+    def validate_bounds(self) -> LegacyPatternMixtureConfig:
+        lower, upper = self.coefficient_bounds
+        if lower >= upper:
+            raise ValueError("pattern-mixture coefficient bounds must be strictly increasing")
+        return self
+
+
+class CallbackConfig(ConfigModel):
+    grid_points: GridPointCount
+    minimum_bracket_width: ToleranceValue
+    common_slope_tolerance: ToleranceValue
+    stable_equality_tolerance: ToleranceValue
+    root_deduplication_tolerance: ToleranceValue
+    minimum_comparable_bands: BandCount
+    stable_resistance_first_band: CategoryIndex
+    stable_resistance_second_band: CategoryIndex
+
+    @model_validator(mode="after")
+    def validate_stable_resistance_bands(self) -> CallbackConfig:
+        if self.stable_resistance_first_band == self.stable_resistance_second_band:
+            raise ValueError("stable-resistance bands must be distinct")
+        return self
+
+
+class ComparatorsConfig(ConfigModel):
+    legacy_gamma: tuple[GammaSensitivity, ...]
+    pattern_mixture: LegacyPatternMixtureConfig
+    callback: CallbackConfig
+
+    @model_validator(mode="after")
+    def validate_grids(self) -> ComparatorsConfig:
+        _require_unique(self.legacy_gamma, ConfigFieldPath("comparators.legacy_gamma"))
+        _require_strictly_increasing(self.legacy_gamma, ConfigFieldPath("comparators.legacy_gamma"))
+        return self
+
+
+class CoverageConfig(ConfigModel):
+    streams: StreamCount
+    max_events: EventCount
+    checkpoint_every: EventCount
+    acceptance_upper_limit: AcceptanceUpperLimit
+    clopper_pearson_confidence: ConfidenceLevel
+    batch_size: BatchSize
+
+    @model_validator(mode="after")
+    def validate_checkpoint_interval(self) -> CoverageConfig:
+        if self.checkpoint_every > self.max_events:
+            raise ValueError("coverage checkpoint_every cannot exceed max_events")
+        return self
+
+
+class PowerComparator(StrEnum):
+    REPEATED_STATIC = "REPEATED_STATIC"
+    IGNORABLE_DELAY = "IGNORABLE_DELAY"
+
+
+class CertificationPowerScenarioConfig(ConfigModel):
+    name: PowerScenarioName
+    law: LawKey
+    sensitivity_budget: SensitivityBudget
+    risk_budget: RiskBudget
+    band_counts: tuple[BandCount, ...]
+    checkpoints: tuple[EventCount, ...] | None = None
+    comparators: tuple[PowerComparator, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_scenario(self) -> CertificationPowerScenarioConfig:
+        _require_unique(self.band_counts, ConfigFieldPath("certification_power.band_counts"))
+        _require_unique(self.comparators, ConfigFieldPath("certification_power.comparators"))
+        if self.checkpoints is not None:
+            _require_strictly_increasing(
+                self.checkpoints, ConfigFieldPath("certification_power.scenario.checkpoints")
+            )
+        return self
+
+
+class CertificationPowerConfig(ConfigModel):
+    streams: StreamCount
+    batch_size: BatchSize
+    stream_offset: SeedIndex
+    checkpoints: tuple[EventCount, ...]
+    boundary_margin: Probability
+    target_power: Probability
+    figure_scenario: PowerScenarioName
+    scenarios: tuple[CertificationPowerScenarioConfig, ...]
+
+    @model_validator(mode="after")
+    def validate_power(self) -> CertificationPowerConfig:
+        if self.figure_scenario not in {scenario.name for scenario in self.scenarios}:
+            raise ValueError("figure_scenario must name a configured certification-power scenario")
+        _require_strictly_increasing(
+            self.checkpoints, ConfigFieldPath("sequential.certification_power.checkpoints")
+        )
+        _require_unique(
+            tuple(scenario.name for scenario in self.scenarios),
+            ConfigFieldPath("sequential.certification_power.scenarios.name"),
+        )
+        return self
+
+    def scenario_checkpoints(
+        self, scenario: CertificationPowerScenarioConfig
+    ) -> tuple[EventCount, ...]:
+        return self.checkpoints if scenario.checkpoints is None else scenario.checkpoints
+
+
+class SequentialConfig(ConfigModel):
+    coverage: CoverageConfig
+    certification_power: CertificationPowerConfig
+
+
+class PopulationMaterialityConfig(ConfigModel):
+    absolute_tightening: AbsoluteTightening
+    relative_unresolved_gain: RelativeUnresolvedGain
+    qualifying_laws: LawCount
+    compatible_rho_values: RhoValueCount
+
+
+class MaterialityConfig(ConfigModel):
+    population: PopulationMaterialityConfig
+
+
+class BenchmarkConfig(ConfigModel):
+    warmup_repetitions: WarmupRepetitionCount
+    measured_repetitions: RepetitionCount
+    outer_sample_size: EventCount
+    minimum_samples_for_standard_deviation: RepetitionCount
+    scaling_information_margin: InformationNats
+
+
+class CoverageSizeOverrides(ConfigModel):
+    streams: StreamCount | None = None
+    max_events: EventCount | None = None
+    checkpoint_every: EventCount | None = None
+
+
+class PowerSizeOverrides(ConfigModel):
+    streams: StreamCount | None = None
+    batch_size: BatchSize | None = None
+    checkpoints: tuple[EventCount, ...] | None = None
+    scenario_checkpoints: tuple[EventCount, ...] | None = None
+
+
+class SequentialSizeOverrides(ConfigModel):
+    coverage: CoverageSizeOverrides = CoverageSizeOverrides()
+    certification_power: PowerSizeOverrides = PowerSizeOverrides()
+
+
+class BenchmarkSizeOverrides(ConfigModel):
+    warmup_repetitions: WarmupRepetitionCount | None = None
+    measured_repetitions: RepetitionCount | None = None
+
+
+class ExecutionSizeOverrides(ConfigModel):
+    sequential: SequentialSizeOverrides = SequentialSizeOverrides()
+    benchmark: BenchmarkSizeOverrides = BenchmarkSizeOverrides()
+
+
+class FailureBoundaryConfig(ConfigModel):
+    unresolvedness: tuple[Probability, ...]
+    timing_contrast: tuple[TimingContrast, ...]
+    prevalence: tuple[Probability, ...]
+    bands: tuple[BandCount, ...]
+    information_margin: tuple[InformationNats, ...]
+    risk_offset: tuple[RiskOffset, ...]
+    sample_size: tuple[EventCount, ...]
+    terminal_selection_asymmetry: tuple[tuple[Probability, Probability], ...]
+    optimizer_nodes: tuple[OuterMaxNodes, ...]
+    optimizer_sample_size: EventCount
+    optimizer_information_margin: InformationNats
+    compatible_resolution_rho: SensitivityBudget
+    certification_sample_size: tuple[EventCount, ...]
+    certification_sample_rho: SensitivityBudget
+
+    @model_validator(mode="after")
+    def validate_axes(self) -> FailureBoundaryConfig:
+        axes: tuple[tuple[ConfigFieldPath, tuple[Hashable, ...]], ...] = (
+            (ConfigFieldPath("failure_boundary.unresolvedness"), self.unresolvedness),
+            (ConfigFieldPath("failure_boundary.timing_contrast"), self.timing_contrast),
+            (ConfigFieldPath("failure_boundary.prevalence"), self.prevalence),
+            (ConfigFieldPath("failure_boundary.bands"), self.bands),
+            (ConfigFieldPath("failure_boundary.information_margin"), self.information_margin),
+            (ConfigFieldPath("failure_boundary.risk_offset"), self.risk_offset),
+            (ConfigFieldPath("failure_boundary.sample_size"), self.sample_size),
+            (
+                ConfigFieldPath("failure_boundary.terminal_selection_asymmetry"),
+                self.terminal_selection_asymmetry,
+            ),
+            (ConfigFieldPath("failure_boundary.optimizer_nodes"), self.optimizer_nodes),
+            (
+                ConfigFieldPath("failure_boundary.certification_sample_size"),
+                self.certification_sample_size,
+            ),
+        )
+        level_count = len(axes[0][1])
+        for field_path, values in axes:
+            if len(values) != level_count:
+                raise ValueError(f"{field_path} must contain {level_count} levels")
+            _require_unique(values, field_path)
+        _require_strictly_increasing(
+            self.unresolvedness, ConfigFieldPath("failure_boundary.unresolvedness")
+        )
+        _require_strictly_increasing(
+            self.timing_contrast, ConfigFieldPath("failure_boundary.timing_contrast")
+        )
+        _require_strictly_increasing(
+            self.prevalence, ConfigFieldPath("failure_boundary.prevalence")
+        )
+        _require_strictly_increasing(self.bands, ConfigFieldPath("failure_boundary.bands"))
+        _require_strictly_increasing(
+            self.information_margin, ConfigFieldPath("failure_boundary.information_margin")
+        )
+        _require_strictly_increasing(
+            self.risk_offset, ConfigFieldPath("failure_boundary.risk_offset")
+        )
+        _require_strictly_increasing(
+            self.sample_size, ConfigFieldPath("failure_boundary.sample_size")
+        )
+        _require_strictly_increasing(
+            self.optimizer_nodes, ConfigFieldPath("failure_boundary.optimizer_nodes")
+        )
+        return self
+
+
+class IdentifiersConfig(ConfigModel):
+    event_index_width: EventIndexWidth
+
+
+class SerializationConfig(ConfigModel):
+    max_fixed_notation_exponent: FixedNotationExponent
+    min_fixed_notation_exponent: FixedNotationExponent
+
+    @model_validator(mode="after")
+    def validate_exponent_bounds(self) -> SerializationConfig:
+        if self.min_fixed_notation_exponent >= self.max_fixed_notation_exponent:
+            raise ValueError("serialization exponent bounds must be strictly increasing")
+        return self
+
+
+class DeterminismConfig(ConfigModel):
+    fixture_stream_index: SeedIndex
+
+
+class UnitsConfig(ConfigModel):
+    nanoseconds_per_millisecond: NanosecondsPerMillisecond
+    nanoseconds_per_second: NanosecondsPerSecond
+
+
+class PublicationConfig(ConfigModel):
+    table_count: Count
+    figure_count: Count
+
+
+class SmokeConfig(ConfigModel):
+    compatible_offset: SensitivityOffset
+    refinement_offset: SensitivityOffset
+    coverage_stress_events: EventCount
+    coarse_bands: BandCount
+    coverage_stress_bands: BandCount
+    fixture_count: Count
+
+
+class HandCaseInsufficientMaturedConfig(ConfigModel):
+    case_index: CaseIndex
+    event_count: EventCount
+
+
+class HandCaseInsufficientResolvedConfig(ConfigModel):
+    case_index: CaseIndex
+    finite_count: EventCount
+    unresolved_count: EventCount
+    total_count: EventCount
+
+    @model_validator(mode="after")
+    def validate_counts(self) -> HandCaseInsufficientResolvedConfig:
+        if self.finite_count + self.unresolved_count != self.total_count:
+            raise ValueError("hand_cases.insufficient_resolved counts must sum to total_count")
+        return self
+
+
+class HandCaseModelIncompatibleConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+
+
+class HandCaseIntrinsicConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+
+
+class HandCaseCertifiedConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+    beta_margin: SensitivityOffset
+
+
+class HandCaseUncertifiedConfig(ConfigModel):
+    case_index: CaseIndex
+    rho_margin: SensitivityOffset
+
+
+class HandCaseZeroResolvedPlausibleConfig(ConfigModel):
+    case_index: CaseIndex
+    band_mass_scale: Mass
+    unresolved_lower: Mass
+    resolved_mass_upper: Mass
+    entropy_scale: Mass
+    gate_matured: EventCount
+    gate_resolved: EventCount
+
+
+class HandCaseNoUnresolvedConfig(ConfigModel):
+    case_index: CaseIndex
+
+
+class HandCaseSimplexBoundaryConfig(ConfigModel):
+    case_index: CaseIndex
+    harmful_mass_scale: Mass
+    correct_mass_scale: Mass
+    unresolved_mass: Mass
+    hidden_terminal_harmful: Mass
+    rho_margin: SensitivityOffset
+
+
+class HandCaseOptimizerFallbackConfig(ConfigModel):
+    case_index: CaseIndex
+    event_count: EventCount
+    rho_margin: SensitivityOffset
+
+
+class HandCasesConfig(ConfigModel):
+    stream: SeedIndex
+    diagnostic_node_cap: OuterMaxNodes
+    insufficient_matured: HandCaseInsufficientMaturedConfig
+    insufficient_resolved: HandCaseInsufficientResolvedConfig
+    model_incompatible: HandCaseModelIncompatibleConfig
+    intrinsic: HandCaseIntrinsicConfig
+    certified: HandCaseCertifiedConfig
+    uncertified: HandCaseUncertifiedConfig
+    zero_resolved_plausible: HandCaseZeroResolvedPlausibleConfig
+    no_unresolved: HandCaseNoUnresolvedConfig
+    simplex_boundary: HandCaseSimplexBoundaryConfig
+    optimizer_fallback: HandCaseOptimizerFallbackConfig
+
+    @model_validator(mode="after")
+    def validate_case_indices(self) -> HandCasesConfig:
+        indices = (
+            self.insufficient_matured.case_index,
+            self.insufficient_resolved.case_index,
+            self.model_incompatible.case_index,
+            self.intrinsic.case_index,
+            self.certified.case_index,
+            self.uncertified.case_index,
+            self.zero_resolved_plausible.case_index,
+            self.no_unresolved.case_index,
+            self.simplex_boundary.case_index,
+            self.optimizer_fallback.case_index,
+        )
+        if indices != tuple(range(1, len(indices) + 1)):
+            raise ValueError("hand_cases case indices must be exactly 1..10 in declared order")
+        return self
+
+
+class RealTrajectoryHorizonConfig(ConfigModel):
+    primary_seconds: TerminalHorizon
+    sensitivity_seconds: tuple[TerminalHorizon, ...]
+
+    @model_validator(mode="after")
+    def validate_horizons(self) -> RealTrajectoryHorizonConfig:
+        _require_unique(
+            (self.primary_seconds, *self.sensitivity_seconds),
+            ConfigFieldPath("real_trajectory.horizons"),
+        )
+        return self
+
+
+class RealTrajectoryColumnConfig(ConfigModel):
+    human_reviewed: DatasetColumnName
+    is_attack: DatasetColumnName
+    ml_prediction: DatasetColumnName
+    device_name: DatasetColumnName
+    device_type: DatasetColumnName
+    decision_time: DatasetColumnName
+    annotator_id: DatasetColumnName
+    human_confidence: DatasetColumnName
+
+
+class RealTrajectoryDatasetConfig(ConfigModel):
+    name: RealTrajectoryDatasetName
+    source_reference: DatasetSourceReference
+    data_filename: DatasetFilename
+    checksums_filename: DatasetFilename
+    sha256: DatasetChecksumHex
+    documented_total_rows: Count
+    documented_ground_truth_attack_rows: Count
+    documented_human_reviewed_rows: Count
+    device_names: tuple[ClientId, ...]
+    raw_columns: tuple[DatasetColumnName, ...]
+    flow_identity_columns: tuple[DatasetColumnName, ...]
+    expected_schema: tuple[DatasetColumnName, ...]
+    columns: RealTrajectoryColumnConfig
+
+    @model_validator(mode="after")
+    def validate_dataset_contract(self) -> RealTrajectoryDatasetConfig:
+        if not self.device_names:
+            raise ValueError("real_trajectory.dataset.device_names must not be empty")
+        if (
+            self.documented_ground_truth_attack_rows > self.documented_total_rows
+            or self.documented_human_reviewed_rows > self.documented_total_rows
+        ):
+            raise ValueError("documented dataset counts cannot exceed documented_total_rows")
+        if not self.raw_columns or not self.expected_schema:
+            raise ValueError("real_trajectory dataset column contracts must not be empty")
+        if not set(self.raw_columns).issubset(self.expected_schema):
+            raise ValueError("raw_columns must be included in expected_schema")
+        if not set(self.flow_identity_columns).issubset(self.raw_columns):
+            raise ValueError("flow_identity_columns must be included in raw_columns")
+        if not set(self.columns.model_dump().values()).issubset(self.raw_columns):
+            raise ValueError("named trajectory columns must be included in raw_columns")
+        return self
+
+
+class RealTrajectoryConfig(ConfigModel):
+    dataset_root: RawDatasetRoot
+    dataset: RealTrajectoryDatasetConfig
+    horizons: RealTrajectoryHorizonConfig
+
+
+class FigureLayoutConfig(ConfigModel):
+    width: PixelCount
+    height: PixelCount
+    margin_left: FigureMargin
+    margin_right: FigureMargin
+    margin_top: FigureMargin
+    margin_bottom: FigureMargin
+    horizontal_panel_gap: PanelGap
+    grid_panel_gap_x: PanelGap
+    grid_panel_gap_y: PanelGap
+    failure_boundary_grid_columns: GridColumnCount
+    axis_padding_fraction: AxisPaddingFraction
+
+    @model_validator(mode="after")
+    def validate_margins(self) -> FigureLayoutConfig:
+        if self.margin_left + self.margin_right >= self.width:
+            raise ValueError("figure margins must leave a positive plottable width")
+        if self.margin_top + self.margin_bottom >= self.height:
+            raise ValueError("figure margins must leave a positive plottable height")
+        return self
+
+
+class TrajCertConfig(ConfigModel):
+    schema_version: ConfigurationSchemaVersion
+    method: MethodConfig
+    budgets: BudgetsConfig
+    confidence: ConfidenceConfig
+    minimum_evidence: MinimumEvidenceConfig
+    laws: Mapping[LawKey, LawConfig]
+    grids: GridsConfig
+    study_design: StudyDesignConfig
+    numerics: NumericsConfig
+    comparators: ComparatorsConfig
+    sequential: SequentialConfig
+    materiality: MaterialityConfig
+    benchmark: BenchmarkConfig
+    failure_boundary: FailureBoundaryConfig
+    identifiers: IdentifiersConfig
+    serialization: SerializationConfig
+    determinism: DeterminismConfig
+    units: UnitsConfig
+    smoke: SmokeConfig
+    publication: PublicationConfig
+    hand_cases: HandCasesConfig
+    figure_layout: FigureLayoutConfig
+    real_trajectory: RealTrajectoryConfig
+
+    @field_validator("laws")
+    @classmethod
+    def validate_laws(cls, laws: Mapping[LawKey, LawConfig]) -> Mapping[LawKey, LawConfig]:
+        missing = set(LawKey).difference(laws)
+        extra = set(laws).difference(LawKey)
+        if missing or extra:
+            raise ValueError(f"laws must match LawKey exactly; missing={missing}, extra={extra}")
+        return MappingProxyType(dict(laws))
+
+    @field_serializer("laws")
+    def serialize_laws(self, laws: Mapping[LawKey, LawConfig]) -> dict[LawKey, LawConfig]:
+        return dict(laws)
+
+    def serialized_json(self) -> SerializedConfigJson:
+        serializable = self.model_copy(update={"laws": dict(self.laws)})
+        return SerializedConfigJson(serializable.model_dump_json())
+
+    @model_validator(mode="after")
+    def validate_cross_section_contracts(self) -> TrajCertConfig:
+        if self.method.finest_bands != self.grids.partitions[0]:
+            raise ValueError(
+                "method.finest_bands must equal the first configured primary partition"
+            )
+        if self.method.finest_bands not in self.grids.scaling_bands:
+            raise ValueError("method.finest_bands must appear in grids.scaling_bands")
+        if self.minimum_evidence.matured_events > self.sequential.coverage.max_events:
+            raise ValueError("minimum evidence cannot exceed the coverage stress event horizon")
+        if self.sequential.coverage.max_events % self.sequential.coverage.checkpoint_every != 0:
+            raise ValueError("coverage max_events must be divisible by checkpoint_every")
+        _validate_nested_partitions(self.grids.partitions)
+        power = self.sequential.certification_power
+        if any(
+            self.method.finest_bands % bands != 0
+            for scenario in power.scenarios
+            for bands in scenario.band_counts
+        ):
+            raise ValueError("certification-power band counts must coarsen method.finest_bands")
+        if any(
+            self.minimum_evidence.matured_events > max(power.scenario_checkpoints(scenario))
+            for scenario in power.scenarios
+        ):
+            raise ValueError("certification-power horizon cannot be below the evidence gate")
+        if any(
+            case.fine_bands > self.method.finest_bands
+            for case in self.study_design.strict_timing_cases
+        ):
+            raise ValueError("strict timing case exceeds method.finest_bands")
+        return self
+
+    @property
+    def ordered_laws(self) -> tuple[tuple[LawKey, LawConfig], ...]:
+        return tuple((key, self.laws[key]) for key in LawKey)
+
+    @classmethod
+    def from_yaml(cls, path: Path) -> TrajCertConfig:
+        try:
+            loaded = cast(RawYamlValue, yaml.safe_load(path.read_text(encoding="utf-8")))
+        except OSError as exc:
+            raise ConfigurationError(f"cannot read configuration file: {path}") from exc
+        except yaml.YAMLError as exc:
+            raise ConfigurationError(f"invalid YAML configuration: {path}") from exc
+        data = _coerce_yaml_value(loaded)
+        if not isinstance(data, Mapping):
+            raise ConfigurationError("configuration root must be a mapping")
+        try:
+            return cls.model_validate(data)
+        except ValueError as exc:
+            raise ConfigurationError(str(exc)) from exc
+
+    @classmethod
+    def from_yaml_with_overrides(cls, path: Path, overrides_path: Path) -> TrajCertConfig:
+        config = cls.from_yaml(path)
+        overrides = _execution_size_overrides(overrides_path)
+        if overrides is None:
+            return config
+        return _with_execution_size_overrides(config, overrides)
+
+
+def _execution_size_overrides(overrides_path: Path) -> ExecutionSizeOverrides | None:
+    if not overrides_path.is_file():
+        return None
+    try:
+        text = overrides_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ConfigurationError(f"cannot read overrides file: {overrides_path}") from exc
+    try:
+        loaded = cast(RawYamlValue, yaml.safe_load(text))
+    except yaml.YAMLError as exc:
+        raise ConfigurationError(f"invalid YAML overrides: {overrides_path}") from exc
+    if loaded is None:
+        return None
+    data = _coerce_yaml_value(loaded)
+    if not isinstance(data, Mapping):
+        raise ConfigurationError("overrides root must be a mapping")
+    try:
+        return ExecutionSizeOverrides.model_validate(data)
+    except ValueError as exc:
+        raise ConfigurationError(str(exc)) from exc
+
+
+def _with_execution_size_overrides(
+    config: TrajCertConfig, overrides: ExecutionSizeOverrides
+) -> TrajCertConfig:
+    sequential = SequentialConfig(
+        coverage=_with_coverage_size_overrides(
+            config.sequential.coverage, overrides.sequential.coverage
+        ),
+        certification_power=_with_power_size_overrides(
+            config.sequential.certification_power, overrides.sequential.certification_power
+        ),
+    )
+    return TrajCertConfig(
+        schema_version=config.schema_version,
+        method=config.method,
+        budgets=config.budgets,
+        confidence=config.confidence,
+        minimum_evidence=config.minimum_evidence,
+        laws=config.laws,
+        grids=config.grids,
+        study_design=config.study_design,
+        numerics=config.numerics,
+        comparators=config.comparators,
+        sequential=sequential,
+        materiality=config.materiality,
+        benchmark=_with_benchmark_size_overrides(config.benchmark, overrides.benchmark),
+        failure_boundary=config.failure_boundary,
+        identifiers=config.identifiers,
+        serialization=config.serialization,
+        determinism=config.determinism,
+        units=config.units,
+        smoke=config.smoke,
+        publication=config.publication,
+        hand_cases=config.hand_cases,
+        figure_layout=config.figure_layout,
+        real_trajectory=config.real_trajectory,
+    )
+
+
+def _with_power_size_overrides(
+    config: CertificationPowerConfig, overrides: PowerSizeOverrides
+) -> CertificationPowerConfig:
+    scenario_checkpoints = overrides.scenario_checkpoints
+    scenarios = tuple(
+        scenario
+        if scenario.checkpoints is None or scenario_checkpoints is None
+        else scenario.model_copy(update={"checkpoints": scenario_checkpoints})
+        for scenario in config.scenarios
+    )
+    return CertificationPowerConfig(
+        streams=config.streams if overrides.streams is None else overrides.streams,
+        batch_size=config.batch_size if overrides.batch_size is None else overrides.batch_size,
+        stream_offset=config.stream_offset,
+        checkpoints=config.checkpoints if overrides.checkpoints is None else overrides.checkpoints,
+        boundary_margin=config.boundary_margin,
+        target_power=config.target_power,
+        figure_scenario=config.figure_scenario,
+        scenarios=scenarios,
+    )
+
+
+def _with_coverage_size_overrides(
+    config: CoverageConfig, overrides: CoverageSizeOverrides
+) -> CoverageConfig:
+    return CoverageConfig(
+        streams=config.streams if overrides.streams is None else overrides.streams,
+        max_events=config.max_events if overrides.max_events is None else overrides.max_events,
+        checkpoint_every=(
+            config.checkpoint_every
+            if overrides.checkpoint_every is None
+            else overrides.checkpoint_every
+        ),
+        acceptance_upper_limit=config.acceptance_upper_limit,
+        clopper_pearson_confidence=config.clopper_pearson_confidence,
+        batch_size=config.batch_size,
+    )
+
+
+def _with_benchmark_size_overrides(
+    config: BenchmarkConfig, overrides: BenchmarkSizeOverrides
+) -> BenchmarkConfig:
+    return BenchmarkConfig(
+        warmup_repetitions=(
+            config.warmup_repetitions
+            if overrides.warmup_repetitions is None
+            else overrides.warmup_repetitions
+        ),
+        measured_repetitions=(
+            config.measured_repetitions
+            if overrides.measured_repetitions is None
+            else overrides.measured_repetitions
+        ),
+        outer_sample_size=config.outer_sample_size,
+        minimum_samples_for_standard_deviation=config.minimum_samples_for_standard_deviation,
+        scaling_information_margin=config.scaling_information_margin,
+    )
+
+
+def _validate_nested_partitions(partitions: tuple[BandCount, ...]) -> None:
+    for fine, coarse in pairwise(partitions):
+        if fine <= coarse or fine % coarse != 0:
+            raise ValueError(
+                "grids.partitions must define strictly nested deterministic coarsenings"
+            )
+
+
+def _require_unique(values: tuple[Hashable, ...], label: ConfigFieldPath) -> None:
+    if len(values) != len(set(values)):
+        raise ValueError(f"{label} must not contain duplicates")
+
+
+def _require_strictly_increasing(
+    values: tuple[OrderedConfigValue, ...], label: ConfigFieldPath
+) -> None:
+    if any(left >= right for left, right in pairwise(values)):
+        raise ValueError(f"{label} must be strictly increasing")
+
+
+def _require_strictly_decreasing(
+    values: tuple[OrderedConfigValue, ...], label: ConfigFieldPath
+) -> None:
+    if any(left <= right for left, right in pairwise(values)):
+        raise ValueError(f"{label} must be strictly decreasing")
+
+
+def _coerce_yaml_value(value: RawYamlValue) -> YamlValue:
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, list):
+        return tuple(_coerce_yaml_value(item) for item in value)
+    result: dict[str, YamlValue] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise ConfigurationError("configuration mapping keys must be strings")
+        result[key] = _coerce_yaml_value(item)
+    return MappingProxyType(result)

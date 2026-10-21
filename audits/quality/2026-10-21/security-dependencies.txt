@@ -1,0 +1,31 @@
+Found 25 known vulnerabilities in 5 packages
+Name    Version   ID              Fix Versions
+------- --------- --------------- ------------
+certifi 2026.7.22 PYSEC-2026-4320 2026.10.19
+mcp     1.29.0    CVE-2026-59951  1.30.0,2.2.0
+pillow  12.3.0    CVE-2026-112895 13.0.0
+pillow  12.3.0    CVE-2026-112400 13.0.0
+pillow  12.3.0    CVE-2026-112397 13.0.0
+pillow  12.3.0    CVE-2026-112896 13.0.0
+pillow  12.3.0    CVE-2026-112897 13.0.0
+pillow  12.3.0    CVE-2026-112395 13.0.0
+pillow  12.3.0    CVE-2026-112404 13.0.0
+pillow  12.3.0    CVE-2026-112899 13.0.0
+pyjwt   2.13.0    PYSEC-2026-4145 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4146
+pyjwt   2.13.0    PYSEC-2026-4149 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4152 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4144 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4143 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4148 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4140 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4141 2.15.0
+pyjwt   2.13.0    PYSEC-2026-4147 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4151 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4150 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4142 2.14.0
+pyjwt   2.13.0    PYSEC-2026-4183 2.15.0
+uv      0.11.15   PYSEC-2026-4321 0.13.4
+Name     Skip Reason
+-------- -----------------------------------------------------------------------
+trajcert Dependency not found on PyPI and could not be audited: trajcert (0.1.0)

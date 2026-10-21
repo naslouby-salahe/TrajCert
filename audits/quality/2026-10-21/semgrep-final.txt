@@ -1,0 +1,29 @@
+
+
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 80 files tracked by git with 10 Code rules:
+
+  Language      Rules   Files          Origin   Rules
+ ─────────────────────────────        ────────────────
+  python            9      80          Custom      10
+  <multilang>       1      80
+
+
+
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 0 (0 blocking)
+ • Rules run: 10
+ • Targets scanned: 80
+ • Parsed lines: ~100.0%
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 10 rules on 80 files: 0 findings.
+
+A new version of Semgrep is available. See https://semgrep.dev/docs/upgrading
+If Semgrep missed a finding, please send us feedback to let us know!
+See https://semgrep.dev/docs/reporting-false-negatives/

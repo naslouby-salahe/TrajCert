@@ -1,0 +1,223 @@
+schema_version: 1
+method: {finest_bands: 8, endpoint_band_count: 1, terminal_horizon: 8}
+budgets: {risk: 0.05, information_nats: 0.05}
+confidence:
+  anytime_delta: 0.05
+  level: 0.95
+  alpha: 0.05
+minimum_evidence: {matured_events: 200, resolved_events: 50}
+laws:
+  no_path_dependence: {theta: 0.05, q1: 0.1, q0: 0.1, lambda1: 0.0, lambda0: 0.0}
+  timing_harmful_late: {theta: 0.05, q1: 0.1, q0: 0.1, lambda1: 0.45, lambda0: -0.15}
+  terminal_harmful_unresolved: {theta: 0.05, q1: 0.3, q0: 0.05, lambda1: 0.0, lambda0: 0.0}
+  timing_terminal_harmful_late: {theta: 0.05, q1: 0.3, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
+  timing_terminal_harmful_early: {theta: 0.05, q1: 0.05, q0: 0.3, lambda1: -0.45, lambda0: 0.15}
+  high_unresolvedness: {theta: 0.05, q1: 0.7, q0: 0.4, lambda1: 0.35, lambda0: -0.1}
+  low_prevalence: {theta: 0.01, q1: 0.3, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
+  high_prevalence: {theta: 0.2, q1: 0.3, q0: 0.05, lambda1: 0.45, lambda0: -0.15}
+  intrinsic_impossibility: {theta: 0.15, q1: 0.1, q0: 0.1, lambda1: 0.0, lambda0: 0.0}
+  near_degeneracy: {theta: 0.01, q1: 0.9, q0: 0.01, lambda1: 0.8, lambda0: -0.8}
+  same_endpoint_no_timing: {theta: 0.05, q1: 0.2, q0: 0.1, lambda1: 0.0, lambda0: 0.0}
+  same_endpoint_with_timing: {theta: 0.05, q1: 0.2, q0: 0.1, lambda1: 0.6, lambda0: -0.2}
+  strong_timing_late: {theta: 0.02, q1: 0.3, q0: 0.2, lambda1: 1.5, lambda0: -0.6}
+  strong_timing_null: {theta: 0.02, q1: 0.3, q0: 0.2, lambda1: 0.0, lambda0: 0.0}
+grids:
+  partitions: [8, 4, 2, 1]
+  scaling_bands: [1, 2, 4, 8, 16, 32, 64, 128]
+  rho: [0, 0.0025, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]
+  same_endpoint_rho: [0.01, 0.05, 0.10, 0.20, 0.40, 0.6931471805599453]
+  beta: [0.01, 0.025, 0.05, 0.1, 0.2]
+study_design:
+  utility_and_coherence_laws:
+    - no_path_dependence
+    - timing_harmful_late
+    - terminal_harmful_unresolved
+    - timing_terminal_harmful_late
+    - high_unresolvedness
+    - low_prevalence
+  sharpness_oracle_laws:
+    - no_path_dependence
+    - timing_harmful_late
+    - terminal_harmful_unresolved
+    - timing_terminal_harmful_late
+    - timing_terminal_harmful_early
+    - high_unresolvedness
+    - low_prevalence
+    - high_prevalence
+    - intrinsic_impossibility
+    - near_degeneracy
+  safety_and_impossibility_laws:
+    - no_path_dependence
+    - timing_harmful_late
+    - terminal_harmful_unresolved
+    - timing_terminal_harmful_late
+    - timing_terminal_harmful_early
+    - high_unresolvedness
+    - low_prevalence
+    - intrinsic_impossibility
+  strict_timing_cases:
+    - {law: no_path_dependence, fine_bands: 8, coarse_bands: 4, expectation: ZERO}
+    - {law: terminal_harmful_unresolved, fine_bands: 8, coarse_bands: 4, expectation: ZERO}
+    - {law: same_endpoint_no_timing, fine_bands: 8, coarse_bands: 2, expectation: ZERO}
+    - {law: timing_harmful_late, fine_bands: 8, coarse_bands: 4, expectation: POSITIVE}
+    - {law: timing_terminal_harmful_late, fine_bands: 8, coarse_bands: 4, expectation: POSITIVE}
+    - {law: same_endpoint_with_timing, fine_bands: 8, coarse_bands: 2, expectation: POSITIVE}
+  legacy_partition_incoherence:
+    gamma: [1.5, 2, 4]
+    q: [0.1, 0.3]
+    latent_outcome_probabilities: [0.5, 0.5]
+    fine_band_count: 2
+    endpoint_band_count: 1
+  coverage_stress_cases:
+    - {name: "Independent resolution control", law: no_path_dependence, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "High unresolvedness stress", law: high_unresolvedness, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Low error-prevalence stress", law: low_prevalence, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Near-degeneracy stress", law: near_degeneracy, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Thirty-two-band resolution stress", law: timing_terminal_harmful_late, band_count: 32, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION}
+    - {name: "Minimum-information completion stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.002, sensitivity_reference: COMPATIBILITY_FLOOR, minimum_information_completion: true}
+    - {name: "Near-certification risk-budget stress", law: timing_terminal_harmful_late, band_count: 8, rho_offset: 0.01, sensitivity_reference: TRUE_INFORMATION, beta_offset: 0.002}
+  foreign_heterogeneity: [0.0, 0.25, 0.5, 0.75, 1.0]
+  decision_value:
+    laws: [no_path_dependence, timing_harmful_late, terminal_harmful_unresolved, timing_terminal_harmful_late, high_unresolvedness, low_prevalence]
+    beta: [0.03, 0.05, 0.06, 0.07, 0.08, 0.10]
+  partition_coherence_figure_rho: 0.10
+  sharp_set_offsets: [0.0, 0.005, 0.025, 0.1]
+  oracle_offsets: [0.0, 0.0025, 0.01, 0.05, 0.15]
+  timing_offsets: [0.005, 0.025, 0.1]
+  population_rho_value_count: 15
+  representative_stream_indices: [0, 1, 2, 3]
+numerics:
+  root_atol: 1.0e-12
+  identity_atol: 1.0e-10
+  comparison_guard: 1.0e-12
+  oracle_digits: 100
+  anytime_root_atol: 1.0e-12
+  outer_gap: 1.0e-06
+  outer_max_nodes: 2000000
+  arbitrary_precision_bits: 128
+  profile_grid_points: 1001
+  sharp_diagnostic_grid_points: 2001
+  oracle_bracket_width: 1.0e-14
+  projection_refinement_candidates: 20
+  projection_refinement_steps: 24
+  compatibility_floor_offset: 0.005
+  sharpness_diagnostic_offset: 0.05
+  log2_match_tolerance: 1.0e-15
+  proof_check_tolerance: 1.0e-15
+  information_roundoff_ulps: 32.0
+  resolved_harm_boundary_offset: 0.005
+  arb_search: {incumbent_bisection_iterations: 80, root_scan_grid_points: 12, root_scan_envelope_span_floor: 0.15, projection_stall_minimum_visited: 20000, projection_stall_window_visited: 15000, projection_stall_improvement_floor: 1.0e-4, decision_stall_minimum_visited: 3000, decision_stall_window_visited: 2000, decision_stall_improvement_floor: 1.0e-6}
+comparators:
+  legacy_gamma: [1, 1.25, 1.5, 2, 4, 8]
+  pattern_mixture:
+    c: [0, 1, 2, 3]
+    coefficient_bounds: [-20, 20]
+    ftol: 1.0e-15
+    gtol: 1.0e-12
+    max_iterations: 10000
+    initial_clip: 1.0e-8
+    gradient_acceptance: 1.0e-8
+    boundary_distance: 1.0e-8
+    minimum_nonempty_bands: 2
+    initial_slope: 0.0
+  callback:
+    grid_points: 10001
+    minimum_bracket_width: 1.0e-30
+    common_slope_tolerance: 1.0e-20
+    stable_equality_tolerance: 1.0e-10
+    root_deduplication_tolerance: 1.0e-12
+    minimum_comparable_bands: 2
+    stable_resistance_first_band: 0
+    stable_resistance_second_band: 1
+sequential:
+  coverage:
+    streams: 500
+    max_events: 500
+    checkpoint_every: 100
+    acceptance_upper_limit: 0.06
+    clopper_pearson_confidence: 0.95
+    batch_size: 1
+  certification_power:
+    streams: 100
+    batch_size: 1
+    stream_offset: 1000000
+    checkpoints: [500, 1000, 2000, 5000, 10000, 20000]
+    boundary_margin: 0.005
+    target_power: 0.8
+    figure_scenario: "Low error-prevalence power"
+    scenarios:
+      - {name: "Low error-prevalence power", law: low_prevalence, sensitivity_budget: 0.02, risk_budget: 0.05, band_counts: [1, 2, 4, 8], comparators: [REPEATED_STATIC]}
+      - {name: "Strong timing contrast power", law: strong_timing_late, sensitivity_budget: 0.08, risk_budget: 0.09, band_counts: [1, 2, 4, 8], checkpoints: [2000, 5000, 10000, 20000, 50000], comparators: [REPEATED_STATIC]}
+      - {name: "Matched no-timing control", law: strong_timing_null, sensitivity_budget: 0.08, risk_budget: 0.09, band_counts: [1, 2, 4, 8], checkpoints: [2000, 5000, 10000, 20000, 50000]}
+      - {name: "Endpoint-uncertifiable budget", law: strong_timing_late, sensitivity_budget: 0.08, risk_budget: 0.07, band_counts: [1, 2, 4, 8], checkpoints: [10000, 20000, 50000]}
+      - {name: "Headline decision boundary", law: timing_terminal_harmful_late, sensitivity_budget: 0.05, risk_budget: 0.06, band_counts: [1, 8], checkpoints: [2000, 5000, 10000, 20000], comparators: [REPEATED_STATIC]}
+      - {name: "Unsafe compatible law", law: timing_terminal_harmful_late, sensitivity_budget: 0.05, risk_budget: 0.04, band_counts: [1, 8], checkpoints: [2000, 5000, 10000, 20000], comparators: [REPEATED_STATIC, IGNORABLE_DELAY]}
+      - {name: "True risk near budget", law: timing_terminal_harmful_late, sensitivity_budget: 0.05, risk_budget: 0.052, band_counts: [1, 8], checkpoints: [2000, 5000, 10000, 20000], comparators: [REPEATED_STATIC]}
+      - {name: "Model-incompatible budget", law: timing_terminal_harmful_late, sensitivity_budget: 0.02, risk_budget: 0.06, band_counts: [4, 8], checkpoints: [2000, 5000, 10000, 20000]}
+      - {name: "Misspecified sensitivity budget", law: timing_terminal_harmful_late, sensitivity_budget: 0.02, risk_budget: 0.045, band_counts: [1, 2], checkpoints: [2000, 5000, 10000, 20000]}
+      - {name: "Intrinsically uncertifiable law", law: intrinsic_impossibility, sensitivity_budget: 0.05, risk_budget: 0.05, band_counts: [1], checkpoints: [2000, 5000, 10000, 20000]}
+      - {name: "Ignorable-delay valid regime", law: no_path_dependence, sensitivity_budget: 0.02, risk_budget: 0.09, band_counts: [1, 8], checkpoints: [2000, 5000, 10000, 20000], comparators: [REPEATED_STATIC, IGNORABLE_DELAY]}
+      - {name: "Near-degeneracy power", law: near_degeneracy, sensitivity_budget: 0.0493, risk_budget: 0.05, band_counts: [1, 8], checkpoints: [2000, 5000, 10000, 20000]}
+      - {name: "Optional-stopping looks", law: no_path_dependence, sensitivity_budget: 0.02, risk_budget: 0.065, band_counts: [1], checkpoints: [250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000], comparators: [REPEATED_STATIC, IGNORABLE_DELAY]}
+materiality:
+  population: {absolute_tightening: 0.005, relative_unresolved_gain: 0.2, qualifying_laws: 3, compatible_rho_values: 2}
+benchmark: {warmup_repetitions: 5, measured_repetitions: 30, outer_sample_size: 500, minimum_samples_for_standard_deviation: 2, scaling_information_margin: 0.01}
+failure_boundary:
+  unresolvedness: [0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
+  timing_contrast: [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
+  prevalence: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.2]
+  bands: [1, 2, 4, 8, 16, 32, 64]
+  information_margin: [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05]
+  risk_offset: [-0.05, -0.02, -0.005, 0, 0.005, 0.02, 0.05]
+  sample_size: [25, 50, 100, 200, 500, 1000, 2000]
+  terminal_selection_asymmetry:
+    - [0.01, 0.50]
+    - [0.02, 0.40]
+    - [0.05, 0.30]
+    - [0.10, 0.10]
+    - [0.30, 0.05]
+    - [0.40, 0.02]
+    - [0.50, 0.01]
+  optimizer_nodes: [1000, 5000, 20000, 100000, 500000, 1000000, 2000000]
+  optimizer_sample_size: 500
+  optimizer_information_margin: 0.01
+  compatible_resolution_rho: 0.15
+  certification_sample_size: [500, 1000, 2000, 5000, 10000, 20000, 50000]
+  certification_sample_rho: 0.02
+identifiers: {event_index_width: 6}
+serialization: {max_fixed_notation_exponent: 21, min_fixed_notation_exponent: -6}
+determinism: {fixture_stream_index: 0}
+units: {nanoseconds_per_millisecond: 1000000.0, nanoseconds_per_second: 1000000000.0}
+smoke: {compatible_offset: 0.01, refinement_offset: 0.025, coverage_stress_events: 25, coarse_bands: 4, coverage_stress_bands: 2, fixture_count: 6}
+publication: {table_count: 13, figure_count: 12}
+hand_cases:
+  stream: 0
+  diagnostic_node_cap: 1
+  insufficient_matured: {case_index: 1, event_count: 199}
+  insufficient_resolved: {case_index: 2, finite_count: 49, unresolved_count: 151, total_count: 200}
+  model_incompatible: {case_index: 3, rho_margin: 0.005}
+  intrinsic: {case_index: 4, rho_margin: 0.01}
+  certified: {case_index: 5, rho_margin: 0.01, beta_margin: 0.005}
+  uncertified: {case_index: 6, rho_margin: 0.01}
+  zero_resolved_plausible: {case_index: 7, band_mass_scale: 0.2, unresolved_lower: 0.8, resolved_mass_upper: 0.1, entropy_scale: 0.2, gate_matured: 200, gate_resolved: 50}
+  no_unresolved: {case_index: 8}
+  simplex_boundary: {case_index: 9, harmful_mass_scale: 0.1, correct_mass_scale: 0.7, unresolved_mass: 0.2, hidden_terminal_harmful: 0.05, rho_margin: 0.01}
+  optimizer_fallback: {case_index: 10, event_count: 500, rho_margin: 0.01}
+figure_layout: {width: 1400, height: 900, margin_left: 90.0, margin_right: 45.0, margin_top: 85.0, margin_bottom: 80.0, horizontal_panel_gap: 28.0, grid_panel_gap_x: 24.0, grid_panel_gap_y: 34.0, failure_boundary_grid_columns: 3, axis_padding_fraction: 0.05}
+real_trajectory:
+  dataset_root: /home/naslouby/Projects/datp-shared-data/raw/HITL-IoT
+  dataset:
+    name: hitl-iot
+    source_reference: https://github.com/abubakarwakili9/HITL-IoT--Human-in-the-Loop-Intrusion-Detection-Dataset/blob/main/CHANGELOG.md
+    data_filename: HITL-IoT_dataset.csv
+    checksums_filename: HITL-IoT_checksums.txt
+    sha256: 162121f804c2e177dddae4fb9c91e70045aaccaa6e918adde25fc7964acb0c04
+    documented_total_rows: 127845
+    documented_ground_truth_attack_rows: 19215
+    documented_human_reviewed_rows: 10227
+    device_names: [camera_21, camera_22, camera_26, doorbell_30, doorbell_31, speaker_23, speaker_24, speaker_27, thermostat_20, thermostat_25, tv_28, tv_29]
+    raw_columns: [timestamp, src_mac, dst_ip, src_port, dst_port, device_name, device_type, is_attack, ml_prediction, human_reviewed, human_decision, human_confidence, decision_time, annotator_id]
+    flow_identity_columns: [timestamp, src_mac, dst_ip, src_port, dst_port]
+    expected_schema: [timestamp, hour, day_of_week, is_weekend, src_ip, dst_ip, src_mac, dst_mac, packet_size, ttl, is_internal_dst, is_localhost, protocol, src_port, dst_port, is_well_known_port, is_registered_port, is_dynamic_port, device_name, device_type, device_thermostat, device_camera, device_speaker, duration, bytes_sent, bytes_received, bytes_ratio, bytes_per_second, packet_rate, is_business_hours, is_night, protocol_tcp, protocol_udp, connection_frequency, baseline_deviation, bytes_sent_mean_5, bytes_sent_std_5, bytes_sent_mean_10, bytes_sent_std_10, bytes_sent_mean_20, bytes_sent_std_20, connection_frequency_5, connection_frequency_10, is_attack, attack_type, risk_score, ml_confidence, ml_prediction, human_reviewed, human_decision, human_confidence, decision_time, ml_human_agreement, annotator_id]
+    columns: {human_reviewed: human_reviewed, is_attack: is_attack, ml_prediction: ml_prediction, device_name: device_name, device_type: device_type, decision_time: decision_time, annotator_id: annotator_id, human_confidence: human_confidence}
+  horizons: {primary_seconds: 30.0, sensitivity_seconds: [15.0, 60.0]}

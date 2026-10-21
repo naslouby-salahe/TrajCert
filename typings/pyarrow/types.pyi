@@ -1,0 +1,3 @@
+from pyarrow.lib import DataType
+
+def is_floating(value: DataType) -> bool: ...

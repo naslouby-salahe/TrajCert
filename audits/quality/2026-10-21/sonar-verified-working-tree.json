@@ -1,0 +1,193 @@
+{
+  "task": {
+    "http": 200,
+    "data": {
+      "task": {
+        "id": "AaFfF1IH05kXvoKjeGY_",
+        "type": "REPORT",
+        "componentId": "AaAg8jEclYD9h6gZbYFo",
+        "componentKey": "naslouby-salahe_TrajCert",
+        "componentName": "TrajCert",
+        "componentQualifier": "TRK",
+        "analysisId": "d6aa9af8-4e6d-44e2-b785-623abba6bd9d",
+        "status": "SUCCESS",
+        "submittedAt": "2026-10-21T15:32:06+0000",
+        "submitterLogin": "naslouby-salahe-XHjDt@github",
+        "startedAt": "2026-10-21T15:32:06+0000",
+        "executedAt": "2026-10-21T15:32:09+0000",
+        "executionTimeMs": 2978,
+        "logs": false,
+        "hasScannerContext": true,
+        "organization": "naslouby-salahe",
+        "branch": "main",
+        "branchType": "LONG",
+        "warningCount": 0,
+        "warnings": []
+      }
+    }
+  },
+  "gate": {
+    "http": 200,
+    "data": {
+      "projectStatus": {
+        "status": "OK",
+        "conditions": [
+          {
+            "status": "OK",
+            "metricKey": "new_reliability_rating",
+            "comparator": "GT",
+            "periodIndex": 1,
+            "errorThreshold": "1",
+            "actualValue": "1"
+          },
+          {
+            "status": "OK",
+            "metricKey": "new_security_rating",
+            "comparator": "GT",
+            "periodIndex": 1,
+            "errorThreshold": "1",
+            "actualValue": "1"
+          },
+          {
+            "status": "OK",
+            "metricKey": "new_maintainability_rating",
+            "comparator": "GT",
+            "periodIndex": 1,
+            "errorThreshold": "1",
+            "actualValue": "1"
+          },
+          {
+            "status": "OK",
+            "metricKey": "new_coverage",
+            "comparator": "LT",
+            "periodIndex": 1,
+            "errorThreshold": "80",
+            "actualValue": "92.0"
+          },
+          {
+            "status": "OK",
+            "metricKey": "new_duplicated_lines_density",
+            "comparator": "GT",
+            "periodIndex": 1,
+            "errorThreshold": "3",
+            "actualValue": "0.0"
+          },
+          {
+            "status": "OK",
+            "metricKey": "new_security_hotspots_reviewed",
+            "comparator": "LT",
+            "periodIndex": 1,
+            "errorThreshold": "100",
+            "actualValue": "100.0"
+          }
+        ],
+        "periods": [
+          {
+            "index": 1,
+            "mode": "previous_version",
+            "date": "2026-08-22T13:11:24+0000"
+          }
+        ],
+        "ignoredConditions": false
+      }
+    }
+  },
+  "issues": {
+    "http": 200,
+    "data": {
+      "total": 0,
+      "p": 1,
+      "ps": 500,
+      "paging": {
+        "pageIndex": 1,
+        "pageSize": 500,
+        "total": 0
+      },
+      "effortTotal": 0,
+      "debtTotal": 0,
+      "issues": [],
+      "components": [],
+      "organizations": [],
+      "facets": []
+    }
+  },
+  "hotspots": {
+    "http": 200,
+    "data": {
+      "paging": {
+        "pageIndex": 1,
+        "pageSize": 500,
+        "total": 0
+      },
+      "hotspots": [],
+      "components": []
+    }
+  },
+  "analyses": {
+    "http": 200,
+    "data": {
+      "paging": {
+        "pageIndex": 1,
+        "pageSize": 3,
+        "total": 13
+      },
+      "analyses": [
+        {
+          "key": "d6aa9af8-4e6d-44e2-b785-623abba6bd9d",
+          "date": "2026-10-21T15:31:44+0000",
+          "events": [
+            {
+              "key": "AaFfF1nPvvXsIHnglR7_",
+              "category": "VERSION",
+              "name": "not provided"
+            },
+            {
+              "key": "AaFfF1nNvvXsIHnglR7-",
+              "category": "QUALITY_GATE",
+              "name": "Green (was Red)",
+              "description": ""
+            }
+          ],
+          "projectVersion": "not provided",
+          "manualNewCodePeriodBaseline": false,
+          "revision": "1150bed3469761571855b61209c3e1cdd77d8661"
+        },
+        {
+          "key": "3b1435b9-6c61-45c0-8edd-28df400b1157",
+          "date": "2026-10-21T15:30:43+0000",
+          "events": [
+            {
+              "key": "AaFfFmhsu1DSVyB2s1Eq",
+              "category": "QUALITY_GATE",
+              "name": "Red (was Green)",
+              "description": "Reliability Rating on New Code > 1"
+            },
+            {
+              "key": "AaFfFmhsu1DSVyB2s1Ep",
+              "category": "QUALITY_PROFILE",
+              "name": "Use 'Sonar way comprehensive' (yaml)"
+            }
+          ],
+          "projectVersion": "not provided",
+          "manualNewCodePeriodBaseline": false,
+          "revision": "1150bed3469761571855b61209c3e1cdd77d8661"
+        },
+        {
+          "key": "cd396f7e-a61f-4211-aa39-5dbbde1a99b5",
+          "date": "2026-10-21T15:30:06+0000",
+          "events": [
+            {
+              "key": "AaFfFeE7KnwOd2rRSxM8",
+              "category": "QUALITY_GATE",
+              "name": "Green (was Red)",
+              "description": ""
+            }
+          ],
+          "projectVersion": "not provided",
+          "manualNewCodePeriodBaseline": false,
+          "revision": "1150bed3469761571855b61209c3e1cdd77d8661"
+        }
+      ]
+    }
+  }
+}

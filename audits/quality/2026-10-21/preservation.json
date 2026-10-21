@@ -1,0 +1,24 @@
+{
+  "protected_files_checked": 6025,
+  "protected_files_changed": [],
+  "comments_or_docstrings_added": false,
+  "head": "024b4b5e7e94216b485809cd0a3ffd6e89fbb5f7",
+  "branch": "paper",
+  "root_outputs_exists": false,
+  "root_results_exists": false,
+  "staged_files": [],
+  "modified_files": [
+    "src/trajcert/config.py",
+    "src/trajcert/experiments/dispatch.py",
+    "src/trajcert/experiments/mathematics.py",
+    "src/trajcert/experiments/smoke.py",
+    "src/trajcert/inference/confidence.py",
+    "src/trajcert/reporting/figures.py",
+    "src/trajcert/telemetry.py",
+    "tests/integration/test_experiment_runner.py",
+    "tests/unit/inference/test_confidence.py",
+    "tests/unit/inference/test_enclosure_regressions.py",
+    "tests/unit/inference/test_projection.py",
+    "tests/unit/test_config.py"
+  ]
+}

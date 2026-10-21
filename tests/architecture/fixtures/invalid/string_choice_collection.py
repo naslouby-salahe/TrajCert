@@ -1,0 +1,1 @@
+STRATEGIES = ("local", "global")

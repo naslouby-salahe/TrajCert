@@ -1,0 +1,21 @@
+{
+  "config_reads_plugin.py": "70fc4a3c884b951e1e0942909e236615273d574627c614c12753c0fdb47571f6",
+  "sonar-verified-working-tree.json": "ae9d365346af0eba200edf5bc71852981f88141fe8dd4b41c85162d409f41138",
+  "final-tests.txt": "2215ac2b28593d0d8c536226ae9ed6d792dae5d54c80b1851b8c18507dad9067",
+  "runtime-config-reads.json": "675c946d1a156229dc5c5b6657e9385edffc72ab6f27b8fef20773126c45133c",
+  "configuration-usage.json": "9fceb1824fced2a0deeeb15de841550c73ac7174a74d703e558d79a564d76353",
+  "security-dependencies.txt": "916e91df2e9050fa0cb0f848a576e47751c6c6af97d4c95d634b197d0ceb8026",
+  "complexity-final.txt": "fbfdec86d83e320d86e8150b4e0af34bcc9e2a656b161250f65b2bc33fd5a95f",
+  "imports-final.txt": "93947b5e2cdb44dadd3b3587f04eb98c87e17510ee0c1b460d9cec2f180398bc",
+  "preservation.json": "01f715fd7c9422f23e3b4957dfaf6757847a7c2ab8b29fd9a609de1b6238b782",
+  "audit.md": "bb8b10c638755e42247eb59097911f5d7fcda3e956de971425b9fb6c19cbf035",
+  "post-scan-tests.txt": "94c8cf84c004829d4e56d7b2fb9a95722d2776a3ee84c2e6d23369f4c5f5af02",
+  "lock-check.txt": "6d1266b56a09c22a46e5e4af4aa45446f3eef21d345525f89a22d085ae14df31",
+  "sonar-setting-restoration.json": "5190f97bc9fc9ece5526065b8a3eba0e2185bb285f11ef3aee64cb368fdb94dd",
+  "semgrep-final.txt": "a9010405299a2a2d315cae32639c5665fde293e2a8bc0a699b8a6de973b8b8f0",
+  "config_manifest.py": "380b9965754789f89bb8f6fc753c93f836a01c60a78d8899310331873f908f8a",
+  "dependencies-final.txt": "719887196f0b39b852a31b13a1c3584e59597d03097dcd836a2956725fb6f412",
+  "source-audit.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "independent_audit.py": "ca91f8240fcec861432420b4b024f7aa010c6e4ab9bc4874e2155732e831e209",
+  "independent-numerics.json": "5f016f624b13bde2bd99cf20ac237a6b0f997c58c0b9597ba2364d45e5a79a8b"
+}

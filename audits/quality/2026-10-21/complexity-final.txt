@@ -1,0 +1,1095 @@
+──────────────────────────────── 🐙 complexipy ─────────────────────────────────
+src/trajcert/analysis/materiality.py
+    evaluate_population_materiality 4 PASSED
+
+src/trajcert/analysis/metrics.py
+    population_gain 2 PASSED
+
+src/trajcert/cli.py
+    _dataset_name 0 PASSED
+    _experiment_name 0 PASSED
+    _experiment_name 0 PASSED
+    _print_project_status 0 PASSED
+    _print_run 0 PASSED
+    _print_status 0 PASSED
+    parse_args 0 PASSED
+    _print_doctor 1 PASSED
+    _print_smoke 1 PASSED
+    build_parser 1 PASSED
+    _experiment_name 3 PASSED
+    _parse_dataset_name 3 PASSED
+    _parse_experiment_name 5 PASSED
+    main 5 PASSED
+    _dispatch 12 PASSED
+
+src/trajcert/comparators/callback.py
+    _data 0 PASSED
+    _not_applicable 0 PASSED
+    _common_slope_objective 1 PASSED
+    _result 1 PASSED
+    alho_common_slope_callback 1 PASSED
+    stable_resistance_callback 1 PASSED
+    _stable_resistance_objective 2 PASSED
+    _deduplicate 4 PASSED
+    _log_odds_ratio 4 PASSED
+    _golden_minimize 5 PASSED
+    _accepted_roots 10 PASSED
+
+src/trajcert/comparators/endpoint.py
+    endpoint_partition 0 PASSED
+    endpoint_path_information_bound 0 PASSED
+    endpoint_summary 0 PASSED
+
+src/trajcert/comparators/ignorable_delay.py
+    _bernoulli_interval 3 PASSED
+    ignorable_delay_update 5 PASSED
+    _log_mixture_ratio 6 PASSED
+    _root 10 PASSED
+
+src/trajcert/comparators/legacy.py
+    _incompatible 0 PASSED
+    legacy_bandwise_odds_ratio 13 PASSED
+
+src/trajcert/comparators/pattern_mixture.py
+    fit_pattern_mixture 3 PASSED
+
+src/trajcert/comparators/repeated_static.py
+    _wilson_interval 0 PASSED
+    repeated_static_projection 0 PASSED
+    repeated_static_region 1 PASSED
+
+src/trajcert/config.py
+    ComparatorsConfig::validate_grids 0 PASSED
+    DecisionValueConfig::validate_decision_value 0 PASSED
+    RealTrajectoryHorizonConfig::validate_horizons 0 PASSED
+    TrajCertConfig::ordered_laws 0 PASSED
+    TrajCertConfig::serialize_laws 0 PASSED
+    TrajCertConfig::serialized_json 0 PASSED
+    _with_benchmark_size_overrides 0 PASSED
+    _with_coverage_size_overrides 0 PASSED
+    _with_execution_size_overrides 0 PASSED
+    _with_power_size_overrides 0 PASSED
+    BudgetsConfig::validate_information_budget 1 PASSED
+    CallbackConfig::validate_stable_resistance_bands 1 PASSED
+    CertificationPowerConfig::scenario_checkpoints 1 PASSED
+    CertificationPowerConfig::validate_power 1 PASSED
+    CertificationPowerScenarioConfig::validate_scenario 1 PASSED
+    ConfidenceConfig::validate_level_alpha_pair 1 PASSED
+    CoverageConfig::validate_checkpoint_interval 1 PASSED
+    CoverageStressCaseConfig::validate_reference 1 PASSED
+    HandCaseInsufficientResolvedConfig::validate_counts 1 PASSED
+    HandCasesConfig::validate_case_indices 1 PASSED
+    LegacyPatternMixtureConfig::validate_bounds 1 PASSED
+    MinimumEvidenceConfig::validate_resolved_not_greater_than_matured 1 PASSED
+    SerializationConfig::validate_exponent_bounds 1 PASSED
+    TrajCertConfig::from_yaml_with_overrides 1 PASSED
+    _require_strictly_decreasing 1 PASSED
+    _require_strictly_increasing 1 PASSED
+    _require_unique 1 PASSED
+    FigureLayoutConfig::validate_margins 2 PASSED
+    LegacyPartitionIncoherenceConfig::validate_grid 2 PASSED
+    MethodConfig::validate_endpoint_partition 2 PASSED
+    StrictTimingCaseConfig::validate_refinement 2 PASSED
+    TrajCertConfig::validate_laws 2 PASSED
+    FailureBoundaryConfig::validate_axes 3 PASSED
+    GridsConfig::validate_grids 3 PASSED
+    StudyDesignConfig::validate_registry_cardinalities 3 PASSED
+    TrajCertConfig::from_yaml 4 PASSED
+    _validate_nested_partitions 4 PASSED
+    _coerce_yaml_value 6 PASSED
+    _execution_size_overrides 6 PASSED
+    TrajCertConfig::validate_cross_section_contracts 7 PASSED
+    RealTrajectoryDatasetConfig::validate_dataset_contract 8 PASSED
+
+src/trajcert/data/laws.py
+    FullLawProbabilities::total 0 PASSED
+    FullLawProbabilities::unresolved 0 PASSED
+    build_full_law 0 PASSED
+    configured_laws 0 PASSED
+    prepared_synthetic_law 0 PASSED
+    resolved_band_weights 4 PASSED
+
+src/trajcert/data/ledger.py
+    LedgerEvent::identity 0 PASSED
+    EventLedger::validate_events 1 PASSED
+    EventLedger::validate_identity 1 PASSED
+    LedgerEvent::maturity_age_unit 1 PASSED
+    LedgerEvent::validate_adjudication 6 PASSED
+
+src/trajcert/data/maturity.py
+    mature_ledger 0 PASSED
+    mature_event 5 PASSED
+    MaturedCategory::validate_shape 6 PASSED
+
+src/trajcert/data/partitions.py
+    _coarsening_map_values 0 PASSED
+    _is_refinement 1 PASSED
+    partition_name 2 PASSED
+    coarsen_mass_vector 3 PASSED
+    build_partition 4 PASSED
+    TrajectoryPartition::validate_partition 5 PASSED
+    _validate_partition_shape 8 PASSED
+
+src/trajcert/data/real_trajectories.py
+    RealTrajectoryCohort::size 0 PASSED
+    _dataset_contract 0 PASSED
+    _documented_dataset_structure 0 PASSED
+    _eligibility_report 0 PASSED
+    _eligible_events 0 PASSED
+    _observed_dataset_columns 0 PASSED
+    _observed_dataset_counts 0 PASSED
+    _observed_dataset_structure 0 PASSED
+    _observed_entity_ids 0 PASSED
+    _observed_timestamp_range 0 PASSED
+    build_real_trajectory_eligibility 0 PASSED
+    hitl_iot_device_names 0 PASSED
+    inventory_real_trajectory_dataset 0 PASSED
+    resolved_count 0 PASSED
+    unresolved_error_mass 0 PASSED
+    _eligible_annotated_rows 1 PASSED
+    cohort_from_events 1 PASSED
+    empirical_oracle 1 PASSED
+    validate_dataset_schema 1 PASSED
+    finest_observable_summary 2 PASSED
+    _parse_checksums_file 5 PASSED
+    cohort_for_stratum 5 PASSED
+    verify_dataset_integrity 6 PASSED
+
+src/trajcert/data/summaries.py
+    ObservableCounts::total 0 PASSED
+    ObservableSummary::resolved_mass 0 PASSED
+    coarsen_summary 0 PASSED
+    summarize_full_law 1 PASSED
+    summarize_observable_masses 3 PASSED
+
+src/trajcert/data/synthetic.py
+    _event_id 0 PASSED
+    _static_epoch_id 0 PASSED
+    _synthetic_identity 0 PASSED
+    generate_balanced_prefix_ledger 0 PASSED
+    generate_stochastic_ledger 0 PASSED
+    hamilton_apportionment 0 PASSED
+    balanced_prefix 1 PASSED
+    observable_category_probabilities 1 PASSED
+    _event_from_observable_category 2 PASSED
+    _validate_probability_vector 4 PASSED
+    _sample_event 5 PASSED
+
+src/trajcert/determinism.py
+    generator 0 PASSED
+    generator_for 0 PASSED
+    derive_seed 1 PASSED
+    event_stream_namespace 1 PASSED
+
+src/trajcert/experiments/anytime.py
+    _coverage_feasibility 0 PASSED
+    _gate_state 0 PASSED
+    _hand_case_insufficient_matured 0 PASSED
+    _hand_case_insufficient_resolved 0 PASSED
+    _hand_identity 0 PASSED
+    _law 0 PASSED
+    _oracle_input 0 PASSED
+    _parameters 0 PASSED
+    _population_summary 0 PASSED
+    _project 0 PASSED
+    _representative_checkpoint_evidence 0 PASSED
+    _representative_path_evidence 0 PASSED
+    _representative_stream_evidence 0 PASSED
+    _singleton_assessment 0 PASSED
+    _state_result 0 PASSED
+    _true_information 0 PASSED
+    evaluate_configured_coverage_stress 0 PASSED
+    _hand_case_certified 1 PASSED
+    _hand_case_intrinsic 1 PASSED
+    _hand_case_model_incompatible 1 PASSED
+    _hand_case_no_unresolved 1 PASSED
+    _hand_case_zero_resolved_plausible 1 PASSED
+    coverage_evidence_from_batches 1 PASSED
+    resolve_coverage_stress_case 1 PASSED
+    _coverage_method_evidence 2 PASSED
+    _hand_case_simplex_boundary 2 PASSED
+    _hand_case_uncertified 2 PASSED
+    _risk_budget 2 PASSED
+    run_anytime_hand_case 2 PASSED
+    _censored_median 3 PASSED
+    _clopper_pearson_upper 3 PASSED
+    _coverage_method_result 3 PASSED
+    _hand_case_optimizer_fallback 3 PASSED
+    _minimum_information_completion 3 PASSED
+    _coverage_checkpoint_update 4 PASSED
+    _matured_sequence 4 PASSED
+    _sensitivity_budget 5 PASSED
+    combine_coverage_stress_batches 5 PASSED
+    _coverage_checkpoint_violation_counts 6 PASSED
+    coverage_stress_batch 6 PASSED
+    run_sequential_trace 6 PASSED
+    _advance_anytime_regions 7 PASSED
+    _coverage_stream_outcome 12 PASSED
+
+src/trajcert/experiments/artifacts.py
+    _checksum 0 PASSED
+    _completion_identity_matches 0 PASSED
+    cell_artifact_index_path 0 PASSED
+    cell_checkpoint_batch_path 0 PASSED
+    cell_checkpoint_batch_result_path 0 PASSED
+    cell_completion_path 0 PASSED
+    cell_dependency_fingerprint 0 PASSED
+    cell_dependency_material 0 PASSED
+    cell_failure_path 0 PASSED
+    cell_plan_digest 0 PASSED
+    cell_running_path 0 PASSED
+    completion_record 0 PASSED
+    scientific_result_artifact_key 0 PASSED
+    scientific_result_path 0 PASSED
+    scientific_specification_digest 0 PASSED
+    _parent_artifact_identity 2 PASSED
+    _verify_completion_artifacts 2 PASSED
+    verified_upstream_completion_and_index 2 PASSED
+    completion_is_compatible 3 PASSED
+    read_verified_scientific_result 3 PASSED
+    validate_execution_result 3 PASSED
+    _validate_upstream_artifact_entry 5 PASSED
+    _validate_upstream_completion 5 PASSED
+    verify_artifacts 7 PASSED
+
+src/trajcert/experiments/catalog.py
+    _experiment 0 PASSED
+    coordinate_handler_for 0 PASSED
+    dependency_policy_for 0 PASSED
+    execution_handler_for 0 PASSED
+    experiment_definition 0 PASSED
+    experiment_names 0 PASSED
+    seed_policy_for 0 PASSED
+    supports_batched_recovery 0 PASSED
+
+src/trajcert/experiments/checkpointing.py
+    _batch_worker 0 PASSED
+    _coverage_stress_cell_with_recovery 0 PASSED
+    _power_case 0 PASSED
+    _power_cell_with_recovery 0 PASSED
+    _batch_payload_type 1 PASSED
+    _compute_batch_payload 1 PASSED
+    batch_seed_ranges 1 PASSED
+    dispatch_with_batched_recovery 2 PASSED
+    _checkpoint_batch_valid 3 PASSED
+    _recover_batch 6 PASSED
+    _recovered_batches 7 PASSED
+
+src/trajcert/experiments/comparator_reduction.py
+    _endpoint_point 0 PASSED
+    evaluate_comparator_reduction 2 PASSED
+
+src/trajcert/experiments/decision_value.py
+    _decision 0 PASSED
+    evaluate_trajectory_decision 0 PASSED
+    _profile 1 PASSED
+
+src/trajcert/experiments/dispatch.py
+    _cached_real_trajectory_cohort 0 PASSED
+    _certification_power_cell 0 PASSED
+    _coverage_stress_case 0 PASSED
+    _dispatch_anytime_hand_case 0 PASSED
+    _dispatch_cell_independent 0 PASSED
+    _dispatch_partition_coherence 0 PASSED
+    _dispatch_population_sensitivity_utility 0 PASSED
+    _dispatch_refinement_dominance_identity 0 PASSED
+    _dispatch_same_endpoint_different_timing 0 PASSED
+    _dispatch_sharpness_against_generic_oracle 0 PASSED
+    _dispatch_strict_timing_gain 0 PASSED
+    _dispatch_strict_timing_gain_identity 0 PASSED
+    _dispatch_summary_handler 0 PASSED
+    _failure_boundary_probe 0 PASSED
+    _law_level_finest_summary 0 PASSED
+    _summary_comparator_reduction 0 PASSED
+    _summary_compatibility_floor_behavior 0 PASSED
+    _summary_endpoint_special_case_identity 0 PASSED
+    _summary_foreign_information_negative_control 0 PASSED
+    _summary_from_coordinates 0 PASSED
+    _summary_information_profile_convexity 0 PASSED
+    _summary_minimum_compatibility_identity 0 PASSED
+    _summary_path_information_decomposition 0 PASSED
+    _summary_production_solver_vs_independent_oracle 0 PASSED
+    _summary_safety_boundary_identity 0 PASSED
+    _summary_sharp_set_constructive_identity 0 PASSED
+    _trajectory_decision_cell 0 PASSED
+    population_summary 0 PASSED
+    _dispatch_computational_scaling 1 PASSED
+    _node_budget_level 1 PASSED
+    _partition_from_coordinates 1 PASSED
+    _rho_from_offset 1 PASSED
+    certification_power_band_count 1 PASSED
+    direct_rho 1 PASSED
+    _dispatch_legacy_partition_incoherence 2 PASSED
+    _variant_index 2 PASSED
+    dispatch_real_trajectory_validation 2 PASSED
+    _partition_named 3 PASSED
+    _refinement_inputs 3 PASSED
+    execute_scientific_cell 3 PASSED
+    _band_count_for_partition_name 4 PASSED
+    law_from_name 4 PASSED
+    _configured_timing_expectation 5 PASSED
+    _real_trajectory_stratum 5 PASSED
+    _safety_case 5 PASSED
+    _safety_intrinsic_case 5 PASSED
+    _execute_failure_boundary 6 PASSED
+    certification_power_scenario_config 7 PASSED
+    coverage_stress_case_config 9 PASSED
+
+src/trajcert/experiments/failure_boundaries.py
+    _base_parameters 0 PASSED
+    _certification_parameters 0 PASSED
+    _certification_sample_size 0 PASSED
+    _compatible_path_resolution 0 PASSED
+    _partition 0 PASSED
+    _summary 0 PASSED
+    _tau 0 PASSED
+    _true_information 0 PASSED
+    evaluate_terminal_selection_asymmetry 0 PASSED
+    _band_count_level 1 PASSED
+    _information_margin_level 1 PASSED
+    _probability_level 1 PASSED
+    _risk_offset_level 1 PASSED
+    _sample_size_level 1 PASSED
+    _timing_contrast_level 1 PASSED
+    _finite_sample_size 2 PASSED
+    evaluate_optimizer_node_budget 2 PASSED
+    _population_coordinate 5 PASSED
+    _population_state 9 PASSED
+    evaluate_failure_boundary 9 PASSED
+
+src/trajcert/experiments/feasibility.py
+    population_feasibility 0 PASSED
+    population_summary_at 0 PASSED
+    summary_feasibility 2 PASSED
+    _classify_feasibility 7 PASSED
+
+src/trajcert/experiments/foreign_information.py
+    _blend_law 0 PASSED
+    _blend_probability 0 PASSED
+    _blend_slope 0 PASSED
+    _foreign_conditions 0 PASSED
+    _foreign_path_summary 0 PASSED
+    _heterogeneity_point 0 PASSED
+    _naive_pooled_summary 0 PASSED
+    evaluate_foreign_information_negative_control 0 PASSED
+    foreign_law_for 2 PASSED
+    _evaluate_condition 3 PASSED
+    _fixed_risk_budget 3 PASSED
+    _is_spurious_improvement 3 PASSED
+    _introduces_error 4 PASSED
+    _effect 5 PASSED
+
+src/trajcert/experiments/mathematics.py
+    _direct_second_derivative 0 PASSED
+    _response_masses 0 PASSED
+    _tilted_probability 0 PASSED
+    anytime_projection_proof_check 0 PASSED
+    population_complexity_proof_check 0 PASSED
+    refinement_dominance_identity 1 PASSED
+    safety_boundary_identity 1 PASSED
+    endpoint_special_case_identity 2 PASSED
+    evaluate_safety_boundary_case 2 PASSED
+    minimum_compatibility_identity 2 PASSED
+    path_information_decomposition 2 PASSED
+    _sharp_grid_mismatches 3 PASSED
+    sharp_set_constructive_identity 3 PASSED
+    evaluate_legacy_partition_incoherence 7 PASSED
+    information_profile_convexity 8 PASSED
+    strict_timing_gain_identity 9 PASSED
+
+src/trajcert/experiments/plan.py
+    _adjacent_partition_pairs 0 PASSED
+    _coordinates_anytime_certification_power 0 PASSED
+    _coordinates_anytime_coverage_stress 0 PASSED
+    _coordinates_anytime_implementation_hand_cases 0 PASSED
+    _coordinates_anytime_projection_proof_check 0 PASSED
+    _coordinates_comparator_reduction 0 PASSED
+    _coordinates_compatibility_floor_behavior 0 PASSED
+    _coordinates_computational_scaling 0 PASSED
+    _coordinates_endpoint_special_case_identity 0 PASSED
+    _coordinates_foreign_information_negative_control 0 PASSED
+    _coordinates_law_and_partition_product 0 PASSED
+    _coordinates_legacy_partition_incoherence_check 0 PASSED
+    _coordinates_partition_coherence 0 PASSED
+    _coordinates_population_complexity_proof_check 0 PASSED
+    _coordinates_population_sensitivity_utility 0 PASSED
+    _coordinates_production_solver_vs_independent_oracle 0 PASSED
+    _coordinates_real_trajectory_validation 0 PASSED
+    _coordinates_refinement_dominance_identity 0 PASSED
+    _coordinates_safety_and_intrinsic_impossibility 0 PASSED
+    _coordinates_safety_boundary_identity 0 PASSED
+    _coordinates_same_endpoint_different_timing 0 PASSED
+    _coordinates_sharp_set_constructive_identity 0 PASSED
+    _coordinates_sharpness_against_generic_oracle 0 PASSED
+    _coordinates_statistical_synthesis 0 PASSED
+    _coordinates_strict_timing_gain 0 PASSED
+    _coordinates_trajectory_decision_value 0 PASSED
+    _failure_boundary_coordinate 0 PASSED
+    _law_names 0 PASSED
+    _offset_coordinate 0 PASSED
+    _partition_names 0 PASSED
+    _utility_and_coherence_laws 0 PASSED
+    _variant 0 PASSED
+    build_plan 0 PASSED
+    cells_for_experiment 0 PASSED
+    experiment_names 0 PASSED
+    _coordinates_for_experiment 1 PASSED
+    _expand_experiment 1 PASSED
+    dependency_graph 1 PASSED
+    ExperimentPlan::validate_plan 3 PASSED
+    _population_rho_values 3 PASSED
+    PlannedCell::validate_execution_contract 4 PASSED
+    _failure_boundary_coordinates 4 PASSED
+    _required_experiments 4 PASSED
+
+src/trajcert/experiments/power.py
+    _ignorable_certified_flag 0 PASSED
+    _method_errors 0 PASSED
+    _representative_paths 0 PASSED
+    _state_counts 0 PASSED
+    _static_certified 0 PASSED
+    _summarize_checkpoint 0 PASSED
+    _trajcert_certified 0 PASSED
+    power_law_parameters 0 PASSED
+    power_stream_indices 0 PASSED
+    _bound_gap 1 PASSED
+    _checkpoint_outcome 1 PASSED
+    _state_of 1 PASSED
+    _static_state 1 PASSED
+    combine_power_batches 1 PASSED
+    power_batch 1 PASSED
+    resolve_power_case 1 PASSED
+    _advance_regions 3 PASSED
+    _first_certified 3 PASSED
+    _ignorable_certified 3 PASSED
+    evaluate_power_stream 9 PASSED
+
+src/trajcert/experiments/real_trajectory.py
+    _coarse_partition 0 PASSED
+    _horizon_information 1 PASSED
+    _observable_summary 1 PASSED
+    _oracle_containment 1 PASSED
+    _rho_point 1 PASSED
+    evaluate_real_trajectory_cell 1 PASSED
+    _contains 2 PASSED
+    _classify_scientific_state 7 PASSED
+
+src/trajcert/experiments/runner.py
+    _failure_diagnostic 0 PASSED
+    dependency_block_reason 2 PASSED
+    expected_seed_count 3 PASSED
+    execute_dispatched_cell 5 PASSED
+    run_cell 6 PASSED
+
+src/trajcert/experiments/safety.py
+    _expected_safety_regime 1 PASSED
+    sharpness_against_generic_oracle 1 PASSED
+    compatibility_floor_behavior 4 PASSED
+    safety_and_intrinsic_impossibility 5 PASSED
+
+src/trajcert/experiments/scaling.py
+    _parameters 0 PASSED
+    _scaling_inputs 0 PASSED
+    _benchmark_target 1 PASSED
+    _execute_target 1 PASSED
+    _max_oracle_error 1 PASSED
+    _worker 1 PASSED
+    benchmark_scaling_cell 1 PASSED
+    _isolated_measurement 4 PASSED
+    _population_oracle_error 4 PASSED
+
+src/trajcert/experiments/sensitivity.py
+    population_sensitivity_utility 2 PASSED
+
+src/trajcert/experiments/smoke.py
+    SmokeResult::passed 0 PASSED
+    _parameters 0 PASSED
+    _confidence_smoke 2 PASSED
+    _projection_smoke 4 PASSED
+    run_smoke_fixtures 4 PASSED
+
+src/trajcert/experiments/solver_validation.py
+    compare_safety_frontier_to_oracle 2 PASSED
+    compare_production_solver_to_oracle 13 PASSED
+
+src/trajcert/experiments/status.py
+    _state_counts 0 PASSED
+    _completion_status 1 PASSED
+    aggregate_experiment_status 1 PASSED
+    _matching_failure_status 4 PASSED
+    _aggregate_state 6 PASSED
+    inspect_cell_status 7 PASSED
+
+src/trajcert/experiments/synthesis.py
+    SynthesisArtifactPaths::__getitem__ 0 PASSED
+    SynthesisArtifactPaths::keys 0 PASSED
+    _cell_order 0 PASSED
+    _compatibility_floor_evidence 0 PASSED
+    _convexity_observation 0 PASSED
+    _convexity_observations 0 PASSED
+    _dependency_reference 0 PASSED
+    _foreign_information_evidence 0 PASSED
+    _population_figure_evidence 0 PASSED
+    _population_utility_evidence 0 PASSED
+    _real_trajectory_evidence 0 PASSED
+    _real_trajectory_inventory 0 PASSED
+    _real_trajectory_pooled_primary_horizon_evidence 0 PASSED
+    _real_trajectory_prepared_events 0 PASSED
+    _safety_evidence 0 PASSED
+    _sharpness_evidence 0 PASSED
+    _theorem_observation 0 PASSED
+    _theorem_validation_observations 0 PASSED
+    build_synthesis_evidence 0 PASSED
+    make_statistical_synthesis_executor 0 PASSED
+    synthesis_artifact_keys 0 PASSED
+    _band_count 1 PASSED
+    _cells 1 PASSED
+    _family_primary_artifact 1 PASSED
+    _identity_observations 1 PASSED
+    _legacy_observations 1 PASSED
+    _publication_source_rows 1 PASSED
+    _refinement_observations 1 PASSED
+    _required_law 1 PASSED
+    _required_partition 1 PASSED
+    _rho_from_persisted_tau 1 PASSED
+    _same_endpoint_timed_law 1 PASSED
+    _sharp_set_observations 1 PASSED
+    synthesis_artifact_paths 1 PASSED
+    synthesis_dependency_fingerprint 1 PASSED
+    verify_synthesis_dependency_fingerprint 1 PASSED
+    _safety_boundary_observations 3 PASSED
+    execute_statistical_synthesis 3 PASSED
+    _same_endpoint_figure_evidence 4 PASSED
+    _validate_synthesis_cell 5 PASSED
+    _partition_timing_evidence 6 PASSED
+
+src/trajcert/experiments/timing.py
+    evaluate_same_endpoint_different_timing 5 PASSED
+    evaluate_partition_coherence 8 PASSED
+
+src/trajcert/experiments/workflows.py
+    DoctorResult::passed 0 PASSED
+    _dependency_readiness 0 PASSED
+    _execution_log_path 0 PASSED
+    _load_config 0 PASSED
+    _persist_plan_artifacts 0 PASSED
+    _real_trajectory_preprocessing_inventory_path 0 PASSED
+    _run_cell_worker 0 PASSED
+    _synthetic_law_manifest_path 0 PASSED
+    _environment_digest 1 PASSED
+    _executor 1 PASSED
+    _experiment_status 1 PASSED
+    _known_experiment_name 1 PASSED
+    _run_cells_sequentially 1 PASSED
+    experiment_status 1 PASSED
+    plan_view 1 PASSED
+    smoke 1 PASSED
+    _execution_context 2 PASSED
+    _preprocess_real_trajectory 2 PASSED
+    _current_cell_status 3 PASSED
+    _render_synthesis_publication_artifacts 3 PASSED
+    _run_state 3 PASSED
+    _tally_outcome 3 PASSED
+    report 3 PASSED
+    _real_trajectory_preprocessing_is_current 4 PASSED
+    _synthetic_preprocessing_is_current 4 PASSED
+    preprocess 5 PASSED
+    _run_cells_in_parallel 6 PASSED
+    _assert_workspace_writable 7 PASSED
+    doctor 8 PASSED
+    run_experiment 9 PASSED
+
+src/trajcert/inference/categorical.py
+    CategoricalState::matured_count 0 PASSED
+    CategoricalState::resolved_count 0 PASSED
+    CategoricalState::unresolved_count 0 PASSED
+    initialize_categorical_state 0 PASSED
+    CategoricalState::canonical_count_vector 1 PASSED
+    append_matured_event 13 PASSED
+
+src/trajcert/inference/certification.py
+    classify_certification 13 PASSED
+
+src/trajcert/inference/confidence.py
+    _jeffreys_beta_ball 0 PASSED
+    ClosedProbabilityInterval::validate_order 1 PASSED
+    _intersect_running 1 PASSED
+    confidence_sequence_update 2 PASSED
+    CategoricalConfidenceRegion::validate_simplex_intersection 3 PASSED
+    confidence_sequence_excludes 3 PASSED
+    raw_confidence_region 3 PASSED
+    _invert_category_count 5 PASSED
+    _root_ball 6 PASSED
+    _lower_root 9 PASSED
+    _upper_root 9 PASSED
+
+src/trajcert/inference/envelope.py
+    ObservableSummaryEnvelope::is_singleton 0 PASSED
+    ScalarEnvelope::is_singleton 0 PASSED
+    _resolved_entropy_envelope 0 PASSED
+    _scalar 0 PASSED
+    singleton_summary_envelope 0 PASSED
+    ObservableSummaryEnvelope::exact_summary 1 PASSED
+    ScalarEnvelope::validate_order 1 PASSED
+    _subset_interval 1 PASSED
+    summary_envelope_from_confidence 1 PASSED
+    ObservableSummaryEnvelope::validate_shape 2 PASSED
+
+src/trajcert/inference/projection.py
+    _Box::objective_upper 0 PASSED
+    _Box::widths 0 PASSED
+    _arb_exact 0 PASSED
+    _binary_entropy_bounds 0 PASSED
+    _binary_entropy_point_arb 0 PASSED
+    _box_resolution 0 PASSED
+    _compatibility_box_lower 0 PASSED
+    _final_projection 0 PASSED
+    _initial_box 0 PASSED
+    _log_two 0 PASSED
+    _projection_fallback 0 PASSED
+    _singleton_projection 0 PASSED
+    _unit 0 PASSED
+    _verified_information_feasible 0 PASSED
+    arb_lower 0 PASSED
+    arb_upper 0 PASSED
+    mass_entropy_bounds 0 PASSED
+    _arb_interval 1 PASSED
+    _information_point_arb 1 PASSED
+    _intrinsic_box_lower 1 PASSED
+    _minimum_profile_point 1 PASSED
+    _resolved_bandwise_entropy_arb 1 PASSED
+    _verified_incumbent 1 PASSED
+    _zero_resolved_plausible 1 PASSED
+    _binary_entropy_arb 2 PASSED
+    _binary_entropy_bounds_at 2 PASSED
+    _box_possible 2 PASSED
+    _compatibility_converged 2 PASSED
+    _intrinsic_converged 2 PASSED
+    _sensitivity_lower 2 PASSED
+    _split_box 2 PASSED
+    _SearchStall::should_stop 3 PASSED
+    _allocate_total 3 PASSED
+    _compatibility_final 3 PASSED
+    _compatibility_stall_final 3 PASSED
+    _enqueue_compatibility_children 3 PASSED
+    _intrinsic_final 3 PASSED
+    _intrinsic_stall_final 3 PASSED
+    _mass_entropy_arb 3 PASSED
+    _mass_entropy_bounds_at 3 PASSED
+    _summary_at_aggregates 3 PASSED
+    _use_singleton_shortcut 3 PASSED
+    _validate_search_controls 3 PASSED
+    _verified_compatibility_point 3 PASSED
+    _aggregate_midpoint 4 PASSED
+    _update_intrinsic_best_upper 4 PASSED
+    _enqueue_intrinsic_children 5 PASSED
+    _enqueue_projection_children 5 PASSED
+    _singleton_incumbent 5 PASSED
+    _queue_upper 6 PASSED
+    _settled_search 6 PASSED
+    _singleton_right_bracket 6 PASSED
+    _witness_in_envelope 6 PASSED
+    _feasible_risk_at 7 PASSED
+    _compatibility_step 8 PASSED
+    _intrinsic_step 8 PASSED
+    project_upper_risk 8 PASSED
+    _bisected_hidden_mass 10 PASSED
+    _enclosed_singleton 10 PASSED
+    _projection_step 10 PASSED
+    _compatibility_search 12 PASSED
+    _scan_projection_incumbent 12 PASSED
+    _intrinsic_search 14 PASSED
+    _projection_search 14 PASSED
+
+src/trajcert/math/bounds.py
+    unresolved_as_harm_upper 0 PASSED
+    SharpRiskSet::identified_width 1 PASSED
+    complete_case_arrival_only 1 PASSED
+    sharp_risk_set 1 PASSED
+
+src/trajcert/math/compatibility.py
+    assess_compatibility 8 PASSED
+
+src/trajcert/math/enclosure.py
+    _endpoint_fraction 0 PASSED
+    sum_lower 0 PASSED
+    sum_upper 0 PASSED
+    ball_lower 1 PASSED
+    ball_upper 1 PASSED
+    rational_lower 1 PASSED
+    rational_upper 1 PASSED
+    mass_entropy_ball 3 PASSED
+
+src/trajcert/math/entropy.py
+    _scalar_binary_entropy 0 PASSED
+    binary_entropy 0 PASSED
+    binary_entropy 0 PASSED
+    binary_entropy_from_masses 0 PASSED
+    binary_entropy_from_masses 0 PASSED
+    weighted_binary_entropy 0 PASSED
+    weighted_binary_entropy 0 PASSED
+    xlogx 0 PASSED
+    xlogx 0 PASSED
+    binary_entropy 1 PASSED
+    xlogx 1 PASSED
+    _scalar_xlogx 2 PASSED
+    binary_entropy_from_masses 4 PASSED
+    weighted_binary_entropy 5 PASSED
+
+src/trajcert/math/information.py
+    information_profile 0 PASSED
+    information_profile_second_derivative 0 PASSED
+    latent_risk 0 PASSED
+    profile_difference 0 PASSED
+    resolved_timing_entropy 0 PASSED
+    information_profile_with_resolved_entropy 1 PASSED
+    observed_timing_information 1 PASSED
+    _hidden_mass 2 PASSED
+    _nonnegative_roundoff_guard 2 PASSED
+    _strictly_interior_hidden_mass 2 PASSED
+    minimum_information_point 2 PASSED
+    timing_gain 7 PASSED
+
+src/trajcert/math/oracle.py
+    _arb_exact_float 0 PASSED
+    _arb_lower_float 0 PASSED
+    _arb_upper_float 0 PASSED
+    _bracket 0 PASSED
+    _projection_information_arb 0 PASSED
+    _projection_information_float 0 PASSED
+    _retain_best 0 PASSED
+    direct_mutual_information 0 PASSED
+    OracleMassInterval::validate_order 1 PASSED
+    _mass_entropy_arb 1 PASSED
+    _oracle_band_weights 1 PASSED
+    population_law_masses 1 PASSED
+    solve_information_oracle 1 PASSED
+    solve_information_oracle_from_law 1 PASSED
+    _binary_entropy_float 2 PASSED
+    _mass_entropy_float 3 PASSED
+    _mass_entropy_point_arb 3 PASSED
+    ProjectionOracleInput::validate_shape_and_simplex 4 PASSED
+    _binary_entropy_arb 4 PASSED
+    _projection_information_derivative_float 4 PASSED
+    _result 4 PASSED
+    _golden_minimum 5 PASSED
+    _left_boundary 5 PASSED
+    _projection_candidate 5 PASSED
+    _right_boundary 5 PASSED
+    _allocate_total 6 PASSED
+    _projection_direct_information_arb 6 PASSED
+    _select_verified_hidden_float 6 PASSED
+    _solve_information_oracle_data 6 PASSED
+    _binary_entropy_point_arb 11 PASSED
+    _max_verified_projection_hidden 12 PASSED
+    _mutual_information 12 PASSED
+    feasible_projection_lower_oracle 12 PASSED
+    _projection_root_bracket_float 14 PASSED
+    _refine_projection_candidate 15 PASSED
+
+src/trajcert/math/safety.py
+    safety_budget_cases 1 PASSED
+    _risk_budget 2 PASSED
+    assess_safety_geometry 5 PASSED
+
+src/trajcert/math/solver.py
+    _exact_root 0 PASSED
+    _profile_residual 0 PASSED
+    _is_minimum_singleton 1 PASSED
+    _require_residual 1 PASSED
+    _positive_tolerance 2 PASSED
+    _solve_lower_branch 2 PASSED
+    _solve_upper_branch 2 PASSED
+    compute_iteration_cap 2 PASSED
+    validate_final_signs 2 PASSED
+    solve_hidden_mass_interval 5 PASSED
+    validate_initial_signs 6 PASSED
+    _bisect 14 PASSED
+
+src/trajcert/paths.py
+    artifact_path 0 PASSED
+    experiment_leaf 0 PASSED
+    experiment_root 0 PASSED
+    plan_artifact_path 0 PASSED
+    preprocessing_leaf 0 PASSED
+    real_trajectory_preprocessing_path 0 PASSED
+    results_publication_leaf 0 PASSED
+    shared_artifact_path 0 PASSED
+    _decimal_position 1 PASSED
+    _split_coefficient 1 PASSED
+    checkpoint_batch_file 1 PASSED
+    fsync_directory 1 PASSED
+    semantic_cell_path 1 PASSED
+    long_path_safe 3 PASSED
+    _parsed_coefficient 4 PASSED
+    _format_number_token 5 PASSED
+    canonical_number_token 6 PASSED
+    semantic_slug 10 PASSED
+
+src/trajcert/provenance.py
+    SemanticCellIdentity::experiment_slug 0 PASSED
+    SemanticCellIdentity::semantic_cell_key 0 PASSED
+    SensitivityCoordinate::display 0 PASSED
+    dependency_fingerprint 0 PASSED
+    ComparisonPair::display 1 PASSED
+    SemanticCoordinates::_serialize_comparison_pair 1 PASSED
+    SemanticCoordinates::_serialize_failure_boundary 1 PASSED
+    SemanticCoordinates::_serialize_sensitivity_coordinate 1 PASSED
+    SemanticCoordinates::_serialize_variant 1 PASSED
+    SemanticCoordinates::_parse_sensitivity_coordinate 2 PASSED
+    SemanticCoordinates::_parse_comparison_pair 3 PASSED
+    SemanticCoordinates::_parse_failure_boundary 3 PASSED
+    VariantCoordinate::display 3 PASSED
+    FailureBoundaryCoordinate::display 4 PASSED
+    SemanticCoordinates::_parse_variant 4 PASSED
+    _failure_boundary_from_parts 10 PASSED
+    SemanticCellIdentity::path_coordinates 11 PASSED
+
+src/trajcert/reporting/export.py
+    _copy_source_data 0 PASSED
+    _finalized_render_paths 0 PASSED
+    _render_publication_tree 1 PASSED
+    _selected_descriptors 2 PASSED
+    _tree_digest 2 PASSED
+    git_commit 2 PASSED
+    require_synthesis_completion 2 PASSED
+    _copy_rendered_artifact 3 PASSED
+    _render_complete_results_tree 3 PASSED
+    _write_reproducibility 3 PASSED
+    _validate_upstream_completions 7 PASSED
+    export_report 7 PASSED
+    _destination 10 PASSED
+    replace_tree 12 PASSED
+    validate_results_layout 14 PASSED
+
+src/trajcert/reporting/figures.py
+    _band_linestyle 0 PASSED
+    _circle 0 PASSED
+    _column_value 0 PASSED
+    _column_values 0 PASSED
+    _ecdf 0 PASSED
+    _facet_label 0 PASSED
+    _foreign_information_negative_control 0 PASSED
+    _gate_marker 0 PASSED
+    _linestyle 0 PASSED
+    _main_title 0 PASSED
+    _marker 0 PASSED
+    _matching_rows 0 PASSED
+    _new_figure 0 PASSED
+    _pdf_bytes 0 PASSED
+    _png_bytes 0 PASSED
+    _required_facet_label 0 PASSED
+    _rows 0 PASSED
+    _scatter_markers 0 PASSED
+    _set_title 0 PASSED
+    _single_axis 0 PASSED
+    _state_marker 0 PASSED
+    _svg_bytes 0 PASSED
+    _unique_numbers 0 PASSED
+    _unique_strings 0 PASSED
+    _build_figure 1 PASSED
+    _certification_power_line 1 PASSED
+    _legend_host 1 PASSED
+    _level_text 1 PASSED
+    _optional_labels 1 PASSED
+    _ordered_levels 1 PASSED
+    _partition_order 1 PASSED
+    _real_trajectory_refinement 1 PASSED
+    _required_bool 1 PASSED
+    _required_rows 1 PASSED
+    _rho_sensitivity 1 PASSED
+    _rho_sensitivity_law 1 PASSED
+    _rho_sensitivity_legend 1 PASSED
+    _set_y_limits 1 PASSED
+    _state_of 1 PASSED
+    _state_style 1 PASSED
+    _timing_case_label 1 PASSED
+    _axis_labels 2 PASSED
+    _draw_legend 2 PASSED
+    _horizontal_axes 2 PASSED
+    _real_trajectory_decision_time 2 PASSED
+    _required_float 2 PASSED
+    _set_limits 2 PASSED
+    _set_log_x_limits 2 PASSED
+    render_figure 2 PASSED
+    _computational_scaling 3 PASSED
+    _expanded_bounds 3 PASSED
+    _optional_float 3 PASSED
+    _partition_coherence 3 PASSED
+    _reference_values 3 PASSED
+    _certification_power 4 PASSED
+    _failure_boundaries 4 PASSED
+    _grid_axes 4 PASSED
+    _information_profile 4 PASSED
+    _rho_sensitivity_partition 4 PASSED
+    _anytime_paths 5 PASSED
+    _timing_value 7 PASSED
+    _anytime_coverage 10 PASSED
+
+src/trajcert/reporting/power_rows.py
+    _checkpoint_row 0 PASSED
+    _summary_row 0 PASSED
+    certification_power_rows 0 PASSED
+    certification_power_summary_rows 0 PASSED
+    _comparator_counts 1 PASSED
+    _dominant_termination 1 PASSED
+    certification_power_results 1 PASSED
+    trajectory_decision_results 1 PASSED
+    _decision_row 2 PASSED
+    _rate 2 PASSED
+    _censored_median 3 PASSED
+    certification_power_figure_rows 3 PASSED
+    clopper_pearson_one_sided_upper 3 PASSED
+    trajectory_decision_rows 3 PASSED
+    clopper_pearson_interval 4 PASSED
+
+src/trajcert/reporting/publication_rows.py
+    _controlled_value_json 0 PASSED
+    _coverage_results 0 PASSED
+    _failure_figure_rows 0 PASSED
+    _failure_results 0 PASSED
+    _failure_rows 0 PASSED
+    _heterogeneity_row 0 PASSED
+    _max_optional 0 PASSED
+    _optimizer_stability_rows 0 PASSED
+    _population_coherence_row 0 PASSED
+    _population_results 0 PASSED
+    _rho_sensitivity_rows 0 PASSED
+    _runtime_milliseconds 0 PASSED
+    _same_endpoint_coherence_row 0 PASSED
+    _scaling_figure_rows 0 PASSED
+    _scaling_results 0 PASSED
+    _scaling_rows 0 PASSED
+    _solver_comparison_evidence 0 PASSED
+    _solver_oracle_validation_row 0 PASSED
+    _solver_rows 0 PASSED
+    _state_interpretation 0 PASSED
+    build_publication_source_rows 0 PASSED
+    compatibility_safety_rows 0 PASSED
+    partition_timing_rows 0 PASSED
+    population_rho_utility_rows 0 PASSED
+    _anytime_path_rows 1 PASSED
+    _cells 1 PASSED
+    _required_partition 1 PASSED
+    _rho_offset 1 PASSED
+    _theorem_scientific_consequence 1 PASSED
+    real_trajectory_validation_rows 1 PASSED
+    _require_exact_family 2 PASSED
+    _solver_comparison_groups 2 PASSED
+    _anytime_coverage_figure_rows 3 PASSED
+    _partition_timing_row 3 PASSED
+    foreign_heterogeneity_rows 3 PASSED
+    foreign_information_rows 3 PASSED
+    real_trajectory_refinement_figure_rows 3 PASSED
+    _population_coherence_values 4 PASSED
+    _same_endpoint_coherence_values 4 PASSED
+    foreign_information_figure_rows 4 PASSED
+    partition_coherence_figure_rows 4 PASSED
+    real_trajectory_decision_time_figure_rows 4 PASSED
+    theorem_validation_summary_rows 4 PASSED
+    _timing_figure_rows 7 PASSED
+    _coverage_rows 8 PASSED
+    _frontier_oracle_evidence 8 PASSED
+    _information_profile_rows 8 PASSED
+    compatibility_safety_evidence 13 PASSED
+
+src/trajcert/reporting/publication_sources.py
+    _publication_source 0 PASSED
+    publication_columns 0 PASSED
+    publication_source_artifact_key 0 PASSED
+    publication_source_descriptors 0 PASSED
+    publication_source_path 0 PASSED
+    manuscript_name 1 PASSED
+
+src/trajcert/reporting/source_data.py
+    _table_rows 0 PASSED
+    all_publication_source_descriptors 0 PASSED
+    figure_source_descriptors 0 PASSED
+    read_verified_source_data 0 PASSED
+    supplementary_table_source_descriptors 0 PASSED
+    table_source_descriptors 0 PASSED
+    _atomic_write_parquet 1 PASSED
+    read_source_data 2 PASSED
+    write_source_data 2 PASSED
+    _deterministic_order 3 PASSED
+    _validate_source_columns 3 PASSED
+    _verify_registered_lineage 6 PASSED
+    _validate_scientific_values 9 PASSED
+
+src/trajcert/reporting/supplementary_rows.py
+    _comparator_counts 0 PASSED
+    _pass_reader 0 PASSED
+    build_supplementary_source_rows 0 PASSED
+    _cells 1 PASSED
+    _count 1 PASSED
+    _hand_case_rows 1 PASSED
+    _law 1 PASSED
+    _legacy_rows 1 PASSED
+    _partition 1 PASSED
+    _validation_summary_rows 1 PASSED
+    _comparator_rows 3 PASSED
+    _same_endpoint_rows 3 PASSED
+
+src/trajcert/reporting/tables.py
+    _escape_tex 0 PASSED
+    _csv_payload 1 PASSED
+    _format_csv_value 1 PASSED
+    _format_tex_value 1 PASSED
+    _tex_payload 1 PASSED
+    render_table 1 PASSED
+    _format_scalar 4 PASSED
+
+src/trajcert/storage.py
+    _canonical_json_array 0 PASSED
+    _canonical_json_object 0 PASSED
+    atomic_write_model 0 PASSED
+    canonical_model_bytes 0 PASSED
+    canonical_models_bytes 0 PASSED
+    model_digest 0 PASSED
+    models_digest 0 PASSED
+    write_completion_last 0 PASSED
+    _atomic_write_bytes 1 PASSED
+    atomic_replace 1 PASSED
+    atomic_write_bytes 1 PASSED
+    _canonical_json_number 2 PASSED
+    read_model 2 PASSED
+    file_digest 4 PASSED
+    _canonical_json 7 PASSED
+
+src/trajcert/telemetry.py
+    ExperimentProgress::__init__ 0 PASSED
+    ExperimentProgress::cell_finished 0 PASSED
+    ExperimentProgress::cell_started 0 PASSED
+    ExperimentProgress::experiment_finished 0 PASSED
+    PreprocessingProgress::__init__ 0 PASSED
+    PreprocessingProgress::completed 0 PASSED
+    PreprocessingProgress::dataset_located 0 PASSED
+    PreprocessingProgress::eligibility_computed 0 PASSED
+    PreprocessingProgress::schema_validated 0 PASSED
+    PreprocessingProgress::started 0 PASSED
+    SearchProgress::__init__ 0 PASSED
+    StreamProgress::__init__ 0 PASSED
+    attach_execution_log_file 0 PASSED
+    detach_execution_log_file 0 PASSED
+    log_cli_command_started 0 PASSED
+    set_current_cell_key 0 PASSED
+    _current_cell_label 1 PASSED
+    configure_logging 1 PASSED
+    observable_workflow 1 PASSED
+    SearchProgress::maybe_log 2 PASSED
+    log_cli_command_finished 2 PASSED
+    PreprocessingProgress::exclusion_breakdown 3 PASSED
+    StreamProgress::maybe_log 3 PASSED
+
+src/trajcert/types.py
+    HiddenMassInterval::width 0 PASSED
+    NDArrayFloat64Annotation::__get_pydantic_core_schema__ 0 PASSED
+    NDArrayFloat64Annotation::serialize 0 PASSED
+    RiskInterval::width 0 PASSED
+    batch_phase 0 PASSED
+    mass_tuple 0 PASSED
+    NDArrayFloat64Annotation::validate 1 PASSED
+    current_platform 1 PASSED
+
+All functions are within the allowed complexity.
+────────────────────────── 🎉 Analysis completed! 🎉 ───────────────────────────

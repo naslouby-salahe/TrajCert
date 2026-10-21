@@ -1,0 +1,1555 @@
+{
+  "ArbSearchConfig.decision_stall_improvement_floor": [
+    "src/trajcert/inference/projection.py:610",
+    "src/trajcert/inference/projection.py:767"
+  ],
+  "ArbSearchConfig.decision_stall_minimum_visited": [
+    "src/trajcert/inference/projection.py:608",
+    "src/trajcert/inference/projection.py:765"
+  ],
+  "ArbSearchConfig.decision_stall_window_visited": [
+    "src/trajcert/inference/projection.py:609",
+    "src/trajcert/inference/projection.py:766"
+  ],
+  "ArbSearchConfig.incumbent_bisection_iterations": [
+    "src/trajcert/inference/projection.py:1142"
+  ],
+  "ArbSearchConfig.projection_stall_improvement_floor": [
+    "src/trajcert/inference/projection.py:424"
+  ],
+  "ArbSearchConfig.projection_stall_minimum_visited": [
+    "src/trajcert/inference/projection.py:422"
+  ],
+  "ArbSearchConfig.projection_stall_window_visited": [
+    "src/trajcert/inference/projection.py:423"
+  ],
+  "ArbSearchConfig.root_scan_envelope_span_floor": [
+    "src/trajcert/inference/projection.py:1098"
+  ],
+  "ArbSearchConfig.root_scan_grid_points": [
+    "src/trajcert/inference/projection.py:1101"
+  ],
+  "BenchmarkConfig.measured_repetitions": [
+    "src/trajcert/experiments/scaling.py:107"
+  ],
+  "BenchmarkConfig.minimum_samples_for_standard_deviation": [
+    "src/trajcert/experiments/scaling.py:134"
+  ],
+  "BenchmarkConfig.warmup_repetitions": [
+    "src/trajcert/experiments/scaling.py:103"
+  ],
+  "BudgetsConfig.information_nats": [
+    "src/trajcert/experiments/anytime.py:1047",
+    "src/trajcert/experiments/anytime.py:1161",
+    "src/trajcert/experiments/anytime.py:1168",
+    "src/trajcert/experiments/anytime.py:1216",
+    "src/trajcert/experiments/anytime.py:1221",
+    "src/trajcert/experiments/anytime.py:999",
+    "src/trajcert/experiments/failure_boundaries.py:141",
+    "src/trajcert/experiments/failure_boundaries.py:232",
+    "src/trajcert/experiments/failure_boundaries.py:243",
+    "src/trajcert/experiments/failure_boundaries.py:354",
+    "src/trajcert/reporting/publication_rows.py:1265"
+  ],
+  "BudgetsConfig.risk": [
+    "src/trajcert/experiments/anytime.py:1000",
+    "src/trajcert/experiments/anytime.py:1048",
+    "src/trajcert/experiments/anytime.py:1072",
+    "src/trajcert/experiments/anytime.py:1089",
+    "src/trajcert/experiments/anytime.py:1169",
+    "src/trajcert/experiments/anytime.py:1196",
+    "src/trajcert/experiments/anytime.py:973",
+    "src/trajcert/experiments/failure_boundaries.py:142",
+    "src/trajcert/experiments/failure_boundaries.py:188",
+    "src/trajcert/experiments/failure_boundaries.py:201",
+    "src/trajcert/experiments/failure_boundaries.py:233",
+    "src/trajcert/experiments/failure_boundaries.py:244",
+    "src/trajcert/experiments/failure_boundaries.py:274",
+    "src/trajcert/experiments/failure_boundaries.py:285",
+    "src/trajcert/experiments/failure_boundaries.py:313",
+    "src/trajcert/experiments/failure_boundaries.py:355",
+    "src/trajcert/reporting/publication_rows.py:1300"
+  ],
+  "CallbackConfig.common_slope_tolerance": [
+    "src/trajcert/comparators/callback.py:67"
+  ],
+  "CallbackConfig.grid_points": [
+    "src/trajcert/comparators/callback.py:68",
+    "src/trajcert/comparators/callback.py:89"
+  ],
+  "CallbackConfig.minimum_bracket_width": [
+    "src/trajcert/comparators/callback.py:69",
+    "src/trajcert/comparators/callback.py:90"
+  ],
+  "CallbackConfig.minimum_comparable_bands": [
+    "src/trajcert/comparators/callback.py:172",
+    "src/trajcert/comparators/callback.py:61",
+    "src/trajcert/comparators/callback.py:81"
+  ],
+  "CallbackConfig.root_deduplication_tolerance": [
+    "src/trajcert/comparators/callback.py:70",
+    "src/trajcert/comparators/callback.py:91"
+  ],
+  "CallbackConfig.stable_equality_tolerance": [
+    "src/trajcert/comparators/callback.py:88"
+  ],
+  "CallbackConfig.stable_resistance_first_band": [
+    "src/trajcert/comparators/callback.py:181",
+    "src/trajcert/comparators/callback.py:94"
+  ],
+  "CallbackConfig.stable_resistance_second_band": [
+    "src/trajcert/comparators/callback.py:182",
+    "src/trajcert/comparators/callback.py:94"
+  ],
+  "CertificationPowerConfig.batch_size": [
+    "src/trajcert/experiments/checkpointing.py:261"
+  ],
+  "CertificationPowerConfig.boundary_margin": [
+    "src/trajcert/experiments/feasibility.py:131"
+  ],
+  "CertificationPowerConfig.figure_scenario": [
+    "src/trajcert/reporting/publication_rows.py:1007"
+  ],
+  "CertificationPowerConfig.scenarios": [
+    "src/trajcert/experiments/dispatch.py:583",
+    "src/trajcert/experiments/dispatch.py:711",
+    "src/trajcert/experiments/plan.py:403"
+  ],
+  "CertificationPowerConfig.stream_offset": [
+    "src/trajcert/experiments/power.py:202",
+    "src/trajcert/experiments/power.py:421"
+  ],
+  "CertificationPowerConfig.streams": [
+    "src/trajcert/experiments/checkpointing.py:261",
+    "src/trajcert/experiments/runner.py:192"
+  ],
+  "CertificationPowerConfig.target_power": [
+    "src/trajcert/experiments/power.py:396"
+  ],
+  "CertificationPowerScenarioConfig.band_counts": [
+    "src/trajcert/experiments/dispatch.py:712",
+    "src/trajcert/experiments/plan.py:404"
+  ],
+  "CertificationPowerScenarioConfig.comparators": [
+    "src/trajcert/experiments/power.py:249",
+    "src/trajcert/experiments/power.py:356",
+    "src/trajcert/experiments/power.py:370",
+    "src/trajcert/experiments/power.py:407",
+    "src/trajcert/experiments/power.py:412",
+    "src/trajcert/experiments/power.py:508",
+    "src/trajcert/experiments/power.py:509"
+  ],
+  "CertificationPowerScenarioConfig.law": [
+    "src/trajcert/experiments/dispatch.py:586",
+    "src/trajcert/experiments/plan.py:399",
+    "src/trajcert/experiments/power.py:161",
+    "src/trajcert/experiments/power.py:163",
+    "src/trajcert/experiments/power.py:164"
+  ],
+  "CertificationPowerScenarioConfig.name": [
+    "src/trajcert/experiments/dispatch.py:584",
+    "src/trajcert/experiments/plan.py:401",
+    "src/trajcert/experiments/power.py:391"
+  ],
+  "CertificationPowerScenarioConfig.risk_budget": [
+    "src/trajcert/experiments/power.py:193",
+    "src/trajcert/experiments/power.py:312",
+    "src/trajcert/experiments/power.py:345",
+    "src/trajcert/experiments/power.py:364",
+    "src/trajcert/experiments/power.py:378",
+    "src/trajcert/experiments/power.py:428"
+  ],
+  "CertificationPowerScenarioConfig.sensitivity_budget": [
+    "src/trajcert/experiments/power.py:193",
+    "src/trajcert/experiments/power.py:305",
+    "src/trajcert/experiments/power.py:344",
+    "src/trajcert/experiments/power.py:362"
+  ],
+  "ComparatorsConfig.callback": [
+    "src/trajcert/comparators/callback.py:172",
+    "src/trajcert/comparators/callback.py:180",
+    "src/trajcert/comparators/callback.py:54",
+    "src/trajcert/comparators/callback.py:79"
+  ],
+  "ComparatorsConfig.legacy_gamma": [
+    "src/trajcert/experiments/comparator_reduction.py:67"
+  ],
+  "ComparatorsConfig.pattern_mixture": [
+    "src/trajcert/comparators/pattern_mixture.py:52"
+  ],
+  "ConfidenceConfig.anytime_delta": [
+    "src/trajcert/experiments/anytime.py:267",
+    "src/trajcert/experiments/anytime.py:423",
+    "src/trajcert/experiments/anytime.py:506",
+    "src/trajcert/experiments/anytime.py:524",
+    "src/trajcert/experiments/anytime.py:730",
+    "src/trajcert/experiments/power.py:241",
+    "src/trajcert/experiments/power.py:361",
+    "src/trajcert/experiments/power.py:394",
+    "src/trajcert/experiments/smoke.py:127"
+  ],
+  "CoverageConfig.acceptance_upper_limit": [
+    "src/trajcert/experiments/anytime.py:396",
+    "src/trajcert/experiments/anytime.py:731",
+    "src/trajcert/experiments/anytime.py:763"
+  ],
+  "CoverageConfig.batch_size": [
+    "src/trajcert/experiments/checkpointing.py:241"
+  ],
+  "CoverageConfig.checkpoint_every": [
+    "src/trajcert/experiments/anytime.py:326",
+    "src/trajcert/experiments/anytime.py:832"
+  ],
+  "CoverageConfig.clopper_pearson_confidence": [
+    "src/trajcert/experiments/anytime.py:804",
+    "src/trajcert/reporting/power_rows.py:137",
+    "src/trajcert/reporting/power_rows.py:156"
+  ],
+  "CoverageConfig.max_events": [
+    "src/trajcert/experiments/anytime.py:325",
+    "src/trajcert/experiments/anytime.py:819"
+  ],
+  "CoverageConfig.streams": [
+    "src/trajcert/experiments/anytime.py:681",
+    "src/trajcert/experiments/anytime.py:706",
+    "src/trajcert/experiments/checkpointing.py:241",
+    "src/trajcert/experiments/runner.py:190"
+  ],
+  "CoverageStressCaseConfig.band_count": [
+    "src/trajcert/experiments/anytime.py:655",
+    "src/trajcert/experiments/anytime.py:656",
+    "src/trajcert/experiments/dispatch.py:557",
+    "src/trajcert/experiments/plan.py:388"
+  ],
+  "CoverageStressCaseConfig.beta_offset": [
+    "src/trajcert/experiments/anytime.py:972",
+    "src/trajcert/experiments/anytime.py:984"
+  ],
+  "CoverageStressCaseConfig.law": [
+    "src/trajcert/experiments/anytime.py:888",
+    "src/trajcert/experiments/anytime.py:890",
+    "src/trajcert/experiments/anytime.py:891",
+    "src/trajcert/experiments/dispatch.py:556",
+    "src/trajcert/experiments/plan.py:387"
+  ],
+  "CoverageStressCaseConfig.minimum_information_completion": [
+    "src/trajcert/experiments/anytime.py:659"
+  ],
+  "CoverageStressCaseConfig.name": [
+    "src/trajcert/experiments/dispatch.py:554",
+    "src/trajcert/experiments/plan.py:389"
+  ],
+  "CoverageStressCaseConfig.rho_offset": [
+    "src/trajcert/experiments/anytime.py:958"
+  ],
+  "CoverageStressCaseConfig.sensitivity_reference": [
+    "src/trajcert/experiments/anytime.py:942"
+  ],
+  "DecisionValueConfig.laws": [
+    "src/trajcert/experiments/plan.py:410"
+  ],
+  "DeterminismConfig.fixture_stream_index": [
+    "src/trajcert/experiments/failure_boundaries.py:175",
+    "src/trajcert/experiments/failure_boundaries.py:223",
+    "src/trajcert/experiments/failure_boundaries.py:265"
+  ],
+  "FailureBoundaryConfig.bands": [
+    "src/trajcert/experiments/failure_boundaries.py:300",
+    "src/trajcert/experiments/plan.py:517",
+    "src/trajcert/experiments/plan.py:528"
+  ],
+  "FailureBoundaryConfig.certification_sample_rho": [
+    "src/trajcert/experiments/failure_boundaries.py:261"
+  ],
+  "FailureBoundaryConfig.certification_sample_size": [
+    "src/trajcert/experiments/plan.py:531"
+  ],
+  "FailureBoundaryConfig.compatible_resolution_rho": [
+    "src/trajcert/experiments/failure_boundaries.py:312"
+  ],
+  "FailureBoundaryConfig.information_margin": [
+    "src/trajcert/experiments/plan.py:520"
+  ],
+  "FailureBoundaryConfig.optimizer_information_margin": [
+    "src/trajcert/experiments/failure_boundaries.py:181"
+  ],
+  "FailureBoundaryConfig.optimizer_nodes": [
+    "src/trajcert/experiments/plan.py:526"
+  ],
+  "FailureBoundaryConfig.optimizer_sample_size": [
+    "src/trajcert/experiments/failure_boundaries.py:171"
+  ],
+  "FailureBoundaryConfig.prevalence": [
+    "src/trajcert/experiments/plan.py:516"
+  ],
+  "FailureBoundaryConfig.risk_offset": [
+    "src/trajcert/experiments/plan.py:522"
+  ],
+  "FailureBoundaryConfig.sample_size": [
+    "src/trajcert/experiments/plan.py:523"
+  ],
+  "FailureBoundaryConfig.terminal_selection_asymmetry": [
+    "src/trajcert/experiments/plan.py:547"
+  ],
+  "FailureBoundaryConfig.timing_contrast": [
+    "src/trajcert/experiments/plan.py:515"
+  ],
+  "FailureBoundaryConfig.unresolvedness": [
+    "src/trajcert/experiments/plan.py:513",
+    "src/trajcert/experiments/plan.py:534"
+  ],
+  "FigureLayoutConfig.axis_padding_fraction": [
+    "src/trajcert/reporting/figures.py:1140"
+  ],
+  "FigureLayoutConfig.failure_boundary_grid_columns": [
+    "src/trajcert/reporting/figures.py:571",
+    "src/trajcert/reporting/figures.py:673"
+  ],
+  "FigureLayoutConfig.grid_panel_gap_x": [
+    "src/trajcert/reporting/figures.py:1076"
+  ],
+  "FigureLayoutConfig.grid_panel_gap_y": [
+    "src/trajcert/reporting/figures.py:1075"
+  ],
+  "FigureLayoutConfig.height": [
+    "src/trajcert/reporting/figures.py:1029",
+    "src/trajcert/reporting/figures.py:1038",
+    "src/trajcert/reporting/figures.py:1039",
+    "src/trajcert/reporting/figures.py:1057",
+    "src/trajcert/reporting/figures.py:1058",
+    "src/trajcert/reporting/figures.py:1081",
+    "src/trajcert/reporting/figures.py:1089",
+    "src/trajcert/reporting/figures.py:1090"
+  ],
+  "FigureLayoutConfig.horizontal_panel_gap": [
+    "src/trajcert/reporting/figures.py:1051"
+  ],
+  "FigureLayoutConfig.margin_bottom": [
+    "src/trajcert/reporting/figures.py:1039",
+    "src/trajcert/reporting/figures.py:1058",
+    "src/trajcert/reporting/figures.py:1081",
+    "src/trajcert/reporting/figures.py:1090"
+  ],
+  "FigureLayoutConfig.margin_left": [
+    "src/trajcert/reporting/figures.py:1036",
+    "src/trajcert/reporting/figures.py:1050",
+    "src/trajcert/reporting/figures.py:1055",
+    "src/trajcert/reporting/figures.py:1078",
+    "src/trajcert/reporting/figures.py:1087"
+  ],
+  "FigureLayoutConfig.margin_right": [
+    "src/trajcert/reporting/figures.py:1037",
+    "src/trajcert/reporting/figures.py:1050",
+    "src/trajcert/reporting/figures.py:1056",
+    "src/trajcert/reporting/figures.py:1078",
+    "src/trajcert/reporting/figures.py:1088"
+  ],
+  "FigureLayoutConfig.margin_top": [
+    "src/trajcert/reporting/figures.py:1038",
+    "src/trajcert/reporting/figures.py:1057",
+    "src/trajcert/reporting/figures.py:1081",
+    "src/trajcert/reporting/figures.py:1089"
+  ],
+  "FigureLayoutConfig.width": [
+    "src/trajcert/reporting/figures.py:1029",
+    "src/trajcert/reporting/figures.py:1036",
+    "src/trajcert/reporting/figures.py:1037",
+    "src/trajcert/reporting/figures.py:1050",
+    "src/trajcert/reporting/figures.py:1055",
+    "src/trajcert/reporting/figures.py:1056",
+    "src/trajcert/reporting/figures.py:1078",
+    "src/trajcert/reporting/figures.py:1087",
+    "src/trajcert/reporting/figures.py:1088"
+  ],
+  "GridsConfig.partitions": [
+    "src/trajcert/experiments/dispatch.py:487",
+    "src/trajcert/experiments/plan.py:490",
+    "src/trajcert/experiments/synthesis.py:277",
+    "src/trajcert/experiments/synthesis.py:339",
+    "src/trajcert/experiments/synthesis.py:470",
+    "src/trajcert/experiments/synthesis.py:495",
+    "src/trajcert/experiments/workflows.py:182",
+    "src/trajcert/experiments/workflows.py:242",
+    "src/trajcert/reporting/publication_rows.py:553"
+  ],
+  "GridsConfig.rho": [
+    "src/trajcert/experiments/comparator_reduction.py:58",
+    "src/trajcert/experiments/plan.py:495"
+  ],
+  "GridsConfig.same_endpoint_rho": [
+    "src/trajcert/experiments/plan.py:335"
+  ],
+  "GridsConfig.scaling_bands": [
+    "src/trajcert/experiments/dispatch.py:487",
+    "src/trajcert/experiments/plan.py:477"
+  ],
+  "HandCaseCertifiedConfig.beta_margin": [
+    "src/trajcert/experiments/anytime.py:1105"
+  ],
+  "HandCaseCertifiedConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1108"
+  ],
+  "HandCaseCertifiedConfig.rho_margin": [
+    "src/trajcert/experiments/anytime.py:1103"
+  ],
+  "HandCaseInsufficientMaturedConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1006"
+  ],
+  "HandCaseInsufficientMaturedConfig.event_count": [
+    "src/trajcert/experiments/anytime.py:1001",
+    "src/trajcert/experiments/anytime.py:992"
+  ],
+  "HandCaseInsufficientResolvedConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1041",
+    "src/trajcert/experiments/anytime.py:1054"
+  ],
+  "HandCaseInsufficientResolvedConfig.finite_count": [
+    "src/trajcert/experiments/anytime.py:1030"
+  ],
+  "HandCaseInsufficientResolvedConfig.total_count": [
+    "src/trajcert/experiments/anytime.py:1036",
+    "src/trajcert/experiments/anytime.py:1040",
+    "src/trajcert/experiments/anytime.py:1049"
+  ],
+  "HandCaseInsufficientResolvedConfig.unresolved_count": [
+    "src/trajcert/experiments/anytime.py:1031"
+  ],
+  "HandCaseIntrinsicConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1091"
+  ],
+  "HandCaseIntrinsicConfig.rho_margin": [
+    "src/trajcert/experiments/anytime.py:1087"
+  ],
+  "HandCaseModelIncompatibleConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1074"
+  ],
+  "HandCaseModelIncompatibleConfig.rho_margin": [
+    "src/trajcert/experiments/anytime.py:1070"
+  ],
+  "HandCaseNoUnresolvedConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1195"
+  ],
+  "HandCaseSimplexBoundaryConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1279"
+  ],
+  "HandCaseSimplexBoundaryConfig.correct_mass_scale": [
+    "src/trajcert/experiments/anytime.py:1248"
+  ],
+  "HandCaseSimplexBoundaryConfig.harmful_mass_scale": [
+    "src/trajcert/experiments/anytime.py:1245"
+  ],
+  "HandCaseSimplexBoundaryConfig.hidden_terminal_harmful": [
+    "src/trajcert/experiments/anytime.py:1262"
+  ],
+  "HandCaseSimplexBoundaryConfig.rho_margin": [
+    "src/trajcert/experiments/anytime.py:1265"
+  ],
+  "HandCaseSimplexBoundaryConfig.unresolved_mass": [
+    "src/trajcert/experiments/anytime.py:1255",
+    "src/trajcert/experiments/anytime.py:1261"
+  ],
+  "HandCaseUncertifiedConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1132"
+  ],
+  "HandCaseUncertifiedConfig.rho_margin": [
+    "src/trajcert/experiments/anytime.py:1123"
+  ],
+  "HandCaseZeroResolvedPlausibleConfig.band_mass_scale": [
+    "src/trajcert/experiments/anytime.py:1143"
+  ],
+  "HandCaseZeroResolvedPlausibleConfig.case_index": [
+    "src/trajcert/experiments/anytime.py:1181"
+  ],
+  "HandCaseZeroResolvedPlausibleConfig.entropy_scale": [
+    "src/trajcert/experiments/anytime.py:1157"
+  ],
+  "HandCaseZeroResolvedPlausibleConfig.gate_matured": [
+    "src/trajcert/experiments/anytime.py:1164"
+  ],
+  "HandCaseZeroResolvedPlausibleConfig.gate_resolved": [
+    "src/trajcert/experiments/anytime.py:1164"
+  ],
+  "HandCaseZeroResolvedPlausibleConfig.resolved_mass_upper": [
+    "src/trajcert/experiments/anytime.py:1155",
+    "src/trajcert/experiments/anytime.py:1156"
+  ],
+  "HandCaseZeroResolvedPlausibleConfig.unresolved_lower": [
+    "src/trajcert/experiments/anytime.py:1154"
+  ],
+  "HandCasesConfig.certified": [
+    "src/trajcert/experiments/anytime.py:1100"
+  ],
+  "HandCasesConfig.diagnostic_node_cap": [
+    "src/trajcert/experiments/anytime.py:1002",
+    "src/trajcert/experiments/anytime.py:1050",
+    "src/trajcert/experiments/anytime.py:1162"
+  ],
+  "HandCasesConfig.insufficient_matured": [
+    "src/trajcert/experiments/anytime.py:989"
+  ],
+  "HandCasesConfig.insufficient_resolved": [
+    "src/trajcert/experiments/anytime.py:1016"
+  ],
+  "HandCasesConfig.intrinsic": [
+    "src/trajcert/experiments/anytime.py:1084"
+  ],
+  "HandCasesConfig.model_incompatible": [
+    "src/trajcert/experiments/anytime.py:1064"
+  ],
+  "HandCasesConfig.no_unresolved": [
+    "src/trajcert/experiments/anytime.py:1195"
+  ],
+  "HandCasesConfig.simplex_boundary": [
+    "src/trajcert/experiments/anytime.py:1243"
+  ],
+  "HandCasesConfig.stream": [
+    "src/trajcert/experiments/anytime.py:992"
+  ],
+  "HandCasesConfig.uncertified": [
+    "src/trajcert/experiments/anytime.py:1117"
+  ],
+  "HandCasesConfig.zero_resolved_plausible": [
+    "src/trajcert/experiments/anytime.py:1142"
+  ],
+  "IdentifiersConfig.event_index_width": [
+    "src/trajcert/data/synthetic.py:253"
+  ],
+  "LawConfig.lambda0": [
+    "src/trajcert/data/laws.py:88",
+    "src/trajcert/experiments/anytime.py:1460",
+    "src/trajcert/experiments/anytime.py:896",
+    "src/trajcert/experiments/dispatch.py:473",
+    "src/trajcert/experiments/failure_boundaries.py:343",
+    "src/trajcert/experiments/failure_boundaries.py:418",
+    "src/trajcert/experiments/power.py:169",
+    "src/trajcert/experiments/smoke.py:182",
+    "src/trajcert/reporting/publication_rows.py:1284"
+  ],
+  "LawConfig.lambda1": [
+    "src/trajcert/data/laws.py:87",
+    "src/trajcert/experiments/anytime.py:1459",
+    "src/trajcert/experiments/anytime.py:895",
+    "src/trajcert/experiments/dispatch.py:472",
+    "src/trajcert/experiments/failure_boundaries.py:342",
+    "src/trajcert/experiments/failure_boundaries.py:417",
+    "src/trajcert/experiments/power.py:168",
+    "src/trajcert/experiments/smoke.py:181",
+    "src/trajcert/reporting/publication_rows.py:1283"
+  ],
+  "LawConfig.q0": [
+    "src/trajcert/data/laws.py:86",
+    "src/trajcert/experiments/anytime.py:1458",
+    "src/trajcert/experiments/anytime.py:894",
+    "src/trajcert/experiments/dispatch.py:471",
+    "src/trajcert/experiments/failure_boundaries.py:341",
+    "src/trajcert/experiments/failure_boundaries.py:416",
+    "src/trajcert/experiments/power.py:167",
+    "src/trajcert/experiments/smoke.py:180",
+    "src/trajcert/reporting/publication_rows.py:1282"
+  ],
+  "LawConfig.q1": [
+    "src/trajcert/data/laws.py:85",
+    "src/trajcert/experiments/anytime.py:1457",
+    "src/trajcert/experiments/anytime.py:893",
+    "src/trajcert/experiments/dispatch.py:470",
+    "src/trajcert/experiments/failure_boundaries.py:340",
+    "src/trajcert/experiments/failure_boundaries.py:415",
+    "src/trajcert/experiments/power.py:166",
+    "src/trajcert/experiments/smoke.py:179",
+    "src/trajcert/reporting/publication_rows.py:1281"
+  ],
+  "LawConfig.theta": [
+    "src/trajcert/data/laws.py:84",
+    "src/trajcert/experiments/anytime.py:1456",
+    "src/trajcert/experiments/anytime.py:892",
+    "src/trajcert/experiments/dispatch.py:469",
+    "src/trajcert/experiments/failure_boundaries.py:339",
+    "src/trajcert/experiments/failure_boundaries.py:414",
+    "src/trajcert/experiments/power.py:165",
+    "src/trajcert/experiments/smoke.py:178",
+    "src/trajcert/reporting/publication_rows.py:1280"
+  ],
+  "LegacyPartitionIncoherenceConfig.endpoint_band_count": [
+    "src/trajcert/experiments/mathematics.py:461"
+  ],
+  "LegacyPartitionIncoherenceConfig.fine_band_count": [
+    "src/trajcert/experiments/mathematics.py:448",
+    "src/trajcert/experiments/mathematics.py:449",
+    "src/trajcert/experiments/mathematics.py:460"
+  ],
+  "LegacyPartitionIncoherenceConfig.gamma": [
+    "src/trajcert/experiments/plan.py:215"
+  ],
+  "LegacyPartitionIncoherenceConfig.latent_outcome_probabilities": [
+    "src/trajcert/experiments/mathematics.py:441"
+  ],
+  "LegacyPartitionIncoherenceConfig.q": [
+    "src/trajcert/experiments/plan.py:215"
+  ],
+  "LegacyPatternMixtureConfig.boundary_distance": [
+    "src/trajcert/comparators/pattern_mixture.py:114"
+  ],
+  "LegacyPatternMixtureConfig.c": [
+    "src/trajcert/comparators/pattern_mixture.py:143"
+  ],
+  "LegacyPatternMixtureConfig.coefficient_bounds": [
+    "src/trajcert/comparators/pattern_mixture.py:74"
+  ],
+  "LegacyPatternMixtureConfig.ftol": [
+    "src/trajcert/comparators/pattern_mixture.py:96"
+  ],
+  "LegacyPatternMixtureConfig.gradient_acceptance": [
+    "src/trajcert/comparators/pattern_mixture.py:112"
+  ],
+  "LegacyPatternMixtureConfig.gtol": [
+    "src/trajcert/comparators/pattern_mixture.py:97"
+  ],
+  "LegacyPatternMixtureConfig.initial_clip": [
+    "src/trajcert/comparators/pattern_mixture.py:72"
+  ],
+  "LegacyPatternMixtureConfig.initial_slope": [
+    "src/trajcert/comparators/pattern_mixture.py:73"
+  ],
+  "LegacyPatternMixtureConfig.max_iterations": [
+    "src/trajcert/comparators/pattern_mixture.py:98"
+  ],
+  "LegacyPatternMixtureConfig.minimum_nonempty_bands": [
+    "src/trajcert/comparators/pattern_mixture.py:57"
+  ],
+  "MaterialityConfig.population": [
+    "src/trajcert/analysis/materiality.py:51",
+    "src/trajcert/analysis/materiality.py:53",
+    "src/trajcert/analysis/materiality.py:61",
+    "src/trajcert/analysis/materiality.py:69",
+    "src/trajcert/experiments/sensitivity.py:75",
+    "src/trajcert/experiments/sensitivity.py:77"
+  ],
+  "MethodConfig.endpoint_band_count": [
+    "src/trajcert/comparators/endpoint.py:13"
+  ],
+  "MethodConfig.finest_bands": [
+    "src/trajcert/experiments/comparator_reduction.py:56",
+    "src/trajcert/experiments/dispatch.py:429",
+    "src/trajcert/experiments/dispatch.py:430",
+    "src/trajcert/experiments/dispatch.py:490",
+    "src/trajcert/experiments/failure_boundaries.py:139",
+    "src/trajcert/experiments/failure_boundaries.py:170",
+    "src/trajcert/experiments/failure_boundaries.py:219",
+    "src/trajcert/experiments/failure_boundaries.py:260",
+    "src/trajcert/experiments/failure_boundaries.py:353",
+    "src/trajcert/experiments/feasibility.py:55",
+    "src/trajcert/experiments/feasibility.py:78",
+    "src/trajcert/experiments/power.py:179",
+    "src/trajcert/experiments/smoke.py:111",
+    "src/trajcert/experiments/smoke.py:138",
+    "src/trajcert/experiments/smoke.py:38",
+    "src/trajcert/experiments/smoke.py:39",
+    "src/trajcert/experiments/smoke.py:43",
+    "src/trajcert/experiments/smoke.py:48",
+    "src/trajcert/experiments/synthesis.py:454",
+    "src/trajcert/experiments/workflows.py:178",
+    "src/trajcert/experiments/workflows.py:230",
+    "src/trajcert/reporting/publication_rows.py:1011",
+    "src/trajcert/reporting/publication_rows.py:1264",
+    "src/trajcert/reporting/publication_rows.py:1287",
+    "src/trajcert/reporting/publication_rows.py:1288",
+    "src/trajcert/reporting/publication_rows.py:942"
+  ],
+  "MethodConfig.terminal_horizon": [
+    "src/trajcert/experiments/anytime.py:657",
+    "src/trajcert/experiments/anytime.py:909",
+    "src/trajcert/experiments/dispatch.py:431",
+    "src/trajcert/experiments/dispatch.py:492",
+    "src/trajcert/experiments/failure_boundaries.py:303",
+    "src/trajcert/experiments/failure_boundaries.py:426",
+    "src/trajcert/experiments/feasibility.py:56",
+    "src/trajcert/experiments/mathematics.py:450",
+    "src/trajcert/experiments/mathematics.py:462",
+    "src/trajcert/experiments/power.py:180",
+    "src/trajcert/experiments/smoke.py:113",
+    "src/trajcert/experiments/smoke.py:140",
+    "src/trajcert/experiments/smoke.py:40",
+    "src/trajcert/experiments/smoke.py:45",
+    "src/trajcert/experiments/smoke.py:50",
+    "src/trajcert/experiments/workflows.py:183",
+    "src/trajcert/experiments/workflows.py:241",
+    "src/trajcert/reporting/publication_rows.py:1289"
+  ],
+  "MinimumEvidenceConfig.matured_events": [
+    "src/trajcert/experiments/anytime.py:1170",
+    "src/trajcert/experiments/anytime.py:1383",
+    "src/trajcert/experiments/anytime.py:1389",
+    "src/trajcert/experiments/anytime.py:287",
+    "src/trajcert/experiments/anytime.py:469",
+    "src/trajcert/experiments/power.py:346",
+    "src/trajcert/experiments/power.py:375"
+  ],
+  "MinimumEvidenceConfig.resolved_events": [
+    "src/trajcert/experiments/anytime.py:1171",
+    "src/trajcert/experiments/anytime.py:1384",
+    "src/trajcert/experiments/anytime.py:1390",
+    "src/trajcert/experiments/anytime.py:288",
+    "src/trajcert/experiments/anytime.py:470",
+    "src/trajcert/experiments/power.py:347",
+    "src/trajcert/experiments/power.py:376"
+  ],
+  "NumericsConfig.anytime_root_atol": [
+    "src/trajcert/experiments/anytime.py:268",
+    "src/trajcert/experiments/anytime.py:507",
+    "src/trajcert/experiments/anytime.py:525",
+    "src/trajcert/experiments/power.py:277",
+    "src/trajcert/experiments/power.py:284",
+    "src/trajcert/experiments/smoke.py:128"
+  ],
+  "NumericsConfig.arb_search": [
+    "src/trajcert/inference/projection.py:1097",
+    "src/trajcert/inference/projection.py:1142",
+    "src/trajcert/inference/projection.py:420",
+    "src/trajcert/inference/projection.py:606",
+    "src/trajcert/inference/projection.py:763"
+  ],
+  "NumericsConfig.arbitrary_precision_bits": [
+    "src/trajcert/comparators/repeated_static.py:51",
+    "src/trajcert/experiments/anytime.py:1365",
+    "src/trajcert/experiments/power.py:309",
+    "src/trajcert/experiments/smoke.py:159",
+    "src/trajcert/inference/confidence.py:69",
+    "src/trajcert/inference/confidence.py:93"
+  ],
+  "NumericsConfig.comparison_guard": [
+    "src/trajcert/comparators/repeated_static.py:50",
+    "src/trajcert/data/synthetic.py:265",
+    "src/trajcert/experiments/anytime.py:1172",
+    "src/trajcert/experiments/anytime.py:1212",
+    "src/trajcert/experiments/anytime.py:1256",
+    "src/trajcert/experiments/anytime.py:1272",
+    "src/trajcert/experiments/anytime.py:1364",
+    "src/trajcert/experiments/anytime.py:1391",
+    "src/trajcert/experiments/anytime.py:1447",
+    "src/trajcert/experiments/anytime.py:289",
+    "src/trajcert/experiments/anytime.py:471",
+    "src/trajcert/experiments/anytime.py:664",
+    "src/trajcert/experiments/anytime.py:747",
+    "src/trajcert/experiments/anytime.py:877",
+    "src/trajcert/experiments/anytime.py:911",
+    "src/trajcert/experiments/comparator_reduction.py:66",
+    "src/trajcert/experiments/comparator_reduction.py:77",
+    "src/trajcert/experiments/comparator_reduction.py:93",
+    "src/trajcert/experiments/decision_value.py:97",
+    "src/trajcert/experiments/dispatch.py:162",
+    "src/trajcert/experiments/dispatch.py:176",
+    "src/trajcert/experiments/dispatch.py:210",
+    "src/trajcert/experiments/dispatch.py:248",
+    "src/trajcert/experiments/dispatch.py:398",
+    "src/trajcert/experiments/dispatch.py:457",
+    "src/trajcert/experiments/failure_boundaries.py:179",
+    "src/trajcert/experiments/failure_boundaries.py:310",
+    "src/trajcert/experiments/failure_boundaries.py:434",
+    "src/trajcert/experiments/feasibility.py:123",
+    "src/trajcert/experiments/feasibility.py:132",
+    "src/trajcert/experiments/feasibility.py:65",
+    "src/trajcert/experiments/mathematics.py:457",
+    "src/trajcert/experiments/mathematics.py:464",
+    "src/trajcert/experiments/mathematics.py:465",
+    "src/trajcert/experiments/mathematics.py:466",
+    "src/trajcert/experiments/power.py:308",
+    "src/trajcert/experiments/power.py:348",
+    "src/trajcert/experiments/smoke.py:158",
+    "src/trajcert/experiments/smoke.py:83",
+    "src/trajcert/experiments/synthesis.py:314",
+    "src/trajcert/experiments/synthesis.py:424",
+    "src/trajcert/experiments/synthesis.py:476",
+    "src/trajcert/experiments/synthesis.py:499",
+    "src/trajcert/reporting/publication_rows.py:1271",
+    "src/trajcert/reporting/publication_rows.py:1294"
+  ],
+  "NumericsConfig.identity_atol": [
+    "src/trajcert/comparators/repeated_static.py:49",
+    "src/trajcert/experiments/anytime.py:1226",
+    "src/trajcert/experiments/anytime.py:1287",
+    "src/trajcert/experiments/anytime.py:1363",
+    "src/trajcert/experiments/anytime.py:978",
+    "src/trajcert/experiments/comparator_reduction.py:92",
+    "src/trajcert/experiments/decision_value.py:90",
+    "src/trajcert/experiments/dispatch.py:161",
+    "src/trajcert/experiments/dispatch.py:175",
+    "src/trajcert/experiments/dispatch.py:197",
+    "src/trajcert/experiments/dispatch.py:209",
+    "src/trajcert/experiments/dispatch.py:213",
+    "src/trajcert/experiments/dispatch.py:244",
+    "src/trajcert/experiments/dispatch.py:397",
+    "src/trajcert/experiments/dispatch.py:534",
+    "src/trajcert/experiments/failure_boundaries.py:112",
+    "src/trajcert/experiments/failure_boundaries.py:143",
+    "src/trajcert/experiments/failure_boundaries.py:314",
+    "src/trajcert/experiments/feasibility.py:106",
+    "src/trajcert/experiments/mathematics.py:487",
+    "src/trajcert/experiments/power.py:307",
+    "src/trajcert/experiments/sensitivity.py:47",
+    "src/trajcert/experiments/smoke.py:149",
+    "src/trajcert/experiments/smoke.py:157",
+    "src/trajcert/experiments/smoke.py:60",
+    "src/trajcert/experiments/smoke.py:69",
+    "src/trajcert/experiments/smoke.py:75",
+    "src/trajcert/experiments/smoke.py:82",
+    "src/trajcert/reporting/publication_rows.py:804",
+    "src/trajcert/reporting/publication_rows.py:805",
+    "src/trajcert/reporting/publication_rows.py:819"
+  ],
+  "NumericsConfig.information_roundoff_ulps": [
+    "src/trajcert/math/information.py:153"
+  ],
+  "NumericsConfig.log2_match_tolerance": [
+    "src/trajcert/reporting/publication_rows.py:1252"
+  ],
+  "NumericsConfig.oracle_bracket_width": [
+    "src/trajcert/experiments/anytime.py:1271",
+    "src/trajcert/experiments/comparator_reduction.py:76",
+    "src/trajcert/experiments/decision_value.py:96",
+    "src/trajcert/experiments/dispatch.py:246"
+  ],
+  "NumericsConfig.oracle_digits": [
+    "src/trajcert/experiments/anytime.py:1263",
+    "src/trajcert/experiments/anytime.py:1270",
+    "src/trajcert/experiments/anytime.py:883",
+    "src/trajcert/experiments/anytime.py:956",
+    "src/trajcert/experiments/comparator_reduction.py:62",
+    "src/trajcert/experiments/comparator_reduction.py:63",
+    "src/trajcert/experiments/comparator_reduction.py:75",
+    "src/trajcert/experiments/decision_value.py:95",
+    "src/trajcert/experiments/dispatch.py:245",
+    "src/trajcert/experiments/dispatch.py:533",
+    "src/trajcert/experiments/failure_boundaries.py:483",
+    "src/trajcert/experiments/feasibility.py:98"
+  ],
+  "NumericsConfig.outer_gap": [
+    "src/trajcert/comparators/repeated_static.py:52",
+    "src/trajcert/experiments/anytime.py:1366",
+    "src/trajcert/experiments/power.py:310",
+    "src/trajcert/experiments/smoke.py:160"
+  ],
+  "NumericsConfig.outer_max_nodes": [
+    "src/trajcert/comparators/repeated_static.py:53",
+    "src/trajcert/experiments/anytime.py:1368",
+    "src/trajcert/experiments/power.py:311",
+    "src/trajcert/experiments/smoke.py:161"
+  ],
+  "NumericsConfig.profile_grid_points": [
+    "src/trajcert/experiments/mathematics.py:117",
+    "src/trajcert/experiments/mathematics.py:235",
+    "src/trajcert/experiments/timing.py:60"
+  ],
+  "NumericsConfig.proof_check_tolerance": [
+    "src/trajcert/experiments/mathematics.py:359",
+    "src/trajcert/experiments/mathematics.py:377"
+  ],
+  "NumericsConfig.resolved_harm_boundary_offset": [
+    "src/trajcert/math/safety.py:77"
+  ],
+  "NumericsConfig.root_atol": [
+    "src/trajcert/comparators/repeated_static.py:48",
+    "src/trajcert/experiments/anytime.py:1362",
+    "src/trajcert/experiments/anytime.py:977",
+    "src/trajcert/experiments/comparator_reduction.py:91",
+    "src/trajcert/experiments/decision_value.py:89",
+    "src/trajcert/experiments/dispatch.py:160",
+    "src/trajcert/experiments/dispatch.py:174",
+    "src/trajcert/experiments/dispatch.py:196",
+    "src/trajcert/experiments/dispatch.py:208",
+    "src/trajcert/experiments/dispatch.py:243",
+    "src/trajcert/experiments/dispatch.py:396",
+    "src/trajcert/experiments/failure_boundaries.py:111",
+    "src/trajcert/experiments/failure_boundaries.py:143",
+    "src/trajcert/experiments/failure_boundaries.py:314",
+    "src/trajcert/experiments/feasibility.py:105",
+    "src/trajcert/experiments/power.py:306",
+    "src/trajcert/experiments/sensitivity.py:46",
+    "src/trajcert/experiments/smoke.py:148",
+    "src/trajcert/experiments/smoke.py:156",
+    "src/trajcert/experiments/smoke.py:59",
+    "src/trajcert/experiments/smoke.py:68",
+    "src/trajcert/experiments/smoke.py:81"
+  ],
+  "NumericsConfig.sharp_diagnostic_grid_points": [
+    "src/trajcert/experiments/mathematics.py:401"
+  ],
+  "NumericsConfig.sharpness_diagnostic_offset": [
+    "src/trajcert/experiments/dispatch.py:247"
+  ],
+  "PopulationMaterialityConfig.absolute_tightening": [
+    "src/trajcert/analysis/materiality.py:51",
+    "src/trajcert/experiments/sensitivity.py:75"
+  ],
+  "PopulationMaterialityConfig.compatible_rho_values": [
+    "src/trajcert/analysis/materiality.py:61"
+  ],
+  "PopulationMaterialityConfig.qualifying_laws": [
+    "src/trajcert/analysis/materiality.py:69"
+  ],
+  "PopulationMaterialityConfig.relative_unresolved_gain": [
+    "src/trajcert/analysis/materiality.py:53",
+    "src/trajcert/experiments/sensitivity.py:77"
+  ],
+  "PublicationConfig.figure_count": [
+    "src/trajcert/experiments/workflows.py:196",
+    "src/trajcert/experiments/workflows.py:198",
+    "src/trajcert/experiments/workflows.py:203"
+  ],
+  "PublicationConfig.table_count": [
+    "src/trajcert/experiments/workflows.py:195",
+    "src/trajcert/experiments/workflows.py:198",
+    "src/trajcert/experiments/workflows.py:202"
+  ],
+  "RealTrajectoryColumnConfig.decision_time": [
+    "src/trajcert/data/real_trajectories.py:363",
+    "src/trajcert/data/real_trajectories.py:379"
+  ],
+  "RealTrajectoryColumnConfig.device_name": [
+    "src/trajcert/data/real_trajectories.py:300",
+    "src/trajcert/data/real_trajectories.py:302"
+  ],
+  "RealTrajectoryColumnConfig.human_reviewed": [
+    "src/trajcert/data/real_trajectories.py:310"
+  ],
+  "RealTrajectoryColumnConfig.is_attack": [
+    "src/trajcert/data/real_trajectories.py:311"
+  ],
+  "RealTrajectoryColumnConfig.ml_prediction": [
+    "src/trajcert/data/real_trajectories.py:312"
+  ],
+  "RealTrajectoryConfig.dataset": [
+    "src/trajcert/data/real_trajectories.py:47"
+  ],
+  "RealTrajectoryConfig.dataset_root": [
+    "src/trajcert/experiments/workflows.py:184"
+  ],
+  "RealTrajectoryConfig.horizons": [
+    "src/trajcert/experiments/plan.py:429",
+    "src/trajcert/experiments/synthesis.py:423"
+  ],
+  "RealTrajectoryDatasetConfig.checksums_filename": [
+    "src/trajcert/data/real_trajectories.py:210"
+  ],
+  "RealTrajectoryDatasetConfig.columns": [
+    "src/trajcert/data/real_trajectories.py:300",
+    "src/trajcert/data/real_trajectories.py:302",
+    "src/trajcert/data/real_trajectories.py:310",
+    "src/trajcert/data/real_trajectories.py:311",
+    "src/trajcert/data/real_trajectories.py:312",
+    "src/trajcert/data/real_trajectories.py:363",
+    "src/trajcert/data/real_trajectories.py:379"
+  ],
+  "RealTrajectoryDatasetConfig.data_filename": [
+    "src/trajcert/data/real_trajectories.py:209",
+    "src/trajcert/data/real_trajectories.py:221",
+    "src/trajcert/data/real_trajectories.py:232",
+    "src/trajcert/data/real_trajectories.py:242",
+    "src/trajcert/data/real_trajectories.py:371",
+    "src/trajcert/data/real_trajectories.py:372"
+  ],
+  "RealTrajectoryDatasetConfig.device_names": [
+    "src/trajcert/data/real_trajectories.py:376",
+    "src/trajcert/data/real_trajectories.py:51"
+  ],
+  "RealTrajectoryDatasetConfig.documented_ground_truth_attack_rows": [
+    "src/trajcert/data/real_trajectories.py:374"
+  ],
+  "RealTrajectoryDatasetConfig.documented_human_reviewed_rows": [
+    "src/trajcert/data/real_trajectories.py:375"
+  ],
+  "RealTrajectoryDatasetConfig.documented_total_rows": [
+    "src/trajcert/data/real_trajectories.py:373"
+  ],
+  "RealTrajectoryDatasetConfig.expected_schema": [
+    "src/trajcert/data/real_trajectories.py:377"
+  ],
+  "RealTrajectoryDatasetConfig.flow_identity_columns": [
+    "src/trajcert/data/real_trajectories.py:361",
+    "src/trajcert/data/real_trajectories.py:378"
+  ],
+  "RealTrajectoryDatasetConfig.name": [
+    "src/trajcert/data/real_trajectories.py:230"
+  ],
+  "RealTrajectoryDatasetConfig.raw_columns": [
+    "src/trajcert/data/real_trajectories.py:283"
+  ],
+  "RealTrajectoryDatasetConfig.sha256": [
+    "src/trajcert/data/real_trajectories.py:214"
+  ],
+  "RealTrajectoryDatasetConfig.source_reference": [
+    "src/trajcert/data/real_trajectories.py:231",
+    "src/trajcert/data/real_trajectories.py:258"
+  ],
+  "RealTrajectoryHorizonConfig.primary_seconds": [
+    "src/trajcert/experiments/plan.py:430",
+    "src/trajcert/experiments/synthesis.py:423"
+  ],
+  "RealTrajectoryHorizonConfig.sensitivity_seconds": [
+    "src/trajcert/experiments/plan.py:431"
+  ],
+  "SequentialConfig.certification_power": [
+    "src/trajcert/experiments/checkpointing.py:255",
+    "src/trajcert/experiments/dispatch.py:583",
+    "src/trajcert/experiments/dispatch.py:711",
+    "src/trajcert/experiments/feasibility.py:131",
+    "src/trajcert/experiments/plan.py:403",
+    "src/trajcert/experiments/power.py:190",
+    "src/trajcert/experiments/power.py:202",
+    "src/trajcert/experiments/power.py:396",
+    "src/trajcert/experiments/power.py:421",
+    "src/trajcert/experiments/runner.py:192",
+    "src/trajcert/reporting/publication_rows.py:1007"
+  ],
+  "SequentialConfig.coverage": [
+    "src/trajcert/experiments/anytime.py:325",
+    "src/trajcert/experiments/anytime.py:326",
+    "src/trajcert/experiments/anytime.py:396",
+    "src/trajcert/experiments/anytime.py:681",
+    "src/trajcert/experiments/anytime.py:706",
+    "src/trajcert/experiments/anytime.py:731",
+    "src/trajcert/experiments/anytime.py:763",
+    "src/trajcert/experiments/anytime.py:804",
+    "src/trajcert/experiments/anytime.py:819",
+    "src/trajcert/experiments/anytime.py:832",
+    "src/trajcert/experiments/checkpointing.py:241",
+    "src/trajcert/experiments/runner.py:190",
+    "src/trajcert/reporting/power_rows.py:137",
+    "src/trajcert/reporting/power_rows.py:156"
+  ],
+  "SerializationConfig.max_fixed_notation_exponent": [
+    "src/trajcert/paths.py:322"
+  ],
+  "SerializationConfig.min_fixed_notation_exponent": [
+    "src/trajcert/paths.py:323"
+  ],
+  "SmokeConfig.coarse_bands": [
+    "src/trajcert/experiments/smoke.py:44"
+  ],
+  "SmokeConfig.compatible_offset": [
+    "src/trajcert/experiments/smoke.py:144",
+    "src/trajcert/experiments/smoke.py:58"
+  ],
+  "SmokeConfig.coverage_stress_bands": [
+    "src/trajcert/experiments/smoke.py:112",
+    "src/trajcert/experiments/smoke.py:139"
+  ],
+  "SmokeConfig.coverage_stress_events": [
+    "src/trajcert/experiments/smoke.py:119",
+    "src/trajcert/experiments/smoke.py:132"
+  ],
+  "SmokeConfig.fixture_count": [
+    "src/trajcert/experiments/smoke.py:30"
+  ],
+  "SmokeConfig.refinement_offset": [
+    "src/trajcert/experiments/smoke.py:80"
+  ],
+  "StrictTimingCaseConfig.coarse_bands": [
+    "src/trajcert/experiments/dispatch.py:231",
+    "src/trajcert/experiments/plan.py:254"
+  ],
+  "StrictTimingCaseConfig.expectation": [
+    "src/trajcert/experiments/dispatch.py:233"
+  ],
+  "StrictTimingCaseConfig.fine_bands": [
+    "src/trajcert/experiments/dispatch.py:230",
+    "src/trajcert/experiments/plan.py:253"
+  ],
+  "StrictTimingCaseConfig.law": [
+    "src/trajcert/experiments/dispatch.py:229",
+    "src/trajcert/experiments/plan.py:251"
+  ],
+  "StudyDesignConfig.coverage_stress_cases": [
+    "src/trajcert/experiments/dispatch.py:553",
+    "src/trajcert/experiments/plan.py:391"
+  ],
+  "StudyDesignConfig.decision_value": [
+    "src/trajcert/experiments/plan.py:410"
+  ],
+  "StudyDesignConfig.foreign_heterogeneity": [
+    "src/trajcert/experiments/dispatch.py:400"
+  ],
+  "StudyDesignConfig.legacy_partition_incoherence": [
+    "src/trajcert/experiments/mathematics.py:440",
+    "src/trajcert/experiments/plan.py:212"
+  ],
+  "StudyDesignConfig.oracle_offsets": [
+    "src/trajcert/experiments/plan.py:298",
+    "src/trajcert/experiments/plan.py:469"
+  ],
+  "StudyDesignConfig.partition_coherence_figure_rho": [
+    "src/trajcert/experiments/synthesis.py:313",
+    "src/trajcert/experiments/synthesis.py:469",
+    "src/trajcert/experiments/synthesis.py:494",
+    "src/trajcert/reporting/publication_rows.py:551"
+  ],
+  "StudyDesignConfig.population_rho_value_count": [
+    "src/trajcert/experiments/plan.py:500"
+  ],
+  "StudyDesignConfig.representative_stream_indices": [
+    "src/trajcert/experiments/anytime.py:705",
+    "src/trajcert/experiments/power.py:214",
+    "src/trajcert/reporting/figures.py:387"
+  ],
+  "StudyDesignConfig.safety_and_impossibility_laws": [
+    "src/trajcert/experiments/plan.py:362"
+  ],
+  "StudyDesignConfig.sharp_set_offsets": [
+    "src/trajcert/experiments/plan.py:235"
+  ],
+  "StudyDesignConfig.sharpness_oracle_laws": [
+    "src/trajcert/experiments/plan.py:351"
+  ],
+  "StudyDesignConfig.strict_timing_cases": [
+    "src/trajcert/experiments/dispatch.py:227",
+    "src/trajcert/experiments/plan.py:259"
+  ],
+  "StudyDesignConfig.timing_offsets": [
+    "src/trajcert/experiments/plan.py:259",
+    "src/trajcert/experiments/plan.py:321"
+  ],
+  "StudyDesignConfig.utility_and_coherence_laws": [
+    "src/trajcert/experiments/plan.py:208"
+  ],
+  "TrajCertConfig.benchmark": [
+    "src/trajcert/experiments/scaling.py:103",
+    "src/trajcert/experiments/scaling.py:107",
+    "src/trajcert/experiments/scaling.py:134"
+  ],
+  "TrajCertConfig.budgets": [
+    "src/trajcert/experiments/anytime.py:1000",
+    "src/trajcert/experiments/anytime.py:1047",
+    "src/trajcert/experiments/anytime.py:1048",
+    "src/trajcert/experiments/anytime.py:1072",
+    "src/trajcert/experiments/anytime.py:1089",
+    "src/trajcert/experiments/anytime.py:1161",
+    "src/trajcert/experiments/anytime.py:1168",
+    "src/trajcert/experiments/anytime.py:1169",
+    "src/trajcert/experiments/anytime.py:1196",
+    "src/trajcert/experiments/anytime.py:1216",
+    "src/trajcert/experiments/anytime.py:1221",
+    "src/trajcert/experiments/anytime.py:973",
+    "src/trajcert/experiments/anytime.py:999",
+    "src/trajcert/experiments/failure_boundaries.py:141",
+    "src/trajcert/experiments/failure_boundaries.py:142",
+    "src/trajcert/experiments/failure_boundaries.py:188",
+    "src/trajcert/experiments/failure_boundaries.py:201",
+    "src/trajcert/experiments/failure_boundaries.py:232",
+    "src/trajcert/experiments/failure_boundaries.py:233",
+    "src/trajcert/experiments/failure_boundaries.py:243",
+    "src/trajcert/experiments/failure_boundaries.py:244",
+    "src/trajcert/experiments/failure_boundaries.py:274",
+    "src/trajcert/experiments/failure_boundaries.py:285",
+    "src/trajcert/experiments/failure_boundaries.py:313",
+    "src/trajcert/experiments/failure_boundaries.py:354",
+    "src/trajcert/experiments/failure_boundaries.py:355",
+    "src/trajcert/reporting/publication_rows.py:1265",
+    "src/trajcert/reporting/publication_rows.py:1300"
+  ],
+  "TrajCertConfig.comparators": [
+    "src/trajcert/comparators/callback.py:172",
+    "src/trajcert/comparators/callback.py:180",
+    "src/trajcert/comparators/callback.py:54",
+    "src/trajcert/comparators/callback.py:79",
+    "src/trajcert/comparators/pattern_mixture.py:52",
+    "src/trajcert/experiments/comparator_reduction.py:67"
+  ],
+  "TrajCertConfig.confidence": [
+    "src/trajcert/experiments/anytime.py:267",
+    "src/trajcert/experiments/anytime.py:423",
+    "src/trajcert/experiments/anytime.py:506",
+    "src/trajcert/experiments/anytime.py:524",
+    "src/trajcert/experiments/anytime.py:730",
+    "src/trajcert/experiments/power.py:241",
+    "src/trajcert/experiments/power.py:361",
+    "src/trajcert/experiments/power.py:394",
+    "src/trajcert/experiments/smoke.py:127"
+  ],
+  "TrajCertConfig.determinism": [
+    "src/trajcert/experiments/failure_boundaries.py:175",
+    "src/trajcert/experiments/failure_boundaries.py:223",
+    "src/trajcert/experiments/failure_boundaries.py:265"
+  ],
+  "TrajCertConfig.failure_boundary": [
+    "src/trajcert/experiments/failure_boundaries.py:171",
+    "src/trajcert/experiments/failure_boundaries.py:181",
+    "src/trajcert/experiments/failure_boundaries.py:261",
+    "src/trajcert/experiments/failure_boundaries.py:300",
+    "src/trajcert/experiments/failure_boundaries.py:312",
+    "src/trajcert/experiments/plan.py:513",
+    "src/trajcert/experiments/plan.py:515",
+    "src/trajcert/experiments/plan.py:516",
+    "src/trajcert/experiments/plan.py:517",
+    "src/trajcert/experiments/plan.py:520",
+    "src/trajcert/experiments/plan.py:522",
+    "src/trajcert/experiments/plan.py:523",
+    "src/trajcert/experiments/plan.py:526",
+    "src/trajcert/experiments/plan.py:528",
+    "src/trajcert/experiments/plan.py:531",
+    "src/trajcert/experiments/plan.py:534",
+    "src/trajcert/experiments/plan.py:547"
+  ],
+  "TrajCertConfig.figure_layout": [
+    "src/trajcert/reporting/figures.py:1027",
+    "src/trajcert/reporting/figures.py:1033",
+    "src/trajcert/reporting/figures.py:1049",
+    "src/trajcert/reporting/figures.py:1073",
+    "src/trajcert/reporting/figures.py:1140",
+    "src/trajcert/reporting/figures.py:571",
+    "src/trajcert/reporting/figures.py:673"
+  ],
+  "TrajCertConfig.grids": [
+    "src/trajcert/experiments/comparator_reduction.py:58",
+    "src/trajcert/experiments/dispatch.py:487",
+    "src/trajcert/experiments/plan.py:335",
+    "src/trajcert/experiments/plan.py:477",
+    "src/trajcert/experiments/plan.py:490",
+    "src/trajcert/experiments/plan.py:495",
+    "src/trajcert/experiments/synthesis.py:277",
+    "src/trajcert/experiments/synthesis.py:339",
+    "src/trajcert/experiments/synthesis.py:470",
+    "src/trajcert/experiments/synthesis.py:495",
+    "src/trajcert/experiments/workflows.py:182",
+    "src/trajcert/experiments/workflows.py:242",
+    "src/trajcert/reporting/publication_rows.py:553"
+  ],
+  "TrajCertConfig.hand_cases": [
+    "src/trajcert/experiments/anytime.py:1002",
+    "src/trajcert/experiments/anytime.py:1016",
+    "src/trajcert/experiments/anytime.py:1050",
+    "src/trajcert/experiments/anytime.py:1064",
+    "src/trajcert/experiments/anytime.py:1084",
+    "src/trajcert/experiments/anytime.py:1100",
+    "src/trajcert/experiments/anytime.py:1117",
+    "src/trajcert/experiments/anytime.py:1142",
+    "src/trajcert/experiments/anytime.py:1162",
+    "src/trajcert/experiments/anytime.py:1195",
+    "src/trajcert/experiments/anytime.py:1243",
+    "src/trajcert/experiments/anytime.py:989",
+    "src/trajcert/experiments/anytime.py:992"
+  ],
+  "TrajCertConfig.identifiers": [
+    "src/trajcert/data/synthetic.py:253"
+  ],
+  "TrajCertConfig.laws": [
+    "src/trajcert/experiments/anytime.py:1452",
+    "src/trajcert/experiments/anytime.py:888",
+    "src/trajcert/experiments/failure_boundaries.py:335",
+    "src/trajcert/experiments/failure_boundaries.py:410",
+    "src/trajcert/experiments/power.py:161",
+    "src/trajcert/experiments/smoke.py:174",
+    "src/trajcert/experiments/synthesis.py:760",
+    "src/trajcert/reporting/publication_rows.py:1276"
+  ],
+  "TrajCertConfig.materiality": [
+    "src/trajcert/analysis/materiality.py:51",
+    "src/trajcert/analysis/materiality.py:53",
+    "src/trajcert/analysis/materiality.py:61",
+    "src/trajcert/analysis/materiality.py:69",
+    "src/trajcert/experiments/sensitivity.py:75",
+    "src/trajcert/experiments/sensitivity.py:77"
+  ],
+  "TrajCertConfig.method": [
+    "src/trajcert/comparators/endpoint.py:13",
+    "src/trajcert/experiments/anytime.py:657",
+    "src/trajcert/experiments/anytime.py:909",
+    "src/trajcert/experiments/comparator_reduction.py:56",
+    "src/trajcert/experiments/dispatch.py:429",
+    "src/trajcert/experiments/dispatch.py:430",
+    "src/trajcert/experiments/dispatch.py:431",
+    "src/trajcert/experiments/dispatch.py:490",
+    "src/trajcert/experiments/dispatch.py:492",
+    "src/trajcert/experiments/failure_boundaries.py:139",
+    "src/trajcert/experiments/failure_boundaries.py:170",
+    "src/trajcert/experiments/failure_boundaries.py:219",
+    "src/trajcert/experiments/failure_boundaries.py:260",
+    "src/trajcert/experiments/failure_boundaries.py:303",
+    "src/trajcert/experiments/failure_boundaries.py:353",
+    "src/trajcert/experiments/failure_boundaries.py:426",
+    "src/trajcert/experiments/feasibility.py:55",
+    "src/trajcert/experiments/feasibility.py:56",
+    "src/trajcert/experiments/feasibility.py:78",
+    "src/trajcert/experiments/mathematics.py:450",
+    "src/trajcert/experiments/mathematics.py:462",
+    "src/trajcert/experiments/power.py:179",
+    "src/trajcert/experiments/power.py:180",
+    "src/trajcert/experiments/smoke.py:111",
+    "src/trajcert/experiments/smoke.py:113",
+    "src/trajcert/experiments/smoke.py:138",
+    "src/trajcert/experiments/smoke.py:140",
+    "src/trajcert/experiments/smoke.py:38",
+    "src/trajcert/experiments/smoke.py:39",
+    "src/trajcert/experiments/smoke.py:40",
+    "src/trajcert/experiments/smoke.py:43",
+    "src/trajcert/experiments/smoke.py:45",
+    "src/trajcert/experiments/smoke.py:48",
+    "src/trajcert/experiments/smoke.py:50",
+    "src/trajcert/experiments/synthesis.py:454",
+    "src/trajcert/experiments/workflows.py:178",
+    "src/trajcert/experiments/workflows.py:183",
+    "src/trajcert/experiments/workflows.py:230",
+    "src/trajcert/experiments/workflows.py:241",
+    "src/trajcert/reporting/publication_rows.py:1011",
+    "src/trajcert/reporting/publication_rows.py:1264",
+    "src/trajcert/reporting/publication_rows.py:1287",
+    "src/trajcert/reporting/publication_rows.py:1288",
+    "src/trajcert/reporting/publication_rows.py:1289",
+    "src/trajcert/reporting/publication_rows.py:942"
+  ],
+  "TrajCertConfig.minimum_evidence": [
+    "src/trajcert/experiments/anytime.py:1170",
+    "src/trajcert/experiments/anytime.py:1171",
+    "src/trajcert/experiments/anytime.py:1383",
+    "src/trajcert/experiments/anytime.py:1384",
+    "src/trajcert/experiments/anytime.py:1389",
+    "src/trajcert/experiments/anytime.py:1390",
+    "src/trajcert/experiments/anytime.py:287",
+    "src/trajcert/experiments/anytime.py:288",
+    "src/trajcert/experiments/anytime.py:469",
+    "src/trajcert/experiments/anytime.py:470",
+    "src/trajcert/experiments/power.py:346",
+    "src/trajcert/experiments/power.py:347",
+    "src/trajcert/experiments/power.py:375",
+    "src/trajcert/experiments/power.py:376"
+  ],
+  "TrajCertConfig.numerics": [
+    "src/trajcert/data/synthetic.py:265",
+    "src/trajcert/experiments/anytime.py:1172",
+    "src/trajcert/experiments/anytime.py:1212",
+    "src/trajcert/experiments/anytime.py:1226",
+    "src/trajcert/experiments/anytime.py:1256",
+    "src/trajcert/experiments/anytime.py:1263",
+    "src/trajcert/experiments/anytime.py:1270",
+    "src/trajcert/experiments/anytime.py:1271",
+    "src/trajcert/experiments/anytime.py:1272",
+    "src/trajcert/experiments/anytime.py:1287",
+    "src/trajcert/experiments/anytime.py:1362",
+    "src/trajcert/experiments/anytime.py:1363",
+    "src/trajcert/experiments/anytime.py:1364",
+    "src/trajcert/experiments/anytime.py:1365",
+    "src/trajcert/experiments/anytime.py:1366",
+    "src/trajcert/experiments/anytime.py:1368",
+    "src/trajcert/experiments/anytime.py:1391",
+    "src/trajcert/experiments/anytime.py:1447",
+    "src/trajcert/experiments/anytime.py:268",
+    "src/trajcert/experiments/anytime.py:289",
+    "src/trajcert/experiments/anytime.py:425",
+    "src/trajcert/experiments/anytime.py:471",
+    "src/trajcert/experiments/anytime.py:507",
+    "src/trajcert/experiments/anytime.py:525",
+    "src/trajcert/experiments/anytime.py:664",
+    "src/trajcert/experiments/anytime.py:747",
+    "src/trajcert/experiments/anytime.py:877",
+    "src/trajcert/experiments/anytime.py:883",
+    "src/trajcert/experiments/anytime.py:911",
+    "src/trajcert/experiments/anytime.py:956",
+    "src/trajcert/experiments/anytime.py:977",
+    "src/trajcert/experiments/anytime.py:978",
+    "src/trajcert/experiments/comparator_reduction.py:62",
+    "src/trajcert/experiments/comparator_reduction.py:63",
+    "src/trajcert/experiments/comparator_reduction.py:66",
+    "src/trajcert/experiments/comparator_reduction.py:75",
+    "src/trajcert/experiments/comparator_reduction.py:76",
+    "src/trajcert/experiments/comparator_reduction.py:77",
+    "src/trajcert/experiments/comparator_reduction.py:87",
+    "src/trajcert/experiments/decision_value.py:89",
+    "src/trajcert/experiments/decision_value.py:90",
+    "src/trajcert/experiments/decision_value.py:95",
+    "src/trajcert/experiments/decision_value.py:96",
+    "src/trajcert/experiments/decision_value.py:97",
+    "src/trajcert/experiments/dispatch.py:160",
+    "src/trajcert/experiments/dispatch.py:161",
+    "src/trajcert/experiments/dispatch.py:162",
+    "src/trajcert/experiments/dispatch.py:174",
+    "src/trajcert/experiments/dispatch.py:175",
+    "src/trajcert/experiments/dispatch.py:176",
+    "src/trajcert/experiments/dispatch.py:196",
+    "src/trajcert/experiments/dispatch.py:197",
+    "src/trajcert/experiments/dispatch.py:208",
+    "src/trajcert/experiments/dispatch.py:209",
+    "src/trajcert/experiments/dispatch.py:210",
+    "src/trajcert/experiments/dispatch.py:213",
+    "src/trajcert/experiments/dispatch.py:243",
+    "src/trajcert/experiments/dispatch.py:244",
+    "src/trajcert/experiments/dispatch.py:245",
+    "src/trajcert/experiments/dispatch.py:246",
+    "src/trajcert/experiments/dispatch.py:247",
+    "src/trajcert/experiments/dispatch.py:248",
+    "src/trajcert/experiments/dispatch.py:396",
+    "src/trajcert/experiments/dispatch.py:397",
+    "src/trajcert/experiments/dispatch.py:398",
+    "src/trajcert/experiments/dispatch.py:457",
+    "src/trajcert/experiments/dispatch.py:533",
+    "src/trajcert/experiments/dispatch.py:534",
+    "src/trajcert/experiments/failure_boundaries.py:111",
+    "src/trajcert/experiments/failure_boundaries.py:112",
+    "src/trajcert/experiments/failure_boundaries.py:143",
+    "src/trajcert/experiments/failure_boundaries.py:179",
+    "src/trajcert/experiments/failure_boundaries.py:310",
+    "src/trajcert/experiments/failure_boundaries.py:314",
+    "src/trajcert/experiments/failure_boundaries.py:434",
+    "src/trajcert/experiments/failure_boundaries.py:483",
+    "src/trajcert/experiments/feasibility.py:105",
+    "src/trajcert/experiments/feasibility.py:106",
+    "src/trajcert/experiments/feasibility.py:123",
+    "src/trajcert/experiments/feasibility.py:132",
+    "src/trajcert/experiments/feasibility.py:65",
+    "src/trajcert/experiments/feasibility.py:98",
+    "src/trajcert/experiments/mathematics.py:117",
+    "src/trajcert/experiments/mathematics.py:235",
+    "src/trajcert/experiments/mathematics.py:359",
+    "src/trajcert/experiments/mathematics.py:377",
+    "src/trajcert/experiments/mathematics.py:401",
+    "src/trajcert/experiments/mathematics.py:457",
+    "src/trajcert/experiments/mathematics.py:464",
+    "src/trajcert/experiments/mathematics.py:465",
+    "src/trajcert/experiments/mathematics.py:466",
+    "src/trajcert/experiments/mathematics.py:487",
+    "src/trajcert/experiments/power.py:277",
+    "src/trajcert/experiments/power.py:284",
+    "src/trajcert/experiments/power.py:306",
+    "src/trajcert/experiments/power.py:307",
+    "src/trajcert/experiments/power.py:308",
+    "src/trajcert/experiments/power.py:309",
+    "src/trajcert/experiments/power.py:310",
+    "src/trajcert/experiments/power.py:311",
+    "src/trajcert/experiments/power.py:348",
+    "src/trajcert/experiments/power.py:363",
+    "src/trajcert/experiments/sensitivity.py:46",
+    "src/trajcert/experiments/sensitivity.py:47",
+    "src/trajcert/experiments/smoke.py:128",
+    "src/trajcert/experiments/smoke.py:148",
+    "src/trajcert/experiments/smoke.py:149",
+    "src/trajcert/experiments/smoke.py:156",
+    "src/trajcert/experiments/smoke.py:157",
+    "src/trajcert/experiments/smoke.py:158",
+    "src/trajcert/experiments/smoke.py:159",
+    "src/trajcert/experiments/smoke.py:160",
+    "src/trajcert/experiments/smoke.py:161",
+    "src/trajcert/experiments/smoke.py:59",
+    "src/trajcert/experiments/smoke.py:60",
+    "src/trajcert/experiments/smoke.py:68",
+    "src/trajcert/experiments/smoke.py:69",
+    "src/trajcert/experiments/smoke.py:75",
+    "src/trajcert/experiments/smoke.py:81",
+    "src/trajcert/experiments/smoke.py:82",
+    "src/trajcert/experiments/smoke.py:83",
+    "src/trajcert/experiments/synthesis.py:314",
+    "src/trajcert/experiments/synthesis.py:424",
+    "src/trajcert/experiments/synthesis.py:476",
+    "src/trajcert/experiments/synthesis.py:499",
+    "src/trajcert/experiments/timing.py:60",
+    "src/trajcert/inference/confidence.py:69",
+    "src/trajcert/inference/confidence.py:93",
+    "src/trajcert/inference/projection.py:1097",
+    "src/trajcert/inference/projection.py:1142",
+    "src/trajcert/inference/projection.py:420",
+    "src/trajcert/inference/projection.py:606",
+    "src/trajcert/inference/projection.py:763",
+    "src/trajcert/math/information.py:153",
+    "src/trajcert/math/safety.py:77",
+    "src/trajcert/reporting/publication_rows.py:1252",
+    "src/trajcert/reporting/publication_rows.py:1271",
+    "src/trajcert/reporting/publication_rows.py:1294",
+    "src/trajcert/reporting/publication_rows.py:804",
+    "src/trajcert/reporting/publication_rows.py:805",
+    "src/trajcert/reporting/publication_rows.py:819"
+  ],
+  "TrajCertConfig.publication": [
+    "src/trajcert/experiments/workflows.py:195",
+    "src/trajcert/experiments/workflows.py:196",
+    "src/trajcert/experiments/workflows.py:198",
+    "src/trajcert/experiments/workflows.py:202",
+    "src/trajcert/experiments/workflows.py:203"
+  ],
+  "TrajCertConfig.real_trajectory": [
+    "src/trajcert/data/real_trajectories.py:47",
+    "src/trajcert/experiments/plan.py:429",
+    "src/trajcert/experiments/synthesis.py:423",
+    "src/trajcert/experiments/workflows.py:184"
+  ],
+  "TrajCertConfig.sequential": [
+    "src/trajcert/experiments/anytime.py:325",
+    "src/trajcert/experiments/anytime.py:326",
+    "src/trajcert/experiments/anytime.py:396",
+    "src/trajcert/experiments/anytime.py:681",
+    "src/trajcert/experiments/anytime.py:706",
+    "src/trajcert/experiments/anytime.py:731",
+    "src/trajcert/experiments/anytime.py:763",
+    "src/trajcert/experiments/anytime.py:804",
+    "src/trajcert/experiments/anytime.py:819",
+    "src/trajcert/experiments/anytime.py:832",
+    "src/trajcert/experiments/checkpointing.py:241",
+    "src/trajcert/experiments/checkpointing.py:255",
+    "src/trajcert/experiments/dispatch.py:583",
+    "src/trajcert/experiments/dispatch.py:711",
+    "src/trajcert/experiments/feasibility.py:131",
+    "src/trajcert/experiments/plan.py:403",
+    "src/trajcert/experiments/power.py:190",
+    "src/trajcert/experiments/power.py:202",
+    "src/trajcert/experiments/power.py:396",
+    "src/trajcert/experiments/power.py:421",
+    "src/trajcert/experiments/runner.py:190",
+    "src/trajcert/experiments/runner.py:192",
+    "src/trajcert/reporting/power_rows.py:137",
+    "src/trajcert/reporting/power_rows.py:156",
+    "src/trajcert/reporting/publication_rows.py:1007"
+  ],
+  "TrajCertConfig.serialization": [
+    "src/trajcert/paths.py:321"
+  ],
+  "TrajCertConfig.smoke": [
+    "src/trajcert/experiments/smoke.py:112",
+    "src/trajcert/experiments/smoke.py:119",
+    "src/trajcert/experiments/smoke.py:132",
+    "src/trajcert/experiments/smoke.py:139",
+    "src/trajcert/experiments/smoke.py:144",
+    "src/trajcert/experiments/smoke.py:30",
+    "src/trajcert/experiments/smoke.py:44",
+    "src/trajcert/experiments/smoke.py:58",
+    "src/trajcert/experiments/smoke.py:80"
+  ],
+  "TrajCertConfig.study_design": [
+    "src/trajcert/experiments/anytime.py:705",
+    "src/trajcert/experiments/dispatch.py:227",
+    "src/trajcert/experiments/dispatch.py:400",
+    "src/trajcert/experiments/dispatch.py:553",
+    "src/trajcert/experiments/mathematics.py:440",
+    "src/trajcert/experiments/plan.py:208",
+    "src/trajcert/experiments/plan.py:212",
+    "src/trajcert/experiments/plan.py:235",
+    "src/trajcert/experiments/plan.py:259",
+    "src/trajcert/experiments/plan.py:298",
+    "src/trajcert/experiments/plan.py:321",
+    "src/trajcert/experiments/plan.py:351",
+    "src/trajcert/experiments/plan.py:362",
+    "src/trajcert/experiments/plan.py:391",
+    "src/trajcert/experiments/plan.py:410",
+    "src/trajcert/experiments/plan.py:469",
+    "src/trajcert/experiments/plan.py:500",
+    "src/trajcert/experiments/power.py:214",
+    "src/trajcert/experiments/synthesis.py:313",
+    "src/trajcert/experiments/synthesis.py:469",
+    "src/trajcert/experiments/synthesis.py:494",
+    "src/trajcert/reporting/figures.py:387",
+    "src/trajcert/reporting/publication_rows.py:551"
+  ],
+  "TrajCertConfig.units": [
+    "src/trajcert/experiments/failure_boundaries.py:192",
+    "src/trajcert/experiments/failure_boundaries.py:236",
+    "src/trajcert/experiments/failure_boundaries.py:277",
+    "src/trajcert/experiments/power.py:315",
+    "src/trajcert/experiments/scaling.py:111",
+    "src/trajcert/reporting/publication_rows.py:999"
+  ],
+  "UnitsConfig.nanoseconds_per_millisecond": [
+    "src/trajcert/experiments/failure_boundaries.py:192",
+    "src/trajcert/experiments/failure_boundaries.py:236",
+    "src/trajcert/experiments/failure_boundaries.py:277",
+    "src/trajcert/experiments/power.py:315",
+    "src/trajcert/reporting/publication_rows.py:1000"
+  ],
+  "UnitsConfig.nanoseconds_per_second": [
+    "src/trajcert/experiments/scaling.py:111",
+    "src/trajcert/reporting/publication_rows.py:1000"
+  ]
+}

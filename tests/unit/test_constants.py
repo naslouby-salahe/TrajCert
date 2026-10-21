@@ -1,0 +1,31 @@
+from __future__ import annotations
+
+from math import log
+from pathlib import Path
+
+import pytest
+
+from trajcert.constants import (
+    BINARY_MAX_INFORMATION_NATS,
+    PRODUCTION_CONFIG_PATH,
+    SEED_MODULUS,
+)
+from trajcert.types import PartitionLabel, SeedMaterialGrammar
+
+_SEED_MODULUS_EXPECTED = 1 << 63
+
+
+def test_schema_and_seed_constants_are_pinned() -> None:
+    assert SeedMaterialGrammar.PREFIX == "TrajCert"
+    assert SeedMaterialGrammar.FIELD_SEPARATOR == "|"
+    assert SEED_MODULUS == _SEED_MODULUS_EXPECTED
+
+
+def test_naming_and_config_constants_are_pinned() -> None:
+    assert PartitionLabel.TERMINAL == "infinity"
+    assert PartitionLabel.ENDPOINT_ONLY == "Endpoint-only partition"
+    assert Path("configs/trajcert.yaml") == PRODUCTION_CONFIG_PATH
+
+
+def test_binary_max_information_nats_equals_log_two() -> None:
+    assert pytest.approx(log(2.0)) == BINARY_MAX_INFORMATION_NATS
