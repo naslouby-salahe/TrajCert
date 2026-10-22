@@ -1,0 +1,11 @@
+heterogeneity,condition,cell_count,no_change_cells,benign_tightening_cells,conservative_widening_cells,erroneous_bound_cells,model_incompatible_cells,containment_failures,underestimating_cells,false_certification_cells
+0.0,foreign_path,280,271,0,1,0,8,82,74,11
+0.0,naive_pooled,280,280,0,0,0,0,88,80,12
+0.25,foreign_path,280,102,61,87,1,29,67,61,11
+0.25,naive_pooled,280,31,80,110,28,31,83,60,12
+0.5,foreign_path,280,102,53,87,3,35,64,59,9
+0.5,naive_pooled,280,31,68,98,48,35,93,57,11
+0.75,foreign_path,280,102,43,87,3,45,61,56,9
+0.75,naive_pooled,280,31,62,91,60,36,102,51,9
+1.0,foreign_path,280,114,42,72,2,50,62,56,9
+1.0,naive_pooled,280,30,57,94,63,36,106,57,9

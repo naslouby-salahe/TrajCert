@@ -1,0 +1,19 @@
+law_name,coarse_partition,fine_partition,rho,tau_coarse,tau_fine,delta_tau,coarse_risk_upper,fine_risk_upper,bound_gain,fine_subset_coarse,theorem_condition,pass
+No outcome-path dependence,4-band partition,8-band partition,0.005,0.0,0.0,0.0,0.05895064830432603,0.05895064830432603,0.0,true,false,true
+No outcome-path dependence,4-band partition,8-band partition,0.025,0.0,0.0,0.0,0.07400856013749946,0.07400856013749946,0.0,true,false,true
+No outcome-path dependence,4-band partition,8-band partition,0.1,0.0,0.0,0.0,0.10884518798191498,0.10884518798191498,0.0,true,false,true
+Same endpoint with timing information,2-band partition,8-band partition,0.048739214631701604,0.031209152251187533,0.043739214631701606,0.012530062380514073,0.06369041821366259,0.0535002261939604,0.010190192019702185,true,true,true
+Same endpoint with timing information,2-band partition,8-band partition,0.0687392146317016,0.031209152251187533,0.043739214631701606,0.012530062380514073,0.07575953118296838,0.06853672189048128,0.007222809292487101,true,true,true
+Same endpoint with timing information,2-band partition,8-band partition,0.1437392146317016,0.031209152251187533,0.043739214631701606,0.012530062380514073,0.10864554364173637,0.1039488640215407,0.004696679620195668,true,true,true
+Same endpoint without timing information,2-band partition,8-band partition,0.005,0.0,0.0,0.0,0.0535002261939604,0.0535002261939604,0.0,true,false,true
+Same endpoint without timing information,2-band partition,8-band partition,0.025,0.0,0.0,0.0,0.06853672189048128,0.06853672189048128,0.0,true,false,true
+Same endpoint without timing information,2-band partition,8-band partition,0.1,0.0,0.0,0.0,0.1039488640215407,0.1039488640215407,0.0,true,false,true
+Terminal only: harmful outcomes remain unresolved,4-band partition,8-band partition,0.005,0.0,0.0,0.0,0.04378148770456634,0.04378148770456634,0.0,true,false,true
+Terminal only: harmful outcomes remain unresolved,4-band partition,8-band partition,0.025,0.0,0.0,0.0,0.05529120128063247,0.05529120128063247,0.0,true,false,true
+Terminal only: harmful outcomes remain unresolved,4-band partition,8-band partition,0.1,0.0,0.0,0.0,0.08222492146959726,0.08222492146959726,0.0,true,false,true
+Timing and terminal: harmful outcomes resolve late,4-band partition,8-band partition,0.030106390432677887,0.023710384982046556,0.025106390432677886,0.0013960054506313296,0.044832962244505316,0.04378148770456633,0.001051474539938986,true,true,true
+Timing and terminal: harmful outcomes resolve late,4-band partition,8-band partition,0.05010639043267789,0.023710384982046556,0.025106390432677886,0.0013960054506313296,0.05594863747134634,0.05529120128063246,0.0006574361907138795,true,true,true
+Timing and terminal: harmful outcomes resolve late,4-band partition,8-band partition,0.1251063904326779,0.023710384982046556,0.025106390432677886,0.0013960054506313296,0.08261753164634986,0.08222492146959726,0.00039261017675260024,true,true,true
+Timing only: harmful outcomes resolve late,4-band partition,8-band partition,0.03673577283620388,0.029997633854696837,0.03173577283620388,0.0017381389815070425,0.060679906374516576,0.05895064830432602,0.001729258070190559,true,true,true
+Timing only: harmful outcomes resolve late,4-band partition,8-band partition,0.05673577283620388,0.029997633854696837,0.03173577283620388,0.0017381389815070425,0.0750623183179232,0.07400856013749944,0.0010537581804237611,true,true,true
+Timing only: harmful outcomes resolve late,4-band partition,8-band partition,0.13173577283620388,0.029997633854696837,0.03173577283620388,0.0017381389815070425,0.10949326782616482,0.10884518798191496,0.0006480798442498603,true,true,true

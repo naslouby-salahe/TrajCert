@@ -1,0 +1,9 @@
+experiment_name,case_count,passed_count,all_cases_pass
+Anytime Implementation Hand Cases,30,30,true
+Compatibility Floor Behavior,28,28,true
+Partition Coherence,54,54,true
+Production Solver vs Independent Oracle,280,280,true
+Safety and Intrinsic Impossibility,40,40,true
+"Same Endpoint, Different Timing",24,24,true
+Sharpness Against Generic Oracle,40,40,true
+Strict Timing Gain,18,18,true
