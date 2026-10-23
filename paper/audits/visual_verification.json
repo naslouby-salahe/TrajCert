@@ -1,0 +1,195 @@
+{
+  "date": "2026-10-22",
+  "method": "Rendered with pdftoppm at 110 dpi; every page visually inspected with image viewer; affected main pages re-inspected after float-placement and widow correction.",
+  "documents": {
+    "main": {
+      "pdf": "main.pdf",
+      "sha256": "92877deba724c355418e10cb33a6f782af0b61358d5831cdfe6098cc23da61af",
+      "pages_inspected": 20,
+      "observations": [
+        {
+          "page": 1,
+          "status": "PASS",
+          "note": "Title, affiliations, abstract, keywords and footnotes readable. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "bb1a07d4d16248ff3c7af24989988fe7bf7f2b5be5d461762a9b29b6f506b6cc"
+        },
+        {
+          "page": 2,
+          "status": "PASS",
+          "note": "Introduction and related-work paragraphs flow normally. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "1a780b1725f9e374195f5db33d6e61f98e83ac0dc080fdafee2261d97c3eeae5"
+        },
+        {
+          "page": 3,
+          "status": "PASS",
+          "note": "Citations and model equations fit. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "e074b18d73e00c32da3b197092b26af3dff33ef2c2a7fb69464011f1eda0c8f8"
+        },
+        {
+          "page": 4,
+          "status": "PASS",
+          "note": "Assumptions, entropy notation and theorem statement fit. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "4285daf6161632515f147029beb06086fe4c33435228f26ce3aa0c1f43274aa5"
+        },
+        {
+          "page": 5,
+          "status": "PASS",
+          "note": "Derivatives, refinement statement and proofs fit. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "65cf1bf0ee7d30367c04e02ec245296319bafe269845e4dc1ac3dd7c3f5af6f6"
+        },
+        {
+          "page": 6,
+          "status": "PASS",
+          "note": "Frontier equations and proof readable; space reserved before Figure 1. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "2428244205ff44b5fcf6e34e2a2b6c882c0f8e8e68a70ae934ac0ea7fe4469ee"
+        },
+        {
+          "page": 7,
+          "status": "PASS",
+          "note": "Figure 1 axes, legend, profile and caption clear; confidence equations fit.",
+          "render_sha256": "9cc44d2baf6ca96ad1fcb6de456bc63e36a93ec5e9b27e69f3a234a83e762988"
+        },
+        {
+          "page": 8,
+          "status": "PASS",
+          "note": "Projection and envelope equations fit, with no clipped terms.",
+          "render_sha256": "a55db975185e30e93cabb5de6bcfc5a9bbfdbb6075f438d2e779ab54662c9793"
+        },
+        {
+          "page": 9,
+          "status": "PASS",
+          "note": "Conditional theorem, proof and decision states readable.",
+          "render_sha256": "fb4f503f73a32851fb8fec92a21e9e70cbed46f23afeabaea41f56205f847347"
+        },
+        {
+          "page": 10,
+          "status": "PASS",
+          "note": "Law table caption explicitly identifies the matched control; aligned columns.",
+          "render_sha256": "c0a822592bc76f915daa4c6ec82065f7277afb4ff79f45f5fa04161b39cd8615"
+        },
+        {
+          "page": 11,
+          "status": "PASS",
+          "note": "Design, intervals, comparators and provenance readable.",
+          "render_sha256": "56ce2aef522cd40c5c8645f55fbd477292769395ad5a8f71b0b0bd7201e7a7dd"
+        },
+        {
+          "page": 12,
+          "status": "PASS",
+          "note": "Provenance paragraph, solver results and population table fit after removal of preparation acknowledgment.",
+          "render_sha256": "186271f54b20a24d4ece015477441374a8e35f8a03e5b978747d4ceb7cb6ad27"
+        },
+        {
+          "page": 13,
+          "status": "PASS",
+          "note": "Population and power discussion readable after reflow.",
+          "render_sha256": "cd9f2ef1bf281c1c229d4eb9a8bd97f497a7ac4f8aac603b805f9761835cb9dd"
+        },
+        {
+          "page": 14,
+          "status": "PASS",
+          "note": "All four power panels, intervals, labels and caption readable.",
+          "render_sha256": "d4709f3c61a5d47b93afe3a9ad55149e361a595230f94d08ee964db504baddd0"
+        },
+        {
+          "page": 15,
+          "status": "PASS",
+          "note": "Selected power table followed by complete stricter-budget and control discussion.",
+          "render_sha256": "5fcaa4c40a33be8ace864068a6dfde448465740b5f2c3bb6c191cc7100b60bd6"
+        },
+        {
+          "page": 16,
+          "status": "PASS",
+          "note": "Coverage table and validity discussion readable; no orphan continuation line.",
+          "render_sha256": "2514f96f4a2a04a39acb15736829374e2d0d8014061d015b1db8e6379178069c"
+        },
+        {
+          "page": 17,
+          "status": "PASS",
+          "note": "Runtime figure lies between complete discussion blocks; units and caption readable.",
+          "render_sha256": "6a2e8d1145362fc87c8b5c772bbf0748112f3576b98610b284bb3d3022f7a80a"
+        },
+        {
+          "page": 18,
+          "status": "PASS",
+          "note": "Discussion, conclusion and availability declarations readable.",
+          "render_sha256": "5f75fb8e48de08948430a50c9c3136612b62168489ce6e04f7faf353874aa2bc"
+        },
+        {
+          "page": 19,
+          "status": "PASS",
+          "note": "Author contributions followed directly by references; obsolete notice removed; all entries readable.",
+          "render_sha256": "ee06b4ad2face1bde4daa3fb1074a28849d766f220c9c4af55044f9cb11cd986"
+        },
+        {
+          "page": 20,
+          "status": "PASS",
+          "note": "Remaining references readable; no blank trailing page.",
+          "render_sha256": "316e415baa6bb853b620714eabcfaf96e63bb71af8c40f74e305647c26b530af"
+        }
+      ]
+    },
+    "supplement": {
+      "pdf": "supplementary/supplement.pdf",
+      "sha256": "cd46a0eab39f28d2243123d45657db53fed05e8424e166d641af3624dd7aa7b5",
+      "pages_inspected": 9,
+      "observations": [
+        {
+          "page": 1,
+          "status": "PASS",
+          "note": "Title, author affiliations, table definition and boundary equations fit.",
+          "render_sha256": "d84101639940af683c6744978142746b14164ec9e13ec17a888371c50c5fe1ba"
+        },
+        {
+          "page": 2,
+          "status": "PASS",
+          "note": "Refinement, frontier and martingale derivations readable.",
+          "render_sha256": "df1e630492316e74f7234f7ab6219b63ffcb7c46eda41a9445f59d9c7d1f2bc8"
+        },
+        {
+          "page": 3,
+          "status": "PASS",
+          "note": "Enclosure equations and numerical-contract explanation fit.",
+          "render_sha256": "07beb4deaef882035e61660f54e9de86e60e6a99c65644c7ddb14fc71c3400a7"
+        },
+        {
+          "page": 4,
+          "status": "PASS",
+          "note": "Fast-filter equations, summation and search invariants readable. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "f2b6918a5355dbe4f1b4992484e0ae54258068b7eaeb95f54b8ca2a95ddcb28f"
+        },
+        {
+          "page": 5,
+          "status": "PASS",
+          "note": "Singleton, witness and rejection details readable; complete-outcomes section starts coherently. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "ba840bbdd507f489304c294c9618b0867b813746eb85f8259af65f72a1d721fe"
+        },
+        {
+          "page": 6,
+          "status": "PASS",
+          "note": "All 32 Table S1 rows and Table S2 state/runtime columns fit with readable captions. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "eeb502fc05297f7f93f16d370450dc23bfa833fba9ae988f59ea3b1876ec3142"
+        },
+        {
+          "page": 7,
+          "status": "PASS",
+          "note": "Design details, statistical distinctions and secondary diagnostics readable. Re-inspected after conservative prose audit; text, equations and page flow remain readable.",
+          "render_sha256": "464590f99fc65dacd29d2629ed2b0d55167c131f0218925058267bb2e898446a"
+        },
+        {
+          "page": 8,
+          "status": "PASS",
+          "note": "Table S3 aligned; provenance hashes fit within margins.",
+          "render_sha256": "0d104e44acf33c41e8dc4d58602253ea47fe1a845e6f02bab7a4c7baa3faa6e7"
+        },
+        {
+          "page": 9,
+          "status": "PASS",
+          "note": "Environment, pilot and archive explanations readable; no blank trailing page.",
+          "render_sha256": "4c323a4c625902253c38634d3ec0a185d4eed9d27282b277edd4e21cc5dcc798"
+        }
+      ]
+    }
+  },
+  "latest_check": "Prose re-audit: main pages 1-6 and supplement pages 4-7 visually inspected at 110 dpi; all other page renders identical to previously inspected renders. Two stranded threshold symbols corrected."
+}

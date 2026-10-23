@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-22",
+  "protected_files_unchanged": 26378,
+  "new_protected_nonpaper_files": [],
+  "capture_exclusions": [
+    "paper/",
+    ".git/",
+    ".venv/",
+    ".nox/",
+    "node_modules/",
+    "cache directories"
+  ],
+  "git_head_unchanged": "e4f5cef47d3af18f5badcb0a644dbc3636d52cd5",
+  "index_unchanged": true,
+  "changes_only_in_paper": true,
+  "original_evidence_archive_unchanged": true,
+  "no_experiment_executed": true,
+  "git_status": " M paper/README.md\n M paper/audit.md\n M paper/audits/figure_table_sources.json\n M paper/audits/final_validation.json\n M paper/audits/package_validation.json\n M paper/audits/revision_verification.json\n M paper/audits/text_hygiene.json\n M paper/audits/verified_evidence.json\n M paper/figures/certification_power.pdf\n M paper/figures/computation.pdf\n M paper/figures/identification.pdf\n M paper/highlights.rtf\n M paper/highlights.txt\n M paper/literature/REFERENCE_AUDIT.md\n M paper/literature/doi_resolution.json\n M paper/main.pdf\n M paper/main.tex\n M paper/references.bib\n M paper/sections/declarations.tex\n M paper/sections/discussion.tex\n M paper/sections/experiments.tex\n M paper/sections/introduction.tex\n M paper/sections/results.tex\n M paper/sections/sequential.tex\n M paper/submission_manifest.json\n M paper/submission_sources.zip\n M paper/supplementary/supplement.pdf\n M paper/supplementary/supplement.tex\n M paper/tools/audit_evidence.py\n M paper/tools/render_evidence.py\n M paper/tools/validate_manuscript.py\n M paper/tools/verify_revision.py\n?? paper/audits/completion_verification.json\n?? paper/audits/population_verification.json\n?? paper/audits/visual_verification.json\n?? paper/literature/metadata/current_verification.json\n?? paper/supplementary/evidence_current.zip\n?? paper/tables/foreign_information.tex\n?? paper/tools/package_manuscript.py\n",
+  "current_evidence_archive_payloads_verified": 8313,
+  "current_evidence_archive_sha256": "1c014ef8b45d387009ceb407f480b2a6e0974be3002cb452951ef4bc15535dfc"
+}

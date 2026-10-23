@@ -1,6 +1,7 @@
 """Read-only checks of existing campaign artifacts; writes only paper/audits."""
 from pathlib import Path
 import csv, hashlib, json, math
+import yaml
 from collections import Counter
 import pyarrow.parquet as pq
 from scipy.stats import beta
@@ -16,7 +17,18 @@ for a in rpt['rendered_artifacts']:
   f=ROOT/a[kind+'_path']; assert hashlib.sha256(f.read_bytes()).hexdigest()==a[kind+'_sha256'], f
  checks.append(a)
 assert hashlib.sha256((ROOT/'configs/trajcert.yaml').read_bytes()).hexdigest()==rpt['configuration_sha256']
-assert (ROOT/'configs/trajcert.yaml').read_bytes()==(ROOT/'docs/audit/exploratory_pilots/configs_trajcert_frozen_2026-10-19.yaml').read_bytes()
+current_config=yaml.safe_load((ROOT/'configs/trajcert.yaml').read_text())
+frozen_config=yaml.safe_load((ROOT/'docs/audit/exploratory_pilots/configs_trajcert_frozen_2026-10-19.yaml').read_text())
+assert current_config['sequential']['coverage']['batch_size']==1
+assert current_config['sequential']['certification_power']['batch_size']==1
+assert frozen_config['sequential']['coverage']['batch_size']==50
+assert frozen_config['sequential']['certification_power']['batch_size']==10
+for key in ['coverage','certification_power']:
+ current_config['sequential'][key]['batch_size']=frozen_config['sequential'][key]['batch_size']
+assert current_config==frozen_config
+for source in rpt['sources']:
+ assert hashlib.sha256((ROOT/source['source_path']).read_bytes()).hexdigest()==source['source_sha256']
+assert hashlib.sha256((ROOT/'requirements.lock').read_bytes()).hexdigest()==rpt['environment']['environment_lock_digest']
 summary=readcsv('anytime-certification-power','certification_power_summary')
 power=readcsv('anytime-certification-power','certification_power')
 allrecords={}
@@ -58,8 +70,13 @@ for f in (ROOT/'outputs/experiments/anytime-coverage-stress/evaluations/records'
  d=json.loads(f.read_text()); cp=ROOT/str(f.parent.relative_to(ROOT)).replace('evaluations/records','checkpoints/execution')
  assert (cp/'COMPLETED.json').exists()
  bs=[json.loads(b.read_text()) for b in cp.glob('batch_*_result.json')]
- assert sum(b['seed_index_stop_exclusive']-b['seed_index_start'] for b in bs)==500
+ assert sorted(i for b in bs for i in range(b['seed_index_start'],b['seed_index_stop_exclusive']))==list(range(500))
+ assert len(bs)==500 and all(b['seed_index_stop_exclusive']-b['seed_index_start']==1 for b in bs)
+ assert all(v is None for b in bs for v in b['first_certified_matured'])
  v=sum(b['confidence_sequence_violations'] for b in bs)
+ methods={m['method_name']:m for m in d['methods']}
+ assert v==methods['Time-uniform confidence sequence construction']['ever_violations']==methods['TrajCert']['ever_violations']
+ assert v==sum(m['failures'] for b in bs for m in b['method_failures'] if m['method']=='TrajCert')
  coverage_batch.append({'path':str(f.relative_to(ROOT)),'construction_violations':v})
 decision=readcsv('trajectory-decision-value','trajectory_decision_value');assert len(decision)==2160
 flips=[r for r in decision if r['decision_changed']=='true'];assert len(flips)==34
@@ -86,6 +103,23 @@ for exp,name in [('anytime-certification-power','certification_power'),('anytime
    elif isinstance(v,bool): assert b[k]==str(v).lower()
    elif isinstance(v,(float,int)): assert math.isclose(float(b[k]),v,rel_tol=1e-12,abs_tol=1e-14)
    else: assert str(v)==b[k], (exp,name,k,v,b[k])
-results={'date':'2026-10-20','render_manifest_commit':rpt['git_commit'],'configuration_sha256':rpt['configuration_sha256'],'rendered_artifacts_hash_verified':len(checks),'power_cells':32,'power_batches':batch_count,'streams_per_power_cell':100,'checkpoint_rows':len(power),'power_false_certifications':sum(int(r['false_certifications']) for r in summary),'power_premature_certifications':sum(int(r['premature_certifications']) for r in summary),'power_coverage_exclusions_range':[min(int(r['coverage_exclusions']) for r in summary),max(int(r['coverage_exclusions']) for r in summary)],'decision_rows':2160,'distinct_law_rho_partition_profiles':len(unique),'decision_changed_rows':34,'decision_flips_by_law':dict(Counter(r['law_name'] for r in flips)),'decision_max_oracle_error':max(float(r['oracle_error']) for r in decision if r['oracle_error']),'coverage':coverage,'coverage_batch_checks':coverage_batch,'scaling':scaling,'solver_oracle_rows':len(oracle),'solver_oracle_columns':list(oracle[0]),'targeted_full_decisions':sum(len(r['targets']) for r in equiv),'all_targeted_full_decisions_agree':True,'scientific_records':science_files,'power_summary':summary}
+# Reconstruct every secondary transport count from stored cell records.
+foreign_records=[json.loads(f.read_text()) for f in (ROOT/'outputs/experiments/foreign-information-negative-control/evaluations/records').rglob('scientific_result.json')]
+assert len(foreign_records)==280
+foreign_rows=list(csv.DictReader((ROOT/'results/project_summary/tables/supplementary/foreign_information_heterogeneity.csv').open()))
+for row in foreign_rows:
+ level=float(row['heterogeneity']); condition=row['condition']
+ items=[h for d in foreign_records for h in d['heterogeneity'] if h['heterogeneity']==level]
+ assert len(items)==int(row['cell_count'])==280
+ counts=Counter(h[condition+'_effect'] for h in items)
+ for column,effect in [('no_change_cells','NO_CHANGE'),('benign_tightening_cells','BENIGN_TIGHTENING'),('conservative_widening_cells','CONSERVATIVE_WIDENING'),('erroneous_bound_cells','ERRONEOUS_BOUND'),('model_incompatible_cells','MODEL_INCOMPATIBLE')]:
+  assert counts[effect]==int(row[column]),(row,column,counts)
+ for column,field,invert in [('containment_failures','contains_true_risk',True),('underestimating_cells','underestimates_true_risk',False),('false_certification_cells','false_certification',False)]:
+  assert sum((h[condition][field] is False) if invert else (h[condition][field] is True) for h in items)==int(row[column])
+ # Verify the printed supplementary table directly, including its condition label.
+ name='Path' if condition=='foreign_path' else 'Pooled'
+ values=[row[k] for k in ['no_change_cells','benign_tightening_cells','conservative_widening_cells','erroneous_bound_cells','model_incompatible_cells']]
+ assert f"{level:.2f} & {name} & "+' & '.join(values) in (PAPER/'tables/foreign_information.tex').read_text()
+results={'date':'2026-10-22','render_manifest_commit':rpt['git_commit'],'configuration_sha256':rpt['configuration_sha256'],'rendered_artifacts_hash_verified':len(checks),'foreign_information_rows_verified':len(foreign_rows),'power_cells':32,'power_batches':batch_count,'streams_per_power_cell':100,'checkpoint_rows':len(power),'power_false_certifications':sum(int(r['false_certifications']) for r in summary),'power_premature_certifications':sum(int(r['premature_certifications']) for r in summary),'power_coverage_exclusions_range':[min(int(r['coverage_exclusions']) for r in summary),max(int(r['coverage_exclusions']) for r in summary)],'decision_rows':2160,'distinct_law_rho_partition_profiles':len(unique),'decision_changed_rows':34,'decision_flips_by_law':dict(Counter(r['law_name'] for r in flips)),'decision_max_oracle_error':max(float(r['oracle_error']) for r in decision if r['oracle_error']),'coverage':coverage,'coverage_batch_checks':coverage_batch,'scaling':scaling,'solver_oracle_rows':len(oracle),'solver_oracle_columns':list(oracle[0]),'targeted_full_decisions':sum(len(r['targets']) for r in equiv),'all_targeted_full_decisions_agree':True,'scientific_records':science_files,'power_summary':summary}
 dump('verified_evidence.json',results)
 print(json.dumps({k:v for k,v in results.items() if k not in ['scientific_records','power_summary','coverage','coverage_batch_checks','scaling']},indent=2))

@@ -1,117 +1,501 @@
-[
-  {
-    "path": "main.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "preamble.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "references.bib",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "highlights.txt",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "README.md",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/model.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/experiments.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/discussion.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/identification.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/declarations.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/results.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/introduction.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "sections/sequential.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "tables/all_power.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "tables/population.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "tables/power_selected.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "tables/coverage.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "supplementary/supplement.tex",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "audits/EVIDENCE_AUDIT.md",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "audits/FINAL_MANUSCRIPT_AUDIT.md",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "audits/JOURNAL_COMPLIANCE.md",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "audits/HOSTILE_REVIEW.md",
-    "suspicious_total": 0,
-    "hits": []
-  },
-  {
-    "path": "literature/REFERENCE_AUDIT.md",
-    "suspicious_total": 0,
-    "hits": []
-  }
-]
+{
+  "date": "2026-10-22",
+  "files": [
+    {
+      "path": "main.tex",
+      "inspection": {
+        "length": 3746,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 3746,
+        "output_length": 3746,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "preamble.tex",
+      "inspection": {
+        "length": 918,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 918,
+        "output_length": 918,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "sections/declarations.tex",
+      "inspection": {
+        "length": 1319,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "bytes_unchanged": true,
+      "latest_check": "Inspection only after authorized editorial changes."
+    },
+    {
+      "path": "sections/discussion.tex",
+      "inspection": {
+        "length": 4154,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 4154,
+        "output_length": 4154,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "sections/experiments.tex",
+      "inspection": {
+        "length": 8792,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "bytes_unchanged": true,
+      "latest_check": "Inspection only after authorized editorial changes."
+    },
+    {
+      "path": "sections/identification.tex",
+      "inspection": {
+        "length": 8639,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 8639,
+        "output_length": 8639,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "sections/introduction.tex",
+      "inspection": {
+        "length": 7915,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 7915,
+        "output_length": 7915,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "sections/model.tex",
+      "inspection": {
+        "length": 2734,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 2734,
+        "output_length": 2734,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "sections/results.tex",
+      "inspection": {
+        "length": 15149,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 15149,
+        "output_length": 15149,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "sections/sequential.tex",
+      "inspection": {
+        "length": 9647,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 9647,
+        "output_length": 9647,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "tables/all_power.tex",
+      "inspection": {
+        "length": 2900,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 2900,
+        "output_length": 2900,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "tables/coverage.tex",
+      "inspection": {
+        "length": 444,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 444,
+        "output_length": 444,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "tables/foreign_information.tex",
+      "inspection": {
+        "length": 516,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 516,
+        "output_length": 516,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "tables/population.tex",
+      "inspection": {
+        "length": 331,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 331,
+        "output_length": 331,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "tables/power_selected.tex",
+      "inspection": {
+        "length": 567,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 567,
+        "output_length": 567,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "supplementary/supplement.tex",
+      "inspection": {
+        "length": 35371,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 35371,
+        "output_length": 35371,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "references.bib",
+      "inspection": {
+        "length": 8099,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 8099,
+        "output_length": 8099,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "audit.md",
+      "inspection": {
+        "length": 18441,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "bytes_unchanged": true,
+      "latest_check": "Inspection only after authorized editorial changes."
+    },
+    {
+      "path": "README.md",
+      "inspection": {
+        "length": 2149,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "bytes_unchanged": true,
+      "latest_check": "Inspection only after authorized editorial changes."
+    },
+    {
+      "path": "highlights.txt",
+      "inspection": {
+        "length": 372,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 372,
+        "output_length": 372,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    },
+    {
+      "path": "literature/REFERENCE_AUDIT.md",
+      "inspection": {
+        "length": 6832,
+        "suspicious_total": 0,
+        "hits": [],
+        "notes": [
+          "Layer A only: invisible/format Unicode and space homoglyphs (edit-based carriers).",
+          "Statistical (token-sampling) watermarks are not detectable here; use Layer B rewrite.",
+          "Inspect kinds: strip, bidi, tag_chars, variation_selector, zwj_family, private_use, space, confusable, other_cf.",
+          "Load-bearing invisibles are preserved by default during cleaning: emoji glue, CJK/Mongolian variation selectors, script joiners, complete flag tag sequences, same-script fillers/selectors (Mongolian FVS, Khmer inherent vowels, Hangul jamo fillers), RTL directional marks/paired embeddings, orthographic Arabic/Syriac Cf marks, and visible-layout format controls next to their own script (Egyptian hieroglyph quadrat, Duployan shorthand, musical beaming). Inspection still reports bidi controls. Use explicit strip flags only after review.",
+          "No deterministic Layer A (invisible Unicode/format) carriers detected; statistical and pixel-domain marks are out of scope here."
+        ]
+      },
+      "cleanup": {
+        "input_length": 6832,
+        "output_length": 6832,
+        "removed": {},
+        "replaced": {},
+        "removed_count": 0,
+        "replaced_count": 0,
+        "nfkc_changed": false
+      },
+      "bytes_unchanged": true
+    }
+  ],
+  "suspicious_characters": 0,
+  "modifications": 0,
+  "scope": "Current manuscript, tables, bibliography, highlights and current prose documentation; mathematical notation and citations preserved."
+}

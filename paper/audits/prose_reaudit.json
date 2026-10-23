@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-22",
+  "scope": "Conservative prose and consistency review; no scientific reruns",
+  "edits": [
+    {
+      "file": "sections/introduction.tex",
+      "before": "A useful answer must separate three uncertainties.",
+      "after": "This requires separating identification, sensitivity assumptions and sampling uncertainty."
+    },
+    {
+      "file": "sections/introduction.tex",
+      "before": "its minimum is an observable weighted timing information",
+      "after": "its minimum is the observable timing information weighted by the resolved mass"
+    },
+    {
+      "file": "sections/introduction.tex",
+      "before": "The distinction has measurable consequences. A population example",
+      "after": "A population example"
+    },
+    {
+      "file": "sections/introduction.tex",
+      "before": "The gain from observing the process is established here through an explicit profile difference, not through a general claim that timing data are new.",
+      "after": "Here, the gain from observing timing is quantified by an explicit difference between information profiles."
+    },
+    {
+      "file": "sections/introduction.tex",
+      "before": " Neither data processing nor martingale inversion is claimed as a new general principle.",
+      "after": ""
+    },
+    {
+      "file": "sections/model.tex",
+      "before": "The budget $\\rho$ is an assumption axis.",
+      "after": "The budget $\\rho$ indexes the sensitivity assumption."
+    },
+    {
+      "file": "sections/identification.tex",
+      "before": "the information advantage is the one implied by a common absolute finest-path budget.",
+      "after": "the tightening therefore depends on comparing partitions at a common absolute finest-path budget."
+    },
+    {
+      "file": "sections/identification.tex",
+      "before": "budgets above the endpoint frontier and below the fine frontier",
+      "after": "budgets above the endpoint frontier and at or below the fine frontier"
+    },
+    {
+      "file": "supplementary/supplement.tex",
+      "before": "Initially, every point of $V_n$ is in the aggregate box.",
+      "after": "Initially, every feasible point of the relaxed projection is in the aggregate box."
+    },
+    {
+      "file": "supplementary/supplement.tex",
+      "before": "Compatibility rejection uses a lower bound on $q(A,G)-T_U$, rounded down and truncated at zero. Intrinsic rejection uses a lower bound on $A/(A+G)$ over compatible-plausible boxes. For example, on a box with $A_-+G_+>0$, $A_-/(A_-+G_+)$ is a valid lower bound. If zero resolved mass is plausible, intrinsic rejection is withheld. ",
+      "after": ""
+    },
+    {
+      "file": "supplementary/supplement.tex",
+      "before": "One-sided violation limits use $B^{-1}_{x+1,m-x}(0.95)$.",
+      "after": "One-sided violation limits equal one if $x=m$ and otherwise use $B^{-1}_{x+1,m-x}(0.95)$."
+    },
+    {
+      "file": "supplementary/supplement.tex",
+      "before": "without claiming that the true stream risk exceeds $\\beta$.",
+      "after": "without establishing that the true risk exceeds~$\\beta$."
+    },
+    {
+      "file": "supplementary/supplement.tex",
+      "before": "it withholds certification and does not establish that the true risk exceeds $\\beta$.",
+      "after": "it withholds certification and does not show that the true risk exceeds~$\\beta$."
+    }
+  ],
+  "formal_statements_proofs_displays_citations_tables_figures_unchanged": true,
+  "binomial_boundary": "Completed x=m endpoint convention; no reported estimate changes",
+  "localized_edits": 13,
+  "main_text_words": 6510,
+  "supplement_text_words": 4456,
+  "main_pages": 20,
+  "supplement_pages": 9,
+  "visual_check": "Ten changed pages inspected; nineteen unchanged render hashes verified.",
+  "package_build": "PASS: both isolated compiled PDFs match delivered text",
+  "protected_files_unchanged": 26378
+}

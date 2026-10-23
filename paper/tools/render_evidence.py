@@ -42,7 +42,7 @@ handles,labels=axs[0,0].get_legend_handles_labels();fig.legend(handles,labels,fr
 fig,axs=plt.subplots(1,2,figsize=(6.7,2.6),layout='constrained')
 x=[int(r['K']) for r in sca]
 for a,field,div,title,ylabel in [(axs[0],'population_median_runtime_ms',1,'(a) Population solver','Median runtime (ms)'),(axs[1],'outer_median_runtime_ms',1000,'(b) Outer projection','Median runtime (s)')]:
- a.plot(x,[float(r[field])/div for r in sca],'o-',color=colors[0],ms=4);a.set(xscale='log',title=title,ylabel=ylabel,xlabel='Resolved bands $K$',ylim=(0,.55 if div==1 else 8.3));a.set_xticks(x);a.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter());a.xaxis.set_minor_locator(matplotlib.ticker.NullLocator());a.grid(axis='y',alpha=.18)
+ a.plot(x,[float(r[field])/div for r in sca],'o-',color=colors[0],ms=4);a.set(xscale='log',title=title,ylabel=ylabel,xlabel='Resolved bands $K$',ylim=(0,.46 if div==1 else 6.8));a.set_xticks(x);a.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter());a.xaxis.set_minor_locator(matplotlib.ticker.NullLocator());a.grid(axis='y',alpha=.18)
 save(fig,'computation')
 rows=[r for r in dec if r['law_name']=='Timing and terminal: harmful outcomes resolve late' and float(r['rho'])==.05 and float(r['beta'])==.06]
 table('population',r'\begin{tabular}{rrrrl}\toprule $K$ & $\tau_K$ & $\theta_{U,K}(0.05)$ & $\rho_K^*(0.06)$ & Decision\\\midrule'+'\n'+'\n'.join(f"{r['K']} & {float(r['tau']):.6f} & {float(r['risk_upper']):.6f} & {float(r['safety_frontier']):.6f} & "+('Certified' if r['scientific_state']=='CERTIFIED' else 'Uncertified')+r'\\' for r in rows)+r'\bottomrule\end{tabular}')

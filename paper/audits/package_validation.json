@@ -1,8 +1,18 @@
 {
-  "status": "PASS",
-  "source_archive_members": 24,
-  "both_clean_builds_succeeded": true,
-  "both_extracted_pdf_texts_match_canonical": true,
-  "evidence_archive_members": 524,
-  "evidence_archive_sha256": "022f20172dd125aa092ad8894cbbdd7fbe28929c3c28ad41a23473a3076efd23"
+  "date": "2026-10-22",
+  "archive_sha256": "b36406da22d7cc592a2ab50d1b68b923a94fdb4d0daf218e9d92e4856c760ac9",
+  "manifest_payloads_verified": 24,
+  "isolated_build_directory": "build/package-prose-sx3cjqu7",
+  "documents": [
+    {
+      "document": "main",
+      "build": "PASS",
+      "extracted_text_identical_to_final_pdf": true
+    },
+    {
+      "document": "supplement",
+      "build": "PASS",
+      "extracted_text_identical_to_final_pdf": true
+    }
+  ]
 }

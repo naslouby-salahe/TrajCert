@@ -93,16 +93,16 @@ def verify():
         decomposition.append({"scenario": scenario, "K": k, "n": n,
                               **{label: counts[label] for label in
                                  ("certified", "refuted", "unresolved", "stopped")}})
-    assert len(records) == 32 and batches == 320 and len(medians) == 160
+    assert len(records) == 32 and batches == 3200 and len(medians) == 160
     assert incompatible == 0
     assert len(longest) == 21 and sum(v["count"] for v in longest.values()) == 58
     assert max(v["count"] for v in longest.values()) == 6
-    with ZipFile(ROOT / "paper/supplementary/evidence.zip") as archive:
+    with ZipFile(ROOT / "paper/supplementary/evidence_current.zip") as archive:
         manifest = json.loads(archive.read("MANIFEST.json"))
         for item in manifest["files"]:
             assert hashlib.sha256(archive.read(item["path"])).hexdigest() == item["sha256"]
             assert hashlib.sha256((ROOT / item["path"]).read_bytes()).hexdigest() == item["sha256"]
-    return {"power_cells": len(records), "batches": batches, "checkpoints": len(medians),
+    return {"date": "2026-10-22", "power_cells": len(records), "batches": batches, "checkpoints": len(medians),
             "decomposition": decomposition, "runtime_medians_ms":
             {"median": median(medians), "maximum": max(medians),
              "over_10000": sum(x > 10000 for x in medians)},

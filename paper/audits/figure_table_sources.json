@@ -5,7 +5,7 @@
   },
   {
     "path": "results/experiments/anytime-certification-power/tables/main/certification_power.csv",
-    "sha256": "62e6fbf3c34a6c559c98092d51889ba6a0ac9877a5c77f1c638246edfd8b1447"
+    "sha256": "2f794b1cd2c9c55e59792ee5b1cbe0b06334930aeba2342d165559a7b1161b07"
   },
   {
     "path": "results/experiments/anytime-certification-power/tables/main/certification_power_summary.csv",
@@ -17,7 +17,7 @@
   },
   {
     "path": "results/experiments/computational-scaling/tables/main/computational_scaling.csv",
-    "sha256": "969c3b148c2e461cddeb963d1661a00d30a1db07b9180b7c858ba3ccf1a76922"
+    "sha256": "92d2a72b3541996ae8f4b759c145b5a4701303ee1e4f30466692c26351db6cfb"
   },
   {
     "path": "outputs/experiments/safety-and-intrinsic-impossibility/evaluations/aggregates/figure_information_profile.parquet",

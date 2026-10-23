@@ -1,35 +1,40 @@
 {
-  "date": "2026-10-20",
+  "date": "2026-10-22",
   "canonical_main": "main.tex",
+  "canonical_supplement": "supplementary/supplement.tex",
   "canonical_bibliography": "references.bib",
   "files": [
     {
       "path": "README.md",
-      "sha256": "13b80062d794d297ed9d58283073e90c2cca660e037eb83f9510fa3758b1bc06"
+      "sha256": "452ddf917fe62a271a39676535a95f95f0048f668eed55270aef6d8bc823e1bb"
     },
     {
       "path": "figures/certification_power.pdf",
-      "sha256": "6705be4261964937715ed3571dde29529ddde30c37a1bb6c47722e512b3cc36a"
+      "sha256": "d3f12a3f6b2a7769ab0ec1494f41bf4f441cfb8513bd5d39fecf657d6f8a436e"
     },
     {
       "path": "figures/computation.pdf",
-      "sha256": "551da8b524665e6a62db0a6d1d85341abe0d8692266f7fd429d314fe0292124e"
+      "sha256": "417fe24a5cb3a930888c569bae6221e1135a4545eb7fd3d51c7a902adafea011"
     },
     {
       "path": "figures/identification.pdf",
-      "sha256": "c745b0f6c236b8b72ffa0539a8a5a2d87595ae2d150275920089254ca42b119f"
+      "sha256": "997b90405866998009c36eb290967a03d5e0e901034b32b365cbb3e4d0450d41"
     },
     {
       "path": "highlights.rtf",
-      "sha256": "a030d40859df8131b4363e8ad16b8ce6f089cccbdbdcd163fe93ee36c6ad1d3d"
+      "sha256": "1b86c72c9a7b30735911aa40a55f9a018bb81567a0df1bb29c3e8309a67e4b36"
     },
     {
       "path": "highlights.txt",
-      "sha256": "13cb3f3b3a546ef7a6fd89b75baed4aafc29d7639e5bf8c150555e194b7eaeca"
+      "sha256": "1912a5d2edb2f89fe8d871994bb0d65c29868eed67e0cb5c4e3b21e3ba9c9265"
+    },
+    {
+      "path": "main.bbl",
+      "sha256": "35be93b62e4c41ec2d64750df32fae4c9ae4fe8f33aa6de4b56fa2562c538880"
     },
     {
       "path": "main.tex",
-      "sha256": "e54dc32c9b02115578235eb8db4ef32e6dcd710e92fee99a20948cfba1fb4fba"
+      "sha256": "42ba0fc26e5d75dc057279dc41f1097a1890cdf7fe1ff4959eff8954ee436734"
     },
     {
       "path": "preamble.tex",
@@ -37,43 +42,43 @@
     },
     {
       "path": "references.bib",
-      "sha256": "94518d9c496624b490c7fb726c6951d03bf35bf1f913b95313e459654b87d1ee"
+      "sha256": "ecd5a67688369a428eecb98d237809fadfbfad5f0c706580a739f507a99ebadc"
     },
     {
       "path": "sections/declarations.tex",
-      "sha256": "796c16a75c1a5561cc97873a7b990978e0e75634315e64e56e2f63b72dd3d784"
+      "sha256": "87c03b7264e0410000cddc0eb010af8a24c8deb92f9dfffc2c20c8c618666feb"
     },
     {
       "path": "sections/discussion.tex",
-      "sha256": "f348f7a5967801bccfa8bd87c75fb3484d8fec435453ab5ea5a73e982331549e"
+      "sha256": "06e6fc581ebc8b433d1dcba6a30b0c4d557dd3a51c928ed7aba32b5ab45637b1"
     },
     {
       "path": "sections/experiments.tex",
-      "sha256": "88f1171ec05039f7f750f07f07a016cb5ad11c7927d5119e1a517afb50b7ded7"
+      "sha256": "ac4dd68563d818af8c5bc8b4b2f22342a619320322eecf8009daa261655dcdaa"
     },
     {
       "path": "sections/identification.tex",
-      "sha256": "dad2527bb0106465a10a00e5e12cfc7ad5cbd8ff06283fed49b6b021a0d5166e"
+      "sha256": "eb55f60c457210f6739f1b6534f7dabe0df0f6c25b3723d82cbb4485f4f38aba"
     },
     {
       "path": "sections/introduction.tex",
-      "sha256": "938c30c006cb1c9eeefa9acce64dc0bcadd13a5e234059930d7c63e944a6c186"
+      "sha256": "15a5b11b7c38cf3d3eb2b81b29a6a0a2bae5ddc29c04b5d53df57e31cbd59fb5"
     },
     {
       "path": "sections/model.tex",
-      "sha256": "77b29e71eb3a0dec2ecc367a2f4360b0e8d830811005bbf5983b3c10e1263f4e"
+      "sha256": "9d36ee81159851cb55c7efed74e6d069b0b02b8a5740531af9fbe77aeba00c9a"
     },
     {
       "path": "sections/results.tex",
-      "sha256": "45a1695a2800e0b189dd26b2d90a2ec71a804830d5a47e3afbb730862eee0452"
+      "sha256": "4f2b17ba3c7783f28e1f46c0bb777d2c5b3b976c09d8372ea1d775b091384a41"
     },
     {
       "path": "sections/sequential.tex",
-      "sha256": "d639f76948df6c1dece519393f189198488afc4fa7a462e7c1aab74cb2d0184a"
+      "sha256": "f00bd5a24a9d30c136287ca22a0456e07627ed902c00de6f40a4a5c11f44a2e6"
     },
     {
       "path": "supplementary/supplement.tex",
-      "sha256": "b43f053a237f595d5bda56021c183cb37e5158e16cb336ba0e194fa834a08e3f"
+      "sha256": "14d666cca75122ea5f5ea3d18de978ec796adf7c49fa9de8e921fca0e6d19cc1"
     },
     {
       "path": "tables/all_power.tex",
@@ -82,6 +87,10 @@
     {
       "path": "tables/coverage.tex",
       "sha256": "24b2a085880b00a4b92ed5e4f12c647c2e02a3ba0f7b4be31ba8be544a704e5a"
+    },
+    {
+      "path": "tables/foreign_information.tex",
+      "sha256": "fb9c98549870a453eb3d10aa43928d30cbfb727067fa289d9d86b4f2a6b2e478"
     },
     {
       "path": "tables/population.tex",

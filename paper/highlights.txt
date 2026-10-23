@@ -2,4 +2,4 @@ A scalar information profile gives sharp bounds for incompletely verified risk.
 Observed timing information determines an exact compatibility floor.
 Trajectory refinement shifts the risk-certification frontier explicitly.
 Conservative projection supports anytime-valid risk certification.
-Informative timing enables earlier certificates in frozen synthetic studies.
+Informative timing enables earlier certificates in prespecified synthetic studies.
