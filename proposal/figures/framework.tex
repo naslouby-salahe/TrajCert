@@ -1,0 +1,12 @@
+\begin{tikzpicture}[>=Latex,font=\small,every node/.style={align=center},stage/.style={draw=black!60,line width=.4pt,inner sep=5pt,text width=4.55cm,minimum height=1.42cm}]
+\node[anchor=west,font=\small\bfseries] at (-2.4,1.22) {Population identification};
+\node[stage] (pop) at (0,0) {Events with binary outcome $L$\\Harmful ($1$) or nonharmful ($0$)\\Target risk $\theta=\Pr(L=1)$};
+\node[stage] (obs) at (5.55,0) {Coarsening: $J_\Pi=g_\Pi(J^*)$\\Timing: $J_\Pi=1,\ldots,K,\infty$\\Unresolved at $H$: $J_\Pi=\infty$\\Endpoint: $R=\mathbf1\{J_\Pi<\infty\}$};
+\node[stage] (id) at (11.1,0) {Finest-path budget $I(L;J^*)\le\rho$\\Scalar completion $u\in[0,c]$\\Sharp compatible risk interval};
+\draw[->] (pop)--(obs); \draw[->] (obs)--(id);
+\node[anchor=west,font=\small\bfseries] at (-2.4,-1.42) {Finite-sample certification};
+\node[stage] (mat) at (0,-2.6) {Every event enters once,\\at common terminal age $H$\\Permanent observed category $Y$};
+\node[stage] (cs) at (5.55,-2.6) {Matured-event stream $Y_1,\ldots,Y_n$\\Categorical confidence\\sequence\\Stable observation law};
+\node[stage] (cert) at (11.1,-2.6) {Conservative risk projection $\widehat U_n$\\Certify only if $\widehat U_n\le\beta$\\Otherwise: uncertified};
+\draw[->] (mat)--(cs); \draw[->] (cs)--(cert); \draw[->] (id.south)--node[right,font=\footnotesize]{Sensitivity model}(cert.north);
+\end{tikzpicture}
