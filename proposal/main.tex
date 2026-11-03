@@ -34,7 +34,7 @@ TrajCert addresses this problem through a risk-identification and certification 
 \end{center}
 \vspace{-3pt}
 \textbf{Sharp risk identification.}
-Partial-identification and informative-coarsening methods provide the foundation for reasoning about unresolved outcomes \cite{manski,shardell}. TrajCert characterizes harmful-outcome risk through the unknown harmful mass among unresolved events. Under a declared mutual-information constraint, the compatible risk values form a sharp interval determined by a convex one-dimensional information profile. The profile also provides an observable compatibility floor, distinguishing admissible sensitivity assumptions from those contradicted by the observed distribution.
+Recent work addresses nonignorable missing outcomes through partial identification and uses callback histories to adjust for nonresponse \cite{dalygrafstein,miao}. TrajCert characterizes harmful-outcome risk through the unknown harmful mass among unresolved events. Under a declared mutual-information constraint, the compatible risk values form a sharp interval determined by a convex one-dimensional information profile. The profile also provides an observable compatibility floor, distinguishing admissible sensitivity assumptions from those contradicted by the observed distribution.
 
 \textbf{The value of resolution timing.}
 Resolution timing contributes information that endpoint-only observation discards. TrajCert establishes an exact relationship between timing refinement and the information profile: finer resolution shifts the profile by an observable conditional-information increment. Under a common sensitivity budget, this can tighten the identified risk interval and change whether a risk threshold can be certified.
@@ -44,7 +44,7 @@ Resolution timing contributes information that endpoint-only observation discard
 Here $S_f,S_c$ are fine and coarse information profiles, $J_f,J_c$ their resolution categories at the same horizon ($J_c$ coarsens $J_f$), $c$ the unresolved mass, and $u$ its unknown harmful part. The observable increment $\Delta$ is independent of $u$; risk is $A+u$, with $A$ the resolved harmful mass. The budget $\rho$ is assumed, not learned from unresolved labels.
 
 \textbf{Sequential certification.}
-TrajCert extends population identification to sequential monitoring by projecting a categorical confidence sequence \cite{howard} onto the compatible risk set. Conservative upper-risk bounds support certification at successive monitoring checkpoints without relying on a fixed sample size. Time-uniform validity holds under the specified stability, sensitivity, and numerical-enclosure conditions. These require a fixed full law, conditionally stable observed categories, correct resolved labels, and conservative confidence inversion and projection for a prespecified partition.
+TrajCert extends population identification to sequential monitoring by projecting a categorical confidence sequence onto the compatible risk set. The sequence follows established principles for anytime-valid inference \cite{ramdas}. Conservative upper-risk bounds support certification at successive monitoring checkpoints without relying on a fixed sample size. Time-uniform validity holds under the specified stability, sensitivity, and numerical-enclosure conditions. These require a fixed full law, conditionally stable observed categories, correct resolved labels, and conservative confidence inversion and projection for a prespecified partition.
 
 Observable resolution timing accounts for part of the permitted dependence between outcomes and verification. Under a fixed information budget, this leaves less freedom to assign harmful outcomes to unresolved events, potentially turning an inconclusive risk bound into a certificate.
 \newpage
@@ -85,8 +85,8 @@ These results depend on the declared sensitivity model and stable observation co
 \renewcommand{\refname}{References}
 \begin{thebibliography}{3}
 \fontsize{9.5}{10.5}\selectfont\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
-\bibitem{manski} C. F. Manski (2005). Partial identification with missing data: concepts and findings. \emph{International Journal of Approximate Reasoning} 39(2--3), 151--165.
-\bibitem{shardell} M. Shardell and S. S. El-Kamary (2009). Sensitivity Analysis of Informatively Coarsened Data Using Pattern Mixture Models. \emph{Journal of Biopharmaceutical Statistics} 19(6), 1018--1038.
-\bibitem{howard} S. R. Howard, A. Ramdas, J. McAuliffe and J. Sekhon (2021). Time-uniform, nonparametric, nonasymptotic confidence sequences. \emph{The Annals of Statistics} 49(2), 1055--1080.
+\bibitem{dalygrafstein} D. Daly-Grafstein and P. Gustafson (2026). Partial identification with categorical data and nonignorable missing outcomes. \emph{Canadian Journal of Statistics} 54(3), e70037.
+\bibitem{miao} W. Miao, X. Li, P. Zhang and B. Sun (2025). A stableness of resistance model for nonresponse adjustment with callback data. \emph{JRSS Series B: Statistical Methodology} 87(2), 433--456.
+\bibitem{ramdas} A. Ramdas, P. Gr\"unwald, V. Vovk and G. Shafer (2023). Game-theoretic statistics and safe anytime-valid inference. \emph{Statistical Science} 38(4), 576--601.
 \end{thebibliography}
 \end{document}
