@@ -58,11 +58,11 @@ For a partition and its endpoint coarsening, the identity is particularly transp
  \Sprof_\Pi(u)=\tau_\Pi+\Sprof_1(u),\qquad
  \Thset_\Pi(\rho)=\Thset_1(\rho-\tau_\Pi)\quad(\rho\ge\tau_\Pi).
 \end{equation}
-The endpoint set on the right uses the same $A,G,c$. Thus timing deducts an observable amount from the information allowance for terminal selection. At equal excess budgets $\rho-\tau_\Pi$, common endpoint masses yield identical risk intervals; the tightening therefore depends on comparing partitions at a common absolute finest-path budget.
+The right-hand endpoint similarly shares the parameters $A,G,c$. Timing therefore consumes some of the information that could otherwise be spent on terminal choice, for given levels of excess path budget $\rho - \tau_\Pi$. For the same excess budget, identical endpoint masses imply the same admissible interval for risk, so this narrowing follows by comparing partitions under the same value of total path budget.
 
-The total-information restriction accounts for both dependence expressed in resolved timing and dependence through terminal nonresolution. Under a common absolute budget, the observed timing contribution leaves less information available for terminal selection. This tightening is conditional on the total-budget assumption; it does not establish that selection among unresolved outcomes is weak. An application that instead fixes a separate allowance for terminal selection poses a different sensitivity question.
+This information constraint reflects the two ways in which outcome and resolution path may be dependent: via dependence captured by timing, and via non-resolved dependence at termination. Having spent information on timing leaves correspondingly less to assign to terminal choice (for fixed total budget). It is not however shown that terminal choice is insensitive when not fully resolved - a problem where one explicitly reserves additional information for terminal selection raises its own distinct question.
 
-This is a fixed-budget comparison. Changing $\rho$ separately for each partition would mix information gain with a change in assumptions. Refinement can also increase $\tau$ above the declared budget. That outcome is model incompatibility, not successful risk certification. Conversely, positive timing information need not lower an upper endpoint that already saturates the worst-case bound at both resolutions.
+Here we have kept $\rho$ fixed. Allowing it to vary between different refinements would confound the improved information with relaxing the problem assumptions. Further, refinement may drive required $\tau$ beyond $\rho$. We regard such an example as failing the modelling requirements rather than demonstrating the desired boundedness. Likewise, favourable information from timing will not in general reduce the best upper bound on risk if that upper bound is achieved at both levels of refinement.
 
 \subsection{Certification geometry}
 \begin{proposition}[Risk-budget frontier]\label{prop:safety}
@@ -76,10 +76,10 @@ Then certification is equivalent to $\tau_\Pi\le\rho\le\rho_\Pi^*(\beta)$. For n
 \end{equation}
 \end{proposition}
 \begin{proof}
-Every compatible set contains the minimum-information completion $\td$, and every completion has risk at most $A+c$. In the corridor, $\beta-A$ lies on the nondecreasing branch of the strictly convex profile. Its sublevel-set upper endpoint is at most this point exactly when $\rho\le\Sprof_\Pi(\beta-A)$. Compatibility supplies the lower bound on $\rho$. The shift is \eqref{eq:shift} evaluated at $\beta-A$.
+All compatible sets include $\td$ as a completion, and all completions have risk no greater than $A+c$. Within the corridor, the value $\beta-A$ occurs on the increasing portion of the convex profile $\Sprof$, so its sublevel-set max is bounded by this value if and only if $\rho \leq \Sprof_\Pi(\beta-A)$. We have a matching lower bound on $\rho$ from the compatibility conditions. This follows from applying equation \eqref{eq:shift} with argument $\beta-A$.
 \end{proof}
 
-The frontier shift gives a decision interpretation of timing information. Provided the fine model is compatible, budgets above the endpoint frontier and at or below the fine frontier permit a fine certificate but exclude an endpoint certificate. A smaller upper bound matters operationally only if it crosses the chosen $\beta$.
+The frontier shift can be understood in terms of decisions regarding the time information. If the fine frontier is attainable, then budgets exceeding the endpoint frontier and up to and including the fine frontier allow a fine but no endpoint certificate. This tighter bound is only relevant if it falls below the selected value of $\beta$.
 
 \begin{figure}[!htbp]
 \centering\includegraphics[width=\linewidth]{figures/identification.pdf}
