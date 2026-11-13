@@ -1,5 +1,5 @@
 \section{Observation model and sensitivity assumption}\label{sec:model}
-Fix a terminal horizon $H$ and a partition $0=H_0<H_1<\cdots<H_K=H$. Let $L\in\{0,1\}$ indicate a harmful outcome. Write $J_\Pi=k$ when verification first resolves in $(H_{k-1},H_k]$, and $J_\Pi=\infty$ when it remains unresolved through $H$. The observed category is $Y=(k,L)$ in a finite band and $Y=\infty$ otherwise. Thus the observable law has $d=2K+1$ cells,
+Fix a terminal time $H$ and choose times $0=H_0<H_1<\ldots<H_K=H$. Let $L$ take value 1 if an adverse outcome occurs and 0 otherwise. Let $J_\Pi=k$ denote the event that verification terminates within $(H_{k-1},H_k]$ for some $k\le K$, and $J_\Pi=\infty$ if it does not terminate before $H$. The observed data value is $Y=(k,L)$ if $J_\Pi\le K$, or $Y=\infty$ if $J_\Pi=\infty$. We therefore have $d=2K+1$ possible values for the observed distribution of $Y$:
 \begin{equation}\label{eq:masses}
  a_k=\Pbb(J_\Pi=k,L=1),\qquad b_k=\Pbb(J_\Pi=k,L=0),\qquad c=\Pbb(J_\Pi=\infty).
 \end{equation}
@@ -7,18 +7,18 @@ Set $A=\sum_k a_k$, $G=\sum_k b_k$, and $r=A+G=1-c$. The only unidentified cell 
 \begin{equation}\label{eq:hidden}
  u=\Pbb(J_\Pi=\infty,L=1)\in[0,c],\qquad \theta=A+u.
 \end{equation}
-Resolved labels are assumed correct. The horizon, partition and observation rules are fixed before the corresponding outcomes are inspected.
+Labels considered resolved will be taken as ground truth. We specify the set of rules for horizon, partitioning and observations ahead of time prior to knowledge of these outcomes.
 
-The finest categorical representation $J^*$ is prespecified. Every analysis partition is a deterministic coarsening $J_\Pi=g_\Pi(J^*)$ that preserves the unresolved category and the terminal horizon. Our structural assumption is
+We similarly pre-specify the finest granularity $J^*$ at which we represent categories. For any given partitioning $\Pi$, there is an associated mapping $g_\Pi: J^* \mapsto J_\Pi$ resulting in a coarsened version of $J^*$ with the unresolved label and end horizon retained. We assume: 
 \begin{equation}\label{eq:pis}
  I(L;J^*)\le\rho,\qquad \rho\ge0.
 \end{equation}
-All logarithms are natural. The same $\rho$ implies $I(L;J_\Pi)\le\rho$ for each coarsening. A sharp interval at partition $\Pi$ refers to all joint laws of $(L,J_\Pi)$ satisfying its observed margins and this induced constraint. If finer observed margins are retained, their identified set can be smaller; a coarse interval is a relaxation of that more informative experiment.
+All logs are taken wrt $e$. For any given $\rho$, each coarsening $J_\Pi$ satisfies $I(L;J_\Pi) \leq \rho$. The sharp set of distributions of $(L, J_\Pi)$ with the observed margins on $\Pi$ and obeying this restriction will be called the sharp interval. If additional, finer margins are observed, the resulting set of compatible distributions may be reduced. We therefore view a coarse interval as corresponding to an experiment with less information than that finer one.
 
 We use the continuous binary entropy $h(x)=-x\log x-(1-x)\log(1-x)$, with $0\log0=0$, and the homogeneous mass entropy
 \begin{equation}\label{eq:massentropy}
  q(a,b)=(a+b)h\{a/(a+b)\},\qquad q(0,0)=0.
 \end{equation}
-Let $T_\Pi=\sum_k q(a_k,b_k)$. Empty bands contribute zero; their harmful proportions need not be defined. The risk budget $\beta\in[0,1]$ is distinct from $\rho$. Population certification means that the compatible risk set is nonempty and its upper endpoint does not exceed $\beta$.
+Let $T_\Pi=\sum_k q(a_k,b_k)$. As before, we leave empty bands' corresponding fractions undefined since they take value 0. There is then a separate budget on compatible risk $\beta \in [0,1]$, which differs from $\rho$, and our population claim will hold if compatible risks exist and the maximum compatible risk is $\le \beta$.
 
-The budget $\rho$ indexes the sensitivity assumption. Increasing it permits more dependence and can widen the identified interval. Decreasing it can contradict the observed timing information. Independently adjudicated validation data could inform a range of budgets, with uncertainty and transport assumptions, but the partially observed stream does not determine the true information. In particular, a small absolute information budget is not a universal guarantee of weak selection for a rare outcome: $I(L;J^*)\le h(\theta)$ even under strong dependence. Reported budgets are sensitivity choices, not empirically validated operating values.
+$\rho$ is a sensitivity parameter. Allowing it to increase accommodates stronger degrees of selection bias (and so potentially larger confidence intervals); reducing $\rho$ may be inconsistent with the observed information. We might specify several appropriate budgets using independent validation (albeit subject to concerns over finite-sample error and distribution shift), but in general can only use the partial information provided by our stream. Note that low levels of absolute information do not always rule out high degrees of selection for a low-probability event ($I(L;J^*)\le h(\theta)$ is still possible). Thus these should be considered as sensitivity analysis parameters only.
