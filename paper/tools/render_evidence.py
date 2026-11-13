@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 P=Path(__file__).resolve().parents[1]; R=P.parent
+(P/'build').mkdir(exist_ok=True)
 plt.rcParams.update({'font.family':'serif','font.size':10,'axes.labelsize':10,'axes.titlesize':10,'legend.fontsize':9,'pdf.fonttype':42,'ps.fonttype':42,'axes.spines.top':False,'axes.spines.right':False})
 SOURCES=[]
 def csvrows(exp,name):
@@ -62,5 +63,5 @@ for r in sumr:
  lines.append(f"{short[r['scenario_name']]} & {r['K']} & {float(r['rho']):.4f} & {float(r['beta']):.3f} & {int(r['horizon']):,} & {r['certified_streams']}/100 & [{float(r['power_cp_lower']):.3f}, {float(r['power_cp_upper']):.3f}]"+r'\\')
 table('all_power', r'\small\begin{longtable}{lrrrrrl}\caption{All 32 final-cell certification outcomes. Intervals are conditionwise two-sided exact 95\% intervals for ever certifying by the horizon, using 100 trials per row.}\label{tab:allpower}\\\toprule Scenario & $K$ & $\rho$ & $\beta$ & Horizon & Certified & 95\% interval\\\midrule\endfirsthead\toprule Scenario & $K$ & $\rho$ & $\beta$ & Horizon & Certified & 95\% interval\\\midrule\endhead'+'\n'+'\n'.join(lines)+r'\bottomrule\end{longtable}\normalsize')
 # Copy only selected numerical evidence, never historical studies.
-(P/'audits/figure_table_sources.json').write_text(json.dumps([{'path':str(f.relative_to(R)),'sha256':hashlib.sha256(f.read_bytes()).hexdigest()} for f in dict.fromkeys(SOURCES)],indent=2))
+(P/'build/figure_table_sources.json').write_text(json.dumps([{'path':str(f.relative_to(R)),'sha256':hashlib.sha256(f.read_bytes()).hexdigest()} for f in dict.fromkeys(SOURCES)],indent=2))
 print('Rendered 3 vector figures and 4 tables from stored evidence.')

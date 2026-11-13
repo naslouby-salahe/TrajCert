@@ -1,4 +1,4 @@
-"""Read-only checks of existing campaign artifacts; writes only paper/audits."""
+"""Check existing campaign artifacts and write reports under paper/build."""
 from pathlib import Path
 import csv, hashlib, json, math
 import yaml
@@ -9,7 +9,9 @@ ROOT=Path(__file__).resolve().parents[2]
 PAPER=ROOT/'paper'
 def readcsv(exp,name):
  return list(csv.DictReader((ROOT/f'results/experiments/{exp}/tables/main/{name}.csv').open()))
-def dump(name,x): (PAPER/'audits'/name).write_text(json.dumps(x,indent=2))
+def dump(name,x):
+ (PAPER/'build').mkdir(exist_ok=True)
+ (PAPER/'build'/name).write_text(json.dumps(x,indent=2))
 rpt=json.loads((ROOT/'results/project_summary/reproducibility/report_reproducibility.json').read_text())
 checks=[]
 for a in rpt['rendered_artifacts']:

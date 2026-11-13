@@ -69,6 +69,6 @@ if args.integrity_baseline:
     outside=[l for l in command('git','status','--porcelain',cwd=R).splitlines() if not l[3:].startswith('paper/')]
     check(not outside,'Git changes outside paper: '+str(outside))
     integrity={'baseline_checked':True,'protected_files_unchanged':len(baseline),'head_unchanged':before['head'].strip(),'index_unchanged':True,'status_changes_only_in_paper':True}
-validation={'date':'2026-10-22','mechanical_document_checks':'PASS','references':len(keys),'doi_metadata_verified':len(dois),'official_url_exceptions':url_only,'pdf':pdfchecks,'report_sources_hash_verified':len(report['sources']),'integrity':integrity,'scientific_guarantee_status':'CONDITIONAL: confidence-filter and summation contracts; see audit.md','author_review':'All-author approval confirmed by user on 2026-10-22; not inferred from mechanical checks','visual_inspection':'Recorded separately after inspecting rendered pages; not inferred from compilation'}
-(P/'audits/final_validation.json').write_text(json.dumps(validation,indent=2)+'\n')
+validation={'date':'2026-10-22','mechanical_document_checks':'PASS','references':len(keys),'doi_metadata_verified':len(dois),'official_url_exceptions':url_only,'pdf':pdfchecks,'report_sources_hash_verified':len(report['sources']),'integrity':integrity,'scientific_guarantee_status':'CONDITIONAL: confidence-filter and summation contracts; see the manuscript','author_review':'All-author approval confirmed by user on 2026-10-22; not inferred from mechanical checks','visual_inspection':'Recorded separately after inspecting rendered pages; not inferred from compilation'}
+(P/'build/final_validation.json').write_text(json.dumps(validation,indent=2)+'\n')
 print(json.dumps(validation,indent=2))

@@ -29,8 +29,8 @@ Author approval was confirmed by the user on 22 October 2026. Journal-specific
 submission requirements remain to be checked after venue selection.
 """
 manifest={'date':'2026-10-22','canonical_main':'main.tex','canonical_supplement':'supplementary/supplement.tex','canonical_bibliography':'references.bib','files':[{'path':name,'sha256':hashlib.sha256(data).hexdigest()} for name,data in sorted(payload.items())]}
-data=(json.dumps(manifest,indent=2)+'\n').encode();(P/'submission_manifest.json').write_bytes(data)
+data=(json.dumps(manifest,indent=2)+'\n').encode()
 with zipfile.ZipFile(P/'submission_sources.zip','w',zipfile.ZIP_DEFLATED) as z:
  for name,data in sorted(payload.items()):z.writestr(name,data)
- z.write(P/'submission_manifest.json','submission_manifest.json')
+ z.writestr('submission_manifest.json',data)
 print(json.dumps({'payloads':len(payload),'archive_sha256':hashlib.sha256((P/'submission_sources.zip').read_bytes()).hexdigest(),'bytes':(P/'submission_sources.zip').stat().st_size}))
