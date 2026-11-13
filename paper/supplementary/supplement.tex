@@ -177,30 +177,12 @@ The foreign-information diagnostic applies local risk decisions to altered popul
 An introduced error means loss of true-risk containment, an upper bound below the true risk, or a false population certificate when that error was absent locally. The grid includes budgets that already fail for the local law. For example, at full heterogeneity the path and pooled tables have 62 and 106 containment failures, respectively, but only two and 63 newly introduced errors. A ``tightening'' or ``widening'' label therefore does not establish validity. At zero heterogeneity, naive pooling leaves all 280 cells unchanged; path replacement regenerates shapes at the analysis resolution and can differ from coarsening the finest local law. It is consequently not a pure zero-change control. These diagnostics motivate using trajectories from the target population; they do not provide a transportability theorem. The full outcome counts, including underestimation and false-certification indicators, are retained in the evidence archive.
 
 \section{Reproducibility record}
-The current canonical configuration, \texttt{configs/trajcert.yaml}, has SHA-256
-\begin{quote}\small\ttfamily
-932d1995d99ed3b91963220aedae29a64b7c0091768b220001a6da4eb762b866.
-\end{quote}
-The retained 19 October design copy has SHA-256
-\begin{quote}\small\ttfamily
-865eeb27e1bdbead6198ecfc1f45349a483fe44e4ea6a06e71012ca0e35058b7.
-\end{quote}
-The two files differ only in execution batch sizes: coverage 50 versus one, and power ten versus one. The scientific law parameters, budgets, grids, seed indices and thresholds are identical. The completed current records contain 3,200 power batches and 3,500 coverage batches, each holding one stream. Their scientific-specification digest is
-\begin{quote}\small\ttfamily
-bfd5e15eac0bfe08b1c0f095b5c99d28d25ad10efe9c9dcecb8c1f33ba4549e7.
-\end{quote}
-The current report records commit \texttt{1cdf6d737c4b4a1f81214348945de4338ad62471}; this manuscript revision inspected \texttt{e4f5cef47d3af18f5badcb0a644dbc3636d52cd5}. The report's configuration and source hashes agree with the available files. Its commit identifies a reporting checkout, whereas the per-cell dependency fingerprint omits the source tree. These records establish which numerical artifacts support the manuscript, but do not independently attest the implementation bytes used by every historical stream. Earlier selected-case equivalence and feasible-oracle diagnostics are retained as historical validation, not proof of full campaign equivalence.
+The documented design and completed evaluations use the same laws, budgets, grids, seed indices and thresholds. Execution batch sizes changed from 50 to one for coverage and from ten to one for power. The completed records contain 3,200 power batches and 3,500 coverage batches, each holding one stream. The recorded dependency fingerprints omit the source tree, so the exact implementation used by every historical stream cannot be independently established. Selected-case equivalence and feasible-oracle diagnostics do not establish equivalence across the full evaluation.
 
-The report's environment-lock digest is
-\begin{quote}\small\ttfamily
-2f94341d20401569cbbd305333d78becd88a046ca1b272c30b49997836fcf9db.
-\end{quote}
-The manifest declares Python 3.12 or later, NumPy 2.5.2, SciPy 1.17.1, mpmath 1.3.0 and python-flint 0.9.0; \texttt{uv.lock} supplies the resolved graph and \texttt{requirements.lock} its hash-locked export. The declared environment does not independently identify the physical CPU or machine load for the timing measurements. The retained quality log records 1,005 passing tests and 91.98\% branch-aware coverage; these are previously completed checks, not tests executed during this manuscript revision.
+The declared environment uses Python 3.12 or later, NumPy 2.5.2, SciPy 1.17.1, mpmath 1.3.0 and python-flint 0.9.0. Dependency locks accompany the code. The available records do not identify the physical CPU or machine load for the timing measurements.
 
 Seeds derive from SHA-256 of a semantic event-stream namespace and stream index, using NumPy's PCG64 generator. The namespace includes the law and finest band count but excludes analysis partition, sensitivity budget, risk budget and experiment name. Coarse analyses reuse the same stream and shorter horizons use prefixes. Disjoint exploratory pilots informed law and horizon selection: ten streams ordinarily and twenty for the optional-stopping grid. A separate ten-stream pilot of the ordinary population-decision example recorded no certification through 200,000 matured events. It is not part of the 100-stream confirmatory estimates and does not establish that certification is impossible at later horizons. The retained pilot records are private; their local design account is not an external preregistration.
 
-The publication archive \texttt{evidence\_current.zip} contains unchanged copies of the current scientific records and their completion markers, individual power and validity batches, all cited numerical tables, figure source data, the current configuration and dependency locks, with a SHA-256 manifest. No raw external diagnostic data or private pilot records are distributed. The previous \texttt{evidence.zip} is a historical preparation artifact and is not the evidence archive for this revision. Reproduction of the publication assets reads these records; it does not require a new simulation.
-
-The manuscript checks reconstruct all 160 power-checkpoint counts and exact intervals, the 32 final-cell summaries, the seven validity-study denominators and limits, the population-decision grid, solver discrepancies and scaling-unit conversions. They also verify all 116 rendered source/destination pairs in the current report. Compared with the previous publication archive, the complete final power-summary table is unchanged, while all 160 runtime medians and 119 bound-gap medians differ. Accordingly, all runtime and gap descriptions use the current records. The no-false-risk-certification counts, stopped paths, incompatible-model certificates and noncertifying controls remain visible. No scientific experiment was executed and no scientific input or result was modified during this revision.
+The supplementary evidence archive contains the scientific records, individual power and validity batches, numerical tables, figure source data, configuration and dependency locks, with checksums. No raw external diagnostic data or private pilot records are distributed. Reproducing the publication assets from these records does not require a new simulation.
 
 \end{document}
