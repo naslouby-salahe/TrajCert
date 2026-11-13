@@ -1,43 +1,45 @@
-\documentclass[preprint,11pt,authoryear]{elsarticle}
-\input{preamble}
-% Journal-neutral preprint; select the destination before template adaptation.
-\hypersetup{pdftitle={TrajCert: Sharp risk identification and anytime-valid certification with informative outcome-resolution paths},pdfauthor={Salaheddine Naslouby, Mohamed Lachgar, Hamid Hrimech},pdfsubject={Partial identification and anytime-valid risk certification},pdfkeywords={partial identification, informative verification, mutual information, confidence sequences}}
-\makeatletter
-\def\ps@pprintTitle{\let\@oddhead\@empty\let\@evenhead\@empty\def\@oddfoot{\hfil\thepage\hfil}\let\@evenfoot\@oddfoot}
-\makeatother
-\renewcommand{\topfraction}{0.92}
-\renewcommand{\textfraction}{0.07}
-\renewcommand{\floatpagefraction}{0.70}
-\renewcommand{\bibfont}{\small}
-\setlength{\bibsep}{2pt plus 1pt minus 1pt}
-\begin{document}
-\begin{frontmatter}
+\documentclass[11pt]{article}
+\input{"preamble Temp"}
+\hypersetup{hidelinks,pdfauthor={Salaheddine Naslouby, Mohamed Lachgar, Hamid Hrimech},pdftitle={TrajCert: Sharp risk identification and anytime-valid certification with informative outcome-resolution paths},pdfsubject={Partial identification and anytime-valid risk certification},pdfkeywords={partial identification, informative verification, mutual information, confidence sequences}}
 \title{TrajCert: Sharp risk identification and anytime-valid certification with informative outcome-resolution paths}
-\author[aff1]{Salaheddine Naslouby\corref{cor1}\fnref{orcid1}}
-\ead{naslouby.salahe@gmail.com}
-\author[aff2]{Mohamed Lachgar}
-\ead{m.lachgar@uca.ac.ma}
-\author[aff1]{Hamid Hrimech}
-\ead{hamid.hrimech@uhp.ac.ma}
-\cortext[cor1]{Corresponding author.}
-\fntext[orcid1]{ORCID: \href{https://orcid.org/0009-0002-7295-7816}{0009-0002-7295-7816}.}
-\address[aff1]{Hassan First University, National School of Applied Sciences (ENSA), LAMSAD Laboratory, Berrechid, Morocco}
-\address[aff2]{Cadi Ayyad University, Higher Normal School (ENS), L2IS Laboratory, Marrakech, Morocco}
+\author{Salaheddine Naslouby\,\orcidlink{0009-0002-7295-7816}$^{1,*}$ \and Mohamed Lachgar\,\orcidlink{0000-0002-6155-3309}$^2$ \and Hamid Hrimech\,\orcidlink{0000-0002-3980-1214}$^1$}
+\date{}
+\begin{document}
+\maketitle
+\begin{center}\small
+$^1$Hassan First University, National School of Applied Sciences (ENSA),\\
+LAMSAD Laboratory, Berrechid, Morocco\\[3pt]
+$^2$Cadi Ayyad University, Higher Normal School (ENS),\\
+L2IS Laboratory, Marrakech, Morocco\\[5pt]
+$^*$Corresponding author: \href{mailto:naslouby.salahe@gmail.com}{naslouby.salahe@gmail.com}\\
+\href{mailto:m.lachgar@uca.ac.ma}{m.lachgar@uca.ac.ma};
+\href{mailto:hamid.hrimech@uhp.ac.ma}{hamid.hrimech@uhp.ac.ma}
+\end{center}
 \begin{abstract}
 The occurrence or non-occurrence of harm at resolution / the (unobserved) risk at a terminal end point could both drive outcome verification. If we reduce this to whether verification occurs or not, we will lose information pertinent to our goal of establishing a safe level of risk. We therefore consider the class of risks compatible with observing only a binary indication of harm within an information limit to a categorical resolution event (or its absence). We show this defines a contiguous range of binary risks, which admits an information-based lower bound, given by the minimum of the corresponding one-dimensional convex function over the hidden terminal mass. With deterministic enrichment, this function is translated by an additional observable quantity measuring the reduction in uncertainty afforded by observing timing relative to resolution. This allows us to assess if enrichment is sufficient to alter risk certification decisions. Moreover, by tracking a vector of categorised observations via a confidence sequence, we establish a time-uniform upper bound to binary risk over a known distribution and stable observation of resolved outcomes (subject to the confidence region covering its target and the resulting projection enclosing the compatible risk interval above). We illustrate this via a fully specified simulation where 100 independent data streams are monitored per combination of scenario parameters. With high levels of informativeness about the risk from timing, the refined approach certifies all 100 streams within $\sim$5e3 observations of the endpoint outcome; in contrast, observing just the endpoint certifies only 96 streams after $\sim$5e4 observations. Tightening the information constraint, the population upper bound on binary risk disallows certification, but enriched approaches allow 99-100 streams to be certified after $\sim$5e4 observations. A non-enriched comparator highlights the impact of losing information about the risk at resolution in finite samples. Overall, the simulations show how allowing verification through (some) resolutions leads to favourable inferences about a population-level risk and more rapid stream certification, subject to constraints on information available.
 \end{abstract}
-\begin{keyword}
-Partial identification \sep Informative verification \sep Sensitivity analysis \sep Mutual information \sep Confidence sequences \sep Risk certification
-\end{keyword}
-\end{frontmatter}
+\noindent\textbf{Keywords:} partial identification; informative verification; sensitivity analysis; mutual information; confidence sequences; risk certification.
 \input{"sections Temp/introduction"}
 \input{"sections Temp/model"}
 \input{"sections Temp/identification"}
 \input{"sections Temp/sequential"}
+\FloatBarrier
 \input{"sections Temp/experiments"}
 \input{"sections Temp/results"}
 \input{"sections Temp/discussion"}
+\clearpage
+\appendix
+\renewcommand{\theHtable}{\Alph{section}.\arabic{table}}
+\renewcommand{\thetable}{\Alph{section}.\arabic{table}}
+\renewcommand{\theHequation}{\Alph{section}.\arabic{equation}}
+\renewcommand{\theequation}{\Alph{section}.\arabic{equation}}
+\counterwithin*{table}{section}
+\counterwithin*{equation}{section}
+\input{"sections Temp/supplement"}
 \input{"sections Temp/declarations"}
-\bibliographystyle{elsarticle-harv}
+\setlength{\bibsep}{0pt}
+\interlinepenalty=10000
+\small
+\bibliographystyle{unsrtnat}
 \bibliography{references}
 \end{document}
