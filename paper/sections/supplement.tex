@@ -19,7 +19,7 @@ This proves the information profile in the article without a selection-model ass
  &=r\KL\{\operatorname{Bern}(p_R)\Vert\operatorname{Bern}(\theta)\}
  +c\KL\{\operatorname{Bern}(p_U)\Vert\operatorname{Bern}(\theta)\}\ge0.\label{eq:js}
 \end{align}
-The equality is interpreted by continuity if a marginal is zero. When $0<r,c<1$, equality holds in the divergence inequality exactly when $p_R=p_U$. From this we see that $u=Ac/r$. Therefore $\tau_\Pi$ is minimal full information possible and is determined by the resolved timing distribution. Equation~\eqref{eq:js} also presents the model as an information budget that remains after resolving timing for terminal choice.
+The equality is interpreted by continuity if a marginal is zero. When $0<r,c<1$, equality holds in the divergence inequality exactly when $p_R=p_U$. From this it follows that $u=Ac/r$. Therefore $\tau_\Pi$ is minimal full information possible and is determined by the resolved timing distribution. Equation~\eqref{eq:js} also presents the model as an information budget that remains after resolving timing for terminal choice.
 
 For interior hidden masses, $h'(x)=\log\{(1-x)/x\}$ and $h''(x)=-1/\{x(1-x)\}$. Hence
 \begin{equation}
@@ -35,7 +35,7 @@ Let each finite coarse band $B$ collect fine bands with masses $m_k=a_k+b_k$ and
 \begin{equation}
  m_Bh(\bar r_B)-\sum_{k\in B}m_kh(r_k)\ge0.
 \end{equation}
-Strict concavity implies the inequality is strict precisely when the positive-mass portions of $B$ are different. We add over coarse bands. The unresolved column stays the same, so this sum is $T_c-T_f$ regardless of its hidden label split. The chain rule for the deterministic map $J_c=g(J_f)$ yields
+Strict concavity implies the inequality is strict precisely when the positive-mass portions of $B$ are different. This is summed over coarse bands. The unresolved column stays the same, so this sum is $T_c-T_f$ regardless of its hidden label split. The chain rule for the deterministic map $J_c=g(J_f)$ yields
 \begin{equation}
  I(L;J_f)=I(L;J_c)+I(L;J_f\mid J_c),
 \end{equation}
@@ -59,7 +59,7 @@ is a nonnegative martingale, because its next multiplicative factor has conditio
 \end{equation}
 The union bound is over categories, not monitoring times; simultaneous containment in every raw interval happens with probability at least $1-\delta$. Thus it suffices to prove the statement on this event. Taking running intersections and intersecting with the simplex both preserve this event. Categories need not be independent within an event. No union bound is taken over monitoring times.
 On simultaneous containment, the true summary is in the observable-law region for every $n$, simultaneous containment says that the true terminal harmful mass provides a feasible completion at every $n$. Since its finest-path information cannot be more than $\rho$ and coarse information cannot be negative, this holds because it belongs to the union of the partition-specific risk sets at every $n$. Its path-wise supremum over $n$ is therefore bounded by the aggregate relaxation, and by any conservative numerical enclosure. This proves the time uniform risk guarantee of the article. Since restricting reports to checkpoints or adding evidence gates can only decrease (remove) opportunities to certify, neither require additional error spending. Error cannot be spent to repair feasibility if the sensitivity assumption is violated.
-Failure of this feasibility step is not repaired by compatibility of some other completion. The event also implies simultaneous coverage of every element of the partition-specific identified set: on this event the whole true observable-law set is contained in each projection. So the guarantee is strictly stronger than pointwise containment of some chosen terminal completion, while the implemented relaxation may be larger than needed for this guarantee. For several partitions or several streams of risk this same logic would require a simultaneous observable region or an explicitly constructed union allocation ; the single partition theorem does not automatically give any such allocation.
+Failure of this feasibility step is not repaired by compatibility of some other completion. The event also implies simultaneous coverage of every element of the partition-specific identified set: on this event the whole true observable-law set is contained in each projection. So the guarantee is strictly stronger than pointwise containment of some chosen terminal completion, while the implemented relaxation may be larger than needed for this guarantee. For several partitions or several streams of risk this same logic would require a simultaneous observable region or an explicitly constructed union allocation; the single partition theorem does not automatically give any such allocation.
 
 \section{Envelope, numerical contracts and branch-and-bound}
 For any selected set of categories $B$, simplex membership implies

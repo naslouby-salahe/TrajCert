@@ -60,9 +60,9 @@ For a partition and its endpoint coarsening, the identity is particularly transp
 \end{equation}
 The right-hand endpoint similarly shares the parameters $A,G,c$. Timing therefore consumes some of the information that could otherwise be spent on terminal choice, for given levels of excess path budget $\rho - \tau_\Pi$. For the same excess budget, identical endpoint masses imply the same admissible interval for risk, so this narrowing follows by comparing partitions under the same value of total path budget.
 
-This information constraint reflects the two ways in which outcome and resolution path may be dependent: via dependence captured by timing, and via non-resolved dependence at termination. Having spent information on timing leaves correspondingly less to assign to terminal choice (for fixed total budget). It is not however shown that terminal choice is insensitive when not fully resolved - a problem where one explicitly reserves additional information for terminal selection raises its own distinct question.
+This information constraint reflects the two ways in which outcome and resolution path may be dependent: via dependence captured by timing, and via non-resolved dependence at termination. Having spent information on timing leaves correspondingly less to assign to terminal choice (for fixed total budget). It is not however shown that terminal choice is insensitive when not fully resolved -- a problem where one explicitly reserves additional information for terminal selection raises its own distinct question.
 
-Here we have kept $\rho$ fixed. Allowing it to vary between different refinements would confound the improved information with relaxing the problem assumptions. Further, refinement may drive required $\tau$ beyond $\rho$. We regard such an example as failing the modelling requirements rather than demonstrating the desired boundedness. Likewise, favourable information from timing will not in general reduce the best upper bound on risk if that upper bound is achieved at both levels of refinement.
+Here $\rho$ has been kept fixed. Allowing it to vary between different refinements would confound the improved information with relaxing the problem assumptions. Further, refinement may drive required $\tau$ beyond $\rho$. Such an example is regarded as failing the modelling requirements rather than demonstrating the desired boundedness. Likewise, favourable information from timing will not in general reduce the best upper bound on risk if that upper bound is achieved at both levels of refinement.
 
 \subsection{Certification geometry}
 \begin{proposition}[Risk-budget frontier]\label{prop:safety}
@@ -76,7 +76,7 @@ Then certification is equivalent to $\tau_\Pi\le\rho\le\rho_\Pi^*(\beta)$. For n
 \end{equation}
 \end{proposition}
 \begin{proof}
-All compatible sets include $\td$ as a completion, and all completions have risk no greater than $A+c$. Within the corridor, the value $\beta-A$ occurs on the increasing portion of the convex profile $\Sprof$, so its sublevel-set max is bounded by this value if and only if $\rho \leq \Sprof_\Pi(\beta-A)$. We have a matching lower bound on $\rho$ from the compatibility conditions. This follows from applying equation \eqref{eq:shift} with argument $\beta-A$.
+All compatible sets include $\td$ as a completion, and all completions have risk no greater than $A+c$. Within the corridor, the value $\beta-A$ occurs on the increasing portion of the convex profile $\Sprof$, so its sublevel-set max is bounded by this value if and only if $\rho \leq \Sprof_\Pi(\beta-A)$. There is a matching lower bound on $\rho$ from the compatibility conditions. This follows from applying equation \eqref{eq:shift} with argument $\beta-A$.
 \end{proof}
 
 The frontier shift can be understood in terms of decisions regarding the time information. If the fine frontier is attainable, then budgets exceeding the endpoint frontier and up to and including the fine frontier allow a fine but no endpoint certificate. This tighter bound is only relevant if it falls below the selected value of $\beta$.
